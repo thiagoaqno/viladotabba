@@ -164,7 +164,7 @@ export function physics(dt, spec = carOf(me())) {
       c.x = eu.x; c.y = eu.y; c.vx = eu.vx; c.vy = eu.vy;
       const f = Math.cos(c.a), g = Math.sin(c.a); c.v = c.vx * f + c.vy * g;
       avisarBatida(forca, "carro");
-      if (forca > 40 && (race.hitT || 0) <= 0) { Sound.crash(forca); race.shake = Math.max(race.shake, Math.min(0.3, forca / 500)); race.hitT = 0.25; }
+      if (forca > 40 && (race.hitT || 0) <= 0) { Sound.crash(forca, "carro"); race.shake = Math.max(race.shake, Math.min(0.3, forca / 500)); race.hitT = 0.25; }
     }
   }
   race.hitT = Math.max(0, (race.hitT || 0) - dt);
@@ -302,9 +302,12 @@ function aoEvento(R, e) {
   else if (e.t === "pouso") { Sound.bump(); R.shake = Math.min(0.35, e.forca / 400); R.land = 0.3; }
   else if (e.t === "setor") { R.cpT = sNow(); if (e.s === 0) { if (R.largou) R.voltaLocal = (R.voltaLocal || 0) + 1; R.largou = true; } }
   else if (e.t === "respawn") Sound.pop();
-  else if (e.t === "boxParou" || e.t === "boxTrocou") Sound.pop();
+  // os macacos e as pistolas de roda (o som gravado; sem ele, o estalo): quando a troca começa (parou sem menu, ou escolheu o pneu no menu)
+  else if ((e.t === "boxParou" && !e.escolha) || e.t === "boxEscolheu") { if (!Sound.pitStop()) Sound.pop(); }
+  else if (e.t === "boxTrocou") { if (!Sound.fimDoPit()) Sound.pop(); }
+  else if (e.t === "muro" && e.forca > 90 && (R.hitT || 0) <= 0) { Sound.crash(e.forca, "muro"); R.hitT = 0.4; }
   else if (e.t === "box" && e.fase === "sai") { R.pedidoBox = null; toast(`🔧 ${window.F1Regras.textoDaParada(R.car.box.parada)}`, 2400); }
-  else if (e.t === "carro" && e.forca > 40 && (R.hitT || 0) <= 0) { Sound.crash(e.forca); R.shake = Math.max(R.shake, Math.min(0.3, e.forca / 500)); R.hitT = 0.25; }
+  else if (e.t === "carro" && e.forca > 40 && (R.hitT || 0) <= 0) { Sound.crash(e.forca, "carro"); R.shake = Math.max(R.shake, Math.min(0.3, e.forca / 500)); R.hitT = 0.25; }
 }
 // o que o resto do jogo (HUD, câmera, som) lê de `race`
 function sincronizar(R) {

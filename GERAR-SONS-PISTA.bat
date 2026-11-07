@@ -11,10 +11,21 @@ echo ============================================================
 echo   Sons da pista (ElevenLabs)
 echo ============================================================
 echo.
-echo   zebra        pneu na zebra (3 s, em laco)
-echo   torcida      rumor da arquibancada (10 s, em laco)
-echo   torcida-uau  a galera quando o carro passa (3 s)
-echo   buzina       buzina da torcida (2 s)
+echo   Cada som tem 2 ou 3 versoes (o jogo sorteia uma a cada vez) e as batidas tem leve, media e forte.
+echo   As descricoes nao falam de carro nem de motor: so do som isolado.
+echo.
+echo   zebra (3)            borracha batendo nas listras de concreto
+echo   torcida (2)          rumor da arquibancada, em laco
+echo   torcida-uau (3)      a galera vibrando quando o carro passa
+echo   buzina (2)           buzina de ar da torcida
+echo   pistola (3)          pistola pneumatica da troca de pneu
+echo   macaco (2)           macaco hidraulico subindo e descendo
+echo   chiado (2)           pneu chiando (freada travada e derrapagem), em laco
+echo   drs (2)              a asa abrindo
+echo   batida-muro-leve, -media, -forte (3 cada)
+echo   batida-carro-leve, -media, -forte (3 cada)
+echo   chegada (2)          a festa da bandeirada
+echo   chuva (1)            chuva caindo no asfalto, em laco
 echo.
 echo O que gerar?
 echo   1) So os que faltam
@@ -26,13 +37,13 @@ set "ARGS="
 if "%M%"=="2" set "ARGS=--refazer"
 if "%M%"=="3" (
   set "QUAIS="
-  set /p "QUAIS=Quais? separados por virgula, ex.: zebra,buzina : "
+  set /p "QUAIS=Quais? separados por virgula, ex.: zebra,pistola : "
   if "!QUAIS!"=="" ( echo Nada escolhido. & pause & exit /b 0 )
   set "ARGS=--so !QUAIS!"
 )
 
 echo.
-echo Cada som gasta creditos de efeitos sonoros da sua conta (sao 4 sons curtos).
+echo Cada som gasta creditos de efeitos sonoros da sua conta (sao 38 arquivos curtos; com a opcao 1 so os que faltam).
 set "GO=N"
 set /p "GO=Continuar e gerar? s/N: "
 if /i not "!GO!"=="s" ( echo Cancelado. Nada foi gerado. & pause & exit /b 0 )

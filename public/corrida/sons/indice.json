@@ -1,0 +1,18 @@
+{
+ "zebra": 3,
+ "torcida": 2,
+ "torcida-uau": 3,
+ "buzina": 2,
+ "pistola": 3,
+ "macaco": 2,
+ "chiado": 2,
+ "drs": 2,
+ "batida-muro-leve": 3,
+ "batida-muro-media": 3,
+ "batida-muro-forte": 3,
+ "batida-carro-leve": 3,
+ "batida-carro-media": 3,
+ "batida-carro-forte": 3,
+ "chegada": 2,
+ "chuva": 1
+}

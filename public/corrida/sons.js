@@ -15,15 +15,38 @@ export const Sound = (() => {
   function ctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volume; master.connect(ac.destination); carregarAmostras(ac); } catch { return null; } } if (ac.state === "suspended") ac.resume(); return ac; }
   // os sons gravados da pista (public/corrida/sons/<id>.mp3, gerados por GERAR-SONS-PISTA.bat com a ElevenLabs): quando existem, a zebra
   // e a torcida tocam eles; sem o arquivo, continua o som sintetizado de cada uma
-  const amostras = {};
+  // os sons gravados da pista (public/corrida/sons/<id>-<n>.mp3, gerados por GERAR-SONS-PISTA.bat com a ElevenLabs): o índice
+  // (sons/indice.json) diz quantas versões cada um tem, e cada vez sai uma (`escolher`, nunca a mesma duas vezes seguidas), com um
+  // pouco de variação de tom e volume; sem o arquivo, continua o som sintetizado
+  const amostras = {}, ultima = {};
   function carregarAmostras(c) {
-    for (const id of ["zebra", "torcida", "torcida-uau", "buzina"]) {
-      fetch(`/corrida/sons/${id}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => b && c.decodeAudioData(b)).then((buf) => { if (buf) amostras[id] = buf; }).catch(() => {});
-    }
+    fetch("/corrida/sons/indice.json").then((r) => (r.ok ? r.json() : {})).then((ind) => {
+      for (const [id, n] of Object.entries(ind || {})) for (let k = 1; k <= n; k++) {
+        fetch(`/corrida/sons/${id}-${k}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => b && c.decodeAudioData(b)).then((buf) => { if (buf) (amostras[id] ||= []).push(buf); }).catch(() => {});
+      }
+    }).catch(() => {});
   }
-  // um som gravado em laço, com volume e velocidade próprios
+  function escolher(id) {
+    const l = amostras[id]; if (!l || !l.length) return null;
+    let k = Math.floor(Math.random() * l.length); if (l.length > 1 && k === ultima[id]) k = (k + 1) % l.length;
+    ultima[id] = k; return l[k];
+  }
+  // um som gravado em laço (uma versão sorteada), que entra e sai devagar pelo volume
   function laco(c, buf) { const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf; src.loop = true; g.gain.value = 0; src.connect(g).connect(master); src.start(); return { src, g }; }
-  function umaVez(id, vol, rate = 1) { const c = ac, buf = amostras[id]; if (!c || !buf || !on) return false; const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf; src.playbackRate.value = rate; g.gain.value = vol; src.connect(g).connect(master); src.start(); return true; }
+  function umaVez(id, vol, rate = 1, at = 0) {
+    const c = ac, buf = escolher(id); if (!c || !buf || !on) return false;
+    const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf;
+    src.playbackRate.value = rate * (0.96 + Math.random() * 0.08); g.gain.value = vol * (0.88 + Math.random() * 0.24);
+    src.connect(g).connect(master); src.start(c.currentTime + at); return true;
+  }
+  const tem = (id) => !!(amostras[id] && amostras[id].length);
+  // o pit stop em partes limpas: o macaco sobe, as pistolas (duas versões diferentes, uma logo depois da outra) e, no fim da troca, o
+  // macaco desce (`fimDoPit`)
+  function pitStop() {
+    if (!tem("pistola")) return false;
+    umaVez("macaco", 0.55, 1.05); umaVez("pistola", 0.6, 1, 0.18); umaVez("pistola", 0.45, 1, 0.42); return true;
+  }
+  function fimDoPit() { return umaVez("macaco", 0.6, 0.95); }
   function tone(f, dur, { type = "square", vol = 0.12, at = 0 } = {}) {
     const c = ctx(); if (!c || !on) return; const t = c.currentTime + at;
     const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
@@ -76,9 +99,16 @@ export const Sound = (() => {
   // chuva: um chiado de ruído filtrado (o mesmo buffer, em loop) pela intensidade da chuva, e o chiado dos pneus no molhado;
   // preparado ao iniciar uma corrida com chuva prevista, e sempre abaixo do motor
   let chuvaN = null;
+  let chuvaA = null;
   function chuva(nivel, pneus, preparar = false) {
-    if (!preparar && !chuvaN && nivel < 0.01 && pneus < 0.01) return;
+    if (!preparar && !chuvaN && !chuvaA && nivel < 0.01 && pneus < 0.01) return;
     const c = ctx(); if (!c) return;
+    if (tem("chuva")) { // a chuva gravada em laço, que entra devagar (uns 8 s) e sai mais depressa; o chiado dos pneus no molhado segue sintetizado
+      if (!chuvaA) chuvaA = laco(c, escolher("chuva"));
+      const alvo = on ? Math.min(1, nivel) * 0.55 : 0;
+      chuvaA.g.gain.setTargetAtTime(alvo, c.currentTime, alvo > chuvaA.g.gain.value ? 2.6 : 1.2);
+      nivel = 0;
+    }
     if (!chuvaN) {
       const len = c.sampleRate * 2, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       const src = c.createBufferSource(), fc = c.createBiquadFilter(), gc = c.createGain(), fp = c.createBiquadFilter(), gp = c.createGain();
@@ -88,6 +118,21 @@ export const Sound = (() => {
     const t = c.currentTime;
     chuvaN.gc.gain.setTargetAtTime(on ? nivel * 0.028 : 0, t, 0.3); chuvaN.gp.gain.setTargetAtTime(on ? pneus * 0.04 * (0.4 + 0.6 * nivel) : 0, t, 0.2);
   }
+  // o pneu chiando: só existe com o carro andando. O volume vem do quanto a roda trava na freada (`travada`, 0 a 1) ou do quanto o
+  // carro escorrega de lado (`slip`), e o tom e a velocidade do som, da velocidade do carro. Com o som gravado (sons/chiado-*.mp3)
+  // toca ele em laço; sem, fica o chiado sintetizado de antes (`skid`).
+  let chiadoA = null;
+  function chiado(slip, travada, v) {
+    const a = Math.abs(v || 0), anda = Math.min(1, Math.max(0, (a - 25) / 120));
+    const nivel = anda * Math.max(Math.min(1, Math.max(0, ((slip || 0) - 45) / 120)), Math.min(1, travada || 0));
+    if (!tem("chiado")) return false;
+    const c = ctx(); if (!c) return true;
+    if (!chiadoA) chiadoA = laco(c, escolher("chiado"));
+    const t = c.currentTime;
+    chiadoA.src.playbackRate.setTargetAtTime(0.8 + 0.35 * Math.min(1, a / 300), t, 0.05);
+    chiadoA.g.gain.setTargetAtTime(on ? nivel * 0.5 : 0, t, nivel > chiadoA.g.gain.value ? 0.03 : 0.12);
+    return true;
+  }
   // a zebra: o pneu batendo nas listras é um ronco GRAVE, sem chiado: um tom de ~55 a 75 Hz (a carroceria vibrando) e um ruído só
   // no grave (o pneu), os dois batendo a cada listra (uma a cada ~14 unidades: "tum-tum-tum" devagar, "brrrrm" rápido).
   // `v`: a velocidade do carro na zebra (0 fora dela).
@@ -96,8 +141,10 @@ export const Sound = (() => {
   function zebra(v) {
     if (!zebraN && !zebraA && !(v > 1)) return;
     const c = ctx(); if (!c) return;
-    if (amostras.zebra) { // o som gravado: mais rápido e um pouco mais agudo com a velocidade
-      if (!zebraA) { zebraA = laco(c, amostras.zebra); if (zebraN) zebraN.saida.gain.value = 0; }
+    if (tem("zebra")) { // o som gravado: mais rápido e um pouco mais agudo com a velocidade; uma versão nova a cada zebra
+      if (!zebraA) { zebraA = laco(c, escolher("zebra")); if (zebraN) zebraN.saida.gain.value = 0; }
+      if (!(Math.abs(v || 0) > 8) && zebraA.g.gain.value < 0.01 && amostras.zebra.length > 1 && !zebraA.trocou) { zebraA.trocou = true; const buf = escolher("zebra"); try { zebraA.src.stop(); } catch {} zebraA = laco(c, buf); }
+      if (Math.abs(v || 0) > 8) zebraA.trocou = false;
       const t = c.currentTime, a = Math.abs(v || 0), ligado = on && a > 8;
       zebraA.src.playbackRate.setTargetAtTime(Math.min(1.5, 0.75 + a / 500), t, 0.05);
       zebraA.g.gain.setTargetAtTime(ligado ? Math.min(0.9, 0.45 + a * 0.0012) : 0, t, ligado ? 0.015 : 0.06);
@@ -128,10 +175,10 @@ export const Sound = (() => {
   function torcida(nivel, v) {
     if (!torcidaN && !torcidaA && !(nivel > 0.01)) return;
     const c = ctx(); if (!c) return;
-    if (amostras.torcida) { // o som gravado: o rumor em laço, o "uuuh" e a buzina quando o carro chega rápido
-      if (!torcidaA) { torcidaA = laco(c, amostras.torcida); if (torcidaN) { torcidaN.gr.gain.value = 0; torcidaN.gv.gain.value = 0; } }
+    if (tem("torcida")) { // o som gravado: o rumor em laço (entra e sai devagar), o "uuuh" e a buzina quando o carro chega rápido
+      if (!torcidaA) { torcidaA = laco(c, escolher("torcida")); if (torcidaN) { torcidaN.gr.gain.value = 0; torcidaN.gv.gain.value = 0; } }
       const t = c.currentTime, n = on ? Math.max(0, Math.min(1, nivel)) : 0, rapido = Math.min(1, Math.abs(v || 0) / 300);
-      torcidaA.g.gain.setTargetAtTime(n * (0.35 + 0.35 * rapido), t, 0.25);
+      torcidaA.g.gain.setTargetAtTime(n * (0.35 + 0.35 * rapido), t, 0.9);
       if (n > 0.55 && torcidaAntes <= 0.55 && rapido > 0.35 && t > uauAte + 2) {
         uauAte = t + 2;
         umaVez("torcida-uau", 0.7 * n, 0.95 + Math.random() * 0.1);
@@ -166,8 +213,11 @@ export const Sound = (() => {
   }
   // o engenheiro falando: os motores de F1 descem para ~35% e voltam devagar quando ele acaba
   function abafar(sim) { if (motorBus && ac) motorBus.gain.setTargetAtTime(sim ? 0.35 : 1, ac.currentTime, sim ? 0.08 : 0.35); }
-  function crash(forca) {
+  function crash(forca, tipo = "muro") {
     const c = ctx(); if (!c || !on) return;
+    const k0 = Math.min(1, forca / 260);
+    const forca3 = k0 < 0.3 ? "leve" : k0 < 0.65 ? "media" : "forte"; // a batida gravada: leve, média ou forte, muro ou carro (cada uma com 3 versões)
+    if (umaVez(`batida-${tipo}-${forca3}`, 0.35 + 0.55 * k0, 0.95 + Math.random() * 0.1)) return;
     const k = Math.min(1, forca / 260), t = c.currentTime, len = Math.floor(c.sampleRate * 0.25), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
     const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); src.buffer = b; f.type = "lowpass"; f.frequency.value = 900 + k * 2200; g.gain.value = 0.06 + k * 0.14;
@@ -185,7 +235,7 @@ export const Sound = (() => {
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

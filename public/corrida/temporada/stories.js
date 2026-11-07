@@ -65,9 +65,10 @@ function tela() {
 // os 40 modelos de desenho: 5 layouts (capa, número gigante, manchete de jornal, duelo, traçado da pista) × 8 fundos (foto, gradiente
 // da equipe, papel, neon, listras, bandeirada, dividido, vidro). Cada situação só usa os layouts que combinam com ela; o fundo é livre.
 // A escolha é fixa pela chave da notícia (o mesmo story sai sempre igual). Stories.vitrine() mostra os 40 em sequência.
-const LAYOUTS = { gp: ["capa", "numero", "manchete", "pista"], camp: ["numero", "manchete", "capa", "duelo"], rival: ["duelo", "numero", "manchete"], melhor: ["numero", "capa", "pista"], prox: ["pista", "capa", "manchete", "numero"] };
+const GERAIS = ["capa", "numero", "manchete", "topo", "centro", "faixa", "lateral", "contorno", "cartao", "selo", "citacao", "tv", "poster", "minimal", "grade"];
+const LAYOUTS = { gp: [...GERAIS, "pista", "placar", "medalha"], camp: [...GERAIS, "duelo", "placar"], rival: [...GERAIS, "duelo", "duelo"], melhor: [...GERAIS, "pista", "medalha"], prox: [...GERAIS, "pista", "ticket", "ticket"] };
 const FUNDOS = ["foto", "gradiente", "papel", "neon", "listras", "bandeirada", "dividido", "vidro"];
-const TODOS = ["capa", "numero", "manchete", "duelo", "pista"].flatMap((l) => FUNDOS.map((f) => `${l}:${f}`));
+const TODOS = [...GERAIS, "duelo", "pista", "placar", "ticket", "medalha"].flatMap((l) => FUNDOS.map((f) => `${l}:${f}`)); // 20 layouts × 8 fundos = 160
 function hashK(k) { let x = 2166136261; for (const c of String(k)) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; }
 function modeloDe(x) {
   if (x.modelo) return x.modelo.split(":");
@@ -81,7 +82,23 @@ function corpoDo(x, l) {
   if (l === "manchete") return `<div class="st-corpo st-m-manchete"><div class="st-jornal"><b>EXTRA</b><span>Corrida da Galera · ${h(x.rot)}</span></div>${tit}<i class="st-fio"></i>${sub}<span class="st-logo">${logo(x.eq)}</span></div>`;
   if (l === "duelo") return `<div class="st-corpo st-m-duelo"><div class="st-vs"><span style="--c:${h(eqs[x.eq]?.cor || "#888")}">${logo(x.eq)}<b>${h(x.nomeA || "")}</b></span><em>${x.dif != null ? `${h(x.dif)}<small>pts</small>` : "VS"}</em><span style="--c:${h(eqs[x.eq2]?.cor || "#888")}">${logo(x.eq2)}<b>${h(x.nomeB || "")}</b></span></div>${tit}${sub}</div>`;
   if (l === "pista" && root.GpSobre) return `<div class="st-corpo st-m-pista"><span class="st-traco">${root.GpSobre.mapaSvg(x.pista, "st-traco-svg")}</span>${tit}${sub}</div>`;
-  return `<div class="st-corpo"><span class="st-logo">${logo(x.eq)}</span>${tit}${sub}</div>`;
+  const num = x.num ? `<span class="st-num">${h(x.num)}</span>` : "", rot = x.numRot ? `<small class="st-num-rot">${h(x.numRot)}</small>` : "", lg = `<span class="st-logo">${logo(x.eq)}</span>`;
+  if (l === "topo") return `<div class="st-corpo st-m-topo">${tit}${sub}<span class="st-logo st-logo-baixo">${logo(x.eq)}</span></div>`;
+  if (l === "centro") return `<div class="st-corpo st-m-centro"><span class="st-logo st-logo-g">${logo(x.eq)}</span>${tit}${sub}</div>`;
+  if (l === "faixa") return `<div class="st-corpo st-m-faixa"><div class="st-banda">${tit}</div>${sub}</div>`;
+  if (l === "lateral") return `<div class="st-corpo st-m-lateral"><b class="st-vertical">${h(x.rot)}</b><div>${lg}${tit}${sub}</div></div>`;
+  if (l === "contorno") return `<div class="st-corpo st-m-contorno"><span class="st-marca-dagua">${h(x.num || x.rot)}</span>${tit}${sub}</div>`;
+  if (l === "cartao") return `<div class="st-corpo st-m-cartao"><div class="st-cartao">${lg}${tit}${sub}</div></div>`;
+  if (l === "selo") return `<div class="st-corpo st-m-selo"><span class="st-selo">${h(x.num || "★")}${rot}</span>${tit}${sub}</div>`;
+  if (l === "citacao") return `<div class="st-corpo st-m-citacao"><span class="st-aspas">“</span>${tit}${sub ? `<p>— ${h(x.sub)}</p>` : ""}</div>`;
+  if (l === "tv") return `<div class="st-corpo st-m-tv"><div class="st-tarja"><span class="st-tarja-cor">${logo(x.eq)}</span><div><b>${h(x.rot)}</b>${tit}</div></div>${sub}</div>`;
+  if (l === "poster") return `<div class="st-corpo st-m-poster">${tit}${sub}</div>`;
+  if (l === "minimal") return `<div class="st-corpo st-m-minimal"><i class="st-linha"></i>${tit}${sub}</div>`;
+  if (l === "grade") return `<div class="st-corpo st-m-grade"><div class="st-grade"><span><b>${h(x.num || "—")}</b><small>${h(x.numRot || x.rot)}</small></span><span>${logo(x.eq)}<small>${h(eqs[x.eq]?.nome || "")}</small></span><span><b>${h(x.dif ?? "—")}</b><small>diferença</small></span><span><b>${h(String(x.rot).split(" ")[0])}</b><small>notícia</small></span></div>${tit}${sub}</div>`;
+  if (l === "placar") return `<div class="st-corpo st-m-placar"><div class="st-placar"><span>POS<b>${h(x.num || "—")}</b></span><span>PTS<b>${h(String(x.numRot || "").replace(/[^0-9+]/g, "") || "—")}</b></span><span>DIF<b>${h(x.dif ?? "—")}</b></span></div>${tit}${sub}</div>`;
+  if (l === "ticket") return `<div class="st-corpo st-m-ticket"><div class="st-ticket"><div><small>Corrida da Galera</small>${tit}${sub}</div><span class="st-canhoto"><b>${h(x.num || "")}</b><small>${h(x.numRot || "")}</small></span></div></div>`;
+  if (l === "medalha") return `<div class="st-corpo st-m-medalha"><span class="st-fita"></span><span class="st-medalha">${h(x.num || "1º")}</span>${tit}${sub}</div>`;
+  return `<div class="st-corpo">${lg}${tit}${sub}</div>`;
 }
 function mostrar(i) {
   if (i < 0 || i >= atuais.length) return fechar();

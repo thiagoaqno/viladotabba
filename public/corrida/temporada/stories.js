@@ -14,30 +14,35 @@ const marcar = (k) => { visto[k] = 1; try { localStorage.setItem("corrida:storie
 
 // os stories da temporada: cada um { k (chave: muda quando a notícia muda), rot, tit, sub, eq (a equipe da cor e do logo), foto }
 function montar(c) {
-  const { s, t, gps, prox, previsao } = c, P = root.F1Pilotos, eqs = P.EQUIPES, Gi = root.GpInfo, lista = [];
+  const { s, t, gps, prox, previsao } = c, P = root.F1Pilotos, eqs = P.EQUIPES, Gi = root.GpInfo, lista = [], TX = root.StoriesTextos;
   const pil = t.pilotos, eu = pil.findIndex((p) => p.id === "voce"), meu = pil[eu];
   const nome = (id) => (pil.find((p) => p.id === id) || {}).nome || P.PILOTOS.find((p) => p.id === id)?.nome || "Piloto";
+  const ptsTxt = (n) => (n === 1 ? "ponto" : "pontos");
+  // um story pela situação: os textos variam (stories-textos.js), sempre com os números de verdade
+  const story = (k, rot, eq, foto, sit, v) => { const x = TX ? TX.texto(sit, k, v) : { tit: rot, sub: "" }; lista.push({ k, rot, eq, foto, tit: x.tit, sub: x.sub }); };
   const ultimo = gps[gps.length - 1];
   if (ultimo) {
     const vence = ultimo.linhas.find((l) => l.pos === 1), minha = ultimo.linhas.find((l) => l.piloto === "voce"), e = s.calendario[ultimo.gp];
-    const venci = vence && vence.piloto === "voce";
-    lista.push({ k: `gp:${s.ano}:${ultimo.gp}`, rot: "Último GP", eq: venci ? s.equipe : vence?.equipe || s.equipe, foto: Gi?.fundoDe(ultimo.pista),
-      tit: venci ? `Vitória no ${nomeGP(e)}!` : `${nome(vence?.piloto)} vence o ${nomeGP(e)}`,
-      sub: minha ? (minha.dnf ? "Você abandonou a corrida." : `Você terminou em ${ord(minha.pos)} e somou ${minha.pontos} ${minha.pontos === 1 ? "ponto" : "pontos"}.`) : "" });
+    const sit = !minha ? "fora" : minha.dnf ? "abandono" : minha.pos === 1 ? "vitoria" : minha.pos <= 3 ? "podio" : minha.pos <= 10 ? "pontos" : "fora";
+    story(`gp:${s.ano}:${ultimo.gp}`, "Último GP", sit === "vitoria" ? s.equipe : vence?.equipe || s.equipe, Gi?.fundoDe(ultimo.pista), sit,
+      { gp: nomeGP(e), pos: minha ? ord(minha.pos) : "", pts: minha?.pontos || 0, pontos_txt: ptsTxt(minha?.pontos || 0), vencedor: nome(vence?.piloto) });
   }
   if (gps.length && meu) {
-    const lider = pil[0], dif = lider.pontos - meu.pontos;
-    lista.push({ k: `camp:${s.ano}:${gps.length}`, rot: "Campeonato", eq: eu === 0 ? s.equipe : lider.equipe,
-      tit: eu === 0 ? "Você lidera o campeonato" : `${lider.nome} lidera o campeonato`,
-      sub: eu === 0 ? `${meu.pontos} pontos, ${meu.pontos - (pil[1]?.pontos || 0)} à frente de ${pil[1]?.nome || "ninguém"}.` : `Você é o ${ord(eu + 1)} com ${meu.pontos} pontos, a ${dif} do líder.` });
+    const lider = pil[0], dif = lider.pontos - meu.pontos, seg = pil[1];
+    const sit = eu === 0 ? "lider" : eu <= 2 || dif <= 25 ? "caca" : "longe";
+    story(`camp:${s.ano}:${gps.length}`, "Campeonato", eu === 0 ? s.equipe : lider.equipe, null, sit,
+      { pts: meu.pontos, vant: eu === 0 ? meu.pontos - (seg?.pontos || 0) : 0, segundo: seg?.nome || "ninguém", lider: lider.nome, pos: ord(eu + 1), dif });
     const frente = pil[eu - 1];
-    if (frente) lista.push({ k: `rival:${s.ano}:${gps.length}`, rot: "Rival", eq: frente.equipe, tit: `${frente.nome} está logo à frente`, sub: `${frente.pontos - meu.pontos} ${frente.pontos - meu.pontos === 1 ? "ponto" : "pontos"} separam vocês no campeonato. ${eqs[frente.equipe]?.nome || ""}.` });
+    if (frente && eu > 1) story(`rival:${s.ano}:${gps.length}`, "Rival", frente.equipe, null, "rival",
+      { rival: frente.nome, dif: frente.pontos - meu.pontos, pontos_txt: ptsTxt(frente.pontos - meu.pontos), equipe: eqs[frente.equipe]?.nome || "" });
     const melhor = gps.map((g) => ({ g, l: g.linhas.find((x) => x.piloto === "voce") })).filter((x) => x.l && !x.l.dnf).sort((a, b) => a.l.pos - b.l.pos)[0];
-    if (melhor && gps.length > 1) lista.push({ k: `melhor:${s.ano}:${melhor.g.gp}`, rot: "Seu melhor", eq: s.equipe, foto: Gi?.fundoDe(melhor.g.pista), tit: `${ord(melhor.l.pos)} no ${nomeGP(s.calendario[melhor.g.gp])}`, sub: `O seu melhor resultado da temporada ${String(s.ano).padStart(2, "0")}.` });
+    if (melhor && gps.length > 1) story(`melhor:${s.ano}:${melhor.g.gp}`, "Seu melhor", s.equipe, Gi?.fundoDe(melhor.g.pista), "melhor",
+      { pos: ord(melhor.l.pos), gp: nomeGP(s.calendario[melhor.g.gp]), ano: String(s.ano).padStart(2, "0") });
   }
   if (prox) {
     const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, s.voltas) : null;
-    lista.push({ k: `prox:${s.ano}:${s.gp}`, rot: "Próxima etapa", eq: s.equipe, foto: Gi?.fundoDe(prox.pista), tit: nomeGP(prox), sub: `Etapa ${s.gp + 1} de ${s.tamanho}${prev && prev.titulo ? ` · ${prev.titulo}` : ""}.` });
+    story(`prox:${s.ano}:${s.gp}`, "Próxima etapa", s.equipe, Gi?.fundoDe(prox.pista), "proxima",
+      { gp: nomeGP(prox), etapa: s.gp + 1, total: s.tamanho, faltam: s.tamanho - s.gp, previsao: prev && prev.titulo ? ` · ${prev.titulo}` : "" });
   }
   return lista;
 }

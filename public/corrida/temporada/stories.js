@@ -19,30 +19,33 @@ function montar(c) {
   const nome = (id) => (pil.find((p) => p.id === id) || {}).nome || P.PILOTOS.find((p) => p.id === id)?.nome || "Piloto";
   const ptsTxt = (n) => (n === 1 ? "ponto" : "pontos");
   // um story pela situação: os textos variam (stories-textos.js), sempre com os números de verdade
-  const story = (k, rot, eq, foto, sit, v) => { const x = TX ? TX.texto(sit, k, v) : { tit: rot, sub: "" }; lista.push({ k, rot, eq, foto, tit: x.tit, sub: x.sub }); };
+  const story = (k, rot, eq, foto, sit, v, extra = {}) => { const x = TX ? TX.texto(sit, k, v) : { tit: rot, sub: "" }; lista.push({ k, rot, eq, foto, sit, tit: x.tit, sub: x.sub, ...extra }); };
   const ultimo = gps[gps.length - 1];
   if (ultimo) {
     const vence = ultimo.linhas.find((l) => l.pos === 1), minha = ultimo.linhas.find((l) => l.piloto === "voce"), e = s.calendario[ultimo.gp];
     const sit = !minha ? "fora" : minha.dnf ? "abandono" : minha.pos === 1 ? "vitoria" : minha.pos <= 3 ? "podio" : minha.pos <= 10 ? "pontos" : "fora";
     story(`gp:${s.ano}:${ultimo.gp}`, "Último GP", sit === "vitoria" ? s.equipe : vence?.equipe || s.equipe, Gi?.fundoDe(ultimo.pista), sit,
-      { gp: nomeGP(e), pos: minha ? ord(minha.pos) : "", pts: minha?.pontos || 0, pontos_txt: ptsTxt(minha?.pontos || 0), vencedor: nome(vence?.piloto) });
+      { gp: nomeGP(e), pos: minha ? ord(minha.pos) : "", pts: minha?.pontos || 0, pontos_txt: ptsTxt(minha?.pontos || 0), vencedor: nome(vence?.piloto) },
+      { num: !minha ? "—" : minha.dnf ? "DNF" : ord(minha.pos), numRot: minha && !minha.dnf ? `+${minha.pontos} pts` : "", pista: ultimo.pista });
   }
   if (gps.length && meu) {
     const lider = pil[0], dif = lider.pontos - meu.pontos, seg = pil[1];
     const sit = eu === 0 ? "lider" : eu <= 2 || dif <= 25 ? "caca" : "longe";
     story(`camp:${s.ano}:${gps.length}`, "Campeonato", eu === 0 ? s.equipe : lider.equipe, null, sit,
-      { pts: meu.pontos, vant: eu === 0 ? meu.pontos - (seg?.pontos || 0) : 0, segundo: seg?.nome || "ninguém", lider: lider.nome, pos: ord(eu + 1), dif });
+      { pts: meu.pontos, vant: eu === 0 ? meu.pontos - (seg?.pontos || 0) : 0, segundo: seg?.nome || "ninguém", lider: lider.nome, pos: ord(eu + 1), dif },
+      { num: ord(eu + 1), numRot: `${meu.pontos} pts`, eq2: eu === 0 ? seg?.equipe : s.equipe, dif: eu === 0 ? meu.pontos - (seg?.pontos || 0) : dif, nomeA: eu === 0 ? "Você" : lider.nome, nomeB: eu === 0 ? seg?.nome || "" : "Você" });
     const frente = pil[eu - 1];
     if (frente && eu > 1) story(`rival:${s.ano}:${gps.length}`, "Rival", frente.equipe, null, "rival",
-      { rival: frente.nome, dif: frente.pontos - meu.pontos, pontos_txt: ptsTxt(frente.pontos - meu.pontos), equipe: eqs[frente.equipe]?.nome || "" });
+      { rival: frente.nome, dif: frente.pontos - meu.pontos, pontos_txt: ptsTxt(frente.pontos - meu.pontos), equipe: eqs[frente.equipe]?.nome || "" },
+      { num: `${frente.pontos - meu.pontos}`, numRot: "pontos de diferença", eq2: s.equipe, dif: frente.pontos - meu.pontos, nomeA: frente.nome, nomeB: "Você" });
     const melhor = gps.map((g) => ({ g, l: g.linhas.find((x) => x.piloto === "voce") })).filter((x) => x.l && !x.l.dnf).sort((a, b) => a.l.pos - b.l.pos)[0];
     if (melhor && gps.length > 1) story(`melhor:${s.ano}:${melhor.g.gp}`, "Seu melhor", s.equipe, Gi?.fundoDe(melhor.g.pista), "melhor",
-      { pos: ord(melhor.l.pos), gp: nomeGP(s.calendario[melhor.g.gp]), ano: String(s.ano).padStart(2, "0") });
+      { pos: ord(melhor.l.pos), gp: nomeGP(s.calendario[melhor.g.gp]), ano: String(s.ano).padStart(2, "0") }, { num: ord(melhor.l.pos), numRot: "melhor do ano", pista: melhor.g.pista });
   }
   if (prox) {
     const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, s.voltas) : null;
     story(`prox:${s.ano}:${s.gp}`, "Próxima etapa", s.equipe, Gi?.fundoDe(prox.pista), "proxima",
-      { gp: nomeGP(prox), etapa: s.gp + 1, total: s.tamanho, faltam: s.tamanho - s.gp, previsao: prev && prev.titulo ? ` · ${prev.titulo}` : "" });
+      { gp: nomeGP(prox), etapa: s.gp + 1, total: s.tamanho, faltam: s.tamanho - s.gp, previsao: prev && prev.titulo ? ` · ${prev.titulo}` : "" }, { num: `${s.gp + 1}/${s.tamanho}`, numRot: "etapa", pista: prox.pista });
   }
   return lista;
 }
@@ -59,16 +62,38 @@ function tela() {
   if (!el) { el = document.createElement("div"); el.id = "stTela"; el.className = "st-tela"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); document.body.appendChild(el); }
   return el;
 }
+// os 40 modelos de desenho: 5 layouts (capa, número gigante, manchete de jornal, duelo, traçado da pista) × 8 fundos (foto, gradiente
+// da equipe, papel, neon, listras, bandeirada, dividido, vidro). Cada situação só usa os layouts que combinam com ela; o fundo é livre.
+// A escolha é fixa pela chave da notícia (o mesmo story sai sempre igual). Stories.vitrine() mostra os 40 em sequência.
+const LAYOUTS = { gp: ["capa", "numero", "manchete", "pista"], camp: ["numero", "manchete", "capa", "duelo"], rival: ["duelo", "numero", "manchete"], melhor: ["numero", "capa", "pista"], prox: ["pista", "capa", "manchete", "numero"] };
+const FUNDOS = ["foto", "gradiente", "papel", "neon", "listras", "bandeirada", "dividido", "vidro"];
+const TODOS = ["capa", "numero", "manchete", "duelo", "pista"].flatMap((l) => FUNDOS.map((f) => `${l}:${f}`));
+function hashK(k) { let x = 2166136261; for (const c of String(k)) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; }
+function modeloDe(x) {
+  if (x.modelo) return x.modelo.split(":");
+  const ls = LAYOUTS[x.k.split(":")[0]] || ["capa"], a = hashK(x.k + ":l"), b = hashK(x.k + ":f");
+  let l = ls[a % ls.length]; if (l === "duelo" && !x.eq2) l = "capa"; if (l === "pista" && !x.pista) l = "numero";
+  return [l, FUNDOS[b % FUNDOS.length]];
+}
+function corpoDo(x, l) {
+  const eqs = root.F1Pilotos.EQUIPES, tit = `<h2>${h(x.tit)}</h2>`, sub = x.sub ? `<p>${h(x.sub)}</p>` : "";
+  if (l === "numero") return `<div class="st-corpo st-m-numero"><span class="st-num">${h(x.num || "")}</span>${x.numRot ? `<small class="st-num-rot">${h(x.numRot)}</small>` : ""}${tit}${sub}</div>`;
+  if (l === "manchete") return `<div class="st-corpo st-m-manchete"><div class="st-jornal"><b>EXTRA</b><span>Corrida da Galera · ${h(x.rot)}</span></div>${tit}<i class="st-fio"></i>${sub}<span class="st-logo">${logo(x.eq)}</span></div>`;
+  if (l === "duelo") return `<div class="st-corpo st-m-duelo"><div class="st-vs"><span style="--c:${h(eqs[x.eq]?.cor || "#888")}">${logo(x.eq)}<b>${h(x.nomeA || "")}</b></span><em>${x.dif != null ? `${h(x.dif)}<small>pts</small>` : "VS"}</em><span style="--c:${h(eqs[x.eq2]?.cor || "#888")}">${logo(x.eq2)}<b>${h(x.nomeB || "")}</b></span></div>${tit}${sub}</div>`;
+  if (l === "pista" && root.GpSobre) return `<div class="st-corpo st-m-pista"><span class="st-traco">${root.GpSobre.mapaSvg(x.pista, "st-traco-svg")}</span>${tit}${sub}</div>`;
+  return `<div class="st-corpo"><span class="st-logo">${logo(x.eq)}</span>${tit}${sub}</div>`;
+}
 function mostrar(i) {
   if (i < 0 || i >= atuais.length) return fechar();
   aberto = i; const x = atuais[i], cor = root.F1Pilotos.EQUIPES[x.eq]?.cor || "#e10600"; marcar(x.k);
   document.querySelector(`.st-bola[data-story="${i}"]`)?.classList.add("vista");
   if (atuais.every((y) => visto[y.k])) document.querySelector(".cx-perfil.com-stories")?.classList.add("vistas");
   const el = tela();
-  el.innerHTML = `<div class="st-card" style="--c:${h(cor)};--foto:${x.foto ? `url('${h(x.foto)}')` : "none"}">
+  const [l, f] = modeloDe(x);
+  el.innerHTML = `<div class="st-card st-l-${l} st-f-${f}" data-modelo="${l}:${f}" style="--c:${h(cor)};--foto:${x.foto ? `url('${h(x.foto)}')` : "none"}">
     <div class="st-barras">${atuais.map((_, k) => `<i class="${k < i ? "cheia" : ""}"><b${k === i ? ' class="anda"' : ""}></b></i>`).join("")}</div>
     <header><span class="st-mini">${logo(x.eq)}</span><b>${h(x.rot)}</b><button type="button" class="st-x" data-st-fechar aria-label="Fechar">✕</button></header>
-    <div class="st-corpo"><span class="st-logo">${logo(x.eq)}</span><h2>${h(x.tit)}</h2>${x.sub ? `<p>${h(x.sub)}</p>` : ""}</div>
+    ${corpoDo(x, l)}
     <button type="button" class="st-lado esq" data-st-ir="-1" aria-label="Anterior"></button><button type="button" class="st-lado dir" data-st-ir="1" aria-label="Próxima"></button></div>`;
   el.hidden = false; clearTimeout(timer); inicio = performance.now(); timer = setTimeout(() => mostrar(aberto + 1), DURA);
 }
@@ -83,5 +108,13 @@ document.addEventListener("keydown", (e) => {
   if (aberto < 0) return;
   if (e.key === "Escape") { e.stopPropagation(); fechar(); } else if (e.key === "ArrowRight") mostrar(aberto + 1); else if (e.key === "ArrowLeft") mostrar(Math.max(0, aberto - 1));
 }, true);
-root.Stories = { faixa, montar, preparar, fechar };
+// a vitrine: o primeiro story da tela nos 40 modelos, em sequência (no console: Stories.vitrine())
+function vitrine(c) {
+  if (c) atuais = montar(c); if (!atuais.length) return 0;
+  const base = atuais[0];
+  atuais = TODOS.map((m, i) => ({ ...base, k: `${base.k}:v${i}`, modelo: m, rot: `Modelo ${i + 1} de ${TODOS.length} · ${m}`, num: base.num || "3º", numRot: base.numRot || "exemplo",
+    eq2: base.eq2 || base.eq, dif: base.dif ?? 12, nomeA: base.nomeA || "Rival", nomeB: base.nomeB || "Você", pista: base.pista || "interlagos" }));
+  mostrar(0); return TODOS.length;
+}
+root.Stories = { faixa, montar, preparar, fechar, vitrine, MODELOS: TODOS };
 })(window);

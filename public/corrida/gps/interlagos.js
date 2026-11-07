@@ -20,6 +20,11 @@ export const GP_INTERLAGOS = {
     brita: [[0.4, 0.48, "fora"], [0.6, 0.7, "fora"], [0.72, 0.79, "fora"]],
     pneus: [[0.06, 0.14, "fora"], [0.4, 0.48, "fora"], [0.6, 0.7, "fora"], [0.72, 0.79, "fora"], [0.84, 0.9, "fora"]],
   },
+  // as arquibancadas do kit, com a torcida sentada (vida.js): a da reta dos boxes, do lado oposto aos boxes, e uma em cada setor
+  arquibancadas: { trechos: [
+    { de: 0.012, ate: 0.098, lado: -1, degraus: 8, cor: "#1f8a3f", encosto: "#ffd23f" },
+    ...[0.16, 0.27, 0.39, 0.51, 0.63, 0.75, 0.87].map((v, k) => ({ de: v - 0.012, ate: v + 0.012, lado: -1, degraus: 6, cor: k % 2 ? "#1f5fbf" : "#1f8a3f", encosto: k % 2 ? "#f4f4f4" : "#ffd23f" })),
+  ] },
   cenario: (tr, ctx) => cenarioInterlagos(tr, ctx), // as arquibancadas (para o som), São Paulo em volta e o lago
   ambiente: {
     marcas: ["heineken", "pirelli", "petrobras", "rolex", "bb", "aramco", "itau", "dhl", "gpsp", "tag"],

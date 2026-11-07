@@ -217,7 +217,8 @@ function loop(t) {
   const somF1 = E.S?.config.regras === "f1"; // regras de F1: o motor V6 turbo (motor-v6.js; ?motor=v10 traz o V10), com o limitador e os carros dos outros
   Sound.engine(race.car.v, ativo() && sNow() >= race.startAt - 300 && !!me(), keys.gas, race.marcha || 1, race.rpm || 0, somF1 ? { cam: somDaCamera(camEstado.modo || camMode), lim: race.box?.fase === "entra" ? 0.45 : keys.gas && (race.rpm || 0) >= 0.985 ? 1 : 0, ers: !!race.ersAtivo, freio: !!keys.brake } : null);
   Sound.outros(OUTROS_SOM, somF1 && me() && !(race.tvAte && sNow() < race.tvAte) ? outrosParaSom() : 0); // (na transmissão de TV o grid parado em marcha lenta soava como uma buzina)
-  Sound.skid(me() && ativo() && race.car.slip > 45 ? race.car.slip : 0);
+  // o pneu chiando: o gravado responde à roda travada, à derrapagem e à velocidade; sem ele, o chiado sintetizado de antes
+  if (!Sound.chiado(me() && ativo() ? race.car.slip : 0, me() && ativo() && !race.car.air ? race.car.travada || 0 : 0, race.car.v)) Sound.skid(me() && ativo() && race.car.slip > 45 ? race.car.slip : 0);
   // o pneu na zebra (race.naZebra, medido no desenho) e a torcida de quem passa perto das arquibancadas (torcida-som.js)
   const correndo = !!me() && ativo() && sNow() >= race.startAt;
   Sound.zebra(correndo && race.naZebra && !race.car.air ? race.car.v : 0);

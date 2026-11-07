@@ -172,6 +172,22 @@ function contratarPiloto(sala, pid, id) {
 // A equipe vira humana com o carro como está (o desenvolvimento dos rivais até aqui) e o caixa inicial; o outro piloto dela vira o
 // companheiro. O piloto substituído vai para o mercado e leva os pontos dele; os pontos da equipe ficam com ela. A pessoa começa do zero.
 // Piloto de equipe de amigo não sai: quem contratou pagou por ele.
+// O contrato de cada amigo: a meta é a posição no campeonato de pilotos que a força da equipe pede (pelo orçamento: a mais forte
+// pede o 2º lugar, a mais fraca o 17º). No fim da temporada, quem termina mais de FOLGA_META posições abaixo da meta é demitido:
+// na virada (proximaTemporada) perde o carro e assume o de uma equipe dos robôs (substituirPiloto), ou só acompanha.
+const FOLGA_META = 3;
+function metaDaEquipe(equipe) {
+  const ordem = Object.keys(Equipes.EQUIPES).sort((a, b) => Equipes.EQUIPES[b].orcamento - Equipes.EQUIPES[a].orcamento), r = Math.max(0, ordem.indexOf(equipe));
+  return Math.min(20, 2 + Math.round(r * 1.5));
+}
+function avaliarContratos(sala) {
+  const tab = tabelas(sala);
+  sala.avaliacoes = sala.ordem.map((id) => sala.pessoas[id]).filter((p) => p && p.equipe).map((p) => {
+    const pos = tab.pilotos.findIndex((x) => x.id === idDoHumano(p.id)) + 1, meta = metaDaEquipe(p.equipe), demitido = pos > meta + FOLGA_META;
+    if (demitido) p.demitidoEm = sala.ano;
+    return { pid: p.id, nome: p.nome, equipe: p.equipe, pos, meta, demitido, ano: sala.ano };
+  });
+}
 function substituirPiloto(sala, pid, id) {
   ativa(sala);
   const p = sala.pessoas[pid]; if (!p) throw Error("Pessoa inválida.");
@@ -256,6 +272,7 @@ function registrarResultado(sala, linhas, analise = null) {
     resultado.financas[eq] = { patrocinio: t.patrocinio, premio, salarios };
   }
   if (sala.gp >= sala.opcoes.tamanho) {
+    avaliarContratos(sala);
     const tab = tabelas(sala);
     sala.campeoes.push({ ano: sala.ano, piloto: tab.pilotos[0].id, pilotoNome: tab.pilotos[0].nome, equipe: tab.equipes[0].id, equipeNome: tab.equipes[0].nome });
   }
@@ -281,6 +298,12 @@ function proximaTemporada(sala, pid) {
   if (sala.host !== pid) throw Error("Só o anfitrião abre a próxima temporada.");
   if (sala.fase !== "temporada" || sala.gp !== sala.opcoes.tamanho) throw Error("Termine o calendário primeiro.");
   for (const r of sala.resultados) if (r.ano < sala.ano) delete r.analise; // o detalhe volta a volta só vale para o ano atual e o anterior
+  // os demitidos perdem o carro (a equipe sem mais ninguém volta para os robôs) e escolhem um carro dos robôs na tela da sala
+  for (const p of Object.values(sala.pessoas)) if (p.demitidoEm === sala.ano && p.equipe) {
+    const eq = p.equipe; p.equipe = null; p.carro = null; p.demitidoDe = eq;
+    const restam = humanosDa(sala, eq); restam.forEach((id, k) => { sala.pessoas[id].carro = k; });
+    if (!restam.length) delete sala.equipes[eq];
+  }
   sala.ano++; sala.gp = 0; sala.semente = Number(sala.semente) + 937;
   const sorteado = Solo.sortearCalendario(sala.opcoes.tamanho, sala.semente, sala.calendario.map((g) => g.pista));
   sala.calendario = sorteado.calendario; sala.calendarioSemente = sorteado.semente;
@@ -309,12 +332,12 @@ function conquistasDoGP(sala, resultado) {
 function vista(sala, pid, presente = () => false) {
   const { pessoas, ordem, equipes, ...resto } = sala;
   return { ...resto, eu: pid, minhaEquipe: pessoas[pid] ? pessoas[pid].equipe : null,
-    pessoas: ordem.map((id) => ({ id, nome: pessoas[id].nome, equipe: pessoas[id].equipe, carro: pessoas[id].carro, online: !!presente(id), host: sala.host === id })),
+    pessoas: ordem.map((id) => ({ id, nome: pessoas[id].nome, equipe: pessoas[id].equipe, carro: pessoas[id].carro, online: !!presente(id), host: sala.host === id, meta: pessoas[id].equipe ? metaDaEquipe(pessoas[id].equipe) : null, demitidoDe: pessoas[id].demitidoDe || null, demitidoEm: pessoas[id].demitidoEm || null })),
     equipes: equipes || {}, tabelas: sala.fase === "temporada" ? tabelas(sala) : null, mercado: sala.fase === "temporada" ? mercado(sala) : [] };
 }
 
 const api = { MAX_PESSOAS, GRID, OPCOES_PADRAO, TAMANHOS, VOLTAS, NIVEIS, criarSala, entrar, sair, dispensar, passarCargo, escolherEquipe, definirOpcoes, iniciar, montar, desenvolver, contratarPiloto, substituirPiloto, contratarEngenheiro, mercado,
-  gridDoGP, idDoHumano, idsEsperados, registrarResultado, conquistasDoGP, tabelas, proximaTemporada, vista, humanosDa, custoDoPiloto, nomeDaEquipe };
+  gridDoGP, idDoHumano, idsEsperados, metaDaEquipe, FOLGA_META, registrarResultado, conquistasDoGP, tabelas, proximaTemporada, vista, humanosDa, custoDoPiloto, nomeDaEquipe };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1TemporadaGrupo = api;
 })(typeof window !== "undefined" ? window : globalThis);

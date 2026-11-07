@@ -27,3 +27,7 @@ body:not(.cx-on) .segmento button[aria-pressed=true]{background:linear-gradient(
 body:not(.cx-on) .segmento button:hover:not(:disabled){transform:skewX(-8deg) translateY(-2px)}
 body:not(.cx-on) .pessoas li{border-radius:4px;padding-inline:6px;transition:background .12s,padding .14s}body:not(.cx-on) .pessoas li:hover{background:#ffffff12;padding-inline:12px}
 body:not(.cx-on) .folha h2,body:not(.cx-on) .sede .bloco h2{font-family:var(--display);font-style:italic;text-transform:uppercase;line-height:1}
+
+/* o contrato na lista da sala (grupo.js): a meta de posição e o selo de demitido */
+.meta-contrato{display:inline-block;margin-left:6px;padding:1px 6px;border:1px solid currentColor;border-radius:999px;font:700 10px/1.5 var(--cx-f,system-ui);font-style:normal;letter-spacing:.06em;text-transform:uppercase;opacity:.7;vertical-align:middle}
+.meta-contrato.demitido{border-color:#e10600;color:#e10600;opacity:1}

@@ -93,7 +93,7 @@ function telaDoConvite(erro) {
 // ---------- a sala antes da temporada ----------
 function listaDePessoas() {
   const eh = S.eu === S.host;
-  return `<ul class="pessoas">${S.pessoas.map((p) => `<li class="${p.online ? "on" : ""}"><i class="bolinha" title="${p.online ? "na sala" : "ausente"}"></i><b>${h(p.nome)}${p.id === S.eu ? " (você)" : ""}</b>${window.EstanteF1?.selo(p.nome) || ""}${p.host ? `<em>anfitrião</em>` : ""}<span>${p.equipe ? `<i class="faixa" style="--c:${h(equipe(p.equipe).cor)}"></i>${h(equipe(p.equipe).nome)}${p.carro != null ? ` · carro ${p.carro + 1}` : ""}` : "sem equipe: só acompanha"}</span>${eh && p.id !== S.eu ? `<button class="small ghost" data-cargo="${h(p.id)}">Tornar anfitrião</button>` : ""}</li>`).join("")}</ul>`;
+  return `<ul class="pessoas">${S.pessoas.map((p) => `<li class="${p.online ? "on" : ""}"><i class="bolinha" title="${p.online ? "na sala" : "ausente"}"></i><b>${h(p.nome)}${p.id === S.eu ? " (você)" : ""}</b>${window.EstanteF1?.selo(p.nome) || ""}${p.meta && S.fase !== "sala" ? `<em class="meta-contrato" title="Contrato: terminar até ${p.meta}º no campeonato de pilotos (mais de ${G.FOLGA_META} abaixo é demissão)">meta ${p.meta}º</em>` : ""}${p.demitidoEm === S.ano && (S.avaliacoes || []).some((a) => a.pid === p.id && a.demitido) ? '<em class="meta-contrato demitido">demitido</em>' : ""}${p.host ? `<em>anfitrião</em>` : ""}<span>${p.equipe ? `<i class="faixa" style="--c:${h(equipe(p.equipe).cor)}"></i>${h(equipe(p.equipe).nome)}${p.carro != null ? ` · carro ${p.carro + 1}` : ""}` : "sem equipe: só acompanha"}</span>${eh && p.id !== S.eu ? `<button class="small ghost" data-cargo="${h(p.id)}">Tornar anfitrião</button>` : ""}</li>`).join("")}</ul>`;
 }
 function telaDaSala() {
   const todas = window.F1Temporada.PISTAS_TRABALHADAS.length;
@@ -113,7 +113,8 @@ function tabela(linhas, tipo, destaque) {
 function blocoDeSubstituir(terminou) {
   const opcoes = S.mercado.filter((m) => m.dono && !S.equipes[m.dono]).map((m) => `<option value="${h(m.id)}">${h(piloto(m.id).nome)} · ${h(equipe(m.dono).nome)}</option>`).join("");
   const pode = opcoes && !terminou && !S.gpAberto;
-  return `<section class="bloco"><header><h2>Você acompanha</h2></header><p class="boxnota">${terminou ? "A temporada acabou: na próxima você pode assumir um carro." : S.gpAberto ? "O GP está aberto: depois do resultado você pode assumir um carro." : "Assuma o lugar de um piloto dos robôs e corra daqui em diante. Você começa com zero pontos; a equipe mantém os pontos e o carro dela."}</p>${pode ? `<div class="row"><select id="g-substituir" aria-label="Piloto a substituir">${opcoes}</select><button class="primary" id="gsubstituir">Assumir o carro</button></div>` : ""}</section>`;
+  const eu = S.pessoas.find((p) => p.id === S.eu), demitido = eu && eu.demitidoDe && !eu.equipe ? `<p class="boxnota"><b>Você foi demitido da ${h(equipe(eu.demitidoDe).nome)}</b>: terminou longe da meta do contrato. Assuma o carro de um piloto de uma equipe dos robôs para continuar correndo.</p>` : "";
+  return `<section class="bloco"><header><h2>${demitido ? "Procurando equipe" : "Você acompanha"}</h2></header>${demitido}<p class="boxnota">${terminou ? "A temporada acabou: na próxima você pode assumir um carro." : S.gpAberto ? "O GP está aberto: depois do resultado você pode assumir um carro." : "Assuma o lugar de um piloto dos robôs e corra daqui em diante. Você começa com zero pontos; a equipe mantém os pontos e o carro dela."}</p>${pode ? `<div class="row"><select id="g-substituir" aria-label="Piloto a substituir">${opcoes}</select><button class="primary" id="gsubstituir">Assumir o carro</button></div>` : ""}</section>`;
 }
 function painelDaEquipe(terminou) {
   const eq = S.minhaEquipe, t = eq && S.equipes[eq]; if (!t) { const aviso = blocoDeSubstituir(terminou); return { carro: aviso, equipe: aviso }; }
@@ -202,7 +203,15 @@ function telaDaTemporada() {
 // a estante (estante.js): os troféus de cada um ao lado do nome; relida quando um GP termina
 let gpDaEstante = null;
 window.addEventListener("estante-f1", () => { if (S) desenhar(); });
+// o resultado do contrato, uma vez por temporada: cumpriu a meta, ficou na equipe ou foi demitido
+let contratoAvisado = null;
+function avisarContrato() {
+  const a = (S.avaliacoes || []).find((x) => x.pid === S.eu); if (!a || contratoAvisado === a.ano) return;
+  contratoAvisado = a.ano;
+  falar(a.demitido ? `Demitido da ${equipe(a.equipe).nome}: ${a.pos}º, e a meta era ${a.meta}º. Na próxima temporada, assuma o carro de uma equipe dos robôs.` : a.pos <= a.meta ? `Contrato cumprido: ${a.pos}º, a meta era ${a.meta}º.` : `Abaixo da meta (${a.pos}º, meta ${a.meta}º), mas a equipe segura você para o ano que vem.`);
+}
 function desenhar(erro) {
+  if (S && S.fase !== "sala") avisarContrato();
   if (S && window.EstanteF1) { const marca = `${S.ano}:${S.gp}`; window.EstanteF1.carregar(gpDaEstante !== null && gpDaEstante !== marca); gpDaEstante = marca; }
   if (!S) { window.F1Garagem.fundoDoGP(null); return telaDoConvite(erro); }
   document.title = `Temporada F1 · sala ${S.codigo}`;

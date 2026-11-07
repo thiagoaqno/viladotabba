@@ -1,69 +1,80 @@
 #!/usr/bin/env node
-// Gera os sons da pista (public/corrida/sons/<id>.mp3) com os efeitos sonoros da ElevenLabs: o pneu na zebra e a torcida das
-// arquibancadas. O jogo (sons.js) toca estes arquivos quando existem e cai no som sintetizado quando faltam.
-// Uso: ELEVENLABS_API_KEY=... node ferramentas/sons-pista.js [--refazer] [--so zebra,torcida]   (ou rode GERAR-SONS-PISTA.bat)
+// Gera os sons da pista (public/corrida/sons/<id>-<n>.mp3 e o índice sons/indice.json) com os efeitos sonoros da ElevenLabs. Cada
+// som tem várias versões (o jogo sorteia uma a cada vez, sons.js) e as batidas têm três forças (leve, média, forte).
+// As descrições NÃO falam de carro, corrida nem motor: só do material do som, isolado. Citar o carro faz a ElevenLabs pôr um
+// motor junto (foi o que deu errado na primeira leva).
+// Uso: ELEVENLABS_API_KEY=... node ferramentas/sons-pista.js [--refazer] [--so zebra,pistola]   (ou rode GERAR-SONS-PISTA.bat)
 // A chave só é lida do ambiente: nunca é gravada nem impressa. Node 18+.
 const fs = require("fs");
 const path = require("path");
 
 const PASTA = path.join(__dirname, "..", "public", "corrida", "sons");
-// `texto`: a descrição em inglês (a ElevenLabs entende melhor); `seg`: a duração; `laco`: um som que repete sem emenda
+const LIMPO = "isolated single sound effect, clean close recording, silent background, nothing else audible, no music, no voices";
+// `texto`: a descrição em inglês (a ElevenLabs entende melhor); `seg`: a duração; `n`: quantas versões; `laco`: repete sem emenda
 const SONS = [
-  { id: "zebra", seg: 3, laco: true,
-    texto: "Formula 1 car tyres riding over red and white rumble strip kerbs at high speed, deep low-frequency rumble and body vibration, rapid thudding brrrrm, onboard perspective, no engine, no music, no voices" },
-  { id: "torcida", seg: 10, laco: true,
-    texto: "Big crowd in a motor racing circuit grandstand, constant excited murmur and cheering, open air, wide stereo, no engines, no music, no clear words" },
-  { id: "torcida-uau", seg: 3, laco: false,
-    texto: "Motor racing grandstand crowd roaring and cheering as a racing car flashes past, rising woooah then fading, open air, no engine, no music" },
-  { id: "buzina", seg: 2, laco: false,
-    texto: "Racing fans blowing two short air horn blasts in a grandstand, outdoor, distant crowd behind, no music" },
-  { id: "box-parada", seg: 3, laco: false,
-    texto: "Formula 1 pit stop: front and rear jacks lifting the car, four pneumatic wheel guns rattling at once brrrt, tyres changed, jacks drop, mechanics shout clear, no engine, no music" },
-  { id: "drs", seg: 1, laco: false,
-    texto: "Formula 1 rear wing DRS flap opening, short mechanical clack followed by a quick rush of air, onboard, no music" },
-  { id: "batida-muro", seg: 2, laco: false,
-    texto: "Racing car crashing into a concrete wall at speed, heavy carbon fibre impact, debris scraping and rattling, no music, no voices" },
-  { id: "batida-carro", seg: 1.5, laco: false,
-    texto: "Two racing cars touching wheels and bodywork at speed, sharp carbon fibre crunch and scrape, no music, no voices" },
-  { id: "chegada", seg: 5, laco: false,
-    texto: "Motor racing finish line: grandstand crowd erupts cheering and applauding, air horns, a few fireworks popping, open air, no engine, no music" },
-  { id: "chuva", seg: 10, laco: true,
-    texto: "Steady rain falling on a race track and grandstand roofs, water spray hiss, open air, no thunder, no engine, no music" },
+  { id: "zebra", n: 3, seg: 2, laco: true, texto: `Fast rhythmic deep thumping of a rubber tyre rolling over raised ridged concrete rumble strips, low frequency drumming vibration, ${LIMPO}` },
+  { id: "torcida", n: 2, seg: 12, laco: true, texto: "Large outdoor stadium crowd ambience from a distance, constant excited murmur with scattered cheers and whistles, wide open air, no music, no announcer, no clear words" },
+  { id: "torcida-uau", n: 3, seg: 3, texto: "Big outdoor stadium crowd suddenly rising into an excited cheer, woooah, then settling down, open air, no music, no announcer" },
+  { id: "buzina", n: 2, seg: 1.5, texto: `One short blast of a handheld gas air horn in an open stadium, ${LIMPO}` },
+  { id: "pistola", n: 3, seg: 1, texto: `Single short burst of a pneumatic impact wrench spinning a wheel nut, brrrt, sharp metallic rattle then stop, ${LIMPO}` },
+  { id: "macaco", n: 2, seg: 1, texto: `Heavy steel lifting jack quickly released, metal clunk and thud dropping onto concrete, ${LIMPO}` },
+  { id: "chiado", n: 2, seg: 3, laco: true, texto: `Continuous high pitched screech of a rubber tyre sliding and skidding on dry asphalt, steady squeal, ${LIMPO}` },
+  { id: "drs", n: 2, seg: 0.6, texto: `Short mechanical snap of a small carbon flap opening, quick hydraulic actuator click and clack, ${LIMPO}` },
+  { id: "batida-muro-leve", n: 3, seg: 1, texto: `Light scrape and small knock of hard carbon fibre bodywork brushing against a concrete wall, ${LIMPO}` },
+  { id: "batida-muro-media", n: 3, seg: 1.5, texto: `Solid impact of carbon fibre bodywork hitting a concrete barrier, crack and short scrape with small debris, ${LIMPO}` },
+  { id: "batida-muro-forte", n: 3, seg: 2.5, texto: `Violent heavy crash of carbon fibre bodywork smashing into a concrete wall, loud crunch, parts breaking and debris scattering, ${LIMPO}` },
+  { id: "batida-carro-leve", n: 3, seg: 0.8, texto: `Two hard plastic and carbon panels lightly tapping and rubbing together, small knock, ${LIMPO}` },
+  { id: "batida-carro-media", n: 3, seg: 1.2, texto: `Two carbon fibre bodywork panels colliding, sharp crack and rubber scrub, ${LIMPO}` },
+  { id: "batida-carro-forte", n: 3, seg: 2, texto: `Hard collision of two carbon fibre bodies, loud crunch, splintering pieces and rubber tyres scrubbing, ${LIMPO}` },
+  { id: "chegada", n: 2, seg: 5, texto: "Huge outdoor stadium crowd erupting into cheers and applause with a few air horns, celebration, no music, no announcer, no fireworks" },
+  { id: "chuva", n: 1, seg: 12, laco: true, texto: "Steady medium rain falling on wet asphalt and puddles outdoors, soft continuous hiss and patter, no thunder, no wind, no traffic, no music" },
 ];
 
 const argv = process.argv.slice(2), refazer = argv.includes("--refazer"), iso = argv.indexOf("--so");
 const so = iso >= 0 ? String(argv[iso + 1] || "").split(",").map((s) => s.trim()).filter(Boolean) : null;
+const arquivo = (id, k) => path.join(PASTA, `${id}-${k}.mp3`);
 
 async function pedir(chave, s, comLaco) {
-  const corpo = { text: s.texto, duration_seconds: s.seg, prompt_influence: 0.55 };
+  const corpo = { text: s.texto, duration_seconds: Math.max(0.5, s.seg), prompt_influence: 0.9 };
   if (comLaco) corpo.loop = true;
   return fetch("https://api.elevenlabs.io/v1/sound-generation?output_format=mp3_44100_128", {
     method: "POST", headers: { "xi-api-key": chave, "Content-Type": "application/json", Accept: "audio/mpeg" }, body: JSON.stringify(corpo),
   });
 }
-async function gerar(chave, s) {
+async function gerar(chave, s, k) {
   let r = await pedir(chave, s, s.laco);
   if (!r.ok && s.laco && (r.status === 400 || r.status === 422)) r = await pedir(chave, s, false); // (conta sem o laço: gera normal)
   if (!r.ok) {
     const erro = new Error(r.status === 401 ? "chave da ElevenLabs recusada (401): confira se copiou a chave certa" : r.status === 429 ? "limite da ElevenLabs atingido (429): espere um pouco ou veja o seu plano" : `a ElevenLabs respondeu ${r.status}: ${(await r.text()).slice(0, 200)}`);
     erro.status = r.status; throw erro;
   }
-  fs.writeFileSync(path.join(PASTA, `${s.id}.mp3`), Buffer.from(await r.arrayBuffer()));
+  fs.writeFileSync(arquivo(s.id, k), Buffer.from(await r.arrayBuffer()));
+}
+// o índice que o jogo lê: { id: quantas versões existem }
+function gravarIndice() {
+  const ind = {};
+  for (const s of SONS) { let k = 1; while (fs.existsSync(arquivo(s.id, k))) k++; if (k > 1) ind[s.id] = k - 1; }
+  fs.writeFileSync(path.join(PASTA, "indice.json"), JSON.stringify(ind, null, 1) + "\n");
+  return ind;
 }
 
 async function main() {
   const chave = (process.env.ELEVENLABS_API_KEY || "").trim();
   if (!chave) { console.error("Falta a chave: defina ELEVENLABS_API_KEY (ou use o GERAR-SONS-PISTA.bat)."); process.exit(1); }
   fs.mkdirSync(PASTA, { recursive: true });
-  let feitos = 0, pulados = 0, falhas = 0;
+  let feitos = 0, pulados = 0, falhas = 0, parar = false;
   for (const s of SONS) {
+    if (parar) break;
     if (so && !so.includes(s.id)) continue;
-    const arq = path.join(PASTA, `${s.id}.mp3`);
-    if (!refazer && !so && fs.existsSync(arq)) { pulados++; console.log(`${s.id}: já existe, pulei`); continue; }
-    try { await gerar(chave, s); feitos++; console.log(`${s.id}: ok (${s.seg} s${s.laco ? ", em laço" : ""})`); }
-    catch (e) { falhas++; console.error(`${s.id}: ${e.message}`); if (e.status === 401 || e.status === 429) break; }
+    for (let k = 1; k <= s.n; k++) {
+      const nome = `${s.id}-${k}`;
+      if (!refazer && !so && fs.existsSync(arquivo(s.id, k))) { pulados++; console.log(`${nome}: já existe, pulei`); continue; }
+      try { await gerar(chave, s, k); feitos++; console.log(`${nome}: ok`); }
+      catch (e) { falhas++; console.error(`${nome}: ${e.message}`); if (e.status === 401 || e.status === 429) { parar = true; break; } }
+    }
   }
-  console.log(`\nGerados: ${feitos} · pulados: ${pulados} · com erro: ${falhas} · pasta: public\\corrida\\sons`);
+  const ind = gravarIndice();
+  console.log(`\nGerados: ${feitos} · pulados: ${pulados} · com erro: ${falhas} · sons no índice: ${Object.keys(ind).length} · pasta: public\\corrida\\sons`);
   process.exit(falhas ? 1 : 0);
 }
 main();

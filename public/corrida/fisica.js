@@ -303,8 +303,8 @@ function aoEvento(R, e) {
   else if (e.t === "setor") { R.cpT = sNow(); if (e.s === 0) { if (R.largou) R.voltaLocal = (R.voltaLocal || 0) + 1; R.largou = true; } }
   else if (e.t === "respawn") Sound.pop();
   // os macacos e as pistolas de roda (o som gravado; sem ele, o estalo): quando a troca começa (parou sem menu, ou escolheu o pneu no menu)
-  else if ((e.t === "boxParou" && !e.escolha) || e.t === "boxEscolheu") { if (!Sound.tocar("box-parada", 0.8)) Sound.pop(); }
-  else if (e.t === "boxTrocou") Sound.pop();
+  else if ((e.t === "boxParou" && !e.escolha) || e.t === "boxEscolheu") { if (!Sound.pitStop()) Sound.pop(); }
+  else if (e.t === "boxTrocou") { if (!Sound.fimDoPit()) Sound.pop(); }
   else if (e.t === "muro" && e.forca > 90 && (R.hitT || 0) <= 0) { Sound.crash(e.forca, "muro"); R.hitT = 0.4; }
   else if (e.t === "box" && e.fase === "sai") { R.pedidoBox = null; toast(`🔧 ${window.F1Regras.textoDaParada(R.car.box.parada)}`, 2400); }
   else if (e.t === "carro" && e.forca > 40 && (R.hitT || 0) <= 0) { Sound.crash(e.forca, "carro"); R.shake = Math.max(R.shake, Math.min(0.3, e.forca / 500)); R.hitT = 0.25; }

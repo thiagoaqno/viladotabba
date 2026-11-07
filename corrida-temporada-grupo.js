@@ -203,6 +203,10 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
     socket.on("substituir", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.substituirPiloto(sala, pid, d.id)));
     socket.on("engenheiro", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.contratarEngenheiro(sala, pid, d.area, Number(d.nivel))));
     socket.on("proximaTemporada", (_, cb) => agir(socket, cb, (sala, pid) => G.proximaTemporada(sala, pid)));
+    // os stories dos amigos (grupo-regras.js): valem até com o GP aberto
+    socket.on("story", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.lancarStory(sala, pid, d), { duranteGP: true }));
+    socket.on("storyApagar", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.apagarStory(sala, pid, d.id), { duranteGP: true }));
+    socket.on("storyReagir", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.reagirStory(sala, pid, d), { duranteGP: true }));
 
     // só o anfitrião abre o GP; a sala de F1 nasce com todos os humanos e cada tela recebe o acesso do seu carro
     socket.on("iniciarGP", (_, cb) => agir(socket, cb, (sala, pid) => {

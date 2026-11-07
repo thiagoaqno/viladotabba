@@ -42,6 +42,11 @@ function montar(c) {
     if (melhor && gps.length > 1) story(`melhor:${s.ano}:${melhor.g.gp}`, "Seu melhor", s.equipe, Gi?.fundoDe(melhor.g.pista), "melhor",
       { pos: ord(melhor.l.pos), gp: nomeGP(s.calendario[melhor.g.gp]), ano: String(s.ano).padStart(2, "0") }, { num: ord(melhor.l.pos), numRot: "melhor do ano", pista: melhor.g.pista });
   }
+  // os stories que os amigos lançaram (temporada em grupo): vêm antes das notícias, o mais novo primeiro
+  if (c.grupo) for (const a of (c.storiesAmigos || []).slice().sort((x, y) => y.em - x.em)) {
+    lista.push({ k: `amigo:${a.id}`, rot: a.pid === c.eu ? "Seu story" : a.nome, eq: a.equipe || s.equipe, foto: null, sit: "amigo", tit: a.texto, sub: a.dado ? a.dado.rot : "",
+      num: a.dado ? a.dado.num : "", numRot: a.dado ? a.dado.rot : "", modelo: a.modelo || null, amigo: a, meu: a.pid === c.eu });
+  }
   if (prox) {
     const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, s.voltas) : null;
     story(`prox:${s.ano}:${s.gp}`, "Próxima etapa", s.equipe, Gi?.fundoDe(prox.pista), "proxima",
@@ -50,7 +55,7 @@ function montar(c) {
   return lista;
 }
 // prepara os stories da tela e diz qual é o primeiro ainda não visto (-1: nenhum novo); o perfil do topo da Central usa isto
-function preparar(c) { atuais = montar(c); return atuais.findIndex((x) => !visto[x.k]); }
+function preparar(c) { ultimoCtx = c; atuais = montar(c); return atuais.findIndex((x) => !visto[x.k]); }
 // a faixa de bolinhas (vazia quando não há notícia)
 function faixa(c) {
   atuais = montar(c);
@@ -66,12 +71,12 @@ function tela() {
 // da equipe, papel, neon, listras, bandeirada, dividido, vidro). Cada situação só usa os layouts que combinam com ela; o fundo é livre.
 // A escolha é fixa pela chave da notícia (o mesmo story sai sempre igual). Stories.vitrine() mostra os 40 em sequência.
 const GERAIS = ["capa", "numero", "manchete", "topo", "centro", "faixa", "lateral", "contorno", "cartao", "selo", "citacao", "tv", "poster", "minimal", "grade"];
-const LAYOUTS = { gp: [...GERAIS, "pista", "placar", "medalha"], camp: [...GERAIS, "duelo", "placar"], rival: [...GERAIS, "duelo", "duelo"], melhor: [...GERAIS, "pista", "medalha"], prox: [...GERAIS, "pista", "ticket", "ticket"] };
+const LAYOUTS = { amigo: ["capa", "topo", "centro", "faixa", "cartao", "citacao", "tv", "poster", "minimal", "manchete", "lateral"], gp: [...GERAIS, "pista", "placar", "medalha"], camp: [...GERAIS, "duelo", "placar"], rival: [...GERAIS, "duelo", "duelo"], melhor: [...GERAIS, "pista", "medalha"], prox: [...GERAIS, "pista", "ticket", "ticket"] };
 const FUNDOS = ["foto", "gradiente", "papel", "neon", "listras", "bandeirada", "dividido", "vidro"];
 const TODOS = [...GERAIS, "duelo", "pista", "placar", "ticket", "medalha"].flatMap((l) => FUNDOS.map((f) => `${l}:${f}`)); // 20 layouts × 8 fundos = 160
 function hashK(k) { let x = 2166136261; for (const c of String(k)) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; }
 function modeloDe(x) {
-  if (x.modelo) return x.modelo.split(":");
+  if (x.modelo) { const [l, f] = x.modelo.split(":"); return [l === "duelo" && !x.eq2 ? "capa" : l === "pista" && !x.pista ? "capa" : l, f]; }
   const ls = LAYOUTS[x.k.split(":")[0]] || ["capa"], a = hashK(x.k + ":l"), b = hashK(x.k + ":f");
   let l = ls[a % ls.length]; if (l === "duelo" && !x.eq2) l = "capa"; if (l === "pista" && !x.pista) l = "numero";
   return [l, FUNDOS[b % FUNDOS.length]];
@@ -92,7 +97,7 @@ function corpoDo(x, l) {
   if (l === "selo") return `<div class="st-corpo st-m-selo"><span class="st-selo">${h(x.num || "★")}${rot}</span>${tit}${sub}</div>`;
   if (l === "citacao") return `<div class="st-corpo st-m-citacao"><span class="st-aspas">“</span>${tit}${sub ? `<p>— ${h(x.sub)}</p>` : ""}</div>`;
   if (l === "tv") return `<div class="st-corpo st-m-tv"><div class="st-tarja"><span class="st-tarja-cor">${logo(x.eq)}</span><div><b>${h(x.rot)}</b>${tit}</div></div>${sub}</div>`;
-  if (l === "poster") return `<div class="st-corpo st-m-poster">${tit}${sub}</div>`;
+  if (l === "poster") return `<div class="st-corpo st-m-poster${String(x.tit).length > 34 ? " longo" : ""}">${tit}${sub}</div>`;
   if (l === "minimal") return `<div class="st-corpo st-m-minimal"><i class="st-linha"></i>${tit}${sub}</div>`;
   if (l === "grade") return `<div class="st-corpo st-m-grade"><div class="st-grade"><span><b>${h(x.num || "—")}</b><small>${h(x.numRot || x.rot)}</small></span><span>${logo(x.eq)}<small>${h(eqs[x.eq]?.nome || "")}</small></span><span><b>${h(x.dif ?? "—")}</b><small>diferença</small></span><span><b>${h(String(x.rot).split(" ")[0])}</b><small>notícia</small></span></div>${tit}${sub}</div>`;
   if (l === "placar") return `<div class="st-corpo st-m-placar"><div class="st-placar"><span>POS<b>${h(x.num || "—")}</b></span><span>PTS<b>${h(String(x.numRot || "").replace(/[^0-9+]/g, "") || "—")}</b></span><span>DIF<b>${h(x.dif ?? "—")}</b></span></div>${tit}${sub}</div>`;
@@ -110,18 +115,65 @@ function mostrar(i) {
   el.innerHTML = `<div class="st-card st-l-${l} st-f-${f}" data-modelo="${l}:${f}" style="--c:${h(cor)};--foto:${x.foto ? `url('${h(x.foto)}')` : "none"}">
     <div class="st-barras">${atuais.map((_, k) => `<i class="${k < i ? "cheia" : ""}"><b${k === i ? ' class="anda"' : ""}></b></i>`).join("")}</div>
     <header><span class="st-mini">${logo(x.eq)}</span><b>${h(x.rot)}</b><button type="button" class="st-x" data-st-fechar aria-label="Fechar">✕</button></header>
-    ${corpoDo(x, l)}
+    ${corpoDo(x, l)}${x.amigo ? rodapeAmigo(x) : ""}
     <button type="button" class="st-lado esq" data-st-ir="-1" aria-label="Anterior"></button><button type="button" class="st-lado dir" data-st-ir="1" aria-label="Próxima"></button></div>`;
   el.hidden = false; clearTimeout(timer); inicio = performance.now(); timer = setTimeout(() => mostrar(aberto + 1), DURA);
 }
+// o rodapé do story de um amigo: as reações (quem não é o autor reage; o autor vê quem reagiu e pode apagar)
+function rodapeAmigo(x) {
+  const R = ["🔥", "😂", "💀"], r = x.amigo.reacoes || {}, conta = (e) => Object.values(r).filter((v) => v === e).length, meu = r[ultimoCtx && ultimoCtx.eu];
+  const nomes = (e) => Object.entries(r).filter(([, v]) => v === e).map(([pid]) => (ultimoCtx?.pessoas || []).find((p) => p.id === pid)?.nome || "").filter(Boolean).join(", ");
+  if (x.meu) return `<footer class="st-reacoes st-meu">${R.map((e) => `<span title="${h(nomes(e))}">${e} ${conta(e)}</span>`).join("")}<button type="button" class="st-apagar" data-st-apagar="${h(x.amigo.id)}">Apagar</button></footer>`;
+  return `<footer class="st-reacoes">${R.map((e) => `<button type="button" class="${meu === e ? "on" : ""}" data-st-reagir="${e}" data-st-id="${h(x.amigo.id)}">${e}<small>${conta(e) || ""}</small></button>`).join("")}</footer>`;
+}
+// ---------- lançar o seu story (temporada em grupo) ----------
+let envio = null, ultimoCtx = null;
+const LAY = () => ["capa", "numero", "manchete", "topo", "centro", "faixa", "lateral", "contorno", "cartao", "selo", "citacao", "tv", "poster", "minimal", "grade"];
+// pode lançar? (grupo, ainda não lançou nesta rodada)
+function podeLancar(c) { return !!(c && c.grupo && envio && !(c.storiesAmigos || []).some((a) => a.pid === c.eu && a.ano === c.s.ano && a.gp === c.s.gp)); }
+function abrirLancar() {
+  const c = ultimoCtx; if (!c) return;
+  const ultimo = (c.gps || []).at(-1), minha = ultimo && ultimo.linhas.find((l) => l.piloto === "voce"), el = tela();
+  clearTimeout(timer); aberto = -2;
+  const opt = (v, t) => `<option value="${v}">${h(t)}</option>`;
+  el.innerHTML = `<div class="st-lancar"><header><b>Lançar story</b><button type="button" class="st-x" data-st-fechar aria-label="Fechar">✕</button></header>
+    <div class="st-lancar-corpo"><div class="st-previa" id="stPrevia"></div><form id="stForm" class="st-form" autocomplete="off">
+      <label for="stTexto">O que você quer contar?</label><textarea id="stTexto" maxlength="120" rows="3" placeholder="Ex.: Semana que vem eu passo todo mundo na largada"></textarea><small id="stConta">0/120</small>
+      <label for="stLayout">Modelo</label><div class="st-duas"><select id="stLayout">${opt("", "Layout surpresa")}${LAY().map((l) => opt(l, l)).join("")}</select><select id="stFundo">${opt("", "Fundo surpresa")}${["foto", "gradiente", "papel", "neon", "listras", "bandeirada", "dividido", "vidro"].map((f) => opt(f, f)).join("")}</select></div>
+      ${minha ? `<label class="st-check"><input type="checkbox" id="stDado"> Mostrar o meu resultado do último GP (${minha.dnf ? "DNF" : minha.pos + "º"})</label>` : ""}
+      <p class="st-aviso">Um story por rodada. Todo mundo da sala vê e pode reagir.</p>
+      <button type="submit" class="st-publicar">Publicar</button></form></div></div>`;
+  el.hidden = false;
+  const atualizar = () => {
+    const texto = document.getElementById("stTexto").value.trim() || "O seu texto aparece aqui", l = document.getElementById("stLayout").value, f = document.getElementById("stFundo").value, dado = document.getElementById("stDado")?.checked;
+    document.getElementById("stConta").textContent = `${document.getElementById("stTexto").value.length}/120`;
+    const x = { k: "previa", rot: "Seu story", eq: c.s.equipe, tit: texto, sub: dado && minha ? `${minha.pontos} pontos no último GP` : "", num: dado && minha ? (minha.dnf ? "DNF" : `${minha.pos}º`) : "", numRot: "", modelo: `${l || "capa"}:${f || "gradiente"}` };
+    const [ll, ff] = modeloDe(x), cor = root.F1Pilotos.EQUIPES[x.eq]?.cor || "#e10600";
+    document.getElementById("stPrevia").innerHTML = `<div class="st-card st-l-${ll} st-f-${ff}" style="--c:${h(cor)};--foto:none"><header><span class="st-mini">${logo(x.eq)}</span><b>${h(x.rot)}</b></header>${corpoDo(x, ll)}</div>`;
+  };
+  ["input", "change"].forEach((ev) => document.getElementById("stForm").addEventListener(ev, atualizar));
+  document.getElementById("stForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const texto = document.getElementById("stTexto").value.trim(); if (!texto) return document.getElementById("stTexto").focus();
+    const l = document.getElementById("stLayout").value, f = document.getElementById("stFundo").value, sorteio = ["capa", "topo", "centro", "faixa", "cartao", "poster", "tv"], fundos = ["foto", "gradiente", "papel", "neon", "listras", "bandeirada", "dividido", "vidro"];
+    const modelo = `${l || sorteio[Math.floor(Math.random() * sorteio.length)]}:${f || fundos[Math.floor(Math.random() * fundos.length)]}`;
+    const r = await envio("story", { texto, modelo, dado: !!document.getElementById("stDado")?.checked });
+    if (r && r.ok) fechar();
+  });
+  atualizar(); document.getElementById("stTexto").focus();
+}
 function fechar() { clearTimeout(timer); aberto = -1; const el = document.getElementById("stTela"); if (el) { el.hidden = true; el.innerHTML = ""; } }
 document.addEventListener("click", (e) => {
-  const b = e.target.closest?.("[data-story],[data-st-ir],[data-st-fechar]"); if (!b) { if (aberto >= 0 && e.target.id === "stTela") fechar(); return; }
+  const b = e.target.closest?.("[data-story],[data-st-ir],[data-st-fechar],[data-st-lancar],[data-st-reagir],[data-st-apagar]"); if (!b) { if (aberto >= 0 && e.target.id === "stTela") fechar(); return; }
   if (b.hasAttribute("data-st-fechar")) return fechar();
+  if (b.hasAttribute("data-st-lancar")) return abrirLancar();
+  if (b.dataset.stReagir) { clearTimeout(timer); const voltar = aberto; envio?.("storyReagir", { id: b.dataset.stId, emoji: b.dataset.stReagir }).then(() => { if (aberto === voltar) mostrar(voltar); }); return; }
+  if (b.dataset.stApagar) { if (confirm("Apagar o seu story desta rodada?")) envio?.("storyApagar", { id: b.dataset.stApagar }).then(() => fechar()); return; }
   if (b.dataset.stIr) return mostrar(aberto + Number(b.dataset.stIr));
   mostrar(Number(b.dataset.story));
 });
 document.addEventListener("keydown", (e) => {
+  if (aberto === -2 && e.key === "Escape") { e.stopPropagation(); return fechar(); }
   if (aberto < 0) return;
   if (e.key === "Escape") { e.stopPropagation(); fechar(); } else if (e.key === "ArrowRight") mostrar(aberto + 1); else if (e.key === "ArrowLeft") mostrar(Math.max(0, aberto - 1));
 }, true);
@@ -133,5 +185,5 @@ function vitrine(c) {
     eq2: base.eq2 || base.eq, dif: base.dif ?? 12, nomeA: base.nomeA || "Rival", nomeB: base.nomeB || "Você", pista: base.pista || "interlagos" }));
   mostrar(0); return TODOS.length;
 }
-root.Stories = { faixa, montar, preparar, fechar, vitrine, MODELOS: TODOS };
+root.Stories = { faixa, montar, preparar, fechar, vitrine, podeLancar, usarEnvio(fn) { envio = fn; }, MODELOS: TODOS };
 })(window);

@@ -32,3 +32,11 @@ body.cx-escuro .st-anel img{background:#14161b;box-shadow:0 0 0 3px #14161b}
 .st-lado{position:absolute;top:60px;bottom:0;z-index:1;width:40%;padding:0;background:none;border:0;cursor:pointer}
 .st-lado.esq{left:0}.st-lado.dir{right:0}
 @media (prefers-reduced-motion:reduce){.st-tela,.st-corpo{animation:none}.st-barras b.anda{animation-duration:.01s}}
+
+/* o perfil do topo da Central com notícia nova: o anel roxo dos stories (some quando todas foram vistas) */
+.cx-perfil.com-stories{position:relative;display:grid;place-items:center;padding:3px;border-radius:50%;background:conic-gradient(from 200deg,#7b2ff7,#c13584,#9b5cff,#7b2ff7);animation:stPulsa 2.4s ease-in-out infinite}
+.cx-perfil.com-stories svg{border-radius:50%;background:var(--cx-fundo,#f6f3ef);box-shadow:0 0 0 2px var(--cx-fundo,#f6f3ef)}
+body.cx-escuro .cx-perfil.com-stories svg{background:#14161b;box-shadow:0 0 0 2px #14161b}
+.cx-perfil.com-stories.vistas{background:none;animation:none}
+@keyframes stPulsa{0%,100%{box-shadow:0 0 0 0 #7b2ff700}50%{box-shadow:0 0 0 4px #7b2ff733}}
+@media (prefers-reduced-motion:reduce){.cx-perfil.com-stories{animation:none}}

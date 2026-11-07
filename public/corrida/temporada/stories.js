@@ -6,7 +6,7 @@
 const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const logo = (id) => `<img src="/api/corrida/logo/${encodeURIComponent(id)}" alt="" onerror="this.style.display='none'">`;
 const ord = (n) => `${n}º`;
-const nomeGP = (e) => (e ? `GP ${/^[AEIOU]/i.test(e.nome) ? "da" : "de"} ${e.nome}` : "GP");
+const nomeGP = (e) => { if (!e) return "GP"; const of = root.GpInfo?.get(e.pista)?.gp; return of ? of.replace(/^Grande Prêmio/, "GP") : `GP ${/^[AEIOU]/i.test(e.nome) ? "da" : "de"} ${e.nome}`; }; // (o nome oficial já vem com o artigo: "GP da China")
 let atuais = [], aberto = -1, timer = null, inicio = 0;
 const DURA = 5200;
 const visto = (() => { try { return JSON.parse(localStorage.getItem("corrida:stories") || "{}"); } catch { return {}; } })();
@@ -46,6 +46,8 @@ function montar(c) {
   }
   return lista;
 }
+// prepara os stories da tela e diz qual é o primeiro ainda não visto (-1: nenhum novo); o perfil do topo da Central usa isto
+function preparar(c) { atuais = montar(c); return atuais.findIndex((x) => !visto[x.k]); }
 // a faixa de bolinhas (vazia quando não há notícia)
 function faixa(c) {
   atuais = montar(c);
@@ -61,6 +63,7 @@ function mostrar(i) {
   if (i < 0 || i >= atuais.length) return fechar();
   aberto = i; const x = atuais[i], cor = root.F1Pilotos.EQUIPES[x.eq]?.cor || "#e10600"; marcar(x.k);
   document.querySelector(`.st-bola[data-story="${i}"]`)?.classList.add("vista");
+  if (atuais.every((y) => visto[y.k])) document.querySelector(".cx-perfil.com-stories")?.classList.add("vistas");
   const el = tela();
   el.innerHTML = `<div class="st-card" style="--c:${h(cor)};--foto:${x.foto ? `url('${h(x.foto)}')` : "none"}">
     <div class="st-barras">${atuais.map((_, k) => `<i class="${k < i ? "cheia" : ""}"><b${k === i ? ' class="anda"' : ""}></b></i>`).join("")}</div>
@@ -80,5 +83,5 @@ document.addEventListener("keydown", (e) => {
   if (aberto < 0) return;
   if (e.key === "Escape") { e.stopPropagation(); fechar(); } else if (e.key === "ArrowRight") mostrar(aberto + 1); else if (e.key === "ArrowLeft") mostrar(Math.max(0, aberto - 1));
 }, true);
-root.Stories = { faixa, montar, fechar };
+root.Stories = { faixa, montar, preparar, fechar };
 })(window);

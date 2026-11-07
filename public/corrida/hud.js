@@ -206,7 +206,7 @@ function avisosF1(m, left, now) {
     race.avDrs = z;
     // a volta mais rápida da corrida: muda quando alguém baixa o tempo
     let melhor = null; for (const p of S.players) if (p.best != null && (!melhor || p.best < melhor.best)) melhor = p;
-    if (melhor && (race.avVmr == null || melhor.best < race.avVmr - 1e-6)) { if (race.avVmr != null || S.players.length) f.empurrar({ tipo: "vmr", texto: `${melhor.sigla || melhor.name} · ${fmt(melhor.best)}`, ttl: 4200 }, agora); race.avVmr = melhor.best; }
+    if (melhor && (race.avVmr == null || melhor.best < race.avVmr - 1e-6)) { if (m && melhor.id === m.id) f.empurrar({ tipo: "vmr", texto: `Você · ${fmt(melhor.best)}`, ttl: 4200 }, agora); race.avVmr = melhor.best; } // (só a sua)
     // o stop-and-go pendente: faixa fixa até cumprir (as voltas que restam mudam no lugar)
     if (m && m.stopGo && !m.dnf) f.empurrar({ chave: "stopgo", tipo: "punicao", texto: `Stop-and-go ${m.stopGo.s} s: cumpra em ${m.stopGo.v} volta${m.stopGo.v > 1 ? "s" : ""} · B pede o box`, fixo: true }, agora);
     else f.remover("stopgo", agora);

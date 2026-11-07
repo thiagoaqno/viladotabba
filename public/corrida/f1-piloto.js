@@ -102,6 +102,70 @@ function garantirMao() {
     for (const p of MAO3D.pilotos) p.luvas.geometry = maosDe(p.corLuva, p.corPainel);
   }).catch((e) => { console.warn("Corrida: a mão do piloto não carregou", e); MAO3D.carregando = false; });
 }
+// ---------- o capacete de verdade (o mesmo da festa do pódio, f1/podio/piloto.glb) ----------
+// O casco, o forro e a viseira do modelo do pódio, encaixados no lugar do capacete desenhado (mesmo tamanho, a viseira para a frente do
+// carro). A pintura é a mesma folha de f1-capacetes.js, lida pelo ponto do casco no modelo original (o atributo `aPC`, porque o casco não
+// tem UV). Enquanto o arquivo não chega, fica o capacete desenhado; quando chega, todos os pilotos já montados trocam (CAP3D.pilotos).
+const CAP3D = { casco: null, viseira: null, caixa: null, carregando: false, pilotos: [] };
+function lerMalha(m) { // posições e normais no espaço do modelo (a pose de repouso), e o índice
+  const P = m.geometry.attributes.position, N = m.geometry.attributes.normal, n = P.count, pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), v = new THREE.Vector3(), w = new THREE.Vector3();
+  const nm = new THREE.Matrix3().getNormalMatrix(m.matrixWorld);
+  for (let i = 0; i < n; i++) { v.fromBufferAttribute(P, i).applyMatrix4(m.matrixWorld); pos.set([v.x, v.y, v.z], i * 3); if (N) { w.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); nor.set([w.x, w.y, w.z], i * 3); } }
+  return { pos, nor, idx: m.geometry.index ? Array.from(m.geometry.index.array) : null, n };
+}
+function garantirCapacete() {
+  if (CAP3D.casco || CAP3D.carregando) return; CAP3D.carregando = true;
+  const l = new GLTFLoader(); l.setMeshoptDecoder(MeshoptDecoder);
+  l.loadAsync("/corrida/f1/podio/piloto.glb").then((gltf) => {
+    gltf.scene.updateMatrixWorld(true);
+    const malhas = {}; gltf.scene.traverse((o) => { if ((o.isMesh || o.isSkinnedMesh) && ["casco", "vedacao", "viseira"].includes(o.name)) malhas[o.name] = lerMalha(o); });
+    if (!malhas.casco || !malhas.viseira) throw new Error("o modelo do pódio não tem o casco e a viseira");
+    // a caixa do casco no modelo original: o centro, a frente (para onde a viseira está) e a altura
+    const caixa = (d) => { const b = new THREE.Box3(); for (let i = 0; i < d.n; i++) b.expandByPoint(new THREE.Vector3(d.pos[i * 3], d.pos[i * 3 + 1], d.pos[i * 3 + 2])); return b; };
+    const bc = caixa(malhas.casco), bv = caixa(malhas.viseira), centro = bc.getCenter(new THREE.Vector3()), frente = bv.getCenter(new THREE.Vector3()).sub(centro);
+    // o capacete desenhado: o tamanho e a frente que o novo tem que ocupar
+    const g = geometrias(); g.capacete.computeBoundingBox(); g.viseira.computeBoundingBox();
+    const ba = g.capacete.boundingBox, alvoCentro = ba.getCenter(new THREE.Vector3()), alvoFrente = g.viseira.boundingBox.getCenter(new THREE.Vector3()).sub(alvoCentro);
+    const esc = (ba.max.y - ba.min.y) / (bc.max.y - bc.min.y) * 1.06, giro = Math.atan2(alvoFrente.x, alvoFrente.z) - Math.atan2(frente.x, frente.z);
+    const m = new THREE.Matrix4().makeTranslation(alvoCentro.x, alvoCentro.y, alvoCentro.z).multiply(new THREE.Matrix4().makeRotationY(giro)).multiply(new THREE.Matrix4().makeScale(esc, esc, esc)).multiply(new THREE.Matrix4().makeTranslation(-centro.x, -centro.y, -centro.z));
+    const montar = (lista, comPC) => {
+      const geos = lista.filter(Boolean).map((d) => {
+        const ge = new THREE.BufferGeometry();
+        ge.setAttribute("position", new THREE.BufferAttribute(d.pos.slice(), 3)); ge.setAttribute("normal", new THREE.BufferAttribute(d.nor.slice(), 3));
+        if (comPC) ge.setAttribute("aPC", new THREE.BufferAttribute(d.pos.slice(), 3)); // o ponto original: a pintura é lida por ele
+        if (d.idx) ge.setIndex(d.idx);
+        ge.applyMatrix4(m); return ge;
+      });
+      const ge = geos.length > 1 ? mergeGeometries(geos) : geos[0]; ge.computeBoundingSphere(); return ge;
+    };
+    CAP3D.casco = montar([malhas.casco, malhas.vedacao], true); CAP3D.viseira = montar([malhas.viseira], false);
+    CAP3D.caixa = { centro: centro.clone(), topo: bc.max.y, alt: bc.max.y - bc.min.y };
+    for (const p of CAP3D.pilotos) vestirCapacete(p); CAP3D.pilotos.length = 0;
+  }).catch((e) => { console.warn("Corrida: o capacete novo não carregou (fica o desenhado)", e); CAP3D.carregando = false; });
+}
+// a pintura do casco novo: a folha do capacete (a mesma textura do desenhado), lida em volta da cabeça pelo ponto original (aPC)
+const CASCOS = new WeakMap();
+function materialDoCascoNovo(antigo) {
+  let m = CASCOS.get(antigo); if (m) return m;
+  const c = CAP3D.caixa, t = antigo.map; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; // (sem mipmap: o atan deixaria uma costura)
+  m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.28, metalness: 0.08 });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uCentro = { value: c.centro }; sh.uniforms.uAlt = { value: new THREE.Vector2(c.topo, c.alt) };
+    sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec3 aPC;\nvarying vec3 vPCasco;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvPCasco = aPC;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vPCasco;\nuniform vec3 uCentro;\nuniform vec2 uAlt;")
+      .replace("#include <map_fragment>", `vec3 pc = vPCasco - uCentro;
+      vec2 uvc = vec2(fract(0.75 + atan(pc.x, pc.z) / 6.2831853), 1.0 - (uAlt.x - vPCasco.y) / uAlt.y);
+      diffuseColor *= texture2D(map, uvc);`);
+  };
+  m.customProgramCacheKey = () => "casco-carro";
+  CASCOS.set(antigo, m); return m;
+}
+const VISEIRA_NOVA = () => (VISEIRA_NOVA.m ||= new THREE.MeshStandardMaterial({ color: 0x050709, roughness: 0.08, metalness: 0.9 }));
+function vestirCapacete(p) {
+  if (!CAP3D.casco) return;
+  p.capacete.geometry = CAP3D.casco; p.capacete.material = materialDoCascoNovo(p.matCapacete);
+  p.viseira.geometry = CAP3D.viseira; p.viseira.material = VISEIRA_NOVA();
+}
 // as duas mãos (a direita é a do modelo; a esquerda, o espelho) numa malha só, pintada por vértice: a palma e os dedos na cor da luva, as costas da mão com um painel de outra cor,
 // o punho escuro (um punho de cano curto) com uma tira de velcro; uma geometria por par de cores, todas com o mesmo material (LUVA)
 const MAOS = new Map();
@@ -187,8 +251,10 @@ export function criarPiloto(kt, op) {
   // o corpo (some na câmera de cockpit): o pescoço é o pivô da cabeça
   const corpo = new THREE.Group(); corpo.name = "piloto"; kt.carro.add(corpo);
   const cab = new THREE.Group(); cab.position.set(PESCOCO.x, PESCOCO.y, PESCOCO.z); cab.rotation.order = "YXZ"; corpo.add(cab);
-  const capacete = solta(new THREE.Mesh(g.capacete, materialDoCapacete(cor1, cor2, op.numero, op.sigla ? capacetePorSigla(op.sigla) : null))); capacete.name = "capacete"; capacete.position.y = 0.14; cab.add(capacete);
+  const matCapacete = materialDoCapacete(cor1, cor2, op.numero, op.sigla ? capacetePorSigla(op.sigla) : null);
+  const capacete = solta(new THREE.Mesh(g.capacete, matCapacete)); capacete.name = "capacete"; capacete.position.y = 0.14; cab.add(capacete);
   const viseira = solta(new THREE.Mesh(g.viseira, VISEIRA())); viseira.name = "viseira"; viseira.position.y = 0.14; cab.add(viseira);
+  { const cp = { capacete, viseira, matCapacete }; if (CAP3D.casco) vestirCapacete(cp); else { CAP3D.pilotos.push(cp); garantirCapacete(); } } // o capacete de verdade, o do pódio
   const tronco = solta(new THREE.Mesh(g.tronco, traje(cor1, cor2))); tronco.name = "tronco"; tronco.position.set(0, 0.45, 0.16); tronco.rotation.x = 0.6; corpo.add(tronco); // o piloto deitado: o peito inclinado para trás
   const bracos = [-1, 1].map((l) => { const m = solta(new THREE.Mesh(g.braco, traje(cor1, cor2))); m.name = "braco"; m.position.set(l * OMBRO.x, OMBRO.y, OMBRO.z); corpo.add(m); return m; });
   // os antebraços ficam fora do corpo: aparecem também na primeira pessoa, junto das luvas

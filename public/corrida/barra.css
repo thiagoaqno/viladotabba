@@ -1,0 +1,42 @@
+/* A barra de botões da corrida (barra.js): poucos botões à vista, no mesmo vidro escuro do HUD, e o menu com o resto.
+   Vem depois de hud-f1.css; os seletores com #tbBarra ganham dos de lá (o Box continua com o estilo dele). */
+#race #tbBarra{position:absolute;top:10px;right:12px;display:flex;align-items:center;gap:6px;z-index:40;flex-wrap:nowrap;max-width:none;font-family:var(--f1-fonte,"Titillium Web",system-ui,sans-serif)}
+#race #tbBarra>button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:40px;height:40px;min-height:40px;padding:0 12px;
+  color:#fff;background:#0b0d13cc;border:1px solid #ffffff24;border-radius:8px;box-shadow:0 4px 14px #0007;backdrop-filter:blur(6px);
+  font:700 13px/1 var(--f1-fonte,"Titillium Web",system-ui,sans-serif);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+  transition:background .15s,border-color .15s,transform .15s,box-shadow .15s}
+#race #tbBarra>button:hover{background:#1a1e29e6;border-color:#ffffff55;transform:translateY(-2px);box-shadow:0 8px 18px #0009,inset 0 -2px 0 #e10600}
+#race #tbBarra>button:active{transform:translateY(0)}
+#race #tbBarra>button.hidden{display:none}
+#race #tbBarra .ico{width:18px;height:18px;flex:none}
+#race #tbBarra #bCam,#race #tbBarra #bTras,#race #tbBarra #bMenu{width:40px;padding:0}
+#race #tbBarra #bMenu.on{background:#e10600;border-color:#e10600}
+#race #tbBarra #bErs .ico{color:#ffd23f}
+#race #tbBarra #bBox{border-radius:8px}
+#race #tbBarra .so-toque{display:none}
+@media (pointer:coarse){#race #tbBarra .so-toque{display:inline-flex}}
+
+/* o menu: um cartão escuro embaixo do botão, com o som em cima e os itens em lista */
+#race #tbMenu{position:absolute;top:48px;right:0;width:250px;padding:8px;background:#0b0d13f2;border:1px solid #ffffff2e;border-radius:12px;box-shadow:0 14px 34px #000c;
+  backdrop-filter:blur(10px);animation:tbEntra .16s ease-out}
+#race #tbMenu[hidden]{display:none}
+@keyframes tbEntra{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+#race #tbMenu .tb-som{display:flex;align-items:center;gap:8px;padding:4px 4px 10px;margin-bottom:6px;border-bottom:1px solid #ffffff1f}
+#race #tbMenu .tb-som [data-radio-botao]{flex:none;width:36px;height:36px;min-width:36px;padding:0;color:#fff;background:#ffffff12;border:1px solid #ffffff24;border-radius:8px}
+#race #tbMenu .vol{flex:1;width:auto;margin:0;height:4px;-webkit-appearance:none;appearance:none;background:linear-gradient(90deg,#e10600,#ff5a52);border-radius:2px}
+#race #tbMenu .vol::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px #0b0d13}
+#race #tbMenu .vol::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:0}
+#race #tbMenu .tb-item{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:38px;padding:0 10px;margin:0;color:#e8ecf2;background:none;border:0;border-radius:8px;
+  font:600 14px/1.2 var(--f1-fonte,"Titillium Web",system-ui,sans-serif);letter-spacing:.02em;text-transform:none;text-align:left;cursor:pointer;transition:background .12s,color .12s}
+#race #tbMenu .tb-item:hover,#race #tbMenu .tb-item:focus-visible{background:#ffffff14;color:#fff}
+#race #tbMenu .tb-item.hidden{display:none}
+#race #tbMenu .tb-item .ico{width:18px;height:18px;flex:none;color:#aab4c3}
+#race #tbMenu .tb-item span{flex:1}
+#race #tbMenu .tb-item kbd{padding:2px 6px;font:700 11px/1 var(--f1-fonte,monospace);color:#aab4c3;background:#ffffff12;border:1px solid #ffffff24;border-radius:4px}
+#race #tbMenu #bLinhaFreio{padding-left:38px}
+#race #tbMenu #bLinhaFreio[aria-pressed="true"]{color:#ffd23f}
+#race #tbMenu .tb-sair{margin-top:6px;border-top:1px solid #ffffff1f;border-radius:0 0 8px 8px;color:#ff6b62}
+#race #tbMenu .tb-sair .ico{color:#ff6b62}
+#race #tbMenu .tb-sair:hover{background:#e1060026;color:#ff8a83}
+@media (max-width:700px){#race #tbBarra{top:8px;right:8px;gap:4px}#race #tbBarra>button{height:36px;min-height:36px;min-width:36px}#race #tbBarra #bRespawn .rot{display:none}#race #tbBarra #bRespawn{width:36px;padding:0}}
+@media (prefers-reduced-motion:reduce){#race #tbMenu{animation:none}#race #tbBarra>button{transition:none}}

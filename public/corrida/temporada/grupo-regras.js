@@ -328,6 +328,42 @@ function conquistasDoGP(sala, resultado) {
   return lista;
 }
 
+// ---------- os stories dos amigos ----------
+// Cada pessoa lança 1 story por rodada (a rodada é `ano:gp`, o GP que vem), com texto próprio (até STORY_MAX letras), o modelo de
+// desenho (`layout:fundo`, ou o sorteio) e, se quiser, o seu resultado no último GP. A sala guarda só a rodada atual e a anterior.
+// Todo mundo vê e reage (🔥 😂 💀, uma reação por pessoa, tocar de novo tira); só o autor apaga.
+const STORY_MAX = 120, REACOES = ["🔥", "😂", "💀"];
+const rodadaDe = (sala) => `${sala.ano}:${sala.gp}`;
+function podarStories(sala) { sala.stories = (sala.stories || []).filter((x) => x.ano === sala.ano && x.gp >= sala.gp - 1); }
+function lancarStory(sala, pid, d = {}) {
+  ativa(sala);
+  const p = sala.pessoas[pid]; if (!p) throw Error("Pessoa inválida.");
+  const texto = String(d.texto || "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, STORY_MAX);
+  if (!texto) throw Error("Escreva o texto do story.");
+  podarStories(sala);
+  if (sala.stories.some((x) => x.pid === pid && x.rodada === rodadaDe(sala))) throw Error("Você já lançou o story desta rodada.");
+  const modelo = typeof d.modelo === "string" && /^[a-z]+:[a-z]+$/.test(d.modelo) ? d.modelo : null;
+  let dado = null;
+  if (d.dado) { // o resultado do último GP, tirado do servidor (ninguém inventa a própria posição)
+    const r = (sala.resultados || []).filter((x) => x.ano === sala.ano).at(-1), l = r && r.linhas.find((x) => x.piloto === idDoHumano(pid));
+    if (l) dado = { num: l.dnf ? "DNF" : `${l.pos}º`, rot: `${l.pontos} ${l.pontos === 1 ? "ponto" : "pontos"} no ${sala.calendario[r.gp] ? sala.calendario[r.gp].nome : "GP"}` };
+  }
+  const id = Math.random().toString(36).slice(2, 10);
+  sala.stories.push({ id, pid, nome: p.nome, equipe: p.equipe || null, rodada: rodadaDe(sala), ano: sala.ano, gp: sala.gp, texto, modelo, dado, em: Date.now(), reacoes: {} });
+  return sala;
+}
+function apagarStory(sala, pid, id) {
+  const x = (sala.stories || []).find((y) => y.id === id); if (!x) throw Error("Story não encontrado.");
+  if (x.pid !== pid) throw Error("Só quem lançou apaga o story.");
+  sala.stories = sala.stories.filter((y) => y.id !== id); return sala;
+}
+function reagirStory(sala, pid, d = {}) {
+  const x = (sala.stories || []).find((y) => y.id === d.id); if (!x) throw Error("Story não encontrado.");
+  if (!REACOES.includes(d.emoji)) throw Error("Reação inválida.");
+  if (x.reacoes[pid] === d.emoji) delete x.reacoes[pid]; else x.reacoes[pid] = d.emoji;
+  return sala;
+}
+
 // o que cada pessoa recebe: tudo menos o hash do token
 function vista(sala, pid, presente = () => false) {
   const { pessoas, ordem, equipes, ...resto } = sala;
@@ -337,7 +373,7 @@ function vista(sala, pid, presente = () => false) {
 }
 
 const api = { MAX_PESSOAS, GRID, OPCOES_PADRAO, TAMANHOS, VOLTAS, NIVEIS, criarSala, entrar, sair, dispensar, passarCargo, escolherEquipe, definirOpcoes, iniciar, montar, desenvolver, contratarPiloto, substituirPiloto, contratarEngenheiro, mercado,
-  gridDoGP, idDoHumano, idsEsperados, metaDaEquipe, FOLGA_META, registrarResultado, conquistasDoGP, tabelas, proximaTemporada, vista, humanosDa, custoDoPiloto, nomeDaEquipe };
+  gridDoGP, idDoHumano, idsEsperados, lancarStory, apagarStory, reagirStory, STORY_MAX, REACOES, metaDaEquipe, FOLGA_META, registrarResultado, conquistasDoGP, tabelas, proximaTemporada, vista, humanosDa, custoDoPiloto, nomeDaEquipe };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1TemporadaGrupo = api;
 })(typeof window !== "undefined" ? window : globalThis);

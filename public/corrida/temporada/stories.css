@@ -1,0 +1,133 @@
+/* As notícias em stories (stories.js): a faixa de bolinhas no topo da Central e a tela cheia em pé, na cor da equipe da notícia. */
+.st-faixa{display:flex;gap:clamp(10px,1.4vw,18px);margin:0 0 clamp(10px,1.8vh,16px);overflow-x:auto;scrollbar-width:none}
+.st-bola{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;width:72px;padding:0;background:none;border:0;color:var(--cx-tx,#111);cursor:pointer}
+.st-anel{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;padding:3px;
+  background:conic-gradient(from 210deg,var(--c),#ffd23f,var(--c));transition:transform .18s}
+.st-anel img{width:100%;height:100%;padding:9px;border-radius:50%;object-fit:contain;background:var(--cx-fundo,#f6f3ef);box-shadow:0 0 0 3px var(--cx-fundo,#f6f3ef)}
+.st-bola.vista .st-anel{background:var(--cx-lin,#ccc)}
+.st-bola:hover .st-anel,.st-bola:focus-visible .st-anel{transform:scale(1.07)}
+.st-bola small{max-width:72px;overflow:hidden;font:600 11px/1.2 var(--cx-f,system-ui);white-space:nowrap;text-overflow:ellipsis;color:var(--cx-tx2,#555)}
+body.cx-escuro .st-anel img{background:#14161b;box-shadow:0 0 0 3px #14161b}
+
+.st-tela{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#000d;backdrop-filter:blur(6px);animation:stEntra .2s ease-out}
+.st-tela[hidden]{display:none}
+@keyframes stEntra{from{opacity:0}to{opacity:1}}
+.st-card{position:relative;display:flex;flex-direction:column;width:min(420px,94vw);height:min(746px,92vh);overflow:hidden;border-radius:16px;color:#fff;
+  background:linear-gradient(180deg,#0008,#000c 70%),var(--foto) center/cover no-repeat,linear-gradient(160deg,var(--c),#0b0d13);box-shadow:0 24px 60px #000c;font-family:var(--cx-f,system-ui)}
+.st-card::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 100%,color-mix(in srgb,var(--c) 55%,transparent),transparent 70%);pointer-events:none}
+.st-barras{position:relative;z-index:2;display:flex;gap:4px;padding:12px 12px 0}
+.st-barras i{flex:1;height:3px;overflow:hidden;border-radius:2px;background:#ffffff4d}
+.st-barras i.cheia b{display:block;width:100%;height:100%;background:#fff}
+.st-barras b.anda{display:block;height:100%;background:#fff;animation:stAnda 5.2s linear forwards}
+@keyframes stAnda{from{width:0}to{width:100%}}
+.st-card header{position:relative;z-index:3;display:flex;align-items:center;gap:8px;padding:10px 12px}
+.st-mini{display:grid;place-items:center;width:30px;height:30px;padding:4px;border-radius:50%;background:#fff}.st-mini img{max-width:100%;max-height:100%;object-fit:contain}
+.st-card header b{flex:1;font-size:14px;letter-spacing:.04em}
+.st-x{width:34px;height:34px;padding:0;background:none;border:0;color:#fff;font-size:20px;cursor:pointer}
+.st-corpo{position:relative;z-index:2;margin-top:auto;padding:0 22px 42px;animation:stSobe .35s ease-out}
+@keyframes stSobe{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.st-logo{display:grid;place-items:center;width:64px;height:64px;margin-bottom:14px;padding:10px;border-radius:14px;background:#fff;box-shadow:0 6px 18px #0007}.st-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.st-corpo h2{margin:0;font:800 clamp(28px,7vw,40px)/1.05 var(--cx-f,system-ui);letter-spacing:-.02em;text-shadow:0 2px 14px #0009}
+.st-corpo p{margin:12px 0 0;font-size:17px;line-height:1.4;color:#ffffffe6;text-shadow:0 1px 8px #0009}
+.st-lado{position:absolute;top:60px;bottom:0;z-index:1;width:40%;padding:0;background:none;border:0;cursor:pointer}
+.st-lado.esq{left:0}.st-lado.dir{right:0}
+@media (prefers-reduced-motion:reduce){.st-tela,.st-corpo{animation:none}.st-barras b.anda{animation-duration:.01s}}
+
+/* o perfil do topo da Central com notícia nova: o anel roxo dos stories (some quando todas foram vistas) */
+.cx-perfil.com-stories{position:relative;display:grid;place-items:center;padding:3px;border-radius:50%;background:conic-gradient(from 200deg,#7b2ff7,#c13584,#9b5cff,#7b2ff7);animation:stPulsa 2.4s ease-in-out infinite}
+.cx-perfil.com-stories svg{border-radius:50%;background:var(--cx-fundo,#f6f3ef);box-shadow:0 0 0 2px var(--cx-fundo,#f6f3ef)}
+body.cx-escuro .cx-perfil.com-stories svg{background:#14161b;box-shadow:0 0 0 2px #14161b}
+.cx-perfil.com-stories.vistas{background:none;animation:none}
+@keyframes stPulsa{0%,100%{box-shadow:0 0 0 0 #7b2ff700}50%{box-shadow:0 0 0 4px #7b2ff733}}
+@media (prefers-reduced-motion:reduce){.cx-perfil.com-stories{animation:none}}
+
+/* os 40 modelos (stories.js): 5 layouts (st-l-*) × 8 fundos (st-f-*) */
+.st-m-numero{text-align:center;margin:auto 0;padding-bottom:60px}
+.st-num{display:block;font:900 clamp(100px,30vw,160px)/.9 var(--cx-f,system-ui);letter-spacing:-.06em;color:var(--st-num,#fff);filter:drop-shadow(0 6px 22px #0008)}
+.st-num-rot{display:block;margin:4px 0 18px;font:700 13px/1 var(--cx-f,system-ui);letter-spacing:.24em;text-transform:uppercase;opacity:.8}
+.st-m-numero h2{font-size:clamp(22px,5.4vw,30px)}
+.st-m-manchete{margin:auto 0;padding:0 26px 40px}
+.st-jornal{display:flex;align-items:baseline;gap:10px;padding-bottom:10px;margin-bottom:18px;border-bottom:3px double currentColor}
+.st-jornal b{padding:2px 8px;background:var(--c);color:#fff;font:900 14px/1.3 var(--cx-f,system-ui);letter-spacing:.14em}
+.st-jornal span{font:600 12px var(--cx-f,system-ui);letter-spacing:.12em;text-transform:uppercase;opacity:.65}
+.st-m-manchete h2{font:900 clamp(32px,8vw,46px)/1.02 Georgia,"Times New Roman",serif;letter-spacing:-.01em}
+.st-fio{display:block;width:64px;height:5px;margin:16px 0 12px;background:var(--c)}
+.st-m-manchete p{font-family:Georgia,serif;font-size:18px}
+.st-m-manchete .st-logo{margin:22px 0 0;width:52px;height:52px}
+.st-m-duelo{margin:auto 0;text-align:center}
+.st-vs{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:26px}
+.st-vs>span{display:flex;flex-direction:column;align-items:center;gap:8px;width:120px}
+.st-vs>span img{width:84px;height:84px;padding:14px;object-fit:contain;border-radius:50%;background:#fff;box-shadow:0 0 0 4px var(--c),0 10px 26px #0008}
+.st-vs>span b{font-size:15px;max-width:120px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.st-vs em{font:900 40px/1 var(--cx-f,system-ui);font-style:normal}.st-vs em small{display:block;font-size:12px;letter-spacing:.2em;opacity:.8}
+.st-m-duelo h2{font-size:clamp(24px,6vw,32px)}
+.st-traco{display:block;margin:0 auto 22px;width:78%}
+.st-traco svg{display:block;width:100%;height:auto}.st-traco svg *{stroke:var(--st-traco,#fff)!important}
+/* os fundos */
+.st-f-gradiente{background:linear-gradient(155deg,var(--c),color-mix(in srgb,var(--c) 35%,#000) 75%)}
+.st-f-papel{background:#f3efe6;color:#14110c}
+.st-f-neon{background:radial-gradient(90% 60% at 50% 30%,color-mix(in srgb,var(--c) 40%,#000),#05060a 75%);--st-traco:var(--c)}
+.st-f-neon h2,.st-f-neon .st-num{color:#fff;text-shadow:0 0 18px var(--c),0 0 42px var(--c)}
+.st-f-listras{background:repeating-linear-gradient(135deg,var(--c) 0 26px,color-mix(in srgb,var(--c) 70%,#000) 26px 52px)}
+.st-f-bandeirada{background:linear-gradient(180deg,#0b0d1300 0,#0b0d1300 18%,#0b0d13 40%),repeating-conic-gradient(#f4f4f4 0 25%,#111 0 50%) 0 0/48px 48px}
+.st-f-dividido{background:linear-gradient(160deg,var(--c) 0 48%,#0b0d13 48% 100%)}
+.st-f-vidro{background:linear-gradient(180deg,#0006,#000a),var(--foto) center/cover,linear-gradient(160deg,var(--c),#0b0d13)}
+.st-f-vidro .st-corpo{margin:auto 16px 28px;padding:24px 20px;border-radius:18px;background:#ffffff24;border:1px solid #ffffff40;backdrop-filter:blur(14px)}
+.st-f-gradiente::before,.st-f-papel::before,.st-f-listras::before,.st-f-bandeirada::before,.st-f-dividido::before,.st-f-neon::before{display:none}
+.st-f-papel h2,.st-f-papel p{text-shadow:none}.st-f-papel{--st-num:#14110c;--st-traco:#14110c}
+.st-f-papel .st-barras i{background:#14110c33}.st-f-papel .st-barras b.anda,.st-f-papel .st-barras i.cheia b{background:#14110c}
+.st-f-papel header,.st-f-papel .st-x{color:#14110c}
+.st-f-listras .st-corpo,.st-f-dividido .st-corpo{text-shadow:0 2px 12px #000c}
+.st-f-papel .st-corpo p,.st-f-papel .st-num-rot{color:#14110ccc;text-shadow:none}
+.st-f-papel .st-corpo h2{color:#14110c}
+
+/* os layouts novos (20 no total) */
+.st-m-topo{margin:24px 0 auto;padding-top:10px}.st-logo-baixo{margin:26px 0 0}
+.st-m-centro{margin:auto 0;text-align:center}.st-logo-g{width:110px;height:110px;margin:0 auto 22px;border-radius:50%}
+.st-m-faixa{margin:auto 0;padding:0 0 30px}.st-banda{margin:0 -22px 16px;padding:22px;background:var(--c);transform:skewY(-4deg)}.st-banda h2{transform:skewY(4deg)}
+.st-m-faixa p{padding:0 4px}
+.st-m-lateral{display:flex;gap:16px;align-items:flex-end}.st-m-lateral>div{min-width:0}.st-vertical{max-height:340px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;writing-mode:vertical-rl;transform:rotate(180deg);font:900 36px/1 var(--cx-f,system-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--c);opacity:.9}
+.st-m-contorno{position:static}.st-marca-dagua{position:absolute;inset:auto -10px 34% auto;font:900 clamp(150px,46vw,240px)/.8 var(--cx-f,system-ui);color:transparent;-webkit-text-stroke:3px #ffffff59;letter-spacing:-.06em;pointer-events:none}
+.st-m-cartao{padding:0 14px 26px}.st-cartao{padding:22px 20px;border-radius:18px;background:#fff;color:#111;box-shadow:0 18px 40px #0009;border-top:6px solid var(--c)}
+.st-cartao h2{color:#111;text-shadow:none;font-size:clamp(24px,6vw,32px)}.st-cartao p{color:#333;text-shadow:none}.st-cartao .st-logo{box-shadow:none;border:1px solid #0001;width:48px;height:48px}
+.st-m-selo{margin:auto 0;text-align:center}.st-selo{display:grid;place-content:center;width:180px;height:180px;margin:0 auto 24px;border-radius:50%;border:6px dashed #ffffffb0;background:var(--c);font:900 64px/1 var(--cx-f,system-ui);box-shadow:0 0 0 10px #ffffff26}
+.st-selo .st-num-rot{margin:6px 0 0;font-size:11px}
+.st-m-citacao{margin:auto 0}.st-aspas{display:block;height:80px;font:900 160px/1 Georgia,serif;color:var(--c)}.st-m-citacao h2{font-style:italic}.st-m-citacao p{font-style:italic}
+.st-m-tv{padding:0 0 46px}.st-tarja{display:flex;align-items:stretch;margin:0 -22px 12px 0;background:#0b0d13f0;border-left:8px solid var(--c)}
+.st-tarja-cor{display:grid;place-items:center;width:64px;background:#fff;padding:8px}.st-tarja-cor img{max-width:100%;max-height:44px;object-fit:contain}
+.st-tarja>div{padding:12px 14px}.st-tarja b{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--c)}.st-tarja h2{font-size:clamp(22px,5.4vw,28px);text-shadow:none}
+.st-m-poster{margin:auto 0}.st-m-poster h2{font:900 clamp(48px,13vw,74px)/.9 var(--cx-f,system-ui);text-transform:uppercase;letter-spacing:-.04em;transform:rotate(-5deg);transform-origin:left}
+.st-m-minimal{padding-bottom:56px}.st-linha{display:block;width:40px;height:2px;margin-bottom:16px;background:currentColor;opacity:.7}.st-m-minimal h2{font-size:clamp(22px,5.4vw,28px);font-weight:600;letter-spacing:0}
+.st-grade{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}.st-grade span{display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:92px;padding:12px;border-radius:12px;background:#ffffff1f;border:1px solid #ffffff2e}
+.st-grade b{font:900 34px/1 var(--cx-f,system-ui)}.st-grade small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}.st-grade img{width:40px;height:40px;object-fit:contain;padding:4px;background:#fff;border-radius:8px}
+.st-m-grade h2{font-size:clamp(22px,5.4vw,28px)}
+.st-placar{display:flex;margin-bottom:22px;border:2px solid #fff;border-radius:6px;overflow:hidden}.st-placar span{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px;font:700 11px/1 var(--cx-f,system-ui);letter-spacing:.2em;background:#0b0d13d9}
+.st-placar span+span{border-left:2px solid #fff}.st-placar b{margin-top:8px;font:900 34px/1 ui-monospace,Consolas,monospace;color:#ffd23f;letter-spacing:0}
+.st-m-ticket{padding:0 14px 30px}.st-ticket{display:flex;border-radius:14px;overflow:hidden;background:#fff;color:#111;box-shadow:0 16px 36px #0009}
+.st-ticket>div{flex:1;padding:18px}.st-ticket small{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--c)}.st-ticket h2{color:#111;text-shadow:none;font-size:clamp(22px,5.4vw,28px);margin-top:4px}.st-ticket p{color:#444;text-shadow:none;font-size:15px}
+.st-canhoto{display:flex;flex-direction:column;align-items:center;justify-content:center;width:86px;border-left:2px dashed #0003;background:var(--c);color:#fff}.st-canhoto b{font:900 26px/1 var(--cx-f,system-ui)}.st-canhoto small{color:#fff}
+.st-m-medalha{margin:auto 0;text-align:center}.st-fita{display:block;width:60px;height:70px;margin:0 auto -8px;background:linear-gradient(90deg,var(--c) 0 50%,#fff 50%);clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%)}
+.st-medalha{display:grid;place-items:center;width:150px;height:150px;margin:0 auto 24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#e0a800 55%,#8a6100);color:#5a3f00;font:900 56px/1 var(--cx-f,system-ui);box-shadow:0 10px 30px #0009,inset 0 0 0 6px #ffe58a}
+.st-f-papel .st-marca-dagua{-webkit-text-stroke-color:#14110c33}.st-f-papel .st-grade span{background:#14110c0f;border-color:#14110c22}.st-f-papel .st-selo{border-color:#14110c66}
+
+/* lançar story e os stories dos amigos */
+.cx-lancar{display:grid;place-items:center;width:30px;height:30px;margin-right:-4px;padding:0;border:0;border-radius:50%;background:linear-gradient(135deg,#7b2ff7,#c13584);color:#fff;font:700 20px/1 var(--cx-f,system-ui);cursor:pointer;box-shadow:0 4px 12px #7b2ff766;transition:transform .15s}
+.cx-lancar:hover{transform:scale(1.12) rotate(90deg)}
+.st-reacoes{position:relative;z-index:4;display:flex;justify-content:center;gap:10px;padding:0 16px 18px}
+.st-reacoes button{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #ffffff55;border-radius:999px;background:#0006;color:#fff;font-size:22px;cursor:pointer;transition:transform .12s,background .12s}
+.st-reacoes button small{font-size:13px;font-weight:700}.st-reacoes button:hover{transform:scale(1.1)}.st-reacoes button.on{background:#ffffffd9;color:#111}
+.st-reacoes.st-meu span{padding:8px 12px;border-radius:999px;background:#0006;font-size:18px}
+.st-apagar{margin-left:auto;padding:8px 14px;border:1px solid #ff6b62;border-radius:999px;background:none;color:#ff8a83;font:700 13px var(--cx-f,system-ui);cursor:pointer}
+.st-lancar{display:flex;flex-direction:column;width:min(860px,96vw);max-height:94vh;overflow:auto;border-radius:16px;background:#0b0d13;color:#fff;box-shadow:0 24px 60px #000c;font-family:var(--cx-f,system-ui)}
+.st-lancar>header{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #ffffff1f}.st-lancar>header b{flex:1;font-size:18px}
+.st-lancar-corpo{display:flex;gap:22px;padding:18px;flex-wrap:wrap;justify-content:center}
+.st-previa{flex:none;width:280px;height:498px}.st-previa .st-card{width:420px;height:746px;transform:scale(.6667);transform-origin:top left}
+.st-form{flex:1;min-width:260px;display:flex;flex-direction:column;gap:6px}
+.st-form label{margin-top:8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#aab4c3}
+.st-form textarea,.st-form select{width:100%;padding:10px 12px;border:1px solid #ffffff2e;border-radius:10px;background:#141821;color:#fff;font:500 15px var(--cx-f,system-ui);resize:none}
+.st-form small{align-self:flex-end;color:#aab4c3;font-size:12px}.st-duas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.st-check{display:flex;align-items:center;gap:8px;text-transform:none!important;letter-spacing:0!important;font-size:14px!important;color:#e8ecf2!important}
+.st-aviso{margin:10px 0 0;font-size:13px;color:#aab4c3}
+.st-publicar{margin-top:12px;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#7b2ff7,#c13584);color:#fff;font:800 16px var(--cx-f,system-ui);cursor:pointer}
+.st-publicar:hover{filter:brightness(1.1)}
+.st-m-poster.longo h2{font-size:clamp(32px,8.6vw,48px)}

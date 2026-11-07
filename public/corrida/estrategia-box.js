@@ -21,6 +21,15 @@ function escolherSeco({ F, jogos, voltasRestantes, fator = 1, evitar = [], ritmo
 function sugerirBox(e) {
   const F = e.F; if (!F || !e.pneu || e.emBox || e.pedido) return null;
   if (e.voltaAtual >= e.voltas) return null; // a última volta não tem box
+  // a sugestão só aparece com o pneu abaixo de 25% de vida (F.vidaRestante: 1 novo, 0 no penhasco), e o motivo diz quanto sobra
+  const vida = F.vidaRestante ? F.vidaRestante(e.pneu) : 1;
+  if (vida >= 0.25) return null;
+  const sugestao = sugerirBoxAgora(e);
+  if (sugestao) sugestao.motivo = `Pneu ${(F.PNEUS[e.pneu.composto] || {}).nome || ""} com ${Math.round(vida * 100)}% de vida · ${sugestao.motivo}`;
+  return sugestao;
+}
+function sugerirBoxAgora(e) {
+  const F = e.F;
   const restam = e.voltas - e.voltaAtual, atual = e.pneu.composto, jogos = e.jogos || {}, seco = !["chuva", "intermediario"].includes(atual);
   const agua = e.agua || 0, molhado = (e.chuva || 0) > 0.05 || agua > 0.3, temChuva = jogos.chuva == null || jogos.chuva > 0, temInter = jogos.intermediario > 0;
   const mud = e.mudanca, iminente = !!mud && mud.em <= Math.max(F.AVISO_S || 40, e.tempoVolta || 0);

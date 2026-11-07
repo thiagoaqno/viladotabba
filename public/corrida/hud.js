@@ -46,7 +46,7 @@ export function hud() {
   if (left > 0) { const n = Math.ceil(left); big = !luz && n <= 3 ? String(n) : ""; if (!luz && n <= 3 && race.beeped !== n) { race.beeped = n; Sound.beep(false); } }
   else if (left > -1) { big = luz ? "" : "VAI!"; if (race.beeped !== 0) { race.beeped = 0; Sound.beep(true); radioF1("largada"); objetivoDaCorrida(); } }
   luzesDaLargada(left);
-  const f1on = cfg.regras === "f1" && E.S.phase === "race"; // o HUD novo (torre e painel) só nas regras de F1; no arcade fica o antigo
+  const f1on = cfg.regras === "f1" && (E.S.phase === "race" || E.S.phase === "quali"); // o HUD da F1 (torre, setores, mostrador, MFD e mapinha) na classificação e na corrida; no arcade fica o antigo
   const f1mfd = cfg.regras === "f1" && E.S.phase === "quali";
   $("race").classList.toggle("f1mfd", f1mfd);
   const f1av = cfg.regras === "f1"; // os avisos no estilo da transmissão valem em toda a pista de F1 (classificação e corrida)
@@ -147,7 +147,7 @@ document.addEventListener("click", (ev) => { if (ev.target && ev.target.id === "
 const ICONE_RELOGIO = '<svg class="vr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 2.5h5"/></svg>';
 function montarTorre() {
   const el = $("hTorre"); if (el.dataset.ok) return; el.dataset.ok = 1;
-  el.innerHTML = `<div class="tt-topo">${LOGO_F1}<b class="tt-modo">RACE</b><button type="button" class="tt-alt" id="tAlt" aria-label="Alternar torre compacta e completa" title="Torre: compacta ou completa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="tt-volta"><span>VOLTA</span> <b id="tVolta">1</b><span id="tVoltaTot"> / 1</span></div><div id="tLinhas"></div>`;
+  el.innerHTML = `<div class="tt-topo">${LOGO_F1}<b class="tt-modo">RACE</b><button type="button" class="tt-alt" id="tAlt" aria-label="Alternar torre compacta e completa" title="Torre: compacta ou completa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="tt-volta"><span id="tVoltaRot">VOLTA</span> <b id="tVolta">1</b><span id="tVoltaTot"> / 1</span></div><div id="tLinhas"></div>`;
   const box = $("tLinhas");
   for (let i = 0; i < 22; i++) { const d = document.createElement("div"); d.className = "tl hidden"; d.innerHTML = `<span class="n"></span><i class="eq"></i><b class="sg"></b><u class="pn"></u><small class="ic"></small><em class="df"></em><span class="vrx">${ICONE_RELOGIO}</span><span class="troca" role="img"></span>`; box.appendChild(d); }
   $("tAlt").addEventListener("click", alternarTorre);
@@ -270,10 +270,20 @@ function hudF1(m, st, now) {
   // a cronometragem: cada carro registra (progresso, hora) a cada tick; o intervalo é o tempo medido entre dois carros (hud-torre.js)
   const cron = race.cron || (race.cron = T.criarCronometragem()), agoraS = t0 / 1000;
   for (const c of cors) cron.registrar(c.id, c.prog, agoraS, tr.n);
-  const linhas = T.torre(cors, { n: tr.n, meuId: m && m.id, esc: race.hudEsc, atraso: (c, lid) => cron.atraso(lid.id, c.prog, agoraS) });
-  // a volta no topo é a do líder (como na TV)
+  let linhas = T.torre(cors, { n: tr.n, meuId: m && m.id, esc: race.hudEsc, atraso: (c, lid) => cron.atraso(lid.id, c.prog, agoraS) });
+  const q = E.S.phase === "quali" && E.S.quali;
+  if (q) { // na classificação a torre é a tabela de tempos da sessão: a pole com o tempo, os outros com a diferença para ela
+    const pole = q.tabela[0], tempos = new Map(q.tabela.map((x) => [x.id, x.tempo]));
+    const ids = [...q.tabela.map((x) => x.id), ...cors.filter((c) => !tempos.has(c.id) && q.ativos.includes(c.id)).map((c) => c.id)];
+    const cq = ids.map((id) => cors.find((c) => c.id === id)).filter(Boolean);
+    linhas = T.torre(cq, { n: tr.n, meuId: m && m.id, esc: race.hudEsc }).map((l) => ({ ...l, volta: !!pole && l.id === pole.id,
+      dif: !tempos.has(l.id) ? { tipo: "m", texto: "Sem tempo" } : pole && l.id === pole.id ? { tipo: "lider", texto: tempo3(tempos.get(l.id)) } : { tipo: "seg", texto: `+${(tempos.get(l.id) - pole.tempo).toFixed(3)}` } }));
+  }
+  set(document.querySelector("#hTorre .tt-modo"), "t", q ? "QUALI" : "RACE"); set($("tVoltaRot"), "t", q ? "SESSÃO" : "VOLTA");
+  // a volta no topo é a do líder (como na TV); na classificação, a sessão e o tempo que falta
   const lid = st[0] && st[0].p, volta = lid ? Math.max(1, Math.min(cfg.voltas, (lid.started ? lid.laps : 0) + 1)) : 1, acabou = !!lid && lid.finish != null;
-  set($("tVolta"), "t", acabou ? "BANDEIRADA" : volta); set($("tVoltaTot"), "t", acabou ? "" : ` / ${cfg.voltas}`);
+  if (q) { const resta = Math.max(0, (q.fimAt - now) / 1000); set($("tVolta"), "t", q.nome); set($("tVoltaTot"), "t", q.pausa ? " · fim" : now < q.startAt ? "" : ` · ${resta > 0 ? mmss(resta) : "bandeirada"}`); }
+  else { set($("tVolta"), "t", acabou ? "BANDEIRADA" : volta); set($("tVoltaTot"), "t", acabou ? "" : ` / ${cfg.voltas}`); }
   const compacta = torreCompacta(), peq = innerWidth < 700;
   // compacta: o líder e os vizinhos (5 linhas); completa: todos que cabem, sem passar do minimapa e do clima embaixo
   const max = compacta ? COMPACTA_N : Math.max(6, Math.min(22, Math.floor((innerHeight - (peq ? 200 : 250)) / (peq ? 22 : 28)))), eu = linhas.findIndex((l) => l.eu);

@@ -1,0 +1,34 @@
+/* As notícias em stories (stories.js): a faixa de bolinhas no topo da Central e a tela cheia em pé, na cor da equipe da notícia. */
+.st-faixa{display:flex;gap:clamp(10px,1.4vw,18px);margin:0 0 clamp(10px,1.8vh,16px);overflow-x:auto;scrollbar-width:none}
+.st-bola{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;width:72px;padding:0;background:none;border:0;color:var(--cx-tx,#111);cursor:pointer}
+.st-anel{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;padding:3px;
+  background:conic-gradient(from 210deg,var(--c),#ffd23f,var(--c));transition:transform .18s}
+.st-anel img{width:100%;height:100%;padding:9px;border-radius:50%;object-fit:contain;background:var(--cx-fundo,#f6f3ef);box-shadow:0 0 0 3px var(--cx-fundo,#f6f3ef)}
+.st-bola.vista .st-anel{background:var(--cx-lin,#ccc)}
+.st-bola:hover .st-anel,.st-bola:focus-visible .st-anel{transform:scale(1.07)}
+.st-bola small{max-width:72px;overflow:hidden;font:600 11px/1.2 var(--cx-f,system-ui);white-space:nowrap;text-overflow:ellipsis;color:var(--cx-tx2,#555)}
+body.cx-escuro .st-anel img{background:#14161b;box-shadow:0 0 0 3px #14161b}
+
+.st-tela{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#000d;backdrop-filter:blur(6px);animation:stEntra .2s ease-out}
+.st-tela[hidden]{display:none}
+@keyframes stEntra{from{opacity:0}to{opacity:1}}
+.st-card{position:relative;display:flex;flex-direction:column;width:min(420px,94vw);height:min(746px,92vh);overflow:hidden;border-radius:16px;color:#fff;
+  background:linear-gradient(180deg,#0008,#000c 70%),var(--foto) center/cover no-repeat,linear-gradient(160deg,var(--c),#0b0d13);box-shadow:0 24px 60px #000c;font-family:var(--cx-f,system-ui)}
+.st-card::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 100%,color-mix(in srgb,var(--c) 55%,transparent),transparent 70%);pointer-events:none}
+.st-barras{position:relative;z-index:2;display:flex;gap:4px;padding:12px 12px 0}
+.st-barras i{flex:1;height:3px;overflow:hidden;border-radius:2px;background:#ffffff4d}
+.st-barras i.cheia b{display:block;width:100%;height:100%;background:#fff}
+.st-barras b.anda{display:block;height:100%;background:#fff;animation:stAnda 5.2s linear forwards}
+@keyframes stAnda{from{width:0}to{width:100%}}
+.st-card header{position:relative;z-index:3;display:flex;align-items:center;gap:8px;padding:10px 12px}
+.st-mini{display:grid;place-items:center;width:30px;height:30px;padding:4px;border-radius:50%;background:#fff}.st-mini img{max-width:100%;max-height:100%;object-fit:contain}
+.st-card header b{flex:1;font-size:14px;letter-spacing:.04em}
+.st-x{width:34px;height:34px;padding:0;background:none;border:0;color:#fff;font-size:20px;cursor:pointer}
+.st-corpo{position:relative;z-index:2;margin-top:auto;padding:0 22px 42px;animation:stSobe .35s ease-out}
+@keyframes stSobe{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.st-logo{display:grid;place-items:center;width:64px;height:64px;margin-bottom:14px;padding:10px;border-radius:14px;background:#fff;box-shadow:0 6px 18px #0007}.st-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.st-corpo h2{margin:0;font:800 clamp(28px,7vw,40px)/1.05 var(--cx-f,system-ui);letter-spacing:-.02em;text-shadow:0 2px 14px #0009}
+.st-corpo p{margin:12px 0 0;font-size:17px;line-height:1.4;color:#ffffffe6;text-shadow:0 1px 8px #0009}
+.st-lado{position:absolute;top:60px;bottom:0;z-index:1;width:40%;padding:0;background:none;border:0;cursor:pointer}
+.st-lado.esq{left:0}.st-lado.dir{right:0}
+@media (prefers-reduced-motion:reduce){.st-tela,.st-corpo{animation:none}.st-barras b.anda{animation-duration:.01s}}

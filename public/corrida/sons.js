@@ -181,8 +181,7 @@ export const Sound = (() => {
       torcidaA.g.gain.setTargetAtTime(n * (0.35 + 0.35 * rapido), t, 0.9);
       if (n > 0.55 && torcidaAntes <= 0.55 && rapido > 0.35 && t > uauAte + 2) {
         uauAte = t + 2;
-        umaVez("torcida-uau", 0.7 * n, 0.95 + Math.random() * 0.1);
-        if (Math.random() < 0.6) setTimeout(() => umaVez("buzina", 0.35 * n, 0.9 + Math.random() * 0.2), 250 + Math.random() * 500);
+        // (o "uuuh" e a buzina saíram: o Thiago não gostou)
       }
       torcidaAntes = n; return;
     }
@@ -202,7 +201,7 @@ export const Sound = (() => {
     torcidaN.fv.frequency.setTargetAtTime(1700 + uau * 700, t, 0.2);
     if (n > 0.55 && torcidaAntes <= 0.55 && rapido > 0.35 && t > uauAte + 2) { // chegou numa arquibancada em velocidade
       uauAte = t + 1.8;
-      if (Math.random() < 0.7) [0, 0.35].forEach((at, k) => tone(k ? 466 : 392, 0.28, { type: "sawtooth", vol: 0.035 * n, at: at + 0.2 })); // a buzina da galera
+
     }
     if (n > 0.3 && Math.random() < 0.06 * n) { // palmas soltas
       const len = Math.floor(c.sampleRate * 0.03), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);

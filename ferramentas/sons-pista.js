@@ -14,8 +14,6 @@ const LIMPO = "isolated single sound effect, clean close recording, silent backg
 const SONS = [
   { id: "zebra", n: 3, seg: 2, laco: true, texto: `Fast rhythmic deep thumping of a rubber tyre rolling over raised ridged concrete rumble strips, low frequency drumming vibration, ${LIMPO}` },
   { id: "torcida", n: 2, seg: 12, laco: true, texto: "Large outdoor stadium crowd ambience from a distance, constant excited murmur with scattered cheers and whistles, wide open air, no music, no announcer, no clear words" },
-  { id: "torcida-uau", n: 3, seg: 3, texto: "Big outdoor stadium crowd suddenly rising into an excited cheer, woooah, then settling down, open air, no music, no announcer" },
-  { id: "buzina", n: 2, seg: 1.5, texto: `One short blast of a handheld gas air horn in an open stadium, ${LIMPO}` },
   { id: "pistola", n: 3, seg: 1, texto: `Single short burst of a pneumatic impact wrench spinning a wheel nut, brrrt, sharp metallic rattle then stop, ${LIMPO}` },
   { id: "macaco", n: 2, seg: 1, texto: `Heavy steel lifting jack quickly released, metal clunk and thud dropping onto concrete, ${LIMPO}` },
   { id: "chiado", n: 2, seg: 3, laco: true, texto: `Continuous high pitched screech of a rubber tyre sliding and skidding on dry asphalt, steady squeal, ${LIMPO}` },

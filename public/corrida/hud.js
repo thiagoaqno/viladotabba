@@ -211,7 +211,7 @@ function avisosF1(m, left, now) {
     if (m && m.stopGo && !m.dnf) f.empurrar({ chave: "stopgo", tipo: "punicao", texto: `Stop-and-go ${m.stopGo.s} s: cumpra em ${m.stopGo.v} volta${m.stopGo.v > 1 ? "s" : ""} · B pede o box`, fixo: true }, agora);
     else f.remover("stopgo", agora);
     // minha bandeirada
-    if (m && m.finish != null && !race.avFim) { race.avFim = true; f.empurrar({ tipo: "chegada", texto: "Bandeirada! Você cruzou a linha de chegada", ttl: 6000 }, agora); window.Narrador?.falarEvento("chegada"); }
+    if (m && m.finish != null && !race.avFim) { race.avFim = true; f.empurrar({ tipo: "chegada", texto: "Bandeirada! Você cruzou a linha de chegada", ttl: 6000 }, agora); window.Narrador?.falarEvento("chegada"); Sound.tocar("chegada", 0.75); }
   }
   desenharAvisos();
 }

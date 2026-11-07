@@ -17,6 +17,18 @@ const SONS = [
     texto: "Motor racing grandstand crowd roaring and cheering as a racing car flashes past, rising woooah then fading, open air, no engine, no music" },
   { id: "buzina", seg: 2, laco: false,
     texto: "Racing fans blowing two short air horn blasts in a grandstand, outdoor, distant crowd behind, no music" },
+  { id: "box-parada", seg: 3, laco: false,
+    texto: "Formula 1 pit stop: front and rear jacks lifting the car, four pneumatic wheel guns rattling at once brrrt, tyres changed, jacks drop, mechanics shout clear, no engine, no music" },
+  { id: "drs", seg: 1, laco: false,
+    texto: "Formula 1 rear wing DRS flap opening, short mechanical clack followed by a quick rush of air, onboard, no music" },
+  { id: "batida-muro", seg: 2, laco: false,
+    texto: "Racing car crashing into a concrete wall at speed, heavy carbon fibre impact, debris scraping and rattling, no music, no voices" },
+  { id: "batida-carro", seg: 1.5, laco: false,
+    texto: "Two racing cars touching wheels and bodywork at speed, sharp carbon fibre crunch and scrape, no music, no voices" },
+  { id: "chegada", seg: 5, laco: false,
+    texto: "Motor racing finish line: grandstand crowd erupts cheering and applauding, air horns, a few fireworks popping, open air, no engine, no music" },
+  { id: "chuva", seg: 10, laco: true,
+    texto: "Steady rain falling on a race track and grandstand roofs, water spray hiss, open air, no thunder, no engine, no music" },
 ];
 
 const argv = process.argv.slice(2), refazer = argv.includes("--refazer"), iso = argv.indexOf("--so");

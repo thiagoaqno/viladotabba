@@ -87,7 +87,7 @@ export function tribunaCoberta({ comprimento = 200, degraus = 8, altura = 5, fun
       const cor = cores[s % cores.length], xc = x0 + (s + 0.5) * sL;
       m.caixa(S, [xc, top / 2, zc], [sL - 0.4, top, fundo], { cor: tom(cor, 0.78) }); // o espelho
       m.caixa(S, [xc, top + 0.15, zc + fundo * 0.12], [sL - 0.4, 0.4, fundo * 0.7], { cor: tom(cor, 1.18) }); // o assento
-      if (publico > 0) for (let q = 0; q < sL - 3; q += 2.6) if (r() < publico) {
+      if (publico > 0) for (let q = 0; q < sL - 3; q += 2.6) if (r() < Math.min(0.85, publico * 2.2)) { // (cheia: o `publico` de cada GP vale o dobro, até 85%)
         const px = xc - sL / 2 + 1.6 + q + r() * 0.6, pz = zc - fundo * 0.15;
         m.caixa(S, [px, top + 1.9, pz], [1.9, 2.8, 1.5], { cor: camisas[(r() * camisas.length) | 0] }); m.caixa(S, [px, top + 3.9, pz], [1.3, 1.3, 1.3], { cor: PELES[(r() * 4) | 0] });
       }

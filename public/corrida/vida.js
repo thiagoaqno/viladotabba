@@ -103,24 +103,26 @@ export function enfeitar(tr, add, r, alturaEm) {
     const corda = new THREE.BufferGeometry().setFromPoints(base.map((b) => new THREE.Vector3(b.x, b.y + 0.2, b.z))); add(new THREE.Line(corda, new THREE.LineBasicMaterial({ color: 0x333333 })));
     V.bandeiras.push({ m: fl, base });
   }
-  // torcida na reta dos boxes: três fileiras dos dois lados, atrás do muro
+  // a torcida senta nas arquibancadas do kit (tr.arqDegraus), em TODAS da volta e cheias (uns 70% dos lugares); ninguém fica em pé
+  // no chão na beira da pista. Quem só anima perto da câmera é o laço de baixo, então muita gente não pesa.
   if (!t.espaco) {
-    const gente = [], pele = ["#f1c7a5", "#d9a37a", "#a8714a", "#7a4a2a", "#5a3520"], camisa = tr.camisasGP || ["#ffd23f", "#e63946", "#1e88e5", "#43a047", "#ffffff", "#fb8c00", "#8e24aa", "#111111"]; // os GPs podem vestir a torcida (tr.camisasGP)
-    const cb = t.boxes && window.F1Regras ? window.F1Regras.corredor(t, n, tr.W) : null; // o corredor dos boxes (regras de F1) fica sem torcida
-    for (let i = -Math.floor(n * 0.04); i < Math.floor(n * 0.05); i += 1) {
-      const p = pts[(i + n) % n];
-      for (const s of [-1, 1]) for (let fila = 0; fila < 3; fila++) {
-        if (r() < 0.35) continue;
-        if (cb && s === cb.lado && (((i - cb.i0) % n) + n) % n <= cb.len + 3) continue;
-        // na frente de uma arquibancada do kit, a torcida senta nos degraus dela (antes ficava no chão, por baixo da rampa)
-        const ii = (i + n) % n, arq = (tr.arqDegraus || []).find((q) => q.lado === s && fila < q.degraus && ((ii - q.i0) % n + n) % n <= q.i1 - q.i0);
-        const d = arq ? Math.abs(arq.l0) + 4.5 + fila * 9 : borda + 10 + fila * 8 + r() * 2, [x, z] = lat(p, s * d);
-        if (!arq && (tr.distAt(x, z) < d - 2 || tr.noCorredor?.(x, z) || (tr.ocupado && tr.ocupado(x, z)))) continue;
-        gente.push({ arq: !!arq, x, y: arq ? p.h + 4 + (fila + 0.5) * 6 : alturaEm(x, z, ii) + fila * 3.5 + (tr.elevarGente || 0), z, ry: Math.atan2(-p.nx * s, -p.ny * s), fase: r() * 6.3, ritmo: 5 + r() * 5, pula: r() < 0.6, pele: pele[(r() * 5) | 0], camisa: camisa[(r() * camisa.length) | 0] });
+    const pele = ["#f1c7a5", "#d9a37a", "#a8714a", "#7a4a2a", "#5a3520"], camisa = tr.camisasGP || ["#ffd23f", "#e63946", "#1e88e5", "#43a047", "#ffffff", "#fb8c00", "#8e24aa", "#111111"]; // os GPs podem vestir a torcida (tr.camisasGP)
+    const qs = (tr.arqDegraus || []).filter((q) => !q.ocupada), lugares = qs.reduce((a, q) => a + (((q.i1 - q.i0) % n + n) % n + 1) * q.degraus, 0);
+    const vaga = Math.max(0.3, 1 - Math.min(0.7, 4000 / Math.max(1, lugares))); // ~70% cheio, menos se a pista tem arquibancada demais (até ~4 mil pessoas)
+    V.torcidasArq = []; // uma torcida por arquibancada: cada uma só anima perto da câmera (o laço de baixo pula as de longe)
+    for (const q of qs) {
+      const s = q.lado, len = ((q.i1 - q.i0) % n + n) % n, gente = [];
+      for (let k = 0; k <= len; k++) {
+        const ii = (q.i0 + k) % n, p = pts[ii];
+        for (let fila = 0; fila < q.degraus; fila++) {
+          if (r() < vaga) continue;
+          const d = Math.abs(q.l0) + 4.5 + fila * 9, [x, z] = lat(p, s * d);
+          gente.push({ arq: true, x, y: p.h + 4 + (fila + 0.5) * 6, z, ry: Math.atan2(-p.nx * s, -p.ny * s), fase: r() * 6.3, ritmo: 5 + r() * 5, pula: r() < 0.6, pele: pele[(r() * 5) | 0], camisa: camisa[(r() * camisa.length) | 0] });
+        }
       }
+      if (gente.length) V.torcidasArq.push(montarTorcida(add, gente));
     }
-    if (tr.elevarGente) praticaveis(add, gente.filter((g) => !g.arq), tr.elevarGente);
-    V.torcida = montarTorcida(add, gente);
+    V.torcida = V.torcidasArq.shift() || null;
   }
   // céu: pássaros (de dia), o dirigível e balões
   const C = t.world / 2, topo = Math.max(...pts.map((p) => p.h));
@@ -179,7 +181,7 @@ export function animarVida(tr, dt, foco) {
   const parado = reduz.matches; V.tempo += dt; const t = V.tempo;
   for (const a of V.agua) if (a.map && !parado) { a.map.offset.x = (t * 0.012) % 1; a.map.offset.y = (t * 0.02) % 1; }
   // torcida: só mexe quem está perto da câmera (a de longe fica parada; ninguém vê a diferença)
-  for (const T of [V.torcida, ...(V.torcidas || [])]) {
+  for (const T of [V.torcida, ...(V.torcidas || []), ...(V.torcidasArq || [])]) {
     if (!T || parado) continue;
     if (foco && !T.primeira && (T.x - foco.x) ** 2 + (T.z - foco.y) ** 2 > 1000 ** 2) continue;
     if (!T.primeira && (V.vezT = (V.vezT || 0) + 1) % 2) continue; // longe da vista o pulo não precisa de 60 quadros

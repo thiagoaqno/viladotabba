@@ -34,6 +34,7 @@ export function vidaMonaco(tr, ctx, { lista, predioEm, hAt }) {
   // ---- a galera nas arquibancadas (as do kit; a da reta dos boxes é da torcida de vida.js) ----
   for (const q of tr.arqDegraus || []) {
     if ((((q.i0 + 0.04 * n) % n) + n) % n < 0.09 * n) continue;
+    q.ocupada = true; // (a torcida de vida.js não senta de novo aqui)
     for (let i = q.i0; i <= q.i1; i += 3) for (let fila = 0; fila < q.degraus; fila++) {
       if (r() < 0.32) continue;
       const p = pts[i % n], d = Math.abs(q.l0) + 4.5 + fila * 9 + (r() - 0.5) * 3, x = p.x + p.nx * q.lado * d, z = p.y + p.ny * q.lado * d;

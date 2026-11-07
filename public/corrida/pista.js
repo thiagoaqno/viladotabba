@@ -517,7 +517,7 @@ function buildWorld(tr) {
     else if (id === "rio") { if (rioSea(x, y)) continue; if (hAt(x, y) > 15 || r() < 0.5) jungle.push({ x, y, h: hAt(x, y), s: 1.3 + r() * 1.2 }); else blds.push({ x, y, h: hAt(x, y), s: 1, sx: 60 + r() * 50, sy: 70 + r() * 120, sz: 60 + r() * 50, dy: 0.5, r: r() * 3, c: ["#f4f1e6", "#e8e0cf", "#d9e6ef"][(r() * 3) | 0] }); }
     else towers.push({ x, y, h: hAt(x, y), s: 1, sx: 80 + r() * 60, sy: 150 + r() * 500, sz: 80 + r() * 60, dy: 0.5, r: r() * 3, c: ["#1d2033", "#242842", "#191b2b", "#2a2340"][(r() * 4) | 0] });
   }
-  if (id === "interlagos" || id === "laguna" || id === "nurburgring") for (let k = 0; k < 7; k++) { const p = pts[Math.floor(n * (0.015 + k * 0.013))], L = W / 2 + 70; stands.push({ x: p.x - p.nx * L, y: p.y - p.ny * L, h: p.h, s: 1, r: -Math.atan2(p.ny, p.nx) }); }
+  if (id === "laguna" || id === "nurburgring") for (let k = 0; k < 7; k++) { const p = pts[Math.floor(n * (0.015 + k * 0.013))], L = W / 2 + 70; stands.push({ x: p.x - p.nx * L, y: p.y - p.ny * L, h: p.h, s: 1, r: -Math.atan2(p.ny, p.nx) }); }
   // modelos
   if (PROPS.arvore) for (const { geo, mat } of PROPS.arvore.pecas) { const g = geo.clone(); g.scale(60, 60, 60); inst(g, mat, trees); } // a árvore do Kenney: 1,5 do modelo vira uns 9 m
   else { const leaf = new THREE.ConeGeometry(30, 70, 7); leaf.translate(0, 55, 0);
@@ -539,7 +539,7 @@ function buildWorld(tr) {
     const cab = new THREE.BoxGeometry(26, 6, 12); cab.translate(-4, 14, 0); inst(cab, M(0xeef1f5), yachts);
     const vidro = new THREE.BoxGeometry(16, 4.5, 10.5); vidro.translate(-2, 19, 0); inst(vidro, M(0x22313f, { roughness: 0.2, metalness: 0.4 }), yachts);
   }
-  if (id === "interlagos") for (const f of [0.16, 0.27, 0.39, 0.51, 0.63, 0.75, 0.87]) {
+  if (false) for (const f of [0.16, 0.27, 0.39, 0.51, 0.63, 0.75, 0.87]) { // (Interlagos: as arquibancadas agora são as do kit, com a torcida sentada: gps/interlagos.js)
     const p = pts[Math.floor(n * f)], L = W / 2 + 155, x = p.x - p.nx * L, y = p.y - p.ny * L;
     if (pts.every(q => Math.hypot(q.x - x, q.y - y) > W / 2 + 95)) stands.push({ x, y, h: hAt(x, y), s: 1, r: -Math.atan2(p.ny, p.nx) });
   }

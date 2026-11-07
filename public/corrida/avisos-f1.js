@@ -60,11 +60,14 @@ function tipoDoTexto(texto) {
 
 // Uma linha do log do servidor vira { tipo, texto } ou null (ruído: os robôs, quem entra e sai, e o que é dos outros pilotos e
 // só atrapalharia: as paradas, as batidas e os limites de pista deles). `nome`: o meu nome, para o que é só meu.
+const PARA_TODOS = new Set(["vermelha", "sc", "amarela", "verde"]);
 function deLinha(texto, nome) {
   const bruto = String(texto || ""), limpo = limpar(bruto);
   if (!limpo || /^🤖|^🏎️/.test(bruto) || /saiu da sala|Box aberto por|chegou ao box|aprenderam a volta|box da temporada|abriu o box|Classificação:/.test(bruto)) return null;
   const tipo = tipoDoTexto(bruto), meu = !!nome && bruto.includes(nome);
-  if ((tipo === "box" || tipo === "limite" || tipo === "batida") && !meu) return null;
+  // só aparece o que é seu (a sua punição, a sua batida, o seu box...) e o que muda a corrida de todo mundo: safety car, bandeira
+  // vermelha, amarela e verde. O que acontece com os outros pilotos fica no log, sem faixa na tela.
+  if (!meu && !PARA_TODOS.has(tipo)) return null;
   if (tipo === "chegada" && /cruzou a chegada/.test(bruto)) return null; // a minha bandeirada vem do estado do meu carro
   return { tipo, texto: limpo };
 }

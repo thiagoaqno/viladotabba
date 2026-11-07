@@ -55,7 +55,10 @@
 .tl.out{opacity:.55}
 /* o minimapa do traçado inteiro (hud-painel.js desenha) no canto inferior esquerdo */
 #race.f1hud .hud.bl{left:10px;bottom:10px}
-#race.f1hud #mini{width:210px;height:210px;border-radius:6px;background:#0a0c12a8;box-shadow:0 6px 16px #000a;filter:none}
+#race.f1hud #mini{width:210px;height:210px;border-radius:0;background:#0a0c12b0;box-shadow:none;filter:none}
+/* a borda do mapinha some num degradê até o transparente (na corrida e na classificação), em vez da caixa com quina: só a faixa
+   de fora esmaece, o traçado do meio fica inteiro */
+#mini{--borda:transparent,#000 13%,#000 87%,transparent;-webkit-mask-image:linear-gradient(to right,var(--borda)),linear-gradient(to bottom,var(--borda));-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,var(--borda)),linear-gradient(to bottom,var(--borda));mask-composite:intersect}
 #race.f1hud #mini{pointer-events:auto;cursor:pointer}
 #race.f1hud #mini.perto{background:transparent;box-shadow:none} /* o mapa de perto, como o do jogo da F1: só o traçado, sem caixa */ /* tocar no mapa troca entre a pista inteira e o de perto (hud.js) */
 @media (max-width:700px){

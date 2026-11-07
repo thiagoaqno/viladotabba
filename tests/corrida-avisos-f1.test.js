@@ -52,9 +52,9 @@ test("log: ruído de robôs e de outros pilotos não vira aviso; o que é meu e 
   assert.equal(de("💥 Beto: batida leve no muro; dano 1%"), null);
   assert.equal(de("🏁 Beto cruzou a chegada em 2º."), null);
   assert.deepEqual(de("⚫⚪ Ana: limite de pista (1/4)."), { tipo: "limite", texto: "Ana: limite de pista (1/4)." });
-  assert.equal(de("⏱️ Beto: queimou a largada, +5 s.").tipo, "punicao", "punição dos outros aparece (é da direção de prova)");
+  assert.equal(de("⏱️ Beto: queimou a largada, +5 s."), null, "a punição dos outros não aparece");
   assert.equal(de("🟡 Bandeira amarela no setor 2: detritos na pista.").tipo, "amarela");
-  assert.equal(de("🔧 Beto quebrou! Anda no modo de emergência.").tipo, "quebra");
+  assert.equal(de("🔧 Beto quebrou! Anda no modo de emergência."), null);
 });
 
 test("log: só as linhas novas e recentes entram, e o que já passou não repete", () => {

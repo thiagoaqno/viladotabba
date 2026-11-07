@@ -17,7 +17,7 @@ export const Sound = (() => {
   // e a torcida tocam eles; sem o arquivo, continua o som sintetizado de cada uma
   const amostras = {};
   function carregarAmostras(c) {
-    for (const id of ["zebra", "torcida", "torcida-uau", "buzina"]) {
+    for (const id of ["zebra", "torcida", "torcida-uau", "buzina", "box-parada", "drs", "batida-muro", "batida-carro", "chegada", "chuva"]) {
       fetch(`/corrida/sons/${id}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => b && c.decodeAudioData(b)).then((buf) => { if (buf) amostras[id] = buf; }).catch(() => {});
     }
   }
@@ -76,9 +76,15 @@ export const Sound = (() => {
   // chuva: um chiado de ruído filtrado (o mesmo buffer, em loop) pela intensidade da chuva, e o chiado dos pneus no molhado;
   // preparado ao iniciar uma corrida com chuva prevista, e sempre abaixo do motor
   let chuvaN = null;
+  let chuvaA = null;
   function chuva(nivel, pneus, preparar = false) {
-    if (!preparar && !chuvaN && nivel < 0.01 && pneus < 0.01) return;
+    if (!preparar && !chuvaN && !chuvaA && nivel < 0.01 && pneus < 0.01) return;
     const c = ctx(); if (!c) return;
+    if (amostras.chuva) { // a chuva gravada em laço; o chiado dos pneus no molhado segue sintetizado (abaixo), só sem o ruído da chuva
+      if (!chuvaA) chuvaA = laco(c, amostras.chuva);
+      chuvaA.g.gain.setTargetAtTime(on ? Math.min(1, nivel) * 0.55 : 0, c.currentTime, 0.4);
+      nivel = 0;
+    }
     if (!chuvaN) {
       const len = c.sampleRate * 2, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       const src = c.createBufferSource(), fc = c.createBiquadFilter(), gc = c.createGain(), fp = c.createBiquadFilter(), gp = c.createGain();
@@ -166,8 +172,10 @@ export const Sound = (() => {
   }
   // o engenheiro falando: os motores de F1 descem para ~35% e voltam devagar quando ele acaba
   function abafar(sim) { if (motorBus && ac) motorBus.gain.setTargetAtTime(sim ? 0.35 : 1, ac.currentTime, sim ? 0.08 : 0.35); }
-  function crash(forca) {
+  function crash(forca, tipo = "muro") {
     const c = ctx(); if (!c || !on) return;
+    const k0 = Math.min(1, forca / 260);
+    if (umaVez(`batida-${tipo}`, 0.25 + 0.6 * k0, 0.9 + Math.random() * 0.2)) return; // a batida gravada (muro ou carro), mais alta quanto mais forte
     const k = Math.min(1, forca / 260), t = c.currentTime, len = Math.floor(c.sampleRate * 0.25), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
     const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); src.buffer = b; f.type = "lowpass"; f.frequency.value = 900 + k * 2200; g.gain.value = 0.06 + k * 0.14;
@@ -185,7 +193,7 @@ export const Sound = (() => {
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol, 0.97 + Math.random() * 0.06); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

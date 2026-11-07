@@ -15,6 +15,12 @@ echo   zebra        pneu na zebra (3 s, em laco)
 echo   torcida      rumor da arquibancada (10 s, em laco)
 echo   torcida-uau  a galera quando o carro passa (3 s)
 echo   buzina       buzina da torcida (2 s)
+echo   box-parada   macacos e pistolas de roda no pit stop (3 s)
+echo   drs          a asa abrindo (1 s)
+echo   batida-muro  batida no muro (2 s)
+echo   batida-carro toque entre carros (1,5 s)
+echo   chegada      a festa da bandeirada (5 s)
+echo   chuva        chuva caindo na pista (10 s, em laco)
 echo.
 echo O que gerar?
 echo   1) So os que faltam
@@ -32,7 +38,7 @@ if "%M%"=="3" (
 )
 
 echo.
-echo Cada som gasta creditos de efeitos sonoros da sua conta (sao 4 sons curtos).
+echo Cada som gasta creditos de efeitos sonoros da sua conta (sao 10 sons curtos; com a opcao 1 so os que faltam).
 set "GO=N"
 set /p "GO=Continuar e gerar? s/N: "
 if /i not "!GO!"=="s" ( echo Cancelado. Nada foi gerado. & pause & exit /b 0 )

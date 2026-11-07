@@ -219,6 +219,8 @@ function loop(t) {
   Sound.zebra(correndo && race.naZebra && !race.car.air ? race.car.v : 0);
   if (!race.tr.mapaTorcida) montarMapaDaTorcida(race.tr, scene);
   Sound.torcida(correndo ? nivelDaTorcida(race.tr, race.car.x, race.car.y) : 0, race.car.v);
+  if (correndo && race.drsAtivo && !race.drsSom) Sound.tocar("drs", 0.6); // a asa abrindo
+  race.drsSom = !!race.drsAtivo;
   draw(dt);
   medirQuadro();
   hud();

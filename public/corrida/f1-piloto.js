@@ -138,7 +138,8 @@ function garantirCapacete() {
       });
       const ge = geos.length > 1 ? mergeGeometries(geos) : geos[0]; ge.computeBoundingSphere(); return ge;
     };
-    CAP3D.casco = montar([malhas.casco, malhas.vedacao], true); CAP3D.viseira = montar([malhas.viseira], false);
+    // (sem o forro: no mesmo lugar do casco ele brigava com ele e fazia pontinhos; o casco dos dois lados já fecha os furinhos)
+    CAP3D.casco = montar([malhas.casco], true); CAP3D.viseira = montar([malhas.viseira], false);
     CAP3D.caixa = { centro: centro.clone(), topo: bc.max.y, alt: bc.max.y - bc.min.y };
     for (const p of CAP3D.pilotos) vestirCapacete(p); CAP3D.pilotos.length = 0;
   }).catch((e) => { console.warn("Corrida: o capacete novo não carregou (fica o desenhado)", e); CAP3D.carregando = false; });
@@ -148,7 +149,7 @@ const CASCOS = new WeakMap();
 function materialDoCascoNovo(antigo) {
   let m = CASCOS.get(antigo); if (m) return m;
   const c = CAP3D.caixa, t = antigo.map; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true; // (sem mipmap: o atan deixaria uma costura)
-  m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.28, metalness: 0.08 });
+  m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.28, metalness: 0.08, side: THREE.DoubleSide }); // (os dois lados: a conversão do modelo do pódio pode inverter faces, e o capacete ficava "transparente")
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uCentro = { value: c.centro }; sh.uniforms.uAlt = { value: new THREE.Vector2(c.topo, c.alt) };
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec3 aPC;\nvarying vec3 vPCasco;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvPCasco = aPC;");
@@ -160,7 +161,7 @@ function materialDoCascoNovo(antigo) {
   m.customProgramCacheKey = () => "casco-carro";
   CASCOS.set(antigo, m); return m;
 }
-const VISEIRA_NOVA = () => (VISEIRA_NOVA.m ||= new THREE.MeshStandardMaterial({ color: 0x050709, roughness: 0.08, metalness: 0.9 }));
+const VISEIRA_NOVA = () => (VISEIRA_NOVA.m ||= new THREE.MeshStandardMaterial({ color: 0x050709, roughness: 0.08, metalness: 0.9, side: THREE.DoubleSide }));
 function vestirCapacete(p) {
   if (!CAP3D.casco) return;
   p.capacete.geometry = CAP3D.casco; p.capacete.material = materialDoCascoNovo(p.matCapacete);

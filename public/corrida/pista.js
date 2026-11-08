@@ -216,11 +216,27 @@ function buildWorld(tr) {
     for (let k = 0; k < pos.count; k++) { const c = cor(pos.getX(k) + WORLD / 2, pos.getZ(k) + WORLD / 2, pos.getY(k), nor.getY(k)); cores[k * 3] = c[0]; cores[k * 3 + 1] = c[1]; cores[k * 3 + 2] = c[2]; }
     geo.setAttribute("color", new THREE.BufferAttribute(cores, 3));
   }
-  const gtex = canvasTex(256, 256, (x, w, hh, rr) => { x.fillStyle = look.ground[0]; x.fillRect(0, 0, w, hh); for (let i = 0; i < 5000; i++) { x.fillStyle = look.ground[1 + ((rr() * 2) | 0)]; x.fillRect(rr() * w, rr() * hh, 3, 3); } });
+  // a grama: um ladrilho de 512 px com manchas suaves das três cores do GP e milhares de folhinhas (traços curtos e inclinados, mais claras
+  // e mais escuras), repetido a cada 90 u; por cima, uma variação grande (tGrande, a cada ~1000 u) que quebra a repetição do ladrilho
+  const gtex = canvasTex(512, 512, (x, w, hh, rr) => {
+    const [c0, c1, c2] = look.ground; x.fillStyle = c0; x.fillRect(0, 0, w, hh);
+    for (let i = 0; i < 40; i++) { const cx = rr() * w, cy = rr() * hh, raio = 30 + rr() * 90, cor = rr() < 0.5 ? c1 : c2; for (const dx of [-w, 0, w]) for (const dy of [-hh, 0, hh]) { const g = x.createRadialGradient(cx + dx, cy + dy, 0, cx + dx, cy + dy, raio); g.addColorStop(0, cor); g.addColorStop(1, "transparent"); x.globalAlpha = 0.35; x.fillStyle = g; x.fillRect(cx + dx - raio, cy + dy - raio, raio * 2, raio * 2); } }
+    x.globalAlpha = 1; x.lineCap = "round";
+    for (let i = 0; i < 22000; i++) { const px = rr() * w, py = rr() * hh, len = 2 + rr() * 5, ang = -Math.PI / 2 + (rr() - 0.5) * 1.2, k = rr();
+      x.strokeStyle = k < 0.33 ? c1 : k < 0.66 ? c2 : k < 0.83 ? "rgba(255,255,230,0.22)" : "rgba(0,20,0,0.25)"; x.lineWidth = 1 + (rr() < 0.25);
+      x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(ang) * len, py + Math.sin(ang) * len); x.stroke(); }
+  });
+  gtex.repeat.set(size / 90, size / 90);
+  const tGrande = canvasTex(128, 128, (x, w, hh, rr) => { x.fillStyle = "#808080"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 60; i++) { const cx = rr() * w, cy = rr() * hh, raio = 8 + rr() * 30, c = rr() < 0.5 ? 40 : 215; for (const dx of [-w, 0, w]) for (const dy of [-hh, 0, hh]) { const g = x.createRadialGradient(cx + dx, cy + dy, 0, cx + dx, cy + dy, raio); g.addColorStop(0, `rgba(${c},${c},${c},0.45)`); g.addColorStop(1, `rgba(${c},${c},${c},0)`); x.fillStyle = g; x.fillRect(cx + dx - raio, cy + dy - raio, raio * 2, raio * 2); } } });
   gtex.repeat.set(size / 120, size / 120);
   // em pedaços (8 × 8): a malha inteira tem quase 300 mil triângulos e era desenhada toda a cada quadro; assim a placa
   // só desenha os pedaços que aparecem na tela. As normais já foram calculadas na malha inteira (sem emenda entre eles)
   const chaoM = new THREE.MeshStandardMaterial({ map: gtex, roughness: 1, vertexColors: !!geo.attributes.color });
+  chaoM.onBeforeCompile = (sh) => { // a variação grande da grama (tGrande), sobre a mesma coordenada do ladrilho, ~11x maior
+    sh.uniforms.tGrande = { value: tGrande };
+    sh.fragmentShader = "uniform sampler2D tGrande;\n" + sh.fragmentShader.replace("#include <map_fragment>", "#include <map_fragment>\n  diffuseColor.rgb *= 0.8 + 0.4 * texture2D(tGrande, vMapUv * 0.09).r;");
+  };
+  chaoM.customProgramCacheKey = () => "chao-grande";
   const lisos = [];
   for (const pedaco of emPedacos(geo, S, gp?.terreno?.pedacos ?? 8)) { // (`terreno` do GP: a grade e os pedaços; Mônaco usa menos, para caber no teto de malhas e triângulos)
     if (pedaco.userData.liso) { lisos.push(pedaco); continue; }
@@ -519,8 +535,27 @@ function buildWorld(tr) {
   }
   if (id === "laguna" || id === "nurburgring") for (let k = 0; k < 7; k++) { const p = pts[Math.floor(n * (0.015 + k * 0.013))], L = W / 2 + 70; stands.push({ x: p.x - p.nx * L, y: p.y - p.ny * L, h: p.h, s: 1, r: -Math.atan2(p.ny, p.nx) }); }
   // modelos
-  if (PROPS.arvore) for (const { geo, mat } of PROPS.arvore.pecas) { const g = geo.clone(); g.scale(60, 60, 60); inst(g, mat, trees); } // a árvore do Kenney: 1,5 do modelo vira uns 9 m
-  else { const leaf = new THREE.ConeGeometry(30, 70, 7); leaf.translate(0, 55, 0);
+  // as árvores: as que o carro vê de perto (até ARV_PACK, a menos de ARV_PERTO u da pista) são as do pack de natureza (props.js: folhas com
+  // textura, uns 3 mil triângulos cada), plátano ou pinheiro; as de longe ficam com a do Kenney. Cada uma ganha um tom de verde próprio
+  // (antes eram todas do mesmo verde-menta, que parecia de plástico)
+  const ARV_PACK = 140, ARV_PERTO = W / 2 + 180, pack = PROPS.natureza, pinho = id === "nurburgring" || id === "spa" || id === "serra";
+  const tom = (o) => { const v = 0.62 + ((Math.sin(o.x * 12.9898 + o.y * 78.233) * 43758.5453) % 1 + 1) % 1 * 0.38; return new THREE.Color(v * 0.86, v, v * 0.78); };
+  let longe = trees;
+  if (pack) {
+    const perto = [], resto = []; for (const o of trees) (perto.length < ARV_PACK && tr.distAt(o.x, o.y) < ARV_PERTO ? perto : resto).push(o); longe = resto;
+    const grupos = new Map();
+    perto.forEach((o, k) => { const vs = pinho && k % 3 ? pack.pinheiro : pack.platano, v = vs[k % vs.length]; if (!grupos.has(v)) grupos.set(v, []); grupos.get(v).push(o); });
+    const d = new THREE.Object3D();
+    for (const [pecasArv, lista] of grupos) for (const { geo, mat, folha } of pecasArv) {
+      const m = add(new THREE.InstancedMesh(geo, mat, lista.length)); m.name = `${id}-arvore-pack`; m.castShadow = false; m.receiveShadow = true;
+      lista.forEach((o, i) => { const h = 50 * o.s; d.position.set(o.x, o.h, o.y); d.rotation.set(0, (o.x * 7.1 + o.y * 3.3) % 6.28, 0); d.scale.set(h, h, h); d.updateMatrix(); m.setMatrixAt(i, d.matrix); m.setColorAt(i, folha ? tom(o) : new THREE.Color(1, 1, 1)); });
+    }
+  }
+  if (PROPS.arvore) for (const { geo, mat } of PROPS.arvore.pecas) { // a árvore do Kenney (1,5 do modelo vira uns 9 m), num verde mais fechado e variado
+    const g = geo.clone(); g.scale(60, 60, 60); const folhas = mat.color && mat.color.g > mat.color.r * 1.1, m2 = mat.clone(); if (folhas) m2.color.multiplyScalar(0.62);
+    const m = inst(g, m2, longe); if (m && folhas) { longe.forEach((o, i) => m.setColorAt(i, tom(o))); m.instanceColor.needsUpdate = true; }
+  }
+  if (!PROPS.arvore) { const leaf = new THREE.ConeGeometry(30, 70, 7); leaf.translate(0, 55, 0);
     inst(leaf, M(0x2d7a33), trees); const trunk = new THREE.CylinderGeometry(4, 5, 30, 6); trunk.translate(0, 15, 0); inst(trunk, M(0x6b4423), trees); }
   const pt = new THREE.CylinderGeometry(2, 3, 60, 6); pt.translate(0, 30, 0); inst(pt, M(0x8b5a2b), palms);
   const fronds = new THREE.ConeGeometry(22, 12, 6, 1, true); fronds.translate(0, 62, 0); inst(fronds, M(0x2f8f3a, { side: THREE.DoubleSide }), palms);

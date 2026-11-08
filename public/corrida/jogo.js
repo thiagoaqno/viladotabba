@@ -255,7 +255,7 @@ function draw(dt) {
   for (const [id, gh] of race.ghosts) {
     const pl = P(id); if (!pl) continue;
     if (pl.dnf) { if (gh.kart) { dropKart(gh.kart); gh.kart = null; } continue; }
-    const key = pl.color + pl.car + JSON.stringify(pl.mods || {}) + (pl.numero || ""); if (!gh.kart || gh.kartKey !== key) { dropKart(gh.kart); gh.kart = makeKart(pl.color, pl.car, false, pl.name, pl.mods, undefined, true, { numero: pl.numero, sigla: pl.bot ? pl.sigla : null }); gh.kartKey = key; }
+    const key = pl.color + pl.car + JSON.stringify(pl.mods || {}) + (pl.numero || ""); if (!gh.kart || gh.kartKey !== key) { dropKart(gh.kart); gh.kart = makeKart(pl.color, pl.car, false, pl.bot ? "" : pl.name, pl.mods, undefined, true, { numero: pl.numero, sigla: pl.bot ? pl.sigla : null }); gh.kartKey = key; }
     // carro que não se vê daqui: nem desenha nem anima, só leva o nome junto (recorte.js)
     const aparece = carroVisivel(tr, cam, gh.x, gh.y, gh.idx); mostrarCarro(gh.kart, aparece);
     if (!aparece) { gh.kart.g.position.set(gh.x, gh.z, gh.y); gh.aAnt = gh.a; gh.zAnt = gh.z; continue; }

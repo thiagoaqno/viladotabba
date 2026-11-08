@@ -24,7 +24,7 @@ const PERFIS = {
   bortoleto:   [0.75, 0.67, 0.72, 0.62, 0.64, "oportunista"],
   gasly:       [0.68, 0.67, 0.66, 0.62, 0.60, "undercut"],
   colapinto:   [0.77, 0.68, 0.75, 0.44, 0.46, "undercut"],
-  ocon:        [0.69, 0.85, 0.70, 0.61, 0.60, "plano"],
+  camara:      [0.76, 0.66, 0.74, 0.46, 0.48, "undercut"],
   bearman:     [0.78, 0.70, 0.76, 0.48, 0.50, "undercut"],
   perez:       [0.62, 0.73, 0.57, 0.81, 0.90, "overcut"],
   bottas:      [0.59, 0.60, 0.58, 0.70, 0.67, "plano"],
@@ -49,7 +49,7 @@ const PILOTAGEM = {
   bortoleto:   [0.70, 0.64, 0.60, 0.24],
   gasly:       [0.68, 0.66, 0.58, 0.18],
   colapinto:   [0.74, 0.58, 0.66, 0.38],
-  ocon:        [0.68, 0.62, 0.58, 0.20],
+  camara:      [0.72, 0.58, 0.62, 0.34],
   bearman:     [0.74, 0.60, 0.64, 0.32],
   perez:       [0.58, 0.72, 0.50, 0.20],
   bottas:      [0.56, 0.66, 0.50, 0.14],
@@ -89,7 +89,9 @@ function parametros(room, p, nivel) {
   const ataque = Math.max(0, Math.min(1, perfil.ataque + press));
   return { perfil, ataque, antec: nivel.antec * (0.84 + 0.16 * ataque),
     defende: Math.max(0, Math.min(0.9, nivel.defende * (0.6 + perfil.defesa * 0.4))),
-    diferencaMinima: 8.5 - ataque * 2.5, espera: Math.round(800 + perfil.paciencia * 800),
+    // com os carros parelhos a diferença de velocidade é pequena: antes era preciso 6 a 8,5 a mais para tentar, e a fila só freava
+    // atrás (parecia que os robôs travavam). Agora 2,5 a 4,5 bastam, e a nova tentativa vem mais cedo
+    diferencaMinima: 4.5 - ataque * 2, espera: Math.round(450 + perfil.paciencia * 500),
     desgaste: 1.05 - perfil.pneus * 0.1 };
 }
 module.exports = { PERFIS, PILOTAGEM, CAMPOS, BOXES, original, dePiloto, limpar, ajustar, pressao, parametros };

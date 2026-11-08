@@ -230,6 +230,7 @@ function montarAmbiente(R) {
   AMB.spec = carOf(m); AMB.manual = S.config.cambio === "manual"; AMB.dano = m.dano || 0; AMB.drsZona = m.drsZona ?? -1;
   AMB.safety = !!(d && d.safety); AMB.setorAmarelo = d && d.amarelo ? d.amarelo.setor : -1; AMB.ersAuto = S.config.ers !== "manual";
   AMB.voltas = S.config.voltas; AMB.laps = m.laps || 0; AMB.paradas = m.paradas || 0; AMB.semente = S.semente; AMB.id = m.id; AMB.grid = m.grid; AMB.equipe = m.equipe || null;
+  AMB.boxOcupado = window.Sim.garagemOcupada(Object.values(S.players || {}), m, (o) => o.boxFase); // a fila do box da equipe (o servidor usa a mesma conta)
   AMB.finish = m.finish; AMB.dnf = !!m.dnf; AMB.quali = S.phase === "quali"; AMB.fantasma = m.finish != null; AMB.f1 = true;
   AMB.jogos = m.jogos || null; // (os jogos de pneu: a recomendação do menu do box)
   AMB.stopGo = m.stopGo ? m.stopGo.s : 0; // stop-and-go pendente: a próxima visita ao box é só ele (o servidor usa a mesma conta)
@@ -304,6 +305,9 @@ function aoEvento(R, e) {
   else if (e.t === "respawn") Sound.pop();
   // os macacos e as pistolas de roda (o som gravado; sem ele, o estalo): quando a troca começa (parou sem menu, ou escolheu o pneu no menu)
   else if ((e.t === "boxParou" && !e.escolha) || e.t === "boxEscolheu") { if (!Sound.pitStop()) Sound.pop(); }
+  // a fila do box da equipe: o companheiro está na garagem, espera logo atrás (com as regras de F1 vira a faixa da direção de prova)
+  else if (e.t === "boxFila") { const msg = "Box ocupado: espere o companheiro sair da garagem"; if (window.HudF1?.avisar) window.HudF1.avisar(msg, { ms: 3000 }); else toast(`⏳ ${msg}`, 3000); }
+  else if (e.t === "boxFilaFim") toast("🔧 Garagem livre: sua vez", 1800);
   else if (e.t === "boxTrocou") { if (!Sound.fimDoPit()) Sound.pop(); }
   else if (e.t === "muro" && e.forca > 90 && (R.hitT || 0) <= 0) { Sound.crash(e.forca, "muro"); R.hitT = 0.4; }
   else if (e.t === "box" && e.fase === "sai") { R.pedidoBox = null; toast(`🔧 ${window.F1Regras.textoDaParada(R.car.box.parada)}`, 2400); }

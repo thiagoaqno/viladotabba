@@ -471,7 +471,8 @@ const ALEM_MONACO = 14; // Mônaco, disputa: o centro do carro pode passar até 
 const ATAQUE_PERTO_MONACO = L_CARRO * 2.5; // Mônaco: só começa a ultrapassar com o alvo a até 2,5 carros (ao longo da pista), onde o lado medido ainda vale
 const MARG_PARADO = 28; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 26
 const ARRANQUE_INI_MS = 2000, ARRANQUE_RAMPA_MS = 4000, ARRANQUE_SEM_ULT_MS = 3500; // a largada: a reserva de espaço à frente volta ao normal entre 2 s e 6 s, e sem ultrapassagem nos primeiros 3,5 s
-const TRANSITO_NIVEL = { facil: { margem: 52, antec: 0.75, defende: 0 }, medio: { margem: 44, antec: 1, defende: 0.5 }, dificil: { margem: 44, antec: 1, defende: 0.5 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
+// (2026-11: mais agressivos depois dos carros parelhos: emparelham mais cedo, mais perto de lado, e o difícil defende mais)
+const TRANSITO_NIVEL = { facil: { margem: 48, antec: 0.95, defende: 0.2 }, medio: { margem: 38, antec: 1.3, defende: 0.55 }, dificil: { margem: 35, antec: 1.5, defende: 0.65 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
 // a distância (u) até o ponto em que o perfil exige frear a partir da velocidade `v` (0: já freando; Infinity: nada nos próximos 540 u)
 function distanciaDaFreada(fis, n, i, v) { const lim = v * 0.9; for (let k = 0; k <= 90; k++) if (fis[(i + k) % n] < lim) return k * STEP; return Infinity; }
 // o lado de dentro da próxima curva de verdade (+1: lado de lat positivo; -1; 0 sem curva nos próximos ~600 u)
@@ -663,6 +664,12 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
         if (F1.sorteio(`defesa:${room.semente}:${p.id}:${chave}`)() < estilo.defende) ia.defesa = { id: tras.oid, lado: dentro, ate: now + Math.min(3000, (dFreio / Math.max(ia.v, 60)) * 1000) };
       }
     }
+    // o vácuo: na reta, longe da freada, sem manobra nem defesa, o robô se alinha atrás do carro da frente para pegar o vácuo
+    // (e daí sai de lado para atacar já com a velocidade a mais); só se a linha dele cabe na pista e ninguém está ao meu lado
+    if (!ia.ult && !ia.defesa && alvo && reta && !monaco && dFreio > 160 && alvo.frente > L_CARRO * 1.4 && alvo.frente < 230 && !out.bloqPos && !out.bloqNeg && Math.abs(alvo.latOutro) <= maxLat) {
+      const peso = Math.min(1, (230 - alvo.frente) / 120) * 0.8;
+      out.desvio = (alvo.latOutro - baseLat) * peso;
+    }
     if (ia.defesa) {
       const emparelhou = out.bloqPos || out.bloqNeg;
       if (now > ia.defesa.ate || dFreio < 20 || ia.ult) ia.defesa = null;
@@ -802,6 +809,9 @@ function decidirParada(room, p, ia, car, spec, cl) {
   const pneu = car.pneu, fator = (spec.desgaste || 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste, taxa = taxaDoPneu(pneu.composto, fator);
   const restam = voltas - feitas - 1, usados = new Set(p.compostos || [p.pneu || F1.COMPOSTO_PADRAO]);
   if (chuvoso && cl) { const pelaAgua = trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator); if (pelaAgua) return pelaAgua; if (!F1.SECOS.includes(pneu.composto) && cl.agua + (ia.vies || 0) > 0.3) return null; }
+  // carro avariado (mais de 10% de dano): para no box para consertar. Com o pneu ainda bom, só conserta ("manter", sem trocar); gasto, troca
+  // também (o serviço do box conserta o dano em toda parada, concluirParada em corrida.js)
+  if ((p.dano || 0) > 10 && restam >= 1) { if (pneu.desgaste < F1.PENHASCO * 0.6) return "manter"; return escolherComposto(restam, usados, fator, p); }
   const chega = pneu.desgaste + taxa * (restam + 0.35) <= F1.PENHASCO; // o resto da corrida e o começo da volta de chegada
   const passaNaProxima = pneu.desgaste + taxa > F1.PENHASCO; // a volta que vem já passaria do penhasco
   // a volta planejada, ajustada pelo jeito: o undercut para uma volta antes se está colado no da frente; o overcut estica uma volta em
@@ -928,7 +938,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     // Em pista livre usa a bateria nas retas; no trânsito reserva energia e só aciona forte ao tentar passar.
     amarela: room.direcao?.amarelo?.setor === Math.floor(i / (n / T.SECTORS)), ersAuto: !ia.ult && !tf.encontrou && !tf.tras && now - room.startAt > 6000,
     voltas: room.config.voltas, laps: p.laps || 0, paradas: (p.paradas || []).length,
-    semente: room.semente, id: p.id, grid: p.grid, f1: true, agua: cl.agua, outros, stopGo, fatorDesgastePneu: Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste };
+    semente: room.semente, id: p.id, grid: p.grid, equipe: p.equipe || null, f1: true, agua: cl.agua, outros, stopGo,
+    boxOcupado: Sim.garagemOcupada(Object.values(room.players), p, (o) => Sim.faseDoBox((o.sim ? o.sim.c : o.ia && o.ia.sim)?.box)), // a fila do box da equipe
+    fatorDesgastePneu: Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste };
   const ent = ia.ent || (ia.ent = {});
   const ev = [], evC = [];
   // o ritmo varia de volta para volta (consistência), e de vez em quando o piloto erra a freada e entra forte demais na curva (taxa de erro)
@@ -982,7 +994,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     for (const e of evC) if (e.forca >= 5) emit("batida", { id: p.id, forca: e.forca, tipo: "carro", chave: "carro:" + e.id }); // (a direção de prova decide: abaixo da força mínima só vale se o outro derrapava)
     for (const e of ev) {
       if (e.t === "setor") setor(p, e.s);
-      else if (e.t === "box" && e.fase === "sai") emit("box", { id: p.id, composto: e.composto, tempo: e.tempo, volta: e.volta, stopGo: !!e.stopGo, troca: !!e.troca, sg: e.sg });
+      else if (e.t === "box" && e.fase === "sai") emit("box", { id: p.id, composto: e.composto, tempo: e.tempo, volta: e.volta, stopGo: !!e.stopGo, troca: !!e.troca, sg: e.sg, manter: !!e.manter });
       else if (e.t === "muro" && e.forca >= F1.BATIDA_MIN) emit("batida", { id: p.id, forca: e.forca, tipo: "muro" });
     }
     amb.laps = p.laps || 0;

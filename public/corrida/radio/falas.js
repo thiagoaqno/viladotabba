@@ -86,7 +86,7 @@ for (const [quando, textos] of Object.entries(SITUACOES)) textos.forEach((texto,
 const NOMES = {
   norris: "Norris", piastri: "Piastri", leclerc: "Leclerc", hamilton: "Hamilton", russell: "Russell", antonelli: "Antonelli", verstappen: "Verstappen",
   hadjar: "Hadjar", lawson: "Lawson", lindblad: "Lindblad", alonso: "Alonso", stroll: "Stroll", albon: "Albon", sainz: "Sainz", hulkenberg: "Hülkenberg",
-  bortoleto: "Bortoleto", gasly: "Gasly", colapinto: "Colapinto", ocon: "Ocon", bearman: "Bearman", perez: "Pérez", bottas: "Bottas",
+  bortoleto: "Bortoleto", gasly: "Gasly", colapinto: "Colapinto", camara: "Câmara", bearman: "Bearman", perez: "Pérez", bottas: "Bottas",
   // a galera (o nome que a pessoa usa na sala, sem acento e em minúsculas, vira o id)
   tabba: "Tabba", kizzy: "Kizzy", "1kizzy": "Kizzy", notizin: "Notizin", sho: "Shô", dollyin: "Dollyin", dolllyin: "Dollyin", atrox: "Átrox", jv: "Jota Vê", verago: "Verago", nikao: "Nikão",
 };

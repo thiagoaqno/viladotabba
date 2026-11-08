@@ -374,6 +374,8 @@ function passoBox(c, ent, amb, tr, p, ev) {
     const uEntrada = rel + 0.5, garagem = F1.garagemDe(cor, amb.grid || 0, amb.equipe);
     const desvioEntrada = direto ? lado - cor.latParada(uEntrada, garagem, lado) : 0;
     Object.assign(B, { fase: "entra", u: uEntrada, uEntrada, desvioEntrada, lat0: lado, t: 0, composto: decidir ? null : B.pedido, escolher: decidir, rec, tt: tempoTroca, manter: false, stopGo, troca: !decidir && stopGo && B.pedido !== atual ? { parada: tempoTroca, t: 0 } : null, sg: stopGo ? amb.stopGo : 0, volta: (amb.laps || 0) + 1, n, parada: stopGo ? amb.stopGo : tempoTroca, garagem, tick0: c.tick });
+    // "manter" direto (o robô com o carro avariado e o pneu ainda bom): para só para consertar, sem trocar o pneu, numa parada curta
+    if (B.pedido === "manter" && !stopGo) { B.composto = atual; B.manter = true; B.parada = F1.PARADA_CONSERTO || 3.2; B.troca = null; }
     if (ev) ev.push({ t: "box", fase: "entra", volta: B.volta, n, stopGo: stopGo || undefined });
   }
   c.v = Math.min(c.v, vlim); // o limitador vale para todos desde a entrada, também para pedidos e robôs

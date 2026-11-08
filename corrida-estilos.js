@@ -89,7 +89,9 @@ function parametros(room, p, nivel) {
   const ataque = Math.max(0, Math.min(1, perfil.ataque + press));
   return { perfil, ataque, antec: nivel.antec * (0.84 + 0.16 * ataque),
     defende: Math.max(0, Math.min(0.9, nivel.defende * (0.6 + perfil.defesa * 0.4))),
-    diferencaMinima: 8.5 - ataque * 2.5, espera: Math.round(800 + perfil.paciencia * 800),
+    // com os carros parelhos a diferença de velocidade é pequena: antes era preciso 6 a 8,5 a mais para tentar, e a fila só freava
+    // atrás (parecia que os robôs travavam). Agora 2,5 a 4,5 bastam, e a nova tentativa vem mais cedo
+    diferencaMinima: 4.5 - ataque * 2, espera: Math.round(450 + perfil.paciencia * 500),
     desgaste: 1.05 - perfil.pneus * 0.1 };
 }
 module.exports = { PERFIS, PILOTAGEM, CAMPOS, BOXES, original, dePiloto, limpar, ajustar, pressao, parametros };

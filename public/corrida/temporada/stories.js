@@ -79,7 +79,8 @@ function modeloDe(x) {
   if (x.modelo) { const [l, f] = x.modelo.split(":"); return [l === "duelo" && !x.eq2 ? "capa" : l === "pista" && !x.pista ? "capa" : l, f]; }
   const ls = LAYOUTS[x.k.split(":")[0]] || ["capa"], a = hashK(x.k + ":l"), b = hashK(x.k + ":f");
   let l = ls[a % ls.length]; if (l === "duelo" && !x.eq2) l = "capa"; if (l === "pista" && !x.pista) l = "numero";
-  return [l, FUNDOS[b % FUNDOS.length]];
+  const fundos = x.k.startsWith("prox:") && x.foto ? ["foto", "vidro"] : FUNDOS; // a próxima pista sempre com a foto dela no fundo
+  return [l, fundos[b % fundos.length]];
 }
 function corpoDo(x, l) {
   const eqs = root.F1Pilotos.EQUIPES, tit = `<h2>${h(x.tit)}</h2>`, sub = x.sub ? `<p>${h(x.sub)}</p>` : "";

@@ -14,10 +14,10 @@ Todas as 24 pistas de GP de F1 com **traçado real, comprimento real, largura re
 | #604 | As 10 pistas fora do calendário da F1 foram apagadas. |
 | #605 | **Interlagos (o piloto)** e a **chave de escala do cenário por GP**: `escala` e `escalaGente` na configuração do GP (`gps/<id>.js`), lidas como `tr.escala` e `tr.escalaGente` (padrão 1). O #605 inclui o #603. |
 | #602 | Cidade do México no comprimento e na largura reais (falta só o cenário: `escala`). |
-| #606 | Spa inteira na escala real. |
-| (em andamento) | Mônaco, no branch `feat/escala-monaco`. Confira se já virou PR antes de mexer nela. |
+| #606 | Spa inteira na escala real (branch `feat/escala-spa`; se o PR ainda não entrou, junte no integrador). |
+| (em andamento) | Mônaco: outra conta está terminando. O trabalho parcial está no worktree `klk/escala-monaco` (branch `feat/escala-monaco`, local). Confira com o Thiago antes de mexer. |
 
-O #603, o #604 e o #605 já estão na main: crie os branches novos a partir de `origin/main`.
+O #601 a #607 entraram na main e depois saíram dela (PR #608), para o site ficar na versão estável: todo esse trabalho está em `feat/escala-real-pistas`. Crie os branches novos a partir dele, nunca da main.
 
 ## A receita (por pista)
 
@@ -68,18 +68,24 @@ Ordem sugerida: primeiro as de cenário genérico (Hungaroring, Madri, Catar, Ab
 
 ## Como trabalhar (regras do Thiago)
 
-- **Subagentes Sonnet em esforço alto**, no máximo **2 ao mesmo tempo**, um por pista, em segundo plano. Cada um num worktree próprio em `C:\Users\thiag\Downloads\lts\klk\`, criado de `origin/main` (ou do branch do piloto, se ainda não mesclado):
-  `git worktree add -b feat/escala-<pista> ../escala-<pista> origin/main`
+**Tudo num branch local de integração, com um mega PR só no fim.** Decidido em 2026-11-08 para não estourar o limite semanal com conflitos e PRs pequenos.
+
+- O branch de integração `feat/escala-real-pistas` **já existe** (worktree `C:Users	hiagDownloadsltsklkescala-real-pistas`, backup no GitHub) e já tem o carro real, Interlagos, Cidade do México e Spa. **A main voltou para a versão de antes da escala real (PR #608), então nada de escala real parte da main.** Junte nele Mônaco quando a outra conta terminar (branch local `feat/escala-monaco`, worktree `klk/escala-monaco`).
+- **Uma pista por subagente, cada um no seu worktree, criado a partir do branch de integração** (nunca dois subagentes no mesmo worktree):
+  `git worktree add -b escala/<pista> ../escala-<pista> feat/escala-real-pistas`
   e `node_modules` ligado por junção ao de `klk/robos-pedal` (`mklink /J`). **Nunca** `git clone` nem `npm ci`: a internet do Thiago é de plano.
-- Cada subagente usa uma porta própria para o servidor (`PORT=33xx DB_PATH=:memory: node server.js`) e para no fim.
-- **Prints obrigatórios** antes de abrir o PR (Playwright em `node_modules/.bin/playwright`), com o carro à vista: largada, as curvas famosas e uma vista geral. Sem prints, sem PR. Poucos prints. Se o painel do navegador do app estiver escondido, a cena não desenha: use o Playwright.
-- **Não criar testes.** Teste antigo que quebra só porque a pista mudou de tamanho: apagar e dizer no PR.
-- Rodar só `node --check`. A suíte fica com o CI do GitHub.
-- Sem número inventado. Todo número do PR é medido.
-- `brach.md` é o corpo do PR, em português claro, com o que foi e o que NÃO foi conferido, terminando com `🤖 Generated with [Claude Code](https://claude.com/claude-code)`. Um parágrafo no `CLAUDE.md` e a pista marcada como feita em `planos/escala-real.md`.
+- O subagente **faz commit no branch dele e NÃO dá push nem abre PR**. Ele também não escreve o `brach.md`: as notas da pista (números medidos, fontes, prints, o que ficou de fora) vão para `planos/escala-real.md`, na seção da pista.
+- Quando a pista termina e está conferida, **você** junta no integrador (`git -C ../escala-real-pistas merge --no-edit escala/<pista>`), resolve os conflitos juntando os dois lados (em geral `CLAUDE.md`, `kit/README.md`, `planos/escala-real.md` e `corrida-linhas-f1.json`) e apaga o worktree da pista.
+- **Backup:** de tempos em tempos, `git push origin feat/escala-real-pistas`, SEM abrir PR, só para não perder o trabalho se o disco falhar.
+- **No fim**, com todas as pistas juntas: escreva um `brach.md` só, com o resumo de cada pista, e o Thiago abre o mega PR (ou você abre com `gh pr create --body-file brach.md` se ele pedir). Não faça merge.
+- **Migrações:** cada pista tem a sua (`migracoes/NNN-<pista>-escala-real.sql`). Reserve os números em sequência no integrador para não repetir.
+- **Subagentes Sonnet em esforço alto**, no máximo **2 ao mesmo tempo**, em segundo plano, cada um com uma porta própria (`PORT=33xx DB_PATH=:memory: node server.js`), parando o servidor no fim.
+- **Prints obrigatórios** antes de a pista ir para o integrador (Playwright em `node_modules/.bin/playwright`), com o carro à vista: largada, as curvas famosas e uma vista geral. Poucos prints. Se o painel do navegador do app estiver escondido, a cena não desenha: use o Playwright.
+- **Não criar testes.** Teste antigo que quebra só porque a pista mudou de tamanho: apagar e anotar.
+- Rodar só `node --check`. A suíte fica com o CI do GitHub, no mega PR.
+- Sem número inventado. Todo número anotado é medido.
 - Commit terminando com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- **Não fazer merge.** O merge é do Thiago.
-- Quando o subagente parar por limite de uso, retome o MESMO subagente (SendMessage), sem começar outro.
+- Quando um subagente parar por limite de uso, retome o MESMO subagente (SendMessage), sem começar outro.
 
 ## Armadilhas já encontradas
 
@@ -92,4 +98,4 @@ Ordem sugerida: primeiro as de cenário genérico (Hungaroring, Madri, Catar, Ab
 
 ## Texto para mandar a cada subagente (troque os campos)
 
-> Leve **<PISTA>** inteira para a escala real na Corrida da Galera, seguindo `planos/escala-real.md` e a receita de `C:\Users\thiag\Downloads\lts\GUIA-ESCALA-REAL.md`. Onde: só no worktree `C:\Users\thiag\Downloads\lts\klk\escala-<pista>`, branch `feat/escala-<pista>`. Servidor: `PORT=<porta> DB_PATH=:memory: node server.js`. Bacinger: `<id>`. Real: <km> km (fator ~<fator>). Faça os 7 passos da receita, com prints obrigatórios (largada, <curvas famosas>, vista geral, carro à vista), corrida com robôs, migração dos recordes, `brach.md`, commit com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`, push e PR com `gh pr create --body-file brach.md`, sem merge. Responda com o link do PR, os números medidos, os prints e o que ficou de fora.
+> Leve **<PISTA>** inteira para a escala real na Corrida da Galera, seguindo `planos/escala-real.md` e a receita de `C:Users	hiagDownloadsltsGUIA-ESCALA-REAL.md`. Onde: só no worktree `C:Users	hiagDownloadsltsklkescala-<pista>`, branch `escala/<pista>` (criado do branch de integração `feat/escala-real-pistas`). Servidor: `PORT=<porta> DB_PATH=:memory: node server.js`. Bacinger: `<id>`. Real: <km> km (fator ~<fator>). Faça os 7 passos da receita, com prints obrigatórios (largada, <curvas famosas>, vista geral, carro à vista), corrida com robôs e migração dos recordes (número <NNN>). Anote os números, as fontes, os prints e o que ficou de fora na seção da pista em `planos/escala-real.md`. Faça commit com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` no seu branch, SEM push, SEM PR e sem mexer no `brach.md`. Responda com os números medidos, os caminhos dos prints e o que ficou de fora.

@@ -127,6 +127,7 @@ function atualizarDRS(c, zona, autorizada, bloqueado, freando = false) {
 // ---------- o vácuo ----------
 // Logo atrás de outro carro (até ~17 m, na mesma linha e na mesma direção) o ar empurra menos. Devolve 0..1 (1 = colado).
 // outros: [{ x, y, z, a, dnf, fant }]
+const VACUO_ALCANCE = 450;
 function vacuoAlvo(c, outros) {
   if (c.air || !F1.vacuoPermitido(c.v) || !outros) return 0;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
@@ -134,8 +135,10 @@ function vacuoAlvo(c, outros) {
   for (const o of outros) {
     if (o.dnf || o.fant) continue;
     const dx = o.x - c.x, dy = o.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
-    if (along < 22 || along > 170 || lat > 24 || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
-    d = Math.max(d, 1 - (along - 22) / 148);
+    // o rastro do vácuo vai longe (VACUO_ALCANCE u, uns 45 m) e abre com a distância, como o ar mexido atrás de um carro de verdade: quem vem
+    // de longe já ganha um pouco e chega com velocidade para emparelhar (antes acabava em 17 m e só servia colado, e ninguém conseguia atacar)
+    if (along < 22 || along > VACUO_ALCANCE || lat > 24 + along * 0.06 || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
+    d = Math.max(d, 1 - (along - 22) / (VACUO_ALCANCE - 22));
   }
   return d;
 }

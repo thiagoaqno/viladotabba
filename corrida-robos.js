@@ -524,10 +524,10 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     // Duas partes próximas do desenho (especialmente curvas de Spa) não são tráfego uma da outra. Confere também a
     // distância ao longo da pista; só o carro realmente adiante pode mandar frear.
     const distancia = ((o.ia ? o.ia.s : o.pos.prog) - ia.s + n * 1.5) % n - n * 0.5;
-    if (distancia * STEP < -220 || distancia * STEP > 340) continue;
+    if (distancia * STEP < -220 || distancia * STEP > 470) continue; // (até 470 adiante: o rastro do vácuo vai até 450)
     const dx = o.pos.x - p.pos.x, dy = o.pos.y - p.pos.y;
     const frente = dx * tx + dy * ty, lado = dx * -ty + dy * tx;
-    if (frente < -210 || frente > 300 || Math.abs(lado) > 90 || (o.box && !p.box)) continue;
+    if (frente < -210 || frente > 460 || Math.abs(lado) > 90 || (o.box && !p.box)) continue;
     const temV = o.pos.vx !== undefined, ov = temV ? o.pos.vx * tx + o.pos.vy * ty : (o.pos.v || 0), vlatO = temV ? o.pos.vx * -ty + o.pos.vy * tx : 0;
     let latOutro = (o.pos.x - ponto.x) * -ty + (o.pos.y - ponto.y) * tx, iO = i, frentePista = frente;
     // Mônaco: o alvo adiante (100 a 260 u) costuma estar do outro lado de uma curva, e o lateral medido no quadro do MEU ponto não tem sentido ali
@@ -539,7 +539,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       if (lado > 0) { out.bloqPos = true; out.limMax = Math.min(out.limMax, latOutro - MARG); } else { out.bloqNeg = true; out.limMin = Math.max(out.limMin, latOutro + MARG); }
       if (!ia.ult || ia.ult.id !== oid) out.ladoDeOutro = true; // (alguém além do carro que estou passando está ao meu lado)
     }
-    if (frente > 22 && frente < 170 && distancia * STEP > 8 && Math.abs(lado) < 24) out.draft = Math.max(out.draft, 1 - (frente - 22) / 148);
+    if (frente > 22 && frente < 450 && distancia * STEP > 8 && Math.abs(lado) < 24 + frente * 0.06) out.draft = Math.max(out.draft, 1 - (frente - 22) / 428); // (o mesmo rastro longo de Sim.vacuoAlvo)
     // quanto ele está freando (a desaceleração medida de uma passagem à outra): quem vem atrás conta com mais 0,6 s do mesmo freio
     const visto = (ia.vistos || (ia.vistos = {}))[oid] || (ia.vistos[oid] = { ov, t: now, a: 0 }), dtv = (now - visto.t) / 1000;
     if (dtv >= 0.04) { visto.a += (Math.max(-300, Math.min(100, (ov - visto.ov) / dtv)) - visto.a) * Math.min(1, dtv * 6); visto.ov = ov; visto.t = now; }

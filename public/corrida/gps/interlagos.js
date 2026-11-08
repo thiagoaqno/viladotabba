@@ -5,6 +5,10 @@
 import { cenarioInterlagos, depoisInterlagos } from "../interlagos.js";
 
 export const GP_INTERLAGOS = {
+  // a escala do cenário (1 u = 0,2083 m, 4,8 u por metro): as peças foram desenhadas para o carro antigo. O fator vem do real ÷ medido:
+  // degrau 0,4 m ÷ 1,25 m = 0,32 (de fundo, 0,8 ÷ 1,87 = 0,43), barreira 0,75 m ÷ 1,77 m = 0,42; a média geométrica dá 0,39, e o GP usa 0,4.
+  // A gente tem fator próprio: 1,75 m ÷ 2,54 m = 0,69. O prédio dos boxes, São Paulo, as árvores, a cerca, os mastros e os fiscais já estavam em tamanho real e não mudam.
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#7b7d82" }, // o asfalto cinza-claro da faixa de escape junto da zebra

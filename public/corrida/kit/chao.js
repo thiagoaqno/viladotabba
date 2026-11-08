@@ -82,7 +82,8 @@ export function chaoGP(tr, add, cfg, { gridSpot }) {
       x.clearRect(0, 0, w, hh); x.fillStyle = "#f4f4f4"; x.fillRect(4, 4, w - 8, 12); x.fillRect(4, 4, 10, 60); x.fillRect(w - 14, 4, 10, 60);
       x.font = "900 70px Arial Black, Impact, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(String(g + 1), w / 2, 120); gastar(x, w, hh, rr, 0.12);
     }, false)));
-    const vaga = (lote, g, f1) => { const sp = gridSpot(pts, g, W, f1), lat = (g % 2 ? 1 : -1) * W * 0.22; tira(tr, lote.de(numeros[g]), sp.idx - 3, sp.idx + 3, lat - 15, lat + 15, 0.55, 0.55); };
+    // o colchete: 36 de comprimento (6 pontos, um pouco mais que o carro) e 30 de largura, vezes a escala do cenário (tr.escala: com 0,4 são 12, para um carro de 9,1)
+    const E = tr.escala ?? 1, vaga = (lote, g, f1) => { const sp = gridSpot(pts, g, W, f1), lat = (g % 2 ? 1 : -1) * W * 0.22; tira(tr, lote.de(numeros[g]), sp.idx - 3, sp.idx + 3, lat - 15 * E, lat + 15 * E, 0.55, 0.55); };
     for (let g = 0; g < 8; g++) vaga(LG, g, false);
     for (let g = 0; g < 20; g++) vaga(LF, g, true);
     tr.gridGalera = add(new THREE.Group()); tr.gridF1 = add(new THREE.Group()); tr.gridF1.visible = false;

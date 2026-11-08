@@ -23,7 +23,7 @@ test("gravidade pela velocidade de aproximação: limiares sobem 10% em relaçã
   assert.equal(F1.gravidadeDaBatida(F1.COLISAO_LEVE), "leve");
   assert.equal(F1.gravidadeDaBatida(F1.COLISAO_MEDIA - 1), "leve");
   assert.equal(F1.gravidadeDaBatida(F1.COLISAO_MEDIA), "media");
-  assert.deepEqual([F1.COLISAO_LEVE, F1.COLISAO_MEDIA, F1.COLISAO_GRAVE], [44, 99, 165]);
+  assert.deepEqual([F1.COLISAO_LEVE, F1.COLISAO_MEDIA, F1.COLISAO_GRAVE], [25, 99, 165]);
   assert.equal(F1.gravidadeDaBatida(115 / 0.75), "media");
   assert.equal(F1.gravidadeDaBatida(F1.COLISAO_GRAVE), "grave");
   assert.equal(kmh(F1.COLISAO_GRAVE), 123.75);

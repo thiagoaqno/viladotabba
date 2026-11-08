@@ -544,7 +544,7 @@ function batida(forca) {
 // partir de 44, média a partir de 99 (~74 km/h) e grave a partir de 165 (~124 km/h a mais na traseira de quem estava na frente). A escala de quem CAUSOU a batida: leve +3 s, média
 // +6 s, grave stop-and-go de 8 s (entrar no box, ficar parado 8 s sem trocar pneu e voltar) em até 3 voltas; sem voltas para cumprir,
 // vale +20 s no tempo final; quem não cumpre leva a bandeira preta. A partir da 2ª batida causada a punição sobe um nível; a 6ª é bandeira preta.
-const COLISAO_LEVE = 44, COLISAO_MEDIA = 99, COLISAO_GRAVE = 165; // (margens largas: toque leve de roda não é punido)
+const COLISAO_LEVE = 25, COLISAO_MEDIA = 99, COLISAO_GRAVE = 165; // (a culpa sai do lugar do contato, Sim.culpaPorOnde; abaixo de 25 u/s é só um toque)
 const PUNICAO_LEVE_S = 3, PUNICAO_MEDIA_S = 6, STOPGO_S = 8, STOPGO_VOLTAS = 3, STOPGO_CONVERSAO_S = 20;
 const ESCALA_PUNICAO = ["leve", "media", "grave"];
 function gravidadeDaBatida(forca) {

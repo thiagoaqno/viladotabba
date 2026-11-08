@@ -67,7 +67,7 @@ function voltaFechada(room, p, log) {
 // e quase não leva dano.
 // Um carro DERRAPANDO antes do impacto (rodando, atravessado ou com guinada forte), pelo que o impacto guardou (as velocidades de antes do
 // impulso): a batida é acidente de corrida, sem punição nem dano para os dois. `idDoOutro`: o carro de quem se pergunta.
-const DERRAPA_ANGULO = 0.6, DERRAPA_GUINADA = 3, DERRAPA_V = 40; // rad entre o rumo e a velocidade; rad/s (rodando: num grampo a guinada normal passa de 1,5); u/s
+const DERRAPA_ANGULO = 0.3, DERRAPA_GUINADA = 2, DERRAPA_V = 25; // rad entre o rumo e a velocidade (17°: qualquer derrapada; numa curva normal o carro fica abaixo de 6°); rad/s; u/s
 function derrapando(imp, idDoOutro) {
   if (!imp || !imp.pre) return false;
   const q = imp.pre, ele = imp.de === idDoOutro, vx = ele ? q.vx : q.ovx, vy = ele ? q.vy : q.ovy, a = ele ? q.a : q.oa, r = ele ? q.r : q.orr;
@@ -77,7 +77,7 @@ function derrapando(imp, idDoOutro) {
   if (v < DERRAPA_V) return false;
   return Math.abs(Math.atan2(Math.sin(Math.atan2(vy, vx) - a), Math.cos(Math.atan2(vy, vx) - a))) > DERRAPA_ANGULO;
 }
-const ACIDENTE_MS = 1500; // a derrapagem até 1,5 s antes da batida ainda conta como acidente de corrida
+const ACIDENTE_MS = 2000; // a derrapagem até 2 s antes da batida ainda conta como acidente de corrida
 const FREADA_BRUSCA = 140; // u/s² (~3 g): o atingido freando mais que isto na frente do causador não conta como batida proposital
 const DANO_CAUSADOR = { leve: 12, media: 20, grave: 35 }, DANO_BATIDO = { leve: 0, media: 0, grave: 0.5 };
 function bater(room, p, forca, tipo, agora, log, chave = tipo) {

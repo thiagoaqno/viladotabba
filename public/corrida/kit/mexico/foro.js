@@ -2,7 +2,7 @@
 // O estádio cabe no miolo da alça do fim da volta, encolhido: a arquibancada em ferradura (uma elipse de degraus lotados de camisa verde,
 // branca e vermelha, aberta onde a pista passa perto), o muro do campo com o acolchoado e os painéis, o gramado listrado com o losango
 // de terra e as linhas, o pódio no meio do campo virado para a torcida, as bandeiras do México no alto, as torres de refletores, o placar e a
-// fumaça verde, branca e vermelha que sobe do campo. Escala do jogo (1 ≈ 10 cm). Peças repetidas em InstancedMesh; o resto, uma malha por material.
+// fumaça verde, branca e vermelha que sobe do campo. Escala da física (1 u = 0,208 m; a pista agora é de tamanho real, e o estádio coube só no miolo da alça: é menor que o Foro Sol de verdade). Peças repetidas em InstancedMesh; o resto, uma malha por material.
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { Montador, solido, comTextura, letreiro, tom } from "../montagem.js";

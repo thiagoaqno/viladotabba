@@ -2,7 +2,7 @@
 // (kit/README.md explica cada peça) e o que só ele tem, em ../mexico.js e ../kit/mexico/ (o Foro Sol, o estádio de beisebol que a pista atravessa, com a
 // arquibancada em ferradura e o pódio no meio do campo; a reta dos boxes com o prédio das garagens e a tribuna principal; o Palácio dos Esportes de cúpula
 // de cobre; o parque com lagos, quadras e árvores; a Peraltada antiga; e a cidade e os vulcões Popocatépetl e Iztaccíhuatl no horizonte).
-// O traçado veio de bacinger/f1-circuits (mx-1962, licença MIT) por ferramentas/circuitos-f1.js e não mudou; as frações (0 a 1) são da volta, a partir da
+// O traçado veio de bacinger/f1-circuits (mx-1962, licença MIT) por ferramentas/circuitos-f1.js; agora na ESCALA REAL (4 304 m, pista de 14 m: ver `pistas.js`); as frações (0 a 1) são da volta, a partir da
 // linha de chegada, que fica no meio da reta dos boxes:
 // a reta dos boxes e a de chegada 0,93-0,25 · as curvas 1 a 3 (o "S" da freada forte) 0,25-0,34 · as curvas do meio 0,34-0,52 · a reta de trás 0,52-0,80 ·
 // o fim da reta e o grampo 0,80-0,86 · o Foro Sol (curvas 12 a 16) 0,86-0,98. Painéis só com nomes de lugar e de comida do México (kit/mexico/marcas.js).

@@ -2,7 +2,7 @@
 
 Segunda pista levada ao tamanho de verdade, seguindo a receita de Interlagos e da Cidade do México (`planos/escala-real.md`). Este PR já inclui o carro real (#603) e a chave de escala do cenário (#605), porque nasce em cima deles.
 
-## O que mudou
+## Como funciona
 
 | | Antes | Agora | Real |
 | --- | --- | --- | --- |
@@ -17,7 +17,12 @@ Segunda pista levada ao tamanho de verdade, seguindo a receita de Interlagos e d
 - **Largura:** não achei a largura de Spa publicada em nenhuma fonte. Usei 12 m, o mínimo que a FIA pede a uma pista de grau 1 (o das de F1; é o resumo que a imprensa faz do regulamento, não o texto dele), que também cabe nos 10 a 14 m do pedido. Se alguém tiver a largura medida, é só trocar `width` (metros ÷ 0,2083).
 - **Relevo e barreiras:** `node ferramentas/pista-real.js be-1925 spa --dem eudem25m --raio 3 --meia 6`. Eau Rouge e Raidillon ficaram a 13,1% (antes 14,6%), a pior descida a 17,3% e a maior quebra de inclinação a 0,34% a cada 6 u (antes 0,81%): a crista do Raidillon ficou mais suave, então o carro não decola. Com `--raio 2` o Raidillon sobe a 14,2%, mas a descida depois de Bruxelles chega a 20%, por isso fiquei no 3 do pedido. A ferramenta achou barreira mapeada em quase toda a volta (lado 1 sem barreira em 3%, o outro em 2%), então valem os 77 trechos de `muros` dela.
 
-## Cenário
+| Peça | Antes | Real | Depois |
+| --- | --- | --- | --- |
+| Degrau da arquibancada, altura | 1,25 m | 0,4 m | 0,50 m |
+| Degrau, fundo | 1,87 m | 0,8 m | 0,75 m |
+| Barreira do escape | 1,77 m | 0,75 m | 0,71 m |
+| Pessoa na arquibancada | 2,54 m | 1,75 m | 1,75 m |
 
 `gps/spa.js` ganhou `escala: 0.4` e `escalaGente: 0.69`, as mesmas de Interlagos (as peças do kit são as mesmas, então o real ÷ medido é o mesmo). As peças que só Spa tem também leem `tr.escala`:
 

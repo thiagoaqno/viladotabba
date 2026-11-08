@@ -1,13 +1,21 @@
-# Cenário de Interlagos no tamanho real
+# Spa-Francorchamps em escala real
 
-O carro e a pista de Interlagos já estavam no tamanho de verdade, mas o cenário em volta tinha sido desenhado para o carro antigo, quase o dobro. Na largada, uma pessoa da arquibancada era do tamanho do carro e a placa de DRS era maior que ele. Este PR cria uma chave `escala` na configuração do GP, com padrão 1, e liga ela em Interlagos. Ele inclui o #603 (carro) e o #601 (pista).
+Segunda pista levada ao tamanho de verdade, seguindo a receita de Interlagos e da Cidade do México (`planos/escala-real.md`). Este PR já inclui o carro real (#603) e a chave de escala do cenário (#605), porque nasce em cima deles.
 
 ## Como funciona
 
-- `escala` (e `escalaGente`, só para a torcida) fica em `gps/interlagos.js` e vira `tr.escala` em `pista.js`. As peças do kit e as de `pista.js` multiplicam o **tamanho** por ela. A posição ao longo da pista e o recuo da beira não mudam.
-- Sem a chave, vale 1 e nada muda. A Monza (outra pista) saiu igual nos prints de antes e depois.
+| | Antes | Agora | Real |
+| --- | --- | --- | --- |
+| Volta (`Pistas.pontos(t, 6)`) | 17.446 u = 3.634 m | 33.497 u = **6.977 m** | 6.978 m |
+| Largura da pista | 120 u = 25 m | 58 u = **12,1 m** | veja abaixo |
+| `scale` / `minLap` | 4 / 41 s | 7,68 / 79 s | |
+| `flat` / `fall` | 60 / 380 | 115 / 730 | |
+| Zebra (`dentro` / `fora`) | 340 / 220 | 653 / 422 | |
+| Desnível da volta | 55 m | **105 m** | 105 m (EU-DEM) |
 
-## O fator, pelo tamanho real (1 u = 0,2083 m, ou 4,8 u por metro)
+- **Traçado:** é o mesmo (a linha central real de bacinger, be-1925). As frações da volta, as curvas e a linha de chegada não mudaram.
+- **Largura:** não achei a largura de Spa publicada em nenhuma fonte. Usei 12 m, o mínimo que a FIA pede a uma pista de grau 1 (o das de F1; é o resumo que a imprensa faz do regulamento, não o texto dele), que também cabe nos 10 a 14 m do pedido. Se alguém tiver a largura medida, é só trocar `width` (metros ÷ 0,2083).
+- **Relevo e barreiras:** `node ferramentas/pista-real.js be-1925 spa --dem eudem25m --raio 3 --meia 6`. Eau Rouge e Raidillon ficaram a 13,1% (antes 14,6%), a pior descida a 17,3% e a maior quebra de inclinação a 0,34% a cada 6 u (antes 0,81%): a crista do Raidillon ficou mais suave, então o carro não decola. Com `--raio 2` o Raidillon sobe a 14,2%, mas a descida depois de Bruxelles chega a 20%, por isso fiquei no 3 do pedido. A ferramenta achou barreira mapeada em quase toda a volta (lado 1 sem barreira em 3%, o outro em 2%), então valem os 77 trechos de `muros` dela.
 
 | Peça | Antes | Real | Depois |
 | --- | --- | --- | --- |
@@ -16,24 +24,32 @@ O carro e a pista de Interlagos já estavam no tamanho de verdade, mas o cenári
 | Barreira do escape | 1,77 m | 0,75 m | 0,71 m |
 | Pessoa na arquibancada | 2,54 m | 1,75 m | 1,75 m |
 
-As razões real ÷ antes são 0,32, 0,43 e 0,42 para as peças de estrutura (média geométrica 0,39, então `escala: 0.4`) e 0,69 para a pessoa (`escalaGente: 0.69`), porque uma pessoa não encolhe como um degrau.
+`gps/spa.js` ganhou `escala: 0.4` e `escalaGente: 0.69`, as mesmas de Interlagos (as peças do kit são as mesmas, então o real ÷ medido é o mesmo). As peças que só Spa tem também leem `tr.escala`:
 
-Outras peças que seguem o fator (sem um valor real medido por mim, só seguiram a escala): pilha de pneus 2,1 m de diâmetro para 0,85 m; painéis de patrocínio 6,2 × 1,9 m para 2,5 × 0,75 m; placas de frenagem 2,7 × 1,9 m para 1,1 × 0,75 m; vão livre sob a passarela 15,4 m para 6,2 m; pórtico da largada 12,9 m para 5,2 m; placa de DRS 6,9 × 2,7 m para 2,75 × 1,1 m; setas de curva 2,9 × 2,2 m para 1,2 × 0,9 m; placa PIT ENTRY 11,5 × 3,5 m para 4,6 × 1,4 m; linha de chegada 2,5 m de espessura para 1 m; colchete do grid 6,25 m de largura para 2,5 m (o carro tem 1,9 m).
+| Peça | Antes | Agora |
+| --- | --- | --- |
+| Degrau das tribunas cobertas (principal e Raidillon) | 1,1 × 1,7 m, 12 fileiras | 0,45 × 0,68 m, 30 fileiras (mesma altura e mesma profundidade de antes) |
+| Degrau das arquibancadas de curva (kit) | 1,25 × 1,87 m | 0,5 × 0,75 m |
+| Pneu do muro | 2,1 m | 0,85 m (e a pilha vem a cada ponto) |
+| Placas com o nome da curva | 20 × 7,5 m | 8 × 3 m |
+| Torcida das encostas (de pé) | 2,17 m | 1,75 m (fator 8,4 ÷ 10,4 = 0,81); bandeiras e hastes junto |
+| Barreira do escape (kit) | 1,77 m | 0,71 m |
 
-**Já estavam em tamanho real e não mudaram:** prédio dos boxes (3 pavimentos), São Paulo em volta (andar de 3 m), árvores (6,7 a 12 m), cerca de 5 m, mastros de bandeira, postos de fiscal, mecânicos (em metros × o fator do carro), mureta do box (0,75 m) e garagens. A faixa dos boxes (54 u) fica como está porque é da física.
+As posições ao longo da volta não mudaram (são frações). Todas as peças continuam sendo colocadas (`faltouSpa` vazio, 19 peças).
 
-## O que foi conferido no navegador
+**Medido e deixado como está:** prédio dos boxes e torre de controle, tendas, fiscais e torres de TV (35 m). **Acima do real e não mexidos:** a casa de enxaimel (andar de 5 m, cumeeira a 17 m; a de verdade tem uns 3 m por andar), as carretas do paddock (7 m de largura) e as árvores (35 a 62 m). Ficam para uma próxima.
 
-Prints com o Playwright, com o carro à vista, antes e depois: largada com o grid, reta dos boxes, S do Senna, vista geral de cima, a Ferradura (setas, pneus, brita), a passarela e as garagens com a equipe fazendo a troca de pneus. Uma pista antiga (Monza) antes e depois, igual.
+## Robôs e recordes
 
-Corrida curta com robôs em Interlagos, no navegador: 21 robôs, 2 voltas. Os 21 terminaram, nenhum abandonou, nenhum quebrou, ninguém ficou preso. Melhores voltas de 65,8 a 81,3 s (contam a largada). O único parado foi o piloto humano do teste, que não saiu do grid de propósito.
+- `corrida-linhas-f1.json`: linha de Spa refeita (5.583 pontos, 38 s).
+- `migracoes/030-spa-escala-real.sql` zera voltas, recordes e setores de Spa, como a `029` fez com o México.
+- Corrida com robôs no navegador (22 carros, 5 voltas, clima variável: choveu da 2ª à 4ª volta). Os 21 robôs correram, **nenhum abandonou nem quebrou e ninguém ficou preso**. Primeira volta (com a largada, no seco) de 98,2 a 113,5 s; no total, as voltas foram de 92,0 a 159 s, as mais lentas na chuva; a mais rápida no seco, na última volta (Russell, 92,0 s). 8 completaram as 5 voltas e os outros 13 foram classificados com 4. Na última volta, na chuva, cinco carros se bateram juntos. O piloto humano do teste ficou parado no grid de propósito.
+- Desempenho (`node tests/ajuda-cena/medir.mjs spa`): 275 chamadas de desenho e 888 mil triângulos na vista (antes 204 e 566 mil); 1,64 milhão na cena inteira (antes 951 mil). A volta tem o dobro do comprimento (o dobro de árvores e de pneus) e as tribunas têm 2,5 vezes mais gente.
 
-## O que não foi conferido ou ficou de fora
+## Conferido no navegador
 
-- Os mecânicos aparecem só durante uma parada real. No print forcei, só no script de teste, uma equipe fazendo a troca; uma parada de verdade com o carro não foi vista.
-- Não vi a pista de noite nem na chuva, nem a câmera de cockpit.
-- Ficaram como estão: outdoors (13 × 5,8 m), cata-ventos, trem, avião, balão, helicóptero, o lago e a caixa-d'água, as bandeiras de checkpoint (marcadores do jogo) e as zebras (1,5 m). Não tenho um tamanho real confirmado para elas.
-- Outras pistas não ganharam `escala`: ficam com o cenário grande até alguém medir e escolher o fator de cada uma (`planos/escala-real.md`).
-- Nenhum teste criado ou apagado. Só `node --check`; a suíte fica com o CI.
+Prints com o Playwright, com o carro à vista: largada, La Source, Eau Rouge, Raidillon, Kemmel, Pouhon e duas vistas gerais (pasta `spa-prints`, fora do repositório).
+
+Não rodei os testes (o CI roda). Nenhum teste foi criado nem apagado.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

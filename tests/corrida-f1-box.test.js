@@ -27,7 +27,7 @@ test("box: uma parada em Interlagos custa entre 5 e 10 s (entrada + limitador + 
   const curta = F1.tempoNoBox(c, vmax, F1.PARADA_BASE), longa = F1.tempoNoBox(c, vmax, F1.PARADA_BASE + F1.PARADA_ERRO);
   assert.ok(curta >= 5 && longa <= 10, `${curta.toFixed(1)} a ${longa.toFixed(1)} s`);
   // o corredor começa antes da linha de chegada, do lado de dentro; pista sem `boxes` não tem corredor
-  assert.ok(c.i0 > T.pontos(T.PISTAS.interlagos, 6).length * 0.9 && c.lado === 1);
+  assert.ok(c.i0 > T.pontos(T.PISTAS.interlagos, 6).length * 0.9 && c.lado === -1); // (Interlagos real: anti-horário, a reta dos boxes desce para o sul e os boxes ficam a leste, do lado de dentro, que agora é o -1)
   assert.equal(F1.corredor(T.PISTAS.arcoiris, 2000, 88), null);
 });
 

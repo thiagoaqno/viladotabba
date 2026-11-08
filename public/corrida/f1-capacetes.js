@@ -26,7 +26,7 @@ export const CAPACETES = {
   bortoleto: { cores: ["#1fa64a", "#ffd400", "#f4f4f4"], desenho: "asas" },     // verde e amarelo, "asas" douradas, faixa branca
   gasly: { cores: ["#1f56d8", "#f4f4f4", "#e0242f"], desenho: "faixa" },        // azul, uma faixa branca e vermelha
   colapinto: { cores: ["#74c0ec", "#f4f4f4", "#e0364a"], desenho: "triangulos" },// azul-claro e branco, triângulos no topo
-  ocon: { cores: ["#d0102a", "#a30a1f", "#f4f4f4"], desenho: "topo" },          // todo vermelho, o topo mais escuro
+  camara: { cores: ["#ffd400", "#009c3b", "#002776"], desenho: "faixa" },      // amarelo, verde e azul do Brasil
   bearman: { cores: ["#2a4fd6", "#c4f31a", "#f4f4f4"], desenho: "faixa" },      // azul, neon e branco
   perez: { cores: ["#a8ff00", "#17191d", "#d2192e"], desenho: "asas" },         // neon, preto e vermelho
   bottas: { cores: ["#15171b", "#2f6fdb", "#8a909a"], desenho: "blocos" },      // preto, azul e dois cinzas

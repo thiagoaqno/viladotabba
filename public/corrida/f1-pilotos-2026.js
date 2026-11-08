@@ -32,7 +32,7 @@ const LINHAS = [
   ["albon", "Alexander Albon", "ALB", 23, "williams", 88, 89, 84], ["sainz", "Carlos Sainz", "SAI", 55, "williams", 89, 88, 86],
   ["hulkenberg", "Nico Hülkenberg", "HUL", 27, "audi", 86, 87, 84], ["bortoleto", "Gabriel Bortoleto", "BOR", 5, "audi", 82, 78, 80],
   ["gasly", "Pierre Gasly", "GAS", 10, "alpine", 87, 86, 85], ["colapinto", "Franco Colapinto", "COL", 43, "alpine", 79, 74, 78],
-  ["ocon", "Esteban Ocon", "OCO", 31, "haas", 83, 84, 82], ["bearman", "Oliver Bearman", "BEA", 87, "haas", 85, 82, 83],
+  ["camara", "Rafael Câmara", "CAM", 51, "haas", 80, 76, 79] /* (no lugar do Ocon, demitido) */, ["bearman", "Oliver Bearman", "BEA", 87, "haas", 85, 82, 83],
   ["perez", "Sergio Pérez", "PER", 11, "cadillac", 82, 80, 78], ["bottas", "Valtteri Bottas", "BOT", 77, "cadillac", 82, 85, 79],
 ];
 const PILOTOS = LINHAS.map(([id, nome, sigla, numero, equipe, ritmo, constancia, largada]) =>

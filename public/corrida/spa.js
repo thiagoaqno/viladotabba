@@ -88,8 +88,9 @@ function retaDosBoxes(tr, { add }) {
   // a tribuna principal, do outro lado: três módulos cobertos de frente para a pista, de torcida laranja e belga
   const oposto = -lado, mods = [];
   for (const [ao, sem] of [[-390, 3], [-100, 8], [190, 12]]) {
+    const E = tr.escala ?? 1; // o degrau real tem 0,4 m de subida e 0,8 m de fundo: mais fileiras, de tamanho certo, na mesma altura e profundidade de antes
     const t = tribunaCoberta({
-      comprimento: 270, degraus: 12, altura: 5.4, fundo: 8.2, secoes: 7, publico: 0.55, semente: sem, alcance: 0.7, folga: 18, vao: 56, camisas: CAMISAS_SPA,
+      comprimento: 270, degraus: Math.round(12 / E), altura: 5.4 * E, fundo: 8.2 * E, secoes: 7, publico: 0.55, semente: sem, alcance: 0.7, folga: 18, vao: 56, camisas: CAMISAS_SPA,
       cores: ["#1f1f22", "#f2c500", "#c8102e", "#1f1f22", "#f2c500", "#c8102e", "#f4f4f2"], cobertura: "#b11226", estrutura: "#8a9096",
     });
     const o = colocar(tr, add, t, { f: 0.998, lado: oposto, lats: [W / 2 + 46, W / 2 + 70], ao, w: 274, d: 12 * 8.2 + 8, folga: 30, reserva: null });
@@ -133,7 +134,7 @@ function laSource(tr, { add }) {
 function eauRouge(tr, { add }) {
   const { W, pts } = tr;
   // a tribuna gigante do Raidillon, por fora da subida, de frente para a pista
-  const g = tribunaDoRaidillon({ comprimento: 230, degraus: 12, camisas: CAMISAS_SPA, semente: 21 });
+  const g = tribunaDoRaidillon({ comprimento: 230, degraus: 12, camisas: CAMISAS_SPA, semente: 21, escala: tr.escala ?? 1 });
   const o = colocar(tr, add, g, { f: 0.153, lado: -1, lats: [W / 2 + 56, W / 2 + 84, W / 2 + 120], w: 236, d: 12 * 8 + 30, folga: 34, reserva: 30 });
   if (o) somDaTorcida(tr, 0.14, 0.17);
   // a casa branca do topo (o café do Raidillon), onde a pista sai da subida
@@ -235,10 +236,10 @@ function placasDasCurvas(tr, { add }) {
     const [lado, x, z] = escolhido, y = tr.chao(x, z) - 1.5;
     // a placa gira um pouco para quem vem de trás (a frente aponta para a pista e um pouco contra o sentido da corrida)
     const nx = -lado * p.nx - 0.55 * p.tx, nz = -lado * p.ny - 0.55 * p.ty, len = Math.hypot(nx, nz), ex = nz / len, ez = -nx / len; // (ex, ez): o eixo largo da placa
-    const w = 96, h = 36, y0 = y + 22, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3;
+    const E = tr.escala ?? 1, w = 96 * E, h = 36 * E, y0 = y + 22 * E, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3; // (E: a placa de 20 × 7,5 m vira a de 8 × 3 m)
     for (const [a, b] of [[-1, 0], [1, 0], [-1, 1], [1, 1]]) { vs.push(x + ex * a * w / 2, y0 + b * h, z + ez * a * w / 2); uv.push(((a + 1) / 2 + c) / 4, 1 - (rr + 1 - b) / 3); }
     idx.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
-    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 6), y + 13, z + ez * s * (w / 2 - 6)], [2.4, 28, 2.4], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) });
+    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 6 * E), y + 13 * E, z + ez * s * (w / 2 - 6 * E)], [2.4 * E, 28 * E, 2.4 * E], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) });
     tr.reservado.push([x, z, 28]);
   });
   if (!idx.length) return;

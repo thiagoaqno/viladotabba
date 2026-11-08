@@ -60,7 +60,7 @@ function otimizar(pts, max0, externas = 40) {
   }
   return l;
 }
-function linhaDaPista(pista, pts, W, folga = 18) {
+function linhaDaPista(pista, pts, W, folga = 10) { // (a folga da beira: meio carro, 4,6 u, e um respiro)
   const k = pista + "|" + folga; if (CACHE.has(k)) return CACHE.get(k);
   const lat = otimizar(pts, Math.max(4, W / 2 - folga)); CACHE.set(k, lat); return lat;
 }

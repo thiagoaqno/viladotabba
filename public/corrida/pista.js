@@ -51,16 +51,6 @@ export const THEMES = {
   lasvegas: { preview: "#b9a784", sky: ["#4a8fd6", "#eaf0f2"], fog: "#e4dccd", oob: 0xffb9a784, roadCol: "#4d4e53" },
   catar: { preview: "#d6bf8e", sky: ["#63b0e5", "#fce0aa"], fog: "#e9cc9d", oob: 0xffd6bf8e, roadCol: "#4d4e53" },
   abudhabi: { preview: "#a99c84", sky: ["#3b2a6b", "#ff9a5a"], fog: "#e8a07a", oob: 0xffa99c84, roadCol: "#4d4e53" },
-  losangeles: { preview: "#7a4a6a", sky: ["#3b2a6b", "#ff9a5a"], fog: "#e8a07a", oob: 0xff6a8aa0, roadCol: "#3f3f46" },
-  rio: { preview: "#1f8a8a", sky: ["#3f97e0", "#d6f1ff"], fog: "#cfeaf2", oob: 0xff2a7a3a, roadCol: "#4a4a50" },
-  serra: { preview: "#4d8854", sky: ["#6eb9f0", "#e4f6ff"], fog: "#cde6dd", oob: 0xff467b45, roadCol: "#51545a" },
-  deserto: { preview: "#cca96e", sky: ["#63b0e5", "#fce0aa"], fog: "#e9cc9d", oob: 0xffcaab72, roadCol: "#55565a" },
-  nurburgring: { preview: "#2f6a32", sky: ["#7d94a8", "#d9e2e6"], fog: "#c8d2d4", oob: 0xff2f6a32, roadCol: "#4a4c52" },
-  laguna: { preview: "#b39352", sky: ["#5a7fbf", "#f7c99a"], fog: "#e8c9a6", oob: 0xffc2a35e, roadCol: "#4f5056" },
-  luigi: { preview: "#3f8f3a", sky: ["#3f97e0", "#eaf4ff"], fog: "#dfeee0", oob: 0xff3a9a3f, roadCol: "#55555c" },
-  sorvete: { preview: "#8fb8d8", sky: ["#8fc6f2", "#f2f8ff"], fog: "#e8f2fa", oob: 0xffe4edf5, roadCol: "#9fc3dd" },
-  arcoiris: { preview: "#0b0a1a", sky: ["#02020a", "#1a0b3a"], fog: "#0a0618", oob: 0xff05040c, roadCol: "#ffffff" },
-  tokyo: { preview: "#14152a", sky: ["#05061a", "#3a1d5c"], fog: "#2a1a44", oob: 0xff1f1514, roadCol: "#24252c" },
 };
 
 // As marcas do grid e a física usam a mesma posição de largada.
@@ -172,12 +162,13 @@ function emPedacos(geo, S, N) {
 export function groundH(tr, x, y, idx) { const f = trackFrame(tr, x, y, idx); return tr.relevoGP ? tr.relevoGP(x, y, f, idx) : f.h * falloff(tr, f.lat); }
 
 // Rio: o mar fica do lado de fora da reta da orla (Copacabana); as coordenadas foram desenhadas no quadrado de 1600
-const rioSea = (x, y) => { const K = PISTAS.rio.scale; return x < 230 * K + (y - 335 * K) * 0.04 && y < 1450 * K; };
 // água que mexe: listras claras numa textura que desliza (vida.js anda com o offset)
 const aguaTex = (cor) => canvasTex(256, 256, (x, w, hh, rr) => { x.fillStyle = cor; x.fillRect(0, 0, w, hh); for (let i = 0; i < 260; i++) { x.fillStyle = rr() < 0.5 ? "#ffffff22" : "#00000018"; x.fillRect(rr() * w, rr() * hh, 10 + rr() * 30, 2); } });
 function buildWorld(tr) {
   const { pts, n, W, look, id, grp } = tr, t = tr.t, add = (o) => (grp.add(o), o), r = rng(id.length * 977), gp = GPS[id];
   const mundo = mundoDe(id);
+  // a escala do cenário (gps/<id>.js: `escala`, e `escalaGente` para a torcida; padrão 1 = o tamanho de sempre). As peças do kit e deste arquivo multiplicam por ela o TAMANHO (altura, degrau, painel), nunca a posição ao longo da pista
+  const E = (tr.escala = gp?.escala ?? 1); tr.escalaGente = gp?.escalaGente ?? E;
   tr.luzesPista = []; // as luzes dos postes e holofotes (kit/luz-postes.js: registrarLuz); a montagem pode rodar de novo quando os enfeites chegam
   tr.reservado = []; // onde os enfeites soltos não entram (o kit e o cenário de cada GP vão pondo aqui)
   tr.sem = gp?.sem || {}; // o que este GP não tem e vida.js / vida-mais.js não devem pôr (Mônaco: olhos de gato, setas, mastros, roda-gigante...)
@@ -204,7 +195,6 @@ function buildWorld(tr) {
     const lat = longe ? 1e9 : Math.abs(trackFrame(tr, x, y, bi).lat), perto = !longe && (mundo ? lat < mundo.banda(tr) + 30 : lat < W / 2 + 26); // embaixo da pista o chão afunda mais (a malha é grossa e furava o asfalto nas rampas)
     let h = t.espaco ? -700 : (longe ? 0 : mundo ? tr.relevoGP(x, y, trackFrame(tr, x, y, bi), bi, true) : groundH(tr, x, y, bi)) - (mundo ? 1.5 + 7.5 * (1 - Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)) ** 2 * (3 - 2 * Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)))) * (perto ? 1 : 0) : perto ? 9 : 1.5); // no espaço não tem chão: o "chão" fica bem lá embaixo
     if (mundo) { const s = mundo.fundo(tr, x, y); if (s > -90) h = s > 0 ? Math.max(-34, mundo.nivelMar - 7 - s * 0.35) : Math.min(h, mundo.nivelMar + 1 + 3.2 * -s); } // a bacia do porto e o mar, o cais em paredão e a falésia do Rochedo (3 de altura por unidade)
-    if (id === "rio" && rioSea(x, y)) h = Math.min(h, -14); // o mar de Copacabana
     if (gp?.terreno?.altura) h = gp.terreno.altura(tr, x, y, h, lat); // o GP com água ou relevo próprio (Singapura: a baía e o rio afundam o chão)
     if (tr.sobPonte) h = Math.min(h, tr.sobPonte(x, y) - 4); // embaixo da ponte (Suzuka)
     pos.setY(i, h);
@@ -345,7 +335,7 @@ function buildWorld(tr) {
         const q = vs.length / 3;
         for (const j of [i, prox]) {
           const p = pts[j], l = lado * (W / 2 + mapa[j]), h = p.h * falloff(tr, l);
-          vs.push(p.x + p.nx * l, h + 0.5, p.y + p.ny * l, p.x + p.nx * l, h + 9, p.y + p.ny * l);
+          vs.push(p.x + p.nx * l, h + 0.5, p.y + p.ny * l, p.x + p.nx * l, h + 0.5 + 8.5 * E, p.y + p.ny * l); // (8,5 de altura × a escala do cenário)
           uv.push(j / 8, 0, j / 8, 1);
         }
         indices.push(q, q + 2, q + 1, q + 1, q + 2, q + 3);
@@ -362,7 +352,7 @@ function buildWorld(tr) {
   }
   // linha de chegada quadriculada e o grid
   const a0 = pts[0], chk = canvasTex(128, 16, (x, w, hh) => { for (let i = 0; i < 16; i++) for (let j = 0; j < 2; j++) { x.fillStyle = (i + j) % 2 ? "#111" : "#f4f4f4"; x.fillRect(i * 8, j * 8, 8, 8); } }, false);
-  const line = add(new THREE.Mesh(new THREE.PlaneGeometry(W, 12), new THREE.MeshStandardMaterial({ map: chk, roughness: 0.6 })));
+  const line = add(new THREE.Mesh(new THREE.PlaneGeometry(W, 12 * E), new THREE.MeshStandardMaterial({ map: chk, roughness: 0.6 })));
   line.rotation.x = -Math.PI / 2; line.rotation.z = -Math.atan2(a0.ty, a0.tx) + Math.PI / 2; line.position.set(a0.x, a0.h + 0.55, a0.y);
   // os GPs com o chão do kit têm o grid pintado com os números
   // (as barras das regras de F1 são as 22 vagas do grid; as de hoje, as 8 de sempre: pista.js liga um conjunto de cada vez)
@@ -372,14 +362,14 @@ function buildWorld(tr) {
   // pórtico da largada (`portico.adiante` do GP: quantas unidades à frente da linha de chegada ele fica; Mônaco o põe uns 80 m depois, como na pista de verdade)
   const ap = gp?.portico?.adiante ? pts[Math.round(gp.portico.adiante / 6) % n] : a0;
   { const s = 1, L = W / 2 + 14, mat = M(0x333844), sign = canvasTex(256, 32, (x, w, hh) => { x.fillStyle = "#111"; x.fillRect(0, 0, w, hh); x.fillStyle = "#ffd23f"; x.font = "bold 24px sans-serif"; x.textAlign = "center"; x.fillText("CORRIDA DA GALERA", w / 2, 24); }, false);
-    for (const k of [1, -1]) { const m = add(new THREE.Mesh(new THREE.BoxGeometry(4, 60, 4), mat)); m.position.set(ap.x + ap.nx * k * L, ap.h + 30, ap.y + ap.ny * k * L); m.castShadow = true; }
-    const top = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10, 3), [mat, mat, mat, mat, new THREE.MeshBasicMaterial({ map: sign }), new THREE.MeshBasicMaterial({ map: sign })]));
-    top.position.set(ap.x, ap.h + 62, ap.y); top.rotation.y = -Math.atan2(ap.ny, ap.nx); void s;
+    for (const k of [1, -1]) { const m = add(new THREE.Mesh(new THREE.BoxGeometry(4, 60 * E, 4), mat)); m.position.set(ap.x + ap.nx * k * L, ap.h + 30 * E, ap.y + ap.ny * k * L); m.castShadow = true; }
+    const top = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10 * E, 3), [mat, mat, mat, mat, new THREE.MeshBasicMaterial({ map: sign }), new THREE.MeshBasicMaterial({ map: sign })]));
+    top.position.set(ap.x, ap.h + 62 * E, ap.y); top.rotation.y = -Math.atan2(ap.ny, ap.nx); void s;
     // nas pistas de GP, o pórtico das regras de F1: no lugar da faixa "CORRIDA DA GALERA", cinco caixas com duas luzes vermelhas
     // cada, que acendem uma por segundo e apagam juntas (tr.luzes.set(n), chamado por hud.js). jogo.js liga um pórtico ou o outro.
     if (gp) {
-      const topF1 = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10, 3), mat)); topF1.position.copy(top.position); topF1.rotation.copy(top.rotation); topF1.visible = false;
-      const grupo = add(new THREE.Group()); grupo.position.copy(top.position); grupo.rotation.copy(top.rotation); grupo.visible = false;
+      const topF1 = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10 * E, 3), mat)); topF1.position.copy(top.position); topF1.rotation.copy(top.rotation); topF1.visible = false;
+      const grupo = add(new THREE.Group()); grupo.position.copy(top.position); grupo.rotation.copy(top.rotation); grupo.scale.setScalar(E); grupo.visible = false; // (as luzes da largada encolhem junto com a viga)
       const caixa = new THREE.BoxGeometry(10, 15, 2), esfera = new THREE.SphereGeometry(2.6, 12, 8), preto = M(0x0b0c10), apagada = 0x2a0505, acesa = 0xff2a1a, lampadas = [];
       for (let k = 0; k < 5; k++) {
         const c = new THREE.Mesh(caixa, preto); c.position.set((k - 2) * 13, 0, 2.2); grupo.add(c);
@@ -471,8 +461,8 @@ function buildWorld(tr) {
     tr.drsPlacas = add(new THREE.Group()); tr.drsPlacas.visible = false;
     for (const [deteccao, abre] of t.drs) for (const f of [deteccao, abre]) {
       const p = pts[Math.floor(f * n) % n], lado = W / 2 + 28;
-      const placa = new THREE.Sprite(mat); placa.position.set(p.x + p.nx * lado, p.h + 18, p.y + p.ny * lado);
-      placa.scale.set(33, 13, 1); tr.drsPlacas.add(placa);
+      const placa = new THREE.Sprite(mat); placa.position.set(p.x + p.nx * lado, p.h + 18 * E, p.y + p.ny * lado);
+      placa.scale.set(33 * E, 13 * E, 1); tr.drsPlacas.add(placa);
     }
   }
   const terra = (x, y) => !mundo || (!mundo.agua(tr, x, y) && !tr.reservado.some(([cx, cy, rr]) => (x - cx) ** 2 + (y - cy) ** 2 < rr * rr));

@@ -31,15 +31,15 @@ function montanha({ x, z, raio, alto, perfil, semente, neveAcima, rocha, neve, a
 }
 
 export function vulcoes(tr, add) {
-  const C = tr.t.world / 2, ang = Math.PI / 4;
+  const C = tr.t.world / 2, ang = Math.PI / 4, K = tr.t.world / 5360; // (5360 = o mundo de antes da escala real; os vulcões só afastam 15%: o plano de corte da câmera é 16000)
   // Popocatépetl: o cone alto com a cratera e o penacho de fumaça; Iztaccíhuatl: a crista comprida de quatro saliências (cabeça, peito, joelhos e pés)
-  const popo = montanha({ x: C + Math.cos(ang) * 10200, z: C + Math.sin(ang) * 10200, raio: 3000, alto: 1850, semente: 3, neveAcima: 0.55, rocha: "#4e463e", neve: "#f2f5f8",
+  const popo = montanha({ x: C + Math.cos(ang) * 10200 * 1.15, z: C + Math.sin(ang) * 10200 * 1.15, raio: 3000, alto: 1850, semente: 3, neveAcima: 0.55, rocha: "#4e463e", neve: "#f2f5f8",
     perfil: (r) => (r > 0.995 ? 0 : Math.pow(1 - r, 1.15) * (r < 0.06 ? 0.93 + r : 1)) });
   popo.name = "popocatepetl"; add(popo);
   const penacho = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xdcd6d0, transparent: true, opacity: 0.55, fog: false, depthWrite: false }));
   penacho.position.set(popo.geometry.attributes.position.array[0], 1850, popo.geometry.attributes.position.array[2]); penacho.scale.set(420, 900, 420); penacho.position.y = 1850 + 380; penacho.name = "popo-fumaca"; penacho.frustumCulled = false; add(penacho);
   const a2 = ang - 0.3, rot = a2 + Math.PI / 2;
-  const izta = montanha({ x: C + Math.cos(a2) * 9300, z: C + Math.sin(a2) * 9300, raio: 2800, alto: 1500, semente: 7, neveAcima: 0.52, rocha: "#554c43", neve: "#eef2f6", achata: 2.1, rot,
+  const izta = montanha({ x: C + Math.cos(a2) * 9300 * 1.15, z: C + Math.sin(a2) * 9300 * 1.15, raio: 2800, alto: 1500, semente: 7, neveAcima: 0.52, rocha: "#554c43", neve: "#eef2f6", achata: 2.1, rot,
     perfil: (r) => Math.pow(1 - r, 1.2) * (0.88 + 0.12 * Math.cos(r * 13)) });
   izta.name = "iztaccihuatl"; add(izta);
   tr.vulcoesMexico = { popo: popo.name, izta: izta.name };
@@ -49,15 +49,15 @@ export function vulcoes(tr, add) {
 // A cidade: casas baixas de cores quentes até onde a vista alcança e as torres do centro
 // ---------------------------------------------------------------------------------------------------------------------
 export function cidade(tr, add) {
-  const r = sorteio(909), C = tr.t.world / 2, lista = [], altas = [];
+  const r = sorteio(909), C = tr.t.world / 2, K = tr.t.world / 5360, lista = [], altas = []; // (K: o anel de casas de antes da escala real, de 3400 a 6000 do centro, cresce junto)
   const tex = canvasTex(64, 128, (x, w, h, q) => {
     x.fillStyle = "#ffffff"; x.fillRect(0, 0, w, h);
     for (let j = 0; j < 14; j++) for (let i = 0; i < 6; i++) { x.fillStyle = q() < 0.18 ? "#f4e2a8" : "#6f7d8c"; x.fillRect(4 + i * 10, 5 + j * 9, 6, 5); }
   });
   const quentes = ["#e8c9a0", "#d9a37a", "#e7d4b0", "#c97b5a", "#f1e6d0", "#b98a6a", "#d4a5a0", "#a9b8c4", "#e0b24f", "#8fa5b8"];
-  for (let k = 0; k < 520; k++) {
-    const a = r() * Math.PI * 2, d = 3400 + r() * 2600, x = C + Math.cos(a) * d * 1.04, z = C + Math.sin(a) * d * 1.04;
-    if (tr.distAprox(x, z) < 700) continue;
+  for (let k = 0; k < Math.round(520 * K * K); k++) {
+    const a = r() * Math.PI * 2, d = (3400 + r() * 2600) * K, x = C + Math.cos(a) * d * 1.04, z = C + Math.sin(a) * d * 1.04;
+    if (tr.distAprox(x, z) < 700 * K) continue;
     const alta = r() < 0.05, h = alta ? 160 + r() * 260 : 36 + r() * r() * 110, w = alta ? 70 + r() * 60 : 50 + r() * 90;
     const o = { x, y: h / 2 - 2, z, sx: w, sy: h, sz: w * (0.7 + r() * 0.6), r: r() * 3, cor: quentes[(r() * quentes.length) | 0] };
     (alta ? altas : lista).push(o);
@@ -68,7 +68,7 @@ export function cidade(tr, add) {
     if (m) { const c = new THREE.Color(); l.forEach((o, k) => m.setColorAt(k, c.set(o.cor))); m.instanceColor.needsUpdate = true; }
   }
   // a Torre Latinoamericana, de cima do centro: os degraus e a antena, ao sul-sudoeste do autódromo, na névoa
-  const tx = C - 1500, tz = C + 4200;
+  const tx = C - 1500 * K, tz = C + 4200 * K;
   const torre = new THREE.Group(); torre.name = "torre-latino";
   const concreto = new THREE.MeshStandardMaterial({ color: 0xcfd4d8, roughness: 0.6, map: tex });
   for (const [w, h, y] of [[90, 260, 0], [64, 150, 260], [40, 90, 410]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), concreto); b.position.y = y + h / 2; torre.add(b); }

@@ -66,8 +66,8 @@ function voltaFechada(room, p, log) {
 // porta); sem culpado claro (lado a lado) ninguém é punido. O causador leva a punição e a maior parte do dano; o batido nunca é punido
 // e quase não leva dano.
 // Um carro DERRAPANDO antes do impacto (rodando, atravessado ou com guinada forte), pelo que o impacto guardou (as velocidades de antes do
-// impulso): bater nele é infração leve, qualquer que seja a velocidade, porque ele não tinha como evitar. `idDoOutro`: o carro atingido.
-const DERRAPA_ANGULO = 0.6, DERRAPA_GUINADA = 1.5, DERRAPA_V = 40; // rad entre o rumo e a velocidade; rad/s; u/s
+// impulso): a batida é acidente de corrida, sem punição nem dano para os dois. `idDoOutro`: o carro de quem se pergunta.
+const DERRAPA_ANGULO = 0.6, DERRAPA_GUINADA = 3, DERRAPA_V = 40; // rad entre o rumo e a velocidade; rad/s (rodando: num grampo a guinada normal passa de 1,5); u/s
 function derrapando(imp, idDoOutro) {
   if (!imp || !imp.pre) return false;
   const q = imp.pre, ele = imp.de === idDoOutro, vx = ele ? q.vx : q.ovx, vy = ele ? q.vy : q.ovy, a = ele ? q.a : q.oa, r = ele ? q.r : q.orr;
@@ -77,19 +77,27 @@ function derrapando(imp, idDoOutro) {
   if (v < DERRAPA_V) return false;
   return Math.abs(Math.atan2(Math.sin(Math.atan2(vy, vx) - a), Math.cos(Math.atan2(vy, vx) - a))) > DERRAPA_ANGULO;
 }
+const ACIDENTE_MS = 1500; // a derrapagem até 1,5 s antes da batida ainda conta como acidente de corrida
 const FREADA_BRUSCA = 140; // u/s² (~3 g): o atingido freando mais que isto na frente do causador não conta como batida proposital
 const DANO_CAUSADOR = { leve: 12, media: 20, grave: 35 }, DANO_BATIDO = { leve: 0, media: 0, grave: 0.5 };
 function bater(room, p, forca, tipo, agora, log, chave = tipo) {
   if (!room.direcao || room.phase !== 'race' || !p || p.dnf || p.finish != null || p.box || agora < room.startAt) return null;
   const cd = p.batidaPares || (p.batidaPares = {});
   if (agora < (cd[chave] || 0)) return null;
-  let b = F1.batida(forca), derrapou = false;
-  const outro0 = tipo !== 'muro' && String(chave).startsWith('carro:') ? String(chave).slice(6) : null;
-  if (outro0 && forca >= 5) { // bateu num carro que derrapava: infração leve mesmo em baixa velocidade, se o outro não foi o causador
-    const i0 = Contato.impactoDe(room, p.id, outro0);
-    if (derrapando(i0, outro0) && !(i0.culpado && i0.culpado !== p.id)) { derrapou = true; b = b || F1.batida(F1.BATIDA_MIN); }
-  }
+  const b = F1.batida(forca);
   if (!b) return null;
+  // ACIDENTE DE CORRIDA: um dos dois derrapou (rodou, atravessou) e o outro bateu em seguida. Ninguém é punido e ninguém leva dano,
+  // nem quem derrapou nem quem não conseguiu desviar: o impacto guardado (as velocidades de antes do impulso) ou o histórico dos
+  // últimos ACIDENTE_MS dizem se algum dos dois estava derrapando
+  const outro0 = tipo !== 'muro' && String(chave).startsWith('carro:') ? String(chave).slice(6) : null;
+  if (outro0) {
+    const i0 = Contato.impactoDe(room, p.id, outro0), t0 = i0 ? i0.t : agora;
+    if (derrapando(i0, outro0) || derrapando(i0, p.id) || Contato.derrapouAntes(room, outro0, t0, ACIDENTE_MS) || Contato.derrapouAntes(room, p.id, t0, ACIDENTE_MS)) {
+      cd[chave] = agora + F1.BATIDA_INTERVALO;
+      if (!room.acidentesLog || agora - (room.acidentesLog[chave] || 0) > F1.BATIDA_INTERVALO) { (room.acidentesLog ||= {})[chave] = agora; log(`💥 ${p.name}: acidente de corrida (um carro derrapou): sem punição e sem dano.`); }
+      return null;
+    }
+  }
   if (tipo === 'muro') Contato.fantasmaDoMuro(room, p, forca); // bateu no muro: fantasma por 2 s para os outros carros não o acertarem (a punição e o dano seguem abaixo)
   cd[chave] = agora + F1.BATIDA_INTERVALO;
   for (const k of Object.keys(cd)) if (cd[k] < agora) delete cd[k]; // (só guarda os que ainda valem)
@@ -98,8 +106,8 @@ function bater(room, p, forca, tipo, agora, log, chave = tipo) {
   const outroId = tipo !== 'muro' && String(chave).startsWith('carro:') ? String(chave).slice(6) : null;
   const imp = outroId ? Contato.impactoDe(room, p.id, outroId) : null;
   // a gravidade vem da VELOCIDADE RELATIVA no impacto (o causador menos o atingido, na direção do contato, medida antes do impulso): `imp.forca`
-  const grav = outroId ? F1.gravidadeDaBatida(imp ? imp.forca : forca) || (derrapou ? 'leve' : null) : null;
-  const culpa = !!(grav && imp && (imp.culpado === p.id || (derrapou && !imp.culpado))), batido = !!(grav && imp && imp.culpado && imp.culpado !== p.id);
+  const grav = outroId ? F1.gravidadeDaBatida(imp ? imp.forca : forca) : null;
+  const culpa = !!(grav && imp && imp.culpado === p.id), batido = !!(grav && imp && imp.culpado && imp.culpado !== p.id);
   const dano = culpa ? DANO_CAUSADOR[grav] : batido ? DANO_BATIDO[grav] : b.dano;
   p.dano = Math.min(100, Math.round(((p.dano || 0) + dano) * 10) / 10);
   p.ultimaBatida = { at: agora, nivel: grav || b.nivel, dano, tipo, ...(culpa ? { culpa: true } : batido ? { batido: true } : {}) };

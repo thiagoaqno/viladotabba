@@ -163,17 +163,6 @@ test("bandeira azul exige líder próximo e não repete ao oscilar no limite", (
   assert.equal(b.avisosAzul, 2);
 });
 
-test("bater num carro que derrapa é infração leve mesmo em baixa velocidade (e num que não derrapa, não)", () => {
-  const room = sala(), a = room.players.a;
-  Contato.estado(room).impactos.set("a|b", { t: 5000, forca: 6, culpado: null, de: "a", pre: { vx: 100, vy: 0, ovx: 95, ovy: 0, a: 0, oa: 0, r: 0, orr: 3 } });
-  Direcao.bater(room, a, 6, "carro", 5000, semLog, "carro:b");
-  assert.equal(a.penal, F1.PUNICAO_LEVE_S, "o outro girava a 3 rad/s");
-  const room2 = sala(), a2 = room2.players.a;
-  Contato.estado(room2).impactos.set("a|b", { t: 5000, forca: 6, culpado: null, de: "a", pre: { vx: 100, vy: 0, ovx: 95, ovy: 0, a: 0, oa: 0, r: 0, orr: 0 } });
-  Direcao.bater(room2, a2, 6, "carro", 5000, semLog, "carro:b");
-  assert.equal(a2.penal, 0);
-});
-
 test("stop-and-go com troca na mesma parada: B.troca = { parada, t } e a fase vai de stopgo a troca", () => {
   const Sim = require("../public/corrida/sim.js"), T = require("../public/corrida/pistas.js"), Eq = require("../public/corrida/f1-equipes.js");
   const tr = Sim.criarPista(T.PISTAS.interlagos, "interlagos");

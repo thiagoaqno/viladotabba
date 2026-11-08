@@ -470,7 +470,7 @@ const INST_FORCA = 200;   // a força (u/s de aproximação) que dá a instabili
 // cada um se move em direção ao outro. Culpado claro só quando um se aproxima bem mais que o outro (a traseira que acerta quem estava
 // na frente, quem fecha a porta em cima de quem está ao lado); lado a lado, ou os dois se aproximando, não tem culpado. Só aí o impulso
 // é assimétrico: o culpado leva o impacto inteiro e a vítima só uma parte (não perde velocidade nem fica instável de forma exagerada).
-const CULPA_MIN = 8, CULPA_RAZAO = 1.6; // u/s: a aproximação mínima do culpado, e quantas vezes ela passa a do outro
+const CULPA_MIN = 15, CULPA_RAZAO = 2.0; // u/s: a aproximação mínima do culpado, e quantas vezes ela passa a do outro (com folga: na dúvida, ninguém é culpado)
 const K_CULPADO = 1.15, K_VITIMA = 0.4; // o quanto do impulso cada um leva quando há culpado claro
 // (vA, vB: as velocidades dos centros antes do impulso; n: o vetor unitário de B para A no contato). +1: A causou; -1: B causou; 0: ninguém
 function culpaEntre(vAx, vAy, vBx, vBy, nx, ny) {

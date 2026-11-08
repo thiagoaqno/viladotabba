@@ -470,8 +470,20 @@ const INST_FORCA = 200;   // a força (u/s de aproximação) que dá a instabili
 // cada um se move em direção ao outro. Culpado claro só quando um se aproxima bem mais que o outro (a traseira que acerta quem estava
 // na frente, quem fecha a porta em cima de quem está ao lado); lado a lado, ou os dois se aproximando, não tem culpado. Só aí o impulso
 // é assimétrico: o culpado leva o impacto inteiro e a vítima só uma parte (não perde velocidade nem fica instável de forma exagerada).
-const CULPA_MIN = 8, CULPA_RAZAO = 1.6; // u/s: a aproximação mínima do culpado, e quantas vezes ela passa a do outro
+const CULPA_MIN = 15, CULPA_RAZAO = 2.0; // u/s: a aproximação mínima do culpado, e quantas vezes ela passa a do outro (com folga: na dúvida, ninguém é culpado)
 const K_CULPADO = 1.15, K_VITIMA = 0.4; // o quanto do impulso cada um leva quando há culpado claro
+// A CULPA PELO LUGAR DO CONTATO (o que vale nas batidas): de que lado de cada carro o outro estava. Quem acerta com o BICO (o outro carro
+// à frente dele, na direção do contato) a traseira ou a lateral do outro é o culpado; lateral com lateral (lado a lado) ou bico com bico
+// é corrida, sem culpado. A velocidade não decide a culpa, só a gravidade. (aa, ba: o rumo de A e de B; n: de B para A no contato)
+const BICO = 0.7; // cos do ângulo: o contato a menos de ~45° da frente do carro é "de bico"
+function zonaDoContato(a, dx, dy) { const d = Math.cos(a) * dx + Math.sin(a) * dy; return d > BICO ? "bico" : d < -BICO ? "traseira" : "lado"; }
+function culpaPorOnde(aa, ba, nx, ny) {
+  const zA = zonaDoContato(aa, -nx, -ny), zB = zonaDoContato(ba, nx, ny); // (para A, o outro está em −n; para B, em +n)
+  if (zA === "bico" && zB !== "bico") return 1;
+  if (zB === "bico" && zA !== "bico") return -1;
+  return 0;
+}
+// (a regra antiga, pela velocidade de aproximação de cada um; fica para quem ainda a chama)
 // (vA, vB: as velocidades dos centros antes do impulso; n: o vetor unitário de B para A no contato). +1: A causou; -1: B causou; 0: ninguém
 function culpaEntre(vAx, vAy, vBx, vBy, nx, ny) {
   const atkA = Math.max(0, -(vAx * nx + vAy * ny)), atkB = Math.max(0, vBx * nx + vBy * ny);
@@ -505,13 +517,13 @@ function contatoCom(c, eu, o, dt, reg, semImpulso) {
   const ax0 = c.x0 ?? c.x, ay0 = c.y0 ?? c.y, aa0 = c.a0 ?? c.a;
   let da = c.a - aa0; da = Math.atan2(Math.sin(da), Math.cos(da));
   const rel = dt > 0 ? Math.hypot(c.x - ax0 - ovx * dt, c.y - ay0 - ovy * dt) : 0, nsub = dt > 0 ? Math.min(16, Math.max(1, Math.ceil(rel / 5))) : 1;
-  let f = 1, m = null, ax = c.x, ay = c.y, aa = c.a, bx = ox1, by = oy1;
+  let f = 1, m = null, ax = c.x, ay = c.y, aa = c.a, bx = ox1, by = oy1, ba = oa1;
   const folga = o.folga || 0; // (o navegador, que só tem uma previsão do outro carro, exige que ele esteja mais enterrado que isto; o servidor, com a pose de verdade, não)
   for (let i = 1; i <= nsub; i++) {
     const g = i / nsub, qx = ax0 + (c.x - ax0) * g, qy = ay0 + (c.y - ay0) * g, qa = aa0 + da * g;
     const rx = ox1 - ovx * dt * (1 - g), ry = oy1 - ovy * dt * (1 - g), ra = oa1 - orr * dt * (1 - g);
     const hit = maisEnterrado(qx, qy, qa, eu.L, eu.W, rx, ry, ra, o.L, o.W);
-    if (hit && hit.pen > folga) { m = hit; f = g; ax = qx; ay = qy; aa = qa; bx = rx; by = ry; break; }
+    if (hit && hit.pen > folga) { m = hit; f = g; ax = qx; ay = qy; aa = qa; bx = rx; by = ry; ba = ra; break; }
   }
   if (!m) return 0;
   // a velocidade dos dois no ponto do contato (a de cada centro mais a guinada vezes o braço)
@@ -525,7 +537,7 @@ function contatoCom(c, eu, o, dt, reg, semImpulso) {
   if (vn < 0 && !semImpulso) { // se aproximando: troca o momento
     forca = -vn;
     // as velocidades de ANTES do impulso: a gravidade e a culpa saem delas (o servidor guarda em corrida-contato.js)
-    const culpa = culpaEntre(c.vx, c.vy, ovx, ovy, nx, ny), kA = culpa === 1 ? K_CULPADO : culpa === -1 ? K_VITIMA : 1, kB = culpa === -1 ? K_CULPADO : culpa === 1 ? K_VITIMA : 1;
+    const culpa = culpaPorOnde(aa, ba, nx, ny), kA = culpa === 1 ? K_CULPADO : culpa === -1 ? K_VITIMA : 1, kB = culpa === -1 ? K_CULPADO : culpa === 1 ? K_VITIMA : 1;
     o.culpa = culpa; o.pre = { vx: c.vx, vy: c.vy, ovx, ovy, nx, ny, a: aa, oa: oa1, r: c.r, orr };
     const cAn = rAx * ny - rAy * nx, cBn = rBx * ny - rBy * nx;
     const j = -(1 + E_BATIDA) * vn / (1 / mA + 1 / mB + cAn * cAn / IA + cBn * cBn / IB);
@@ -674,7 +686,7 @@ function reconciliar(c, st, tr, ctx) {
   return { erro, dentro, dx: ox - c.x, dy: oy - c.y, da };
 }
 
-const api = { PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+const api = { PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

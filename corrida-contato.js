@@ -98,6 +98,18 @@ function freada(K, id, t) {
   const a = {}, b = {}; em(H, t - 300, a); em(H, t, b);
   return (Math.hypot(a.vx, a.vy) - Math.hypot(b.vx, b.vy)) / 0.3;
 }
+// o carro `id` derrapou (rodou, ficou atravessado ou com guinada forte) em algum momento dos `ms` antes de `t`? Pelo histórico do servidor.
+// (a mesma régua de corrida-f1-direcao.js: guinada acima de 2 rad/s, ou o rumo a mais de 0,3 rad da velocidade andando a 25 u/s ou mais)
+function derrapouAntes(room, id, t, ms = 1500) {
+  const H = estado(room).hist.get(id); if (!H || !H.n) return false;
+  for (let k = 0; k < H.n; k++) {
+    const j = (H.i - 1 - k + 2 * N) % N; if (H.t[j] > t + 50) continue; if (H.t[j] < t - ms) break;
+    if (Math.abs(H.r[j]) > 2) return true;
+    const v = Math.hypot(H.vx[j], H.vy[j]); if (v < 25) continue;
+    const d = Math.atan2(H.vy[j], H.vx[j]) - H.a[j]; if (Math.abs(Math.atan2(Math.sin(d), Math.cos(d))) > 0.3) return true;
+  }
+  return false;
+}
 function guardarImpacto(K, idA, e, t) {
   if (!e.pre) return;
   for (const [k, i] of K.impactos) if (t - i.t > IMPACTO_VALE_MS) K.impactos.delete(k);
@@ -150,4 +162,4 @@ function fantasmaDoMuro(room, p, forca) {
   return true;
 }
 
-module.exports = { BOX_FANTASMA_MS, FANTASMA_BATIDA_MS, FANTASMA_PAR_MS, FANTASMA_MURO_MIN, FANTASMA_MURO_INTERVALO_MS, fantasmaDoMuro, fantasmaDoBox, impactoDe, estado, limpar, gravar, em, outrosNaHora, depoisDoPasso, geometria, PAR_MS, N };
+module.exports = { derrapouAntes, BOX_FANTASMA_MS, FANTASMA_BATIDA_MS, FANTASMA_PAR_MS, FANTASMA_MURO_MIN, FANTASMA_MURO_INTERVALO_MS, fantasmaDoMuro, fantasmaDoBox, impactoDe, estado, limpar, gravar, em, outrosNaHora, depoisDoPasso, geometria, PAR_MS, N };

@@ -56,7 +56,10 @@ export function boxesGP(tr, add, cfg = {}) {
   const em = (u, l) => {
     const i = cor.i0 + Math.floor(u), f = u - Math.floor(u), a = pts[i % n], b = pts[(i + 1) % n];
     const x = a.x + (b.x - a.x) * f + (a.nx + (b.nx - a.nx) * f) * l, y = a.y + (b.y - a.y) * f + (a.ny + (b.ny - a.ny) * f) * l;
-    return { x, y, h: tr.chao(x, y) };
+    // a altura: a da pista naquele ponto (a reta dos boxes fica no nível do asfalto), ou o chão se ele for mais alto. Antes era só o
+    // chão, e o terreno ficava por cima do corredor (a grama aparecia no lugar do asfalto)
+    const hp = a.h != null && b.h != null ? a.h + (b.h - a.h) * f : -Infinity;
+    return { x, y, h: Math.max(tr.chao(x, y), hp) };
   };
   // uma fita de u0 a u1: de `la(u)` a `lb(u)`, na altura do chão + ya e + yb (iguais: fita deitada; lados iguais: parede)
   const fita = (mat, u0, u1, la, lb, ya, yb, vRep = 60) => {
@@ -111,6 +114,14 @@ export function boxesGP(tr, add, cfg = {}) {
     fita(concreto, a, b, lm, lm, 0, alt, 8); fita(concreto, a, b, (u) => lm(u) + lado * 2.4, (u) => lm(u) + lado * 2.4, alt, 0, 8);
     fita(concreto, a, b, lm, (u) => lm(u) + lado * 2.4, alt, alt, 8);
   }
+  // o piso de concreto entre o corredor e o fundo das garagens (no autódromo de verdade não tem grama ali) e as laterais que descem até
+  // o chão, para o corredor alto não ficar flutuando
+  const comPiso = cfg.garagens !== false, pisoFim = cor.garagemLat + lado * (meia / 2 + 22);
+  const piso = poly({ map: canvasTex(64, 64, (x, w, hh, rr) => { x.fillStyle = "#a9a8a2"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 300; i++) { x.fillStyle = rr() < 0.5 ? "#00000014" : "#ffffff18"; x.fillRect(rr() * w, rr() * hh, 2, 2); } x.fillStyle = "#00000022"; x.fillRect(0, 0, w, 1); x.fillRect(0, 0, 1, hh); }), polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  if (comPiso) fita(piso, F.RAMPA, fim - F.RAMPA, desloc(meia - 0.2), () => pisoFim, y0 - 0.02, y0 - 0.02, 12);
+  fita(concreto, 0, fim, desloc(-meia), desloc(-meia), y0, -6, 8); // a lateral do lado da pista
+  fita(concreto, 0, comPiso ? F.RAMPA : fim, desloc(meia), desloc(meia), y0, -6, 8); // a lateral de fora (onde não tem o piso)
+  if (comPiso) { fita(concreto, F.RAMPA, fim - F.RAMPA, () => pisoFim, () => pisoFim, y0, -6, 8); fita(concreto, fim - F.RAMPA, fim, desloc(meia), desloc(meia), y0, -6, 8); }
   L.montar((o) => (grp.add(o), o), `${tr.id}-boxes`);
   // as garagens, os mecânicos e o quadrado pintado onde o carro para: tudo numa malha só, com a cor nos vértices. As
   // partes na cor da equipe ficam anotadas em "faixas" para "colorir" trocar (jogo.js pinta com a cor de quem usa cada uma)
@@ -155,12 +166,7 @@ export function boxesGP(tr, add, cfg = {}) {
       const pf = fundo - 1.45; fundoLogo.position.set(ref.x + nx * pf, ref.h + alt - 6.5, ref.y + ny * pf); fundoLogo.rotation.y = Math.atan2(-nx, -ny);
       grp.add(fundoLogo);
       caixa(ref, tx, ty, nx, ny, 0, fundo + 0.2, alt + 1.2, 7, 1, 6, c, k); caixa(ref, tx, ty, nx, ny, 0, fundo + 0.2, alt + 6.8, 9, 1, 1.4, "#f4f4f4"); // a placa da garagem em cima do teto
-      // os mecânicos da equipe: macacão da cor dela e capacete, em fila na frente da garagem
-      for (const s of [-1.5, -0.5, 0.5, 1.5]) {
-        caixa(ref, tx, ty, nx, ny, s * 5, 2.2, 0, 2.2, 1.8, 5.2, c, k);
-        caixa(ref, tx, ty, nx, ny, s * 5, 2.2, 5.2, 1.8, 1.6, 1.8, pele);
-        caixa(ref, tx, ty, nx, ny, s * 5, 2.2, 6.6, 2.1, 1.9, 1, "#f4f4f4");
-      }
+      // (os mecânicos de caixinha saíram: ficavam feios; a equipe trocando pneu vai entrar como animação)
     }
     caixa(q, tx, ty, nx, ny, 0, 0, 0.7, 13, 8.5, 0.05, c, k); // o quadrado pintado no corredor onde o carro para
     caixa(q, tx, ty, nx, ny, 0, 0, 0.78, 11.5, 7, 0.05, "#2c2e33");

@@ -21,9 +21,9 @@ function escolherSeco({ F, jogos, voltasRestantes, fator = 1, evitar = [], ritmo
 function sugerirBox(e) {
   const F = e.F; if (!F || !e.pneu || e.emBox || e.pedido) return null;
   if (e.voltaAtual >= e.voltas) return null; // a última volta não tem box
-  // a sugestão só aparece com o pneu abaixo de 25% de vida (F.vidaRestante: 1 novo, 0 no penhasco), e o motivo diz quanto sobra
+  // a sugestão só aparece com o pneu abaixo de 20% de vida (F.vidaRestante: 1 novo, 0 no penhasco), e o motivo diz quanto sobra
   const vida = F.vidaRestante ? F.vidaRestante(e.pneu) : 1;
-  if (vida >= 0.25) return null;
+  if (vida >= 0.2) return null;
   const sugestao = sugerirBoxAgora(e);
   if (sugestao) sugestao.motivo = `Pneu ${(F.PNEUS[e.pneu.composto] || {}).nome || ""} com ${Math.round(vida * 100)}% de vida · ${sugestao.motivo}`;
   return sugestao;

@@ -18,7 +18,7 @@ export function passarelas(tr, add, { candidatos, marcas = ["rolex", "heineken",
     const pes = [-1, 1].map((s) => [p.x + p.nx * s * vao, p.y + p.ny * s * vao]);
     if (!pes.every(([x, z]) => livre(tr, x, z, 24) && !ocupado(tr, x, z))) continue; // nem na água, nem na arquibancada, nem no grampo vizinho
     const g = new THREE.Group(); g.position.set(p.x, p.h, p.y); g.rotation.y = Math.atan2(p.nx, p.ny); add(g); // z do grupo = lado da pista
-    const alto = 74, fx = new THREE.MeshBasicMaterial({ map: faixas[k % faixas.length] });
+    const alto = 74 * (tr.escala ?? 1), fx = new THREE.MeshBasicMaterial({ map: faixas[k % faixas.length] }); // o vão livre sob a passarela (o resto dela já tem o tamanho real)
     const deck = new THREE.Mesh(new THREE.BoxGeometry(14, 16, vao * 2 + 16), [fx, fx, aco, aco, aco, aco]); deck.position.y = alto + 8; deck.castShadow = true; g.add(deck);
     const corrimao = new THREE.Mesh(new THREE.BoxGeometry(12, 10, vao * 2 + 14), vidro); corrimao.position.y = alto + 21; g.add(corrimao);
     for (const s of [-1, 1]) {

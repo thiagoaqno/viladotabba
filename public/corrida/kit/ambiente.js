@@ -10,7 +10,7 @@ import { marcaTex, PATROCINIO } from "./marcas.js";
 import { ocupado } from "./comum.js";
 
 export function ambienteGP(tr, add, { marcas = PATROCINIO.slice(0, 9), posto = "f1", bandeira = [0xc42d38, 0xf0eee6], placas = [100, 50], outdoors = PATROCINIO, cerca = true, paineis = true, mastros = true, semCerca = [], tela = false } = {}) {
-  const { pts, n, W } = tr, L = tr.wallLat < 1e9 ? tr.wallLat : W / 2 + 30, lotes = new Map();
+  const { pts, n, W } = tr, E = tr.escala ?? 1, L = tr.wallLat < 1e9 ? tr.wallLat : W / 2 + 30, lotes = new Map(); // E: a escala do cenário do GP (os painéis e as placas encolhem; o mastro, a cerca e o posto já têm o tamanho real)
   const metal = M(0x697780), branco = M(0xf0eee6), vermelho = M(0xc42d38), laranja = M(0xf27421), escuro = M(0x18242b), bandCima = M(bandeira[0]), bandBaixo = M(bandeira[1]), bandMeio = bandeira[2] != null ? M(bandeira[2]) : null;
   const luz = new THREE.MeshBasicMaterial({ color: 0xffdf9c, toneMapped: false });
   const placa = (texto, fundo, cor = "#ffffff") => new THREE.MeshBasicMaterial({ map: canvasTex(512, 128, (x, w, h) => {
@@ -60,7 +60,7 @@ export function ambienteGP(tr, add, { marcas = PATROCINIO.slice(0, 9), posto = "
     if (!tela) peca(); // com `tela`, o poste só entra se tiver vizinho (mais abaixo): poste e barra isolados ficariam soltos no ar
     }
     if (paineis && i % 27 === 0) {
-      caixa(anuncios[(i / 27) % anuncios.length], x - p.nx * lado * 1.6, h + 7, z - p.ny * lado * 1.6, 30, 9, 0.6, ry);
+      caixa(anuncios[(i / 27) % anuncios.length], x - p.nx * lado * 1.6, h + 7 * E, z - p.ny * lado * 1.6, 30 * E, 9 * E, 0.6, ry);
       stats.paineis++; stats.setores[Math.floor(i / n * 4)]++;
     }
     if (mastros && i % 81 === 0) {
@@ -111,7 +111,7 @@ export function ambienteGP(tr, add, { marcas = PATROCINIO.slice(0, 9), posto = "
     placas.forEach((distancia, j) => {
       const idx = (i - Math.round(distancia * 10 / 6) + n) % n, o = lugar(idx, lado, L + 6, 5);
       if (!o || tr.coberto?.(idx)) return;
-      caixa(distancias[j], o.x, o.h + 22, o.z, 13, 9, 0.8, Math.atan2(-o.p.tx, -o.p.ty)); stats.placas++;
+      caixa(distancias[j], o.x, o.h + 22 * E, o.z, 13 * E, 9 * E, 0.8, Math.atan2(-o.p.tx, -o.p.ty)); stats.placas++;
     });
   }
   const geo = new THREE.BoxGeometry(1, 1, 1), d = new THREE.Object3D();

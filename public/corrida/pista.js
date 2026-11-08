@@ -178,6 +178,8 @@ const aguaTex = (cor) => canvasTex(256, 256, (x, w, hh, rr) => { x.fillStyle = c
 function buildWorld(tr) {
   const { pts, n, W, look, id, grp } = tr, t = tr.t, add = (o) => (grp.add(o), o), r = rng(id.length * 977), gp = GPS[id];
   const mundo = mundoDe(id);
+  // a escala do cenário (gps/<id>.js: `escala`, e `escalaGente` para a torcida; padrão 1 = o tamanho de sempre). As peças do kit e deste arquivo multiplicam por ela o TAMANHO (altura, degrau, painel), nunca a posição ao longo da pista
+  const E = (tr.escala = gp?.escala ?? 1); tr.escalaGente = gp?.escalaGente ?? E;
   tr.luzesPista = []; // as luzes dos postes e holofotes (kit/luz-postes.js: registrarLuz); a montagem pode rodar de novo quando os enfeites chegam
   tr.reservado = []; // onde os enfeites soltos não entram (o kit e o cenário de cada GP vão pondo aqui)
   tr.sem = gp?.sem || {}; // o que este GP não tem e vida.js / vida-mais.js não devem pôr (Mônaco: olhos de gato, setas, mastros, roda-gigante...)
@@ -345,7 +347,7 @@ function buildWorld(tr) {
         const q = vs.length / 3;
         for (const j of [i, prox]) {
           const p = pts[j], l = lado * (W / 2 + mapa[j]), h = p.h * falloff(tr, l);
-          vs.push(p.x + p.nx * l, h + 0.5, p.y + p.ny * l, p.x + p.nx * l, h + 9, p.y + p.ny * l);
+          vs.push(p.x + p.nx * l, h + 0.5, p.y + p.ny * l, p.x + p.nx * l, h + 0.5 + 8.5 * E, p.y + p.ny * l); // (8,5 de altura × a escala do cenário)
           uv.push(j / 8, 0, j / 8, 1);
         }
         indices.push(q, q + 2, q + 1, q + 1, q + 2, q + 3);
@@ -362,7 +364,7 @@ function buildWorld(tr) {
   }
   // linha de chegada quadriculada e o grid
   const a0 = pts[0], chk = canvasTex(128, 16, (x, w, hh) => { for (let i = 0; i < 16; i++) for (let j = 0; j < 2; j++) { x.fillStyle = (i + j) % 2 ? "#111" : "#f4f4f4"; x.fillRect(i * 8, j * 8, 8, 8); } }, false);
-  const line = add(new THREE.Mesh(new THREE.PlaneGeometry(W, 12), new THREE.MeshStandardMaterial({ map: chk, roughness: 0.6 })));
+  const line = add(new THREE.Mesh(new THREE.PlaneGeometry(W, 12 * E), new THREE.MeshStandardMaterial({ map: chk, roughness: 0.6 })));
   line.rotation.x = -Math.PI / 2; line.rotation.z = -Math.atan2(a0.ty, a0.tx) + Math.PI / 2; line.position.set(a0.x, a0.h + 0.55, a0.y);
   // os GPs com o chão do kit têm o grid pintado com os números
   // (as barras das regras de F1 são as 22 vagas do grid; as de hoje, as 8 de sempre: pista.js liga um conjunto de cada vez)
@@ -372,14 +374,14 @@ function buildWorld(tr) {
   // pórtico da largada (`portico.adiante` do GP: quantas unidades à frente da linha de chegada ele fica; Mônaco o põe uns 80 m depois, como na pista de verdade)
   const ap = gp?.portico?.adiante ? pts[Math.round(gp.portico.adiante / 6) % n] : a0;
   { const s = 1, L = W / 2 + 14, mat = M(0x333844), sign = canvasTex(256, 32, (x, w, hh) => { x.fillStyle = "#111"; x.fillRect(0, 0, w, hh); x.fillStyle = "#ffd23f"; x.font = "bold 24px sans-serif"; x.textAlign = "center"; x.fillText("CORRIDA DA GALERA", w / 2, 24); }, false);
-    for (const k of [1, -1]) { const m = add(new THREE.Mesh(new THREE.BoxGeometry(4, 60, 4), mat)); m.position.set(ap.x + ap.nx * k * L, ap.h + 30, ap.y + ap.ny * k * L); m.castShadow = true; }
-    const top = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10, 3), [mat, mat, mat, mat, new THREE.MeshBasicMaterial({ map: sign }), new THREE.MeshBasicMaterial({ map: sign })]));
-    top.position.set(ap.x, ap.h + 62, ap.y); top.rotation.y = -Math.atan2(ap.ny, ap.nx); void s;
+    for (const k of [1, -1]) { const m = add(new THREE.Mesh(new THREE.BoxGeometry(4, 60 * E, 4), mat)); m.position.set(ap.x + ap.nx * k * L, ap.h + 30 * E, ap.y + ap.ny * k * L); m.castShadow = true; }
+    const top = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10 * E, 3), [mat, mat, mat, mat, new THREE.MeshBasicMaterial({ map: sign }), new THREE.MeshBasicMaterial({ map: sign })]));
+    top.position.set(ap.x, ap.h + 62 * E, ap.y); top.rotation.y = -Math.atan2(ap.ny, ap.nx); void s;
     // nas pistas de GP, o pórtico das regras de F1: no lugar da faixa "CORRIDA DA GALERA", cinco caixas com duas luzes vermelhas
     // cada, que acendem uma por segundo e apagam juntas (tr.luzes.set(n), chamado por hud.js). jogo.js liga um pórtico ou o outro.
     if (gp) {
-      const topF1 = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10, 3), mat)); topF1.position.copy(top.position); topF1.rotation.copy(top.rotation); topF1.visible = false;
-      const grupo = add(new THREE.Group()); grupo.position.copy(top.position); grupo.rotation.copy(top.rotation); grupo.visible = false;
+      const topF1 = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10 * E, 3), mat)); topF1.position.copy(top.position); topF1.rotation.copy(top.rotation); topF1.visible = false;
+      const grupo = add(new THREE.Group()); grupo.position.copy(top.position); grupo.rotation.copy(top.rotation); grupo.scale.setScalar(E); grupo.visible = false; // (as luzes da largada encolhem junto com a viga)
       const caixa = new THREE.BoxGeometry(10, 15, 2), esfera = new THREE.SphereGeometry(2.6, 12, 8), preto = M(0x0b0c10), apagada = 0x2a0505, acesa = 0xff2a1a, lampadas = [];
       for (let k = 0; k < 5; k++) {
         const c = new THREE.Mesh(caixa, preto); c.position.set((k - 2) * 13, 0, 2.2); grupo.add(c);
@@ -471,8 +473,8 @@ function buildWorld(tr) {
     tr.drsPlacas = add(new THREE.Group()); tr.drsPlacas.visible = false;
     for (const [deteccao, abre] of t.drs) for (const f of [deteccao, abre]) {
       const p = pts[Math.floor(f * n) % n], lado = W / 2 + 28;
-      const placa = new THREE.Sprite(mat); placa.position.set(p.x + p.nx * lado, p.h + 18, p.y + p.ny * lado);
-      placa.scale.set(33, 13, 1); tr.drsPlacas.add(placa);
+      const placa = new THREE.Sprite(mat); placa.position.set(p.x + p.nx * lado, p.h + 18 * E, p.y + p.ny * lado);
+      placa.scale.set(33 * E, 13 * E, 1); tr.drsPlacas.add(placa);
     }
   }
   const terra = (x, y) => !mundo || (!mundo.agua(tr, x, y) && !tr.reservado.some(([cx, cy, rr]) => (x - cx) ** 2 + (y - cy) ** 2 < rr * rr));

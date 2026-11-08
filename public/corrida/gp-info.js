@@ -58,11 +58,9 @@ const REAIS = {
     curvas: [{ n: 1, nome: null, f: 0.097 }, { n: 2, nome: null, f: 0.1544 }, { n: 3, nome: null, f: 0.1959 }, { n: 4, nome: null, f: 0.2713 }, { n: 5, nome: null, f: 0.3031 }, { n: 6, nome: null, f: 0.3583 }, { n: 7, nome: null, f: 0.4339 }, { n: 8, nome: null, f: 0.4688 }, { n: 9, nome: null, f: 0.4959 }, { n: 10, nome: null, f: 0.5454 }, { n: 11, nome: null, f: 0.6517 }, { n: 12, nome: null, f: 0.6867 }, { n: 13, nome: null, f: 0.7258 }, { n: 14, nome: null, f: 0.7847 }, { n: 15, nome: null, f: 0.8713 }] },
   abudhabi: { gp: "Grande Prêmio de Abu Dhabi", circuito: "Yas Marina Circuit", cidade: "Ilha de Yas, Abu Dhabi", pais: "Emirados Árabes", pa: "AE", km: 5.281, voltas: 58,
     curvas: [{ n: 1, nome: null, f: 0.0502 }, { n: 2, nome: null, f: 0.0968 }, { n: 3, nome: null, f: 0.1352 }, { n: 4, nome: null, f: 0.2509 }, { n: 5, nome: null, f: 0.4791 }, { n: 6, nome: null, f: 0.489 }, { n: 7, nome: null, f: 0.5257 }, { n: 8, nome: null, f: 0.6851 }, { n: 9, nome: null, f: 0.753 }, { n: 10, nome: null, f: 0.7789 }, { n: 11, nome: null, f: 0.802 }, { n: 12, nome: null, f: 0.8235 }, { n: 13, nome: null, f: 0.845 }, { n: 14, nome: null, f: 0.9012 }, { n: 15, nome: null, f: 0.9428 }] },
-  nurburgring: { gp: "Nürburgring Nordschleife", circuito: "Nürburgring Nordschleife", cidade: "Nürburg", pais: "Alemanha", pa: "DE", km: 20.832, voltas: 0,
-    curvas: [{ n: 1, nome: "Tiergarten", f: 0.0836 }, { n: 2, nome: "Hohenrain", f: 0.1448 }, { n: 3, nome: "Hatzenbach", f: 0.206 }, { n: 4, nome: "Flugplatz", f: 0.3288 }, { n: 5, nome: "Schwedenkreuz", f: 0.3545 }, { n: 6, nome: "Aremberg", f: 0.3887 }, { n: 7, nome: "Fuchsröhre", f: 0.4431 }, { n: 8, nome: "Adenauer Forst", f: 0.4992 }, { n: 9, nome: "Metzgesfeld", f: 0.5473 }, { n: 10, nome: "Kallenhard", f: 0.57 }, { n: 11, nome: "Wehrseifen", f: 0.5965 }, { n: 12, nome: "Bergwerk", f: 0.6224 }, { n: 13, nome: "Karussell", f: 0.661 }, { n: 14, nome: "Hohe Acht", f: 0.69 }, { n: 15, nome: "Brünnchen", f: 0.7171 }, { n: 16, nome: "Pflanzgarten", f: 0.7442 }, { n: 17, nome: "Schwalbenschwanz", f: 0.7759 }] },
 };
 const ORDEM = Object.keys(REAIS);
-const CEUS = ["arcoiris", "barcelona", "deserto", "interlagos", "laguna", "losangeles", "luigi", "monaco", "monza", "nurburgring", "rio", "serra", "sorvete", "tokyo"];
+const CEUS = ["barcelona", "interlagos", "monaco", "monza"];
 const SEM_FOTO = []; // pistas reais sem foto livre (cai no céu)
 
 // as bandeiras: desenhos simples em 24 × 16 (reconhecíveis, não oficiais); emoji de bandeira não aparece no Windows

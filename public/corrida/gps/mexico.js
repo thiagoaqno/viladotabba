@@ -17,10 +17,10 @@ const MARCAS = ["mxmexico", "mxgp", "pirelli", "rolex", "aramco", "dhl", "heinek
 export const GP_MEXICO = {
   asfalto: true,
   chao: {
-    margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 340, fora: 220 },
+    margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 547, fora: 354 }, // (raios das curvas ×1,609 com a escala real: as mesmas curvas de antes têm zebra)
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]], grid: true, remendos: 26,
   },
-  escape: { britaCurvas: 420, corBrita: "#cfc4a6", largura: 26 },
+  escape: { britaCurvas: 676, corBrita: "#cfc4a6", largura: 26 },
   arquibancadas: { trechos: [
     arq(0.93, 1.0, -1, 10, VERDE, BRANCO, true), arq(0.002, 0.11, -1, 10, VERDE, BRANCO, true), arq(0.11, 0.2, -1, 7, VERMELHO), // a reta principal, do lado norte
     arq(0.25, 0.285, -1, 9, VERMELHO, BRANCO, true), arq(0.285, 0.33, 1, 8, VERDE), arq(0.3, 0.34, -1, 7, ESCURO), // curvas 1 a 3

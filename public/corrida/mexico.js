@@ -15,7 +15,8 @@ import { tendaPaddock } from "./kit/coberturas.js";
 import { registrarMarcasMexico } from "./kit/mexico/marcas.js";
 import { reservarRet, acharRet, indice } from "./kit/mexico/lugar.js";
 import { foroSol } from "./kit/mexico/foro.js";
-import { arvoresDoParque, lagos, quadras, palacioDosEsportes, peraltada } from "./kit/mexico/parque.js";
+import { arvoresDoParque, lagos, camposDeEsporte, palacioDosEsportes, peraltada } from "./kit/mexico/parque.js";
+import { CAMPOS } from "./kit/mexico/dados.js";
 import { cidade, vulcoes } from "./kit/mexico/horizonte.js";
 
 registrarMarcasMexico();
@@ -23,10 +24,13 @@ registrarMarcasMexico();
 // ---------------------------------------------------------------------------------------------------------------------
 // 1. O Foro Sol
 // ---------------------------------------------------------------------------------------------------------------------
+// (escala real: o traçado tem 4,3 km de verdade, 1 u = 0,208 m. O centro de partida, (1306, 2915), é o do laço de ~140 m de diâmetro que o OpenStreetMap tem dentro da alça do fim
+// da volta, no encaixe do traçado do jogo; a arquibancada em ferradura cabe em volta dele, de 94 m de semieixo, e a pista passa pelo vão. O Foro Sol de verdade é maior.)
+const FORO_CENTRO = [1306, 2915];
 function oForoSol(tr, { add }) {
-  const A = 200, B = 104, fundo = 56, folga = 30, ok = (x, z) => livre(tr, x, z, folga) && !ocupado(tr, x, z);
+  const A = 470, B = 440, fundo = 140, folga = 30, ok = (x, z) => livre(tr, x, z, folga) && !ocupado(tr, x, z);
   let melhor = null;
-  for (let cx = 640; cx <= 1020; cx += 20) for (let cz = 1240; cz <= 1420; cz += 10) {
+  for (let cx = FORO_CENTRO[0] - 160; cx <= FORO_CENTRO[0] + 160; cx += 20) for (let cz = FORO_CENTRO[1] - 160; cz <= FORO_CENTRO[1] + 160; cz += 20) {
     let bons = 0;
     for (let k = 0; k < 72; k++) {
       const t = (k / 72) * Math.PI * 2;
@@ -35,9 +39,9 @@ function oForoSol(tr, { add }) {
     if (!melhor || bons > melhor.bons) melhor = { cx, cz, bons };
   }
   if (!melhor || melhor.bons < 20) { tr.faltouMexico = (tr.faltouMexico || []).concat([{ nome: "foro" }]); return null; }
-  const info = foroSol(tr, add, { cx: melhor.cx, cz: melhor.cz, A, B, fundo, degraus: 7, ok });
+  const info = foroSol(tr, add, { cx: melhor.cx, cz: melhor.cz, A, B, fundo, degraus: 16, ok });
   // reserva o estádio inteiro (as árvores e a torcida solta não entram)
-  for (let u = -A; u <= A; u += 50) for (let v = -B; v <= B; v += 50) if ((u / A) ** 2 + (v / B) ** 2 <= 1.2) tr.reservado.push([melhor.cx + u, melhor.cz + v, 46]);
+  for (let u = -A; u <= A; u += 60) for (let v = -B; v <= B; v += 60) if ((u / A) ** 2 + (v / B) ** 2 <= 1.2) tr.reservado.push([melhor.cx + u, melhor.cz + v, 60]);
   tr.foroSol = info;
   const anterior = tr.animarPista;
   tr.animarPista = (dt, foco, t) => { anterior?.(dt, foco, t); info.fumaca.animar(t, foco); };
@@ -66,13 +70,14 @@ export function cenarioMexico(tr, ctx, marcas) {
   tr.reservado ||= [];
   oForoSol(tr, ctx);
   retaDosBoxes(tr, ctx, marcas);
-  peraltada(tr, ctx.add);
-  palacioDosEsportes(tr, ctx.add, [2300, 780]);
-  lagos(tr, ctx.add, [
-    { caixa: [1500, 3300, 1500, 2000], a: 150, b: 80 }, { caixa: [2200, 3600, 1650, 2050], a: 110, b: 62 },
-    { caixa: [700, 2600, 2600, 3900], a: 190, b: 110 }, { caixa: [3300, 4400, 3600, 4200], a: 130, b: 70 },
+  // o resto do parque, no lugar de verdade (OpenStreetMap, no encaixe do traçado): os campos e quadras de kit/mexico/dados.js; o Palácio dos Esportes (domo de 120 m) fica a ~1,5 km a oeste da
+  // pista, fora do mundo (o chão vai 1400 u além dele); a Peraltada antiga é só uma curva de concreto de raio grande ao lado do Foro Sol (a posição exata dela não foi achada)
+  peraltada(tr, ctx.add, { caixa: [500, 1300, 2300, 3300], raios: [500, 700], largura: 67 });
+  palacioDosEsportes(tr, ctx.add, [-674, 2439], 2.62);
+  camposDeEsporte(tr, ctx.add, CAMPOS);
+  lagos(tr, ctx.add, [ // (o OpenStreetMap só mapeia um laguinho aqui, o do sul; os dois do miolo são enfeite do parque)
+    { caixa: [2300, 3400, 2750, 3300], a: 190, b: 110 }, { caixa: [3700, 4900, 3500, 4200], a: 260, b: 150 }, { caixa: [4840, 4960, 7570, 7700], a: 68, b: 70 },
   ]);
-  quadras(tr, ctx.add, [1500, 1850]);
 }
 
 export function depoisMexico(tr, ctx) {

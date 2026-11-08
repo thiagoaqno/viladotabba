@@ -15,9 +15,20 @@ Todas as 24 pistas de GP de F1 com **traçado real, comprimento real, largura re
 | #605 | **Interlagos (o piloto)** e a **chave de escala do cenário por GP**: `escala` e `escalaGente` na configuração do GP (`gps/<id>.js`), lidas como `tr.escala` e `tr.escalaGente` (padrão 1). O #605 inclui o #603. |
 | #602 | Cidade do México no comprimento e na largura reais (falta só o cenário: `escala`). |
 | #606 | Spa inteira na escala real (branch `feat/escala-spa`; se o PR ainda não entrou, junte no integrador). |
-| (em andamento) | Mônaco: outra conta está terminando. O trabalho parcial está no worktree `klk/escala-monaco` (branch `feat/escala-monaco`, local). Confira com o Thiago antes de mexer. |
+| (em andamento) | Mônaco: outra conta está terminando (veja "Estado agora"). |
 
-O #601 a #607 entraram na main e depois saíram dela (PR #608), para o site ficar na versão estável: todo esse trabalho está em `feat/escala-real-pistas`. Crie os branches novos a partir dele, nunca da main.
+Esses PRs entraram na main e depois saíram dela pelo #608 (veja "Estado agora"): o trabalho está todo em `feat/escala-real-pistas`.
+
+## Estado agora (atualizado em 2026-11-08, depois do PR #608)
+
+- **O site está na versão estável.** O deploy automático (Cloudflare/Hostinger) publica a `main` a cada push. Para o site não ficar com metade das pistas em escala real, a `main` voltou ao código do #600 (`dfbab3e6`) pelo PR #608, mesclado. Quem joga online hoje não vê nada da escala real.
+- **Todo o trabalho de escala real está no branch `feat/escala-real-pistas`**, no worktree `C:Users	hiagDownloadsltsklkescala-real-pistas`, com backup no GitHub. Ele tem o carro real (#603), as pistas antigas apagadas (#604), Interlagos (#601 e #605), a Cidade do México (#602) e Spa (#606).
+- **O integrador já está pronto para o mega PR.** A `main` foi juntada nele e a volta do #608 foi desfeita lá dentro (commit "Desfaz a volta do #608 dentro do branch de integração"). Por isso o mega PR de `feat/escala-real-pistas` para `main` traz a escala real de volta. **Não apague esse commit**, senão o mega PR apaga a escala real em vez de trazê-la.
+- **Nunca parta da `main` para trabalho de escala real** enquanto o mega PR não entrar. Tudo parte de `feat/escala-real-pistas`.
+- **Se a `main` receber outras mudanças** (consertos que não são da escala real), junte a `main` no integrador de vez em quando com `git merge origin/main`. Não desfaça nada de novo: a volta do #608 já foi desfeita uma vez e não volta.
+- **Mônaco:** a outra conta está terminando. O trabalho parcial está no worktree `C:Users	hiagDownloadsltsklkescala-monaco` (branch local `feat/escala-monaco`, sem push, criado antes do #608). Para juntar no integrador, faça o merge do branch dela e confira os conflitos, porque ela partiu de uma base anterior.
+- **Recordes:** se o site chegou a publicar a escala real antes do #608, as migrações 029 (Cidade do México) e 030 (Spa) já rodaram no banco e zeraram esses recordes. Quando o mega PR entrar, elas não rodam de novo (o banco guarda pelo nome).
+- **No fim:** com todas as pistas juntas no integrador, escreva um `brach.md` só e abra o mega PR de `feat/escala-real-pistas` para `main`. O merge (e com ele o deploy) é do Thiago.
 
 ## A receita (por pista)
 

@@ -77,7 +77,14 @@ export function boxesGP(tr, add, cfg = {}) {
   const branco = poly({ color: 0xf1f1ec, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), vermelho = poly({ color: 0xd8232a, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
   const concreto = poly({ map: canvasTex(32, 32, (x, w, hh, rr) => { x.fillStyle = "#b9b6ad"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 160; i++) { x.fillStyle = rr() < 0.5 ? "#00000018" : "#ffffff20"; x.fillRect(rr() * w, rr() * hh, 2, 2); } x.fillStyle = "#7f7c74"; x.fillRect(0, 0, w, 3); }) });
   const y0 = 0.62, fim = cor.len;
-  fita(asfalto, 0, fim, desloc(-meia), desloc(meia), y0, y0);
+  // o piso como nas pistas de verdade: a faixa de passagem (do lado da pista) de asfalto escuro, a de trabalho (na frente das garagens)
+  // de concreto claro, a faixa azul de patrocínio rente à divisão e a linha vermelha correndo junto das garagens
+  const trabalho = poly({ map: canvasTex(64, 64, (x, w, hh, rr) => { x.fillStyle = "#b9b7b0"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 380; i++) { x.fillStyle = rr() < 0.5 ? "#0000000f" : "#ffffff1a"; x.fillRect(rr() * w, rr() * hh, 2, 2); } x.fillStyle = "#0000001c"; x.fillRect(0, 0, w, 1); }), polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  const azul = poly({ color: 0x1f4fc4, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }); // (o texto esticava em listras ao longo da faixa: fica a faixa lisa)
+  fita(asfalto, 0, fim, desloc(-meia), desloc(0), y0, y0);
+  fita(trabalho, 0, fim, desloc(0), desloc(meia), y0, y0);
+  fita(azul, F.RAMPA, fim - F.RAMPA, desloc(-7.5), desloc(-0.6), y0 + 0.04, y0 + 0.04);
+  fita(vermelho, F.RAMPA, fim - F.RAMPA, desloc(meia - 2.4), desloc(meia - 1.2), y0 + 0.05, y0 + 0.05);
   // as bordas do corredor (a linha branca do lado da pista é a "linha branca de entrada") e as linhas de entrada e saída
   fita(branco, 1, fim - 1, desloc(-meia + 0.4), desloc(-meia + 1.8), y0 + 0.04, y0 + 0.04);
   fita(branco, 1, fim - 1, desloc(meia - 1.8), desloc(meia - 0.4), y0 + 0.04, y0 + 0.04);
@@ -125,17 +132,19 @@ export function boxesGP(tr, add, cfg = {}) {
   L.montar((o) => (grp.add(o), o), `${tr.id}-boxes`);
   // as garagens, os mecânicos e o quadrado pintado onde o carro para: tudo numa malha só, com a cor nos vértices. As
   // partes na cor da equipe ficam anotadas em "faixas" para "colorir" trocar (jogo.js pinta com a cor de quem usa cada uma)
-  const geo = { vs: [], cs: [] }, faixas = cor.garagens.map(() => []), cor3 = (c) => new THREE.Color(c);
+  const geo = { vs: [], cs: [] }, luzes = { vs: [], cs: [] }, faixas = cor.garagens.map(() => []), cor3 = (c) => new THREE.Color(c);
   // caixa com o centro em (a ao longo da pista, b para o lado de fora), de altura sy a partir de y, nos eixos da pista no ponto q
+  let emLuz = false; // as peças que acendem (luminárias e as luzes dos braços) vão para uma malha só, que brilha no bloom
   const caixa = (q, tx, ty, nx, ny, a, b, y, sa, sb, sy, c, k = -1) => {
-    const col = cor3(c), v0 = geo.vs.length / 3, cantos = [];
+    const alvo = emLuz ? luzes : geo, col = cor3(c), v0 = alvo.vs.length / 3, cantos = [];
     for (const [ka, kb, ky] of [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]) {
       const pa = a + (ka * sa) / 2, pb = b + (kb * sb) / 2;
       cantos.push([q.x + tx * pa + nx * pb, q.h + y + ((ky + 1) / 2) * sy, q.y + ty * pa + ny * pb]);
     }
-    for (const f of [[0, 1, 2, 3], [4, 7, 6, 5], [0, 4, 5, 1], [1, 5, 6, 2], [2, 6, 7, 3], [3, 7, 4, 0]]) for (const i of [f[0], f[1], f[2], f[0], f[2], f[3]]) { geo.vs.push(...cantos[i]); geo.cs.push(col.r, col.g, col.b); }
-    if (k >= 0) faixas[k].push([v0, geo.vs.length / 3]);
+    for (const f of [[0, 1, 2, 3], [4, 7, 6, 5], [0, 4, 5, 1], [1, 5, 6, 2], [2, 6, 7, 3], [3, 7, 4, 0]]) for (const i of [f[0], f[1], f[2], f[0], f[2], f[3]]) { alvo.vs.push(...cantos[i]); alvo.cs.push(col.r, col.g, col.b); }
+    if (k >= 0) faixas[k].push([v0, alvo.vs.length / 3]);
   };
+  const luz = (...a) => { emLuz = true; caixa(...a); emLuz = false; };
   const fundo = 16, alt = 14, pele = "#e2b48c", cinza = "#8c8f96", comGaragem = cfg.garagens !== false;
   // a garagem só é construída onde nenhum outro trecho da pista passa mais perto do que ela está do próprio (Mônaco, Zandvoort...)
   const garagemLivre = (ref, tx, ty, nx, ny, largura) => [0, fundo + 3].every((b) => [-1, 0, 1].every((s) => tr.distAt(ref.x + nx * b + tx * s * largura / 2, ref.y + ny * b + ty * s * largura / 2) >= Math.abs(cor.garagemLat) + meia / 2 + b - 4));
@@ -144,37 +153,54 @@ export function boxesGP(tr, add, cfg = {}) {
     const largura = Math.max(18, cor.gap * 6 * 0.92), q = em(u, cor.garagemLat), [idEq, nomeEq, corEq] = equipeDa(k), c = cfg.cores?.[k % cfg.cores.length] || corEq;
     const ref = { x: q.x + nx * (meia / 2), y: q.y + ny * (meia / 2), h: q.h }; // a borda externa da faixa das garagens
     if (comGaragem && garagemLivre(ref, tx, ty, nx, ny, largura)) {
-      caixa(ref, tx, ty, nx, ny, 0, fundo - 0.7, -9, largura, 1.4, 9 + alt, "#2b2e34"); // o fundo, escuro, onde fica o painel com o logo
-      caixa(ref, tx, ty, nx, ny, 0, fundo - 1.5, alt - 3, largura, 0.4, 1.2, c, k); // o friso na cor da equipe no alto do fundo
-      for (const s of [-1, 1]) caixa(ref, tx, ty, nx, ny, s * (largura / 2 - 0.4), fundo / 2, -9, 0.8, fundo, 9 + alt, "#d9d7d0"); // as laterais
-      for (const s of [-1, 1]) caixa(ref, tx, ty, nx, ny, s * (largura / 2 - 1.2), fundo / 2, 0, 0.6, fundo - 1, 1.6, c, k); // o rodapé na cor da equipe
-      caixa(ref, tx, ty, nx, ny, 0, fundo / 2, 0.62, largura - 1.6, fundo - 1.4, 0.1, "#c9ccd2"); // o piso de resina
-      caixa(ref, tx, ty, nx, ny, 0, fundo / 2, 0.74, 1.2, fundo - 2, 0.04, c, k); // a faixa no piso
-      caixa(ref, tx, ty, nx, ny, 0, fundo / 2 - 1.5, alt, largura + 1.4, fundo + 3, 1.2, "#e4e2dc"); // o teto, saindo para o corredor
-      caixa(ref, tx, ty, nx, ny, 0, -2.4, alt - 6, largura + 1.4, 1.2, 6, "#15181d"); // a fachada (o painel com o logo vai na frente)
-      // os pneus empilhados dos dois lados, com a faixa do composto, e a bancada de ferramentas no fundo
-      for (const s of [-1, 1]) for (let j = 0; j < 4; j++) {
-        caixa(ref, tx, ty, nx, ny, s * (largura / 2 - 3.2), fundo - 4, 0.7 + j * 1.5, 3.2, 3.2, 1.4, "#1a1a1c");
-        caixa(ref, tx, ty, nx, ny, s * (largura / 2 - 3.2), fundo - 4, 0.7 + j * 1.5 + 0.55, 3.3, 3.3, 0.3, ["#e8202a", "#ffd100", "#f4f4f4", "#39c85a"][(j + (s > 0 ? 1 : 0)) % 4]);
-      }
-      caixa(ref, tx, ty, nx, ny, 0, fundo - 2.6, 0.7, largura * 0.45, 2.4, 3.6, "#5d6168"); caixa(ref, tx, ty, nx, ny, 0, fundo - 2.6, 4.3, largura * 0.45, 2.6, 0.3, c, k);
-      // o painel da fachada (logo e nome) e o do fundo (só o logo, grande): o logo de verdade da equipe
+      const passo = Math.max(largura + 1.6, cor.gap * 6), escuro = "#2e3136", cinzaP = "#3c4046";
+      // o fundo e o interior: piso de resina claro, a parede do fundo escura com o logo grande, a luz do teto
+      caixa(ref, tx, ty, nx, ny, 0, fundo - 0.7, -9, passo, 1.4, 9 + alt + 13, escuro);
+      caixa(ref, tx, ty, nx, ny, 0, fundo / 2, 0.62, largura, fundo - 1.4, 0.1, "#d6d8dc");
+      caixa(ref, tx, ty, nx, ny, 0, fundo / 2, 0.74, 1.2, fundo - 2, 0.04, c, k); // a faixa da equipe no piso
+      luz(ref, tx, ty, nx, ny, 0, fundo / 2, alt - 0.6, largura - 2, fundo - 3, 0.3, "#fff6e0"); // as luminárias do teto
+      for (const sd of [-1, 1]) for (let jj = 0; jj < 3; jj++) caixa(ref, tx, ty, nx, ny, sd * (largura / 2 - 3), fundo - 4, 0.7 + jj * 1.5, 3.2, 3.2, 1.4, "#1a1a1c"); // pneus no fundo
+      // os pilares entre as garagens e a fachada escura acima da abertura, com a placa da equipe
+      for (const sd of [-1, 1]) caixa(ref, tx, ty, nx, ny, sd * (passo / 2 - 0.8), fundo / 2 - 1, -9, 1.6, fundo + 1, 9 + alt + 13, cinzaP);
+      caixa(ref, tx, ty, nx, ny, 0, -0.6, alt - 6, passo, 1.2, 6, escuro);
+      // a marquise que avança sobre a faixa de trabalho, com a faixa de patrocínio vermelha na frente e um filete branco
+      caixa(ref, tx, ty, nx, ny, 0, -6, alt, passo, 12, 1.2, cinzaP);
+      caixa(ref, tx, ty, nx, ny, 0, -12, alt - 2.6, passo, 0.6, 4, cfg.faixa || "#c8102e");
+      caixa(ref, tx, ty, nx, ny, 0, -12.05, alt + 1.2, passo, 0.7, 0.5, "#f4f4f4");
+      // o andar do hospitality: vidro escuro, guarda-corpo branco na frente e a laje do teto
+      caixa(ref, tx, ty, nx, ny, 0, fundo / 2 + 1, alt + 1.2, passo, fundo - 2, 10, "#27394a");
+      caixa(ref, tx, ty, nx, ny, 0, -0.4, alt + 1.2, passo, 0.4, 3, "#e9e9e6");
+      caixa(ref, tx, ty, nx, ny, 0, fundo / 2 - 1, alt + 11.2, passo, fundo + 3, 1.2, "#25282d");
+      // o braço prateado da garagem (a "gantry"): o poste na fachada e a viga por cima da faixa de trabalho, com a luz na ponta
+      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -1.4, 0.6, 0.9, 0.9, 10, "#c9ccd2");
+      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -9, 10.2, 0.9, 16, 0.9, "#c9ccd2");
+      luz(ref, tx, ty, nx, ny, largura / 2 - 2.4, -16.6, 8.4, 1.4, 1.4, 1.8, "#f4f8ff");
+      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -16.6, 7.6, 1.6, 0.4, 0.8, c, k);
+      // a placa da equipe sobre a abertura (o logo e o nome) e o logo grande no fundo
       const fachada = new THREE.Mesh(new THREE.PlaneGeometry(largura, 5.2), new THREE.MeshBasicMaterial({ map: placaDaEquipe(idEq, nomeEq, c, 640, 104, true), side: THREE.DoubleSide }));
-      fachada.position.set(ref.x - nx * 3.05, ref.h + alt - 3, ref.y - ny * 3.05); fachada.rotation.y = Math.atan2(-nx, -ny); // virada para o corredor (quem passa lê o nome) fachada.name = `${tr.id}-garagem-${idEq}`;
+      fachada.position.set(ref.x - nx * 1.25, ref.h + alt - 3, ref.y - ny * 1.25); fachada.rotation.y = Math.atan2(-nx, -ny); fachada.name = `${tr.id}-garagem-${idEq}`;
       grp.add(fachada);
       const fundoLogo = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(largura - 4, 16), 7), new THREE.MeshBasicMaterial({ map: placaDaEquipe(idEq, nomeEq, c, 384, 168, false), side: THREE.DoubleSide }));
       const pf = fundo - 1.45; fundoLogo.position.set(ref.x + nx * pf, ref.h + alt - 6.5, ref.y + ny * pf); fundoLogo.rotation.y = Math.atan2(-nx, -ny);
       grp.add(fundoLogo);
-      caixa(ref, tx, ty, nx, ny, 0, fundo + 0.2, alt + 1.2, 7, 1, 6, c, k); caixa(ref, tx, ty, nx, ny, 0, fundo + 0.2, alt + 6.8, 9, 1, 1.4, "#f4f4f4"); // a placa da garagem em cima do teto
-      // (os mecânicos de caixinha saíram: ficavam feios; a equipe trocando pneu vai entrar como animação)
     }
-    caixa(q, tx, ty, nx, ny, 0, 0, 0.7, 13, 8.5, 0.05, c, k); // o quadrado pintado no corredor onde o carro para
-    caixa(q, tx, ty, nx, ny, 0, 0, 0.78, 11.5, 7, 0.05, "#2c2e33");
+    // a parada da equipe pintada no concreto, em amarelo: o contorno do retângulo e o traço do meio (onde o carro para)
+    const Y = "#f2c230", W2 = 13, D2 = 9;
+    caixa(q, tx, ty, nx, ny, 0, -D2 / 2, 0.66, W2, 0.5, 0.05, Y); caixa(q, tx, ty, nx, ny, 0, D2 / 2, 0.66, W2, 0.5, 0.05, Y);
+    for (const sd of [-1, 1]) caixa(q, tx, ty, nx, ny, sd * W2 / 2, 0, 0.66, 0.5, D2, 0.05, Y);
+    caixa(q, tx, ty, nx, ny, 0, 0, 0.66, 0.6, 3, 0.05, Y); caixa(q, tx, ty, nx, ny, 0, 0, 0.66, 3.6, 0.6, 0.05, Y);
+    caixa(q, tx, ty, nx, ny, 0, D2 / 2 - 0.6, 0.67, 4, 0.6, 0.06, c, k); // a marca na cor da equipe
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(geo.vs, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(geo.cs, 3)); g.computeVertexNormals();
   const malha = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, side: THREE.DoubleSide }));
   malha.castShadow = malha.receiveShadow = true; malha.name = `${tr.id}-garagens`; grp.add(malha);
+  if (luzes.vs.length) { // um brilho leve no bloom (pos.js lê userData.bloom); na qualidade Baixa fica só a cor clara
+    const gl = new THREE.BufferGeometry();
+    gl.setAttribute("position", new THREE.Float32BufferAttribute(luzes.vs, 3)); gl.setAttribute("color", new THREE.Float32BufferAttribute(luzes.cs, 3));
+    const ml = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false }); ml.userData.bloom = 1.6;
+    const acesas = new THREE.Mesh(gl, ml); acesas.name = `${tr.id}-garagens-luzes`; grp.add(acesas);
+  }
   // pinta as partes da equipe de cada garagem: cores[k] (ou cinza) vale para a garagem k
   grp.userData.colorir = (cores) => {
     const atr = g.attributes.color;

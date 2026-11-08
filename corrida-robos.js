@@ -429,7 +429,7 @@ function estiloDe(room, p, rng) {
   const estreita = T.PISTAS[room.config.pista].width <= LARGURA_ESTREITA;
   return { dentro: (rng() * 2 - 1) * (estreita ? 0.5 : 1), lado: (rng() * 2 - 1) * (estreita ? 2 : 9), look: pil && Estilos.PERFIS[pil.id] ? 2 + Math.min(3, Math.floor((1 - Estilos.dePiloto(pil.id).frenagem) * 4)) : 2 + Math.floor(rng() * 4), erroK: nivel * (pil ? 0.5 + (100 - pil.constancia) / 40 : 1), erros: F1.sorteio(`erros:${room.semente}:${p.id}`) };
 }
-const L_CARRO = 26.4, W_CARRO = 9.1; // o carro em unidades da pista (carros.js: 5,5 m x 1,9 m, escala 4,8)
+const L_CARRO = 44, W_CARRO = 26; // o carro em unidades da pista (carros.js: 4,4 m x 2,6 m, escala 10)
 // os 3 círculos do carro (como em colisao.js, que é do navegador)
 function circulos(pos) {
   const r = W_CARRO * 0.45, d = Math.max(0, L_CARRO / 2 - r), fx = Math.cos(pos.a), fy = Math.sin(pos.a);
@@ -469,10 +469,10 @@ function contatos(room, emit) {
 // Devolve o desvio do traçado, o limite de velocidade, se tem alguém à frente, os lados bloqueados e os limites laterais.
 const ALEM_MONACO = 14; // Mônaco, disputa: o centro do carro pode passar até 14 u do `teto` das barreiras (o muro físico fica a ~15, `muroFolga` 9), e até W/2 - 9 onde a rua é mais larga
 const ATAQUE_PERTO_MONACO = L_CARRO * 2.5; // Mônaco: só começa a ultrapassar com o alvo a até 2,5 carros (ao longo da pista), onde o lado medido ainda vale
-const MARG_PARADO = 10; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 9,1
+const MARG_PARADO = 28; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 26
 const ARRANQUE_INI_MS = 2000, ARRANQUE_RAMPA_MS = 4000, ARRANQUE_SEM_ULT_MS = 3500; // a largada: a reserva de espaço à frente volta ao normal entre 2 s e 6 s, e sem ultrapassagem nos primeiros 3,5 s
 // (2026-11: mais agressivos depois dos carros parelhos: emparelham mais cedo, mais perto de lado, e o difícil defende mais)
-const TRANSITO_NIVEL = { facil: { margem: 17, antec: 0.95, defende: 0.2 }, medio: { margem: 13.5, antec: 1.3, defende: 0.55 }, dificil: { margem: 12.5, antec: 1.5, defende: 0.65 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
+const TRANSITO_NIVEL = { facil: { margem: 48, antec: 0.95, defende: 0.2 }, medio: { margem: 38, antec: 1.3, defende: 0.55 }, dificil: { margem: 35, antec: 1.5, defende: 0.65 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
 // a distância (u) até o ponto em que o perfil exige frear a partir da velocidade `v` (0: já freando; Infinity: nada nos próximos 540 u)
 function distanciaDaFreada(fis, n, i, v) { const lim = v * 0.9; for (let k = 0; k <= 90; k++) if (fis[(i + k) % n] < lim) return k * STEP; return Infinity; }
 // o lado de dentro da próxima curva de verdade (+1: lado de lat positivo; -1; 0 sem curva nos próximos ~600 u)

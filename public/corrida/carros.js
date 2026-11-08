@@ -13,16 +13,14 @@ import { modeloItem } from "./modelos.js";
 // ---------- os carros 3D ----------
 // Cada "carro" (os 5 da garagem, com a física de cada um) é o mesmo F1 de f1.js, no comprimento do carro
 // (L = comprimento, W = largura, em metros). Personalização: a pintura (as cores de equipe ou a cor do piloto).
-// O tamanho de verdade de cada carro, em metros (um F1 de 2026 tem uns 5,5 m × 1,9 m), e KS, a mesma escala da física (dinamica.js: 1 u = 0,75/3,6 m):
-// o carro fica do tamanho certo na pista. Antes era KS = 10 com 4,4 m × 2,6 m: o carro saía com 9 m × 5,4 m na escala da física.
 export const CARS3 = {
-  equilibrado: { L: 5.5, W: 1.9 },
-  foguete: { L: 6.0, W: 1.85 },
-  formiga: { L: 5.1, W: 1.9 },
-  drifteiro: { L: 5.5, W: 1.85 },
-  tanque: { L: 5.75, W: 2.1 },
+  equilibrado: { L: 4.4, W: 2.6 },
+  foguete: { L: 4.8, W: 2.5 },
+  formiga: { L: 4.1, W: 2.6 },
+  drifteiro: { L: 4.4, W: 2.5 },
+  tanque: { L: 4.6, W: 2.9 },
 };
-export const KS = 3.6 / 0.75; // metros -> unidades da pista (4,8; o inverso de ESC em dinamica.js)
+export const KS = 10; // metros do modelo -> unidades da pista
 export const MODS3 = window.Pistas.MODS, MODS_PADRAO = window.Pistas.MODS_PADRAO;
 // leve: o modelo com menos triângulos e sem sombra projetada (os carros dos outros; não há mais sombra redonda falsa no chão: era a mancha preta oval sob o carro)
 // op: { sigla (o piloto robô, f1-capacetes.js: o capacete é o dele), volante (o carro do jogador: a tela e as luzes de troca do volante, f1.js), numero (o número do piloto, no carro de equipe), semPintura (a pintura de equipe fica de fora: a máscara de cores) }

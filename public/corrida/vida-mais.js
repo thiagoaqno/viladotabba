@@ -132,15 +132,15 @@ export function praticaveis(add, gente, alto) {
   const m = add(new THREE.InstancedMesh(new THREE.BoxGeometry(5.5, 1, 5), M(0x8a8d94, { roughness: 0.9 }), gente.length)), o = new THREE.Object3D(); m.name = "gente-praticavel"; m.castShadow = false; m.receiveShadow = true;
   gente.forEach((g, k) => { o.position.set(g.x, g.y - alto / 2 - 0.2, g.z); o.rotation.set(0, g.ry || 0, 0); o.scale.set(1, alto, 1); o.updateMatrix(); m.setMatrixAt(k, o.matrix); });
 }
-export function montarTorcida(add, gente, { leve = false, escala = 1 } = {}) { // leve: cabeça com menos faces (GPs que precisam de muita gente: Mônaco)
+export function montarTorcida(add, gente, { leve = false } = {}) { // leve: cabeça com menos faces (GPs que precisam de muita gente: Mônaco)
   if (!gente.length) return null;
-  const corpo = add(new THREE.InstancedMesh(new THREE.BoxGeometry(4.6, 8, 2.8).translate(0, 4, 0).scale(escala, escala, escala), M(0xffffff), gente.length));
-  const cabeca = add(new THREE.InstancedMesh((leve ? new THREE.SphereGeometry(2, 5, 3) : new THREE.SphereGeometry(2, 8, 6)).translate(0, 10.2, 0).scale(escala, escala, escala), M(0xffffff), gente.length));
-  const bracos = add(new THREE.InstancedMesh(new THREE.BoxGeometry(7.6, 1.4, 1.4).translate(0, 8.5, 0).scale(escala, escala, escala), M(0xffffff), gente.length));
+  const corpo = add(new THREE.InstancedMesh(new THREE.BoxGeometry(4.6, 8, 2.8).translate(0, 4, 0), M(0xffffff), gente.length));
+  const cabeca = add(new THREE.InstancedMesh((leve ? new THREE.SphereGeometry(2, 5, 3) : new THREE.SphereGeometry(2, 8, 6)).translate(0, 10.2, 0), M(0xffffff), gente.length));
+  const bracos = add(new THREE.InstancedMesh(new THREE.BoxGeometry(7.6, 1.4, 1.4).translate(0, 8.5, 0), M(0xffffff), gente.length));
   gente.forEach((o, k) => { corpo.setColorAt(k, new THREE.Color(o.camisa)); cabeca.setColorAt(k, new THREE.Color(o.pele)); bracos.setColorAt(k, new THREE.Color(o.camisa)); });
   for (const m of [corpo, cabeca, bracos]) { m.castShadow = false; m.receiveShadow = true; }
   const x = gente.reduce((s, o) => s + o.x, 0) / gente.length, z = gente.reduce((s, o) => s + o.z, 0) / gente.length;
-  return { gente, corpo, cabeca, bracos, x, z, primeira: true, escala };
+  return { gente, corpo, cabeca, bracos, x, z, primeira: true };
 }
 function enfeitarEspaco(tr, add, r, V) { // Arco-íris: asteroides girando em volta da pista
   const C = tr.t.world / 2, geo = new THREE.IcosahedronGeometry(1, 0), lista = [];

@@ -492,8 +492,8 @@ function culpaEntre(vAx, vAy, vBx, vBy, nx, ny) {
   return 0;
 }
 function circulos(x, y, a, L, W) { const fx = Math.cos(a), fy = Math.sin(a), r = W * 0.45, d = Math.max(0, L / 2 - r); return [-d, 0, d].map((u) => [x + fx * u, y + fy * u, r]); }
-// o tamanho (u) de cada carro, o mesmo de CARS3 em carros.js (metros × KS = 4,8)
-const DIMENSOES = { equilibrado: [26.4, 9.1], foguete: [28.8, 8.9], formiga: [24.5, 9.1], drifteiro: [26.4, 8.9], tanque: [27.6, 10.1] };
+// o tamanho (u) de cada carro, o mesmo de CARS3 em carros.js (metros do modelo × KS = 10)
+const DIMENSOES = { equilibrado: [44, 26], foguete: [48, 25], formiga: [41, 26], drifteiro: [44, 25], tanque: [46, 29] };
 const dimensoes = (car) => DIMENSOES[car] || DIMENSOES.equilibrado;
 const massaDe = (spec) => (spec ? D.parametros(spec).massa : 800);
 // o par de círculos mais enterrado entre A e B: { pen, nx, ny (de B para A), px, py (o ponto do contato) } ou null

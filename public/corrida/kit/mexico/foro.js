@@ -2,7 +2,7 @@
 // O estádio cabe no miolo da alça do fim da volta, encolhido: a arquibancada em ferradura (uma elipse de degraus lotados de camisa verde,
 // branca e vermelha, aberta onde a pista passa perto), o muro do campo com o acolchoado e os painéis, o gramado listrado com o losango
 // de terra e as linhas, o pódio no meio do campo virado para a torcida, as bandeiras do México no alto, as torres de refletores, o placar e a
-// fumaça verde, branca e vermelha que sobe do campo. Escala da física (1 u = 0,208 m; a pista agora é de tamanho real, e o estádio coube só no miolo da alça: é menor que o Foro Sol de verdade). Peças repetidas em InstancedMesh; o resto, uma malha por material.
+// fumaça verde, branca e vermelha que sobe do campo. Escala do jogo (1 ≈ 10 cm). Peças repetidas em InstancedMesh; o resto, uma malha por material.
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { Montador, solido, comTextura, letreiro, tom } from "../montagem.js";
@@ -79,7 +79,7 @@ function malha(l, mat, comCor = false) {
  */
 export function foroSol(tr, add, { cx, cz, A, B, fundo = 56, degraus = 7, ok, semente = 11 }) {
   const SEG = 72, topo = 4 + degraus * 5.6, a0 = A - fundo, b0 = B - fundo;
-  let y0 = tr.chao(cx, cz) - 0.6; // o campo fica no nível do chão do centro (abaixo, com a arquibancada pronta, sobe para o nível dela)
+  const y0 = tr.chao(cx, cz) - 0.6; // o campo fica no nível do chão do centro
   const g = new THREE.Group(); g.name = "foro-sol"; g.position.set(cx, y0, cz);
   const mundo = (d, t) => [cx + (A - d) * Math.cos(t), cz + (B - d) * Math.sin(t)];
   // as seções em pé: as que ficam a mais de uma folga da pista nos dois cantos de cada borda
@@ -91,13 +91,6 @@ export function foroSol(tr, add, { cx, cz, A, B, fundo = 56, degraus = 7, ok, se
   }
   // fiapos soltos de uma seção só ficam feios: tira a seção sem vizinha
   const ativas = em.length > 3 ? em.filter(([ta, tb]) => em.some(([, ub]) => Math.abs(ub - ta) < 1e-6) || em.some(([ua]) => Math.abs(ua - tb) < 1e-6)) : em;
-  // na escala real o chão sob a ferradura não é plano (a pista sobe até ~9 m perto dela): o estádio assenta no nível de 85% das alturas sob as seções que ficam em pé,
-  // as arquibancadas mais baixas ficam sobre o aterro (que desce até o ponto mais baixo) e as mais altas, no máximo, com a base um pouco enterrada
-  if (ativas.length) {
-    const alt = [];
-    for (const [ta, tb] of ativas) for (const d of [0, fundo / 2, fundo]) alt.push(tr.chao(...mundo(d, (ta + tb) / 2)));
-    alt.sort((p, q) => p - q); y0 = alt[Math.floor(alt.length * 0.85)] - 0.6; g.position.y = y0; tr.foroAltMin = alt[0];
-  }
   const rake = novo(), conc = novo(), muro = novo(), corConc = new THREE.Color("#c9ccd0"), corFundo = new THREE.Color("#a9adb3");
   for (const [ta, tb] of ativas) {
     const comp = (tb - ta) * ((A + B) / 2), u = comp / 30;
@@ -118,7 +111,7 @@ export function foroSol(tr, add, { cx, cz, A, B, fundo = 56, degraus = 7, ok, se
   campo.rotation.x = -Math.PI / 2; campo.scale.set(a0 + 5, b0 + 5, 1); campo.position.y = 0.35; campo.receiveShadow = true;
   // o uv do CircleGeometry vai de 0 a 1 no quadrado que o contém: dá certo com a escala elíptica
   g.add(campo);
-  const fundoAterro = 14 + Math.max(0, y0 - (tr.foroAltMin ?? y0)), aterro = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, fundoAterro, 48), M(0xb5ab98, { roughness: 1 })); aterro.scale.set(A + 6, 1, B + 6); aterro.position.y = -fundoAterro / 2 - 0.5; g.add(aterro);
+  const aterro = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 14, 48), M(0xb5ab98, { roughness: 1 })); aterro.scale.set(A + 6, 1, B + 6); aterro.position.y = -7.5; g.add(aterro);
 
   // o pódio no meio do campo, de frente para a maior parte da torcida
   let fx = 0, fz = 0; for (const [ta, tb] of ativas) { const t = (ta + tb) / 2; fx += Math.cos(t) * A; fz += Math.sin(t) * B; }

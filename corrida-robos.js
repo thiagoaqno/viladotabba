@@ -938,7 +938,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     // Em pista livre usa a bateria nas retas; no trânsito reserva energia e só aciona forte ao tentar passar.
     amarela: room.direcao?.amarelo?.setor === Math.floor(i / (n / T.SECTORS)), ersAuto: !ia.ult && !tf.encontrou && !tf.tras && now - room.startAt > 6000,
     voltas: room.config.voltas, laps: p.laps || 0, paradas: (p.paradas || []).length,
-    semente: room.semente, id: p.id, grid: p.grid, f1: true, agua: cl.agua, outros, stopGo, fatorDesgastePneu: Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste };
+    semente: room.semente, id: p.id, grid: p.grid, equipe: p.equipe || null, f1: true, agua: cl.agua, outros, stopGo,
+    boxOcupado: Sim.garagemOcupada(Object.values(room.players), p, (o) => Sim.faseDoBox((o.sim ? o.sim.c : o.ia && o.ia.sim)?.box)), // a fila do box da equipe
+    fatorDesgastePneu: Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste };
   const ent = ia.ent || (ia.ent = {});
   const ev = [], evC = [];
   // o ritmo varia de volta para volta (consistência), e de vez em quando o piloto erra a freada e entra forte demais na curva (taxa de erro)

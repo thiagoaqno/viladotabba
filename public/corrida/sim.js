@@ -352,6 +352,7 @@ function pontoDoBox(tr, cor, u, lat0, garagem, B) {
   return { x: a.x + (b.x - a.x) * f + (a.nx + (b.nx - a.nx) * f) * lat, y: a.y + (b.y - a.y) * f + (a.ny + (b.ny - a.ny) * f) * lat };
 }
 // um passo do carro no corredor; true enquanto o carro está nele (a física normal fica de fora)
+const ESPERA_FILA = 4.5; // (pontos da pista: ~27 u, um carro atrás da garagem)
 function passoBox(c, ent, amb, tr, p, ev) {
   const B = c.box, cor = B.cor, spec = amb.spec, dt = PASSO, vlim = F1.LIMITADOR * spec.vmax;
   if (!B.fase) {
@@ -382,10 +383,15 @@ function passoBox(c, ent, amb, tr, p, ev) {
   const frena = 180, acel = 90; // o corredor tem o seu próprio jeito de frear e de arrancar
   const vai = (alvo, a) => { c.v = c.v > alvo ? Math.max(alvo, c.v - frena * dt) : Math.min(alvo, c.v + a * dt); };
   if (B.fase === "entra") {
-    const falta = Math.max(0, B.garagem - B.u) * 6;
+    // a fila da equipe (os dois carros param na mesma garagem): com o companheiro parado lá (`amb.boxOcupado`), espera logo atrás
+    // da garagem, parado, até ele sair; o tempo da espera conta na parada (como na F1 de verdade, no "double stack")
+    const destino = amb.boxOcupado ? Math.max(B.uEntrada, B.garagem - ESPERA_FILA) : B.garagem;
+    const falta = Math.max(0, destino - B.u) * 6;
     vai(Math.min(vlim, Math.sqrt(2 * frena * 0.6 * falta)), acel);
-    B.u = Math.min(B.garagem, B.u + (c.v * dt) / 6);
-    if (B.u >= B.garagem - 0.02) { B.u = B.garagem; c.v = 0; B.fase = B.escolher ? "escolha" : "parada"; B.t = 0; if (ev) ev.push({ t: B.escolher ? "boxParou" : "boxParou", escolha: B.escolher || undefined }); }
+    B.u = Math.min(destino, B.u + (c.v * dt) / 6);
+    if (amb.boxOcupado && B.u >= destino - 0.02) { c.v = 0; if (!B.naFila) { B.naFila = true; if (ev) ev.push({ t: "boxFila" }); } }
+    else if (B.naFila && !amb.boxOcupado) { B.naFila = false; if (ev) ev.push({ t: "boxFilaFim" }); }
+    if (!amb.boxOcupado && B.u >= B.garagem - 0.02) { B.u = B.garagem; c.v = 0; B.fase = B.escolher ? "escolha" : "parada"; B.t = 0; if (ev) ev.push({ t: B.escolher ? "boxParou" : "boxParou", escolha: B.escolher || undefined }); }
   } else if (B.fase === "escolha") {
     // o carro fica parado e o menu está aberto: o pedido que chega (um pneu ou "manter") escolhe; sem escolha em ESCOLHA_BOX_S vale o recomendado. O tempo conta na parada.
     c.v = 0; B.t += dt;
@@ -416,7 +422,9 @@ function passoBox(c, ent, amb, tr, p, ev) {
   c.x = a.x; c.y = a.y;
   c.vx = Math.cos(c.a) * c.v; c.vy = Math.sin(c.a) * c.v; c.vl = 0; c.r = 0; c.slip = 0; c.vz = 0; c.air = false; c.steer *= 0.8; c.offroad = false; c.travada = 0; c.patina = 0;
   c.gasP = 0; c.brkP = 0;
-  c.idx = saida ? saida.indice : procurar(tr, c.x, c.y, c.idx); c.z = alturaDoChao(tr, c.x, c.y, c.idx);
+  c.idx = saida ? saida.indice : procurar(tr, c.x, c.y, c.idx);
+  // no corredor o chão é o piso dos boxes, na altura da pista (o terreno de baixo, na faixa das garagens, chega a ficar ~5 u abaixo e o carro afundava)
+  { const iu = cor.i0 + Math.floor(B.u), fu = B.u - Math.floor(B.u), h0 = tr.pts[iu % tr.n].h, h1 = tr.pts[(iu + 1) % tr.n].h; c.z = Math.max(alturaDoChao(tr, c.x, c.y, c.idx), h0 + (h1 - h0) * fu); }
   c.rpm = Math.max(0.3, D.rotacao(c.v, spec.vmax, c.marcha)); c.marcha = D.marchaAuto(c.v, spec.vmax, c.marcha);
   if (fim) {
     if (ev) ev.push({ t: "box", fase: "sai", composto: B.composto, tempo: (c.tick - B.tick0) * dt, volta: B.volta, stopGo: B.stopGo || undefined, troca: B.stopGo ? !!B.troca : !B.manter, manter: B.manter || undefined, sg: B.sg || undefined });
@@ -425,6 +433,13 @@ function passoBox(c, ent, amb, tr, p, ev) {
   return !fim; // no último passo o carro já está na beira da pista e a física de sempre continua dali
 }
 
+// A fila do box da equipe: o companheiro (mesma equipe, outro carro) está parado na garagem (escolhendo ou trocando)?
+// `lista` são os jogadores da sala, `faseDe(o)` a fase do box de cada um (Sim.faseDoBox no servidor; `boxFase` do estado no navegador).
+function garagemOcupada(lista, eu, faseDe) {
+  if (!eu || !eu.equipe) return false;
+  for (const o of lista) if (o && o !== eu && o.id !== eu.id && o.equipe === eu.equipe && !o.dnf && faseDe(o)) return true;
+  return false;
+}
 // A fase da parada no box para o HUD: "stopgo" enquanto cumpre os segundos do stop-and-go, "troca" na troca do pneu (o stop-and-go já cumprido, ou a
 // parada normal), `resta` os segundos que faltam dessa fase e `total` os que faltam da parada inteira. null se não está parado na garagem.
 function faseDoBox(B) {
@@ -656,7 +671,7 @@ function reconciliar(c, st, tr, ctx) {
   return { erro, dentro, dx: ox - c.x, dy: oy - c.y, da };
 }
 
-const api = { PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+const api = { PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

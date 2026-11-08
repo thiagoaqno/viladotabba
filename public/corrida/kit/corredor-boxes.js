@@ -12,6 +12,7 @@
 import * as THREE from "three";
 import { canvasTex } from "../cena.js";
 import { lotes } from "./comum.js";
+import { MARCAS, PATROCINIO } from "./marcas.js";
 
 // uma garagem por equipe, na ordem de F1Regras.EQUIPES_GARAGEM (é por ela que cada carro acha a sua): [id, nome, cor]
 const EQUIPES = [
@@ -22,6 +23,19 @@ const EQUIPES = [
 const equipeDa = (k) => EQUIPES[k % EQUIPES.length];
 // o logo da equipe (o mesmo do resto do jogo, /api/corrida/logo/:id) desenhado num canvas: a fachada e o painel do fundo da garagem.
 // O desenho sai na hora com o nome e é refeito quando a imagem chega (no Node dos testes não há Image, e fica só o nome).
+// o patrocinador em branco sobre a faixa vermelha da marquise (uma textura por marca, guardada)
+const FAIXAS = new Map();
+function texFaixa(nome, fundo) {
+  const chave = nome + fundo; if (FAIXAS.has(chave)) return FAIXAS.get(chave);
+  const m = MARCAS[nome] || { texto: String(nome).toUpperCase(), fonte: "900 {s}px Arial, sans-serif" };
+  const t = canvasTex(1024, 128, (x, w, hh) => {
+    x.fillStyle = fundo; x.fillRect(0, 0, w, hh);
+    x.fillStyle = "#ffffff"; x.textAlign = "center"; x.textBaseline = "middle"; let s = 86; x.font = m.fonte.replace("{s}", s);
+    while (s > 30 && x.measureText(m.texto).width > w * 0.7) { s -= 4; x.font = m.fonte.replace("{s}", s); }
+    x.fillText(m.texto, w / 2, hh / 2 + 4);
+  }, false);
+  FAIXAS.set(chave, t); return t;
+}
 function placaDaEquipe(id, nome, cor, w, h, comNome) {
   const pintar = (ctx, img) => {
     ctx.clearRect(0, 0, w, h);
@@ -73,17 +87,49 @@ export function boxesGP(tr, add, cfg = {}) {
   const desloc = (f) => (u) => latDe(u) + f;
   // materiais: asfalto escuro, a linha branca, a vermelha e o concreto da mureta (na frente do asfalto da pista, sem brigar)
   const poly = (o) => new THREE.MeshStandardMaterial({ roughness: 0.92, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, ...o });
-  const asfalto = poly({ map: canvasTex(64, 64, (x, w, hh, rr) => { x.fillStyle = cfg.asfalto || "#46484d"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 500; i++) { x.fillStyle = rr() < 0.5 ? "#0000001a" : "#ffffff12"; x.fillRect(rr() * w, rr() * hh, 2, 2); } }) });
+  // o asfalto da faixa de passagem: um ladrilho grande (cobre a largura da faixa e 60 u de comprimento) com o agregado fino e as pedrinhas,
+  // as duas trilhas de borracha onde passam as rodas, remendos selados e manchas de óleo (antes era um ruído de 64 px, borrado de perto)
+  const asfalto = poly({ roughness: 0.86, map: canvasTex(512, 1024, (x, w, hh, rr) => {
+    x.fillStyle = cfg.asfalto || "#3f4146"; x.fillRect(0, 0, w, hh);
+    for (let i = 0; i < 26000; i++) { const c = rr(); x.fillStyle = c < 0.45 ? "#00000022" : c < 0.85 ? "#ffffff14" : "#ffffff30"; x.fillRect(rr() * w, rr() * hh, 1 + (rr() < 0.15), 1 + (rr() < 0.15)); }
+    for (let i = 0; i < 900; i++) { x.fillStyle = rr() < 0.5 ? "#8a8c90" : "#26282c"; x.globalAlpha = 0.35 + rr() * 0.3; x.fillRect(rr() * w, rr() * hh, 2 + rr() * 2, 2 + rr() * 2); }
+    x.globalAlpha = 1;
+    for (const c of [0.32, 0.68]) { const g = x.createLinearGradient(w * (c - 0.09), 0, w * (c + 0.09), 0); g.addColorStop(0, "#00000000"); g.addColorStop(0.5, "#0000002e"); g.addColorStop(1, "#00000000"); x.fillStyle = g; x.fillRect(w * (c - 0.09), 0, w * 0.18, hh); }
+    x.strokeStyle = "#1c1d20"; x.globalAlpha = 0.55; x.lineWidth = 3;
+    for (let k = 0; k < 3; k++) { let px = rr() * w, py = rr() * hh; x.beginPath(); x.moveTo(px, py); for (let j = 0; j < 8; j++) { px += (rr() - 0.5) * 60; py += 20 + rr() * 40; x.lineTo(px, py); } x.stroke(); }
+    for (let k = 0; k < 5; k++) { const g = x.createRadialGradient(0, 0, 0, 0, 0, 30); g.addColorStop(0, "#0000004a"); g.addColorStop(1, "#00000000"); x.save(); x.translate(rr() * w, rr() * hh); x.scale(1, 1.6 + rr()); x.fillStyle = g; x.beginPath(); x.arc(0, 0, 30, 0, 7); x.fill(); x.restore(); }
+    x.globalAlpha = 1;
+  }) });
   const branco = poly({ color: 0xf1f1ec, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), vermelho = poly({ color: 0xd8232a, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
   const concreto = poly({ map: canvasTex(32, 32, (x, w, hh, rr) => { x.fillStyle = "#b9b6ad"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 160; i++) { x.fillStyle = rr() < 0.5 ? "#00000018" : "#ffffff20"; x.fillRect(rr() * w, rr() * hh, 2, 2); } x.fillStyle = "#7f7c74"; x.fillRect(0, 0, w, 3); }) });
   const y0 = 0.62, fim = cor.len;
   // o piso como nas pistas de verdade: a faixa de passagem (do lado da pista) de asfalto escuro, a de trabalho (na frente das garagens)
   // de concreto claro, a faixa azul de patrocínio rente à divisão e a linha vermelha correndo junto das garagens
-  const trabalho = poly({ map: canvasTex(64, 64, (x, w, hh, rr) => { x.fillStyle = "#b9b7b0"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 380; i++) { x.fillStyle = rr() < 0.5 ? "#0000000f" : "#ffffff1a"; x.fillRect(rr() * w, rr() * hh, 2, 2); } x.fillStyle = "#0000001c"; x.fillRect(0, 0, w, 1); }), polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-  const azul = poly({ color: 0x1f4fc4, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }); // (o texto esticava em listras ao longo da faixa: fica a faixa lisa)
+  // a faixa de trabalho: placas de concreto claro com as juntas, a textura do vassourado, manchas e marcas de pneu de quem arranca da garagem
+  const trabalho = poly({ roughness: 0.9, map: canvasTex(512, 1024, (x, w, hh, rr) => {
+    x.fillStyle = "#bdbbb3"; x.fillRect(0, 0, w, hh);
+    for (let y = 0; y < hh; y += 2) { x.fillStyle = rr() < 0.5 ? "#0000000a" : "#ffffff0c"; x.fillRect(0, y, w, 1); } // o vassourado, de lado a lado
+    for (let i = 0; i < 14000; i++) { x.fillStyle = rr() < 0.5 ? "#00000012" : "#ffffff1c"; x.fillRect(rr() * w, rr() * hh, 1 + (rr() < 0.2), 1 + (rr() < 0.2)); }
+    for (let k = 0; k < 6; k++) { const g = x.createRadialGradient(0, 0, 0, 0, 0, 60); g.addColorStop(0, "#5a564a26"); g.addColorStop(1, "#00000000"); x.save(); x.translate(rr() * w, rr() * hh); x.scale(1 + rr(), 1 + rr()); x.fillStyle = g; x.beginPath(); x.arc(0, 0, 60, 0, 7); x.fill(); x.restore(); }
+    x.strokeStyle = "#22222244"; x.lineWidth = 7; // marcas de pneu (arrancadas em curva saindo da garagem)
+    for (let k = 0; k < 2; k++) { const y = rr() * hh, sx = rr() < 0.5 ? 1 : -1; for (const off of [0, 46]) { x.beginPath(); x.moveTo(w * 0.85, y + off); x.quadraticCurveTo(w * 0.5, y + off - sx * 30, w * 0.15, y + off + sx * 120); x.stroke(); } }
+    x.fillStyle = "#6f6c64"; for (let y = 0; y < hh; y += hh / 4) x.fillRect(0, y, w, 3); x.fillRect(w / 2 - 1, 0, 3, hh); // as juntas das placas
+    x.fillStyle = "#ffffff30"; for (let y = 3; y < hh; y += hh / 4) x.fillRect(0, y, w, 1);
+  }), polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  // a faixa azul com os nomes dos patrocinadores em branco, escritos ao longo dela (lidos de quem passa pelo corredor); um ladrilho de
+  // REP_AZUL u com três nomes, repetido no comprimento
+  const REP_AZUL = 210, nomesAzul = (cfg.patrocinio || PATROCINIO).slice(0, 3);
+  const azul = poly({ map: canvasTex(96, 1536, (x, w, hh) => {
+    x.fillStyle = "#1f4fc4"; x.fillRect(0, 0, w, hh);
+    nomesAzul.forEach((nome, i) => { const m = MARCAS[nome] || { texto: String(nome).toUpperCase(), fonte: "900 {s}px Arial, sans-serif" };
+      x.save(); x.translate(w / 2, (hh / nomesAzul.length) * (i + 0.5)); x.rotate(Math.PI / 2);
+      x.fillStyle = "#ffffff"; x.textAlign = "center"; x.textBaseline = "middle"; let s2 = 64; x.font = m.fonte.replace("{s}", s2);
+      while (s2 > 20 && x.measureText(m.texto).width > hh / nomesAzul.length * 0.8) { s2 -= 4; x.font = m.fonte.replace("{s}", s2); }
+      x.fillText(m.texto, 0, 0); x.restore(); });
+  }), polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
   fita(asfalto, 0, fim, desloc(-meia), desloc(0), y0, y0);
   fita(trabalho, 0, fim, desloc(0), desloc(meia), y0, y0);
-  fita(azul, F.RAMPA, fim - F.RAMPA, desloc(-7.5), desloc(-0.6), y0 + 0.04, y0 + 0.04);
+  fita(azul, F.RAMPA, fim - F.RAMPA, desloc(-7.5), desloc(-0.6), y0 + 0.04, y0 + 0.04, REP_AZUL);
   fita(vermelho, F.RAMPA, fim - F.RAMPA, desloc(meia - 2.4), desloc(meia - 1.2), y0 + 0.05, y0 + 0.05);
   // as bordas do corredor (a linha branca do lado da pista é a "linha branca de entrada") e as linhas de entrada e saída
   fita(branco, 1, fim - 1, desloc(-meia + 0.4), desloc(-meia + 1.8), y0 + 0.04, y0 + 0.04);
@@ -167,6 +213,11 @@ export function boxesGP(tr, add, cfg = {}) {
       caixa(ref, tx, ty, nx, ny, 0, -6, alt, passo, 12, 1.2, cinzaP);
       caixa(ref, tx, ty, nx, ny, 0, -12, alt - 2.6, passo, 0.6, 4, cfg.faixa || "#c8102e");
       caixa(ref, tx, ty, nx, ny, 0, -12.05, alt + 1.2, passo, 0.7, 0.5, "#f4f4f4");
+      // o patrocinador na faixa vermelha (um por garagem, alternando), de frente para o corredor
+      const nomeFaixa = (cfg.patrocinio || PATROCINIO)[k % (cfg.patrocinio || PATROCINIO).length];
+      const faixaP = new THREE.Mesh(new THREE.PlaneGeometry(passo, 3.6), new THREE.MeshBasicMaterial({ map: texFaixa(nomeFaixa, cfg.faixa || "#c8102e"), side: THREE.DoubleSide }));
+      const pfx = 12.32; faixaP.position.set(ref.x - nx * pfx, ref.h + alt - 0.6, ref.y - ny * pfx); faixaP.rotation.y = Math.atan2(-nx, -ny);
+      grp.add(faixaP);
       // o andar do hospitality: vidro escuro, guarda-corpo branco na frente e a laje do teto
       caixa(ref, tx, ty, nx, ny, 0, fundo / 2 + 1, alt + 1.2, passo, fundo - 2, 10, "#27394a");
       caixa(ref, tx, ty, nx, ny, 0, -0.4, alt + 1.2, passo, 0.4, 3, "#e9e9e6");

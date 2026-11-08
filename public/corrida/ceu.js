@@ -33,6 +33,16 @@ export const CEUS = {
   lasvegas: { brilho: 1, luz: 0.55, arquivo: "deserto" }, // o céu limpo do deserto de Nevada (a noite usa o céu noturno compartilhado)
   catar: { brilho: 1, luz: 0.55, arquivo: "deserto" },
   abudhabi: { brilho: 1, luz: 0.55, arquivo: "losangeles" },
+  losangeles: { brilho: 1, luz: 0.6 },
+  rio: { brilho: 1, luz: 0.55 },
+  serra: { brilho: 1, luz: 0.5 },
+  deserto: { brilho: 1, luz: 0.5 },
+  luigi: { brilho: 1, luz: 0.55 },
+  sorvete: { brilho: 1.05, luz: 0.6 },
+  nurburgring: { brilho: 0.95, luz: 0.5 },
+  laguna: { brilho: 1, luz: 0.6 },
+  tokyo: { brilho: 0.32, luz: 0.25, noite: true },
+  arcoiris: { brilho: 0.16, luz: 0.2, noite: true },
 };
 const pmrem = new THREE.PMREMGenerator(renderer);
 // Céu urbano noturno: a luz da cidade clareia discretamente o horizonte, sem estrelas artificiais.

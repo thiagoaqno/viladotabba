@@ -58,8 +58,6 @@ export function bandeirasDaTorcida(tr, add, lista) {
  */
 export function torcidaNasEncostas(tr, add, zonas, cfg = {}) {
   const { pts, n } = tr, r = sorteio(cfg.semente ?? 7771), camisas = cfg.camisas || CAMISAS_SPA, corpos = [], cabecas = [], bandeiras = [];
-  // a pessoa de pé desenhada aqui tem 8 + 2,4 u de cabeça = 10,4 u = 2,17 m; a de verdade, 1,75 m (8,4 u): fator 0,81 (só com a escala do cenário ligada; sem ela, 1)
-  const G = (tr.escala ?? 1) < 1 ? 8.4 / 10.4 : 1;
   for (const z of zonas) {
     const a = Math.floor(z.f0 * n), b = Math.floor(z.f1 * n);
     for (let i = a; i <= b; i += 2) {
@@ -67,10 +65,10 @@ export function torcidaNasEncostas(tr, add, zonas, cfg = {}) {
       for (let k = 0, q = Math.floor(z.dens) + (r() < z.dens % 1 ? 1 : 0); k < q; k++) {
         const lat = z.lat0 + (z.lat1 - z.lat0) * r() * r(), x = p.x + p.nx * z.lado * lat + p.tx * (r() - 0.5) * 12, zz = p.y + p.ny * z.lado * lat + p.ty * (r() - 0.5) * 12;
         if (tr.distAt(x, zz) < lat - 6 || ocupado(tr, x, zz, i % n)) continue;
-        const y = tr.chao(x, zz) - 1.5, sentado = r() < 0.4, alto = (sentado ? 5.4 : 8) * G, c = camisas[(r() * camisas.length) | 0];
-        corpos.push({ x, y: y + alto / 2, z: zz, sx: 2.8 * G, sy: alto, sz: 2.2 * G, r: r() * 6.28, c });
-        cabecas.push({ x, y: y + alto + 1.2 * G, z: zz, sx: 2.3 * G, sy: 2.4 * G, sz: 2.3 * G, r: r() * 6.28, c: PELES[(r() * PELES.length) | 0] });
-        if (r() < (z.bandeiras ?? 0.12)) bandeiras.push({ x, y: y + alto - 1, z: zz, tipo: r() < 0.5 ? 2 : r() < 0.55 ? 0 : r() < 0.7 ? 1 : 3, r: r() * 6.28, s: (0.8 + r() * 0.5) * G, alto: (16 + r() * 10) * G });
+        const y = tr.chao(x, zz) - 1.5, sentado = r() < 0.4, alto = sentado ? 5.4 : 8, c = camisas[(r() * camisas.length) | 0];
+        corpos.push({ x, y: y + alto / 2, z: zz, sx: 2.8, sy: alto, sz: 2.2, r: r() * 6.28, c });
+        cabecas.push({ x, y: y + alto + 1.2, z: zz, sx: 2.3, sy: 2.4, sz: 2.3, r: r() * 6.28, c: PELES[(r() * PELES.length) | 0] });
+        if (r() < (z.bandeiras ?? 0.12)) bandeiras.push({ x, y: y + alto - 1, z: zz, tipo: r() < 0.5 ? 2 : r() < 0.55 ? 0 : r() < 0.7 ? 1 : 3, r: r() * 6.28, s: 0.8 + r() * 0.5, alto: 16 + r() * 10 });
       }
     }
   }

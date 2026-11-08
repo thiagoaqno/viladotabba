@@ -42,7 +42,7 @@ export function carregarPilotos() {
 }
 
 // o casco sem UV: a folha do capacete (x em volta da cabeça, com a frente em 3/4; y da coroa ao queixo) é lida pelo ponto do casco na pose de repouso
-function materialDoCasco(geo, textura) {
+export function materialDoCasco(geo, textura) {
   geo.computeBoundingBox();
   const b = geo.boundingBox, m = new THREE.MeshStandardMaterial({ map: textura, roughness: 0.28, metalness: 0.05 });
   const centro = b.getCenter(new THREE.Vector3());
@@ -107,6 +107,8 @@ export function criarPilotoPodio(it, parado) {
   };
 }
 export const alturaDoPiloto = ALTURA_M;
+// o que os mecânicos do box (mecanicos.js) reaproveitam: o modelo, as folhas do traje e os materiais fixos (depois de carregarPilotos)
+export const basePodio = () => base;
 
 // sai da tela: solta as geometrias e os materiais que todo mundo divide (na próxima festa, o navegador pega do cache)
 export function liberarPilotos() {

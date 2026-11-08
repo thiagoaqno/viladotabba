@@ -21,7 +21,7 @@ import { physics, quadroDeFisica, quadroParado, criarRede, PASSO } from "./fisic
 import { loadBest, recordLap, drawBest, myProg } from "./fantasma.js";
 import { standings, hud, renderResults } from "./hud.js";
 import { estadoDeExemplo } from "./resultado-gp.js";
-import { f1Pronto, atualizarVolante } from "./f1.js";
+import { f1Pronto, atualizarVolante, TAM } from "./f1.js";
 import { propsPronto } from "./props.js";
 import { startItems, stopItems, stepItems } from "./itens.js";
 import { passoEfeitos, limparEfeitos, amostrasDeEfeitos } from "./efeitos.js";
@@ -31,6 +31,7 @@ import { desenhar, ajustarTela, medirQuadro, comecarMedida, compilarPos, prepara
 import { quadroTV, pularTV } from "./transmissao.js";
 import { criarLinhaFreio } from "./linha-frenagem.js";
 import { detalheRemoto } from "./detalhe-remoto.js";
+import { criarBoxesDaCorrida } from "./mecanicos.js";
 const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
 
 // ---------- corrida ----------
@@ -154,7 +155,7 @@ export function startRace(st) {
   aquecerPista(tr, ceu);
   if (!raf) raf = requestAnimationFrame(loop);
 }
-function clearRace() { if (!race) return; soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
+function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
 export function stopRace() { clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); limparClima(); }
 function resize() {
   const w = window.innerWidth, hh = window.innerHeight;
@@ -304,6 +305,18 @@ function draw(dt) {
   let src = c;
   if (!me()) { const lead = standings()[0]; const gh = lead && race.ghosts.get(lead.id); if (gh) src = gh; }
   animarVida(tr, dt, src);
+  // os mecânicos do box (regras de F1): a equipe na frente da garagem enquanto um carro dela está no corredor (mecanicos.js)
+  if (E.S.config.regras === "f1" && tr.corredor) {
+    if (race.mecanicos === undefined) race.mecanicos = criarBoxesDaCorrida(tr, scene, KS * CARS3.equilibrado.L / TAM);
+    if (race.mecanicos) {
+      const corDe = (eq) => window.EQUIPES_F1?.[eq]?.cor, eu = me(), lista = [];
+      for (const pl of E.S.players) {
+        if (eu && pl.id === eu.id) { const B = race.car && race.car.box; lista.push({ id: pl.id, equipe: pl.equipe, cor: corDe(pl.equipe), grid: pl.grid, noBox: !!(B && B.fase), fase: B && window.Sim.faseDoBox(B), composto: B && B.composto }); }
+        else lista.push({ id: pl.id, equipe: pl.equipe, cor: corDe(pl.equipe), grid: pl.grid, noBox: pl.noBox, fase: pl.boxFase, composto: pl.pneuAtual });
+      }
+      race.mecanicos.atualizar(lista, cam.position);
+    }
+  }
   // a câmera (cameras.js): cockpit, onboard, bico, perseguição próxima e afastada, aérea e TV; quem só assiste ou já
   // passou a bandeirada começa na TV
   const mode = quadroCamera(race, { dt, tr, c, src, nearest, olharTras: keys.olharTras || pad.olharTras, rm: motionPreference.matches, escolha: camMode, assistindo: !(src === c && race.kart), acabou: !!me() && me().finish != null, spec: CARS3[me()?.car] || CARS3.equilibrado });

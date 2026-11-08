@@ -83,18 +83,18 @@ export function barreiras(tr, add, cfg = {}) {
 // ---------------------------------------------------------------------------------------------------------------------
 /** @param {Array} lista [[f0, f1, lado]]: lado 1, -1, 0 (os dois) ou "fora" | "dentro" da curva · @param {object} cfg { lat: onde ficam (W/2 + 21), alto: pneus por pilha (3) } */
 export function muroDePneus(tr, add, lista, cfg = {}) {
-  const { pts, n, W } = tr, lat = cfg.lat ?? W / 2 + 21, pretos = [], brancos = [], E = tr.escala ?? 1, pneu = new THREE.TorusGeometry(3.4 * E, 1.7 * E, 5, 9), alto = cfg.alto ?? 3; // (E: o pneu de 2,1 m vira o de 0,85 m, e a pilha vem a cada ponto, como em kit/escape.js)
+  const { pts, n, W } = tr, lat = cfg.lat ?? W / 2 + 21, pretos = [], brancos = [], pneu = new THREE.TorusGeometry(3.4, 1.7, 5, 9), alto = cfg.alto ?? 3;
   pneu.rotateX(Math.PI / 2);
   for (const [f0, f1, lado] of lista) {
     const a = Math.floor(f0 * n), b = Math.floor(f1 * n);
     let lados = lado === 0 ? [-1, 1] : [lado];
     if (lado === "fora" || lado === "dentro") { let m = a; for (let k = a; k <= b; k++) if ((pts[k % n].k || 0) > (pts[m % n].k || 0)) m = k; const d = sinalDaCurva(pts, n, m % n); lados = [lado === "dentro" ? d : -d]; }
-    for (const s of lados) for (let i = a; i < b; i += E < 1 ? 1 : 3) {
+    for (const s of lados) for (let i = a; i < b; i += 3) {
       if (tr.murosEscape && !tr.murosEscape[s][i % n]) continue;
       const d = tr.murosEscape ? W / 2 + tr.murosEscape[s][i % n] - 4 : lat;
       const p = pts[i % n], x = p.x + p.nx * s * d, z = p.y + p.ny * s * d;
       if (tr.distAt(x, z) < d - 3 || ocupado(tr, x, z, i % n) || tr.noCorredor?.(x, z)) continue;
-      for (let k = 0; k < alto; k++) (((i / 2 + k) % 7 | 0) === 0 ? brancos : pretos).push({ x, y: (tr.murosEscape ? tr.chao(x, z) : p.h) + (1.7 + k * 3.6) * E, z, sx: 1, sy: 1, sz: 1 });
+      for (let k = 0; k < alto; k++) (((i / 2 + k) % 7 | 0) === 0 ? brancos : pretos).push({ x, y: (tr.murosEscape ? tr.chao(x, z) : p.h) + 1.7 + k * 3.6, z, sx: 1, sy: 1, sz: 1 });
     }
   }
   instancias(add, pneu, M(0x16171a, { roughness: 0.95 }), pretos, { nome: `${tr.id}-muro-pneus` });

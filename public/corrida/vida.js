@@ -42,7 +42,6 @@ function instancias(add, geo, mat, lista, sombra = true) {
 // ---------- monta (uma vez por pista) ----------
 export function enfeitar(tr, add, r, alturaEm) {
   const { pts, n, W, id } = tr, t = tr.t, comMuro = tr.wallLat < 1e9, borda = comMuro ? tr.wallLat : W / 2 + (id === "interlagos" ? 33 : 16);
-  const E = tr.escala ?? 1, G = tr.escalaGente ?? E; // a escala do cenário e a da gente (gps/<id>.js)
   const V = (tr.vida = { torcida: null, bandeiras: [], passaros: [], dirigivel: null, baloes: [], agua: tr.agua || [], fogos: [], planeta: null, tempo: 0 });
   const noite = id === "tokyo" || id === "arcoiris";
   const lat = (p, l) => [p.x + p.nx * l, p.y + p.ny * l];
@@ -66,8 +65,8 @@ export function enfeitar(tr, add, r, alturaEm) {
     const p = pts[i], q = pts[(i + 3) % n]; if (!(p.k > 1 / 230) || t.espaco || tr.sem?.setas) continue;
     const giro = p.tx * q.ty - p.ty * q.tx, fora = giro > 0 ? -1 : 1, dSeta = comMuro ? tr.wallLat + 10 : W / 2 + 22, [x, z] = lat(p, fora * dSeta), y = alturaEm(x, z, i); // a placa tem 14 de largura: o canto de dentro fica a mais de 12 do asfalto
     if (tr.noCorredor?.(x, z) || tr.distAt(x, z) < dSeta - 2) continue;
-    setas[fora > 0 ? 0 : 1].push({ x, y: y + (comMuro ? 18 : 12) * E, z, ry: Math.atan2(-p.tx, -p.ty), s: E });
-    if (!comMuro) postes.push({ x, y: y + 4 * E, z, s: E });
+    setas[fora > 0 ? 0 : 1].push({ x, y: y + (comMuro ? 18 : 12), z, ry: Math.atan2(-p.tx, -p.ty), s: 1 });
+    if (!comMuro) postes.push({ x, y: y + 4, z, s: 1 });
   }
   const placa = new THREE.PlaneGeometry(14, 10.5);
   setas.forEach((l, k) => instancias(add, placa, new THREE.MeshStandardMaterial({ map: setaTex(k ? 1 : -1), roughness: 0.5, emissive: 0xffffff, emissiveIntensity: noite ? 0.5 : 0.08, emissiveMap: null, side: THREE.DoubleSide }), l, false));
@@ -117,11 +116,11 @@ export function enfeitar(tr, add, r, alturaEm) {
         const ii = (q.i0 + k) % n, p = pts[ii];
         for (let fila = 0; fila < q.degraus; fila++) {
           if (r() < vaga) continue;
-          const d = Math.abs(q.l0) + (q.prof ?? 9) / 2 + fila * (q.prof ?? 9), [x, z] = lat(p, s * d); // o meio do degrau (o tamanho dele vem da arquibancada do kit)
-          gente.push({ arq: true, x, y: p.h + (q.base ?? 4) + (fila + 0.5) * (q.alt ?? 6), z, ry: Math.atan2(-p.nx * s, -p.ny * s), fase: r() * 6.3, ritmo: 5 + r() * 5, pula: r() < 0.6, pele: pele[(r() * 5) | 0], camisa: camisa[(r() * camisa.length) | 0] });
+          const d = Math.abs(q.l0) + 4.5 + fila * 9, [x, z] = lat(p, s * d);
+          gente.push({ arq: true, x, y: p.h + 4 + (fila + 0.5) * 6, z, ry: Math.atan2(-p.nx * s, -p.ny * s), fase: r() * 6.3, ritmo: 5 + r() * 5, pula: r() < 0.6, pele: pele[(r() * 5) | 0], camisa: camisa[(r() * camisa.length) | 0] });
         }
       }
-      if (gente.length) V.torcidasArq.push(montarTorcida(add, gente, { escala: G }));
+      if (gente.length) V.torcidasArq.push(montarTorcida(add, gente));
     }
     V.torcida = V.torcidasArq.shift() || null;
   }
@@ -189,10 +188,10 @@ export function animarVida(tr, dt, foco) {
     T.primeira = false;
     const { gente, corpo, cabeca, bracos } = T;
     gente.forEach((o, k) => {
-      const pulo = o.pula ? Math.max(0, Math.sin(t * o.ritmo + o.fase)) * 3.2 * (T.escala ?? 1) : 0, balanca = Math.sin(t * o.ritmo * 0.5 + o.fase) * 0.12;
+      const pulo = o.pula ? Math.max(0, Math.sin(t * o.ritmo + o.fase)) * 3.2 : 0, balanca = Math.sin(t * o.ritmo * 0.5 + o.fase) * 0.12;
       d.position.set(o.x, o.y + pulo, o.z); d.rotation.set(0, o.ry, balanca); d.scale.setScalar(1); d.updateMatrix();
       corpo.setMatrixAt(k, d.matrix); cabeca.setMatrixAt(k, d.matrix);
-      d.position.y += Math.sin(t * o.ritmo + o.fase) * 1.3 * (T.escala ?? 1); d.rotation.z = balanca + Math.sin(t * o.ritmo + o.fase) * 0.35; d.updateMatrix(); bracos.setMatrixAt(k, d.matrix); // braços para cima e para baixo
+      d.position.y += Math.sin(t * o.ritmo + o.fase) * 1.3; d.rotation.z = balanca + Math.sin(t * o.ritmo + o.fase) * 0.35; d.updateMatrix(); bracos.setMatrixAt(k, d.matrix); // braços para cima e para baixo
     });
     corpo.instanceMatrix.needsUpdate = cabeca.instanceMatrix.needsUpdate = bracos.instanceMatrix.needsUpdate = true;
   }

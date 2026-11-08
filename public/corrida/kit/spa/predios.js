@@ -88,10 +88,9 @@ export function predioDosBoxes({ comprimento: L = 600, fundo: F = 46, torre = 0 
  * A tribuna de três andares: arquibancada em degraus (kit 2), a cobertura inclinada escura que sobe até o fundo e o bloco de vidro atrás, com a
  * fachada de concreto aparente. Origem no meio da frente; frente para +z. `camisas`: as cores da torcida.
  */
-export function tribunaDoRaidillon({ comprimento = 200, degraus = 12, camisas, semente = 11, escala = 1 } = {}) {
-  // `escala` (tr.escala): o degrau real tem 0,4 m de subida e 0,8 m de fundo; com escala 0,4 são mais fileiras (degraus ÷ escala) de tamanho certo, na mesma altura e profundidade de antes
+export function tribunaDoRaidillon({ comprimento = 200, degraus = 12, camisas, semente = 11 } = {}) {
   const g = tribunaCoberta({
-    comprimento, degraus: Math.round(degraus / escala), altura: 5.2 * escala, fundo: 8 * escala, secoes: 5, publico: 0.7, semente, alcance: 1, folga: 22, vao: 50, camisas,
+    comprimento, degraus, altura: 5.2, fundo: 8, secoes: 5, publico: 0.7, semente, alcance: 1, folga: 22, vao: 50, camisas,
     cores: ["#1f1f22", "#f2c500", "#c8102e", "#1f1f22", "#f2c500"], cobertura: "#3a3e44", estrutura: "#808790",
   });
   const D = degraus * 8, m = new Montador(), S = solido(), V = vidro(), alto = degraus * 5.2;

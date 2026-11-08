@@ -1,28 +1,12 @@
-# O site volta para a versão de antes da escala real
+# Guia da escala real: o estado depois do #608
 
-O deploy publica a main automaticamente. Para o site ficar numa versão estável enquanto as pistas vão para a escala real fora do ar, a main volta ao código do #600 (`dfbab3e6`), o último antes da escala real.
+Atualiza `planos/escala-real-guia.md` com o estado de agora:
 
-## O que sai do ar (e fica guardado)
+- o site está na versão estável (a main voltou para antes da escala real pelo #608);
+- todo o trabalho de escala real está no branch `feat/escala-real-pistas`, que já tem a volta do #608 desfeita lá dentro, para o mega PR trazer a escala real de volta em vez de apagá-la;
+- Mônaco está com a outra conta, na pasta `klk/escala-monaco`;
+- o fluxo de trabalho: uma cópia por pista a partir do integrador, sem PR, e um mega PR no fim.
 
-Tudo isto continua no branch `feat/escala-real-pistas` (com backup no GitHub) e volta junto no mega PR, quando todas as pistas estiverem prontas:
-
-- #601 Interlagos de verdade (traçado, escala e relevo reais);
-- #602 Cidade do México em escala real;
-- #603 o carro no tamanho de verdade;
-- #604 as pistas fora do calendário da F1 apagadas;
-- #605 o cenário de Interlagos no tamanho real;
-- #606 Spa em escala real.
-
-Ficam na main só `planos/escala-real.md` e `planos/escala-real-guia.md`, que são documentação.
-
-## Cuidados
-
-- Depois deste PR, o trabalho novo de escala real deve partir de `feat/escala-real-pistas`, não da main.
-- As migrações 029 e 030 (que zeram os recordes da Cidade do México e de Spa) saem do código. Se o site já rodou essas migrações, os recordes dessas pistas já foram zerados; quando o mega PR voltar, elas não rodam de novo.
-- Os recordes feitos online com a escala real (carro novo, pistas novas) continuam no banco.
-
-## Verificação
-
-O código fica igual ao do `dfbab3e6`, que já passou pelo CI, com exceção dos dois arquivos de `planos/`. Não testei no navegador.
+Só documentação. O arquivo é igual ao do branch de integração, para não dar conflito no mega PR.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

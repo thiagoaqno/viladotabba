@@ -664,8 +664,12 @@ const PISTAS = {
     name: "Cidade do México", sub: "Autódromo Hermanos Rodríguez: a reta enorme a 2 200 m de altitude, os S do meio e a passagem pelo estádio Foro Sol antes da última curva", f1: true,
     // Autódromo Hermanos Rodríguez: 4302 m. Traçado de bacinger/f1-circuits (mx-1962, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 92 vértices, a linha de chegada no primeiro
-    scale: 3.35, width: 120, minLap: 31, walls: false, flat: 40, fall: 220, largada: 0.134,
-    hills: [[0,16], [0.04,17], [0.08,9], [0.12,10], [0.16,8], [0.2,12], [0.24,14], [0.28,6], [0.32,5], [0.36,9], [0.4,9], [0.44,8], [0.48,8], [0.52,10], [0.56,8], [0.6,8], [0.64,8], [0.68,10], [0.72,13], [0.76,11], [0.8,18], [0.84,11], [0.88,15], [0.92,10], [0.96,11], [1,16]],
+    // ESCALA REAL (a primeira pista assim): `scale` 5,39 = 3,35 × 1,609, e a volta medida por `Pistas.pontos(t, 6)` dá 20 662 u = 4 304 m na escala da física (1 u = 0,2083 m), a de verdade; antes dava 12 841 u (2 675 m).
+    // `width` 67 u = 14 m (a pista real tem de 13 a 15 m, segundo o formulaf1.es; a de antes tinha 120 u = 25 m). `minLap` 50 = 31 × 1,609. Relevo: SRTM de 30 m pela ferramenta pista-real.js (--dem srtm30m --raio 14: com --raio 4 a pista de
+    // 19 m de desnível chegava a 17% de inclinação, que o SRTM inventa nas árvores e nos prédios; com 14 são 8 m de desnível e no máximo 3%); a ferramenta achou barreira mapeada em só 53% de um lado (lado 1 sem barreira em 47%, mais
+    // que os 30% de corte), então não há `muros` e vale a regra automática.
+    scale: 5.39, width: 67, minLap: 50, walls: false, flat: 64, fall: 354, largada: 0.134, hillsSuave: true,
+    hills: [[0,27],[0.01,25],[0.02,23],[0.03,23],[0.04,24],[0.05,24],[0.06,25],[0.07,26],[0.08,26],[0.09,25],[0.1,24],[0.11,21],[0.12,19],[0.13,16],[0.14,14],[0.15,13],[0.16,13],[0.17,14],[0.18,16],[0.19,19],[0.2,21],[0.21,22],[0.22,24],[0.23,25],[0.24,25],[0.25,25],[0.26,26],[0.27,26],[0.28,27],[0.29,28],[0.3,27],[0.31,26],[0.32,25],[0.33,22],[0.34,20],[0.35,18],[0.36,15],[0.37,12],[0.38,11],[0.39,11],[0.4,10],[0.41,10],[0.42,11],[0.43,11],[0.44,11],[0.45,13],[0.46,14],[0.47,16],[0.48,19],[0.49,21],[0.5,24],[0.51,25],[0.52,25],[0.53,24],[0.54,22],[0.55,19],[0.56,14],[0.57,10],[0.58,7],[0.59,5],[0.6,4],[0.61,5],[0.62,8],[0.63,12],[0.64,16],[0.65,19],[0.66,22],[0.67,23],[0.68,24],[0.69,23],[0.7,22],[0.71,21],[0.72,20],[0.73,18],[0.74,17],[0.75,16],[0.76,15],[0.77,15],[0.78,16],[0.79,18],[0.8,19],[0.81,21],[0.82,22],[0.83,22],[0.84,22],[0.85,21],[0.86,20],[0.87,20],[0.88,22],[0.89,25],[0.9,29],[0.91,33],[0.92,38],[0.93,40],[0.94,42],[0.95,41],[0.96,40],[0.97,37],[0.98,33],[0.99,30],[1,27]],
     points: [
       [403, 352, 0], [783, 404, 0], [935, 419, 0], [1057, 436, 0], [1348, 479, 0], [1398, 488, 191], [1407, 492, 31], [1413, 496, 21],
       [1417, 503, 23], [1418, 511, 98], [1411, 557, 141], [1412, 570, 24], [1419, 580, 55], [1444, 595, 46], [1447, 600, 22], [1449, 607, 50],
@@ -1139,7 +1143,7 @@ const SUPERFICIES_ESCAPE = {
   "abudhabi": {"britaCurvas": 420, "largura": 26},
   "austin": {"brita": [[0.405, 0.42, "fora"]], "listrado": [[0.05, 0.078, "fora"], [0.62, 0.644, "fora"], [0.703, 0.73, "fora"], [0.85, 0.87, "fora"], [0.9, 0.925, "fora"]], "largura": 56}, // (brita só na curva 11; o resto é asfalto liso de escape, onde o `muros` tem folga para ele)
   "xangai": {"britaCurvas": 420, "largura": 26},
-  "mexico": {"britaCurvas": 420, "largura": 26},
+  "mexico": {"britaCurvas": 676, "largura": 26},
   "redbullring": {"britaCurvas": 420, "largura": 26, "brita": [[0.84, 0.875, -1], [0.89, 0.93, -1]]},
   "madri": {"britaCurvas": 420, "largura": 26},
   "miami": {"britaCurvas": 420, "largura": 26},

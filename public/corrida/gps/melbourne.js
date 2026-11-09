@@ -12,7 +12,7 @@ export const GP_MELBOURNE = {
   asfalto: true,
   chao: {
     margem: { cor: "#686a6e" }, // o asfalto cinza da margem do parque
-    zebra: { cores: ["#007a3d", "#f4c300"], dentro: 380, fora: 240 }, // o verde e amarelo australiano tradicional
+    zebra: { cores: ["#007a3d", "#f4c300"], dentro: 692, fora: 437 }, // o verde e amarelo australiano tradicional
     amarelas: [[0.06, 0.082], [0.135, 0.16], [0.495, 0.535], [0.665, 0.695], [0.875, 0.91]], // zebras altas anticorte
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true,

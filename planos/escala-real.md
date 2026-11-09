@@ -14,3 +14,28 @@ O Thiago escolheu (2026-11-08) **encolher o carro** para a escala da física, em
 4. Robôs, recordes e linhas: recalcular `corrida-linhas-f1.json` e zerar os recordes de cada pista que mudar de tamanho (migração por pista).
 
 Até a fase 3 terminar, numa pista antiga o carro fica pequeno (a pista tem o dobro da largura real) e o cenário fica grande em volta dele.
+
+## Lote 1: o comprimento real de 14 pistas (2026-11-09)
+
+`node ferramentas/escala-lote.js <id>=<metros> ...` acha o `scale` que faz a volta de `Pistas.pontos(t, 6)` dar o comprimento real e multiplica pelo mesmo fator `minLap`, `flat`, `fall`, a zebra (`dentro`, `fora`) de `gps/<id>.js` e a `britaCurvas` (de `gps/<id>.js` e de `SUPERFICIES_ESCAPE`). Medido depois de rodar:
+
+| Pista | scale | Volta antes → depois | Real | minLap |
+|---|---|---|---|---|
+| Silverstone | 3,3 → 6,398 | 3 038 → 5 892 m | 5 891 m | 35 → 68 |
+| Melbourne | 3,62 → 6,596 | 2 897 → 5 278 m | 5 278 m | 33 → 60 |
+| Xangai | 2,8 → 4,56 | 3 347 → 5 452 m | 5 451 m | 38 → 62 |
+| Suzuka | 3,77 → 7,332 | 2 986 → 5 808 m | 5 807 m | 35 → 68 |
+| Bahrein | 2,39 → 4,462 | 2 900 → 5 413 m | 5 412 m | 34 → 63 |
+| Jeddah | 5,09 → 10,25 | 3 066 → 6 174 m | 6 174 m | 35 → 70 |
+| Miami | 3 → 5,609 | 2 895 → 5 412 m | 5 412 m | 34 → 64 |
+| Montreal | 4,42 → 7,115 | 2 708 → 4 361 m | 4 361 m | 31 → 50 |
+| Red Bull Ring | 2,9 → 4,649 | 2 693 → 4 318 m | 4 318 m | 31 → 50 |
+| Zandvoort | 2,29 → 3,624 | 2 691 → 4 259 m | 4 259 m | 31 → 49 |
+| Austin | 4,2 → 6,835 | 3 388 → 5 513 m | 5 513 m | 39 → 63 |
+| Madri | 3,64 → 6,872 | 2 897 → 5 470 m | 5 470 m | 34 → 64 |
+| Catar | 2,96 → 5,469 | 2 933 → 5 419 m | 5 419 m | 34 → 63 |
+| Abu Dhabi | 3,51 → 6,418 | 2 888 → 5 280 m | 5 281 m | 33 → 60 |
+
+Migrações `033` a `046` zeram voltas, recordes e setores de cada uma (031 é Mônaco e 032 é Hungaroring). Ainda falta em cada pista, numa passada por pista: `width` real (com fonte), relevo e barreiras (`ferramentas/pista-real.js`, porque as alturas de `hills` não cresceram com o `scale` e as ladeiras ficaram mais suaves), `escala` e `escalaGente` do cenário, as peças próprias lendo `tr.escala`, os cuidados visuais e a linha dos robôs. Madri, Catar e Abu Dhabi usam a zebra padrão de `kit/gp-simples.js`, que não cresceu. Monza e Barcelona ficaram de fora: o traçado delas ainda é desenhado à mão e precisa ser convertido antes.
+
+**Depois de todas as pistas** (pedido do Thiago): a corrida com robôs de verdade roda uma vez só, no fim, e a pilotagem (aceleração, dirigibilidade) e o ajuste do trânsito dos robôs (#610, medido com o carro antigo) serão revistos para ficar perto de como era com o carro antigo.

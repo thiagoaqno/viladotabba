@@ -157,7 +157,7 @@ const PISTAS = {
   silverstone: {
     name: "Silverstone", sub: "Silverstone Circuit: Abbey, Farm, Village e The Loop, Aintree, a Wellington Straight, Brooklands e Luffield, Woodcote e Copse, o S rápido Maggotts-Becketts-Chapel, a Hangar Straight, Stowe, Vale e Club",
     // aeródromo de verdade: asfalto largo, área de escape dos dois lados, campo aberto (sem muro colado)
-    scale: 3.3, width: 124, minLap: 35, walls: false, flat: 60, fall: 380, largada: 0.45, hillsSuave: true,
+    scale: 6.398, width: 124, minLap: 68, walls: false, flat: 116, fall: 737, largada: 0.45, hillsSuave: true,
     // relevo: o aeródromo é quase plano. Sobe um pouco de Chapel pela Hangar Straight até Stowe (o ponto mais alto) e desce por
     // Vale e Club; a reta dos boxes e Abbey ficam no fundo, e a Wellington Straight desce até Brooklands
     // relevo real por ferramentas/pista-real.js (eudem25m); barreiras por trecho do OpenStreetMap (© colaboradores do OpenStreetMap, ODbL)
@@ -281,7 +281,7 @@ const PISTAS = {
     name: "Melbourne", sub: "Albert Park: a volta em torno do lago no parque de Melbourne, rápida, com as curvas 9 e 10 e a reta do lago", f1: true,
     // Albert Park Circuit: 5273 m. Traçado de bacinger/f1-circuits (au-1953, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 97 vértices, a linha de chegada no primeiro
-    scale: 3.62, width: 120, minLap: 33, walls: false, flat: 40, fall: 220, largada: 0.597, hillsSuave: true,
+    scale: 6.596, width: 120, minLap: 60, walls: false, flat: 73, fall: 401, largada: 0.597, hillsSuave: true,
     // relevo real por ferramentas/pista-real.js (srtm30m); as barreiras seguem a regra automática, porque o OSM mapeia pouco aqui
     hills: [[0,11],[0.01,10],[0.02,8],[0.03,6],[0.04,5],[0.05,4],[0.06,4],[0.07,4],[0.08,4],[0.09,5],[0.1,5],[0.11,6],[0.12,8],[0.13,9],[0.14,12],[0.15,13],[0.16,14],[0.17,14],[0.18,14],[0.19,12],[0.2,10],[0.21,7],[0.22,6],[0.23,5],[0.24,7],[0.25,9],[0.26,12],[0.27,15],[0.28,18],[0.29,20],[0.3,21],[0.31,21],[0.32,20],[0.33,18],[0.34,16],[0.35,15],[0.36,13],[0.37,11],[0.38,9],[0.39,7],[0.4,5],[0.41,4],[0.42,4],[0.43,5],[0.44,7],[0.45,9],[0.46,10],[0.47,10],[0.48,10],[0.49,9],[0.5,10],[0.51,11],[0.52,11],[0.53,12],[0.54,12],[0.55,11],[0.56,11],[0.57,10],[0.58,9],[0.59,9],[0.6,10],[0.61,12],[0.62,14],[0.63,16],[0.64,18],[0.65,19],[0.66,19],[0.67,19],[0.68,18],[0.69,17],[0.7,16],[0.71,15],[0.72,13],[0.73,12],[0.74,10],[0.75,9],[0.76,9],[0.77,10],[0.78,12],[0.79,13],[0.8,14],[0.81,14],[0.82,13],[0.83,12],[0.84,10],[0.85,9],[0.86,8],[0.87,7],[0.88,6],[0.89,5],[0.9,5],[0.91,5],[0.92,5],[0.93,6],[0.94,8],[0.95,10],[0.96,11],[0.97,12],[0.98,13],[0.99,12],[1,11]],
     points: [
@@ -304,7 +304,7 @@ const PISTAS = {
     name: "Xangai", sub: "Shanghai International Circuit: o caracol das curvas 1 e 2, a sequência do meio, a reta de 1,2 km e o grampo do fim", f1: true,
     // Shanghai International Circuit: 5448 m. Traçado de bacinger/f1-circuits (cn-2004, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 146 vértices, a linha de chegada no primeiro
-    scale: 2.8, width: 120, minLap: 38, walls: false, flat: 40, fall: 220, largada: 0.915, hillsSuave: true, // (scale maior que o do conversor, 2.42: o caracol e o grampo ficavam travados demais)
+    scale: 4.56, width: 120, minLap: 62, walls: false, flat: 65, fall: 358, largada: 0.915, hillsSuave: true, // (scale maior que o do conversor, 2.42: o caracol e o grampo ficavam travados demais)
     // relevo real por ferramentas/pista-real.js (srtm30m); as barreiras seguem a regra automática, porque o OSM mapeia pouco aqui
     hills: [[0,9],[0.01,6],[0.02,7],[0.03,9],[0.04,11],[0.05,12],[0.06,10],[0.07,6],[0.08,4],[0.09,6],[0.1,7],[0.11,8],[0.12,8],[0.13,10],[0.14,14],[0.15,13],[0.16,12],[0.17,13],[0.18,14],[0.19,14],[0.2,13],[0.21,14],[0.22,15],[0.23,13],[0.24,11],[0.25,9],[0.26,9],[0.27,9],[0.28,9],[0.29,10],[0.3,11],[0.31,8],[0.32,8],[0.33,15],[0.34,20],[0.35,17],[0.36,12],[0.37,11],[0.38,12],[0.39,13],[0.4,14],[0.41,13],[0.42,13],[0.43,12],[0.44,9],[0.45,9],[0.46,13],[0.47,15],[0.48,11],[0.49,5],[0.5,7],[0.51,11],[0.52,9],[0.53,10],[0.54,13],[0.55,14],[0.56,13],[0.57,11],[0.58,11],[0.59,15],[0.6,18],[0.61,15],[0.62,11],[0.63,11],[0.64,14],[0.65,12],[0.66,9],[0.67,11],[0.68,15],[0.69,18],[0.7,19],[0.71,18],[0.72,14],[0.73,12],[0.74,13],[0.75,14],[0.76,13],[0.77,13],[0.78,15],[0.79,14],[0.8,12],[0.81,11],[0.82,10],[0.83,13],[0.84,15],[0.85,16],[0.86,17],[0.87,14],[0.88,13],[0.89,16],[0.9,16],[0.91,17],[0.92,18],[0.93,19],[0.94,18],[0.95,14],[0.96,12],[0.97,12],[0.98,13],[0.99,13],[1,9]],
     points: [
@@ -333,7 +333,7 @@ const PISTAS = {
     name: "Suzuka", sub: "Suzuka: os S do primeiro setor, Dunlop, Degner, a passagem por baixo da ponte, o grampo, Spoon, a reta de trás por cima da ponte, a 130R e a chicane Casio", f1: true,
     // Suzuka International Racing Course: 5812 m. Traçado de bacinger/f1-circuits (jp-1962, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 135 vértices, a linha de chegada no primeiro
-    scale: 3.77, width: 120, minLap: 35, walls: false, flat: 40, fall: 220, largada: 0.419,
+    scale: 7.332, width: 120, minLap: 68, walls: false, flat: 78, fall: 428, largada: 0.419,
     cruza: [[0.401,0.808]], // as frações da volta onde ela passa por cima de si mesma (a ponte)
     hills: [[0,55], [0.04,27], [0.08,7], [0.12,10], [0.16,25], [0.2,44], [0.24,60], [0.28,76], [0.32,86], [0.36,69], [0.4,58], [0.44,82], [0.48,104], [0.52,95], [0.56,94], [0.6,91], [0.64,109], [0.68,81], [0.72,80], [0.758,84], [0.79,111], [0.822,111], [0.848,95], [0.88,97], [0.92,96], [0.96,54], [1,55]], // com a ponte: a reta de trás 52 acima do trecho depois da Degner
     points: [
@@ -360,7 +360,7 @@ const PISTAS = {
     name: "Bahrein", sub: "Sakhir: a curva 1 freada no fim da reta, a 4, as curvas do meio e a reta de trás, no deserto do Bahrein", f1: true,
     // Bahrain International Circuit: 5418 m. Traçado de bacinger/f1-circuits (bh-2002, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 114 vértices, a linha de chegada no primeiro
-    scale: 2.39, width: 120, minLap: 34, walls: false, flat: 40, fall: 220, largada: 0.501,
+    scale: 4.462, width: 120, minLap: 63, walls: false, flat: 75, fall: 411, largada: 0.501,
     hills: [[0,13], [0.04,6], [0.08,7], [0.12,13], [0.16,21], [0.2,33], [0.24,40], [0.28,43], [0.32,33], [0.36,19], [0.4,12], [0.44,16], [0.48,14], [0.52,13], [0.56,17], [0.6,13], [0.64,17], [0.68,32], [0.72,43], [0.76,35], [0.8,24], [0.84,17], [0.88,14], [0.92,7], [0.96,8], [1,13]],
     points: [
       [388, 762, 0], [404, 199, 0], [407, 169, 53], [412, 161, 36], [419, 155, 34], [431, 152, 35], [443, 156, 75], [483, 194, 186],
@@ -384,7 +384,7 @@ const PISTAS = {
     name: "Jeddah", sub: "Jeddah Corniche: a pista de rua mais rápida, os S cegos entre os muros à beira do Mar Vermelho e o grampo do fim", f1: true,
     // Jeddah Corniche Circuit: 6196 m. Traçado de bacinger/f1-circuits (sa-2021, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 106 vértices, a linha de chegada no primeiro
-    scale: 5.09, width: 104, minLap: 35, walls: true, muro: true, wall: 14, flat: 20, fall: 120, largada: 0.592,
+    scale: 10.25, width: 104, minLap: 70, walls: true, muro: true, wall: 14, flat: 40, fall: 242, largada: 0.592,
     hills: [[0,10], [0.04,8], [0.08,7], [0.12,10], [0.16,10], [0.2,10], [0.24,10], [0.28,7], [0.32,11], [0.36,10], [0.4,12], [0.44,8], [0.48,8], [0.52,9], [0.56,5], [0.6,10], [0.64,10], [0.68,6], [0.72,8], [0.76,5], [0.8,8], [0.84,6], [0.88,11], [0.92,10], [0.96,8], [1,10]],
     points: [
       [867, 1151, 0], [824, 1019, 0], [805, 966, 124], [798, 956, 24], [781, 953, 36], [777, 950, 20], [775, 945, 18], [774, 939, 90],
@@ -407,7 +407,7 @@ const PISTAS = {
     name: "Miami", sub: "Miami International Autodrome: a volta em torno do Hard Rock Stadium, as retas compridas e a chicane estreita das curvas 14 e 15", f1: true,
     // Miami International Autodrome: 5415 m. Traçado de bacinger/f1-circuits (us-2022, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 133 vértices, a linha de chegada no primeiro
-    scale: 3, width: 120, minLap: 34, walls: false, flat: 40, fall: 220, largada: 0.671,
+    scale: 5.609, width: 120, minLap: 64, walls: false, flat: 75, fall: 411, largada: 0.671,
     hills: [[0,6], [0.04,6], [0.08,6], [0.12,29], [0.16,6], [0.2,6], [0.24,4], [0.28,5], [0.32,5], [0.36,8], [0.4,6], [0.44,6], [0.48,6], [0.52,4], [0.56,5], [0.6,5], [0.64,4], [0.68,4], [0.72,4], [0.76,5], [0.8,6], [0.84,6], [0.88,6], [0.92,6], [0.96,6], [1,6]],
     points: [
       [864, 731, 0], [946, 780, 976], [965, 795, 59], [970, 800, 26], [972, 806, 23], [972, 816, 24], [966, 826, 73], [929, 856, 124],
@@ -433,7 +433,7 @@ const PISTAS = {
     name: "Montreal", sub: "Circuit Gilles-Villeneuve, na ilha Notre-Dame: as chicanes, o grampo e o Muro dos Campeões na saída da última", f1: true,
     // Circuit Gilles-Villeneuve: 4365 m. Traçado de bacinger/f1-circuits (ca-1978, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 81 vértices, a linha de chegada no primeiro
-    scale: 4.42, width: 120, minLap: 31, walls: false, flat: 40, fall: 220, largada: 0.461,
+    scale: 7.115, width: 120, minLap: 50, walls: false, flat: 64, fall: 354, largada: 0.461,
     hills: [[0,16], [0.04,18], [0.08,17], [0.12,19], [0.16,21], [0.2,22], [0.24,19], [0.28,21], [0.32,23], [0.36,13], [0.4,19], [0.44,7], [0.48,4], [0.52,9], [0.56,17], [0.6,27], [0.64,18], [0.68,24], [0.72,22], [0.76,19], [0.8,20], [0.84,20], [0.88,15], [0.92,14], [0.96,11], [1,16]],
     points: [
       [943, 1090, 0], [970, 1214, 0], [978, 1262, 279], [978, 1297, 397], [969, 1369, 392], [969, 1387, 34], [972, 1394, 18], [977, 1399, 66],
@@ -453,7 +453,7 @@ const PISTAS = {
     name: "Red Bull Ring", sub: "Red Bull Ring, em Spielberg: a subida até a Remus, a reta até a Schlossgold, a descida pelas curvas de Rindt e a Red Bull Mobile, entre as montanhas da Estíria", f1: true,
     // Red Bull Ring: 4302 m. Traçado de bacinger/f1-circuits (at-1969, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 93 vértices, a linha de chegada no primeiro
-    scale: 2.9, width: 120, minLap: 31, walls: false, flat: 60, fall: 380, largada: 0.515, hillsSuave: true,
+    scale: 4.649, width: 120, minLap: 50, walls: false, flat: 96, fall: 609, largada: 0.515, hillsSuave: true,
     // relevo e barreiras reais, por ferramentas/pista-real.js (ladeira na inclinação da real, sem o teto de altura do conversor): altitude do EU-DEM de 25 m;
     // barreiras por trecho do OpenStreetMap (© colaboradores do OpenStreetMap, ODbL), com a folga real na escala da física: [f0, f1, lado, recuo, rampa]
     hills: [[0,6],[0.01,4],[0.02,4],[0.03,7],[0.04,11],[0.05,18],[0.06,26],[0.07,36],[0.08,42],[0.09,41],[0.1,41],[0.11,43],[0.12,49],[0.13,55],[0.14,62],[0.15,66],[0.16,69],[0.17,71],[0.18,72],[0.19,77],[0.2,83],[0.21,89],[0.22,96],[0.23,104],[0.24,113],[0.25,124],[0.26,139],[0.27,159],[0.28,177],[0.29,194],[0.3,206],[0.31,210],[0.32,212],[0.33,213],[0.34,210],[0.35,203],[0.36,191],[0.37,180],[0.38,170],[0.39,162],[0.4,157],[0.41,155],[0.42,154],[0.43,154],[0.44,151],[0.45,145],[0.46,139],[0.47,137],[0.48,133],[0.49,122],[0.5,108],[0.51,98],[0.52,94],[0.53,95],[0.54,99],[0.55,103],[0.56,106],[0.57,108],[0.58,108],[0.59,106],[0.6,101],[0.61,90],[0.62,77],[0.63,66],[0.64,60],[0.65,54],[0.66,50],[0.67,48],[0.68,52],[0.69,60],[0.7,64],[0.71,62],[0.72,58],[0.73,54],[0.74,50],[0.75,51],[0.76,57],[0.77,68],[0.78,82],[0.79,94],[0.8,102],[0.81,106],[0.82,105],[0.83,99],[0.84,90],[0.85,76],[0.86,61],[0.87,46],[0.88,33],[0.89,25],[0.9,23],[0.91,21],[0.92,20],[0.93,19],[0.94,18],[0.95,16],[0.96,13],[0.97,11],[0.98,10],[0.99,9],[1,6]],
@@ -532,7 +532,7 @@ const PISTAS = {
     name: "Zandvoort", sub: "Circuit Zandvoort, nas dunas: a Tarzanbocht, a Hugenholtz inclinada, Hunserug, Scheivlak, a Hans Ernst e a Arie Luyendyk inclinada antes da reta", f1: true,
     // Circuit Zandvoort: 4255 m. Traçado de bacinger/f1-circuits (nl-1948, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 150 vértices, a linha de chegada no primeiro
-    scale: 2.29, width: 120, minLap: 31, walls: false, flat: 60, fall: 380, largada: 0.865, hillsSuave: true,
+    scale: 3.624, width: 120, minLap: 49, walls: false, flat: 95, fall: 601, largada: 0.865, hillsSuave: true,
     // relevo real por ferramentas/pista-real.js (eudem25m); barreiras por trecho do OpenStreetMap (© colaboradores do OpenStreetMap, ODbL)
     hills: [[0,12],[0.01,14],[0.02,14],[0.03,15],[0.04,16],[0.05,15],[0.06,14],[0.07,14],[0.08,15],[0.09,18],[0.1,19],[0.11,18],[0.12,15],[0.13,12],[0.14,11],[0.15,11],[0.16,12],[0.17,13],[0.18,13],[0.19,13],[0.2,13],[0.21,12],[0.22,10],[0.23,9],[0.24,10],[0.25,11],[0.26,12],[0.27,13],[0.28,12],[0.29,11],[0.3,8],[0.31,7],[0.32,6],[0.33,6],[0.34,7],[0.35,9],[0.36,11],[0.37,13],[0.38,16],[0.39,17],[0.4,16],[0.41,15],[0.42,15],[0.43,15],[0.44,15],[0.45,14],[0.46,14],[0.47,14],[0.48,13],[0.49,10],[0.5,7],[0.51,5],[0.52,5],[0.53,6],[0.54,6],[0.55,6],[0.56,6],[0.57,5],[0.58,5],[0.59,5],[0.6,8],[0.61,10],[0.62,11],[0.63,10],[0.64,9],[0.65,7],[0.66,6],[0.67,6],[0.68,6],[0.69,8],[0.7,9],[0.71,10],[0.72,10],[0.73,9],[0.74,8],[0.75,7],[0.76,6],[0.77,5],[0.78,4],[0.79,4],[0.8,4],[0.81,5],[0.82,6],[0.83,7],[0.84,8],[0.85,8],[0.86,9],[0.87,10],[0.88,11],[0.89,12],[0.9,13],[0.91,14],[0.92,14],[0.93,14],[0.94,13],[0.95,12],[0.96,11],[0.97,10],[0.98,11],[0.99,11],[1,12]],
     muros: [[0,0.01,1,20,30],[0.01,0.02,1,40,30],[0.02,0.03,1,220,30],[0.08,0.12,1,220,30],[0.12,0.13,1,40,30],[0.13,0.19,1,20,30],[0.19,0.22,1,40,30],[0.22,0.3,1,20,30],[0.3,0.32,1,60,30],[0.32,0.35,1,40,30],[0.35,0.56,1,20,30],[0.56,0.6,1,40,30],[0.6,0.63,1,100,30],[0.63,0.64,1,40,30],[0.64,0.66,1,20,30],[0.66,0.69,1,60,30],[0.69,0.7,1,40,30],[0.7,0.82,1,20,30],[0.82,0.83,1,40,30],[0.83,0.85,1,60,30],[0.85,0.94,1,20,30],[0.97,1,1,20,30],[0.02,0.09,-1,20,30],[0.09,0.1,-1,60,30],[0.1,0.12,-1,100,30],[0.12,0.13,-1,60,30],[0.13,0.14,-1,40,30],[0.14,0.18,-1,20,30],[0.18,0.2,-1,60,30],[0.2,0.22,-1,20,30],[0.22,0.26,-1,40,30],[0.26,0.3,-1,20,30],[0.33,0.38,-1,20,30],[0.38,0.39,-1,40,30],[0.39,0.4,-1,60,30],[0.4,0.44,-1,120,30],[0.44,0.45,-1,100,30],[0.45,0.46,-1,60,30],[0.46,0.47,-1,40,30],[0.47,0.48,-1,20,30],[0.48,0.49,-1,40,30],[0.49,0.51,-1,100,30],[0.51,0.56,-1,80,30],[0.56,0.59,-1,40,30],[0.59,0.62,-1,60,30],[0.62,0.64,-1,40,30],[0.64,0.66,-1,20,30],[0.7,0.74,-1,20,30],[0.74,0.76,-1,200,30],[0.76,0.78,-1,80,30],[0.78,0.79,-1,40,30],[0.79,0.84,-1,20,30],[0.84,0.86,-1,100,30],[0.86,0.87,-1,80,30],[0.87,0.88,-1,40,30],[0.88,1,-1,20,30]],
@@ -562,7 +562,7 @@ const PISTAS = {
     name: "Madri", sub: "Madring, em Madri: a pista nova do GP da Espanha em volta do IFEMA, com a curva inclinada La Monumental", f1: true,
     // Circuito de Madring: 5430 m. Traçado de bacinger/f1-circuits (es-2026, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 133 vértices, a linha de chegada no primeiro
-    scale: 3.64, width: 120, minLap: 34, walls: false, flat: 40, fall: 220, largada: 0.759,
+    scale: 6.872, width: 120, minLap: 64, walls: false, flat: 76, fall: 415, largada: 0.759,
     hills: [[0,32], [0.04,15], [0.08,13], [0.12,14], [0.16,23], [0.2,28], [0.24,44], [0.28,53], [0.32,55], [0.36,51], [0.4,34], [0.44,27], [0.48,21], [0.52,29], [0.56,42], [0.6,34], [0.64,45], [0.68,19], [0.72,28], [0.76,16], [0.8,22], [0.84,27], [0.88,14], [0.92,11], [0.96,23], [1,32]],
     points: [
       [909, 1378, 0], [806, 1394, 947], [779, 1401, 54], [772, 1405, 20], [769, 1410, 30], [766, 1429, 58], [764, 1435, 20], [759, 1440, 21],
@@ -640,7 +640,7 @@ const PISTAS = {
     name: "Austin", sub: "Circuit of the Americas: a subida até a curva 1, os S rápidos, a reta de trás, o estádio e a curva 19, no Texas", f1: true,
     // Circuit of the Americas: 5520 m. Traçado de bacinger/f1-circuits (us-2012, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 114 vértices, a linha de chegada no primeiro
-    scale: 4.2, width: 120, minLap: 39, walls: false, flat: 60, fall: 380, largada: 0.668, hillsSuave: true,
+    scale: 6.835, width: 120, minLap: 63, walls: false, flat: 98, fall: 618, largada: 0.668, hillsSuave: true,
     // relevo real (ferramentas/pista-real.js, SRTM de 30 m, --raio 4): sobe 11% da linha de chegada até a curva 1 ("Big Red", o ponto mais alto, em 0,06), desce até a curva 6 e sobe de novo até a curva 9 (0,32).
     // inclinação máxima 10,6% (a real é de 11%), 151 a 183 m de altitude. Barreiras: a ferramenta achou barreira mapeada nos dois lados quase a volta toda (lado 1 sem barreira em 0%, lado -1 em 3%), então valem os `muros` dela.
     hills: [[0,33],[0.01,37],[0.02,46],[0.03,61],[0.04,78],[0.05,93],[0.06,100],[0.07,92],[0.08,82],[0.09,72],[0.1,64],[0.11,59],[0.12,57],[0.13,56],[0.14,56],[0.15,57],[0.16,57],[0.17,54],[0.18,52],[0.19,52],[0.2,50],[0.21,49],[0.22,52],[0.23,56],[0.24,57],[0.25,54],[0.26,52],[0.27,54],[0.28,60],[0.29,69],[0.3,79],[0.31,89],[0.32,90],[0.33,82],[0.34,69],[0.35,57],[0.36,50],[0.37,48],[0.38,52],[0.39,59],[0.4,64],[0.41,65],[0.42,59],[0.43,52],[0.44,45],[0.45,41],[0.46,41],[0.47,45],[0.48,50],[0.49,52],[0.5,48],[0.51,43],[0.52,40],[0.53,40],[0.54,41],[0.55,41],[0.56,40],[0.57,37],[0.58,36],[0.59,36],[0.6,35],[0.61,31],[0.62,29],[0.63,28],[0.64,30],[0.65,34],[0.66,38],[0.67,40],[0.68,41],[0.69,43],[0.7,44],[0.71,45],[0.72,48],[0.73,52],[0.74,53],[0.75,54],[0.76,57],[0.77,60],[0.78,62],[0.79,60],[0.8,56],[0.81,48],[0.82,41],[0.83,36],[0.84,34],[0.85,30],[0.86,23],[0.87,16],[0.88,12],[0.89,10],[0.9,6],[0.91,4],[0.92,6],[0.93,11],[0.94,17],[0.95,22],[0.96,25],[0.97,25],[0.98,25],[0.99,29],[1,33]],
@@ -724,7 +724,7 @@ const PISTAS = {
     name: "Catar", sub: "Losail: as curvas rápidas e largas no deserto do Catar e a reta dos boxes de 1 km", f1: true,
     // Losail International Circuit: 5421 m. Traçado de bacinger/f1-circuits (qa-2004, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 126 vértices, a linha de chegada no primeiro
-    scale: 2.96, width: 120, minLap: 34, walls: false, flat: 40, fall: 220, largada: 0.592,
+    scale: 5.469, width: 120, minLap: 63, walls: false, flat: 74, fall: 406, largada: 0.592,
     hills: [[0,8], [0.04,6], [0.08,8], [0.12,6], [0.16,5], [0.2,7], [0.24,5], [0.28,6], [0.32,6], [0.36,7], [0.4,8], [0.44,10], [0.48,7], [0.52,7], [0.56,9], [0.6,10], [0.64,11], [0.68,9], [0.72,12], [0.76,12], [0.8,12], [0.84,11], [0.88,14], [0.92,13], [0.96,14], [1,8]],
     points: [
       [443, 937, 0], [307, 687, 0], [258, 601, 435], [252, 587, 65], [250, 575, 59], [251, 561, 61], [255, 547, 48], [265, 533, 56],
@@ -749,7 +749,7 @@ const PISTAS = {
     name: "Abu Dhabi", sub: "Yas Marina: a reta de 1,2 km, a chicane, a marina e a volta por baixo do hotel, no pôr do sol de Abu Dhabi", f1: true,
     // Yas Marina Circuit: 5293 m. Traçado de bacinger/f1-circuits (ae-2009, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 108 vértices, a linha de chegada no primeiro
-    scale: 3.51, width: 120, minLap: 33, walls: false, flat: 40, fall: 220, largada: 0.519,
+    scale: 6.418, width: 120, minLap: 60, walls: false, flat: 73, fall: 402, largada: 0.519,
     hills: [[0,17], [0.04,12], [0.08,17], [0.12,29], [0.16,22], [0.2,15], [0.24,17], [0.28,14], [0.32,11], [0.36,13], [0.4,11], [0.44,11], [0.48,13], [0.52,14], [0.56,12], [0.6,11], [0.64,9], [0.68,11], [0.72,6], [0.76,5], [0.8,13], [0.84,5], [0.88,12], [0.92,11], [0.96,9], [1,17]],
     points: [
       [790, 878, 0], [932, 859, 0], [970, 853, 116], [979, 850, 29], [986, 844, 29], [991, 834, 31], [993, 824, 179], [965, 700, 1004],
@@ -836,7 +836,7 @@ if (PISTAS.singapura) { PISTAS.singapura.muros = MUROS_SINGAPURA; PISTAS.singapu
 const SUPERFICIES_ESCAPE = {
   "bahrein": {"brita": [[0.31, 0.352, "fora"], [0.6, 0.63, "fora"], [0.658, 0.696, "fora"]], "largura": 36},
   "barcelona": {"brita": [[0.15, 0.177, "fora"], [0.178, 0.2, "fora"], [0.205, 0.268, "fora"], [0.34, 0.4, "fora"], [0.432, 0.46, "fora"], [0.527, 0.545, "fora"], [0.595, 0.632, "fora"], [0.728, 0.762, "fora"], [0.778, 0.825, "fora"], [0.835, 0.88, "fora"], [0.9, 0.935, "fora"]], "listrado": [[0.152, 0.176, "dentro"], [0.208, 0.266, "dentro"], [0.342, 0.4, "dentro"], [0.597, 0.63, "dentro"], [0.78, 0.822, "dentro"], [0.902, 0.934, "dentro"]], "largura": 24},
-  "catar": {"largura": 26, "britaCurvas": 420},
+  "catar": {"largura": 26, "britaCurvas": 776},
   "interlagos": {"brita": [[0.45, 0.505, "fora"], [0.545, 0.59, "fora"], [0.62, 0.655, "fora"]], "listrado": [[0.06, 0.125, "fora"], [0.31, 0.37, "fora"], [0.74, 0.775, "fora"]], "largura": 56}, // (as frações do traçado real: S do Senna, Descida do Lago e Junção; brita na Ferradura, no Pinheirinho e no Bico de Pato)
   "melbourne": {"brita": [[0.055, 0.09, "fora"], [0.13, 0.17, "fora"], [0.26, 0.31, "fora"], [0.66, 0.72, "fora"], [0.76, 0.82, "fora"], [0.87, 0.92, "fora"]], "listrado": [[0.085, 0.11, "fora"], [0.53, 0.56, "fora"], [0.69, 0.73, "fora"]]},
   "montreal": {"brita": [[0.655, 0.677, "fora"], [0.118, 0.14, "fora"]], "listrado": [[0.1, 0.14, 0], [0.936, 0.955, 0], [0.5, 0.53, 0]], "largura": 20},
@@ -846,13 +846,13 @@ const SUPERFICIES_ESCAPE = {
   "suzuka": {"brita": [[0.072, 0.12, "fora"], [0.355, 0.395, "fora"], [0.448, 0.48, "fora"], [0.606, 0.662, "fora"], [0.807, 0.836, "fora"], [0.905, 0.946, "fora"]], "largura": 30},
   "zandvoort": {"brita": [[0.092, 0.132, "fora"], [0.186, 0.24, "fora"], [0.4, 0.447, "fora"], [0.486, 0.562, "fora"], [0.594, 0.628, "fora"], [0.838, 0.934, "fora"], [0.738, 0.775, 0]], "largura": 26},
   "hungaroring": {"britaCurvas": 420, "largura": 26},
-  "abudhabi": {"britaCurvas": 420, "largura": 26},
+  "abudhabi": {"britaCurvas": 768, "largura": 26},
   "austin": {"brita": [[0.405, 0.42, "fora"]], "listrado": [[0.05, 0.078, "fora"], [0.62, 0.644, "fora"], [0.703, 0.73, "fora"], [0.85, 0.87, "fora"], [0.9, 0.925, "fora"]], "largura": 56}, // (brita só na curva 11; o resto é asfalto liso de escape, onde o `muros` tem folga para ele)
-  "xangai": {"britaCurvas": 420, "largura": 26},
+  "xangai": {"britaCurvas": 684, "largura": 26},
   "mexico": {"britaCurvas": 676, "largura": 26},
-  "redbullring": {"britaCurvas": 420, "largura": 26, "brita": [[0.84, 0.875, -1], [0.89, 0.93, -1]]},
-  "madri": {"britaCurvas": 420, "largura": 26},
-  "miami": {"britaCurvas": 420, "largura": 26},
+  "redbullring": {"britaCurvas": 673, "largura": 26, "brita": [[0.84, 0.875, -1], [0.89, 0.93, -1]]},
+  "madri": {"britaCurvas": 793, "largura": 26},
+  "miami": {"britaCurvas": 785, "largura": 26},
   "lasvegas": {"listrado": [[0.008, 0.054, 1], [0.046, 0.094, -1], [0.223, 0.248, -1], [0.262, 0.292, 1], [0.484, 0.512, 1]], "largura": 80},
   "baku": {"listrado": [[0.016, 0.056, 1], [0.08, 0.098, 1], [0.228, 0.252, 1]], "largura": 56},
   "monaco": {"listrado": [[0.0605, 0.0765, "fora"], [0.3395, 0.356, "fora"], [0.624, 0.641, 1]], "largura": 60}, // Sainte Dévote, Mirabeau Haute e a saída do túnel / Nouvelle Chicane (as mesmas frações de `muros`)

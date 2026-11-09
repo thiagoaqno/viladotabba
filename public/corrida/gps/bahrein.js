@@ -14,7 +14,7 @@ export const GP_BAHREIN = {
   asfalto: true,
   chao: {
     margem: { cor: "#8f8672" }, // o asfalto cinza-areia da faixa de escape junto da zebra
-    zebra: { cores: ["#d62828", BRANCO], dentro: 380, fora: 240 }, // as zebras vermelhas e brancas
+    zebra: { cores: ["#d62828", BRANCO], dentro: 709, fora: 448 }, // as zebras vermelhas e brancas
     amarelas: [[0.248, 0.264], [0.383, 0.396], [0.467, 0.48], [0.727, 0.738]], // zebra alta nas curvas 4, 8, 10 e 14
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,

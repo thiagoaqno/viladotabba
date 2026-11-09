@@ -17,12 +17,12 @@ export const GP_REDBULLRING = {
   asfalto: true,
   chao: {
     margem: { cor: "#6b6c71" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 360, fora: 260 }, // as zebras vermelhas e brancas
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 577, fora: 417 }, // as zebras vermelhas e brancas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 22,
   },
   // o escape: a brita bege automática do lado de fora das curvas fechadas e as duas faixas de SUPERFICIES_ESCAPE (pistas.js), as mesmas que a física lê
-  escape: { corBrita: "#cfc4a4", largura: 26, britaCurvas: 420, brita: [[0.84, 0.875, -1], [0.89, 0.93, -1]] },
+  escape: { corBrita: "#cfc4a4", largura: 26, britaCurvas: 673, brita: [[0.84, 0.875, -1], [0.89, 0.93, -1]] },
   cenario: (tr, ctx) => cenarioRedBullRing(tr, ctx), // a reta dos boxes, o touro, as tribunas, os sítios, as encostas e as placas
   ambiente: {
     marcas: ["spielberg", "gpaustria", "steiermark", "murtal", "kernoel", "backhendl", "strudel", "schilcher", "zeltweg", "knittelfeld"],

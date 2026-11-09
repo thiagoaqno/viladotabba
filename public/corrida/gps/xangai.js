@@ -18,12 +18,12 @@ export const GP_XANGAI = {
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: ["#c8102e", "#f4f4f2"], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas nas curvas
+    zebra: { cores: ["#c8102e", "#f4f4f2"], dentro: 554, fora: 358 }, // as zebras vermelhas e brancas nas curvas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,
   },
   // o escape: brita clara por fora das curvas mais fechadas (o caracol, os grampos)
-  escape: { britaCurvas: 420, corBrita: "#ddd3b6", largura: 26 },
+  escape: { britaCurvas: 684, corBrita: "#ddd3b6", largura: 26 },
   // as arquibancadas grandes à mão: o caracol das curvas 1 e 2, por fora do giro (a maior do circuito), e o grampo da curva 14; as outras curvas fechadas e a
   // tribuna principal são de ../xangai.js
   arquibancadas: { trechos: [

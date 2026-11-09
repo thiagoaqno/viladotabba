@@ -18,7 +18,7 @@ export const GP_AUSTIN = {
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 553, fora: 358 }, // as zebras vermelhas e brancas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,
   },

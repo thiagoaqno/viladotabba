@@ -14,7 +14,7 @@ export const GP_MONTREAL = {
   asfalto: true,
   chao: {
     margem: { cor: "#6a6c70" }, // o asfalto cinza junto da zebra
-    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
+    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 547, fora: 354 }, // as zebras vermelhas e brancas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 30,
   },

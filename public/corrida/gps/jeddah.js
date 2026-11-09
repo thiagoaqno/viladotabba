@@ -18,7 +18,7 @@ export const GP_JEDDAH = {
   asfalto: true,
   chao: {
     margem: { cor: "#4d4f54" }, // a faixa de asfalto escuro junto das zebras
-    zebra: { cores: ["#d62828", BRANCO], dentro: 360, fora: 230 },
+    zebra: { cores: ["#d62828", BRANCO], dentro: 725, fora: 463 },
     amarelas: [[0.147, 0.153], [0.206, 0.226], [0.258, 0.268], [0.482, 0.505], [0.678, 0.69], [0.716, 0.727]], // zebra alta anticorte
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 30,

@@ -16,7 +16,7 @@ export const GP_SUZUKA = {
   asfalto: true,
   chao: {
     margem: { cor: "#6a6c70" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 380, fora: 260 }, // as zebras vermelhas e brancas de Suzuka
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 739, fora: 506 }, // as zebras vermelhas e brancas de Suzuka
     amarelas: [[0.349, 0.363], [0.372, 0.393], [0.447, 0.48], [0.605, 0.662], [0.805, 0.835], [0.876, 0.904]], // zebra alta nas Degner, Hairpin, Spoon, 130R e Casio
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 30,

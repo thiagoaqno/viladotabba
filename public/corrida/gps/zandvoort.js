@@ -21,7 +21,7 @@ export const GP_ZANDVOORT = {
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 538, fora: 348 }, // as zebras vermelhas e brancas
     amarelas: [[0.1, 0.122]], // a zebra alta de dentro da Tarzanbocht
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 22,

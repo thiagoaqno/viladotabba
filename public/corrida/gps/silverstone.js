@@ -14,7 +14,7 @@ export const GP_SILVERSTONE = {
   asfalto: true,
   chao: {
     margem: { cor: "#6f7075" }, // o asfalto cinza da área de escape, logo depois da zebra
-    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 330, fora: 210 },
+    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 640, fora: 407 },
     sc: [[0.955, "SC 1"], [0.13, "SC 2"]],
     grid: true, remendos: 30,
   },

@@ -31,7 +31,7 @@ export const GP_MEXICO = {
     arq(0.8, 0.86, -1, 8, VERDE, BRANCO, true), // a freada da curva 12
     arq(0.875, 0.915, -1, 9, VERMELHO, BRANCO, true), arq(0.915, 0.945, -1, 9, VERDE, BRANCO, true), // o Foro Sol por fora
   ] },
-  cenario: (tr, ctx) => cenarioMexico(tr, ctx, MARCAS),
+  cenario: (tr, ctx) => cenarioMexico(tr, ctx, MARCAS, GP_MEXICO.ambienteMexico), // o chão sólido, o ambiente (painéis, mastros e placas no chão) e as peças do México
   ambiente: {
     marcas: MARCAS, outdoors: ["mxmexico", "mxgp", "mxpopo", "mxizta", "mxmixhuca", "mxcoyoacan", "mxxochimilco", "mxreforma", "mxlucha", "mxmariachi", "mxjamaica", "mxquesadilla", "mxpozole"],
     posto: "mxmexico", bandeira: [0x006847, 0xf4f4f0, 0xce1126], placas: [150, 100, 50],
@@ -42,3 +42,5 @@ export const GP_MEXICO = {
   depois: (tr, ctx) => depoisMexico(tr, ctx),
   vida: { gaivotas: [], som: { campo: () => 0.7, cidade: 0.35 } },
 };
+// o ambiente do kit (kit/ambiente.js) deixa mastros, painéis e placas de frenagem no ar: o México usa o seu (kit/mexico/ambiente.js), chamado em `cenario` com a mesma configuração
+GP_MEXICO.ambienteMexico = GP_MEXICO.ambiente; delete GP_MEXICO.ambiente;

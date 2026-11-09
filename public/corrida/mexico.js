@@ -9,6 +9,8 @@
 // 5. o horizonte: a cidade baixa de cores quentes, a Torre Latinoamericana e os vulcões Popocatépetl e Iztaccíhuatl na névoa da altitude.
 // Tudo é cenário: nada fica dentro da pista (livre/ocupado) e a física é a de sempre. Sem marcas registradas novas: os painéis são nomes de lugar e de
 // comida do México (kit/mexico/marcas.js) e as marcas que o kit já tem.
+import * as THREE from "three";
+import { M } from "./cena.js";
 import { livre, ocupado } from "./kit/comum.js";
 import { prediosDosBoxes } from "./kit/boxes.js";
 import { tendaPaddock } from "./kit/coberturas.js";
@@ -18,6 +20,8 @@ import { foroSol } from "./kit/mexico/foro.js";
 import { arvoresDoParque, lagos, camposDeEsporte, palacioDosEsportes, peraltada } from "./kit/mexico/parque.js";
 import { CAMPOS } from "./kit/mexico/dados.js";
 import { cidade, vulcoes } from "./kit/mexico/horizonte.js";
+import { beiradaSolida } from "./kit/mexico/chao.js";
+import { ambienteMexico } from "./kit/mexico/ambiente.js";
 
 registrarMarcasMexico();
 
@@ -39,7 +43,7 @@ function oForoSol(tr, { add }) {
     if (!melhor || bons > melhor.bons) melhor = { cx, cz, bons };
   }
   if (!melhor || melhor.bons < 20) { tr.faltouMexico = (tr.faltouMexico || []).concat([{ nome: "foro" }]); return null; }
-  const info = foroSol(tr, add, { cx: melhor.cx, cz: melhor.cz, A, B, fundo, degraus: 16, ok });
+  const info = foroSol(tr, add, { cx: melhor.cx, cz: melhor.cz, A, B, fundo, ok });
   // reserva o estádio inteiro (as árvores e a torcida solta não entram)
   for (let u = -A; u <= A; u += 60) for (let v = -B; v <= B; v += 60) if ((u / A) ** 2 + (v / B) ** 2 <= 1.2) tr.reservado.push([melhor.cx + u, melhor.cz + v, 60]);
   tr.foroSol = info;
@@ -66,8 +70,10 @@ function retaDosBoxes(tr, { add }, marcas) {
 // ---------------------------------------------------------------------------------------------------------------------
 // O antes (cenario) e o depois (depois) do GP
 // ---------------------------------------------------------------------------------------------------------------------
-export function cenarioMexico(tr, ctx, marcas) {
+export function cenarioMexico(tr, ctx, marcas, ambiente) {
   tr.reservado ||= [];
+  beiradaSolida(tr, ctx.add); // a base sólida da pista e a grama no nível do asfalto, dos dois lados (kit/mexico/chao.js)
+  ambienteMexico(tr, ctx.add, ambiente); // painéis na barreira, mastros e placas de frenagem no chão, postos dos fiscais (kit/mexico/ambiente.js)
   oForoSol(tr, ctx);
   retaDosBoxes(tr, ctx, marcas);
   // o resto do parque, no lugar de verdade (OpenStreetMap, no encaixe do traçado): os campos e quadras de kit/mexico/dados.js; o Palácio dos Esportes (domo de 120 m) fica a ~1,5 km a oeste da
@@ -81,7 +87,18 @@ export function cenarioMexico(tr, ctx, marcas) {
 }
 
 export function depoisMexico(tr, ctx) {
+  postesDRS(tr);
   arvoresDoParque(tr, ctx.add);
   cidade(tr, ctx.add);
   vulcoes(tr, ctx.add);
+}
+
+// as placas de DRS de pista.js (um sprite a 18 × a escala acima do ponto da pista, sem nada embaixo) ganham o poste até o chão; ele entra no mesmo grupo (tr.drsPlacas) e some e aparece junto
+function postesDRS(tr) {
+  if (!tr.drsPlacas) return;
+  const { W, pts, n } = tr, E = tr.escala ?? 1, metal = M(0x697780), geo = new THREE.BoxGeometry(0.8, 1, 0.8);
+  for (const [deteccao, abre] of tr.t.drs || []) for (const f of [deteccao, abre]) {
+    const p = pts[Math.floor(f * n) % n], lado = W / 2 + 28, x = p.x + p.nx * lado, z = p.y + p.ny * lado, h = tr.chao(x, z), baixo = p.h + 18 * E - 6.5 * E; // a borda de baixo da placa
+    const poste = new THREE.Mesh(geo, metal); poste.scale.y = baixo - h + 0.5 + 0.3; poste.position.set(x, h - 0.5 + poste.scale.y / 2, z); poste.castShadow = true; tr.drsPlacas.add(poste);
+  }
 }

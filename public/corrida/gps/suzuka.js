@@ -9,12 +9,15 @@ import { cenarioSuzuka, depoisSuzuka } from "../suzuka.js";
 import { parque } from "../kit/parque.js";
 
 const BOXES = window.Pistas.PISTAS.suzuka.boxes;
+// A brita de escape de Suzuka vem de `SUPERFICIES_ESCAPE.suzuka` em pistas.js (o escape livre das pistas de F1), não do `escape` abaixo. Duas faixas dela ficavam em cima do cruzamento em oito: a da 130R, que começava em 0,807, na altura da pista de cima,
+// aparecia como uma faixa bege de 30 u atravessando a pista de baixo (e do deck, onde ninguém chega: a física segura o carro a 29 u do eixo), e a da Degner acabava em 0,395, dentro do muro de arrimo (que começa em 0,3937). Aqui elas são recortadas (o mesmo recorte vale no desenho e na fita de kit/suzuka/chao.js).
+{ const se = window.Pistas.PISTAS.suzuka.superficieEscape; if (se?.brita) for (const b of se.brita) { if (b[0] === 0.807) b[0] = 0.82; if (b[1] === 0.395) b[1] = 0.39; } }
 const VERMELHO = "#c8102e", BRANCO = "#f4f4f2", AZUL = "#2b4fa8", AMARELO = "#f2c400", VERDE = "#13804a";
 const TORCIDA = ["#ffffff", "#bc002d", "#1e41ff", "#ffd100", "#e8002d", "#ff8700", "#27f4d2", "#ffffff"]; // a torcida japonesa: Honda/Red Bull, Ferrari, McLaren, Mercedes
 
 export const GP_SUZUKA = {
   // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
-  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  // As peças só desta pista (suzuka.js, kit/suzuka/) leem `tr.escala` ou têm o tamanho real medido (planos/escala-real.md).
   escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
@@ -24,11 +27,12 @@ export const GP_SUZUKA = {
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 30,
   },
+  // (a brita e o muro de pneus da 130R começam em 0,82, depois do viaduto: a faixa de brita de 30 u que começava em 0,807 ficava na altura da pista de cima, em cima da pista de baixo; a da Degner acaba em 0,39, antes do muro de arrimo; a arquibancada da 130R também sai do viaduto)
   // o escape: brita bege do lado de fora das curvas lentas (T1, Degner, Hairpin, Spoon, 130R) e muros de pneus por fora
   escape: {
     corBrita: "#d3c49b", largura: 30,
-    brita: [[0.072, 0.12, "fora"], [0.355, 0.395, "fora"], [0.448, 0.48, "fora"], [0.606, 0.662, "fora"], [0.807, 0.836, "fora"], [0.905, 0.946, "fora"]],
-    pneus: [[0.075, 0.115, "fora"], [0.448, 0.48, "fora"], [0.612, 0.66, "fora"], [0.81, 0.834, "fora"]],
+    brita: [[0.072, 0.12, "fora"], [0.355, 0.39, "fora"], [0.448, 0.48, "fora"], [0.606, 0.662, "fora"], [0.82, 0.836, "fora"], [0.905, 0.946, "fora"]],
+    pneus: [[0.075, 0.115, "fora"], [0.448, 0.48, "fora"], [0.612, 0.66, "fora"], [0.82, 0.834, "fora"]],
   },
   // as arquibancadas de curva (a principal, na reta dos boxes, é do ../suzuka.js, em módulos do kit 2)
   arquibancadas: {
@@ -42,13 +46,13 @@ export const GP_SUZUKA = {
       { de: 0.447, ate: 0.48, lado: 1, degraus: 11, cor: AMARELO, encosto: AZUL, cobertura: true, torcida: TORCIDA }, // Hairpin
       { de: 0.608, ate: 0.636, lado: 1, degraus: 10, cor: VERMELHO, encosto: BRANCO, cobertura: true, torcida: TORCIDA }, // Spoon
       { de: 0.64, ate: 0.662, lado: 1, degraus: 9, cor: AZUL, encosto: BRANCO, cobertura: false, torcida: TORCIDA },
-      { de: 0.806, ate: 0.835, lado: 1, degraus: 10, cor: VERDE, encosto: BRANCO, cobertura: true, torcida: TORCIDA }, // 130R
+      { de: 0.82, ate: 0.835, lado: 1, degraus: 10, cor: VERDE, encosto: BRANCO, cobertura: true, torcida: TORCIDA }, // 130R
       { de: 0.88, ate: 0.903, lado: 1, degraus: 9, cor: AMARELO, encosto: VERMELHO, cobertura: true, torcida: TORCIDA }, // chicane Casio
       { de: 0.908, ate: 0.945, lado: -1, degraus: 10, cor: VERMELHO, encosto: BRANCO, cobertura: true, torcida: TORCIDA }, // a última curva
     ],
   },
-  cenario: (tr, ctx) => { tr.camisasGP = TORCIDA; cenarioSuzuka(tr, ctx); }, // o viaduto, os boxes, a arquibancada principal, a alameda, o parque e os morros
-  ambiente: {
+  cenario: (tr, ctx) => { tr.camisasGP = TORCIDA; cenarioSuzuka(tr, ctx, GP_SUZUKA.ambienteSZ); }, // o viaduto, o chão sólido, o ambiente, os boxes, a arquibancada principal, a alameda, o parque e os morros
+  ambienteSZ: { // (o ambiente do kit deixa mastros, painéis e placas no ar: Suzuka usa o seu, kit/suzuka/ambiente.js, chamado em `cenario`; a chave não se chama `ambiente` para pista.js não chamar o do kit)
     marcas: ["suzuka", "honda", "pirelli", "rolex", "aramco", "dhl", "heineken", "japangp", "f1", "aws", "lenovo", "yokohama", "dunlop", "msc"],
     outdoors: ["suzuka", "honda", "japangp", "pirelli", "rolex", "aramco", "dhl", "yokohama", "casio", "ganbare"],
     posto: "suzuka", bandeira: [0xffffff, 0xbc002d], placas: [150, 100, 50], // a bandeira do Japão

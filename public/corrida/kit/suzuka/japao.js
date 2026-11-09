@@ -27,7 +27,7 @@ export function registrarMarcasSuzuka() {
 
 const girar = (ref, dx, dz) => [ref.x + dx * Math.cos(ref.ry) + dz * Math.sin(ref.ry), ref.z - dx * Math.sin(ref.ry) + dz * Math.cos(ref.ry)]; // (dx, dz) locais → mundo
 
-/** Um torii vermelho (dois pilares, o kasagi curvo preto em cima e o nuki). De frente para +z. `k`: a escala (1 = 90 de altura). */
+/** Um torii vermelho (dois pilares, o kasagi curvo preto em cima e o nuki). De frente para +z. `k`: a escala (1 = 90 u de altura, 18,7 m; um torii de portão grande tem uns 12 m, k = 0,64). */
 export function torii({ k = 1, cor = "#c8281e", topo = "#1b1b1f" } = {}) {
   const m = new Montador(), S = solido(), alt = 90 * k, vao = 76 * k, r = 4.4 * k;
   for (const s of [-1, 1]) {
@@ -47,7 +47,7 @@ export function torii({ k = 1, cor = "#c8281e", topo = "#1b1b1f" } = {}) {
  * Fios de lanternas vermelhas (chochin): para cada trecho `[x0, z0, x1, z1]` um fio caindo de leve no meio, com uma lanterna a cada
  * `passo`. Duas malhas instanciadas (as lanternas e a faixa branca de cada uma) e o fio todo numa linha só.
  */
-export function lanternas(add, trechos, { alto = 52, passo = 15, queda = 5, tam = 5.2, cor = "#d8201f" } = {}) {
+export function lanternas(add, trechos, { alto = 28, passo = 9, queda = 2, tam = 1.3, cor = "#d8201f" } = {}) { // (a lanterna de festival tem uns 0,5 m: 1,3 u de raio de 0,28 m dá 0,6 m de altura; antes 5,2 u = 1,1 m de raio, uma lanterna de 2,4 m; o fio a 28 u = 5,8 m)
   const lista = [], fio = [];
   for (const [x0, z0, x1, z1] of trechos) {
     const dist = Math.hypot(x1 - x0, z1 - z0), nn = Math.max(1, Math.floor(dist / passo));
@@ -83,7 +83,7 @@ const texNobori = ({ fundo, cor, texto }) => tex(64, 192, (x, w, h) => {
   const letras = Array.from(texto); letras.forEach((c, i) => x.fillText(c, w / 2, h / 2 + (i - (letras.length - 1) / 2) * (texto.length > 2 ? 40 : 56)));
 });
 /** Estandartes verticais nos pontos `[x, z, ry]` (o pano olha para ry), cada um de um desenho, balançando só na imaginação. */
-export function nobori(add, lugares, { hAt, alto = 88, largura = 22 } = {}) {
+export function nobori(add, lugares, { hAt, alto = 26, largura = 5.5 } = {}) { // (o estandarte de festa: mastro de uns 5,4 m e pano de 1,1 × 4,2 m; antes 18 m de mastro e pano de 4,6 × 14 m)
   const por = NOBORI.map(() => []);
   lugares.forEach(([x, z, ry], k) => por[k % NOBORI.length].push({ x, z, ry }));
   const d = new THREE.Object3D(), hastes = [];
@@ -93,7 +93,7 @@ export function nobori(add, lugares, { hAt, alto = 88, largura = 22 } = {}) {
     por[j].forEach((o, i) => { const y = hAt(o.x, o.z); d.position.set(o.x, y + alto * 0.58, o.z); d.rotation.set(0, o.ry, 0); d.updateMatrix(); m.setMatrixAt(i, d.matrix); hastes.push([o.x, y, o.z, o.ry]); });
     m.castShadow = false; m.name = "suzuka-nobori";
   });
-  const poste = add(new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 0.9, alto, 5), new THREE.MeshStandardMaterial({ color: 0xc8b27a, roughness: 0.8 }), hastes.length));
+  const poste = add(new THREE.InstancedMesh(new THREE.CylinderGeometry(0.25, 0.3, alto, 5), new THREE.MeshStandardMaterial({ color: 0xc8b27a, roughness: 0.8 }), hastes.length));
   hastes.forEach(([x, y, z], i) => { d.position.set(x, y + alto / 2, z); d.rotation.set(0, 0, 0); d.updateMatrix(); poste.setMatrixAt(i, d.matrix); });
   poste.castShadow = false;
   return hastes.length;
@@ -106,24 +106,29 @@ const CARROS = ["#f4f4f2", "#f4f4f2", "#f4f4f2", "#d9dadd", "#2a2c31", "#2a2c31"
  * `ref`: o centro { x, y (o chão), z, ry }. As malhas: o piso (1), as carrocerias (1 InstancedMesh) e as cabines (1).
  */
 export function estacionamento(add, ref, { filas = 4, vagas = 20, semente = 11 } = {}) {
-  const r = sorteio(semente), larg = 22, comp = 46, W = vagas * larg, D = filas * comp * 1.0 + (filas / 2) * 26;
-  const piso = new THREE.Mesh(new THREE.PlaneGeometry(W + 16, D + 16), new THREE.MeshStandardMaterial({ map: pisoVagas(vagas, filas), roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
-  piso.rotation.x = -Math.PI / 2; piso.rotation.z = 0; piso.position.set(ref.x, ref.y + 0.5, ref.z);
-  const grupo = new THREE.Group(); grupo.position.set(ref.x, 0, ref.z); grupo.rotation.y = ref.ry; piso.position.set(0, ref.y + 0.5, 0); grupo.add(piso); add(grupo);
+  // a vaga de 2,5 × 5,2 m (12 × 25 u); o sedã de 4,6 × 1,8 × 1,45 m (22 × 8,6 × 7 u) e o kei-car de 3,4 × 1,5 × 1,6 m (16,5 × 7,2 × 7,7 u). Antes a vaga era de 4,6 × 9,6 m, o carro de 3,1 × 8,7 m e o chão ficava 1,7 u abaixo da carroceria.
+  const r = sorteio(semente), larg = 12, comp = 25, W = vagas * larg, D = filas * comp * 1.0 + (filas / 2) * 14;
+  const grupo = new THREE.Group(); grupo.position.set(ref.x, 0, ref.z); grupo.rotation.y = ref.ry; add(grupo);
+  const piso = new THREE.Mesh(new THREE.PlaneGeometry(W + 10, D + 10), new THREE.MeshStandardMaterial({ map: pisoVagas(vagas, filas), roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+  piso.rotation.x = -Math.PI / 2; piso.position.set(0, ref.y + 0.25, 0); grupo.add(piso);
   const corpos = [], cabines = [];
-  const filaZ = (f) => -D / 2 + comp / 2 + 8 + Math.floor(f / 2) * (comp * 2 + 26) + (f % 2) * comp;
+  const filaZ = (f) => -D / 2 + comp / 2 + 5 + Math.floor(f / 2) * (comp * 2 + 14) + (f % 2) * comp;
   for (let f = 0; f < filas; f++) for (let v = 0; v < vagas; v++) {
     if (r() > 0.82) continue;
-    const x = -W / 2 + (v + 0.5) * larg, z = filaZ(f), c = CARROS[(r() * CARROS.length) | 0], kei = r() < 0.35, l = kei ? 34 : 42;
+    const x = -W / 2 + (v + 0.5) * larg, z = filaZ(f), c = CARROS[(r() * CARROS.length) | 0], kei = r() < 0.35, l = kei ? 16.5 : 22, sx = kei ? 7.2 : 8.6, alto = kei ? 4.2 : 3.4, cab = kei ? 3.5 : 2.8;
     const frente = f % 2 ? 1 : -1; // de ré ou de frente, como na vida real: metade para cada lado
-    corpos.push({ x, z, c, sx: 15, sy: kei ? 14 : 11, sz: l, ry: 0 }); cabines.push({ x, z: z - frente * 2, sx: 13.5, sy: kei ? 10 : 8, sz: l * 0.52, y: kei ? 14 : 11 });
+    corpos.push({ x, z, c, sx, sy: alto, sz: l, ry: 0 }); cabines.push({ x, z: z - frente * 0.5, sx: sx - 0.8, sy: cab, sz: l * 0.55, y: alto });
   }
   const corpoMat = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.2 }), vidroMat = new THREE.MeshStandardMaterial({ color: 0x2c3844, roughness: 0.2, metalness: 0.3 }), cubo = new THREE.BoxGeometry(1, 1, 1), d = new THREE.Object3D();
   const a = new THREE.InstancedMesh(cubo, corpoMat, corpos.length), b = new THREE.InstancedMesh(cubo, vidroMat, cabines.length);
-  corpos.forEach((o, k) => { d.position.set(o.x, ref.y + 2.2 + o.sy / 2, o.z); d.scale.set(o.sx, o.sy, o.sz); d.updateMatrix(); a.setMatrixAt(k, d.matrix); a.setColorAt(k, new THREE.Color(o.c)); });
-  cabines.forEach((o, k) => { d.position.set(o.x, ref.y + 2.2 + o.y + o.sy / 2, o.z); d.scale.set(o.sx, o.sy, o.sz); d.updateMatrix(); b.setMatrixAt(k, d.matrix); });
-  a.instanceColor.needsUpdate = true; a.castShadow = b.castShadow = false; a.name = "suzuka-carros"; grupo.add(a, b);
-  return { largura: W + 16, profundidade: D + 16, carros: corpos.length };
+  const folga = 0.9; // a luz do chão: 0,2 m, e as rodas (a caixa vai até ela)
+  corpos.forEach((o, k) => { d.position.set(o.x, ref.y + 0.25 + folga + o.sy / 2, o.z); d.scale.set(o.sx, o.sy, o.sz); d.updateMatrix(); a.setMatrixAt(k, d.matrix); a.setColorAt(k, new THREE.Color(o.c)); });
+  cabines.forEach((o, k) => { d.position.set(o.x, ref.y + 0.25 + folga + o.y + o.sy / 2, o.z); d.scale.set(o.sx, o.sy, o.sz); d.updateMatrix(); b.setMatrixAt(k, d.matrix); });
+  // as rodas: uma caixa escura por baixo de cada carro, da pista até a carroceria (o carro não flutua)
+  const rodas = new THREE.InstancedMesh(cubo, new THREE.MeshStandardMaterial({ color: 0x17181b, roughness: 0.9 }), corpos.length);
+  corpos.forEach((o, k) => { d.position.set(o.x, ref.y + 0.25 + folga / 2 + 0.2, o.z); d.scale.set(o.sx - 0.6, folga + 0.4, o.sz * 0.7); d.updateMatrix(); rodas.setMatrixAt(k, d.matrix); });
+  a.instanceColor.needsUpdate = true; a.castShadow = b.castShadow = rodas.castShadow = false; a.name = "suzuka-carros"; grupo.add(a, b, rodas);
+  return { largura: W + 10, profundidade: D + 10, carros: corpos.length };
 }
 function pisoVagas(vagas, filas) {
   const t = tex(256, 128, (x, w, h) => {
@@ -136,7 +141,7 @@ function pisoVagas(vagas, filas) {
 
 // ---- o hotel do circuito e as atrações do parque ----
 /** O Suzuka Circuit Hotel: bloco branco de seis andares com as janelas em fita, a faixa vermelha no alto e o letreiro. De frente para +z. */
-export function hotel({ largura = 300, andares = 6, alturaAndar = 22, profundidade = 90, cor = "#efece6", faixa = "#c8102e" } = {}) {
+export function hotel({ largura = 300, andares = 6, alturaAndar = 14.4, profundidade = 90, cor = "#efece6", faixa = "#c8102e" } = {}) {
   const m = new Montador(), S = solido(), H = andares * alturaAndar;
   const janelas = comTextura(tex(128, 64, (x, w, h) => {
     x.fillStyle = cor; x.fillRect(0, 0, w, h); x.fillStyle = "#35506a"; x.fillRect(4, 14, w - 8, 36); x.fillStyle = "#ffffff55"; for (let k = 0; k < 6; k++) x.fillRect(4 + k * 20, 14, 2, 36);
@@ -148,17 +153,17 @@ export function hotel({ largura = 300, andares = 6, alturaAndar = 22, profundida
   m.plano(janelas, [0, H / 2, -profundidade - 0.15], [largura, H], { uv: [largura / 64, andares], ry: Math.PI }); // os fundos também têm janelas
   m.caixa(S, [0, H + 3, -profundidade / 2], [largura + 6, 6, profundidade + 6], { cor: "#d9d5cb" });
   m.caixa(S, [0, H - 5, 1.4], [largura + 2, 9, 3], { cor: faixa });
-  m.caixa(S, [largura * 0.34, H + 20, -profundidade * 0.4], [largura * 0.22, 28, profundidade * 0.4], { cor: "#cfd2d6" }); // a casa de máquinas
+  m.caixa(S, [largura * 0.34, H + 10, -profundidade * 0.4], [largura * 0.22, 14, profundidade * 0.4], { cor: "#cfd2d6" }); // a casa de máquinas (2,9 m)
   const portao = comTextura(tex(512, 64, (x, w, h) => { x.fillStyle = faixa; x.fillRect(0, 0, w, h); x.fillStyle = "#fff"; x.font = `900 36px ${FONTE_JP}`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("鈴鹿サーキットホテル", w / 2, h / 2 + 2, w - 20); }));
   m.plano(portao, [0, H - 5, 3.2], [largura * 0.62, 9]);
-  m.caixa(S, [0, 7, 14], [largura * 0.36, 3, 30], { cor: "#d9d5cb" }); // a marquise da entrada
-  for (const s of [-1, 1]) m.caixa(S, [s * largura * 0.17, 3.5, 26], [3, 7, 3], { cor: "#b9b5ab" });
-  const g = m.montar("hotel-suzuka"); g.userData = { largura, alto: H + 40, profundidade };
+  m.caixa(S, [0, 18, 14], [largura * 0.36, 3, 30], { cor: "#d9d5cb" }); // a marquise da entrada, a 3,7 m do chão
+  for (const s of [-1, 1]) m.caixa(S, [s * largura * 0.17, 8.5, 26], [3, 17, 3], { cor: "#b9b5ab" });
+  const g = m.montar("hotel-suzuka"); g.userData = { largura, alto: H + 20, profundidade };
   return g;
 }
 
 /** Uma torre de queda livre (parque de diversões): mastro, dois anéis de assentos e as faixas de cor. */
-export function torreDeQueda({ alto = 290, cor = "#e8212b" } = {}) {
+export function torreDeQueda({ alto = 190, cor = "#e8212b" } = {}) { // (190 u = 40 m de mastro, 47 m com o topo; o grupo sai com 0,5 na planta: a base de 2 m e o anel de assentos de 3,5 m de raio; antes 54 m e uma base de 3 m com o anel de 6,7 m)
   const m = new Montador(), S = solido();
   m.caixa(S, [0, alto / 2, 0], [14, alto, 14], { cor: "#cfd3d8" });
   for (const [dx, dz] of [[-9, -9], [9, -9], [-9, 9], [9, 9]]) m.caixa(S, [dx, alto / 2, dz], [2.2, alto, 2.2], { cor: "#9aa0a8" });
@@ -167,7 +172,7 @@ export function torreDeQueda({ alto = 290, cor = "#e8212b" } = {}) {
   for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2; m.caixa(S, [Math.cos(a) * 32, alto * 0.78 - 9, Math.sin(a) * 32], [8, 11, 8], { cor: "#f4f4f2", ry: -a }); }
   m.cilindro(S, [0, alto + 8, 0], [11, 16], { cor }); m.cilindro(S, [0, alto + 22, 0], [1.2, 28], { cor: "#9aa0a8", seg: 6 });
   m.cilindro(S, [0, 2, 0], [60, 4], { cor: "#b9bcc0", seg: 16 });
-  return m.montar("torre-de-queda");
+  const g = m.montar("torre-de-queda"); g.scale.set(0.5, 1, 0.5); return g;
 }
 
 /** Um carrossel: o piso, o mastro, o teto cônico listrado e cavalinhos de cores. */
@@ -180,6 +185,6 @@ export function carrossel({ raio = 56, cores = ["#e8212b", "#f4f4f2"] } = {}) {
   m.geo(S, cone, { y: 69, cor: cores[0] });
   for (let k = 0; k < 10; k += 2) { const a = (k / 10) * Math.PI * 2 + Math.PI / 10; m.caixa(S, [Math.cos(a) * raio * 0.55, 66, Math.sin(a) * raio * 0.55], [3, 3, raio * 0.9], { cor: cores[1], ry: -a + Math.PI / 2, rz: 0 }); }
   m.cilindro(S, [0, 86, 0], [1, 14], { cor: "#d9b24a", seg: 6 });
-  return m.montar("carrossel");
+  const g = m.montar("carrossel"); g.scale.setScalar(0.45); return g; // 0,45: raio de 5,3 m e 9 m de altura (antes 11,7 m de raio e 21 m)
 }
 void vidro; void tom;

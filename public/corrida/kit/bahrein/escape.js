@@ -8,7 +8,7 @@ import { canvasTex, M } from "../../cena.js";
 import { lotes, tira, sinalDaCurva, livre, ocupado } from "../comum.js";
 
 // de qual lado cada trecho vai (como em kit/escape.js): 1, -1, 0 (os dois) ou "fora"/"dentro" da curva mais fechada do trecho
-function lados(tr, a, b, lado) {
+export function lados(tr, a, b, lado) {
   const { pts, n } = tr;
   if (lado === 1 || lado === -1) return [lado];
   if (lado === 0 || lado === undefined) return [-1, 1];
@@ -16,7 +16,10 @@ function lados(tr, a, b, lado) {
   const dentro = sinalDaCurva(pts, n, i % n); return [lado === "dentro" ? dentro : -dentro];
 }
 
-export function escapeMosaico(tr, add, { trechos = [], pneus = [], largura = 36 } = {}) {
+// os trechos do mosaico em estações e lados ([i0, i1, lado]): o chão (chao.js) fica abaixo da tinta neles
+export const marcasDoMosaico = (tr, trechos) => trechos.flatMap(([f0, f1, lado]) => { const a = Math.floor(f0 * tr.n), b = Math.floor(f1 * tr.n); return lados(tr, a, b, lado).map((s) => [a, b, s]); });
+
+export function escapeMosaico(tr, add, { trechos = [], pneus = [], largura = 36, nivel = (x, z) => tr.chao(x, z) } = {}) {
   const { pts, n, W } = tr, de = W / 2 + 7, ate = de + largura, L = lotes();
   // o mosaico: uma grade de 4 × 4 casas, cada uma cortada na diagonal em dois triângulos de tons de azul (alguns verdes e brancos)
   const AZUIS = ["#1f5aa6", "#2a6dbd", "#3a82cf", "#4f96d9", "#2563a8", "#1b4f94", "#5ba3e0"], VERDES = ["#2e9f86", "#3ab57b", "#27a39a"], BRANCOS = ["#e6eef5", "#cfe3f2"];
@@ -36,18 +39,19 @@ export function escapeMosaico(tr, add, { trechos = [], pneus = [], largura = 36 
     for (const s of lados(tr, a, b, lado)) { tira(tr, L.de(mat), a, b, s * de, s * ate, 0.42, 0.42, (a * 3.78) / 40, (b * 3.78) / 40); km += b - a; }
   }
   L.montar(add, `${tr.id}-escape-mosaico`);
-  // o muro de pneus: pilha de 3 (cilindros de 8 lados), preta ou, de vez em quando, branca
+  // o muro de pneus: pilha de 4 pneus de caminhão (0,5 m de raio e 0,3 m de grossura: 2,4 e 1,45 u a 4,8 u por metro; antes 3,5 × 3,3 u, 0,73 m de raio, a pilha de 3 com 2,4 m), uma a cada estação (1,25 m), preta ou, de vez em quando, branca;
+  // colado na barreira mapeada (`tr.murosEscape`, 4 u à frente dela) onde ela vem antes do fim do escape, e a base pousa no chão que se vê (`nivel`)
   const dPneus = ate - 4, pilhas = [];
   for (const [f0, f1, lado] of pneus) {
     const a = Math.floor(f0 * n), b = Math.floor(f1 * n);
-    for (const s of lados(tr, a, b, lado)) for (let i = a; i < b; i += 2) {
-      const p = pts[i % n], x = p.x + p.nx * s * dPneus, z = p.y + p.ny * s * dPneus;
+    for (const s of lados(tr, a, b, lado)) for (let i = a; i < b; i++) {
+      const p = pts[i % n], mu = tr.murosEscape?.[s]?.[i % n] || 0, d = mu > 0 ? Math.max(de + 2, Math.min(dPneus, mu - 4)) : dPneus, x = p.x + p.nx * s * d, z = p.y + p.ny * s * d;
       if (!livre(tr, x, z, 12) || ocupado(tr, x, z, i % n)) continue;
-      pilhas.push({ x, z, y: p.h, c: ((i / 2) | 0) % 7 === 0 ? "#e6e6e0" : "#18191c" });
+      pilhas.push({ x, z, y: nivel(x, z) - 0.2, c: i % 11 === 0 ? "#e6e6e0" : "#18191c" });
     }
   }
   if (pilhas.length) {
-    const partes = [0, 1, 2].map((k) => { const g = new THREE.CylinderGeometry(3.5, 3.5, 3.3, 8); g.translate(0, 1.7 + k * 3.6, 0); return g; });
+    const partes = [0, 1, 2, 3].map((k) => { const g = new THREE.CylinderGeometry(2.4, 2.4, 1.4, 8); g.translate(0, 0.75 + k * 1.5, 0); return g; });
     const geo = mergeGeometries(partes), d = new THREE.Object3D(), cor = new THREE.Color();
     const m = new THREE.InstancedMesh(geo, M(0xffffff, { roughness: 0.95, flatShading: true }), pilhas.length);
     pilhas.forEach((o, k) => { d.position.set(o.x, o.y, o.z); d.rotation.set(0, k * 0.7, 0); d.updateMatrix(); m.setMatrixAt(k, d.matrix); m.setColorAt(k, cor.set(o.c)); });

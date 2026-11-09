@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { ocupado } from "../comum.js";
 import { M } from "../../cena.js";
+import { nivelDoChao } from "./chao.js";
 
 export const indice = (tr, f) => ((Math.floor(f * tr.n) % tr.n) + tr.n) % tr.n;
 export const lim = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -29,7 +30,7 @@ export const mundoDe = (x, z, ry, u, v) => [x + Math.cos(ry) * u - Math.sin(ry) 
 // Põe um grupo (origem no meio da frente, frente para +z) a `lat` do eixo, do lado `lado`, em f e `ao` ao longo da pista, de frente para a pista.
 export function pousar(tr, g, f, lado, lat, ao = 0, elev = 0) {
   const p = tr.pts[indice(tr, f)], x = p.x + p.nx * lado * lat + p.tx * ao, z = p.y + p.ny * lado * lat + p.ty * ao, ry = Math.atan2(-lado * p.nx, -lado * p.ny);
-  g.position.set(x, tr.chao(x, z) - 1 + elev, z); g.rotation.y = ry;
+  g.position.set(x, nivelDoChao(tr, x, z) - 0.6 + elev, z); g.rotation.y = ry; // (o chão que se vê, a fita de chao.js perto da pista; a base da peça entra 0,6 u nele, e o aterro desce dali)
   return { x, z, ry, p };
 }
 // a pegada w × d cabe? Nove pontos (cantos, meios e centro) a mais de `folga` da borda da pista e fora do que já foi reservado

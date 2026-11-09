@@ -9,6 +9,8 @@ import { D, distanciaDoMar } from "../kit/monaco/mundo.js";
 import { pertoDe } from "../kit/som.js";
 import { PORTICO_ADIANTE } from "../kit/monaco/detalhes.js";
 import { boxesMonaco } from "../kit/monaco/boxes.js";
+import { ambienteMonaco } from "../kit/monaco/ambiente.js";
+import { baseDaPista } from "../kit/monaco/base.js";
 
 const BOXES = window.Pistas.PISTAS.monaco.boxes; // o corredor dos boxes (pistas.js): as linhas SC 1 e SC 2 são a entrada e a saída dele
 const F = D.frac;
@@ -20,10 +22,14 @@ function gaivotasDoPorto(tr) {
   return out;
 }
 
+const AMBIENTE = { paineis: false, mastros: false, tela: true, semCerca: [[0.85, 0.9]] }; // a cerca de detritos, os postos de fiscais e as placas de frenagem (a barreira e os painéis são do guardrail abaixo)
+
 export const GP_MONACO = {
   // a escala do cenário (1 u = 0,2083 m, 4,8 u por metro; kit/README.md): as peças do kit foram desenhadas para o carro antigo. Os mesmos fatores de Interlagos, porque Mônaco usa as mesmas peças (arquibancada, torcida, escapes, passarela, grid):
   // degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa tem fator próprio (1,75 m ÷ 2,54 m = 0,69). O guard-rail de `guardrail` (altura e comprimento do painel) segue o mesmo 0,4.
   escala: 0.4, escalaGente: 0.69,
+  semFundacao: true, // a base da pista é a de kit/monaco/base.js (paredão de pedra com textura), não o cinza liso de pista.js
+  afundarPerto: 0.4, // quanto a malha do terreno afunda a mais por baixo da pista e da calçada (pista.js: 7,5 por padrão; Mônaco precisa do chão rente ao asfalto, sem vão sob o guard-rail)
   asfalto: true, // o asfalto de GP de asfalto-gp.js, com as linhas de borda e a borracha
   chao: {
     margem: "sarjeta",
@@ -61,9 +67,8 @@ export const GP_MONACO = {
   },
   murosProprios: true, // a barreira é o guard-rail de Mônaco (`guardrail` acima), na distância de `muros` (pistas.js); o muro genérico de pista.js não entra
   depois: (tr, ctx) => { boxesMonaco(tr, ctx.add); vidaMonaco(tr, ctx); }, // o pit lane de Mônaco (terraços, toldos, placas) e a vida: a galera, os fiscais, as bandeiras, os barcos, os guindastes (depois do ambiente e do vidaGP)
-  cenario: (tr, ctx) => cenarioMonaco(tr, ctx), // o porto, a piscina, as arquibancadas, o túnel, os prédios reais, os marcos, o Rochedo e as árvores
+  cenario: (tr, ctx) => { cenarioMonaco(tr, ctx); baseDaPista(tr, ctx.add); ambienteMonaco(tr, ctx.add, AMBIENTE); }, // a cerca, os postos de fiscais e as placas de frenagem (kit/monaco/ambiente.js, a cópia de Mônaco do kit) e o porto, a piscina, as arquibancadas, o túnel, os prédios reais, os marcos, o Rochedo e as árvores
   boxes: { garagens: false, mureta: true }, // só o corredor, a mureta e os quadrados pintados: as garagens, os terraços e os toldos são de Mônaco (kit/monaco/boxes.js) // o prédio das garagens fica do lado externo da nova faixa de parada
-  ambiente: { paineis: false, mastros: false, tela: true, semCerca: [[0.85, 0.9]] }, // a cerca de detritos, os postos de fiscais e as placas de frenagem (a barreira e os painéis são do guardrail acima)
   passarelas: { candidatos: [0.03, 0.12, 0.48, 0.58, 0.72, 0.93], marcas: ["rolex", "heineken", "tag"], max: 2 }, // a da Rolex na reta dos boxes
   portico: { adiante: PORTICO_ADIANTE }, // o pórtico das luzes de largada fica 260 depois da linha de chegada (a pole o vê lá na frente)
   postes: { passo: 34 },

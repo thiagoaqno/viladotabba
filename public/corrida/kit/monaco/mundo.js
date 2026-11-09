@@ -84,9 +84,13 @@ export function relevoMonaco(tr) {
   // fora dela o morro só sobe em talude (inclinação limitada), nunca em degrau. `teto(x, z)` é o mínimo, sobre os pontos da linha central, de (altura - folga + talude * distância além do muro + margem).
   const plano = L + 30, rampa = 260, longe = 700, talude = 0.85, folga = 0.5, margem = 18, alcance = 260, C = 64, hash = new Map();
   pts.forEach((p, i) => { const k = Math.floor(p.x / C) * 100003 + Math.floor(p.y / C); (hash.get(k) || hash.set(k, []).get(k)).push(i); });
-  const teto = (x, z) => {
+  // (os pontos da MESMA rua, a menos de `vizinhos` pontos do mais perto, não entram: numa ladeira o ponto 48 mais adiante é bem mais baixo (até 9 de diferença) e puxava o chão para baixo do guard-rail, deixando um vão
+  // entre a pista e a calçada. Para a própria rua vale só a altura do ponto mais perto, em `relevo` abaixo.)
+  const vizinhos = 45;
+  const teto = (x, z, idx) => {
     const r = Math.ceil((L + alcance) / C), cx = Math.floor(x / C), cz = Math.floor(z / C); let m = Infinity;
     for (let a = cx - r; a <= cx + r; a++) for (let b = cz - r; b <= cz + r; b++) for (const j of hash.get(a * 100003 + b) || []) {
+      if (idx != null) { const dj = Math.abs(j - idx); if (Math.min(dj, n - dj) < vizinhos) continue; }
       const p = pts[j], dx = p.x - x, dz = p.y - z, d2 = dx * dx + dz * dz; if (d2 > (L + alcance) ** 2) continue;
       const c = p.h - folga + talude * Math.max(0, Math.sqrt(d2) - L - margem); if (c < m) m = c;
     }
@@ -99,7 +103,7 @@ export function relevoMonaco(tr) {
     const a = suave((d - plano) / rampa), b = suave((d - plano - rampa) / longe);
     let g = f.h * (1 - a) + (dem + desvio * (1 - b)) * a; // (o desvio já leva a pista ao nível dela: a e b são suaves, sem escada)
     // (o túnel tem o teto e as paredes de tunel.js; o morro de verdade em volta já fica acima dele)
-    return menor(g, teto(x, z));
+    return Math.min(menor(g, teto(x, z, idx)), f.h - folga + talude * Math.max(0, d - L - margem)); // (a própria rua: a altura do ponto mais perto, meio unidade abaixo do asfalto, e o morro só sobe em talude dali)
   };
 }
 

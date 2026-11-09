@@ -18,17 +18,18 @@ const ladoDe = (tr, p, quer) => { const L = tr.wallLat; if (quer === "agua") { r
 
 // ---- os blocos Tecpro: duas filas de blocos brancos com a faixa vermelha, de dois andares, do lado de fora da curva ----
 export function tecpro(tr, add, trechos) {
-  const L = tr.wallLat, { pts, n } = tr, brancos = [], azuis = [], vermelhos = [];
+  const L = tr.wallLat, { pts, n } = tr, brancos = [], azuis = [], vermelhos = [], E = tr.escala ?? 1; // (E: a escala do cenário; o comprimento do bloco, 22, foi desenhado para o carro antigo e encolhe com ela; o módulo Tecpro de verdade tem ~1,2 m de altura por 1 m de largura, en.wikipedia.org/wiki/Tecpro_barrier, e o comprimento varia)
+  const alto = 1.2 / 0.2083, larg = 1 / 0.2083, comp = 22 * E, passo = Math.max(1, Math.round(comp / 6)); // (1 u = 0,2083 m)
   for (const [f0, f1, quer] of trechos) {
     let i0 = Math.floor(f0 * n), i1 = Math.floor(f1 * n); if (i1 < i0) i1 += n;
     const lado = quer === "fora" ? -sinalDaCurva(pts, n, Math.floor((i0 + i1) / 2) % n) : quer;
-    for (let i = i0; i <= i1; i += 4) {
+    for (let i = i0; i <= i1; i += passo) {
       const p = pts[i % n];
       for (let fila = 0; fila < 2; fila++) {
-        const d = tr.t.muros ? tr.latMuro(lado, i) - 7 - fila * 11 : L + 8 + fila * 11, [x, z] = lateral(p, lado, d); // (com `muros` os blocos ficam NA FRENTE da barreira do escape, não atrás dela)
-        if (!livre(tr, x, z, 14) || ocupado(tr, x, z) || tr.distAt(x, z) < d - 4) continue;
+        const d = tr.t.muros ? tr.latMuro(lado, i) - larg / 2 - 1 - fila * (larg + 0.5) : L + 8 * E + larg / 2 + fila * (larg + 0.5), [x, z] = lateral(p, lado, d); // (com `muros` os blocos ficam NA FRENTE da barreira do escape, não atrás dela)
+        if (!livre(tr, x, z, 14 * E) || ocupado(tr, x, z) || tr.distAt(x, z) < d - 4) continue;
         const y = tr.chao(x, z) - 1.5, ry = Math.atan2(p.tx, p.ty) + Math.PI / 2;
-        for (let andar = 0; andar < 2; andar++) { (fila === 0 ? azuis : brancos).push({ x, y: y + 4.5 + andar * 9, z, sx: 8.6, sy: 8.4, sz: 22, r: ry - Math.PI / 2 }); vermelhos.push({ x, y: y + 4.5 + andar * 9, z, sx: 8.9, sy: 2.4, sz: 22.3, r: ry - Math.PI / 2 }); }
+        for (let andar = 0; andar < 1; andar++) { (fila === 0 ? azuis : brancos).push({ x, y: y + alto / 2 + andar * alto, z, sx: larg, sy: alto, sz: comp, r: ry - Math.PI / 2 }); vermelhos.push({ x, y: y + alto / 2 + andar * alto, z, sx: larg + 0.3, sy: alto * 0.29, sz: comp + 0.3, r: ry - Math.PI / 2 }); }
       }
     }
   }
@@ -42,14 +43,14 @@ export function telaos(tr, add, fracoes) {
   const L = tr.wallLat, // a textura tem o desenho duas vezes lado a lado e a tela mostra uma metade: o offset anda (kit/monaco/vida.js) e a faixa de notícias corre sem emenda
     tex = canvasTex(512, 128, (x, w, h) => { x.fillStyle = "#0b1226"; x.fillRect(0, 0, w, h); x.fillStyle = "#e10600"; x.fillRect(0, h - 14, w, 14); x.textAlign = "center"; x.textBaseline = "middle"; for (const cx of [w / 4, (3 * w) / 4]) { x.fillStyle = "#ffffff"; x.font = "900 50px Arial Black, Impact, sans-serif"; x.fillText("MONACO", cx, 40); x.font = "900 32px Arial Black, Impact, sans-serif"; x.fillText("GRAND PRIX", cx, 84); x.fillStyle = "#ffffff"; x.font = "700 12px Arial, sans-serif"; x.fillText("LIVE  P1  P2  P3  •  FASTEST LAP  •  DRS ENABLED", cx, h - 7); } }, false);
   tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = 0.5; tr.telaoTex = tex;
-  const tela = new THREE.MeshBasicMaterial({ map: tex }); let feitos = 0;
+  const tela = new THREE.MeshBasicMaterial({ map: tex }), E = tr.escala ?? 1; let feitos = 0; // (E: o poste e o telão foram desenhados para o carro antigo)
   for (const f of fracoes) for (const lado of [1, -1]) {
     const [p] = noTraco(tr, f), d = L + 26, [x, z] = lateral(p, lado, d);
     if (!livre(tr, x, z, 30) || ocupado(tr, x, z) || tr.coberto?.(Math.floor(f * tr.n))) continue;
     const gr = new THREE.Group(); gr.position.set(x, tr.chao(x, z) - 1.5, z); gr.rotation.y = Math.atan2(-p.nx * lado, -p.ny * lado); add(gr);
-    const poste = new THREE.Mesh(new THREE.BoxGeometry(3, 52, 3), FERRO); poste.position.y = 26; poste.name = "monaco-marco"; gr.add(poste);
-    const caixa = new THREE.Mesh(new THREE.BoxGeometry(56, 32, 3), FERRO); caixa.position.y = 62; caixa.name = "monaco-marco"; gr.add(caixa);
-    const t = new THREE.Mesh(new THREE.PlaneGeometry(52, 28), tela); t.position.set(0, 62, 1.8); gr.add(t);
+    const poste = new THREE.Mesh(new THREE.BoxGeometry(3 * E, 52 * E, 3 * E), FERRO); poste.position.y = 26 * E; poste.name = "monaco-marco"; gr.add(poste);
+    const caixa = new THREE.Mesh(new THREE.BoxGeometry(56 * E, 32 * E, 3 * E), FERRO); caixa.position.y = 62 * E; caixa.name = "monaco-marco"; gr.add(caixa);
+    const t = new THREE.Mesh(new THREE.PlaneGeometry(52 * E, 28 * E), tela); t.position.set(0, 62 * E, 1.8 * E); gr.add(t);
     (tr.reservado ||= []).push([x, z, 34]); feitos++;
   }
   tr.telaosMonaco = feitos;
@@ -57,17 +58,17 @@ export function telaos(tr, add, fracoes) {
 
 // ---- o relógio da Rolex na reta dos boxes e a faixa TAG Heuer no pórtico da largada ----
 export function largada(tr, add) {
-  const L = tr.wallLat, [p] = noTraco(tr, 0.012), lado = -(tr.t.boxes?.lado ?? 1), d = L + 12, [x, z] = lateral(p, lado, d);
+  const E = tr.escala ?? 1, L = tr.wallLat, [p] = noTraco(tr, 0.012), lado = -(tr.t.boxes?.lado ?? 1), d = L + 12, [x, z] = lateral(p, lado, d);
   const rolex = canvasTex(256, 128, (c, w, h) => { c.fillStyle = "#0b5a36"; c.fillRect(0, 0, w, h); c.fillStyle = "#e8d49a"; c.font = "900 40px Georgia, serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("ROLEX", w / 2, 34); c.fillStyle = "#101010"; c.fillRect(24, 58, w - 48, 52); c.fillStyle = "#ff3b1f"; c.font = "900 44px monospace"; c.fillText("00:00.0", w / 2, 86); }, false);
   if (livre(tr, x, z, 12) && !tr.noCorredor?.(x, z)) {
     const g = new THREE.Group(); g.position.set(x, tr.chao(x, z) - 1.5, z); g.rotation.y = Math.atan2(-p.nx * lado, -p.ny * lado); add(g);
-    const poste = new THREE.Mesh(new THREE.BoxGeometry(3, 60, 3), FERRO); poste.position.y = 30; poste.name = "monaco-marco"; g.add(poste);
-    const caixa = new THREE.Mesh(new THREE.BoxGeometry(44, 26, 4), FERRO); caixa.position.y = 66; caixa.name = "monaco-marco"; g.add(caixa);
-    const t = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshBasicMaterial({ map: rolex })); t.position.set(0, 66, 2.2); g.add(t);
+    const poste = new THREE.Mesh(new THREE.BoxGeometry(3 * E, 60 * E, 3 * E), FERRO); poste.position.y = 30 * E; poste.name = "monaco-marco"; g.add(poste);
+    const caixa = new THREE.Mesh(new THREE.BoxGeometry(44 * E, 26 * E, 4 * E), FERRO); caixa.position.y = 66 * E; caixa.name = "monaco-marco"; g.add(caixa);
+    const t = new THREE.Mesh(new THREE.PlaneGeometry(40 * E, 20 * E), new THREE.MeshBasicMaterial({ map: rolex })); t.position.set(0, 66 * E, 2.2 * E); g.add(t);
   }
   // a faixa TAG Heuer nos dois lados da viga do pórtico (pista.js: o pórtico de F1 fica na linha de chegada)
   const q = tr.pts[Math.round(PORTICO_ADIANTE / 6) % tr.n], W = tr.W / 2 + 14, tag = marcaTex("tag", 512, 64); // (a mesma posição do pórtico das luzes)
-  for (const s of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * W + 4, 7.4), new THREE.MeshBasicMaterial({ map: tag, side: THREE.FrontSide })); f.position.set(q.x, q.h + 62, q.y); f.rotation.y = -Math.atan2(q.ny, q.nx) + (s > 0 ? 0 : Math.PI); f.translateZ(1.8); add(f); }
+  for (const s of [1, -1]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * W + 4, 7.4 * E), new THREE.MeshBasicMaterial({ map: tag, side: THREE.FrontSide })); f.position.set(q.x, q.h + 62 * E, q.y); f.rotation.y = -Math.atan2(q.ny, q.nx) + (s > 0 ? 0 : Math.PI); f.translateZ(1.8); add(f); } // (a viga do pórtico, em pista.js, fica a 62 × escala e tem 10 × escala de altura)
 }
 
 // um lugar com sobra: em terra, fora de prédio, longe da pista e fora da faixa das arquibancadas daquele lado

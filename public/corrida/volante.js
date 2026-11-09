@@ -19,18 +19,23 @@ function analogico(x, zona = PADRAO.zona, sens = PADRAO.p) {
 // e dos robôs não muda; só a ENTRADA do jogador é suavizada, para cada toque voltar a ocupar a mesma fração da pista que ocupava na pista antiga.
 // (medido no McLaren padrão, deslocamento 0,6 s após o toque em fração da meia-pista; os números no PR da direção em escala real)
 const CURVA = 1.8;              // analógico mais macio no meio do curso, ainda chega a 1 no batente (era 1,4; apertadinha ocupava o dobro da pista)
-// O teclado vira em RAMPA (só a entrada do jogador, fora da física): SOBE por segundo até o batente e VOLTA (rápido) ao soltar. Um toque curto
-// dá um volante pequeno — a "apertadinha" ocupa a mesma fração da pista estreita que ocupava na larga. Os robôs não passam por aqui.
-const SOBE = 1.6, VOLTA = 10;
+// O teclado vira em RAMPA (só a entrada do jogador, fora da física), com DUAS velocidades na subida: macia perto do centro (SOBE_INI) e
+// rápida perto do batente (SOBE_FIM). Assim a apertadinha é suave para guiar, mas chegar ao fim de curso não demora. A taxa cresce com
+// o quanto o volante já virou. VOLTA (rápida) é a volta ao centro ao soltar. Os robôs não passam por aqui.
+// (SOBE_INI 3,55: o começo macio que o Thiago achou bom de guiar; SOBE_FIM 8: o batente no tempo que o 5,32 dava, ~0,19 s, 2026-11-09)
+const SOBE_INI = 3.55, SOBE_FIM = 8, VOLTA = 10;
+const SOBE = SOBE_INI; // (compat.: a taxa no centro)
 function rampa(alvo, atual, dt) {
   const d = alvo - atual, t = limite(dt || 0, 0, 0.1);
-  const k = Math.abs(alvo) < Math.abs(atual) || alvo * atual < 0 ? VOLTA : SOBE; // voltando ao centro: rápido
+  const voltando = Math.abs(alvo) < Math.abs(atual) || alvo * atual < 0;
+  // subindo: a taxa vai de SOBE_INI (centro) a SOBE_FIM (batente), conforme |atual|; voltando ao centro: rápido
+  const k = voltando ? VOLTA : SOBE_INI + (SOBE_FIM - SOBE_INI) * Math.min(1, Math.abs(atual));
   return atual + limite(d, -t * k, t * k);
 }
 // O teclado (ou o botão de toque): -1, 0 ou 1 vira o quanto o volante vira (`sens`, de 0,3 a 1,5; acima de 1 só limita em 1).
 const teclado = (dir, sens = PADRAO.k) => limite((dir || 0) * sens, -1, 1);
 
-const api = { LIMITES, PADRAO, ajustar, analogico, teclado, rampa, CURVA, SOBE, VOLTA };
+const api = { LIMITES, PADRAO, ajustar, analogico, teclado, rampa, CURVA, SOBE, SOBE_INI, SOBE_FIM, VOLTA };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Volante = api;
 })(typeof self !== "undefined" ? self : this);

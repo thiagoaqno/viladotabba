@@ -16,6 +16,7 @@ const M = () => window.HudMfd, F = () => window.F1Regras;
 export const mfd = { aberto: true, pagina: "pneus", lista: [], linha: {}, ultimo: 0, entrada: "teclado" };
 // o que controles.js registra (a câmera e a torre são dele e do hud.js): { camera(d), torre(): alterna compacta/completa }
 import { estiloHud, definirEstiloHud } from "./hud-telemetria.js";
+import { CARROS_ADV, NOMES_CARROS, carrosEscolha, definirCarros } from "./qualidade.js";
 export const acoes = { camera: null, cameraAjuste: null, camNome: () => "", radioRival: null, torreCompacta: () => true, torreAlternar: null, mapaPerto: () => false, mapaAlternar: null };
 const LEITURA = {}; // os últimos dados que o hud passou (as linhas do painel leem daqui)
 let raiz = null, refs = {}, abas = "", paginaVista = null;
@@ -109,6 +110,7 @@ const LINHAS = {
     { rot: "Mapa", valor: () => (acoes.mapaPerto() ? "Perto" : "Pista inteira"), mudar() { if (acoes.mapaAlternar) acoes.mapaAlternar(); } },
     { rot: "Estilo do HUD", valor: () => estiloHud() === "telemetria" ? "Telemetria" : "Clássico", mudar() { definirEstiloHud(estiloHud() === "telemetria" ? "classico" : "telemetria"); } },
     { rot: "Rádio", valor: () => (window.Radio && !window.Radio.mudo ? "Ligado" : "Desligado"), mudar() { if (window.Radio) { window.Radio.silenciar(); } } },
+    { rot: "Carros dos adversários", valor: () => NOMES_CARROS[carrosEscolha()], mudar() { const i = CARROS_ADV.indexOf(carrosEscolha()); definirCarros(CARROS_ADV[(i + 1) % CARROS_ADV.length]); } },
   ],
 };
 const linhasDaPagina = (id = mfd.pagina) => LINHAS[id] || [];

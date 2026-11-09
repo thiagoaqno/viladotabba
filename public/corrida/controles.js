@@ -12,6 +12,16 @@ import { mfd, mfdTecla, mfdPad, mfdAtivo, acoes, teclaBox, digitoPneu, cancelarB
 import { acoesDaTecla, botoesDe, ui, volante } from "./teclas.js";
 import "./teclas-ui.js";
 import { abrirCamera, fecharCamera, cameraAberta } from "./camera-ui.js";
+import { estiloHud, definirEstiloHud } from "./hud-telemetria.js";
+
+// H: o HUD em três estados, clássico → telemetria → sem HUD (a pista limpa, só a cena) → clássico. O estilo fica guardado (hud-telemetria.js);
+// o "sem HUD" vale só nesta corrida, para ninguém abrir o jogo com a tela vazia sem saber por quê.
+function trocarHud() {
+  const r = $("race"); if (!r) return;
+  if (r.classList.contains("sem-hud")) { r.classList.remove("sem-hud"); definirEstiloHud("classico"); toast("HUD clássico"); }
+  else if (estiloHud() === "telemetria") { r.classList.add("sem-hud"); toast("Sem HUD (H de novo volta)"); }
+  else { definirEstiloHud("telemetria"); toast("HUD telemetria"); }
+}
 
 // câmbio manual: Shift sobe, Ctrl direito desce (redução que estouraria o giro não entra)
 export function trocarMarcha(d) {
@@ -44,6 +54,7 @@ document.addEventListener("keydown", (e) => {
     else if (PNEUS[id]) { if (!digitoPneu(PNEUS[id])) escolherComposto(PNEUS[id]); }
     else if (id === "camera") nextCam();
     else if (id === "cameraAjuste") { e.preventDefault(); cameraAberta() ? fecharCamera() : abrirCamera(); }
+    else if (id === "hud") { e.preventDefault(); trocarHud(); }
     else if (id === "ers") { if (E.S?.config.regras === "f1") { keys.ers = true; e.preventDefault(); } else { e.preventDefault(); useItem(keys.brake); } }
     else if (id === "item") { e.preventDefault(); useItem(keys.brake); }
   }

@@ -2,7 +2,7 @@
 // controles.js (pilotagem) e mfd.js (o MFD) leem DAQUI em vez de ter tecla fixa; teclas-ui.js é a tela de remapear. As trocas ficam no
 // navegador (`corrida:teclas`, só o que mudou do padrão). Tecla = `KeyboardEvent.code` (a posição, não a letra); botão = índice da Gamepad API.
 //
-// Padrões: W A S D pilotam; as SETAS são do MFD (↑↓ a linha, ←→ o valor), M e N trocam a página, Tab abre e fecha, Enter confirma o box.
+// Padrões: W A S D pilotam; as SETAS são do MFD (↑↓ a linha, ←→ o valor), Q e E trocam a página, Shift esquerdo é o ERS/overtake, H troca o HUD, Tab abre e fecha, Enter confirma o box.
 // O analógico esquerdo do controle sempre esterça (não remapeia). Fora do HUD de F1 (arcade e classificação) as setas seguem esterçando
 // (controles.js), porque lá não há MFD.
 import { store } from "./estado.js";
@@ -15,14 +15,15 @@ export const ACOES = [
   { id: "freio", g: "Pilotagem", nome: "Frear / ré", k: ["KeyS"], p: [6, 1, 2], comp: ["marchaMais", "marchaMenos"] },
   { id: "esq", g: "Pilotagem", nome: "Esquerda", k: ["KeyA"], p: [] },
   { id: "dir", g: "Pilotagem", nome: "Direita", k: ["KeyD"], p: [] },
-  { id: "marchaMais", g: "Pilotagem", nome: "Marcha acima (câmbio manual)", k: ["ShiftLeft", "ShiftRight"], p: [2], comp: ["freio"] },
+  { id: "marchaMais", g: "Pilotagem", nome: "Marcha acima (câmbio manual)", k: ["ShiftRight"], p: [2], comp: ["freio"] },
   { id: "marchaMenos", g: "Pilotagem", nome: "Marcha abaixo (câmbio manual)", k: ["ControlRight"], p: [1], comp: ["freio"] },
-  { id: "ers", g: "Pilotagem", nome: "ERS / overtake (segurar)", k: ["KeyE"], p: [] },
+  { id: "ers", g: "Pilotagem", nome: "ERS / overtake (segurar)", k: ["ShiftLeft"], p: [] },
   { id: "item", g: "Pilotagem", nome: "Usar item (arcade)", k: ["Space"], p: [5], ctx: "arcade" },
   { id: "respawn", g: "Pilotagem", nome: "Voltar para a pista", k: ["KeyR"], p: [8] },
   { id: "camera", g: "Câmera", nome: "Trocar a câmera", k: ["KeyC"], p: [3] },
   { id: "olharTras", g: "Câmera", nome: "Olhar para trás (segurar)", k: ["KeyV"], p: [10] },
-  { id: "cameraAjuste", g: "Câmera", nome: "Ajustar a câmera (abre e fecha a tela)", k: ["KeyH"], p: [] },
+  { id: "cameraAjuste", g: "Câmera", nome: "Ajustar a câmera (abre e fecha a tela)", k: ["KeyJ"], p: [] },
+  { id: "hud", g: "Câmera", nome: "Trocar o HUD (clássico, telemetria, sem HUD)", k: ["KeyH"], p: [] },
   { id: "box", g: "Box", nome: "Box (abre o MFD; de novo pede, sem cancelar)", k: ["KeyB"], p: [] },
   { id: "pneu1", g: "Box", nome: "Pneu macio (escolhe e pede)", k: ["Digit1", "Numpad1"], p: [] },
   { id: "pneu2", g: "Box", nome: "Pneu médio (escolhe e pede)", k: ["Digit2", "Numpad2"], p: [] },
@@ -31,8 +32,8 @@ export const ACOES = [
   { id: "pneu5", g: "Box", nome: "Pneu intermediário (escolhe e pede)", k: ["Digit5", "Numpad5"], p: [] },
   { id: "cancelarBox", g: "Box", nome: "Cancelar o pedido de box", k: ["Digit6", "Numpad6", "Backspace"], p: [] },
   { id: "mfdAbrir", g: "MFD", nome: "Abrir / fechar o MFD", k: ["Tab"], p: [11], ctx: "mfd" },
-  { id: "mfdPagMais", g: "MFD", nome: "Página seguinte", k: ["KeyM"], p: [5], ctx: "mfd", comp: ["item"] },
-  { id: "mfdPagMenos", g: "MFD", nome: "Página anterior", k: ["KeyN"], p: [4], ctx: "mfd" },
+  { id: "mfdPagMais", g: "MFD", nome: "Página seguinte", k: ["KeyE"], p: [5], ctx: "mfd", comp: ["item"] },
+  { id: "mfdPagMenos", g: "MFD", nome: "Página anterior", k: ["KeyQ"], p: [4], ctx: "mfd" },
   { id: "mfdLinhaMenos", g: "MFD", nome: "Linha acima", k: ["ArrowUp"], p: [12], ctx: "mfd" },
   { id: "mfdLinhaMais", g: "MFD", nome: "Linha abaixo", k: ["ArrowDown"], p: [13], ctx: "mfd" },
   { id: "mfdValorMenos", g: "MFD", nome: "Valor anterior (ou página)", k: ["ArrowLeft"], p: [14], ctx: "mfd" },

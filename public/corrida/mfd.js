@@ -105,7 +105,7 @@ const LINHAS = {
   ajustes: [
     { rot: "Torre", valor: () => (acoes.torreCompacta() ? "Compacta" : "Completa"), mudar() { if (acoes.torreAlternar) acoes.torreAlternar(); } },
     { rot: "Câmera", valor: () => acoes.camNome(), mudar(d) { if (acoes.camera) acoes.camera(d); } },
-    { rot: "Ajuste da câmera", dica: "H", valor: () => "Abrir", mudar() { if (acoes.cameraAjuste) acoes.cameraAjuste(); } },
+    { rot: "Ajuste da câmera", dica: "J", valor: () => "Abrir", mudar() { if (acoes.cameraAjuste) acoes.cameraAjuste(); } },
     { rot: "Mapa", valor: () => (acoes.mapaPerto() ? "Perto" : "Pista inteira"), mudar() { if (acoes.mapaAlternar) acoes.mapaAlternar(); } },
     { rot: "Estilo do HUD", valor: () => estiloHud() === "telemetria" ? "Telemetria" : "Clássico", mudar() { definirEstiloHud(estiloHud() === "telemetria" ? "classico" : "telemetria"); } },
     { rot: "Rádio", valor: () => (window.Radio && !window.Radio.mudo ? "Ligado" : "Desligado"), mudar() { if (window.Radio) { window.Radio.silenciar(); } } },
@@ -404,5 +404,5 @@ const ATU = {
       set(c[4], "t", l.letra); set(c[4], "col", (F.PNEUS[l.pneu] || F.PNEUS.medio).cor);
     }
   },
-  ajustes(ctx, r) { set(r.aErs, "t", E.S.config.ers === "manual" ? "Manual (tecla E / botão ERS)" : "Automático (da sala)"); },
+  ajustes(ctx, r) { set(r.aErs, "t", E.S.config.ers === "manual" ? "Manual (Shift esquerdo / botão ERS)" : "Automático (Shift esquerdo também dá o overtake)"); },
 };

@@ -127,7 +127,7 @@ function atualizarDRS(c, zona, autorizada, bloqueado, freando = false) {
 // ---------- o vácuo ----------
 // Logo atrás de outro carro (até ~17 m, na mesma linha e na mesma direção) o ar empurra menos. Devolve 0..1 (1 = colado).
 // outros: [{ x, y, z, a, dnf, fant }]
-const VACUO_ALCANCE = 450;
+const VACUO_ALCANCE = 290; // (60 m; era 450 u, 94 m: com +20% de velocidade final quem vinha atrás chegava rápido demais e o freio não acompanhava)
 function vacuoAlvo(c, outros) {
   if (c.air || !F1.vacuoPermitido(c.v) || !outros) return 0;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
@@ -246,8 +246,8 @@ function passo(c, ent, amb, tr, ev) {
   const zona = F1.zonaDRS(c.idx / n, tr.t.drs);
   const drs = atualizarDRS(c, zona, amb.drsZona, !!(amb.amarela || amb.safety || amb.quali), !!ent.brake);
   F1.carregarErs(c.ers, dt, !!ent.brake && c.v > 40, !ent.gas, amb.laps || 0);
-  const usarErs = !!(ent.gas && !amb.safety && (amb.ersAuto !== false ? F1.usarErsAuto(c.ers.carga, c.v, spec.vmax, (tr.pts[c.idx].k || 0) < 1 / 1500, c.draft > 0.25) : ent.ers));
-  const ersAtivo = F1.gastarErs(c.ers, dt, usarErs, amb.ersAuto === false || c.draft > 0.25); // (overtake: colado no da frente, ou o botão no modo manual; senão o gasto suave da reta)
+  const usarErs = !!(ent.gas && !amb.safety && (amb.ersAuto !== false ? F1.usarErsAuto(c.ers.carga, c.v, spec.vmax, (tr.pts[c.idx].k || 0) < 1 / 1500, c.draft > 0.25) || (ent.ers && c.ers.carga > F1.ERS_PISO_OVERTAKE) : ent.ers));
+  const ersAtivo = F1.gastarErs(c.ers, dt, usarErs, amb.ersAuto === false || c.draft > 0.25 || !!ent.ers); // (overtake: colado no da frente, ou o botão no modo manual; senão o gasto suave da reta)
   c.drsAtivo = drs; c.ersAtivo = ersAtivo;
   // o relevo: a gravidade puxa para baixo da pista
   const h0 = alturaDoChao(tr, c.x, c.y, c.idx), h1 = alturaDoChao(tr, c.x + fx * 10, c.y + fy * 10, c.idx);

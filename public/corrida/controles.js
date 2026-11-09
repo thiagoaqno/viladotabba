@@ -82,7 +82,14 @@ document.querySelectorAll(".pad button[data-k]").forEach((b) => {
 // A também acelera e B/X também freiam (para quem prefere botão), Y troca a câmera, Back/Select (ou LB) volta para a pista.
 export const pad = { steer: 0, on: false, prev: [], olharTras: false };
 // a direção que a física recebe: o analógico (já com a curva) ou o teclado/toque (-1, 0 ou 1 vezes a sensibilidade escolhida); só muda a entrada, não a física
-export const direcao = () => (pad.on && pad.steer ? pad.steer : window.Volante.teclado((keys.right ? 1 : 0) - (keys.left ? 1 : 0), volante.k));
+// (em rampa: Volante.rampa, pelo relógio, para dar o mesmo resultado chamada a 120 Hz pela física ou a cada quadro)
+const rampaVol = { v: 0, t: 0 };
+export const direcao = () => {
+  const agora = performance.now(), dt = rampaVol.t ? (agora - rampaVol.t) / 1000 : 0; rampaVol.t = agora;
+  const analogico = !!(pad.on && pad.steer), alvo = analogico ? pad.steer : window.Volante.teclado((keys.right ? 1 : 0) - (keys.left ? 1 : 0), volante.k);
+  rampaVol.v = window.Volante.rampa(alvo, rampaVol.v, dt, !analogico);
+  return rampaVol.v;
+};
 export function pollPad() {
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find((g) => g && g.connected);
   if (!gp) { pad.olharTras = false; if (pad.on) { pad.on = false; keys.gas = keys.brake = false; } return; }

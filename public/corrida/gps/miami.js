@@ -17,6 +17,9 @@ const CAMISAS = ["#ffffff", "#ff5fa2", "#00a3ad", "#ffd23f", "#1b1b1b", "#ff9f1c
 const arq = (de, ate, lado, degraus, cor, encosto = BRANCO, cobertura = false) => ({ de, ate, lado, degraus, cor, encosto, cobertura, torcida: CAMISAS });
 
 export const GP_MIAMI = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 636, fora: 411 },

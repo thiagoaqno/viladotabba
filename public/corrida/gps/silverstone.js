@@ -11,6 +11,9 @@ import { cenarioSilverstone, depoisSilverstone } from "../silverstone.js";
 const AZUL = "#1d3f8f", VERMELHO = "#c8102e", BRANCO = "#f4f4f4";
 
 export const GP_SILVERSTONE = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6f7075" }, // o asfalto cinza da área de escape, logo depois da zebra

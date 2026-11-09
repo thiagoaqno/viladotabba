@@ -15,6 +15,9 @@ const arq = (de, ate, lado, degraus, cor, encosto = BRANCO, cobertura = false) =
 const MARCAS = ["mxmexico", "mxgp", "pirelli", "rolex", "aramco", "dhl", "heineken", "f1", "aws", "lenovo", "msc", "mxtacos", "mxzocalo", "mxchapultepec", "mxmole", "mxelote", "mxchurros", "mxtamales"];
 
 export const GP_MEXICO = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 547, fora: 354 }, // (raios das curvas ×1,609 com a escala real: as mesmas curvas de antes têm zebra)

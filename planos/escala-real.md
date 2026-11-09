@@ -43,3 +43,24 @@ Até a fase 3 terminar, numa pista antiga o carro fica pequeno (a pista tem o do
 Migrações `033` a `046` zeram voltas, recordes e setores de cada uma (031 é Mônaco e 032 é Hungaroring). Ainda falta em cada pista, numa passada por pista: `width` real (com fonte), relevo e barreiras (`ferramentas/pista-real.js`, porque as alturas de `hills` não cresceram com o `scale` e as ladeiras ficaram mais suaves), `escala` e `escalaGente` do cenário, as peças próprias lendo `tr.escala`, os cuidados visuais e a linha dos robôs. Madri, Catar e Abu Dhabi usam a zebra padrão de `kit/gp-simples.js`, que não cresceu. Monza e Barcelona ficaram de fora: o traçado delas ainda é desenhado à mão e precisa ser convertido antes.
 
 **Depois de todas as pistas** (pedido do Thiago): a corrida com robôs de verdade roda uma vez só, no fim, e a pilotagem (aceleração, dirigibilidade) e o ajuste do trânsito dos robôs (#610, medido com o carro antigo) serão revistos para ficar perto de como era com o carro antigo.
+
+## Lote 2: largura, relevo, barreiras, escala do cenário e robôs de 12 pistas (2026-11-09)
+
+Silverstone, Red Bull Ring, Zandvoort, Melbourne, Xangai, Suzuka, Bahrein, Jeddah, Miami, Montreal, Austin e Abu Dhabi. Relevo e barreiras por `ferramentas/pista-real.js <bacinger> <id> --meia 6` (cache em `C:\Users\thiag\Downloads\lts\cache-pista-real`, fora do repo), colados por `ferramentas/escala-relevo-lote.js`. `width` 58 u = 12 m em todas: a largura destes circuitos não está publicada, 12 m é o mínimo da FIA (estimativa). Medido depois, em `Pistas.pontos(t, 6)`:
+
+| Pista | DEM / raio | Desnível | Inclinação máx. | Quebra máx. a cada 6 u | Barreira mapeada faltando (lado 1 / -1) | `muros` |
+|---|---|---|---|---|---|---|
+| Silverstone | EU-DEM / 3 | 12,8 m | 2,6% | 0,07% | 7% / 5% | da ferramenta |
+| Red Bull Ring | EU-DEM / 3 | 69,6 m | 15,5% | 0,33% | 19% / 23% | da ferramenta |
+| Zandvoort | EU-DEM / 3 | 5,0 m | 2,7% | 0,11% | 4% / 9% | da ferramenta |
+| Melbourne | SRTM / 8 | 6,6 m | 2,6% | 0,07% | 78% / 83% | regra automática |
+| Xangai | SRTM / 6 | 4,3 m | 1,7% | 0,06% | 90% / 75% | regra automática |
+| Suzuka | SRTM / 3 | 43,1 m | 10,3% | 0,33% | 16% / 20% | da ferramenta |
+| Bahrein | SRTM / 3 | 22,1 m | 4,2% | 0,25% | 18% / 25% | da ferramenta |
+| Jeddah | SRTM / 8 | 6,9 m | 2,9% | 0,05% | 100% / 100% | regra automática |
+| Miami | SRTM / 8 | 5,3 m | 2,1% | 0,08% | 100% / 100% | regra automática |
+| Montreal | SRTM / 8 | 7,8 m | 3,0% | 0,09% | 30% / 52% | regra automática |
+| Austin | SRTM / 4 | 32,5 m | 11,0% | 0,33% | 0% / 3% | da ferramenta |
+| Abu Dhabi | SRTM / 8 | 5,7 m | 1,7% | 0,05% | 18% / 7% | da ferramenta |
+
+O raio subiu onde o SRTM inventou ladeira numa pista plana (com raio 3: Miami 14,9%, Montreal 11,2%, Jeddah 9,1%, Abu Dhabi 8,2%, Xangai 7,0%). No Red Bull Ring a inclinação não cai com raio 4 (15,3%) nem 6 (14,9%): é a ladeira de verdade, fica o raio 3 do PR #577. Nenhuma passa da quebra de Spa (0,34%): o carro não decola. **Suzuka:** o DEM é o chão e não tem a ponte do oito; o trecho de cima (0,808) sobe 34 u (7,1 m) numa rampa de cosseno de ±4,5% da volta, e o vão ficou com 8,6 m (antes 11 m; sem o ajuste, 1,5 m). `escala: 0.4` e `escalaGente: 0.69` em `gps/<id>.js` dessas 12 e do México; Abu Dhabi também ganhou a zebra (622/402) e a brita (768) no tamanho novo. Linhas dos robôs refeitas por `gerar-linhas-f1.js`. **Falta em cada uma (passada visual):** as peças próprias lerem `tr.escala`, os cuidados visuais e os prints; Zandvoort tem as curvas inclinadas, que precisam ser conferidas com a pista de 12 m.

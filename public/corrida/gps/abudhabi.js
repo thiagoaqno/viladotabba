@@ -7,3 +7,8 @@ export const GP_ABUDHABI = gpSimples("abudhabi", {
   bandeira: [0x00732f, 0xef3340], marcas: ["pirelli", "rolex", "aramco", "dhl", "heineken", "f1", "aws", "lenovo", "msc"], margem: "#8a7e6a",
   beira: { palmeiras: 0.12, vidro: 0.15, longe: { vidro: 0.15 } }, horizonte: false,
 });
+// escala real: o cenário do kit no tamanho certo (os mesmos fatores de Interlagos e Spa), e a zebra e a brita automática de gpSimples (fixas em 340/220 e 420)
+// crescem como os raios das curvas (× 1,828, o fator do `scale` de pistas.js)
+Object.assign(GP_ABUDHABI, { escala: 0.4, escalaGente: 0.69 });
+Object.assign(GP_ABUDHABI.chao.zebra, { dentro: 622, fora: 402 });
+GP_ABUDHABI.escape = { ...GP_ABUDHABI.escape, britaCurvas: 768 };

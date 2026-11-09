@@ -1,5 +1,5 @@
 /* Corrida da Galera — a tela Controles (teclas-ui.js): remapear teclado e controle */
-.tk{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:12px;font-family:"Barlow Condensed","Titillium Web",system-ui,sans-serif;color:#fff}
+.tk{position:fixed;inset:0;z-index:90;display:grid;grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr);place-items:center;padding:12px;font-family:"Barlow Condensed","Titillium Web",system-ui,sans-serif;color:#fff}
 .tk.hidden{display:none}
 .tk-fundo{position:absolute;inset:0;background:#000c}
 .tk-painel{position:relative;display:flex;flex-direction:column;width:min(620px,100%);max-height:min(640px,100%);background:#0b0d13;border:1px solid #ffffff2a;border-top:3px solid #e10600;box-shadow:0 16px 50px #000}

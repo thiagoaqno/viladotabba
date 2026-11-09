@@ -7,6 +7,11 @@ import { canvasTex, M } from "../../cena.js";
 import { Montador, solido, tom } from "../montagem.js";
 import { livre, ocupado, instancias } from "../comum.js";
 import { sorteio, ruido, acharElipse, acharRet, cabeRet, reservarRet } from "./lugar.js";
+import { nivelDoChao } from "./chao.js";
+
+// (escala real, 1 u = 0,2083 m) a altura das copas, medida na geometria de cada tipo × a escala sorteada (0,5 a 0,92): jacarandá 17 a 32 m (o de verdade tem de 8 a 15 m, até 20; ×0,6 dá 10 a 19 m), ahuehuete 18 a 34 m,
+// eucalipto 27 a 49 m, pinheiro 17 a 32 m: só o jacarandá estava alto demais, os outros ficam
+const ESCALA_TIPO = { jacaranda: 0.6, ahuehuete: 1, eucalipto: 1, pinheiro: 1 };
 
 const ICO = new THREE.IcosahedronGeometry(1, 0), CONE = new THREE.ConeGeometry(1, 1, 7);
 
@@ -37,8 +42,8 @@ export function arvoresDoParque(tr, add, { max = 1700 } = {}) {
   const peso = [0.3, 0.3, 0.25, 0.15];
   const poe = (x, z) => {
     let q = r(), k = 0; while (k < 3 && q > peso[k]) { q -= peso[k]; k++; }
-    const tipo = nomes[k], e = 0.5 + r() * 0.42;
-    listas[tipo].push({ x, y: tr.chao(x, z) - 1, z, sx: e, sy: e * (0.9 + r() * 0.3), sz: e, r: r() * 6.28 });
+    const tipo = nomes[k], e = (0.5 + r() * 0.42) * ESCALA_TIPO[tipo];
+    listas[tipo].push({ x, y: nivelDoChao(tr, x, z) - 1.2, z, sx: e, sy: e * (0.9 + r() * 0.3), sz: e, r: r() * 6.28 });
   };
   let total = 0;
   // em volta da pista, dos dois lados, em manchas: onde o ruído é alto a mata fecha
@@ -75,9 +80,8 @@ export function lagos(tr, add, locais) {
   for (const { caixa, a, b } of locais) {
     const q = acharElipse(tr, caixa, a + 26, b + 26, { max: 70, min: 24, passo: 40 });
     if (!q) continue;
-    let alto = -1e9; for (let t = 0; t < 16; t++) alto = Math.max(alto, tr.chao(q.x + Math.cos(t * 0.39) * a, q.z + Math.sin(t * 0.39) * b));
-    alto = Math.max(alto, tr.chao(q.x, q.z));
-    const y = alto + 0.5;
+    let baixo = nivelDoChao(tr, q.x, q.z); for (let t = 0; t < 16; t++) baixo = Math.min(baixo, nivelDoChao(tr, q.x + Math.cos(t * 0.39) * a, q.z + Math.sin(t * 0.39) * b));
+    const y = baixo + 0.25; // (antes: o ponto mais ALTO do contorno + 0,5, 2 u acima da malha no mais baixo; o morro cobre a margem do lado alto e a água não flutua)
     const w = new THREE.Mesh(new THREE.CircleGeometry(1, 40), agua); w.rotation.x = -Math.PI / 2; w.scale.set(a, b, 1); w.position.set(q.x, y, q.z); w.receiveShadow = true; add(w);
     const m = new THREE.Mesh(new THREE.CircleGeometry(1, 40), margem); m.rotation.x = -Math.PI / 2; m.scale.set(a + 14, b + 14, 1); m.position.set(q.x, y - 0.25, q.z); m.receiveShadow = true; add(m);
     reservarRet(tr, q.x, q.z, 0, a + 10, b + 10, 12);
@@ -148,7 +152,7 @@ export function camposDeEsporte(tr, add, lista) {
       const c = Math.cos(rot), s = Math.sin(rot), nu = Math.max(2, Math.ceil(w / 70)), nv = Math.max(2, Math.ceil(h / 70)), base = pos.length / 3;
       for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++) {
         const lx = (i / nu - 0.5) * w, lz = (j / nv - 0.5) * h, px = x + c * lx - s * lz, pz = z + s * lx + c * lz;
-        pos.push(px, tr.chao(px, pz) + 0.45, pz); uv.push(i / nu, j / nv);
+        pos.push(px, nivelDoChao(tr, px, pz) + 0.12, pz); uv.push(i / nu, j / nv);
       }
       for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { const a = base + j * (nu + 1) + i, b = a + 1, d = a + nu + 1, e = d + 1; idx.push(a, d, b, b, d, e); }
       feitos++;
@@ -195,7 +199,7 @@ export function peraltada(tr, add, { caixa = [120, 700, 700, 1600], raios = [300
   for (let k = 0; k <= SEG; k++) {
     const t = t0 + (arco * k) / SEG, ci = Math.cos(t), si = Math.sin(t), rIn = R - largura / 2, rOut = R + largura / 2;
     const linha = k % 4 < 2 ? 0 : 1;
-    const pts = [[rIn - 8, 0, "#8a8c8f"], [rIn, 0.6, "#5e6064"], [R - 12, alto * 0.45, linha ? "#6a6c70" : "#5e6064"], [R + 12, alto * 0.55, "#5e6064"], [rOut, alto, "#55575b"], [rOut + 1.5, alto + 8, "#b9bcc0"], [rOut + 6, alto + 8, "#b9bcc0"], [rOut + 6, -10, "#9b9ea2"]];
+    const pts = [[rIn - 8, -10, "#8a8c8f"], [rIn - 8, 0, "#8a8c8f"], [rIn, 0.6, "#5e6064"], [R - 12, alto * 0.45, linha ? "#6a6c70" : "#5e6064"], [R + 12, alto * 0.55, "#5e6064"], [rOut, alto, "#55575b"], [rOut + 1.5, alto + 8, "#b9bcc0"], [rOut + 6, alto + 8, "#b9bcc0"], [rOut + 6, -10, "#9b9ea2"]];
     for (const [rr, y, cor] of pts) { c.set(cor); pos.push(cx + ci * rr, y0 + y, cz + si * rr); col.push(c.r, c.g, c.b); }
     if (k) { const n = pts.length; for (let j = 0; j < n - 1; j++) { const a = (k - 1) * n + j, b = a + n; idx.push(a, b, a + 1, a + 1, b, b + 1); } }
   }

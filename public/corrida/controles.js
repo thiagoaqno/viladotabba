@@ -10,9 +10,19 @@ import { ORDEM, NOMES, usavel, camEstado } from "./cameras.js";
 import { menuBoxTecla, menuBoxPad } from "./box-menu.js";
 import { mfd, mfdTecla, mfdPad, mfdAtivo, acoes, teclaBox, digitoPneu, cancelarBoxTecla } from "./mfd.js";
 import { acoesDaTecla, botoesDe, ui, volante } from "./teclas.js";
-import "./teclas-ui.js";
+import { abrirTeclas } from "./teclas-ui.js";
 import { abrirCamera, fecharCamera, cameraAberta } from "./camera-ui.js";
 import { estiloHud, definirEstiloHud } from "./hud-telemetria.js";
+
+// os atalhos (teclas.js, grupo "Atalhos"): fazem o mesmo que o botão de cada coisa
+const ATALHOS = {
+  torre: () => acoes.torreAlternar && acoes.torreAlternar(),
+  mapa: () => acoes.mapaAlternar && acoes.mapaAlternar(),
+  som: () => { const b = $("btnSound"); if (b) b.click(); },
+  radio: () => { if (window.Radio) toast(window.Radio.silenciar() ? "Rádio desligado" : "Rádio ligado"); },
+  telaCheia: () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} },
+  controles: () => abrirTeclas(),
+};
 
 // H: o HUD em três estados, clássico → telemetria → sem HUD (a pista limpa, só a cena) → clássico. O estilo fica guardado (hud-telemetria.js);
 // o "sem HUD" vale só nesta corrida, para ninguém abrir o jogo com a tela vazia sem saber por quê.
@@ -55,6 +65,7 @@ document.addEventListener("keydown", (e) => {
     else if (id === "camera") nextCam();
     else if (id === "cameraAjuste") { e.preventDefault(); cameraAberta() ? fecharCamera() : abrirCamera(); }
     else if (id === "hud") { e.preventDefault(); trocarHud(); }
+    else if (ATALHOS[id]) { e.preventDefault(); ATALHOS[id](); }
     else if (id === "ers") { if (E.S?.config.regras === "f1") { keys.ers = true; e.preventDefault(); } else { e.preventDefault(); useItem(keys.brake); } }
     else if (id === "item") { e.preventDefault(); useItem(keys.brake); }
   }

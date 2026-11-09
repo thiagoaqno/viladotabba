@@ -2,7 +2,7 @@
 // controles.js (pilotagem) e mfd.js (o MFD) leem DAQUI em vez de ter tecla fixa; teclas-ui.js é a tela de remapear. As trocas ficam no
 // navegador (`corrida:teclas`, só o que mudou do padrão). Tecla = `KeyboardEvent.code` (a posição, não a letra); botão = índice da Gamepad API.
 //
-// Padrões: W A S D pilotam; as SETAS são do MFD (↑↓ a linha, ←→ o valor), Q e E trocam a página, Shift esquerdo é o ERS/overtake, H troca o HUD, Tab abre e fecha, Enter confirma o box.
+// Padrões: W A S D pilotam; as SETAS são do MFD (↑↓ a linha, ←→ o valor), Q e E trocam a página, Shift esquerdo é o ERS/overtake, H troca o HUD, e os atalhos: T torre, N minimapa, M som, U rádio, F tela cheia, K esta tela, Tab abre e fecha, Enter confirma o box.
 // O analógico esquerdo do controle sempre esterça (não remapeia). Fora do HUD de F1 (arcade e classificação) as setas seguem esterçando
 // (controles.js), porque lá não há MFD.
 import { store } from "./estado.js";
@@ -24,6 +24,12 @@ export const ACOES = [
   { id: "olharTras", g: "Câmera", nome: "Olhar para trás (segurar)", k: ["KeyV"], p: [10] },
   { id: "cameraAjuste", g: "Câmera", nome: "Ajustar a câmera (abre e fecha a tela)", k: ["KeyJ"], p: [] },
   { id: "hud", g: "Câmera", nome: "Trocar o HUD (clássico, telemetria, sem HUD)", k: ["KeyH"], p: [] },
+  { id: "torre", g: "Atalhos", nome: "Torre completa / compacta", k: ["KeyT"], p: [] },
+  { id: "mapa", g: "Atalhos", nome: "Minimapa: a pista inteira / de perto", k: ["KeyN"], p: [] },
+  { id: "som", g: "Atalhos", nome: "Som liga / desliga", k: ["KeyM"], p: [] },
+  { id: "radio", g: "Atalhos", nome: "Rádio do engenheiro liga / desliga", k: ["KeyU"], p: [] },
+  { id: "telaCheia", g: "Atalhos", nome: "Tela cheia", k: ["KeyF"], p: [] },
+  { id: "controles", g: "Atalhos", nome: "Abrir esta tela (Controles)", k: ["KeyK"], p: [] },
   { id: "box", g: "Box", nome: "Box (abre o MFD; de novo pede, sem cancelar)", k: ["KeyB"], p: [] },
   { id: "pneu1", g: "Box", nome: "Pneu macio (escolhe e pede)", k: ["Digit1", "Numpad1"], p: [] },
   { id: "pneu2", g: "Box", nome: "Pneu médio (escolhe e pede)", k: ["Digit2", "Numpad2"], p: [] },

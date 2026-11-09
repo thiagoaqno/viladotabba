@@ -508,8 +508,12 @@ const PISTAS = {
     name: "Hungaroring", sub: "Hungaroring, perto de Budapeste: a curva 1 em descida, a sequência travada no fundo do vale e a subida de volta para a reta dos boxes", f1: true,
     // Hungaroring: 4376 m. Traçado de bacinger/f1-circuits (hu-1986, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 117 vértices, a linha de chegada no primeiro
-    scale: 2.8, width: 120, minLap: 31, walls: false, flat: 40, fall: 220, largada: 0.588,
-    hills: [[0,80], [0.04,69], [0.08,57], [0.12,58], [0.16,57], [0.2,46], [0.24,23], [0.28,11], [0.32,19], [0.36,38], [0.4,38], [0.44,51], [0.48,66], [0.52,60], [0.56,68], [0.6,66], [0.64,74], [0.68,71], [0.72,68], [0.76,65], [0.8,60], [0.84,69], [0.88,81], [0.92,87], [0.96,87], [1,80]],
+    // ESCALA REAL: `scale` 4,506 = 2,8 × 1,6094, e a volta medida por `Pistas.pontos(t, 6)` dá 21 030 u = 4 381 m na escala da física (1 u = 0,2083 m), os 4 381 m do circuito; antes dava 13 068 u (2 722 m).
+    // `width` 58 u = 12,1 m (não achei a largura do Hungaroring publicada em nenhuma fonte; 12 m é o mínimo que a FIA pede às pistas do grau 1: é estimativa; a de antes tinha 120 u = 25 m).
+    // `minLap` 50 = 31 × 1,6094, `flat` 64 e `fall` 354 proporcionais.
+    scale: 4.506, width: 58, minLap: 50, walls: false, flat: 64, fall: 354, largada: 0.588, hillsSuave: true,
+    // relevo real, por ferramentas/pista-real.js hu-1986 hungaroring --dem eudem25m --raio 3 --meia 6 (altitude do EU-DEM de 25 m, ladeira na inclinação da real). Barreira mapeada no OpenStreetMap em só 2% de um lado e 51% do outro (corte de 30% em cada lado), então não há `muros` e vale a regra automática.
+    hills: [[0,171],[0.01,158],[0.02,148],[0.03,143],[0.04,142],[0.05,143],[0.06,140],[0.07,131],[0.08,119],[0.09,109],[0.1,108],[0.11,108],[0.12,106],[0.13,104],[0.14,104],[0.15,105],[0.16,103],[0.17,100],[0.18,98],[0.19,91],[0.2,77],[0.21,62],[0.22,51],[0.23,46],[0.24,40],[0.25,29],[0.26,16],[0.27,10],[0.28,6],[0.29,4],[0.3,5],[0.31,9],[0.32,18],[0.33,30],[0.34,40],[0.35,45],[0.36,46],[0.37,46],[0.38,47],[0.39,47],[0.4,51],[0.41,60],[0.42,72],[0.43,85],[0.44,95],[0.45,105],[0.46,114],[0.47,123],[0.48,126],[0.49,119],[0.5,111],[0.51,108],[0.52,108],[0.53,112],[0.54,120],[0.55,129],[0.56,132],[0.57,130],[0.58,126],[0.59,126],[0.6,130],[0.61,135],[0.62,141],[0.63,147],[0.64,152],[0.65,154],[0.66,153],[0.67,151],[0.68,150],[0.69,148],[0.7,146],[0.71,145],[0.72,143],[0.73,141],[0.74,138],[0.75,131],[0.76,122],[0.77,115],[0.78,109],[0.79,105],[0.8,106],[0.81,115],[0.82,124],[0.83,128],[0.84,132],[0.85,138],[0.86,149],[0.87,165],[0.88,178],[0.89,184],[0.9,179],[0.91,173],[0.92,172],[0.93,176],[0.94,182],[0.95,185],[0.96,187],[0.97,190],[0.98,190],[0.99,184],[1,171]],
     points: [
       [513, 1129, 0], [304, 961, 0], [242, 914, 246], [234, 905, 41], [228, 893, 35], [227, 885, 25], [230, 876, 25], [235, 868, 27],
       [243, 863, 31], [252, 860, 53], [266, 859, 395], [312, 860, 470], [335, 861, 228], [364, 867, 285], [394, 877, 358], [424, 890, 225],
@@ -845,7 +849,7 @@ const SUPERFICIES_ESCAPE = {
   "spa": {"brita": [[0.322, 0.35, "fora"], [0.41, 0.436, "fora"], [0.618, 0.652, "fora"], [0.15, 0.185, -1]], "largura": 26, "listrado": [[0.514, 0.578, "fora"], [0.684, 0.714, "fora"], [0.828, 0.874, "fora"], [0.026, 0.052, "fora"], [0.118, 0.16, 1]]},
   "suzuka": {"brita": [[0.072, 0.12, "fora"], [0.355, 0.395, "fora"], [0.448, 0.48, "fora"], [0.606, 0.662, "fora"], [0.807, 0.836, "fora"], [0.905, 0.946, "fora"]], "largura": 30},
   "zandvoort": {"brita": [[0.092, 0.132, "fora"], [0.186, 0.24, "fora"], [0.4, 0.447, "fora"], [0.486, 0.562, "fora"], [0.594, 0.628, "fora"], [0.838, 0.934, "fora"], [0.738, 0.775, 0]], "largura": 26},
-  "hungaroring": {"britaCurvas": 420, "largura": 26},
+  "hungaroring": {"britaCurvas": 676, "largura": 26}, // (raio da curva ×1,609 com a escala real, como no México)
   "abudhabi": {"britaCurvas": 768, "largura": 26},
   "austin": {"brita": [[0.405, 0.42, "fora"]], "listrado": [[0.05, 0.078, "fora"], [0.62, 0.644, "fora"], [0.703, 0.73, "fora"], [0.85, 0.87, "fora"], [0.9, 0.925, "fora"]], "largura": 56}, // (brita só na curva 11; o resto é asfalto liso de escape, onde o `muros` tem folga para ele)
   "xangai": {"britaCurvas": 684, "largura": 26},

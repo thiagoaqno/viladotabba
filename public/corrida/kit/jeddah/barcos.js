@@ -39,7 +39,7 @@ export function barcosJeddah(tr, { add, yachts }, { mar, orla, lagoa }) {
   const orlaOeste = orla.filter((o) => o.ix > 0.7 && o.z > 500 && o.z < 7600);
   for (let k = 0; k < 14 && orlaOeste.length; k++) {
     const o = orlaOeste[Math.floor(r() * orlaOeste.length)], d = 260 + r() * 1200;
-    dhows.push({ cx: o.x - d, cz: o.z + (r() - 0.5) * 300, raio: 80 + r() * 160, vel: (0.012 + r() * 0.02) * (k % 2 ? 1 : -1), fase: r() * 6.28, s: 1.1 + r() * 0.5 });
+    dhows.push({ cx: o.x - d, cz: o.z + (r() - 0.5) * 300, raio: 80 + r() * 160, vel: (0.012 + r() * 0.02) * (k % 2 ? 1 : -1), fase: r() * 6.28, s: 1.8 + r() * 0.8 });
   }
   for (let k = 0; k < 8 && orlaOeste.length; k++) {
     const o = orlaOeste[Math.floor(r() * orlaOeste.length)], d = 180 + r() * 700;

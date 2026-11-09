@@ -94,13 +94,15 @@ export function makeKart(color, model, ghost = false, name = "", mods = MODS_PAD
 // com 19 adversários só os carros passavam de 500 chamadas por quadro. De longe as peças pequenas (volante, câmbio, interior, peças de
 // baixo) não aparecem e saem do desenho; bem longe saem também as suspensões e os detalhes das rodas, e ficam o corpo e os pneus.
 // `d`: a distância em unidades do mundo. Só esconde as peças do modelo (pelo nome), sem mexer nos efeitos (luzes, chamas, faíscas).
-const LOD_PERTO = 320, LOD_LONGE = 1000;
+// As distâncias (u; 1 u = 0,2083 m) de cada nível da opção "Carros dos adversários" (qualidade.js): [sem as peças pequenas, só corpo e pneus].
+// Completo: 67 m e 208 m (o de antes). Leve: 29 m e 104 m. Mínimo: 10 m e 46 m (perto de você ainda é o carro inteiro).
+const LOD_DIST = { completo: [320, 1000], leve: [140, 500], minimo: [50, 220] };
 // (os nomes do carro clássico e, depois, os das peças que f1-2026.js monta)
 const LOD1 = new Set(["gear_switch", "interior_details_1", "interior_details_2", "steering_wheel", "back_suspension_2", "car_body_3", "car_body_4", "volante", "volante-det", "miudezas", "luvas", "luvas-aro", "braco", "antebraco", "tronco"]); // (o piloto: as luvas, os braços e os ombros saem de longe)
 const LOD2 = new Set(["back_suspension_1", "front_suspension", "car_body_2", "McLaren_mp4_5_2", "detalhes", "mecanica", "capacete", "viseira"]); // (e, bem longe, a cabeça)
-export function lodKart(k, d) {
+export function lodKart(k, d, nivel = "completo") {
   if (!k || !k.g) return;
-  const n = d > LOD_LONGE ? 2 : d > LOD_PERTO ? 1 : 0;
+  const [perto, longe] = LOD_DIST[nivel] || LOD_DIST.completo, n = d > longe ? 2 : d > perto ? 1 : 0;
   if (k.lod === n && k.lodMats === k.mats) return; // (k.mats muda quando o modelo de F1 chega: aí as peças são outras)
   k.lod = n; k.lodMats = k.mats;
   if (!k.lodPecas || k.lodPecasDe !== k.mats) { k.lodPecas = []; k.lodPecasDe = k.mats; k.g.traverse((o) => { if (o.isMesh && (LOD1.has(o.name) || LOD2.has(o.name))) k.lodPecas.push(o); }); }

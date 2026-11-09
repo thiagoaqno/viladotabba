@@ -306,7 +306,7 @@ function buildWorld(tr) {
       return d >= 0 && defs[d].agua && aguaDe?.[k] === s ? d + 1000 : d; }; // -1: o estilo de base; 1000+: o do lado da água; 2000+: o de um lado
       const estiloDe = (d) => (d < 0 ? base : d >= 2000 ? { ...base, ...defs[d - 2000], ...defs[d - 2000].porLado[s] } : d >= 1000 ? { ...base, ...defs[d - 1000], ...defs[d - 1000].agua } : { ...base, ...defs[d] }), materiais = new Map();
       const matDe = (d) => { if (!base) return wm; if (!materiais.has(d)) materiais.set(d, new THREE.MeshStandardMaterial({ map: guardRail(s, estiloDe(d)), roughness: 0.55, side: THREE.DoubleSide })); return materiais.get(d); };
-      const vLenDe = (d) => { const g = estiloDe(d); return g?.estilo === "monaco" ? g.sequencia.length * (g.trecho ?? 360) : g?.vLen ?? (base ? 480 : 32); };
+      const vLenDe = (d) => { const g = estiloDe(d); return g?.estilo === "monaco" ? g.sequencia.length * (g.trecho ?? 360) * E : (g?.vLen ?? (base ? 480 : 32)) * (base?.estilo === "monaco" ? E : 1); }; // (a escala do cenário encolhe a altura e o comprimento do painel juntos: o patrocinador mantém a proporção)
       const trecho = (i0, i1) => {
         const fatias = []; let a = i0;
         for (let i = i0 + 1; i <= i1 + 1; i++) if (i === i1 + 1 || defDe(i) !== defDe(a)) { fatias.push([a, Math.min(i, i1), defDe(a)]); a = i; }
@@ -314,7 +314,7 @@ function buildWorld(tr) {
         for (const [x0, x1, d] of fatias) {
           if (x1 <= x0 || d === -2) continue; const g = estiloDe(d);
           const lat = tr.t.muros ? (i) => s * tr.latMuro(s, i) : s * L; // com `muros` (Mônaco), a barreira fica na distância de cada trecho (colada, estreita, ou recuada no escape)
-          m = ribbon(lat, lat, 0.5, matDe(d), vLenDe(d), g?.alto ?? 12, 1, x0, x1); m.castShadow = true; m.name = `${id}-muro`;
+          m = ribbon(lat, lat, 0.5, matDe(d), vLenDe(d), (g?.alto ?? 12) * (base?.estilo === "monaco" ? E : 1), 1, x0, x1); m.castShadow = true; m.name = `${id}-muro`;
           if (base?.estilo === "monaco") afastarMuro(tr, m.geometry, x0, tr.t.muros ? (i) => tr.latMuro(s, i) - 1 : L - (tr.t.muroFolga ?? 8) + 13);
         }
         return m;

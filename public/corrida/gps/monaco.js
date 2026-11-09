@@ -21,6 +21,9 @@ function gaivotasDoPorto(tr) {
 }
 
 export const GP_MONACO = {
+  // a escala do cenário (1 u = 0,2083 m, 4,8 u por metro; kit/README.md): as peças do kit foram desenhadas para o carro antigo. Os mesmos fatores de Interlagos, porque Mônaco usa as mesmas peças (arquibancada, torcida, escapes, passarela, grid):
+  // degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa tem fator próprio (1,75 m ÷ 2,54 m = 0,69). O guard-rail de `guardrail` (altura e comprimento do painel) segue o mesmo 0,4.
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true, // o asfalto de GP de asfalto-gp.js, com as linhas de borda e a borracha
   chao: {
     margem: "sarjeta",

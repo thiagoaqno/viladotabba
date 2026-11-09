@@ -58,13 +58,13 @@ export function distanciaDoMar(x, z) {
   const a = g[j * N + i], b = g[j * N + i + 1], c = g[(j + 1) * N + i], d = g[(j + 1) * N + i + 1];
   return a + (b - a) * fu + (c - a) * fv + (a - b - c + d) * fu * fv;
 }
-// o fundo de Mônaco: a água só começa a 40 do guard-rail (o cais da pista larga do jogo), em qualquer ponto da pista
+// o fundo de Mônaco: a água só começa a 21 do guard-rail (4,4 m: o cais; eram 40 na pista de 84), em qualquer ponto da pista
 export function fundoMonaco(tr, x, z) {
   const sMar = distanciaDoMar(x, z);
   if (sMar < -90) return sMar;
   const { pts, n } = tr, c = tr.indiceAt(x, z); let dr = Infinity;
   for (let k = c - 3; k <= c + 3; k++) { const p = pts[(k + n) % n]; dr = Math.min(dr, Math.hypot(p.x - x, p.y - z)); }
-  return Math.min(sMar, dr - (tr.W / 2 + tr.t.wall + 40));
+  return Math.min(sMar, dr - (tr.W / 2 + tr.t.wall + 21));
 }
 export const aguaMonaco = (tr, x, z) => fundoMonaco(tr, x, z) > 0;
 // a beira do porto (o cais da Piscine, do Tabac e da chicane): aberta, sem prédio entre a pista e os iates

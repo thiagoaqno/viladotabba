@@ -103,13 +103,15 @@ document.querySelectorAll(".pad button[data-k]").forEach((b) => {
 // controle (Xbox/PlayStation): analógico esquerdo vira (com a força exata), RT acelera, LT freia/ré,
 // A também acelera e B/X também freiam (para quem prefere botão), Y troca a câmera, Back/Select (ou LB) volta para a pista.
 export const pad = { steer: 0, on: false, prev: [], olharTras: false };
-// a direção que a física recebe: o analógico (já com a curva) ou o teclado/toque (-1, 0 ou 1 vezes a sensibilidade escolhida); só muda a entrada, não a física
-// (em rampa: Volante.rampa, pelo relógio, para dar o mesmo resultado chamada a 120 Hz pela física ou a cada quadro)
+// a direção que a física recebe: o analógico (já com a curva, direto) ou o teclado/toque em RAMPA (pelo relógio, para dar o mesmo resultado
+// chamada a 120 Hz pela física ou a cada quadro); só muda a entrada do jogador, não a física nem os robôs
 const rampaVol = { v: 0, t: 0 };
 export const direcao = () => {
+  const analogico = !!(pad.on && pad.steer);
+  if (analogico) { rampaVol.v = pad.steer; rampaVol.t = 0; return pad.steer; } // o controle já tem a curva macia; sem rampa
   const agora = performance.now(), dt = rampaVol.t ? (agora - rampaVol.t) / 1000 : 0; rampaVol.t = agora;
-  const analogico = !!(pad.on && pad.steer), alvo = analogico ? pad.steer : window.Volante.teclado((keys.right ? 1 : 0) - (keys.left ? 1 : 0), volante.k);
-  rampaVol.v = window.Volante.rampa(alvo, rampaVol.v, dt, !analogico);
+  const alvo = window.Volante.teclado((keys.right ? 1 : 0) - (keys.left ? 1 : 0), volante.k);
+  rampaVol.v = window.Volante.rampa(alvo, rampaVol.v, dt);
   return rampaVol.v;
 };
 export function pollPad() {

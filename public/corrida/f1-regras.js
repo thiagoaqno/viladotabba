@@ -115,7 +115,10 @@ function zonaDRS(progresso, zonas) {
   const f = fracao(progresso);
   return (zonas || []).findIndex(([, abre, fecha]) => naZona(f, abre, fecha));
 }
-function drsHabilitado({ volta, intervalo, amarela, safety }) {
+// A F1 de 2026 não tem DRS: a ultrapassagem vem da bateria (o ERS, no Shift esquerdo). Por isso o DRS fica DESLIGADO por padrão;
+// `drs` (de config.drs, falso por padrão) religa a regra clássica. O código do DRS fica, só não abre a zona (nem o HUD mostra a pílula).
+function drsHabilitado({ volta, intervalo, amarela, safety, drs = false }) {
+  if (!drs) return false;
   return volta >= 2 && intervalo >= 0 && intervalo < 1 && !amarela && !safety;
 }
 

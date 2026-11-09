@@ -17,10 +17,12 @@ test('pneu frio e no penhasco piora largada, freio, curva e reta', () => {
 });
 
 test('DRS exige menos de um segundo, volta 3 e pista verde; só abre na zona', () => {
-  assert.equal(F1.drsHabilitado({ volta: 2, intervalo: 0.7 }), true);
+  // a F1 de 2026 não tem DRS: desligado por padrão (precisa de drs:true para religar a regra clássica)
+  assert.equal(F1.drsHabilitado({ volta: 2, intervalo: 0.7 }), false);
+  assert.equal(F1.drsHabilitado({ volta: 2, intervalo: 0.7, drs: true }), true);
   for (const dados of [{ volta: 1, intervalo: 0.5 }, { volta: 2, intervalo: 1.01 },
     { volta: 2, intervalo: 0.5, safety: true }, { volta: 2, intervalo: 0.5, amarela: true }])
-    assert.equal(F1.drsHabilitado(dados), false);
+    assert.equal(F1.drsHabilitado({ ...dados, drs: true }), false);
   const z = T.PISTAS.interlagos.drs;
   assert.equal(F1.zonaDRS(2.98, z), 0);
   assert.equal(F1.zonaDRS(3.03, z), 0);

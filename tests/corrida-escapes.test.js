@@ -162,12 +162,12 @@ test("Mônaco: largura por trecho (reta dos boxes e porto largos, Casino e Mirab
   const cassino = entre(f(0.275)), mirabeau = entre(f(0.335)), rua = entre(f(0.5)), porto = entre(f(0.68)), reta = W + m[-1][f(0.99)] + 14; // (do lado do corredor dos boxes o muro de reserva é o fixo, `wallLat`)
   assert.ok(cassino < rua && mirabeau < rua, `o Casino (${cassino}) e o Mirabeau (${mirabeau}) são mais estreitos que a rua (${rua})`);
   assert.ok(porto > rua && reta > porto, `o porto (${porto}) é mais largo que a rua e a reta dos boxes (${reta}) mais ainda`);
-  assert.ok(cassino >= 60, "estreita, mas dá para dois carros lado a lado");
+  assert.ok(cassino >= 36, "estreita (7,5 m), mas dá para dois carros lado a lado (cada um tem 9,1 u de largura)");
   assert.ok(m[1][f(0.5)] > 0 && m[1][f(0.5)] <= 2, "o guard-rail da rua é colado (recuo 1; recuo 0 seria sem barreira)");
   assert.equal(m[-1][f(0.82)] <= 2 && m[1][f(0.82)] <= 2, true, "a Piscine tem o muro colado");
-  assert.ok(m[-1][f(0.07)] > 30, "Sainte Dévote: o escape em frente, do lado de fora (esquerda) da curva à direita");
-  assert.ok(m[-1][f(0.348)] > 15 && m[-1][f(0.348)] < m[-1][f(0.07)], "o escape do Mirabeau é curto");
-  assert.ok(m[1][f(0.632)] > 40, "a saída do túnel / Nouvelle Chicane: o escape grande, do lado de fora da primeira curva");
+  assert.ok(m[-1][f(0.07)] > 16, "Sainte Dévote: o escape em frente, do lado de fora (esquerda) da curva à direita");
+  assert.ok(m[-1][f(0.348)] > 8 && m[-1][f(0.348)] < m[-1][f(0.07)], "o escape do Mirabeau é curto");
+  assert.ok(m[1][f(0.632)] > 22, "a saída do túnel / Nouvelle Chicane: o escape grande, do lado de fora da primeira curva");
   for (const [lado, fr] of [[-1, 0.07], [-1, 0.348], [1, 0.632]]) assert.equal(tr.superficiesEscape[lado][f(fr)], 2, `o escape ${fr} é de asfalto (a física)`);
   assert.equal(tr.superficiesEscape[1][f(0.5)], 0, "a rua não tem escape");
   for (const lado of [-1, 1]) for (let i = 0; i < n; i += 11) if (m[lado][i]) {

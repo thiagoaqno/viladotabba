@@ -193,7 +193,7 @@ function buildWorld(tr) {
     const x = pos.getX(i) + WORLD / 2, y = pos.getZ(i) + WORLD / 2;
     const longe = !tr.relevoGP && tr.distAprox(x, y) > W / 2 + t.flat + t.fall + WORLD / 96, bi = longe ? 0 : tr.indiceAt(x, y);
     const lat = longe ? 1e9 : Math.abs(trackFrame(tr, x, y, bi).lat), perto = !longe && (mundo ? lat < mundo.banda(tr) + 30 : lat < W / 2 + 26); // embaixo da pista o chão afunda mais (a malha é grossa e furava o asfalto nas rampas)
-    let h = t.espaco ? -700 : (longe ? 0 : mundo ? tr.relevoGP(x, y, trackFrame(tr, x, y, bi), bi, true) : groundH(tr, x, y, bi)) - (mundo ? 1.5 + 7.5 * (1 - Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)) ** 2 * (3 - 2 * Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)))) * (perto ? 1 : 0) : perto ? 9 : 1.5); // no espaço não tem chão: o "chão" fica bem lá embaixo
+    let h = t.espaco ? -700 : (longe ? 0 : mundo ? tr.relevoGP(x, y, trackFrame(tr, x, y, bi), bi, true) : groundH(tr, x, y, bi)) - (mundo ? 1.5 + (gp?.afundarPerto ?? 7.5) * (1 - Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)) ** 2 * (3 - 2 * Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)))) * (perto ? 1 : 0) : perto ? 9 : 1.5); // no espaço não tem chão: o "chão" fica bem lá embaixo
     if (mundo) { const s = mundo.fundo(tr, x, y); if (s > -90) h = s > 0 ? Math.max(-34, mundo.nivelMar - 7 - s * 0.35) : Math.min(h, mundo.nivelMar + 1 + 3.2 * -s); } // a bacia do porto e o mar, o cais em paredão e a falésia do Rochedo (3 de altura por unidade)
     if (gp?.terreno?.altura) h = gp.terreno.altura(tr, x, y, h, lat); // o GP com água ou relevo próprio (Singapura: a baía e o rio afundam o chão)
     if (tr.sobPonte) h = Math.min(h, tr.sobPonte(x, y) - 4); // embaixo da ponte (Suzuka)
@@ -234,7 +234,7 @@ function buildWorld(tr) {
   }
   if (lisos.length) { const m = add(new THREE.Mesh(mergeGeometries(lisos, false), chaoM)); m.position.set(WORLD / 2, 0, WORLD / 2); m.receiveShadow = true; m.name = `${id}-terreno`; lisos.forEach((g) => g.dispose()); } // os pedaços lisos, uma chamada só
   geo.dispose();
-  if (mundo) {
+  if (mundo && !gp?.semFundacao) { // (`semFundacao`: o GP desenha a dele, Mônaco em kit/monaco/base.js)
     // Fecha a lateral do asfalto suspenso até abaixo do terreno, sem mudar a colisão.
     // Deixa livres os pontos em que outra parte da pista passa por perto, como no grampo.
     const vs = [], indices = [], lat = W / 2 + 7;
@@ -306,7 +306,7 @@ function buildWorld(tr) {
       return d >= 0 && defs[d].agua && aguaDe?.[k] === s ? d + 1000 : d; }; // -1: o estilo de base; 1000+: o do lado da água; 2000+: o de um lado
       const estiloDe = (d) => (d < 0 ? base : d >= 2000 ? { ...base, ...defs[d - 2000], ...defs[d - 2000].porLado[s] } : d >= 1000 ? { ...base, ...defs[d - 1000], ...defs[d - 1000].agua } : { ...base, ...defs[d] }), materiais = new Map();
       const matDe = (d) => { if (!base) return wm; if (!materiais.has(d)) materiais.set(d, new THREE.MeshStandardMaterial({ map: guardRail(s, estiloDe(d)), roughness: 0.55, side: THREE.DoubleSide })); return materiais.get(d); };
-      const vLenDe = (d) => { const g = estiloDe(d); return g?.estilo === "monaco" ? g.sequencia.length * (g.trecho ?? 360) : g?.vLen ?? (base ? 480 : 32); };
+      const vLenDe = (d) => { const g = estiloDe(d); return g?.estilo === "monaco" ? g.sequencia.length * (g.trecho ?? 360) * E : (g?.vLen ?? (base ? 480 : 32)) * (base?.estilo === "monaco" ? E : 1); }; // (a escala do cenário encolhe a altura e o comprimento do painel juntos: o patrocinador mantém a proporção)
       const trecho = (i0, i1) => {
         const fatias = []; let a = i0;
         for (let i = i0 + 1; i <= i1 + 1; i++) if (i === i1 + 1 || defDe(i) !== defDe(a)) { fatias.push([a, Math.min(i, i1), defDe(a)]); a = i; }
@@ -314,8 +314,11 @@ function buildWorld(tr) {
         for (const [x0, x1, d] of fatias) {
           if (x1 <= x0 || d === -2) continue; const g = estiloDe(d);
           const lat = tr.t.muros ? (i) => s * tr.latMuro(s, i) : s * L; // com `muros` (Mônaco), a barreira fica na distância de cada trecho (colada, estreita, ou recuada no escape)
-          m = ribbon(lat, lat, 0.5, matDe(d), vLenDe(d), g?.alto ?? 12, 1, x0, x1); m.castShadow = true; m.name = `${id}-muro`;
-          if (base?.estilo === "monaco") afastarMuro(tr, m.geometry, x0, tr.t.muros ? (i) => tr.latMuro(s, i) - 1 : L - (tr.t.muroFolga ?? 8) + 13);
+          m = ribbon(lat, lat, 0.5, matDe(d), vLenDe(d), (g?.alto ?? 12) * (base?.estilo === "monaco" ? E : 1), 1, x0, x1); m.castShadow = true; m.name = `${id}-muro`;
+          if (base?.estilo === "monaco") {
+            afastarMuro(tr, m.geometry, x0, tr.t.muros ? (i) => tr.latMuro(s, i) - 1 : L - (tr.t.muroFolga ?? 8) + 13);
+            const A = ((tr.altoMuro ||= { 1: new Float32Array(n), [-1]: new Float32Array(n) })[s]); for (let k = x0; k <= x1; k++) A[((k % n) + n) % n] = (g?.alto ?? 12) * E; // (a altura de cada ponto da barreira, para a cerca de kit/monaco/ambiente.js subir dela)
+          }
         }
         return m;
       };

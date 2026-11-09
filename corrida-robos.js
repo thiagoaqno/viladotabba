@@ -226,7 +226,7 @@ function perfilF1(pf, f) {
   let v = mapa.get(q);
   if (!v && pf.linha.hi) { // pistas de GP: o ritmo do piloto novo (corrida-piloto.js), com os limites de verdade do carro
     const lat = Float64Array.from({ length: pf.n }, (_, i) => pf.lat[(i + 2) % pf.n]);
-    v = Piloto.perfilDoNivel(pf.pts, lat, pf.c, aderRef(), q);
+    v = Piloto.perfilDoNivel(pf.pts, lat, pf.c, aderRef(), q, pf.t.janelaRitmo);
     if (mapa.size >= 30) mapa.delete(mapa.keys().next().value);
     mapa.set(q, v);
   }

@@ -21,7 +21,7 @@ function analogico(x, zona = PADRAO.zona, sens = PADRAO.p) {
 const CURVA = 1.8;              // analógico mais macio no meio do curso, ainda chega a 1 no batente (era 1,4; apertadinha ocupava o dobro da pista)
 // O teclado vira em RAMPA (só a entrada do jogador, fora da física): SOBE por segundo até o batente e VOLTA (rápido) ao soltar. Um toque curto
 // dá um volante pequeno — a "apertadinha" ocupa a mesma fração da pista estreita que ocupava na larga. Os robôs não passam por aqui.
-const SOBE = 5.32, VOLTA = 10;
+const SOBE = 4.5, VOLTA = 10;
 function rampa(alvo, atual, dt) {
   const d = alvo - atual, t = limite(dt || 0, 0, 0.1);
   const k = Math.abs(alvo) < Math.abs(atual) || alvo * atual < 0 ? VOLTA : SOBE; // voltando ao centro: rápido

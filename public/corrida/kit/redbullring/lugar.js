@@ -4,6 +4,10 @@
 import * as THREE from "three";
 import { M } from "../../cena.js";
 import { ocupado } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
+
+/** Unidades por metro (1 u = 0,2083 m: o mesmo do carro de F1 de 26,4 u = 5,5 m). As peças desta pista são medidas em metros e multiplicadas por isto. */
+export const U_POR_M = 4.8;
 
 export const indice = (tr, f) => ((Math.floor(f * tr.n) % tr.n) + tr.n) % tr.n;
 export const lim = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -38,20 +42,24 @@ export function ladoDeDentro(tr, f) {
 }
 
 /** Põe um grupo (origem no meio da frente, frente para +z) a `lat` do eixo, do lado `lado`, em f e `ao` ao longo da pista, de frente para a pista. */
-export function pousar(tr, g, f, lado, lat, ao = 0, folgaY = 1) {
+export function pousar(tr, g, f, lado, lat, ao = 0, folgaY = 0.4) {
   const p = tr.pts[indice(tr, f)], x = p.x + p.nx * lado * lat + p.tx * ao, z = p.y + p.ny * lado * lat + p.ty * ao, ry = Math.atan2(-lado * p.nx, -lado * p.ny);
-  g.position.set(x, tr.chao(x, z) - folgaY, z); g.rotation.y = ry;
+  g.position.set(x, nivelDoChao(tr, x, z) - folgaY, z); g.rotation.y = ry; // (o chão que se vê: a fita de chao.js perto da pista, a malha longe)
   return { x, z, ry, p };
 }
 // o ponto (u para o lado da peça, v para trás a partir da frente) de um grupo de frente `ry` posto em (x, z)
 export const mundo = (x, z, ry, u, v) => [x + Math.cos(ry) * u - Math.sin(ry) * v, z - Math.sin(ry) * u - Math.cos(ry) * v];
-/** A pegada w × d cabe? Nove pontos (cantos, meios e centro) a mais de `folga` da borda da pista e fora do que já foi reservado. */
-export function cabe(tr, x, z, ry, w, d, folga = 24) {
+/** A pegada w × d cabe? Nove pontos (cantos, meios e centro) a mais de `folga` da borda da pista e fora do que já foi reservado, e com o chão que se vê
+ *  (`nivelDoChao`) variando no máximo `declive` unidades entre o ponto mais alto e o mais baixo: o relevo de 70 m desce rápido depois do trecho plano (0,5 u por u), e uma casa numa
+ *  ladeira dessas ficava num pedestal de aterro de até 8 m. */
+export function cabe(tr, x, z, ry, w, d, folga = 24, declive = Infinity) {
+  let alto = -Infinity, baixo = Infinity;
   for (const u of [-w / 2, 0, w / 2]) for (const v of [0, d / 2, d]) {
     const [px, pz] = mundo(x, z, ry, u, v);
     if (tr.distAt(px, pz) < tr.W / 2 + folga || ocupado(tr, px, pz)) return false;
+    const h = nivelDoChao(tr, px, pz); alto = Math.max(alto, h); baixo = Math.min(baixo, h);
   }
-  return true;
+  return alto - baixo <= declive;
 }
 /** Reserva a pegada (círculos ao longo da largura): as árvores, a torcida e o resto não entram. */
 export function reservar(tr, x, z, ry, w, d, folga = 22) {
@@ -63,11 +71,11 @@ export function aterro(g, w, d, fundo = 130) {
   const b = new THREE.Mesh(new THREE.BoxGeometry(w + 4, fundo, d + 4), M(0x5d7a3a, { roughness: 1 })); b.position.set(0, -fundo / 2 - 0.4, -d / 2); g.add(b); return b;
 }
 /** Tenta em cada deslocamento da lista, do lado `lado` e depois do outro (se `ambos`); põe, reserva e devolve onde ficou (ou null). */
-export function colocar(tr, add, g, { nome = g.name, f, lado, lats, ao = 0, w, d, folga = 24, ambos = false, base = true, reserva = 22 }) {
+export function colocar(tr, add, g, { nome = g.name, f, lado, lats, ao = 0, w, d, folga = 24, ambos = false, base = true, reserva = 22, declive = 14 }) {
   for (const l of ambos ? [lado, -lado] : [lado]) for (const lat of lats) {
     const p = tr.pts[indice(tr, f)], x = p.x + p.nx * l * lat + p.tx * ao, z = p.y + p.ny * l * lat + p.ty * ao, ry = Math.atan2(-l * p.nx, -l * p.ny);
     if (lat < tr.W / 2 + recuoMax(tr, l, f, ao, w) + 14) continue; // por dentro da barreira não entra nada
-    if (!cabe(tr, x, z, ry, w, d, folga)) continue;
+    if (!cabe(tr, x, z, ry, w, d, folga, declive)) continue;
     pousar(tr, g, f, l, lat, ao); if (base) aterro(g, w, d); add(g); if (reserva !== null) reservar(tr, x, z, ry, w, d, reserva);
     (tr.pecasAustria ||= []).push({ nome, f: +f.toFixed(4), ao, lado: l, lat: Math.round(lat), x: Math.round(x), z: Math.round(z), ry, w, d });
     return { x, z, ry, w, d, lado: l, lat };

@@ -74,10 +74,10 @@ export function predioBoxesJeddah({ comprimento = 540, profundidade = 62, verde 
     letreiros.push(mat);
   }
   // o terraço do pódio com guarda-sóis brancos e verdes (cones em cima de uma haste)
-  const guarda = new THREE.ConeGeometry(3.4, 1.6, 8);
+  const guarda = new THREE.ConeGeometry(5, 2.4, 8); // o guarda-sol: 5 u de raio e a haste de 7 u, vezes 1,35 do prédio: 1,4 m de raio e 2 m de altura (era 3,4 u e 2,8 u: 1 m de haste)
   for (let x = -L2 + 30; x < L2 - 30; x += 18) {
-    m.cilindro(S, [x, 21 + 1.4, 5], [0.18, 2.8], { cor: "#80858b", seg: 5 });
-    m.geo(S, guarda, { x, y: 21 + 3.4, z: 5, cor: ((x / 18) | 0) % 3 ? "#f4f1e8" : verde });
+    m.cilindro(S, [x, 21 + 3.5, 5], [0.25, 7], { cor: "#80858b", seg: 5 });
+    m.geo(S, guarda, { x, y: 21 + 8.2, z: 5, cor: ((x / 18) | 0) % 3 ? "#f4f1e8" : verde });
   }
   // as velas brancas do Paddock Club (kit 2) sobre o terraço do 3º andar
   const t3 = andares[3];
@@ -85,7 +85,7 @@ export function predioBoxesJeddah({ comprimento = 540, profundidade = 62, verde 
   // o Race Control: a caixa de vidro escuro no alto, o telhado, o mastro com a bandeira
   const rc = andares[4];
   m.caixa(S, [(rc.x0 + rc.x1) / 2, rc.y0 + rc.h + 1, (rc.frente - P + 8) / 2 + 3], [rc.x1 - rc.x0 + 6, 2.4, rc.frente - (-P + 8) + 7], { cor: branco });
-  for (const [dx, h] of [[-52, 56], [0, 70], [56, 56]]) { m.cilindro(S, [(rc.x0 + rc.x1) / 2 + dx, rc.y0 + rc.h + 2.2 + h / 2, rc.frente - 14], [0.5, h], { cor: "#d9dde0", seg: 6 }); mastros.push([(rc.x0 + rc.x1) / 2 + dx, rc.y0 + rc.h + 2.2 + h, rc.frente - 14]); }
+  for (const [dx, h] of [[-52, 40], [0, 50], [56, 40]]) { m.cilindro(S, [(rc.x0 + rc.x1) / 2 + dx, rc.y0 + rc.h + 2.2 + h / 2, rc.frente - 14], [0.5, h], { cor: "#d9dde0", seg: 6 }); mastros.push([(rc.x0 + rc.x1) / 2 + dx, rc.y0 + rc.h + 2.2 + h, rc.frente - 14]); }
   // as torres de câmera e o telão na ponta do prédio
   const g = m.montar("predio-boxes-jeddah");
   g.userData = { comprimento, profundidade, alto: 70, mastros, letreiros, recuo3: t3.frente };

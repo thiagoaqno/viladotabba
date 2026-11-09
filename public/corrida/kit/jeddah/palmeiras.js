@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { M } from "../../cena.js";
 import { livre, ocupado, sorteio } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
 
 const cor = (hex) => new THREE.Color(hex);
 // junta pedaços (posições + cores) numa geometria só
@@ -41,11 +42,12 @@ function folha(comp, ang, alt, queda, larg, base, ponta) {
   return { v, c, i };
 }
 function geoPalmeira() {
-  const H = 64, t = tronco(H, 2.3, 0.35), partes = [t];
+  // o tronco de 11,7 m (era 64 u = 13,3 m, de 0,9 a 1,5 vezes) com o raio de 1,4 u (0,29 m; era 2,3 u: 1 m de diâmetro), e frondes de 4,5 a 6 m (era 6,2 a 8,3 m): com `escala` de 0,75 a 1,1 a palmeira inteira tem 10 a 15 m
+  const H = 56, t = tronco(H, 1.4, 0.35), partes = [t];
   const topo = [t.topo, H, 0], verdes = [["#2f7d32", "#6fb24a"], ["#3a8a34", "#7cbf55"]];
   const n = 9;
   for (let k = 0; k < n; k++) {
-    const ang = (k / n) * Math.PI * 2 + (k % 2) * 0.2, comp = 30 + (k % 3) * 5, f = folha(comp, ang, 9 + (k % 2) * 5, 15 + (k % 3) * 4, 3.4, cor(verdes[k % 2][0]), cor(verdes[k % 2][1]));
+    const ang = (k / n) * Math.PI * 2 + (k % 2) * 0.2, comp = (30 + (k % 3) * 5) * 0.72, f = folha(comp, ang, 9 + (k % 2) * 5, (15 + (k % 3) * 4) * 0.72, 3.4, cor(verdes[k % 2][0]), cor(verdes[k % 2][1]));
     for (let q = 0; q < f.v.length; q += 3) { f.v[q] += topo[0]; f.v[q + 1] += topo[1]; f.v[q + 2] += topo[2]; }
     partes.push(f);
   }
@@ -75,7 +77,7 @@ export const palmeiras = (add, lista, { nome = "palmeiras" } = {}) => instanciar
 export const arbustos = (add, lista, { nome = "arbustos" } = {}) => instanciar(add, geoArbusto(), lista, nome);
 
 // escolhe onde nascem: ao longo da pista, dos dois lados, entre dMin e dMax da linha central, onde livre/ocupado deixam
-export function semearPalmeiras(tr, { de = 0, ate = 1, lados = [1, -1], dMin = 96, dMax = 220, passo = 7, chance = 0.5, semente = 1234, escala = [0.9, 1.5], folga = 38, tipo = "palmeira", filtro = null } = {}) {
+export function semearPalmeiras(tr, { de = 0, ate = 1, lados = [1, -1], dMin = 96, dMax = 220, passo = 7, chance = 0.5, semente = 1234, escala = [0.75, 1.1], folga = 38, tipo = "palmeira", filtro = null } = {}) {
   const { pts, n } = tr, r = sorteio(semente), lista = [];
   for (let i = Math.floor(de * n); i < Math.floor(ate * n); i += passo) {
     const p = pts[i % n];
@@ -83,7 +85,7 @@ export function semearPalmeiras(tr, { de = 0, ate = 1, lados = [1, -1], dMin = 9
       if (r() > chance) continue;
       const d = dMin + r() * (dMax - dMin), x = p.x + p.nx * lado * d + p.tx * (r() - 0.5) * 30, z = p.y + p.ny * lado * d + p.ty * (r() - 0.5) * 30, s = escala[0] + r() * (escala[1] - escala[0]);
       if (!livre(tr, x, z, folga) || ocupado(tr, x, z, i % n) || tr.noCorredor?.(x, z) || (filtro && !filtro(x, z, i % n, lado))) continue;
-      lista.push({ x, y: tr.chao(x, z) - 1.5, z, s: tipo === "palmeira" ? s : s * 0.9, r: r() * 6.28 });
+      lista.push({ x, y: nivelDoChao(tr, x, z) - 0.3, z, s: tipo === "palmeira" ? s : s * 0.9, r: r() * 6.28 });
     }
   }
   return lista;

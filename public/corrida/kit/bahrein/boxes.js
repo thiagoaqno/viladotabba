@@ -10,7 +10,9 @@ import { moldura, Regiao, pintor, materialDaNoite } from "./base.js";
 const EQUIPES = ["#e10600", "#27f4d2", "#ff8700", "#3671c6", "#229971", "#64c4ff", "#b6babd", "#6692ff", "#52e252", "#fd4bc7"];
 const PAREDE = "#e7cbb6", LAJE = "#f6f3ec", VERMELHO = "#ce1126";
 
-export function predioDosBoxes(tr, add, { de = 0.972, ate = 1.07, v0 = 136, fundo = 64 } = {}) {
+// `v0`: a frente do prédio, a W / 2 + 76 do eixo (a rua dos boxes, de regras de F1, vai de W / 2 + 12 a W / 2 + 66; antes um 136 fixo, de quando a pista tinha 120 u: 76 u da borda, os mesmos de agora).
+// Os andares já têm o tamanho real (1 u = 0,2083 m: térreo de 4,6 m com a porta de 3,75 m, hospitality de 4,2 m, velas até uns 20 m do chão): não mudam.
+export function predioDosBoxes(tr, add, { de = 0.972, ate = 1.07, v0 = tr.W / 2 + 76, fundo = 64 } = {}) {
   const { n } = tr;
   let i0 = Math.floor(de * n), i1 = Math.floor(ate * n);
   const rec = recortar(tr, i0, i1, [v0 - 8, v0 + fundo + 4]); if (!rec) return null;

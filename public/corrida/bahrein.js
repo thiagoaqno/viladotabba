@@ -12,7 +12,9 @@ import { predioDosBoxes } from "./kit/bahrein/boxes.js";
 import { torreSakhir } from "./kit/bahrein/torre.js";
 import { praca } from "./kit/bahrein/praca.js";
 import { torresDeLuz } from "./kit/bahrein/luz.js";
-import { escapeMosaico } from "./kit/bahrein/escape.js";
+import { escapeMosaico, marcasDoMosaico } from "./kit/bahrein/escape.js";
+import { beiradaSolida, nivelDoChao } from "./kit/bahrein/chao.js";
+import { ambienteBahrein, postesDRS } from "./kit/bahrein/ambiente.js";
 import { deserto } from "./kit/bahrein/deserto.js";
 import { ligarNoite } from "./kit/bahrein/base.js";
 import { muretaBranca, porticoBahrein, velasTribuna } from "./kit/bahrein/reta.js";
@@ -41,23 +43,27 @@ function refinaria(tr, { add, hAt }) {
 }
 
 // o antes: o prédio dos boxes, a torre, a praça e o paddock, os refletores, o escape em mosaico, o deserto e a refinaria
-export function cenarioBahrein(tr, ctx) {
+export function cenarioBahrein(tr, ctx, ambiente) {
   const { add, hAt } = ctx;
   tr.reservado ||= [];
+  beiradaSolida(tr, add, { marcados: marcasDoMosaico(tr, ESCAPE.mosaico) }); // a base sólida da pista e a areia no nível do asfalto, dos dois lados (kit/bahrein/chao.js)
   const boxes = predioDosBoxes(tr, add);
   // a torre fica no pé do prédio, do lado de dentro da curva 15, onde a reta começa (como nas fotos)
   let torre = null;
-  const p = tr.pts[Math.floor(tr.n * 0.957)];
-  for (const d of [250, 290, 340]) { const x = p.x + p.nx * d, z = p.y + p.ny * d; if (livre(tr, x, z, 130)) { torreSakhir(tr, add, { x, z }); torre = tr.torreAlSakhir; break; } }
+  const p = tr.pts[Math.floor(tr.n * 0.957)], W2 = tr.W / 2;
+  // (as distâncias são a partir da borda: eram 250, 290 e 340 do eixo, de quando a pista tinha 120 u)
+  for (const d of [W2 + 190, W2 + 230, W2 + 280]) { const x = p.x + p.nx * d, z = p.y + p.ny * d; if (livre(tr, x, z, 130)) { torreSakhir(tr, add, { x, z }); torre = tr.torreAlSakhir; break; } }
   praca(tr, add, { torre, boxes });
   torresDeLuz(tr, add);
-  escapeMosaico(tr, add, { trechos: ESCAPE.mosaico, pneus: ESCAPE.pneus, largura: ESCAPE.largura });
+  escapeMosaico(tr, add, { trechos: ESCAPE.mosaico, pneus: ESCAPE.pneus, largura: ESCAPE.largura, nivel: (x, z) => nivelDoChao(tr, x, z) });
   deserto(tr, add, ctx);
   refinaria(tr, ctx);
+  ambienteBahrein(tr, add, ambiente); // painéis, mastros, placas de frenagem e postos dos fiscais, no chão e atrás da barreira (kit/bahrein/ambiente.js)
 }
 
 // o depois: o pórtico branco, a mureta, a cobertura da arquibancada principal
 export function depoisBahrein(tr, { add }) {
+  postesDRS(tr); // as placas de DRS de pista.js ganham o poste até o chão
   porticoBahrein(tr, add);
   const n = tr.n, corr = window.F1Regras?.corredor?.(tr.t, n, tr.W), a = corr ? corr.i0 - 18 : Math.floor(0.97 * n), b = corr ? (corr.i0 + corr.len + 18) % n : Math.floor(0.02 * n);
   muretaBranca(tr, add, [[0.915, 1.085, -1], [0.915, a / n, 1], [b / n, 0.09, 1]]);

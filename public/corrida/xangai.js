@@ -15,7 +15,9 @@
 // Tudo é cenário: nada fica dentro da pista (livre/ocupado) e a física é a de sempre.
 import * as THREE from "three";
 import { marcaTex } from "./kit/marcas.js";
-import { tribunaCoberta } from "./kit/coberturas.js";
+import { tribunaReal } from "./kit/xangai/tribuna.js";
+import { beiradaSolida, nivelDoChao } from "./kit/xangai/chao.js";
+import { ambienteXangai, postesDRS } from "./kit/xangai/ambiente.js";
 import { arquibancadas } from "./kit/arquibancadas.js";
 import { registrarMarcasXangai } from "./kit/xangai/marcas.js";
 import { pousar, reservar, colocar, somDaTorcida, aterro, mundoDe, indice } from "./kit/xangai/lugar.js";
@@ -30,7 +32,10 @@ registrarMarcasXangai();
 export const CAMISAS_CN = ["#c8102e", "#ffd34a", "#ffffff", "#c8102e", "#b5121b", "#f2a33a", "#e9eef2"];
 const CORES_ARQ = ["#c8102e", "#f4f4f2", "#1d3b5c", "#c8102e", "#e8b62c", "#f4f4f2"];
 
-const novaTribuna = (comprimento, degraus, semente, o = {}) => tribunaCoberta({ comprimento, degraus, altura: 5.4, fundo: 8, secoes: Math.max(2, Math.round(comprimento / 45)), publico: 0.7, semente, camisas: CAMISAS_CN, cores: CORES_ARQ, estrutura: "#8a9096", cobertura: "#e9ecee", alcance: 0.7, folga: 18, vao: 56, ...o });
+// A tribuna no tamanho real (kit/xangai/tribuna.js, `tribunaReal`): o degrau é o de `tr.escala` (6 × escala de altura e 9 × escala de fundo, 0,5 × 0,75 m; o de `tribunaCoberta` do kit era 5,4 × 8 u = 1,1 × 1,7 m),
+// a gente tem 1,7 m e a cobertura sobe 5,4 m acima do degrau. Os `degraus` das chamadas são os de antes (8 u de fundo por degrau): `fileiras` os converte para o degrau de hoje (mesma profundidade, 20 m para 12 degraus).
+const fileiras = (tr, degraus) => Math.max(2, Math.round(degraus * 8 / (9 * (tr.escala ?? 1))));
+const novaTribuna = (tr, comprimento, degraus, semente) => tribunaReal({ escala: tr.escala ?? 1, comprimento, degraus: fileiras(tr, degraus), secoes: Math.max(2, Math.round(comprimento / 45)), publico: 0.7, semente, camisas: CAMISAS_CN, cores: CORES_ARQ, estrutura: "#8a9096", cobertura: "#e9ecee", alcance: 0.7, vao: 56 });
 
 // a pegada cabe fora da pista? (sem olhar o que foi reservado: o corredor dos boxes reserva a faixa onde fica a frente do prédio das garagens)
 function cabeNaPista(tr, x, z, ry, w, d, folga) {
@@ -55,8 +60,8 @@ function retaDosBoxes(tr, { add }) {
   // (o outro lado da reta só é livre atrás da linha de chegada: à frente dela a curva 1 volta e passa colada) a tribuna principal, entre as torres das asas
   const mods = [];
   for (const [ao, comp, degraus, sem] of [[-150, 170, 12, 1], [-380, 190, 12, 2], [-570, 190, 11, 3]]) {
-    const t = novaTribuna(comp, degraus, sem);
-    const o = colocar(tr, add, t, { f: aoF(ao), lado: -lado, lats: [LAT_TRIBUNA], w: comp + 4, d: degraus * 8 + 8, folga: 14, reserva: 20 });
+    const t = novaTribuna(tr, comp, degraus, sem), prof = fileiras(tr, degraus) * 9 * (tr.escala ?? 1);
+    const o = colocar(tr, add, t, { f: aoF(ao), lado: -lado, lats: [LAT_TRIBUNA], w: comp + 4, d: prof + 8, folga: 14, reserva: 20 });
     if (o) mods.push(o);
   }
   if (mods.length) somDaTorcida(tr, aoF(-640), aoF(-40));
@@ -101,8 +106,9 @@ function curvasFechadas(tr) {
 function arquibancadasDasCurvas(tr, add) {
   const proprias = [[0, 0.04], [0.04, 0.115], [0.78, 0.845], [0.92, 1.0]]; // o caracol, o grampo da curva 14 e a reta dos boxes: ficam por conta das peças próprias
   const livres = curvasFechadas(tr).filter((c) => { const f0 = c.a / tr.n, f1 = c.b / tr.n; return !proprias.some(([a, b]) => f0 < b && f1 > a); }).sort((a, b) => b.comp - a.comp).slice(0, 7);
+  const FILEIRAS_CURVA = 1.5; // o degrau de 0,5 m do kit é a metade da altura de antes: 1,5 vez as fileiras
   const cores = [["#c8102e", "#f4f4f2"], ["#1d3b5c", "#f4f4f2"], ["#e8b62c", "#1d3b5c"], ["#f4f4f2", "#c8102e"]];
-  const trechos = livres.map((c, j) => ({ de: Math.max(0, c.a / tr.n - 0.004), ate: (c.b / tr.n) + 0.004, lado: c.lado, degraus: 7 + Math.min(4, Math.round(c.comp / 24)), cor: cores[j % 4][0], encosto: cores[j % 4][1], cobertura: j % 3 === 0, torcida: CAMISAS_CN }));
+  const trechos = livres.map((c, j) => ({ de: Math.max(0, c.a / tr.n - 0.004), ate: (c.b / tr.n) + 0.004, lado: c.lado, degraus: Math.round((7 + Math.min(4, Math.round(c.comp / 24))) * FILEIRAS_CURVA), cor: cores[j % 4][0], encosto: cores[j % 4][1], cobertura: j % 3 === 0, torcida: CAMISAS_CN }));
   if (trechos.length) arquibancadas(tr, add, { trechos });
   tr.curvasXangai = livres.map((c) => ({ f: +((c.a + c.b) / 2 / tr.n).toFixed(3), lado: c.lado, comp: c.comp }));
 }
@@ -121,14 +127,16 @@ function teloes(tr, { add }) {
 // ---------------------------------------------------------------------------------------------------------------------
 // O antes (cenario) e o depois (depois) do GP
 // ---------------------------------------------------------------------------------------------------------------------
-export function cenarioXangai(tr, ctx) {
+export function cenarioXangai(tr, ctx, ambiente) {
   tr.reservado ||= [];
+  beiradaSolida(tr, ctx.add); // a base sólida da pista e a grama no nível do asfalto, dos dois lados (kit/xangai/chao.js)
   tr.camisasGP = CAMISAS_CN; // a torcida solta de vida.js também veste vermelho e amarelo
   lamina(tr, ctx); // a água primeiro: `tr.ocupado` passa a dizer "é água" para tudo que vem depois
   arquibancadasDasCurvas(tr, ctx.add);
   const { lado, Z, F } = retaDosBoxes(tr, ctx);
   paddockSobreOLago(tr, ctx.add, { lado, atras: Z + F });
   teloes(tr, ctx);
+  ambienteXangai(tr, ctx.add, ambiente); // as bandeiras, as placas, os postos e a cerca de detritos, no chão e atrás da barreira (kit/xangai/ambiente.js)
 }
 
 export function depoisXangai(tr, ctx) {
@@ -136,10 +144,11 @@ export function depoisXangai(tr, ctx) {
   vegetacaoDoParque(tr, add, {});
   cidadeDeXangai(tr, add, {});
   // a faixa do circuito no pórtico da largada (o de pista.js): uma de cada lado da viga, a da frente com a normal contra o sentido da volta
-  const p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx);
+  postesDRS(tr); // as placas de DRS de pista.js ganham poste até o chão
+  const p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx), E = tr.escala ?? 1; // (a viga do pórtico de pista.js está a 62 × a escala e tem 10 × a escala de altura: a faixa de 8,4 × a escala vai nela)
   for (const s of [1, -1]) {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4), new THREE.MeshBasicMaterial({ map: marcaTex("xgcircuito", 1024, 64), side: THREE.FrontSide }));
-    f.position.set(p.x, p.h + 62, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(1.7); add(f);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4 * E), new THREE.MeshBasicMaterial({ map: marcaTex("xgcircuito", 1024, 64), side: THREE.FrontSide }));
+    f.position.set(p.x, p.h + 62 * E, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(1.7); add(f);
   }
-  void indice;
+  void indice; void nivelDoChao;
 }

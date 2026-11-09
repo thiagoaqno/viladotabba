@@ -1,6 +1,6 @@
 // Silverstone — as peças que só este circuito tem (assets exclusivos), cada uma um THREE.Group com a origem no chão e a
 // frente (a porta, a fachada) para +z, no mesmo molde do kit 2 (kit/montagem.js: cor chapada por vértice, uma malha por
-// material, só um canvas pequeno para o que precisa de letra). 1 unidade ≈ 10 cm.
+// material, só um canvas pequeno para o que precisa de letra). Saem desenhadas a 1 unidade ≈ 10 cm; no mundo de hoje (1 u = 0,2083 m) quem monta (../../silverstone.js) as encolhe: hangar de 150 u de vão e 42 de altura, torre RAF × 0,55, telão × 0,45; a torre da direção de prova, a igreja e a turbina já têm o tamanho real.
 //   hangarRAF       o hangar em arco do antigo aeródromo da RAF (e, pequeno, a barraca Nissen)
 //   torreRAF        a torre de controle de tijolo, com a cabine de vidro, que sobrou do campo de pouso
 //   torreCorrida    a torre da direção de prova, atrás do The Wing (vidro, mastro com a Union Jack)

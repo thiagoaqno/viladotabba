@@ -8,8 +8,12 @@ import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { ocupado, sorteio, instancias } from "../comum.js";
 import { indice } from "./lugar.js";
+import { nivelDoChao } from "./chao.js";
 
 export const LARANJA = "#ff6a13";
+// a pessoa de pé desenhada aqui tinha 8 + 2,4 u de cabeça = 10,4 u = 2,17 m; a de verdade, 1,75 m (8,4 u): fator 0,81 (o mesmo de Spa e do Red Bull Ring). As bandeiras de mão (e as hastes) eram de 3 a 5 m com o pano de
+// 2,5 a 3,3 m (16 a 26 u de haste, 12 × 8 u × 0,8 a 1,3): agora a haste tem 1,8 a 2,9 m e o pano 1,1 a 1,8 m, o fator 0,55 (a haste de 2 m de um torcedor, não um mastro).
+const G = 8.4 / 10.4, BAND = 0.55;
 // a torcida: laranja em quase tudo, e um pouco de branco, azul e vermelho da bandeira
 export const CAMISAS_NL = [LARANJA, LARANJA, LARANJA, "#ff7a1a", LARANJA, "#ff5a00", LARANJA, LARANJA, "#ff8a2a", LARANJA, "#ffffff", "#21468b", "#ae1c28", LARANJA, "#ff6a13", "#111111"];
 const PELES = ["#f1c7a5", "#e8b894", "#d9a37a", "#a8714a", "#f4d3b8"], CHAPEUS = [LARANJA, LARANJA, "#ff7a1a", "#ffffff", "#21468b"];
@@ -62,10 +66,11 @@ export function torcidaLaranja(tr, add, zonas, cfg = {}) {
       for (let k = 0, q = Math.floor(z.dens) + (r() < z.dens % 1 ? 1 : 0); k < q; k++) {
         const lat = z.lat0 + (z.lat1 - z.lat0) * r() * r(), x = p.x + p.nx * z.lado * lat + p.tx * (r() - 0.5) * 12, zz = p.y + p.ny * z.lado * lat + p.ty * (r() - 0.5) * 12;
         if (tr.distAt(x, zz) < lat - 6 || ocupado(tr, x, zz, i % n)) continue;
-        const y = (z.y != null ? p.h + z.y : tr.chao(x, zz)) - 1.5, sentado = r() < 0.4, alto = sentado ? 5.4 : 8, c = camisas[(r() * camisas.length) | 0], chapeu = r() < 0.32;
-        corpos.push({ x, y: y + alto / 2, z: zz, sx: 2.8, sy: alto, sz: 2.2, r: r() * 6.28, c });
-        cabecas.push({ x, y: y + alto + 1.2, z: zz, sx: 2.3, sy: chapeu ? 2.9 : 2.4, sz: 2.3, r: r() * 6.28, c: chapeu ? CHAPEUS[(r() * CHAPEUS.length) | 0] : PELES[(r() * PELES.length) | 0] });
-        if (r() < (z.bandeiras ?? 0.14)) bandeiras.push({ x, y: y + alto - 1, z: zz, tipo: r() < 0.3 ? 0 : r() < 0.5 ? 1 : r() < 0.8 ? 2 : 3, r: r() * 6.28, s: 0.8 + r() * 0.5, alto: 16 + r() * 10 });
+        const y = (z.y != null ? p.h + z.y : nivelDoChao(tr, x, zz)) - 0.3, sentado = r() < 0.4, alto = (sentado ? 5.4 : 8) * G, // (pés 0,06 m dentro do chão que se vê)
+           c = camisas[(r() * camisas.length) | 0], chapeu = r() < 0.32;
+        corpos.push({ x, y: y + alto / 2, z: zz, sx: 2.8 * G, sy: alto, sz: 2.2 * G, r: r() * 6.28, c });
+        cabecas.push({ x, y: y + alto + 1.2 * G, z: zz, sx: 2.3 * G, sy: (chapeu ? 2.9 : 2.4) * G, sz: 2.3 * G, r: r() * 6.28, c: chapeu ? CHAPEUS[(r() * CHAPEUS.length) | 0] : PELES[(r() * PELES.length) | 0] });
+        if (r() < (z.bandeiras ?? 0.14)) bandeiras.push({ x, y: y + alto - 1, z: zz, tipo: r() < 0.3 ? 0 : r() < 0.5 ? 1 : r() < 0.8 ? 2 : 3, r: r() * 6.28, s: (0.8 + r() * 0.5) * BAND, alto: (16 + r() * 10) * BAND });
       }
     }
   }
@@ -93,8 +98,8 @@ export function fumacaLaranja(tr, add, focos, { bolhas = 9, alcance = 1300, vent
     focos.forEach((f, fi) => {
       if (so && so(f) === false) return;
       for (let b = 0; b < bolhas; b++) {
-        const k = fi * bolhas + b, idade = (((t / ciclo) + fase[k]) % 1), env = Math.sin(Math.PI * Math.min(1, idade * 1.05)) ** 0.8, rajada = 1 + 0.35 * Math.sin(t * 0.7 + fi), tam = (f.tam ?? 1) * (6 + 30 * idade) * env;
-        d.position.set(f.x + vento[0] * rajada * idade * ciclo + Math.cos(giro[k]) * 4 * idade, f.y + 8 + idade * 120 * (f.tam ?? 1), f.z + vento[1] * rajada * idade * ciclo + Math.sin(giro[k]) * 4 * idade);
+        const k = fi * bolhas + b, idade = (((t / ciclo) + fase[k]) % 1), env = Math.sin(Math.PI * Math.min(1, idade * 1.05)) ** 0.8, rajada = 1 + 0.35 * Math.sin(t * 0.7 + fi), tam = (f.tam ?? 1) * (3 + 15 * idade) * env; // (a bolha de 1,25 a 7,5 m de raio passou a 0,6 a 3,7 m: a coluna de um sinalizador tem uns 5 m de largura)
+        d.position.set(f.x + vento[0] * rajada * idade * ciclo + Math.cos(giro[k]) * 4 * idade, f.y + 4 + idade * 70 * (f.tam ?? 1), f.z + vento[1] * rajada * idade * ciclo + Math.sin(giro[k]) * 4 * idade);
         d.scale.setScalar(Math.max(0.01, tam)); d.rotation.set(giro[k], idade, 0); d.updateMatrix(); malha.setMatrixAt(k, d.matrix);
       }
     });

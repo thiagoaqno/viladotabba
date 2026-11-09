@@ -32,9 +32,11 @@ function geoBloco(w, h, d) {
   g.translate(0, h / 2, 0); // a base no chão
   return g;
 }
+// (1 u = 0,2083 m: o andar de 15 u são 3,1 m. A orla de Zandvoort tem blocos de dez a quinze andares, então a altura é de 9 a 16 andares, não de 12 a 26 como estava: laje 255 → 195 u = 40,6 m (13 andares), alta 330 → 225 u =
+// 46,9 m (15), torre 390 → 240 u = 50 m (16), baixa 180 → 135 u = 28 m (9), média 225 → 165 u = 34 m (11); a planta (largura e fundo) fica)
 const TIPOS = [
-  { w: 170, h: 255, d: 54, nome: "laje" }, { w: 120, h: 330, d: 52, nome: "alta" }, { w: 70, h: 390, d: 70, nome: "torre" },
-  { w: 150, h: 180, d: 60, nome: "baixa" }, { w: 96, h: 225, d: 48, nome: "media" },
+  { w: 170, h: 195, d: 54, nome: "laje" }, { w: 120, h: 225, d: 52, nome: "alta" }, { w: 70, h: 240, d: 70, nome: "torre" },
+  { w: 150, h: 135, d: 60, nome: "baixa" }, { w: 96, h: 165, d: 48, nome: "media" },
 ];
 const PAREDES = ["#f3f1ea", "#e6dcc8", "#d9d3c7", "#efe5d0", "#cfd6d9", "#e8d2b6", "#f6f4ee", "#c9b9a0"];
 

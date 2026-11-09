@@ -506,7 +506,9 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
   // a folga lateral entre carros acompanha a largura da pista: nas de 104 ou mais vale a de sempre; numa mais estreita (Mônaco, 84) a faixa em que o robô anda (maxLat = W/2 - 18) cabe menos, e uma folga de 44 jogava o carro de lado contra o muro
   const margemNormal = niv.margem * Math.min(1, (T.PISTAS[room.config.pista].width - 36) / 68);
   const monaco = room.config.pista === "monaco";
-  const MARG = monaco ? W_CARRO + Math.max(0, margemNormal - W_CARRO) * 0.5 : margemNormal;
+  // (nunca menos que a largura do carro e mais 3: na escala real a pista tem 58 u e a conta acima dava ~4 u entre os centros, menos que um carro, e os
+  // robôs se encostavam ao emparelhar, viravam fantasma e perdiam a volta)
+  const MARG = monaco ? W_CARRO + Math.max(0, margemNormal - W_CARRO) * 0.5 : Math.max(W_CARRO + 3, margemNormal);
   const dFreio = plano.dFreio ?? Infinity, dentro = plano.dentro || 0, meu = ia.sim;
   const tx = ponto.tx, ty = ponto.ty, vlatMeu = meu ? meu.vx * -ty + meu.vy * tx : 0;
   const out = { desvio: 0, freio: Infinity, encontrou: false, bloqPos: false, bloqNeg: false, draft: 0, limMin: -Infinity, limMax: Infinity, tras: null };
@@ -539,7 +541,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       if (lado > 0) { out.bloqPos = true; out.limMax = Math.min(out.limMax, latOutro - MARG); } else { out.bloqNeg = true; out.limMin = Math.max(out.limMin, latOutro + MARG); }
       if (!ia.ult || ia.ult.id !== oid) out.ladoDeOutro = true; // (alguém além do carro que estou passando está ao meu lado)
     }
-    if (frente > 22 && frente < 450 && distancia * STEP > 8 && Math.abs(lado) < 24 + frente * 0.06) out.draft = Math.max(out.draft, 1 - (frente - 22) / 428); // (o mesmo rastro longo de Sim.vacuoAlvo)
+    if (frente > 22 && frente < Sim.VACUO_ALCANCE && distancia * STEP > 8 && Math.abs(lado) < Sim.VACUO_LARGURA + frente * 0.04) out.draft = Math.max(out.draft, 1 - (frente - 22) / (Sim.VACUO_ALCANCE - 22)); // (o mesmo rastro de Sim.vacuoAlvo)
     // quanto ele está freando (a desaceleração medida de uma passagem à outra): quem vem atrás conta com mais 0,25 s do mesmo freio
     const visto = (ia.vistos || (ia.vistos = {}))[oid] || (ia.vistos[oid] = { ov, t: now, a: 0 }), dtv = (now - visto.t) / 1000;
     if (dtv >= 0.04) { visto.a += (Math.max(-300, Math.min(100, (ov - visto.ov) / dtv)) - visto.a) * Math.min(1, dtv * 6); visto.ov = ov; visto.t = now; }
@@ -553,7 +555,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     const alvoDaManobra = ia.ult?.id === oid;
     const separados = !alvoDaManobra ? perto : monaco ? Math.abs(ia.lat - latOutro) : ia.ult.lento ? perto : Math.min(perto, Math.abs(ia.lat - ondeEsta(o, distancia).lat));
     const faixaLivre = alvoDaManobra && separados >= W_CARRO + 3;
-    if (frente > 0 && distancia * STEP > 8 && !faixaLivre && Math.abs(lado) < 34 + Math.min(10, aproxima * 0.1)) { // na minha faixa (quem chega rápido vê a faixa mais larga), à frente
+    if (frente > 0 && distancia * STEP > 8 && !faixaLivre && Math.abs(lado) < W_CARRO + 8 + Math.min(10, aproxima * 0.1)) { // na minha faixa (quem chega rápido vê a faixa mais larga), à frente (W_CARRO + 8: era 34, a largura do carro antigo, 26, mais 8; com o carro real a pista de 58 u inteira virava "a minha faixa" e o robô nunca emparelhava)
       // reserva espaço para o freio progressivo da física (o pedal leva ~0,2 s para subir) e para o da frente frear mais forte que o previsto
       // (na largada o pelotão sai junto: a reserva de espaço cresce aos poucos, de quase nada no grid, onde os carros estão a 4 u um do outro, até
       // a de sempre; senão a fila de trás esperava cada carro da frente andar, uma fileira de cada vez)

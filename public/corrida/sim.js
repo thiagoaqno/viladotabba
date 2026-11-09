@@ -127,7 +127,7 @@ function atualizarDRS(c, zona, autorizada, bloqueado, freando = false) {
 // ---------- o vácuo ----------
 // Logo atrás de outro carro (até ~17 m, na mesma linha e na mesma direção) o ar empurra menos. Devolve 0..1 (1 = colado).
 // outros: [{ x, y, z, a, dnf, fant }]
-const VACUO_ALCANCE = 290; // (60 m; era 450 u, 94 m: com +20% de velocidade final quem vinha atrás chegava rápido demais e o freio não acompanhava)
+const VACUO_ALCANCE = 290, VACUO_LARGURA = 12; // (VACUO_LARGURA: a largura do rastro logo atrás, a do carro real, 9,1 u, com folga; era 24, a do carro antigo) // (60 m; era 450 u, 94 m: com +20% de velocidade final quem vinha atrás chegava rápido demais e o freio não acompanhava)
 function vacuoAlvo(c, outros) {
   if (c.air || !F1.vacuoPermitido(c.v) || !outros) return 0;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
@@ -137,7 +137,7 @@ function vacuoAlvo(c, outros) {
     const dx = o.x - c.x, dy = o.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
     // o rastro do vácuo vai longe (VACUO_ALCANCE u, uns 45 m) e abre com a distância, como o ar mexido atrás de um carro de verdade: quem vem
     // de longe já ganha um pouco e chega com velocidade para emparelhar (antes acabava em 17 m e só servia colado, e ninguém conseguia atacar)
-    if (along < 22 || along > VACUO_ALCANCE || lat > 24 + along * 0.06 || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
+    if (along < 22 || along > VACUO_ALCANCE || lat > VACUO_LARGURA + along * 0.04 || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
     d = Math.max(d, 1 - (along - 22) / (VACUO_ALCANCE - 22));
   }
   return d;
@@ -686,7 +686,7 @@ function reconciliar(c, st, tr, ctx) {
   return { erro, dentro, dx: ox - c.x, dy: oy - c.y, da };
 }
 
-const api = { PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+const api = { VACUO_ALCANCE, VACUO_LARGURA, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

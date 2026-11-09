@@ -11,10 +11,13 @@ import { cenarioSilverstone, depoisSilverstone } from "../silverstone.js";
 const AZUL = "#1d3f8f", VERMELHO = "#c8102e", BRANCO = "#f4f4f4";
 
 export const GP_SILVERSTONE = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista (silverstone.js, kit/silverstone/) leem `tr.escala` ou têm o tamanho real medido (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6f7075" }, // o asfalto cinza da área de escape, logo depois da zebra
-    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 330, fora: 210 },
+    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 640, fora: 407 },
     sc: [[0.955, "SC 1"], [0.13, "SC 2"]],
     grid: true, remendos: 30,
   },
@@ -42,8 +45,8 @@ export const GP_SILVERSTONE = {
     { de: 0.815, ate: 0.865, lado: -1, degraus: 8, cor: VERMELHO, encosto: AZUL }, // Stowe
     { de: 0.90, ate: 0.932, lado: -1, degraus: 5, cor: BRANCO, encosto: VERMELHO }, // Vale
   ] },
-  cenario: (tr, ctx) => cenarioSilverstone(tr, ctx), // The Wing, tribunas, aeródromo, pórticos, telões, placas das curvas, campos, aldeias e camping
-  ambiente: {
+  cenario: (tr, ctx) => cenarioSilverstone(tr, ctx, GP_SILVERSTONE.ambienteSS), // o chão sólido, o ambiente (painéis na barreira, mastros e placas no chão), The Wing, tribunas, aeródromo, pórticos, telões, placas das curvas, campos, aldeias e camping
+  ambienteSS: { // (o ambiente do kit deixa mastros, painéis e placas no ar: Silverstone usa o seu, kit/silverstone/ambiente.js, chamado em `cenario`; a chave não se chama `ambiente` para pista.js não chamar o do kit)
     bandeira: [0x012169, 0xc8102e], // a Union Jack: azul e vermelho
     marcas: ["pirelli", "rolex", "britgp", "heineken", "dhl", "aramco", "skysports", "silverstone", "tag", "lenovo"],
     outdoors: ["britgp", "pirelli", "rolex", "skysports", "heineken", "aramco", "dhl", "silverstone"],

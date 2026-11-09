@@ -62,8 +62,8 @@ export function physics(dt, spec = carOf(me())) {
   const ers = race.ers;
   if (ers) F1.carregarErs(ers, dt, keys.brake && vf > 40, !keys.gas, m?.laps || 0);
   const ersAuto = E.S?.config.ers !== "manual";
-  const usarErs = !!(ers && keys.gas && !dirProva?.safety && (ersAuto ? F1.usarErsAuto(ers.carga, vf, spec.vmax, (tr.pts[race.idx].k || 0) < 1 / 1500, race.draft > 0.25) : keys.ers));
-  const ersAtivo = ers ? F1.gastarErs(ers, dt, usarErs, !ersAuto || race.draft > 0.25) : false;
+  const usarErs = !!(ers && keys.gas && !dirProva?.safety && (ersAuto ? F1.usarErsAuto(ers.carga, vf, spec.vmax, (tr.pts[race.idx].k || 0) < 1 / 1500, race.draft > 0.25) || (keys.ers && ers.carga > F1.ERS_PISO_OVERTAKE) : keys.ers));
+  const ersAtivo = ers ? F1.gastarErs(ers, dt, usarErs, !ersAuto || race.draft > 0.25 || !!keys.ers) : false;
   race.drsAtivo = drs; race.ersAtivo = ersAtivo;
   const curva = (tr.pts[race.idx].k || 0) > 1 / 600, vac = pn ? F1.vacuoF1(race.draft, curva) : null; // nas regras de F1: vácuo na reta, ar sujo na curva
   race.arSujo = vac ? 1 - vac.aderencia : 0;
@@ -245,7 +245,7 @@ function montarAmbiente(R) {
 // os outros carros como o fim do meu passo os vê: a mesma pose do desenho (pose.js, Outro.pose), lida na hora do servidor em que o passo termina.
 // `folga`: a previsão de batida só vale com os carros enterrados mais que isto (u), tanto quanto o erro que a previsão do outro carro costuma ter
 // com o atraso desta rede (2 m por segundo de atraso, entre 10 e 40 cm): o navegador nunca bate onde o servidor, que vê a pose de verdade, não bateria.
-const MODELOS = [], EU = { L: 44, W: 26, massa: 800 }, POSE = {}, M_POR_U = 0.75 / 3.6;
+const MODELOS = [], EU = { L: 26.4, W: 9.1, massa: 800 }, POSE = {}, M_POR_U = 0.75 / 3.6;
 function outrosDoPasso(R, T) {
   let n = 0;
   for (const [id, gh] of R.ghosts) {

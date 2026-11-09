@@ -11,10 +11,13 @@ const VERMELHO = "#d52b1e", BRANCO = "#f4f4f2", AZUL = "#1b4f9c";
 const tribuna = (de, ate, lado, degraus, o = {}) => ({ de, ate, lado, degraus, cor: VERMELHO, encosto: BRANCO, cobertura: false, torcida: CAMISAS_MONTREAL, ...o });
 
 export const GP_MONTREAL = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6a6c70" }, // o asfalto cinza junto da zebra
-    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
+    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 547, fora: 354 }, // as zebras vermelhas e brancas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 30,
   },

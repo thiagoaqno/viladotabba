@@ -10,8 +10,28 @@ import { ORDEM, NOMES, usavel, camEstado } from "./cameras.js";
 import { menuBoxTecla, menuBoxPad } from "./box-menu.js";
 import { mfd, mfdTecla, mfdPad, mfdAtivo, acoes, teclaBox, digitoPneu, cancelarBoxTecla } from "./mfd.js";
 import { acoesDaTecla, botoesDe, ui, volante } from "./teclas.js";
-import "./teclas-ui.js";
+import { abrirTeclas } from "./teclas-ui.js";
 import { abrirCamera, fecharCamera, cameraAberta } from "./camera-ui.js";
+import { estiloHud, definirEstiloHud } from "./hud-telemetria.js";
+
+// os atalhos (teclas.js, grupo "Atalhos"): fazem o mesmo que o botão de cada coisa
+const ATALHOS = {
+  torre: () => acoes.torreAlternar && acoes.torreAlternar(),
+  mapa: () => acoes.mapaAlternar && acoes.mapaAlternar(),
+  som: () => { const b = $("btnSound"); if (b) b.click(); },
+  radio: () => { if (window.Radio) toast(window.Radio.silenciar() ? "Rádio desligado" : "Rádio ligado"); },
+  telaCheia: () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} },
+  controles: () => abrirTeclas(),
+};
+
+// H: o HUD em três estados, clássico → telemetria → sem HUD (a pista limpa, só a cena) → clássico. O estilo fica guardado (hud-telemetria.js);
+// o "sem HUD" vale só nesta corrida, para ninguém abrir o jogo com a tela vazia sem saber por quê.
+function trocarHud() {
+  const r = $("race"); if (!r) return;
+  if (r.classList.contains("sem-hud")) { r.classList.remove("sem-hud"); definirEstiloHud("classico"); toast("HUD clássico"); }
+  else if (estiloHud() === "telemetria") { r.classList.add("sem-hud"); toast("Sem HUD (H de novo volta)"); }
+  else { definirEstiloHud("telemetria"); toast("HUD telemetria"); }
+}
 
 // câmbio manual: Shift sobe, Ctrl direito desce (redução que estouraria o giro não entra)
 export function trocarMarcha(d) {
@@ -44,6 +64,8 @@ document.addEventListener("keydown", (e) => {
     else if (PNEUS[id]) { if (!digitoPneu(PNEUS[id])) escolherComposto(PNEUS[id]); }
     else if (id === "camera") nextCam();
     else if (id === "cameraAjuste") { e.preventDefault(); cameraAberta() ? fecharCamera() : abrirCamera(); }
+    else if (id === "hud") { e.preventDefault(); trocarHud(); }
+    else if (ATALHOS[id]) { e.preventDefault(); ATALHOS[id](); }
     else if (id === "ers") { if (E.S?.config.regras === "f1") { keys.ers = true; e.preventDefault(); } else { e.preventDefault(); useItem(keys.brake); } }
     else if (id === "item") { e.preventDefault(); useItem(keys.brake); }
   }
@@ -82,7 +104,14 @@ document.querySelectorAll(".pad button[data-k]").forEach((b) => {
 // A também acelera e B/X também freiam (para quem prefere botão), Y troca a câmera, Back/Select (ou LB) volta para a pista.
 export const pad = { steer: 0, on: false, prev: [], olharTras: false };
 // a direção que a física recebe: o analógico (já com a curva) ou o teclado/toque (-1, 0 ou 1 vezes a sensibilidade escolhida); só muda a entrada, não a física
-export const direcao = () => (pad.on && pad.steer ? pad.steer : window.Volante.teclado((keys.right ? 1 : 0) - (keys.left ? 1 : 0), volante.k));
+// (em rampa: Volante.rampa, pelo relógio, para dar o mesmo resultado chamada a 120 Hz pela física ou a cada quadro)
+const rampaVol = { v: 0, t: 0 };
+export const direcao = () => {
+  const agora = performance.now(), dt = rampaVol.t ? (agora - rampaVol.t) / 1000 : 0; rampaVol.t = agora;
+  const analogico = !!(pad.on && pad.steer), alvo = analogico ? pad.steer : window.Volante.teclado((keys.right ? 1 : 0) - (keys.left ? 1 : 0), volante.k);
+  rampaVol.v = window.Volante.rampa(alvo, rampaVol.v, dt, !analogico);
+  return rampaVol.v;
+};
 export function pollPad() {
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find((g) => g && g.connected);
   if (!gp) { pad.olharTras = false; if (pad.on) { pad.on = false; keys.gas = keys.brake = false; } return; }

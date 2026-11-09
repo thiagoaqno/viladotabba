@@ -15,15 +15,18 @@ const BOXES = window.Pistas.PISTAS.xangai.boxes;
 const arq = (de, ate, lado, degraus, cor, encosto, cobertura = false) => ({ de, ate, lado, degraus, cor, encosto, cobertura, torcida: CAMISAS_CN });
 
 export const GP_XANGAI = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: ["#c8102e", "#f4f4f2"], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas nas curvas
+    zebra: { cores: ["#c8102e", "#f4f4f2"], dentro: 554, fora: 358 }, // as zebras vermelhas e brancas nas curvas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,
   },
   // o escape: brita clara por fora das curvas mais fechadas (o caracol, os grampos)
-  escape: { britaCurvas: 420, corBrita: "#ddd3b6", largura: 26 },
+  escape: { britaCurvas: 684, corBrita: "#ddd3b6", largura: 26 },
   // as arquibancadas grandes à mão: o caracol das curvas 1 e 2, por fora do giro (a maior do circuito), e o grampo da curva 14; as outras curvas fechadas e a
   // tribuna principal são de ../xangai.js
   arquibancadas: { trechos: [

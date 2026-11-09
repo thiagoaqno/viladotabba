@@ -11,10 +11,13 @@ const BOXES = window.Pistas.PISTAS.bahrein.boxes; // o corredor dos boxes (pista
 const VERMELHO = "#ce1126", BRANCO = "#f4f4f4";
 
 export const GP_BAHREIN = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#8f8672" }, // o asfalto cinza-areia da faixa de escape junto da zebra
-    zebra: { cores: ["#d62828", BRANCO], dentro: 380, fora: 240 }, // as zebras vermelhas e brancas
+    zebra: { cores: ["#d62828", BRANCO], dentro: 709, fora: 448 }, // as zebras vermelhas e brancas
     amarelas: [[0.248, 0.264], [0.383, 0.396], [0.467, 0.48], [0.727, 0.738]], // zebra alta nas curvas 4, 8, 10 e 14
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,

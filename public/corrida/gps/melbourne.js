@@ -9,10 +9,13 @@ const TORCIDA = ["#ff8700", "#e8002d", "#ffffff", "#1b1b1b", "#ffd23f", "#2f6fd0
 const BOXES = window.Pistas.PISTAS.melbourne.boxes;
 
 export const GP_MELBOURNE = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista leem `tr.escala` (passada visual, planos/escala-real.md: a mureta, o alambrado, as tribunas, o complexo dos boxes) ou foram medidas em metros (lago, veleiros, clube, árvores, skyline, pórticos).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#686a6e" }, // o asfalto cinza da margem do parque
-    zebra: { cores: ["#007a3d", "#f4c300"], dentro: 380, fora: 240 }, // o verde e amarelo australiano tradicional
+    zebra: { cores: ["#007a3d", "#f4c300"], dentro: 692, fora: 437 }, // o verde e amarelo australiano tradicional
     amarelas: [[0.06, 0.082], [0.135, 0.16], [0.495, 0.535], [0.665, 0.695], [0.875, 0.91]], // zebras altas anticorte
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true,
@@ -60,8 +63,8 @@ export const GP_MELBOURNE = {
       { de: 0.88, ate: 0.935, lado: -1, degraus: 7, cor: "#2d3a52", encosto: "#e8eaee", cobertura: true, torcida: TORCIDA },
     ],
   },
-  cenario: (tr, ctx) => cenarioMelbourne(tr, ctx),
-  ambiente: {
+  cenario: (tr, ctx) => cenarioMelbourne(tr, ctx, GP_MELBOURNE.ambienteAustralia), // o chão sólido, o ambiente (placas de frenagem, mastros e postos no chão), o lago, o clube de vela e o skyline
+  ambiente: { // (movido para `ambienteAustralia` no fim do arquivo: o do kit deixa mastros e placas de frenagem no ar; o de Melbourne é o de kit/melbourne/ambiente.js, chamado em `cenario`)
     marcas: ["rolex", "ausgp", "heineken", "pirelli", "aramco", "dhl", "f1", "aws", "lenovo"],
     outdoors: ["rolex", "ausgp", "heineken", "pirelli", "f1", "aramco", "dhl"],
     posto: "ausgp",
@@ -97,6 +100,9 @@ export const GP_MELBOURNE = {
       campo: () => 0.65,
     },
   },
+  sem: { mastros: true }, // os mastros altos de vida-mais.js não: as bandeiras da Austrália são as de kit/melbourne/ambiente.js, de pé no chão
   horizonte: false, // o skyline de Melbourne é modelado em 3D ao norte
   depois: (tr, ctx) => depoisMelbourne(tr, ctx),
 };
+// o ambiente do kit (kit/ambiente.js) deixa mastros e placas de frenagem no ar: Melbourne usa o seu (kit/melbourne/ambiente.js), chamado em `cenario` com a mesma configuração
+GP_MELBOURNE.ambienteAustralia = GP_MELBOURNE.ambiente; delete GP_MELBOURNE.ambiente;

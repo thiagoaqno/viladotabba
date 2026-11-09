@@ -1,9 +1,10 @@
 // Melbourne — as árvores do parque Albert, em bosques soltos (e não numa parede contínua): moitas de 6 a 14 copas longe da pista,
-// mais a fileira de árvores na margem do lago. Copas e troncos em dois InstancedMesh (sem sombra), cor por instância. Nada fica
+// mais a fileira de árvores na margem do lago. Escala real: copa de 90 a 150 u de altura (19 a 31 m, como os eucaliptos e carvalhos do parque), tronco de 1 a 1,5 m (antes de 1,4 a 2,2 m), no chão que se vê (`nivelDoChao`). Copas e troncos em dois InstancedMesh (sem sombra), cor por instância. Nada fica
 // mais perto da pista do que `minimo` (a copa mais larga entra na conta) nem em `proibido`/`tr.ocupado`.
 import * as THREE from "three";
 import { M } from "../../cena.js";
 import { instancias, sorteio } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
 
 /**
  * @param {object} tr · @param {Function} add
@@ -16,9 +17,9 @@ export function bosques(tr, add, { moitas = 110, minimo = 150, alturas = [90, 15
   const r = sorteio(semente), { W } = tr, mundo = tr.t.world, copas = [], troncos = [];
   const ok = (x, z, raio) => tr.distAt(x, z) > W / 2 + minimo * 0.5 + raio && !proibido(x, z) && !tr.ocupado?.(x, z) && !(tr.reservado || []).some(([cx, cz, rr]) => (x - cx) ** 2 + (z - cz) ** 2 < rr * rr);
   const arvore = (x, z, esp = 1) => {
-    const alt = (alturas[0] + r() * (alturas[1] - alturas[0])) * esp, larg = alt * (0.34 + r() * 0.1), h = tr.chao(x, z) - 1.5, cor = folhas[(r() * folhas.length) | 0];
+    const alt = (alturas[0] + r() * (alturas[1] - alturas[0])) * esp, larg = alt * (0.34 + r() * 0.1), h = nivelDoChao(tr, x, z), cor = folhas[(r() * folhas.length) | 0];
     if (!ok(x, z, larg)) return;
-    copas.push({ x, y: h + alt * 0.62, z, sx: larg, sy: alt * 0.4, sz: larg, r: r() * 6, c: cor }); troncos.push({ x, y: h + alt * 0.24, z, sx: alt * 0.04, sy: alt * 0.48, sz: alt * 0.04 });
+    copas.push({ x, y: h + alt * 0.62, z, sx: larg, sy: alt * 0.4, sz: larg, r: r() * 6, c: cor }); troncos.push({ x, y: h + alt * 0.24, z, sx: alt * 0.025, sy: alt * 0.48, sz: alt * 0.025 });
   };
   for (let t = 0, f = 0; f < moitas && t < moitas * 12; t++) {
     const cx = -200 + r() * (mundo + 400), cz = -200 + r() * (mundo + 400);

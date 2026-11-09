@@ -17,14 +17,17 @@ const CAMISAS = ["#ffffff", "#ff5fa2", "#00a3ad", "#ffd23f", "#1b1b1b", "#ff9f1c
 const arq = (de, ate, lado, degraus, cor, encosto = BRANCO, cobertura = false) => ({ de, ate, lado, degraus, cor, encosto, cobertura, torcida: CAMISAS });
 
 export const GP_MIAMI = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
-    margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 340, fora: 220 },
+    margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 636, fora: 411 },
     amarelas: [[0.412, 0.458]], // a zebra anticorte da chicane estreita
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,
   },
-  escape: { britaCurvas: 420, corBrita: "#e3d9bd", largura: 26, pneus: [[0.4, 0.425, "fora"], [0.455, 0.475, "fora"]] },
+  escape: { britaCurvas: 785, corBrita: "#e3d9bd", largura: 26, pneus: [[0.4, 0.425, "fora"], [0.455, 0.475, "fora"]] },
   // as arquibancadas temporárias (andaimes com as cadeiras aqua e rosa): a grande da reta dos boxes, em frente ao prédio, as das curvas
   arquibancadas: { trechos: [
     arq(0.945, 0.05, 1, 11, AQUA, BRANCO, true), arq(0.89, 0.94, 1, 8, ROSA), arq(0.056, 0.098, 1, 8, ROSA), // a reta dos boxes

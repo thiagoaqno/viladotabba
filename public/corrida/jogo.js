@@ -12,6 +12,7 @@ import { gridSpot, buildTrack, groundH, useTrack } from "./pista.js";
 import { inclinacao as inclinacaoDoCarro } from "./inclinacao.js";
 import { renderer, scene, cam, sun, V3 } from "./cena.js";
 import { CARS3, KS, makeKart, poseKart, fantasmaVisual, lodKart, ocultarPiloto, dropKart, puff, stepPuffs, amostraDeFumaca } from "./carros.js";
+import { carrosAdversarios } from "./qualidade.js";
 import { camMode, pollPad, pad } from "./controles.js";
 import { quadroCamera, somDaCamera, camEstado } from "./cameras.js";
 import { quadroEspelhos } from "./espelhos.js";
@@ -272,7 +273,7 @@ function draw(dt) {
     gh.vira = (gh.vira || 0) + (alvoVira - (gh.vira || 0)) * Math.min(1, dt * (gh.mod ? 12 : 8));
     poseKart(gh.kart, gh.x, gh.y, gh.z, gh.a, gh.v || 0, gh.vira, gz, dt, inc.roll, inc.pitch, fxDe(pl, now));
     fantasmaVisual(gh.kart, !!pl.fantasma);
-    lodKart(gh.kart, distancia); // os carros de longe com menos peças (carros.js)
+    lodKart(gh.kart, distancia, carrosAdversarios()); // os carros de longe com menos peças (carros.js), pela opção "Carros dos adversários" (qualidade.js)
   }
   // Safety car: um carro próprio à frente da fila, calculado pela direção de prova no servidor.
   if (race.safety) {

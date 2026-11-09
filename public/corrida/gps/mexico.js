@@ -2,7 +2,7 @@
 // (kit/README.md explica cada peça) e o que só ele tem, em ../mexico.js e ../kit/mexico/ (o Foro Sol, o estádio de beisebol que a pista atravessa, com a
 // arquibancada em ferradura e o pódio no meio do campo; a reta dos boxes com o prédio das garagens e a tribuna principal; o Palácio dos Esportes de cúpula
 // de cobre; o parque com lagos, quadras e árvores; a Peraltada antiga; e a cidade e os vulcões Popocatépetl e Iztaccíhuatl no horizonte).
-// O traçado veio de bacinger/f1-circuits (mx-1962, licença MIT) por ferramentas/circuitos-f1.js e não mudou; as frações (0 a 1) são da volta, a partir da
+// O traçado veio de bacinger/f1-circuits (mx-1962, licença MIT) por ferramentas/circuitos-f1.js; agora na ESCALA REAL (4 304 m, pista de 14 m: ver `pistas.js`); as frações (0 a 1) são da volta, a partir da
 // linha de chegada, que fica no meio da reta dos boxes:
 // a reta dos boxes e a de chegada 0,93-0,25 · as curvas 1 a 3 (o "S" da freada forte) 0,25-0,34 · as curvas do meio 0,34-0,52 · a reta de trás 0,52-0,80 ·
 // o fim da reta e o grampo 0,80-0,86 · o Foro Sol (curvas 12 a 16) 0,86-0,98. Painéis só com nomes de lugar e de comida do México (kit/mexico/marcas.js).
@@ -15,12 +15,15 @@ const arq = (de, ate, lado, degraus, cor, encosto = BRANCO, cobertura = false) =
 const MARCAS = ["mxmexico", "mxgp", "pirelli", "rolex", "aramco", "dhl", "heineken", "f1", "aws", "lenovo", "msc", "mxtacos", "mxzocalo", "mxchapultepec", "mxmole", "mxelote", "mxchurros", "mxtamales"];
 
 export const GP_MEXICO = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
-    margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 340, fora: 220 },
+    margem: { cor: "#6d6e72" }, zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 547, fora: 354 }, // (raios das curvas ×1,609 com a escala real: as mesmas curvas de antes têm zebra)
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]], grid: true, remendos: 26,
   },
-  escape: { britaCurvas: 420, corBrita: "#cfc4a6", largura: 26 },
+  escape: { britaCurvas: 676, corBrita: "#cfc4a6", largura: 26 },
   arquibancadas: { trechos: [
     arq(0.93, 1.0, -1, 10, VERDE, BRANCO, true), arq(0.002, 0.11, -1, 10, VERDE, BRANCO, true), arq(0.11, 0.2, -1, 7, VERMELHO), // a reta principal, do lado norte
     arq(0.25, 0.285, -1, 9, VERMELHO, BRANCO, true), arq(0.285, 0.33, 1, 8, VERDE), arq(0.3, 0.34, -1, 7, ESCURO), // curvas 1 a 3
@@ -28,7 +31,7 @@ export const GP_MEXICO = {
     arq(0.8, 0.86, -1, 8, VERDE, BRANCO, true), // a freada da curva 12
     arq(0.875, 0.915, -1, 9, VERMELHO, BRANCO, true), arq(0.915, 0.945, -1, 9, VERDE, BRANCO, true), // o Foro Sol por fora
   ] },
-  cenario: (tr, ctx) => cenarioMexico(tr, ctx, MARCAS),
+  cenario: (tr, ctx) => cenarioMexico(tr, ctx, MARCAS, GP_MEXICO.ambienteMexico), // o chão sólido, o ambiente (painéis, mastros e placas no chão) e as peças do México
   ambiente: {
     marcas: MARCAS, outdoors: ["mxmexico", "mxgp", "mxpopo", "mxizta", "mxmixhuca", "mxcoyoacan", "mxxochimilco", "mxreforma", "mxlucha", "mxmariachi", "mxjamaica", "mxquesadilla", "mxpozole"],
     posto: "mxmexico", bandeira: [0x006847, 0xf4f4f0, 0xce1126], placas: [150, 100, 50],
@@ -39,3 +42,5 @@ export const GP_MEXICO = {
   depois: (tr, ctx) => depoisMexico(tr, ctx),
   vida: { gaivotas: [], som: { campo: () => 0.7, cidade: 0.35 } },
 };
+// o ambiente do kit (kit/ambiente.js) deixa mastros, painéis e placas de frenagem no ar: o México usa o seu (kit/mexico/ambiente.js), chamado em `cenario` com a mesma configuração
+GP_MEXICO.ambienteMexico = GP_MEXICO.ambiente; delete GP_MEXICO.ambiente;

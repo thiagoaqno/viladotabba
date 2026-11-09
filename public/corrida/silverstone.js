@@ -14,13 +14,19 @@ import { canvasTex, M } from "./cena.js";
 import { faixa } from "./kit/arquibancadas.js";
 import { marcaTex, desenharMarca } from "./kit/marcas.js";
 import { livre, ocupado, instancias, sorteio, recortar } from "./kit/comum.js";
-import { tribunaCoberta, tendaPaddock } from "./kit/coberturas.js";
+import { tendaPaddock } from "./kit/coberturas.js";
 import { boxEquipe } from "./kit/box-equipe.js";
 import { portico } from "./kit/torres.js";
 import { Montador, solido } from "./kit/montagem.js";
 import { hangarRAF, torreRAF, torreCorrida, igreja, turbina, telao, bandeiraUK, prismaGeo } from "./kit/silverstone/pecas.js";
+import { beiradaSolida, solo } from "./kit/silverstone/chao.js";
+import { ambienteSilverstone } from "./kit/silverstone/ambiente.js";
+import { tribunaReal } from "./kit/silverstone/tribuna.js";
 
 const AZUL = "#1d3f8f", VERMELHO = "#c8102e", BRANCO = "#f4f4f4";
+// A escala das peças desenhadas para o carro de antes (1 u = 10 cm: prédios, hangares, tendas, a torre): o mundo agora é 1 u = 0,2083 m, então um prédio de 4,6 m de pé-direito sai com 9,6 m. Fator 0,1 ÷ 0,2083 = 0,48 nas alturas
+// (a planta, o recuo da pista e o comprimento ficam como estão: dependem do lugar da pista). Sem `tr.escala` no GP (padrão), nada muda.
+const predio = (tr) => (tr.escala == null ? 1 : 0.1 / 0.2083);
 const ry0 = (p, lado) => Math.atan2(-lado * p.nx, -lado * p.ny); // rotation.y de quem está do lado `lado`, com a frente (+z) virada para a pista
 const aoLongo = (p) => Math.atan2(-p.ty, p.tx); // rotation.y que põe o eixo x do objeto ao longo da pista
 const ponto = (p, lado, d, t = 0) => [p.x + p.nx * lado * d + p.tx * t, p.y + p.ny * lado * d + p.ty * t];
@@ -33,7 +39,7 @@ const CORES_EQUIPE = ["#e8002d", "#ff8700", "#27f4d2", "#3671c6", "#229971", "#3
 
 // o corte do prédio visto de lado: [afastamento a partir da frente, altura]. O prédio acompanha a reta, em fitas por material.
 function theWing(tr, { add }) {
-  const { pts, n, W } = tr, { lado } = WING, L0 = W / 2 + WING.recuo;
+  const { pts, n, W } = tr, { lado } = WING, L0 = W / 2 + WING.recuo, F = predio(tr); // F: as alturas do prédio (garagem de 9,6 m de pé-direito no mundo de 0,2083 m/u, de 4,6 m com F)
   const rec = recortar(tr, Math.floor(WING.de * n), Math.floor(WING.ate * n), [lado * (L0 - 26), lado * (L0 + 90)]);
   if (!rec) return null;
   const { i0, i1 } = rec;
@@ -59,7 +65,7 @@ function theWing(tr, { add }) {
   }) });
   const concreto = M(0xb5b4ae, { roughness: 0.85, side: THREE.DoubleSide }), branco = M(0xf5f6f7, { roughness: 0.5, side: THREE.DoubleSide }), prata = M(0xbfc5cb, { roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide });
   const azul = M(0x0b2a5b, { roughness: 0.5, side: THREE.DoubleSide }), parede = M(0xd9dadb, { roughness: 0.85, side: THREE.DoubleSide });
-  const perfil = (dx0, y0, dx1, y1, mat, vLen = 60) => faixa(tr, add, i0, i1, lado * (L0 + dx0), lado * (L0 + dx1), y0, y1, mat, vLen);
+  const perfil = (dx0, y0, dx1, y1, mat, vLen = 60) => faixa(tr, add, i0, i1, lado * (L0 + dx0), lado * (L0 + dx1), y0 * F, y1 * F, mat, vLen);
   perfil(0, 0, 0, 46, garagens, 480); // as garagens (a textura tem seis baias)
   perfil(-9, 46, 0, 46, concreto); perfil(-9, 46, -9, 56, azul); perfil(-9, 56, 0, 56, concreto); // a laje do 1º andar com o frisão azul
   perfil(0, 56, 12, 118, vidroM, 90); perfil(12, 118, 12, 143.2, vidroM, 90); // o vidro inclinado, o Paddock Club
@@ -70,24 +76,24 @@ function theWing(tr, { add }) {
   const tri = THREE.ShapeUtils.triangulateShape(corte.map(([a, b]) => new THREE.Vector2(a, b)), []);
   for (const i of [i0, i1]) {
     const p = pts[i % n], vs = [];
-    for (const [dx, y] of corte) vs.push(p.x + p.nx * lado * (L0 + dx), p.h + y, p.y + p.ny * lado * (L0 + dx));
+    for (const [dx, y] of corte) vs.push(p.x + p.nx * lado * (L0 + dx), p.h + y * F, p.y + p.ny * lado * (L0 + dx));
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); g.setIndex(tri.flat()); g.computeVertexNormals(); add(new THREE.Mesh(g, parede));
   }
   // os painéis: o "SILVERSTONE" no frisão da laje e os patrocinadores na borda do teto, virados para a pista
   const meio = Math.floor((i0 + i1) / 2), pm = pts[meio % n], g = new THREE.Group(), comp = (i1 - i0) * 6;
   g.position.set(pm.x, pm.h, pm.y); g.rotation.y = Math.atan2(pm.nx, pm.ny); add(g); // x do grupo ao longo da pista, z = lado da pista
-  const fx = Math.max(3, Math.floor((comp - 30) / 118)), marcas = ["silverstone", "britgp", "pirelli", "rolex", "skysports", "heineken", "aramco", "dhl", "f1"];
+  const larg = 112 * F, passo = larg + 10, fx = Math.max(3, Math.floor((comp - 30) / passo)), marcas = ["silverstone", "britgp", "pirelli", "rolex", "skysports", "heineken", "aramco", "dhl", "f1"];
   for (let k = 0; k < fx; k++) {
-    const x = (k - (fx - 1) / 2) * 118;
-    const a = new THREE.Mesh(new THREE.PlaneGeometry(112, 9.4), new THREE.MeshBasicMaterial({ map: marcaTex("silverstone", 512, 44), side: THREE.DoubleSide }));
-    a.position.set(x, 51, lado * (L0 - 9.6)); a.rotation.y = lado > 0 ? Math.PI : 0; g.add(a);
-    const b = new THREE.Mesh(new THREE.PlaneGeometry(112, 11.6), new THREE.MeshBasicMaterial({ map: marcaTex(marcas[(k + 1) % marcas.length], 512, 52), side: THREE.DoubleSide }));
-    b.position.set(x, 135, lado * (L0 - 26.7)); b.rotation.y = lado > 0 ? Math.PI : 0; g.add(b);
+    const x = (k - (fx - 1) / 2) * passo;
+    const a = new THREE.Mesh(new THREE.PlaneGeometry(larg, 9.4 * F), new THREE.MeshBasicMaterial({ map: marcaTex("silverstone", 512, 44), side: THREE.DoubleSide }));
+    a.position.set(x, 51 * F, lado * (L0 - 9.6)); a.rotation.y = lado > 0 ? Math.PI : 0; g.add(a);
+    const b = new THREE.Mesh(new THREE.PlaneGeometry(larg, 11.6 * F), new THREE.MeshBasicMaterial({ map: marcaTex(marcas[(k + 1) % marcas.length], 512, 52), side: THREE.DoubleSide }));
+    b.position.set(x, 135 * F, lado * (L0 - 26.7)); b.rotation.y = lado > 0 ? Math.PI : 0; g.add(b);
   }
   // as aletas de aço entre as garagens (a luz que bate nelas dá o relevo da fachada)
   const m = new Montador(), S = solido();
-  for (let k = 0; k <= Math.floor(comp / 80); k++) m.caixa(S, [-comp / 2 + k * 80, 23, lado * (L0 - 1.2)], [1.6, 46, 2.4], { cor: "#b9bdc1" });
-  for (let k = 0; k < Math.floor(comp / 60); k++) m.caixa(S, [-comp / 2 + 30 + k * 60, 57.5, lado * (L0 - 4.5)], [1.2, 3, 9], { cor: "#ffffff" }); // as luminárias do terraço
+  for (let k = 0; k <= Math.floor(comp / 80); k++) m.caixa(S, [-comp / 2 + k * 80, 23 * F, lado * (L0 - 1.2)], [1.2, 46 * F, 2.4], { cor: "#b9bdc1" });
+  for (let k = 0; k < Math.floor(comp / 60); k++) m.caixa(S, [-comp / 2 + 30 + k * 60, 57.5 * F, lado * (L0 - 4.5)], [1.2, 1.6, 9], { cor: "#ffffff" }); // as luminárias do terraço
   g.add(m.montar("wing-detalhes"));
   // a torre da direção de prova, atrás do prédio, e o paddock
   const torre = torreCorrida({ andares: 5 }); torre.position.set(0, 0, lado * (L0 + 84 + 40)); torre.rotation.y = lado > 0 ? Math.PI : 0; g.add(torre);
@@ -100,7 +106,7 @@ function theWing(tr, { add }) {
 // brancas, os motorhomes das equipes e as carretas
 function paddock(tr, g, lado, z0, comp) {
   const m = new Montador(), S = solido(), r = sorteio(5521);
-  m.caixa(S, [0, -2.5, lado * (z0 + 170)], [comp + 200, 6, 330], { cor: "#a7a9a8" });
+  m.caixa(S, [0, -19.5, lado * (z0 + 170)], [comp + 200, 40, 330], { cor: "#a7a9a8" }); // o piso desce 8 m: o chão cai por trás do prédio (a pista é mais alta que o terreno) e a laje não pode ficar no ar
   for (let k = -3; k <= 3; k++) m.caixa(S, [k * 140, 0.45, lado * (z0 + 170)], [1.4, 0.3, 320], { cor: "#f2f2f0" }); // a pintura do piso
   g.add(m.montar("paddock-piso"));
   const nT = Math.min(4, Math.floor(comp / 220));
@@ -111,14 +117,15 @@ function paddock(tr, g, lado, z0, comp) {
   const textos = ["FERRARI", "MCLAREN", "MERCEDES", "RED BULL", "ASTON MARTIN", "ALPINE"], nM = Math.min(5, Math.floor(comp / 190));
   for (let k = 0; k < nM; k++) {
     const b = boxEquipe({ portas: 2, cor: ["#d62a1f", "#ff7a1a", "#2fb8a3", "#1d4fd8", "#13804a", "#e873a8"][k % 6], texto: textos[k % 6], corTexto: "#ffffff", corFaixa: "#15161a", abertura: 0.8, carros: 1, interior: false });
-    b.position.set((k - (nM - 1) / 2) * 200, 0.4, lado * (z0 + 260)); b.rotation.y = lado > 0 ? Math.PI : 0; g.add(b);
+    b.scale.setScalar(0.5); b.position.set((k - (nM - 1) / 2) * 200, 0.4, lado * (z0 + 260)); b.rotation.y = lado > 0 ? Math.PI : 0; g.add(b); // (o motorhome de 24 m e 14 m de altura sai de 12 × 7 m)
   }
   const carretas = new Montador();
   for (let k = 0; k < 9; k++) {
     const x = (k - 4) * 92 + (r() - 0.5) * 8, z = lado * (z0 + 40 + (k % 2) * 4), cor = CORES_EQUIPE[k % CORES_EQUIPE.length];
-    carretas.caixa(S, [x, 21, z], [78, 32, 28], { cor: "#eceeef" }); carretas.caixa(S, [x, 21, z - lado * 14.3], [78, 10, 0.6], { cor });
-    carretas.caixa(S, [x + 46, 15, z], [16, 24, 24], { cor }); carretas.caixa(S, [x + 50.4, 20, z], [8, 9, 21], { cor: "#26323d" });
-    for (const dx of [-26, -10, 36, 48]) for (const s of [-1, 1]) carretas.cilindro(S, [x + dx, 6, z + s * 12], [6, 5], { cor: "#1b1c1f", rx: Math.PI / 2, seg: 8 });
+    // a carreta de 16 m, 4 m de altura e 2,7 m de largura (antes 7 m de largura e 6,7 m de altura)
+    carretas.caixa(S, [x, 13, z], [78, 19, 13], { cor: "#eceeef" }); carretas.caixa(S, [x, 11, z - lado * 6.8], [78, 6, 0.6], { cor });
+    carretas.caixa(S, [x + 46, 9, z], [14, 14, 12], { cor }); carretas.caixa(S, [x + 49.4, 12, z], [7, 6, 11], { cor: "#26323d" });
+    for (const dx of [-26, -10, 36, 48]) for (const s of [-1, 1]) carretas.cilindro(S, [x + dx, 2.4, z + s * 5.4], [2.4, 2], { cor: "#1b1c1f", rx: Math.PI / 2, seg: 8 });
   }
   g.add(carretas.montar("paddock-carretas"));
 }
@@ -126,23 +133,23 @@ function paddock(tr, g, lado, z0, comp) {
 // ---------------------------------------------------------------------------------------------------------------------
 // 2. As tribunas cobertas das retas (kit 2) e as bandeiras da torcida
 // ---------------------------------------------------------------------------------------------------------------------
-// frações da volta de cada tribuna: [de, ate, lado, cores]. Cada módulo tem uns 230 de comprimento (23 m) e fica logo atrás do escape.
+// frações da volta de cada tribuna: [de, ate, lado, cores, fileiras]. Cada módulo tem uns 230 de comprimento (48 m) e fica logo atrás do escape. O degrau é o do kit (6 × `tr.escala` de altura, 9 × `tr.escala` de fundo: 0,5 × 0,75 m) e a gente tem 1,7 m (./kit/silverstone/tribuna.js).
 const TRIBUNAS = [
-  [0.968, 1.025, -1, [AZUL, BRANCO, VERMELHO, BRANCO]], // a tribuna principal, de frente para o The Wing
-  [0.205, 0.236, -1, [VERMELHO, BRANCO, AZUL]], [0.258, 0.292, -1, [AZUL, BRANCO, VERMELHO]], // a Wellington Straight
-  [0.443, 0.476, -1, [AZUL, VERMELHO, BRANCO]], // a reta para Copse
-  [0.545, 0.58, -1, [VERMELHO, BRANCO, AZUL, BRANCO]], // a reta de Copse a Maggotts
-  [0.712, 0.746, -1, [AZUL, BRANCO, VERMELHO]], [0.774, 0.806, -1, [VERMELHO, BRANCO, AZUL]], // a Hangar Straight
+  [0.968, 1.025, -1, [AZUL, BRANCO, VERMELHO, BRANCO], 20], // a tribuna principal, de frente para o The Wing
+  [0.205, 0.236, -1, [VERMELHO, BRANCO, AZUL], 14], [0.258, 0.292, -1, [AZUL, BRANCO, VERMELHO], 14], // a Wellington Straight
+  [0.443, 0.476, -1, [AZUL, VERMELHO, BRANCO], 14], // a reta para Copse
+  [0.545, 0.58, -1, [VERMELHO, BRANCO, AZUL, BRANCO], 14], // a reta de Copse a Maggotts
+  [0.712, 0.746, -1, [AZUL, BRANCO, VERMELHO], 14], [0.774, 0.806, -1, [VERMELHO, BRANCO, AZUL], 14], // a Hangar Straight
 ];
 const flagsTorcida = []; // { x, y, z, ry, s }: postas aqui por quem monta uma arquibancada e desenhadas todas de uma vez em bandeirasTorcida
 
 function tribunas(tr, { add }) {
-  const { pts, n, W } = tr, L = W / 2 + 38, r = sorteio(9071), reservar = [];
+  const { pts, n, W } = tr, L = W / 2 + 38, r = sorteio(9071), reservar = [], E = tr.escala ?? 1, ALT = 6 * E, PROF = 9 * E;
   let semente = 3;
   const somDaTorcida = (i0, i1) => { i0 = ((i0 % n) + n) % n; i1 = ((i1 % n) + n) % n; if (i1 >= i0) tr.arquibancadas.push([i0, i1]); else tr.arquibancadas.push([i0, n - 1], [0, i1]); };
   tr.arquibancadas ||= [];
-  for (const [f0, f1, lado, cores] of TRIBUNAS) {
-    const i0 = Math.floor(f0 * n), i1 = Math.floor(f1 * n), comp = (i1 - i0) * 6, nm = Math.max(1, Math.round(comp / 232)), len = comp / nm, fundo = 10 * 8.5 + 22;
+  for (const [f0, f1, lado, cores, fileiras] of TRIBUNAS) {
+    const i0 = Math.floor(f0 * n), i1 = Math.floor(f1 * n), comp = (i1 - i0) * 6, nm = Math.max(1, Math.round(comp / 232)), len = comp / nm, fundo = fileiras * PROF + 22;
     for (let k = 0; k < nm; k++) {
       const ic = Math.round(i0 + ((k + 0.5) * len) / 6), p = pts[ic % n], x = p.x + p.nx * lado * L, z = p.y + p.ny * lado * L;
       // a pista (qualquer trecho) não pode chegar perto de nenhum canto da tribuna
@@ -151,11 +158,14 @@ function tribunas(tr, { add }) {
         return tr.distAt(qx, qz) >= L - 5 && !ocupado(tr, qx, qz);
       });
       if (!ok) continue;
-      const t = tribunaCoberta({ comprimento: len - 6, degraus: 10, altura: 6, fundo: 8.5, cores, secoes: Math.max(3, Math.round(len / 60)), cobertura: "#f6f6f4", publico: 0.15, semente: semente++, alcance: 0.78, folga: 16, vao: 58 });
-      t.position.set(x, p.h - 5, z); t.rotation.y = ry0(p, lado); add(t);
+      // a tribuna é horizontal e a pista não: ela assenta no ponto mais baixo do trecho (1 u abaixo) e o bloco sob o primeiro degrau desce até o mais alto
+      let hMin = Infinity, hMax = -Infinity;
+      for (let i = ic - Math.ceil(len / 12); i <= ic + Math.ceil(len / 12); i++) { const h = pts[((i % n) + n) % n].h; hMin = Math.min(hMin, h); hMax = Math.max(hMax, h); }
+      const base = hMin - 1, t = tribunaReal({ escala: E, comprimento: len - 6, degraus: fileiras, cores, secoes: Math.max(3, Math.round(len / 60)), cobertura: "#f6f6f4", publico: 0.15, semente: semente++, alcance: 0.78, folga: 26, vao: 58, embutido: hMax - hMin + 3, camisas: tr.camisasGP });
+      t.position.set(x, base, z); t.rotation.y = ry0(p, lado); add(t);
       for (let j = 0; j < 7; j++) { // as bandeiras nos degraus de cima
-        const u = (r() - 0.5) * (len - 30), row = 5 + Math.floor(r() * 5), [fx, fz] = ponto(p, lado, L + 4 + row * 8.5, u);
-        flagsTorcida.push({ x: fx, y: p.h - 5 + (row + 1) * 6 + 5, z: fz, ry: aoLongo(p) + (r() - 0.5) * 0.6, s: 0.9 + r() * 0.5 });
+        const u = (r() - 0.5) * (len - 30), row = Math.floor(fileiras * 0.5) + Math.floor(r() * Math.floor(fileiras * 0.45)), [fx, fz] = ponto(p, lado, L + (row + 0.5) * PROF, u);
+        flagsTorcida.push({ x: fx, y: base + (row + 1) * ALT, z: fz, ry: aoLongo(p) + (r() - 0.5) * 0.6, s: 0.9 + r() * 0.5 });
       }
       for (let i = ic - Math.floor(len / 12); i <= ic + Math.floor(len / 12); i += 3) { const q = pts[((i % n) + n) % n]; reservar.push([q.x + q.nx * lado * (L + 45), q.y + q.ny * lado * (L + 45), 80]); }
       somDaTorcida(ic - Math.floor(len / 12), ic + Math.floor(len / 12)); // o som da torcida
@@ -171,8 +181,8 @@ function bandeirasTorcida(tr, { add }) {
     const passo = 6;
     for (let i = q.i0; i <= q.i1; i += passo) {
       if (r() < 0.45) continue;
-      const p = pts[i % n], fila = Math.floor(r() * q.degraus), [x, z] = ponto(p, q.lado, Math.abs(q.l0) + 4.5 + fila * 9);
-      lista.push({ x, y: p.h + 4 + (fila + 1) * 6 + 3, z, ry: aoLongo(p) + (r() - 0.5) * 0.7, s: 0.8 + r() * 0.5 });
+      const p = pts[i % n], fila = Math.floor(r() * q.degraus), [x, z] = ponto(p, q.lado, Math.abs(q.l0) + (fila + 0.5) * q.prof); // (o degrau do kit, `tr.arqDegraus`: fundo, altura e base na escala do cenário)
+      lista.push({ x, y: p.h + q.base + (fila + 1) * q.alt, z, ry: aoLongo(p) + (r() - 0.5) * 0.7, s: 0.8 + r() * 0.5 });
     }
   }
   if (!lista.length) return;
@@ -199,7 +209,7 @@ function pousos(tr, { add }) {
       const base = vs.length / 3;
       for (const [a, d] of [[s, -1], [s, 1], [s + passo, -1], [s + passo, 1]]) {
         const x = e.x + e.dx * a - e.dz * d * largura / 2, z = e.z + e.dz * a + e.dx * d * largura / 2;
-        vs.push(x, tr.chao(x, z) + 0.9 + k * 0.25, z); uv.push(d > 0 ? 1 : 0, a / 120);
+        vs.push(x, solo(tr, x, z) + 0.55 + k * 0.15, z); uv.push(d > 0 ? 1 : 0, a / 120);
       }
       idx.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
     }
@@ -217,17 +227,19 @@ function pousos(tr, { add }) {
 function aerodromo(tr, { add }) {
   const { pts, n } = tr;
   const e = tr.pousos?.[0]; // a pista da Hangar Straight: os hangares ficam do lado dela que dá para a pista de corrida
-  const puxar = (g, x, z, ry, folga = 140) => { if (!livre(tr, x, z, folga) || ocupado(tr, x, z)) return false; g.position.set(x, tr.chao(x, z) - 0.5, z); g.rotation.y = ry; add(g); tr.reservado.push([x, z, folga * 0.8]); return true; };
+  const puxar = (g, x, z, ry, folga = 140) => { if (!livre(tr, x, z, folga) || ocupado(tr, x, z)) return false; g.position.set(x, solo(tr, x, z) - 0.5, z); g.rotation.y = ry; add(g); tr.reservado.push([x, z, folga * 0.8]); return true; }; // (o chão que se vê, 1,5 u abaixo do analítico)
   if (e) {
     const pm = pts[Math.floor(0.76 * n)], ry = aoLongo(pm);
-    for (const [t, off, c] of [[-170, POUSOS[0][1] - 235, 360], [200, POUSOS[0][1] - 235, 330]]) {
+    // o hangar em arco de 30 m de vão e 8,5 m de altura (o de antes tinha 39 m e 17 m); a barraca Nissen de 10 × 5,3 m e 2,9 m de altura (antes 16 × 8 m e 4,5 m)
+    for (const [t, off, c] of [[-170, POUSOS[0][1] - 235, 300], [200, POUSOS[0][1] - 235, 290]]) {
       const [x, z] = ponto(pm, 1, off, t);
-      puxar(hangarRAF({ comprimento: c, largura: 190, altura: 82 }), x, z, ry, 130);
+      puxar(hangarRAF({ comprimento: c, largura: 150, altura: 42 }), x, z, ry, 130);
     }
-    for (let k = 0; k < 4; k++) { const [x, z] = ponto(pm, 1, POUSOS[0][1] - 235, 430 + k * 70); puxar(hangarRAF({ comprimento: 78, largura: 40, altura: 22, corTeto: "#7b848a" }), x, z, ry, 50); }
+    for (let k = 0; k < 4; k++) { const [x, z] = ponto(pm, 1, POUSOS[0][1] - 235, 430 + k * 70); puxar(hangarRAF({ comprimento: 50, largura: 26, altura: 14, corTeto: "#7b848a" }), x, z, ry, 50); }
   }
   const pt = pts[Math.floor(0.885 * n)], [x, z] = ponto(pt, 1, 430);
-  puxar(torreRAF(), x, z, ry0(pt, 1), 90);
+  const tor = torreRAF(); tor.scale.setScalar(0.55); // a torre de controle de 22 m (antes 110 u) fica com 12 m e 9,5 × 6 m de planta
+  puxar(tor, x, z, ry0(pt, 1), 90);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -242,7 +254,7 @@ function porticos(tr, { add }) {
     const p = pts[Math.floor(f * n)], vao = 2 * (W / 2 + 46);
     const pes = [-1, 1].map((s) => ponto(p, s, vao / 2 + 4));
     if (!pes.every(([x, z]) => livre(tr, x, z, 20) && !ocupado(tr, x, z))) continue;
-    const g = portico({ vao, alto: 66, viga: 14, cor, texto, corTexto, corColuna: "#1b1b1f" });
+    const g = portico({ vao, alto: 46, viga: 10, cor, texto, corTexto, corColuna: "#1b1b1f" }); // (a viga a 9,6 m da pista e 2 m de altura; antes 13,7 m e 2,9 m)
     g.position.set(p.x, p.h, p.y); g.rotation.y = Math.atan2(-p.ny, p.nx); add(g);
     for (const [x, z] of pes) tr.reservado.push([x, z, 28]);
   }
@@ -254,11 +266,11 @@ function telaoes(tr, { add }) {
     if (!d) continue;
     const p = pts[Math.floor(f * n)], [x, z] = ponto(p, lado, W / 2 + d);
     if (!livre(tr, x, z, d - 40) || ocupado(tr, x, z)) continue;
-    const t = telao({ texto, w: 160, h: 90, altura: 60 }); t.position.set(x, tr.chao(x, z) - 0.5, z); t.rotation.y = ry0(p, lado); add(t); tr.reservado.push([x, z, 100]);
+    const t = telao({ texto, w: 160, h: 90, altura: 60 }); t.scale.setScalar(0.45); /* 14,8 × 8,3 m sobre pernas de 5,6 m (antes 33 × 18,5 m, pernas de 12,5 m) */ t.position.set(x, solo(tr, x, z) - 0.3, z); t.rotation.y = ry0(p, lado); add(t); tr.reservado.push([x, z, 100]);
   }
 }
 
-// as placas com o nome das curvas, de pé no fim do escape, viradas para quem chega: uma só textura com os 15 nomes e uma malha só
+// as placas com o nome das curvas (8 × 4 m, a 1,9 m do chão, dois postes), de pé no fim do escape, viradas para quem chega: uma só textura com os 15 nomes e uma malha só
 const CURVAS = [["ABBEY", 1, 0.052], ["FARM", 2, 0.088], ["VILLAGE", 3, 0.123], ["THE LOOP", 4, 0.153], ["AINTREE", 5, 0.182], ["BROOKLANDS", 6, 0.31], ["LUFFIELD", 7, 0.347],
   ["WOODCOTE", 8, 0.395], ["COPSE", 9, 0.50], ["MAGGOTTS", 10, 0.585], ["BECKETTS", 11, 0.625], ["CHAPEL", 13, 0.66], ["STOWE", 15, 0.835], ["VALE", 16, 0.922], ["CLUB", 17, 0.955]];
 function placasDasCurvas(tr, { add }) {
@@ -279,13 +291,13 @@ function placasDasCurvas(tr, { add }) {
       if (tr.distAt(x, z) >= d - 8 && !ocupado(tr, x, z)) { escolhido = [lado, x, z]; break; }
     }
     if (!escolhido) return;
-    const [lado, x, z] = escolhido, y = tr.chao(x, z);
+    const [lado, x, z] = escolhido, y = tr.chao(x, z) - 0.8; // (a fita de grama está 0,7 u acima do chão analítico: o poste entra nela)
     // a placa gira um pouco para quem vem de trás (a frente aponta para a pista e um pouco contra o sentido da corrida)
     const nx = -lado * p.nx - 0.55 * p.tx, nz = -lado * p.ny - 0.55 * p.ty, len = Math.hypot(nx, nz), ex = nz / len, ez = -nx / len; // (ex, ez): o eixo largo da placa
-    const w = 104, h = 52, y0 = y + 26, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3;
+    const w = 39, h = 19.5, y0 = y + 9.8, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3;
     for (const [a, b] of [[-1, 0], [1, 0], [-1, 1], [1, 1]]) { vs.push(x + ex * a * w / 2, y0 + b * h, z + ez * a * w / 2); uv.push(((a + 1) / 2 + c) / 4, 1 - (rr + 1 - b) / 4); }
     idx.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
-    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 6), y + 13, z + ez * s * (w / 2 - 6)], [2.6, 28, 2.6], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) });
+    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 3), y + 13, z + ez * s * (w / 2 - 3)], [1.4, 26, 1.4], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) }); // (o poste do chão até a metade da placa)
     tr.reservado.push([x, z, 26]);
   });
   if (!idx.length) return;
@@ -307,21 +319,22 @@ function camping(tr, { add }) {
     for (let d = 480; d <= 900 && !centro; d += 40) { const [x, z] = ponto(p, lado, d); if (livre(tr, x, z, 330) && !ocupado(tr, x, z)) centro = [x, z]; }
     if (!centro) continue;
     const [cx, cz] = centro, ang = aoLongo(p), L = (u, v) => [cx + p.tx * u + p.nx * v, cz + p.ty * u + p.ny * v];
-    for (let i = -6; i <= 6; i++) for (let j = -5; j <= 5; j++) {
-      if (Math.abs(i) <= 2 && Math.abs(j) <= 1) continue; // a clareira da "fan zone" no meio
+    // a barraca de 3 × 4 m e 1,5 m de altura (antes 5 a 7 m e 3,3 a 4,7 m), a caravana de 6,6 × 2,3 m e o carro de 4,5 × 1,9 m (antes 8,8 × 3,7 m), numa grade de 5 × 5 m; tudo no chão que se vê (o terreno, `solo`)
+    for (let i = -10; i <= 10; i++) for (let j = -8; j <= 8; j++) {
+      if (Math.abs(i) <= 5 && Math.abs(j) <= 4) continue; // a clareira da "fan zone" no meio
       if (r() < 0.16) continue;
-      const [x, z] = L(i * 46 + (r() - 0.5) * 8, j * 44 + (r() - 0.5) * 8), cor = BARRACAS[(r() * BARRACAS.length) | 0];
-      if (r() < 0.07) trailers.push({ x, y: tr.chao(x, z) + 12, z, sx: 62, sy: 26, sz: 26, r: ang + (r() < 0.5 ? 0 : Math.PI / 2) });
-      else barracas.push({ x, y: tr.chao(x, z) - 0.5, z, sx: 24 + r() * 10, sy: 16 + r() * 7, sz: 28 + r() * 8, r: ang + (r() - 0.5) * 0.35, cor });
-      if (r() < 0.22) { const [qx, qz] = L(i * 46 + 18, j * 44 + 14); carros.push({ x: qx, y: tr.chao(qx, qz) + 6, z: qz, sx: 42, sy: 12, sz: 18, r: ang + (r() < 0.8 ? Math.PI / 2 : 0), cor: ["#1c1c1f", "#c9ccd0", "#b3262e", "#1f4f9a", "#e2e2e0", "#2d6a43"][(r() * 6) | 0] }); }
+      const [x, z] = L(i * 26 + (r() - 0.5) * 5, j * 24 + (r() - 0.5) * 5), cor = BARRACAS[(r() * BARRACAS.length) | 0], g = solo(tr, x, z);
+      if (r() < 0.07) trailers.push({ x, y: g + 6.7, z, sx: 32, sy: 13, sz: 11, r: ang + (r() < 0.5 ? 0 : Math.PI / 2) });
+      else barracas.push({ x, y: g - 0.3, z, sx: 13 + r() * 4, sy: 6.5 + r() * 2.5, sz: 15 + r() * 5, r: ang + (r() - 0.5) * 0.35, cor });
+      if (r() < 0.22) { const [qx, qz] = L(i * 26 + 10, j * 24 + 8); carros.push({ x: qx, y: solo(tr, qx, qz) + 4.4, z: qz, sx: 22, sy: 7.5, sz: 9, r: ang + (r() < 0.8 ? Math.PI / 2 : 0), cor: ["#1c1c1f", "#c9ccd0", "#b3262e", "#1f4f9a", "#e2e2e0", "#2d6a43"][(r() * 6) | 0] }); }
     }
-    for (let k = 0; k < 14; k++) { // os mastros com a Union Jack nas pontas das fileiras
-      const [x, z] = L((k % 2 ? 1 : -1) * (300 + r() * 30), (r() - 0.5) * 420), h = tr.chao(x, z);
-      hastes.push({ x, y: h + 20, z, sx: 1, sy: 40, sz: 1 }); flags.push({ x: x + Math.cos(ang) * 7, y: h + 36, z: z - Math.sin(ang) * 7, r: ang, s: 1.7 });
+    for (let k = 0; k < 14; k++) { // os mastros com a Union Jack nas pontas das fileiras (8 m, do chão)
+      const [x, z] = L((k % 2 ? 1 : -1) * (290 + r() * 20), (r() - 0.5) * 380), h = solo(tr, x, z);
+      hastes.push({ x, y: h + 19.7, z, sx: 1, sy: 40, sz: 1 }); flags.push({ x: x + Math.cos(ang) * 7, y: h + 35, z: z - Math.sin(ang) * 7, r: ang, s: 1.7 });
     }
     // a fan zone: a tenda grande de velas brancas com o telão ao lado
     const t = tendaPaddock({ modulos: 4, filas: 3, texto: "FAN ZONE", corFaixa: VERMELHO, corMesas: AZUL, vao: 34, profundidade: 34 });
-    t.scale.setScalar(1.6); t.position.set(cx, tr.chao(cx, cz), cz); t.rotation.y = ang + Math.PI / 2; add(t);
+    t.scale.setScalar(1.6); t.position.set(cx, solo(tr, cx, cz) - 0.3, cz); t.rotation.y = ang + Math.PI / 2; add(t);
     tr.reservado.push([cx, cz, 340]);
   }
   const sph = new THREE.SphereGeometry(1, 8, 5, 0, Math.PI * 2, 0, Math.PI / 2), caixa = new THREE.BoxGeometry(1, 1, 1);
@@ -346,13 +359,13 @@ function aldeias(tr, { add }) {
     if (!livre(tr, cx, cz, 330) || ocupado(tr, cx, cz)) continue;
     const ang = (r() - 0.5) * 0.6, ca = Math.cos(ang), sa = Math.sin(ang);
     for (let k = 0; k < 24; k++) { // duas fileiras ao longo da estradinha
-      const u = (k % 12 - 5.5) * 118 + (r() - 0.5) * 24, v = (k < 12 ? -1 : 1) * (62 + r() * 18), x = cx + ca * u - sa * v, z = cz + sa * u + ca * v;
+      const u = (k % 12 - 5.5) * 64 + (r() - 0.5) * 14, v = (k < 12 ? -1 : 1) * (40 + r() * 12), x = cx + ca * u - sa * v, z = cz + sa * u + ca * v;
       if (!livre(tr, x, z, 250)) continue;
-      const w = 70 + r() * 40, l = 90 + r() * 50, h = 44 + r() * 20, base = tr.chao(x, z) - 1, cor = ["#d8c9a0", "#b36a4e", "#cfc3a6", "#e6dfcd", "#a9754f", "#c9b78a"][(r() * 6) | 0];
+      const w = 35 + r() * 20, l = 45 + r() * 25, h = 24 + r() * 8, base = solo(tr, x, z) - 0.8, cor = ["#d8c9a0", "#b36a4e", "#cfc3a6", "#e6dfcd", "#a9754f", "#c9b78a"][(r() * 6) | 0];
       corpos.push({ x, y: base + h / 2, z, sx: l, sy: h, sz: w, r: -ang, cor });
-      telhas.push({ x, y: base + h, z, sx: w + 10, sy: 26 + r() * 10, sz: l + 10, r: Math.PI / 2 - ang, cor: ["#4f5a63", "#8a4a3a", "#5d4b43", "#3d4650"][(r() * 4) | 0] });
+      telhas.push({ x, y: base + h, z, sx: w + 5, sy: 12 + r() * 5, sz: l + 5, r: Math.PI / 2 - ang, cor: ["#4f5a63", "#8a4a3a", "#5d4b43", "#3d4650"][(r() * 4) | 0] });
     }
-    if (feitas < 2) { const ig = igreja(), [x, z] = [cx + ca * 420, cz + sa * 420]; if (livre(tr, x, z, 280)) { ig.position.set(x, tr.chao(x, z) - 1, z); ig.rotation.y = -ang; add(ig); } }
+    if (feitas < 2) { const ig = igreja(), [x, z] = [cx + ca * 420, cz + sa * 420]; if (livre(tr, x, z, 280)) { ig.position.set(x, solo(tr, x, z) - 0.8, z); ig.rotation.y = -ang; add(ig); } }
     tr.reservado.push([cx, cz, 420]); feitas++;
   }
   const colorir = (m, lista) => { if (!m) return; lista.forEach((o, k) => m.setColorAt(k, new THREE.Color(o.cor))); m.instanceColor.needsUpdate = true; };
@@ -364,7 +377,7 @@ function aldeias(tr, { add }) {
 // as turbinas de vento, lá longe, e os campos
 function turbinas(tr, { add }) {
   const lugares = [[-700, 1500], [6200, 3200], [5900, 800], [-500, 4600], [3000, 6300], [1500, -900]];
-  lugares.forEach(([x, z], k) => { if (!livre(tr, x, z, 600)) return; const t = turbina({ altura: 520, pa: 215, giro: k * 0.7 }); t.position.set(x, 0, z); t.rotation.y = 0.4 + k; add(t); });
+  lugares.forEach(([x, z], k) => { if (!livre(tr, x, z, 600)) return; const t = turbina({ altura: 520, pa: 215, giro: k * 0.7 }); t.position.set(x, solo(tr, x, z) - 1, z); t.rotation.y = 0.4 + k; add(t); });
 }
 
 const CAMPOS = ["#9bbd5c", "#b9c866", "#d9c65a", "#cdb34a", "#7fa94f", "#6f9c47", "#bba46c", "#a6c56f", "#86683f", "#9fb85a"];
@@ -378,15 +391,16 @@ function campos(tr, { add }) {
     const cs = Math.cos(ang), sn = Math.sin(ang), loc = (lx, lz) => [cx + cs * lx + sn * lz, cz - sn * lx + cs * lz]; // o campo gira com rotation.y = ang
     const cantos = [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 0]].map(([a, b]) => loc((a * sx) / 2, (b * sz) / 2));
     if (!cantos.every(([x, z]) => plano(x, z) && tr.distAt(x, z) > W / 2 + 300 && !ocupado(tr, x, z) && pousoLonge(x, z))) continue;
-    lista.push({ x: cx, y: 1.1, z: cz, sx, sy: 1, sz, r: ang, cor: CAMPOS[(r() * CAMPOS.length) | 0] });
+    lista.push({ x: cx, y: -1.1, z: cz, sx, sy: 1, sz, r: ang, cor: CAMPOS[(r() * CAMPOS.length) | 0] });
     [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([a, b]) => { // as sebes: duas ou três beiras do campo
       if (r() < 0.55) return;
       const [x, z] = loc((a * sx) / 2, (b * sz) / 2);
-      sebes.push({ x, y: tr.chao(x, z) + 9, z, sx: (a ? sz : sx) * 0.98, sy: 15 + r() * 6, sz: 7, r: a ? ang - Math.PI / 2 : ang, cor: ["#2f5a2a", "#3a6a30", "#274c25", "#44703a"][(r() * 4) | 0] });
+      const alto = 10 + r() * 4; // a sebe inglesa de 2 a 3 m de altura e 1,2 m de largura (antes 3 a 4,4 m e 1,5 m)
+      sebes.push({ x, y: solo(tr, x, z) - 0.3 + alto / 2, z, sx: (a ? sz : sx) * 0.98, sy: alto, sz: 6, r: a ? ang - Math.PI / 2 : ang, cor: ["#2f5a2a", "#3a6a30", "#274c25", "#44703a"][(r() * 4) | 0] });
     });
     if (r() < 0.55) { // uma árvore solta num canto do campo
       const [a, b] = cantos[(r() * 4) | 0], h = 34 + r() * 14, rc = 30 + r() * 16;
-      troncos.push({ x: a, y: h / 2, z: b, sx: 4, sy: h, sz: 4 }); copas.push({ x: a, y: h + rc * 0.55, z: b, sx: rc * 1.1, sy: rc * 0.85, sz: rc * 1.1, r: r() * 6, cor: COPAS[(r() * COPAS.length) | 0] });
+      troncos.push({ x: a, y: h / 2 - 2, z: b, sx: 4, sy: h, sz: 4 }); copas.push({ x: a, y: h - 2 + rc * 0.55, z: b, sx: rc * 1.1, sy: rc * 0.85, sz: rc * 1.1, r: r() * 6, cor: COPAS[(r() * COPAS.length) | 0] });
     }
   }
   // o cinturão de árvores em volta do autódromo (dos dois lados, a 230-390 da beira), com falhas
@@ -398,7 +412,7 @@ function campos(tr, { add }) {
       const d = W / 2 + (lado < 0 ? 230 : 210) + r() * (lado < 0 ? 170 : 210), [x, z] = ponto(p, lado, d, (r() - 0.5) * 30);
       if (tr.distAt(x, z) < d - 20 || ocupado(tr, x, z) || !pousoLonge(x, z)) continue;
       const base = tr.chao(x, z), h = 30 + r() * 22, rc = 24 + r() * 20;
-      troncos.push({ x, y: base + h / 2 - 1, z, sx: 4, sy: h, sz: 4 }); copas.push({ x, y: base + h + rc * 0.5, z, sx: rc * 1.1, sy: rc * 0.9, sz: rc * 1.1, r: r() * 6, cor: COPAS[(r() * COPAS.length) | 0] });
+      troncos.push({ x, y: base - 2 + h / 2, z, sx: 4, sy: h, sz: 4 }); copas.push({ x, y: base - 2 + h + rc * 0.5, z, sx: rc * 1.1, sy: rc * 0.9, sz: rc * 1.1, r: r() * 6, cor: COPAS[(r() * COPAS.length) | 0] });
     }
   }
   // os bosques pequenos (os "spinneys") em alguns pontos soltos
@@ -406,7 +420,7 @@ function campos(tr, { add }) {
     const cx = -900 + r() * (mundo + 1800), cz = -900 + r() * (mundo + 1800);
     if (!plano(cx, cz) || tr.distAt(cx, cz) < W / 2 + 330 || ocupado(tr, cx, cz) || !pousoLonge(cx, cz)) continue;
     const qtd = 9 + ((r() * 8) | 0);
-    for (let q = 0; q < qtd; q++) { const a = r() * 6.28, d = r() * 70, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, h = 34 + r() * 26, rc = 24 + r() * 20; troncos.push({ x, y: h / 2, z, sx: 4, sy: h, sz: 4 }); copas.push({ x, y: h + rc * 0.5, z, sx: rc * 1.1, sy: rc * 0.9, sz: rc * 1.1, r: r() * 6, cor: COPAS[(r() * COPAS.length) | 0] }); }
+    for (let q = 0; q < qtd; q++) { const a = r() * 6.28, d = r() * 70, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, h = 34 + r() * 26, rc = 24 + r() * 20; troncos.push({ x, y: h / 2 - 2, z, sx: 4, sy: h, sz: 4 }); copas.push({ x, y: h - 2 + rc * 0.5, z, sx: rc * 1.1, sy: rc * 0.9, sz: rc * 1.1, r: r() * 6, cor: COPAS[(r() * COPAS.length) | 0] }); }
   }
   const colorir = (m, l) => { if (!m) return; l.forEach((o, k) => m.setColorAt(k, new THREE.Color(o.cor))); m.instanceColor.needsUpdate = true; };
   const chao = new THREE.PlaneGeometry(1, 1); chao.rotateX(-Math.PI / 2);
@@ -418,8 +432,11 @@ function campos(tr, { add }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-export function cenarioSilverstone(tr, ctx) {
+export function cenarioSilverstone(tr, ctx, ambiente) {
   tr.reservado ||= [];
+  const se = tr.t.superficieEscape || {};
+  beiradaSolida(tr, ctx.add, { brita: se.brita || [], listrado: se.listrado || [] }); // a base sólida da pista e a grama no nível do asfalto, dos dois lados (kit/silverstone/chao.js)
+  ambienteSilverstone(tr, ctx.add, ambiente); // painéis na barreira, mastros e placas de frenagem no chão, postos dos fiscais (kit/silverstone/ambiente.js)
   tr.camisasGP = ["#ffffff", "#c8102e", "#1d3f8f", "#f4f4f4", "#0b2a5b", "#c8102e", "#e8e8e8", "#ffd23f"]; // a torcida de vida.js de branco, azul e vermelho
   theWing(tr, ctx);
   tribunas(tr, ctx);
@@ -437,9 +454,20 @@ export function cenarioSilverstone(tr, ctx) {
 // o que vem por último: as bandeiras da torcida e a faixa "SILVERSTONE" pendurada no pórtico da largada (o de pista.js)
 export function depoisSilverstone(tr, ctx) {
   bandeirasTorcida(tr, ctx);
-  const { add } = ctx, p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx);
-  for (const s of [1, -1]) {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4), new THREE.MeshBasicMaterial({ map: marcaTex("britgp", 1024, 64), side: THREE.FrontSide }));
-    f.position.set(p.x, p.h + 62, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(s * 1.7); add(f);
+  postesDRS(tr);
+  const { add } = ctx, p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx), E = tr.escala ?? 1;
+  for (const s of [1, -1]) { // a faixa no pórtico de pista.js: a viga está a 62 × a escala de altura e tem 10 × a escala de espessura (a faixa ficava 37 u acima dela)
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4 * E), new THREE.MeshBasicMaterial({ map: marcaTex("britgp", 1024, 64), side: THREE.FrontSide }));
+    f.position.set(p.x, p.h + 62 * E, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(s * 1.7); add(f);
+  }
+}
+
+// as placas de DRS de pista.js (um sprite a 18 × a escala acima do ponto da pista, sem nada embaixo) ganham o poste até o chão; ele entra no mesmo grupo (tr.drsPlacas) e some e aparece junto
+function postesDRS(tr) {
+  if (!tr.drsPlacas) return;
+  const { W, pts, n } = tr, E = tr.escala ?? 1, metal = M(0x697780), geo = new THREE.BoxGeometry(0.8, 1, 0.8);
+  for (const [deteccao, abre] of tr.t.drs || []) for (const f of [deteccao, abre]) {
+    const p = pts[Math.floor(f * n) % n], lado = W / 2 + 28, x = p.x + p.nx * lado, z = p.y + p.ny * lado, h = tr.chao(x, z), baixo = p.h + 18 * E - 6.5 * E; // a borda de baixo da placa
+    const poste = new THREE.Mesh(geo, metal); poste.scale.y = baixo - h + 0.5 + 0.3; poste.position.set(x, h - 0.5 + poste.scale.y / 2, z); poste.castShadow = true; tr.drsPlacas.add(poste);
   }
 }

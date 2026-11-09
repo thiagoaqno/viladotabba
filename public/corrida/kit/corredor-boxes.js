@@ -159,8 +159,8 @@ export function boxesGP(tr, add, cfg = {}) {
     x.fillStyle = "#fff"; x.font = "900 82px Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("PIT ENTRY", w / 2, h / 2);
   });
   const pEntrada = em(1, lado * (W / 2 + 40)), qEntrada = pts[(cor.i0 + 1) % n];
-  const placa = new THREE.Mesh(new THREE.PlaneGeometry(55, 17), new THREE.MeshBasicMaterial({ map: placaTex, side: THREE.DoubleSide }));
-  placa.position.set(pEntrada.x, pEntrada.h + 31, pEntrada.y); placa.rotation.y = Math.atan2(-qEntrada.tx, -qEntrada.ty); placa.name = `${tr.id}-entrada-box-placa`; grp.add(placa);
+  const E = tr.escala ?? 1, placa = new THREE.Mesh(new THREE.PlaneGeometry(55 * E, 17 * E), new THREE.MeshBasicMaterial({ map: placaTex, side: THREE.DoubleSide }));
+  placa.position.set(pEntrada.x, pEntrada.h + 31 * E, pEntrada.y); placa.rotation.y = Math.atan2(-qEntrada.tx, -qEntrada.ty); placa.name = `${tr.id}-entrada-box-placa`; grp.add(placa);
   // a mureta entre a pista e o corredor, só no trecho reto (nas rampas o carro cruza); pista de rua já tem o guard-rail
   if ((cfg.mureta ?? !tr.t.walls) !== false) {
     const lm = (u) => lado * (W / 2 + 12.5), a = F.RAMPA + 1, b = fim - F.RAMPA - 1, alt = 3.6;

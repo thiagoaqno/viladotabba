@@ -122,10 +122,11 @@ export function florestaJaponesa(tr, add, rel, { passo = 80, minDist = 260, dens
     if (r() > prob) continue;
     if (ocupado(tr, px, pz)) continue;
     const y = Math.max(0, rel.alturaEm(px, pz) - 3) - 1.5, u = r();
-    if (u < cedros) { const alto = 130 + r() * 190, w = alto * (0.17 + r() * 0.07); cedro.push({ x: px, y, z: pz, sx: w, sy: alto, sz: w, r: r() * 6, c: verdesCedro[(r() * verdesCedro.length) | 0] }); }
-    else if (u < cedros + folhosas) { const alto = 120 + r() * 120; folha.push({ x: px, y: y + alto * 0.55, z: pz, sx: alto * 0.4, sy: alto * 0.4, sz: alto * 0.4, r: r() * 6, c: verdesFolha[(r() * verdesFolha.length) | 0] }); troncos.push({ x: px, y: y + alto * 0.2, z: pz, sx: alto * 0.04, sy: alto * 0.4, sz: alto * 0.04 }); }
-    else if (u < cedros + folhosas + bordos) { const alto = 110 + r() * 90; bordo.push({ x: px, y: y + alto * 0.55, z: pz, sx: alto * 0.38, sy: alto * 0.38, sz: alto * 0.38, r: r() * 6, c: bordos_[(r() * bordos_.length) | 0] }); troncos.push({ x: px, y: y + alto * 0.2, z: pz, sx: alto * 0.04, sy: alto * 0.4, sz: alto * 0.04 }); }
-    else { const alto = 100 + r() * 80; flor.push({ x: px, y: y + alto * 0.58, z: pz, sx: alto * 0.44, sy: alto * 0.4, sz: alto * 0.44, r: r() * 6, c: ["#f7c6d9", "#f4b4cc", "#fbd9e6", "#eaa0bd"][(r() * 4) | 0] }); troncos.push({ x: px, y: y + alto * 0.2, z: pz, sx: alto * 0.04, sy: alto * 0.4, sz: alto * 0.04 }); }
+    // cedro de 23 a 46 m de altura e copa de 4 a 6 m de raio (antes 27 a 67 m e 9 a 14 m)
+    if (u < cedros) { const alto = 110 + r() * 110, w = alto * (0.1 + r() * 0.035); cedro.push({ x: px, y, z: pz, sx: w, sy: alto, sz: w, r: r() * 6, c: verdesCedro[(r() * verdesCedro.length) | 0] }); }
+    else if (u < cedros + folhosas) { const alto = 70 + r() * 70; folha.push({ x: px, y: y + alto * 0.55, z: pz, sx: alto * 0.4, sy: alto * 0.4, sz: alto * 0.4, r: r() * 6, c: verdesFolha[(r() * verdesFolha.length) | 0] }); troncos.push({ x: px, y: y + alto * 0.2, z: pz, sx: alto * 0.04, sy: alto * 0.4, sz: alto * 0.04 }); }
+    else if (u < cedros + folhosas + bordos) { const alto = 60 + r() * 50; bordo.push({ x: px, y: y + alto * 0.55, z: pz, sx: alto * 0.38, sy: alto * 0.38, sz: alto * 0.38, r: r() * 6, c: bordos_[(r() * bordos_.length) | 0] }); troncos.push({ x: px, y: y + alto * 0.2, z: pz, sx: alto * 0.04, sy: alto * 0.4, sz: alto * 0.04 }); }
+    else { const alto = 55 + r() * 40; flor.push({ x: px, y: y + alto * 0.58, z: pz, sx: alto * 0.44, sy: alto * 0.4, sz: alto * 0.44, r: r() * 6, c: ["#f7c6d9", "#f4b4cc", "#fbd9e6", "#eaa0bd"][(r() * 4) | 0] }); troncos.push({ x: px, y: y + alto * 0.2, z: pz, sx: alto * 0.04, sy: alto * 0.4, sz: alto * 0.04 }); }
   }
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.95, flatShading: true }), casca = M(0x4d3a2b, { roughness: 1 });
   instanciar(add, geoCedro(), mat, cedro, `${tr.id}-cedros`);
@@ -139,17 +140,17 @@ export function florestaJaponesa(tr, add, rel, { passo = 80, minDist = 260, dens
 
 /**
  * Cerejeiras em flor (sakura) com o tronco torto e a copa rosa, em bosquinho ou isoladas, só onde `livre`/`ocupado` deixam.
- * @param {Array} lugares [[x, z, escala]] (escala 1 = 150 de altura)
+ * @param {Array} lugares [[x, z, escala]] (escala 1 = 62 de altura, 13 m)
  */
 export function cerejeiras(tr, add, lugares, { hAt, folga = 20, semente = 6029 } = {}) {
   const r = sorteio(semente), flor = [], troncos = [], petalas = [];
   for (const [x, z, s = 1] of lugares) {
-    const alto = 150 * s, larg = alto * 0.5;
+    const alto = 62 * s, larg = alto * 0.5; // (a cerejeira de 13 m com s = 1; antes 150 u = 31 m)
     if (!livre(tr, x, z, larg + folga) || ocupado(tr, x, z)) continue;
-    const y = hAt(x, z);
+    const y = hAt(x, z) - 0.6; // (enterrado 0,12 m: o tronco não fica no ar onde a malha do chão inclina)
     flor.push({ x, y: y + alto * 0.62, z, sx: larg, sy: alto * 0.42, sz: larg, r: r() * 6, c: ["#f9d3e1", "#f6bdd2", "#fbe0ea", "#f2a9c4", "#f8c9da"][(r() * 5) | 0] });
     troncos.push({ x, y: y + alto * 0.22, z, sx: alto * 0.045, sy: alto * 0.44, sz: alto * 0.045 });
-    for (let k = 0; k < 3; k++) { const a = r() * 6.3, dd = larg * (0.4 + r() * 0.9); petalas.push({ x: x + Math.cos(a) * dd, y: y + 0.6 + r() * 0.4, z: z + Math.sin(a) * dd, sx: 7 + r() * 8, sy: 1, sz: 5 + r() * 6, r: r() * 6, c: "#f9c8da" }); }
+    for (let k = 0; k < 3; k++) { const a = r() * 6.3, dd = larg * (0.4 + r() * 0.9); petalas.push({ x: x + Math.cos(a) * dd, y: y + 0.6 + r() * 0.4, z: z + Math.sin(a) * dd, sx: 3 + r() * 3, sy: 1, sz: 2 + r() * 2.5, r: r() * 6, c: "#f9c8da" }); }
   }
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.9, flatShading: true });
   instanciar(add, geoCopa(COPA_CEREJA), mat, flor, `${tr.id}-cerejeiras`);

@@ -10,6 +10,7 @@ import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { livre, ocupado, sorteio, instancias } from "../comum.js";
 import { ruido, passo01, lim, eixoDaCosta } from "./lugar.js";
+import { nivelDoChao } from "./chao.js";
 
 const cor = (c) => new THREE.Color(c);
 const AREIA = cor("#dccd9c"), AREIA_CLARA = cor("#ebdfb8"), CAPIM = cor("#aab067"), CAPIM_VERDE = cor("#86a050"), MOITA = cor("#69744a"), MOITA_ESCURA = cor("#4b5c3a"), TERRA = cor("#b4aa70");
@@ -139,8 +140,8 @@ function semear(tr, { passo = 3, dMin = 40, dMax = 380, densidade = 3, semente =
 export function capimDePraia(tr, add, rel, { densidade = 5, semente = 5151, dMax = 420 } = {}) {
   const r = sorteio(semente), lista = [];
   for (const o of semear(tr, { passo: 2, dMin: 30, dMax, densidade, semente, ruidoMin: 0.28, folga: 14 })) {
-    const y = Math.max(rel.alturaEm(o.x, o.z), tr.chao(o.x, o.z) - 1.5) - 0.2, t = 6 + r() * 7;
-    lista.push({ x: o.x, y, z: o.z, sx: t, sy: 7 + r() * 11, sz: t, r: r() * 6.28, c: PALHAS[(r() * PALHAS.length) | 0] });
+    const y = Math.max(rel.alturaEm(o.x, o.z), nivelDoChao(tr, o.x, o.z)) - 0.2, t = 4 + r() * 4; // (nivelDoChao: a fita de areia de chao.js junto da pista, a malha longe; touceira de 0,8 a 1,7 m de largura e 0,7 a 1,8 m de altura: o capim-de-praia tem uns 1 m, não os 1,5 a 3,8 m de antes)
+    lista.push({ x: o.x, y, z: o.z, sx: t, sy: 4 + r() * 6, sz: t, r: r() * 6.28, c: PALHAS[(r() * PALHAS.length) | 0] });
   }
   const m = instancias(add, geoCapim(), new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.DoubleSide }), lista, { sombra: false, nome: `${tr.id}-capim` });
   colorir(m, lista); tr.capimZandvoort = lista.length; return lista.length;
@@ -149,7 +150,7 @@ export function capimDePraia(tr, add, rel, { densidade = 5, semente = 5151, dMax
 export function moitas(tr, add, rel, { densidade = 1.6, semente = 6262, dMax = 480 } = {}) {
   const r = sorteio(semente), lista = [], frutos = [];
   for (const o of semear(tr, { passo: 3, dMin: 46, dMax, densidade, semente, ruidoMin: 0.42, folga: 18 })) {
-    const y = Math.max(rel.alturaEm(o.x, o.z), tr.chao(o.x, o.z) - 1.5), w = 11 + r() * 16, h = 6 + r() * 8;
+    const y = Math.max(rel.alturaEm(o.x, o.z), nivelDoChao(tr, o.x, o.z)), w = 11 + r() * 16, h = 6 + r() * 8;
     lista.push({ x: o.x, y: y + h * 0.18, z: o.z, sx: w, sy: h, sz: w * (0.8 + r() * 0.5), r: r() * 6.28, c: MOITAS[(r() * MOITAS.length) | 0] });
     if (r() < 0.22) frutos.push({ x: o.x + (r() - 0.5) * w * 0.5, y: y + h * 0.9, z: o.z + (r() - 0.5) * w * 0.5, sx: w * 0.55, sy: h * 0.25, sz: w * 0.55, r: 0, c: "#e9902f" });
   }
@@ -162,7 +163,7 @@ export function moitas(tr, add, rel, { densidade = 1.6, semente = 6262, dMax = 4
 export function pinheirosBravos(tr, add, rel, { densidade = 0.6, semente = 7373, dMax = 800 } = {}) {
   const r = sorteio(semente), troncos = [], copas = [];
   for (const o of semear(tr, { passo: 4, dMin: 70, dMax, densidade, semente, ruidoMin: 0.55, folga: 26 })) {
-    const y = Math.max(rel.alturaEm(o.x, o.z), tr.chao(o.x, o.z) - 1.5), alto = 22 + r() * 24, w = alto * (0.55 + r() * 0.25), giro = r() * 6.28;
+    const y = Math.max(rel.alturaEm(o.x, o.z), nivelDoChao(tr, o.x, o.z)), alto = 22 + r() * 24, w = alto * (0.55 + r() * 0.25), giro = r() * 6.28;
     troncos.push({ x: o.x, y: y + alto * 0.3, z: o.z, sx: alto * 0.045, sy: alto * 0.62, sz: alto * 0.045, r: 0, c: "#5a4636" });
     copas.push({ x: o.x + Math.cos(giro) * w * 0.12, y: y + alto * 0.74, z: o.z + Math.sin(giro) * w * 0.12, sx: w, sy: alto * 0.3, sz: w * 0.8, r: giro, c: PINHOS[(r() * PINHOS.length) | 0] });
   }

@@ -21,7 +21,8 @@ export function arcoSainteDevote(tr, add) {
     const [p, i] = noTraco(tr, f), meio = Math.max(Math.max(tr.latMuro(1, i), tr.latMuro(-1, i)) + 9, tr.wallLat + 8), vao = 2 * meio; // (os pés ficam fora da faixa de enfeites: `ocupado` começa em wallLat + 8)
     const pes = [-1, 1].map((s) => ponto(p, s, meio + 4));
     if (!pes.every(([x, z]) => livre(tr, x, z, 20) && fundoMonaco(tr, x, z) < -10 && !noEscape(tr, x, z, 12) && !tr.noCorredor?.(x, z))) continue; // (os pés podem encostar numa fachada: na rua estreita o arco se apoia nos prédios, como nas fotos)
-    const g = portico({ vao, alto: 66, viga: 14, cor: "#0b1530", corColuna: "#202328", texto: "MONACO GRAND PRIX   ·   FORMULA 1   ·   SAINTE DÉVOTE", corTexto: "#ffffff", corFaixa: "#c8102e" });
+    const g = portico({ vao, alto: 66 * (tr.escala ?? 1), viga: 14, // (o vão livre sob o arco, 13,7 m para o carro antigo, na escala do cenário: 5,5 m, parecido com o do pórtico da largada)
+       cor: "#0b1530", corColuna: "#202328", texto: "MONACO GRAND PRIX   ·   FORMULA 1   ·   SAINTE DÉVOTE", corTexto: "#ffffff", corFaixa: "#c8102e" });
     g.position.set(p.x, p.h, p.y); g.rotation.y = Math.atan2(-p.ny, p.nx); add(g);
     for (const [x, z] of pes) reservado.push([x, z, 26]);
     tr.arcoMonaco = { f, vao }; return;

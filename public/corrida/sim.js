@@ -127,7 +127,7 @@ function atualizarDRS(c, zona, autorizada, bloqueado, freando = false) {
 // ---------- o vácuo ----------
 // Logo atrás de outro carro (até ~17 m, na mesma linha e na mesma direção) o ar empurra menos. Devolve 0..1 (1 = colado).
 // outros: [{ x, y, z, a, dnf, fant }]
-const VACUO_ALCANCE = 450;
+const VACUO_ALCANCE = 290, VACUO_LARGURA = 12; // (VACUO_LARGURA: a largura do rastro logo atrás, a do carro real, 9,1 u, com folga; era 24, a do carro antigo) // (60 m; era 450 u, 94 m: com +20% de velocidade final quem vinha atrás chegava rápido demais e o freio não acompanhava)
 function vacuoAlvo(c, outros) {
   if (c.air || !F1.vacuoPermitido(c.v) || !outros) return 0;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
@@ -137,7 +137,7 @@ function vacuoAlvo(c, outros) {
     const dx = o.x - c.x, dy = o.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
     // o rastro do vácuo vai longe (VACUO_ALCANCE u, uns 45 m) e abre com a distância, como o ar mexido atrás de um carro de verdade: quem vem
     // de longe já ganha um pouco e chega com velocidade para emparelhar (antes acabava em 17 m e só servia colado, e ninguém conseguia atacar)
-    if (along < 22 || along > VACUO_ALCANCE || lat > 24 + along * 0.06 || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
+    if (along < 22 || along > VACUO_ALCANCE || lat > VACUO_LARGURA + along * 0.04 || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
     d = Math.max(d, 1 - (along - 22) / (VACUO_ALCANCE - 22));
   }
   return d;
@@ -246,8 +246,8 @@ function passo(c, ent, amb, tr, ev) {
   const zona = F1.zonaDRS(c.idx / n, tr.t.drs);
   const drs = atualizarDRS(c, zona, amb.drsZona, !!(amb.amarela || amb.safety || amb.quali), !!ent.brake);
   F1.carregarErs(c.ers, dt, !!ent.brake && c.v > 40, !ent.gas, amb.laps || 0);
-  const usarErs = !!(ent.gas && !amb.safety && (amb.ersAuto !== false ? F1.usarErsAuto(c.ers.carga, c.v, spec.vmax, (tr.pts[c.idx].k || 0) < 1 / 1500, c.draft > 0.25) : ent.ers));
-  const ersAtivo = F1.gastarErs(c.ers, dt, usarErs, amb.ersAuto === false || c.draft > 0.25); // (overtake: colado no da frente, ou o botão no modo manual; senão o gasto suave da reta)
+  const usarErs = !!(ent.gas && !amb.safety && (amb.ersAuto !== false ? F1.usarErsAuto(c.ers.carga, c.v, spec.vmax, (tr.pts[c.idx].k || 0) < 1 / 1500, c.draft > 0.25) || (ent.ers && c.ers.carga > F1.ERS_PISO_OVERTAKE) : ent.ers));
+  const ersAtivo = F1.gastarErs(c.ers, dt, usarErs, amb.ersAuto === false || c.draft > 0.25 || !!ent.ers); // (overtake: colado no da frente, ou o botão no modo manual; senão o gasto suave da reta)
   c.drsAtivo = drs; c.ersAtivo = ersAtivo;
   // o relevo: a gravidade puxa para baixo da pista
   const h0 = alturaDoChao(tr, c.x, c.y, c.idx), h1 = alturaDoChao(tr, c.x + fx * 10, c.y + fy * 10, c.idx);
@@ -492,8 +492,8 @@ function culpaEntre(vAx, vAy, vBx, vBy, nx, ny) {
   return 0;
 }
 function circulos(x, y, a, L, W) { const fx = Math.cos(a), fy = Math.sin(a), r = W * 0.45, d = Math.max(0, L / 2 - r); return [-d, 0, d].map((u) => [x + fx * u, y + fy * u, r]); }
-// o tamanho (u) de cada carro, o mesmo de CARS3 em carros.js (metros do modelo × KS = 10)
-const DIMENSOES = { equilibrado: [44, 26], foguete: [48, 25], formiga: [41, 26], drifteiro: [44, 25], tanque: [46, 29] };
+// o tamanho (u) de cada carro, o mesmo de CARS3 em carros.js (metros × KS = 4,8)
+const DIMENSOES = { equilibrado: [26.4, 9.1], foguete: [28.8, 8.9], formiga: [24.5, 9.1], drifteiro: [26.4, 8.9], tanque: [27.6, 10.1] };
 const dimensoes = (car) => DIMENSOES[car] || DIMENSOES.equilibrado;
 const massaDe = (spec) => (spec ? D.parametros(spec).massa : 800);
 // o par de círculos mais enterrado entre A e B: { pen, nx, ny (de B para A), px, py (o ponto do contato) } ou null
@@ -686,7 +686,7 @@ function reconciliar(c, st, tr, ctx) {
   return { erro, dentro, dx: ox - c.x, dy: oy - c.y, da };
 }
 
-const api = { PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+const api = { VACUO_ALCANCE, VACUO_LARGURA, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

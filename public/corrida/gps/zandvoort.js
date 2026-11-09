@@ -18,10 +18,13 @@ const VERMELHO = "#ae1c28", BRANCO = "#f4f4f2", LARANJA = "#ff6a13", AZUL = "#21
 const arq = (de, ate, lado, degraus, cor, encosto, cobertura = false) => ({ de, ate, lado, degraus, cor, encosto, cobertura, torcida: CAMISAS_NL });
 
 export const GP_ZANDVOORT = {
+  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
+  // As peças só desta pista leem `tr.escala` (as tribunas) ou já estão medidas em metros (a passada visual: planos/escala-real.md).
+  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 538, fora: 348 }, // as zebras vermelhas e brancas
     amarelas: [[0.1, 0.122]], // a zebra alta de dentro da Tarzanbocht
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 22,
@@ -39,13 +42,14 @@ export const GP_ZANDVOORT = {
     arq(0.405, 0.44, -1, 8, LARANJA, AZUL_ESCURO), arq(0.492, 0.55, -1, 8, AZUL, BRANCO, true), arq(0.6, 0.622, 1, 7, LARANJA, BRANCO), // Hunserug, Scheivlak e Hans Ernst
     arq(0.742, 0.772, -1, 7, VERMELHO, BRANCO), // a chicane
   ] },
-  cenario: (tr, ctx) => cenarioZandvoort(tr, ctx), // a reta dos boxes, o Tarzan, as curvas inclinadas, a torcida laranja, os muros e as placas
-  ambiente: {
+  cenario: (tr, ctx) => cenarioZandvoort(tr, ctx, GP_ZANDVOORT.ambienteHolanda), // o chão sólido, a reta dos boxes, o Tarzan, as curvas inclinadas, a torcida laranja, os muros, as placas e o ambiente (painéis, placas de frenagem e postos no chão)
+  ambiente: { // (movido para `ambienteHolanda` no fim do arquivo: o do kit deixa painéis e placas de frenagem no ar; o de Zandvoort é o de kit/zandvoort/ambiente.js, chamado em `cenario`)
     marcas: ["nlzandvoort", "nlgp", "nlnoordzee", "nlduinen", "nlholland", "nloranje", "nltulpen", "nlkaas", "nlstroop", "nlbitter", "nlhagel", "nlstrand"],
     outdoors: ["nlzandvoort", "nlgp", "nlnoordzee", "nlholland", "nloranje", "nltulpen", "nlkaas", "nlstroop"],
-    posto: "nlzandvoort", cerca: false, // o muro e a cerca alta são de ../kit/zandvoort/curvas.js
-    bandeira: [0xae1c28, 0x21468b], placas: [150, 100, 50], // a Holanda (vermelho e azul, com o branco no meio da torcida) e as placas de 150, 100 e 50 m
+    posto: "nlzandvoort", // o muro e a cerca alta são de ../kit/zandvoort/curvas.js; sem os mastros do kit (as bandeiras da Holanda e a laranja são as da torcida e as do pórtico, em ../zandvoort.js)
+    placas: [150, 100, 50], // as placas de 150, 100 e 50 m, com poste até o chão
   },
+  sem: { mastros: true }, // os mastros de duas cores do kit não
   passarelas: { candidatos: [0.305, 0.66, 0.78, 0.55], marcas: ["nlzandvoort", "nlgp", "nlnoordzee"], max: 2 },
   beira: {}, // sem as árvores pálidas de sempre: o capim, as moitas e os pinheiros baixos das dunas são de ../kit/zandvoort/dunas.js, em `depois`
   horizonte: false, // o horizonte é o mar do Norte, a oeste, e a vila de Zandvoort
@@ -60,3 +64,5 @@ export const GP_ZANDVOORT = {
   },
 };
 void pertoDe;
+// o ambiente do kit (kit/ambiente.js) deixa painéis e placas de frenagem no ar: Zandvoort usa o seu (kit/zandvoort/ambiente.js), chamado em `cenario` com a mesma configuração
+GP_ZANDVOORT.ambienteHolanda = GP_ZANDVOORT.ambiente; delete GP_ZANDVOORT.ambiente;

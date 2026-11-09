@@ -540,10 +540,10 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       if (!ia.ult || ia.ult.id !== oid) out.ladoDeOutro = true; // (alguém além do carro que estou passando está ao meu lado)
     }
     if (frente > 22 && frente < 450 && distancia * STEP > 8 && Math.abs(lado) < 24 + frente * 0.06) out.draft = Math.max(out.draft, 1 - (frente - 22) / 428); // (o mesmo rastro longo de Sim.vacuoAlvo)
-    // quanto ele está freando (a desaceleração medida de uma passagem à outra): quem vem atrás conta com mais 0,6 s do mesmo freio
+    // quanto ele está freando (a desaceleração medida de uma passagem à outra): quem vem atrás conta com mais 0,25 s do mesmo freio
     const visto = (ia.vistos || (ia.vistos = {}))[oid] || (ia.vistos[oid] = { ov, t: now, a: 0 }), dtv = (now - visto.t) / 1000;
     if (dtv >= 0.04) { visto.a += (Math.max(-300, Math.min(100, (ov - visto.ov) / dtv)) - visto.a) * Math.min(1, dtv * 6); visto.ov = ov; visto.t = now; }
-    const ovPlano = Math.max(0, ov + Math.min(0, visto.a) * 0.6);
+    const ovPlano = Math.max(0, ov + Math.min(0, visto.a) * 0.25);
     const aproxima = Math.max(0, ia.v - ovPlano); // a velocidade com que me aproximo dele
     // Depois que abriu espaço lateral suficiente, o carro ultrapassado já não está na mesma faixa:
     // continuar seguindo a velocidade dele ali fazia o robô andar lado a lado sem conseguir passar.
@@ -557,8 +557,8 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       // reserva espaço para o freio progressivo da física (o pedal leva ~0,2 s para subir) e para o da frente frear mais forte que o previsto
       // (na largada o pelotão sai junto: a reserva de espaço cresce aos poucos, de quase nada no grid, onde os carros estão a 4 u um do outro, até
       // a de sempre; senão a fila de trás esperava cada carro da frente andar, uma fileira de cada vez)
-      const folga = frente - L_CARRO - (32 + Math.min(40, k[i] * 2500) + aproxima * 0.3) * arranque - 1;
-      const desacel = D.frenagemMaxima(c, ia.v, 0, plano.aderenciaFreio) * 0.5;
+      const folga = frente - L_CARRO - (12 + Math.min(15, k[i] * 1000) + aproxima * 0.1) * arranque - 1;
+      const desacel = D.frenagemMaxima(c, ia.v, 0, plano.aderenciaFreio) * 0.75;
       let lim = folga <= 0 ? ovPlano * 0.82 : Math.sqrt(Math.max(0, ovPlano * ovPlano + 2 * desacel * folga));
       // Já decidiu ultrapassar este carro mas ainda está na faixa dele: um fio de velocidade (sem encostar) para o volante ter o que virar
       if (ia.ult && ia.ult.id === oid && frente > L_CARRO + 2) lim = Math.max(lim, V_ARRASTO);

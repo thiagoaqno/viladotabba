@@ -10,7 +10,7 @@ const BOXES = window.Pistas.PISTAS.melbourne.boxes;
 
 export const GP_MELBOURNE = {
   // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
-  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
+  // As peças só desta pista leem `tr.escala` (passada visual, planos/escala-real.md: a mureta, o alambrado, as tribunas, o complexo dos boxes) ou foram medidas em metros (lago, veleiros, clube, árvores, skyline, pórticos).
   escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
@@ -63,8 +63,8 @@ export const GP_MELBOURNE = {
       { de: 0.88, ate: 0.935, lado: -1, degraus: 7, cor: "#2d3a52", encosto: "#e8eaee", cobertura: true, torcida: TORCIDA },
     ],
   },
-  cenario: (tr, ctx) => cenarioMelbourne(tr, ctx),
-  ambiente: {
+  cenario: (tr, ctx) => cenarioMelbourne(tr, ctx, GP_MELBOURNE.ambienteAustralia), // o chão sólido, o ambiente (placas de frenagem, mastros e postos no chão), o lago, o clube de vela e o skyline
+  ambiente: { // (movido para `ambienteAustralia` no fim do arquivo: o do kit deixa mastros e placas de frenagem no ar; o de Melbourne é o de kit/melbourne/ambiente.js, chamado em `cenario`)
     marcas: ["rolex", "ausgp", "heineken", "pirelli", "aramco", "dhl", "f1", "aws", "lenovo"],
     outdoors: ["rolex", "ausgp", "heineken", "pirelli", "f1", "aramco", "dhl"],
     posto: "ausgp",
@@ -100,6 +100,9 @@ export const GP_MELBOURNE = {
       campo: () => 0.65,
     },
   },
+  sem: { mastros: true }, // os mastros altos de vida-mais.js não: as bandeiras da Austrália são as de kit/melbourne/ambiente.js, de pé no chão
   horizonte: false, // o skyline de Melbourne é modelado em 3D ao norte
   depois: (tr, ctx) => depoisMelbourne(tr, ctx),
 };
+// o ambiente do kit (kit/ambiente.js) deixa mastros e placas de frenagem no ar: Melbourne usa o seu (kit/melbourne/ambiente.js), chamado em `cenario` com a mesma configuração
+GP_MELBOURNE.ambienteAustralia = GP_MELBOURNE.ambiente; delete GP_MELBOURNE.ambiente;

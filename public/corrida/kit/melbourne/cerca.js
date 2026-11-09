@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
 import { desenharMarca } from "../marcas.js";
 import { instancias } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
 
 const PASSO = 2; // pontos da pista (de 6 em 6 unidades) entre dois cortes da fita
 
@@ -35,7 +36,7 @@ function fita(tr, runs, s, perfil, tile) {
     const base = vs.length / 3; let dist = 0, ant = null;
     for (let i = i0; i <= i1; i += PASSO) {
       const p = pts[i % n]; if (ant) dist += Math.hypot(p.x - ant.x, p.y - ant.y); ant = p;
-      for (const [l, y, v] of perfil) { vs.push(p.x + p.nx * s * l, p.h - 1.5 + y, p.y + p.ny * s * l); uv.push(dist / tile, v); }
+      for (const [l, y, v] of perfil) { const x = p.x + p.nx * s * l, z = p.y + p.ny * s * l; vs.push(x, nivelDoChao(tr, x, z) - 0.3 + y, z); uv.push(dist / tile, v); } // (a base 0,3 u dentro do chão que se vê, a fita de chao.js)
       const k = perfil.length, c = base + ((i - i0) / PASSO) * k;
       if (i < i1) for (let j = 0; j < k - 1; j++) idx.push(c + j, c + j + k, c + j + 1, c + j + 1, c + j + k, c + j + k + 1);
     }
@@ -62,17 +63,21 @@ const faixaTex = (marcas) => canvasTex(2048, 64, (x, w, h) => {
  * A mureta de publicidade e o alambrado alto por cima, dos dois lados da pista.
  * @param {object} tr a pista · @param {Function} add põe na cena
  * @param {object} o
- * @param {number} [o.lat=91.2] deslocamento da frente da mureta · @param {number} [o.altura=58] do alambrado, do chão · @param {number} [o.alto=10] da mureta
- * @param {number} [o.inclinacao=9] quanto a ponta do alambrado se inclina para a pista · @param {string[]} [o.marcas] as marcas da faixa (8)
+ * ESCALA REAL (1 u = 0,2083 m): a frente da mureta fica a 31,2 u (6,5 m) da BORDA do asfalto (W / 2 + 31,2; antes era um deslocamento fixo do eixo, 91,2, de quando a pista tinha 120 u de largura: com os 58 u de hoje a
+ * mureta ficava a 62 u da borda), logo à frente das arquibancadas do kit (a W / 2 + 36). A mureta tem 5 u (1,04 m; antes 10 u = 2,1 m) e o alambrado 23,2 u (4,8 m; antes 58 u = 12 m), com a ponta inclinada de 3,6 u
+ * (antes 9); os postes, de 0,5 u (11 cm) a cada 24 u (5 m), a tela e a faixa de patrocínio acompanham (a marca de 4:1 tem 20 × 5 u: 4,2 × 1 m).
+ * @param {number} [o.lat=W/2+31.2] deslocamento da frente da mureta · @param {number} [o.altura=58*E] do alambrado, do chão · @param {number} [o.alto=12.5*E] da mureta (E = tr.escala)
+ * @param {number} [o.inclinacao=9*E] quanto a ponta do alambrado se inclina para a pista · @param {string[]} [o.marcas] as marcas da faixa (8)
  * @param {(i:number, lado:number)=>boolean} [o.pular] onde não pôr (o corredor dos boxes)
  */
-export function alambrado(tr, add, { lat = 91.2, altura = 58, alto = 10, inclinacao = 9, marcas = ["ausgp", "rolex", "heineken", "pirelli", "aramco", "dhl", "f1", "aws"], pular } = {}) {
+export function alambrado(tr, add, { lat = tr.W / 2 + 31.2, altura = 58 * (tr.escala ?? 1), alto = 12.5 * (tr.escala ?? 1), inclinacao = 9 * (tr.escala ?? 1), marcas = ["ausgp", "rolex", "heineken", "pirelli", "aramco", "dhl", "f1", "aws"], pular } = {}) {
+  const E = tr.escala ?? 1;
   const tela = new THREE.MeshStandardMaterial({ map: telaTex(), transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.35 });
   const faixaM = new THREE.MeshStandardMaterial({ map: faixaTex(marcas), roughness: 0.7, side: THREE.DoubleSide });
   const concreto = new THREE.MeshStandardMaterial({ color: 0xa9adb2, roughness: 0.85, side: THREE.DoubleSide });
   const aco = new THREE.MeshStandardMaterial({ color: 0x4a5058, roughness: 0.5, metalness: 0.5 });
   const postes = [], stats = (tr.alambradoGP = { trechos: 0, postes: 0 });
-  const pe = lat + 2.4, tileTela = 32, tileFaixa = 320;
+  const pe = lat + 2.4, tileTela = 32 * E, tileFaixa = alto * 4 * marcas.length; // (a tela: losango de 4 × a escala; a faixa: uma volta de textura = as 8 marcas de 4:1)
   for (const s of [-1, 1]) {
     const runs = trechos(tr, s, pe + 1, pular); stats.trechos += runs.length;
     // a faixa de patrocínio (v de 0 a 1 de baixo para cima; o lado +1 espelha para o texto sair certo para quem passa)
@@ -86,11 +91,11 @@ export function alambrado(tr, add, { lat = 91.2, altura = 58, alto = 10, inclina
     for (const g of [reta, ponta]) if (g) { const m = add(new THREE.Mesh(g, tela)); m.renderOrder = 2; }
     // os postes (a cada 5 pontos) e a travessa do alto, num InstancedMesh só
     const { pts, n } = tr;
-    for (const [i0, i1] of runs) for (let i = i0; i <= i1; i += 6) {
-      const p = pts[i % n], x = p.x + p.nx * s * (pe - 0.4), z = p.y + p.ny * s * (pe - 0.4), y0 = p.h - 1.5;
-      postes.push({ x, y: y0 + (altura + alto) / 2 + 0.3, z, sx: 1.3, sy: altura - alto + 1, sz: 1.3, r: 0 });
+    for (const [i0, i1] of runs) for (let i = i0; i <= i1; i += 4) {
+      const p = pts[i % n], x = p.x + p.nx * s * (pe - 0.4), z = p.y + p.ny * s * (pe - 0.4), y0 = nivelDoChao(tr, x, z) - 0.3;
+      postes.push({ x, y: y0 + (altura + alto) / 2 + 0.3, z, sx: 1.3 * E, sy: altura - alto + 1, sz: 1.3 * E, r: 0 });
       // o braço que segura a ponta inclinada (uma caixa pequena em cima, deslocada para a pista)
-      postes.push({ x: x - p.nx * s * inclinacao * 0.5, y: y0 + altura + inclinacao * 0.45, z: z - p.ny * s * inclinacao * 0.5, sx: 1, sy: 1, sz: 1, r: Math.atan2(p.nx, p.ny) });
+      postes.push({ x: x - p.nx * s * inclinacao * 0.5, y: y0 + altura + inclinacao * 0.45, z: z - p.ny * s * inclinacao * 0.5, sx: E, sy: E, sz: E, r: Math.atan2(p.nx, p.ny) });
       stats.postes++;
     }
   }

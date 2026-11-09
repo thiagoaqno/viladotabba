@@ -7,6 +7,10 @@
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { livre, ocupado, sorteio, instancias } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
+
+// a pessoa de pé desenhada aqui tem 8 + 2,4 u de cabeça = 10,4 u = 2,17 m; a de verdade, 1,75 m (8,4 u): fator 0,81 (o mesmo de Spa)
+const G = 8.4 / 10.4;
 
 export const LARANJA = "#ff6a13", VERMELHO = "#d3202f";
 // a torcida: laranja e vermelho e branco da Áustria em maioria, e um pouco de tudo (azul, verde, preto, amarelo e a capa de chuva)
@@ -34,7 +38,7 @@ export function bandeirasDaTorcida(tr, add, lista) {
     const ondula = 0.6 + (k % 3) * 0.5;
     for (const [a, yy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { vs.push(o.x + c * w * a + (a ? sn * ondula : 0), o.y + alto - h + h * yy, o.z - sn * w * a + (a ? c * ondula : 0)); uv.push(u0 + 0.5 * a, v0 + 0.5 * yy); }
     idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2);
-    hastes.push({ x: o.x, y: o.y + alto / 2, z: o.z, sx: 0.6, sy: alto, sz: 0.6 });
+    hastes.push({ x: o.x, y: o.y + alto / 2, z: o.z, sx: 0.5, sy: alto, sz: 0.5 });
   });
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
   const m = add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: atlas(), roughness: 0.85, side: THREE.DoubleSide }))); m.name = `${tr.id}-bandeiras-torcida`;
@@ -59,10 +63,10 @@ export function torcidaNasEncostas(tr, add, zonas, cfg = {}) {
         const piso = Math.max(z.lat0, (tr.murosEscape?.[z.lado]?.[i % n] ? tr.W / 2 + tr.murosEscape[z.lado][i % n] + 8 : 0)); // atrás da barreira, nunca entre ela e a pista
         const lat = piso + Math.max(0, z.lat1 - piso) * r() * r(), x = p.x + p.nx * z.lado * lat + p.tx * (r() - 0.5) * 12, zz = p.y + p.ny * z.lado * lat + p.ty * (r() - 0.5) * 12;
         if (tr.distAt(x, zz) < lat - 6 || ocupado(tr, x, zz, i % n)) continue;
-        const y = tr.chao(x, zz) - 1.5, sentado = r() < 0.4, alto = sentado ? 5.4 : 8, c = camisas[(r() * camisas.length) | 0];
-        corpos.push({ x, y: y + alto / 2, z: zz, sx: 2.8, sy: alto, sz: 2.2, r: r() * 6.28, c });
-        cabecas.push({ x, y: y + alto + 1.2, z: zz, sx: 2.3, sy: 2.4, sz: 2.3, r: r() * 6.28, c: PELES[(r() * PELES.length) | 0] });
-        if (r() < (z.bandeiras ?? 0.12)) bandeiras.push({ x, y: y + alto - 1, z: zz, tipo: r() < 0.4 ? 0 : r() < 0.55 ? 2 : r() < 0.8 ? 1 : 3, r: r() * 6.28, s: 0.8 + r() * 0.5, alto: 16 + r() * 10 });
+        const y = nivelDoChao(tr, x, zz) - 0.3, sentado = r() < 0.4, alto = (sentado ? 5.4 : 8) * G, c = camisas[(r() * camisas.length) | 0]; // em pé no chão que se vê (a fita de chao.js ou a malha), com os pés 0,06 m dentro dele
+        corpos.push({ x, y: y + alto / 2, z: zz, sx: 2.8 * G, sy: alto, sz: 2.2 * G, r: r() * 6.28, c });
+        cabecas.push({ x, y: y + alto + 1.2 * G, z: zz, sx: 2.3 * G, sy: 2.4 * G, sz: 2.3 * G, r: r() * 6.28, c: PELES[(r() * PELES.length) | 0] });
+        if (r() < (z.bandeiras ?? 0.12)) bandeiras.push({ x, y: y + alto - 1, z: zz, tipo: r() < 0.4 ? 0 : r() < 0.55 ? 2 : r() < 0.8 ? 1 : 3, r: r() * 6.28, s: (0.8 + r() * 0.5) * G, alto: (16 + r() * 10) * G });
       }
     }
   }
@@ -88,9 +92,9 @@ export function acampamento(tr, add, zonas, cfg = {}) {
       for (let k = 0, q = Math.floor(z.dens) + (r() < z.dens % 1 ? 1 : 0); k < q; k++) {
         const lat = z.lat0 + (z.lat1 - z.lat0) * r(), x = p.x + p.nx * z.lado * lat + p.tx * (r() - 0.5) * 20, zz = p.y + p.ny * z.lado * lat + p.ty * (r() - 0.5) * 20;
         if (!livre(tr, x, zz, 70) || ocupado(tr, x, zz, i % n)) continue;
-        const y = tr.chao(x, zz) - 1.5, giro = r() * 6.28;
+        const y = nivelDoChao(tr, x, zz) - 0.3, giro = r() * 6.28;
         if (r() < (cfg.barracas ?? 0.72)) barracas.push({ x, y, z: zz, sx: 11 + r() * 5, sy: 7 + r() * 2.5, sz: 12 + r() * 5, r: giro + Math.PI / 4, c: CORES[(r() * CORES.length) | 0] });
-        else { const c = CARROS[(r() * CARROS.length) | 0], comp = 20 + r() * 8; carros.push({ x, y: y + 4.4, z: zz, sx: comp, sy: 7.4, sz: 10, r: giro, c }); tetos.push({ x, y: y + 9.4, z: zz, sx: comp * 0.58, sy: 3.4, sz: 9, r: giro, c: "#26323d" }); }
+        else { const c = CARROS[(r() * CARROS.length) | 0], comp = 20 + r() * 8; carros.push({ x, y: y + 3.5, z: zz, sx: comp, sy: 7.4, sz: 10, r: giro, c }); tetos.push({ x, y: y + 8.5, z: zz, sx: comp * 0.58, sy: 3.4, sz: 9, r: giro, c: "#26323d" }); }
       }
     }
   }

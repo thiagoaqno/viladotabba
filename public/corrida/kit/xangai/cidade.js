@@ -71,7 +71,7 @@ export function cidadeDeXangai(tr, add, { raio = 5400, fundo = 900, angulo = Mat
   for (let k = 0; k < quantas; k++) {
     const a = r() * Math.PI * 2, d = raio + r() * fundo, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, centro = Math.max(0, 1 - dif(a, angulo) / 1.5);
     if (r() > 0.55 + 0.4 * centro) continue;
-    const alta = r() < 0.18 + 0.3 * centro, h = (alta ? 480 + r() * 520 : 190 + r() * 300) * escala * (0.7 + 0.4 * centro), sx = 60 + r() * 60, sz = 60 + r() * 60, vi = r() < 0.4;
+    const alta = r() < 0.18 + 0.3 * centro, h = (alta ? 480 + r() * 520 : 190 + r() * 300) * escala * (0.7 + 0.4 * centro), sx = 110 + r() * 90, sz = 70 + r() * 60, vi = r() < 0.4;
     torre(x, z, sx, h, sz, vi ? vidros[(r() * vidros.length) | 0] : pedras[(r() * pedras.length) | 0], vi ? vid : ped, { degrau: alta && r() < 0.4 ? 40 + r() * 70 : 0, antena: alta && r() < 0.3 ? 80 + r() * 140 : 0, jan: 8 + r() * 6 });
     if (!alta && r() < 0.5) { const a2 = a + (r() - 0.5) * 0.02; torre(cx + Math.cos(a2) * (d + 70), cz + Math.sin(a2) * (d + 70), sx * 0.9, h * (0.8 + r() * 0.4), sz * 0.9, pedras[(r() * pedras.length) | 0], ped, { jan: 8 }); } // o quarteirão em fileira
   }
@@ -80,25 +80,25 @@ export function cidadeDeXangai(tr, add, { raio = 5400, fundo = 900, angulo = Mat
   const at = (x, z) => 1; void at;
   const bruma2 = (hex, t = 0.34) => cor3(hex).lerp(ar, t);
   // a Shanghai Tower: torcida, em fatias que giram e afinam
-  { const [x, z] = base(-0.04, 0.55), H = 1560 * escala, n = 14;
-    for (let k = 0; k < n; k++) { const t = k / n, w = 150 * (1 - t * 0.62), h = H / n; topos.caixa(x, z, -3 + k * h, w, h + 0.5, w, k * 0.1 + 0.3, bruma2("#8fa6b8", 0.34 + 0.12 * (1 - t)), bruma2("#b7c9d6", 0.32), 12, 14); }
+  { const [x, z] = base(-0.04, 0.55), H = 3034, n = 14; // 632 m (as alturas dos marcos são as reais, de memória: não conferi numa fonte aberta; eram 552, 372, 418 e 425 m)
+    for (let k = 0; k < n; k++) { const t = k / n, w = 340 * (1 - t * 0.62), h = H / n; topos.caixa(x, z, -3 + k * h, w, h + 0.5, w, k * 0.1 + 0.3, bruma2("#8fa6b8", 0.34 + 0.12 * (1 - t)), bruma2("#b7c9d6", 0.32), 12, 14); }
     topos.caixa(x, z, -3 + H, 8, 120, 8, 0, bruma2("#d8dde2"), bruma2("#d8dde2")); }
   // o Shanghai World Financial Center: o prisma esguio com o vazado trapezoidal no alto (duas pontas e a ponte)
-  { const [x, z] = base(0.015, 0.2), H = 1180 * escala, w = 118;
+  { const [x, z] = base(0.015, 0.2), H = 2362, w = 278; // 492 m, 58 m de lado
     vid.caixa(x, z, -3, w, H * 0.8, w * 0.8, 0.4, bruma2("#7c93a3", 0.36), bruma2("#9fb4c2", 0.32), 16, 14);
     for (const s of [-1, 1]) topos.caixa(x + Math.cos(0.4) * s * w * 0.3, z - Math.sin(0.4) * s * w * 0.3, -3 + H * 0.8, w * 0.36, H * 0.2, w * 0.8, 0.4, bruma2("#7c93a3", 0.34), bruma2("#a9bdca", 0.3), 8, 14);
     topos.caixa(x, z, -3 + H * 0.97, w, H * 0.03, w * 0.8, 0.4, bruma2("#9fb4c2", 0.3), bruma2("#c3d2dc", 0.3), 8, 14); }
   // o Jin Mao: a torre de pagode, em 13 degraus cada vez mais estreitos
-  { const [x, z] = base(0.07, 0.35), H = 1050 * escala, n = 13;
-    for (let k = 0; k < n; k++) { const t = k / n, w = 112 * (1 - t * 0.74), h = (H * 0.92) / n; topos.caixa(x, z, -3 + k * h, w, h * (k === 0 ? 1.0 : 0.94), w, 0.1, bruma2("#a4b0ae", 0.36), bruma2("#cdd7d4", 0.32), 10, 14); if (k > 1) topos.caixa(x, z, -3 + (k + 1) * h - 3, w * 1.12, 5, w * 1.12, 0.1, bruma2("#8d9a98", 0.34), bruma2("#b8c4c1", 0.32), 4, 14); }
+  { const [x, z] = base(0.07, 0.35), H = 2021, n = 13; // 421 m
+    for (let k = 0; k < n; k++) { const t = k / n, w = 260 * (1 - t * 0.74), h = (H * 0.92) / n; topos.caixa(x, z, -3 + k * h, w, h * (k === 0 ? 1.0 : 0.94), w, 0.1, bruma2("#a4b0ae", 0.36), bruma2("#cdd7d4", 0.32), 10, 14); if (k > 1) topos.caixa(x, z, -3 + (k + 1) * h - 3, w * 1.12, 5, w * 1.12, 0.1, bruma2("#8d9a98", 0.34), bruma2("#b8c4c1", 0.32), 4, 14); }
     topos.caixa(x, z, -3 + H * 0.92, 5, H * 0.08, 5, 0, bruma2("#d8dde2"), bruma2("#d8dde2")); }
   // a Torre da Pérola Oriental: as três pernas inclinadas, a esfera grande, a pequena, o fuste e a antena
-  { const [x, z] = base(0.11, 0.1), H = 1200 * escala;
-    for (let k = 0; k < 3; k++) { const a = (k / 3) * Math.PI * 2 + 0.4; for (let s = 0; s < 6; s++) { const t0 = s / 6, w = 18 - s * 1.4; topos.caixa(x + Math.cos(a) * (60 * (1 - t0 * 0.7)), z + Math.sin(a) * (60 * (1 - t0 * 0.7)), -3 + t0 * H * 0.28, w, H * 0.28 / 6 + 1, w, a, bruma2("#b9bec4"), bruma2("#d6dadf")); } }
-    topos.caixa(x, z, -3, 26, H * 0.62, 26, 0, bruma2("#b9bec4", 0.4), bruma2("#d6dadf", 0.34), 3, 14);
-    topos.esfera(x, z, -3 + H * 0.3, 96, bruma2("#a73a5c", 0.3), bruma2("#e0829f", 0.3)); // a esfera grande, rosa
-    topos.esfera(x, z, -3 + H * 0.6, 62, bruma2("#a73a5c", 0.3), bruma2("#e0829f", 0.3)); // a do meio
-    topos.esfera(x, z, -3 + H * 0.74, 36, bruma2("#a73a5c", 0.3), bruma2("#e0829f", 0.3)); // a de cima
+  { const [x, z] = base(0.11, 0.1), H = 2247, F = 1.25; // 468 m; F alarga as esferas e as pernas na mesma proporção (a esfera maior fica com 50 m)
+    for (let k = 0; k < 3; k++) { const a = (k / 3) * Math.PI * 2 + 0.4; for (let s = 0; s < 6; s++) { const t0 = s / 6, w = (18 - s * 1.4) * F; topos.caixa(x + Math.cos(a) * (60 * F * (1 - t0 * 0.7)), z + Math.sin(a) * (60 * F * (1 - t0 * 0.7)), -3 + t0 * H * 0.28, w, H * 0.28 / 6 + 1, w, a, bruma2("#b9bec4"), bruma2("#d6dadf")); } }
+    topos.caixa(x, z, -3, 26 * F, H * 0.62, 26 * F, 0, bruma2("#b9bec4", 0.4), bruma2("#d6dadf", 0.34), 3, 14);
+    topos.esfera(x, z, -3 + H * 0.3, 96 * F, bruma2("#a73a5c", 0.3), bruma2("#e0829f", 0.3)); // a esfera grande, rosa
+    topos.esfera(x, z, -3 + H * 0.6, 62 * F, bruma2("#a73a5c", 0.3), bruma2("#e0829f", 0.3)); // a do meio
+    topos.esfera(x, z, -3 + H * 0.74, 36 * F, bruma2("#a73a5c", 0.3), bruma2("#e0829f", 0.3)); // a de cima
     topos.caixa(x, z, -3 + H * 0.77, 10, H * 0.23, 10, 0, bruma2("#d8dde2"), bruma2("#d8dde2"), 2, 14); }
   // o chão de longe: de onde o terreno acaba (verde apagado pela névoa) até a cor da neblina, em degradê, para não aparecer a emenda do terreno com o céu
   { const fog = cor3(tr.look?.fog ?? 0xd0d6d4), perto = fog.clone().lerp(cor3("#5d7c49"), 0.55), g = new THREE.RingGeometry(3600, 14000, 64, 12), pos = g.attributes.position, cores = new Float32Array(pos.count * 3), c = new THREE.Color();

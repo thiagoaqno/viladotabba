@@ -123,7 +123,7 @@ const pneuLateral = (p, al) => Math.sin(p.C * Math.atan(p.B * al));
 function volanteMaximo(p, vm, kGrip = 1, kCarga = 1) {
   const umin = Math.max(vm, 5), q = 0.5 * RHO * umin * umin;
   const aLat = p.mu * kGrip * (G + (q * p.ClA * kCarga) / p.massa); // a aceleração lateral que o pneu segura (m/s²)
-  return limite(1.1 * (p.L * aLat) / (umin * umin) + 0.035, 0.05, 0.5); // (1,1 × o que o pneu segura no batente; era 1,25 e a direção ficava sensível demais)
+  return limite(1.25 * (p.L * aLat) / (umin * umin) + 0.035, 0.05, 0.5);
 }
 // ---------- o passo da dinâmica ----------
 // Estado (`c`, em unidades da pista e radianos; `novoCarro` cria um): x, y, a (rumo), v (velocidade para a frente, u/s), vl (para o

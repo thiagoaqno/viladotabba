@@ -47,7 +47,9 @@ export function atualizarCentro(ctx) {
   // OVERTAKE: aceso enquanto o ERS está desdobrando; o círculo mostra a tecla (E no manual) e o DRS tem a sua pílula
   const manual = E.S.config.ers === "manual";
   set($("gBotao"), "t", manual ? "⇧" : "⚡"); // (o overtake é o Shift esquerdo: teclas.js) set($("pOver"), "c", ativo ? "on" : carga > 0.12 ? "pronto" : "");
+  const drsLigado = !!E.S.config?.drs; // a F1 de 2026 não tem DRS: a pílula fica oculta se config.drs não religar a regra
   const aberto = !!race.drsAtivo, pronto = !!m && m.drsZona >= 0;
+  $("gDrs").style.display = drsLigado ? "" : "none";
   set($("gDrs"), "c", "gc-drs" + (aberto ? " aberto" : pronto ? " pronto" : ""));
 }
 

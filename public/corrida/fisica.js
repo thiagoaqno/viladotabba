@@ -57,8 +57,9 @@ export function physics(dt, spec = carOf(me())) {
   const F1 = window.F1Regras, pn = race.pneu ? F1.aderencia(race.pneu) : null;
   const dano = pn ? F1.efeitoDoDano(m && m.dano) : null; // cada 1% de dano reduz os atributos do carro em 1%
   const dirProva = E.S?.direcao, setor = Math.floor(race.idx / (tr.n / SECTORS));
-  const zona = F1.zonaDRS(race.idx / tr.n, tr.t.drs), amarela = dirProva?.amarelo?.setor === setor;
-  const drs = !!(pn && m && m.drsZona === zona && zona >= 0 && !keys.brake && !amarela && !dirProva?.safety);
+  const drsLigado = !!E.S?.config?.drs; // a F1 de 2026 não tem DRS: desligado por padrão, religa com config.drs
+  const zona = drsLigado ? F1.zonaDRS(race.idx / tr.n, tr.t.drs) : -1, amarela = dirProva?.amarelo?.setor === setor;
+  const drs = !!(drsLigado && pn && m && m.drsZona === zona && zona >= 0 && !keys.brake && !amarela && !dirProva?.safety);
   const ers = race.ers;
   if (ers) F1.carregarErs(ers, dt, keys.brake && vf > 40, !keys.gas, m?.laps || 0);
   const ersAuto = E.S?.config.ers !== "manual";

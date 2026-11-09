@@ -215,7 +215,7 @@ function registrar(room, p, pos, agora, log) {
     const frente = ordem(room).find((q) => q.id !== p.id && progresso(q, n) > pr && progresso(q, n) - pr < 0.08);
     const ultimo = frente?.deteccoes?.[i], intervalo = ultimo && ultimo.volta === Math.floor(pr - deteccao) ? (agora - ultimo.at) / 1000 : Infinity;
     p.deteccoes[i] = { at: agora, volta: Math.floor(pr - deteccao) };
-    p.drsZona = F1.drsHabilitado({ volta: Math.floor(pr), intervalo, amarela, safety: !!d.safety }) ? i : -1;
+    p.drsZona = F1.drsHabilitado({ volta: Math.floor(pr), intervalo, amarela, safety: !!d.safety, drs: !!room.config.drs }) ? i : -1;
   }
   if (amarela || d.safety) p.drsZona = -1;
   // Se passou um carro em regime de bandeira, tem cinco segundos para devolver o lugar.

@@ -76,6 +76,8 @@ export function hud() {
   if (f1) {
     const d = E.S.direcao, setor = Math.floor(race.idx / (tr.n / SECTORS));
     $("hBandeira").textContent = d?.safety ? "🚨 SAFETY CAR · fila, sem ultrapassar" : d?.amarelo?.setor === setor ? "🟡 AMARELA · reduza" : m?.azul ? "🔵 AZUL · deixe passar" : m && m.avisosLimite ? `⚫⚪ Limites: ${m.avisosLimite}/4` : "🟢 Pista livre";
+    const drsLigado = !!E.S.config?.drs; // a F1 de 2026 não tem DRS: a pílula só aparece se config.drs religar a regra
+    $("hDrs").style.display = drsLigado ? "" : "none";
     $("hDrs").textContent = race.drsAtivo ? "DRS ABERTO" : m?.drsZona >= 0 ? "DRS disponível na zona" : "DRS indisponível";
     $("hDrs").classList.toggle("aberto", !!race.drsAtivo);
     $("hErsCarga").style.width = `${Math.round((race.ers?.carga || 0) * 100)}%`;

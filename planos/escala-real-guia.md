@@ -44,6 +44,13 @@ Unidade da física: **1 u = 0,2083 m** (metros ÷ 0,2083 = unidades).
    - Use os `muros` da ferramenta só se faltar barreira mapeada em menos de 30% da volta em CADA lado. Senão, fica a regra automática, e o PR diz isso.
    - Confira que o carro não decola: o script de Spa mediu a quebra de inclinação a cada 6 u.
 5. **Cenário.** Defina `escala` e `escalaGente` em `gps/<id>.js`. Interlagos e Spa usaram `escala: 0.4` e `escalaGente: 0.69`, medidas assim: degrau de arquibancada ~0,4 m de altura e ~0,8 m de fundo, barreira ~0,75 m, pessoa ~1,75 m. **Meça antes de copiar** o fator: prédios, árvores e peças feitas com dados reais (Mônaco, Baku, Las Vegas, Singapura) podem já estar certos. As peças exclusivas da pista (`<id>.js`, `kit/<id>/`) precisam ler `tr.escala` como as do kit leem. Nada em cima do asfalto, flutuando ou enterrado.
+   **Cuidados visuais do Thiago (2026-11-08), obrigatórios em toda pista:**
+   - A pista não pode parecer uma "folha": um sólido com textura embaixo dela (espessura visível na borda).
+   - Nada flutuando, principalmente o que se vê da câmera em primeira pessoa: grades, cercas, guard-rail, painéis, pneus, placas, árvores, prédios encostam no chão, também nas ladeiras (em Mônaco as grades flutuavam). Prints da primeira pessoa provam.
+   - Torcedores só nas arquibancadas; tirar a gente estática solta no chão ou na beira.
+   - Fora da pista, grama, areia ou brita quase no nível do asfalto, sem vão transparente entre a pista e o cenário.
+   - SEMPRE comparar com fotos reais da internet de cada trecho, e dizer o que foi comparado.
+   - Pode usar texturas (asfalto, grama, vegetação...) de fonte com licença livre (CC0/CC-BY: Poly Haven, ambientCG), anotando fonte e licença, arquivos pequenos (até 1024 px).
 6. **Robôs.** Refaça a linha da pista em `corrida-linhas-f1.json` (`ferramentas/gerar-linhas-f1.js`). Rode uma corrida com robôs no navegador: ninguém pode abandonar, ficar preso ou bater sem parar. Anote as voltas no PR.
 7. **Recordes.** Crie uma migração `migracoes/NNN-<pista>-escala-real.sql` que zere os recordes, as voltas e os setores da pista, como a `029-mexico-escala-real.sql` e a `030-spa-escala-real.sql`. Veja o maior número que já existe na main e nos PRs abertos para não repetir.
 

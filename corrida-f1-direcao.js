@@ -65,8 +65,10 @@ function voltaFechada(room, p, log) {
 // culpa, do impacto guardado em corrida-contato.js: quem se aproximou claramente mais que o outro causou (a traseira, quem fecha a
 // porta); sem culpado claro (lado a lado) ninguém é punido. O causador leva a punição e a maior parte do dano; o batido nunca é punido
 // e quase não leva dano.
-// Um carro DERRAPANDO antes do impacto (rodando, atravessado ou com guinada forte), pelo que o impacto guardou (as velocidades de antes do
-// impulso): a batida é acidente de corrida, sem punição nem dano para os dois. `idDoOutro`: o carro de quem se pergunta.
+// O ATINGIDO derrapando antes do impacto (rodando, atravessado ou com guinada forte), pelo que o impacto guardou (as velocidades de antes do
+// impulso): a batida é acidente de corrida, sem punição nem dano para os dois. Quem derrapou e ACERTOU outro carro (o causador) não se livra:
+// é punido como qualquer causador (pedido do Thiago, 2026-11-10: "alguém derrapa, bate em você, acaba com sua corrida e não dá punição").
+// `idDoOutro`: o carro de quem se pergunta.
 const DERRAPA_ANGULO = 0.3, DERRAPA_GUINADA = 2, DERRAPA_V = 25; // rad entre o rumo e a velocidade (17°: qualquer derrapada; numa curva normal o carro fica abaixo de 6°); rad/s; u/s
 function derrapando(imp, idDoOutro) {
   if (!imp || !imp.pre) return false;
@@ -86,15 +88,18 @@ function bater(room, p, forca, tipo, agora, log, chave = tipo) {
   if (agora < (cd[chave] || 0)) return null;
   const b = F1.batida(forca);
   if (!b) return null;
-  // ACIDENTE DE CORRIDA: um dos dois derrapou (rodou, atravessou) e o outro bateu em seguida. Ninguém é punido e ninguém leva dano,
-  // nem quem derrapou nem quem não conseguiu desviar: o impacto guardado (as velocidades de antes do impulso) ou o histórico dos
-  // últimos ACIDENTE_MS dizem se algum dos dois estava derrapando
+  // ACIDENTE DE CORRIDA: o ATINGIDO derrapou (rodou, atravessou) e o causador bateu nele em seguida, sem ter como desviar. Ninguém é
+  // punido e ninguém leva dano. O impacto guardado (as velocidades de antes do impulso) ou o histórico dos últimos ACIDENTE_MS dizem se o
+  // atingido estava derrapando. Se quem derrapou foi o CAUSADOR (rodou e acertou alguém), a batida segue abaixo como qualquer outra:
+  // punição e dano para ele. Sem culpado claro (lado a lado), vale a regra de antes: um dos dois derrapando é acidente de corrida.
   const outro0 = tipo !== 'muro' && String(chave).startsWith('carro:') ? String(chave).slice(6) : null;
   if (outro0) {
-    const i0 = Contato.impactoDe(room, p.id, outro0), t0 = i0 ? i0.t : agora;
-    if (derrapando(i0, outro0) || derrapando(i0, p.id) || Contato.derrapouAntes(room, outro0, t0, ACIDENTE_MS) || Contato.derrapouAntes(room, p.id, t0, ACIDENTE_MS)) {
+    const i0 = Contato.impactoDe(room, p.id, outro0), t0 = i0 ? i0.t : agora, culpado0 = i0 && i0.culpado;
+    const derrapou = (id) => derrapando(i0, id) || Contato.derrapouAntes(room, id, t0, ACIDENTE_MS);
+    const vitima = culpado0 === p.id ? outro0 : culpado0 === outro0 ? p.id : null;
+    if (vitima ? derrapou(vitima) : derrapou(outro0) || derrapou(p.id)) {
       cd[chave] = agora + F1.BATIDA_INTERVALO;
-      if (!room.acidentesLog || agora - (room.acidentesLog[chave] || 0) > F1.BATIDA_INTERVALO) { (room.acidentesLog ||= {})[chave] = agora; log(`💥 ${p.name}: acidente de corrida (um carro derrapou): sem punição e sem dano.`); }
+      if (!room.acidentesLog || agora - (room.acidentesLog[chave] || 0) > F1.BATIDA_INTERVALO) { (room.acidentesLog ||= {})[chave] = agora; log(`💥 ${p.name}: acidente de corrida (${vitima ? 'o carro atingido derrapou' : 'um carro derrapou'}): sem punição e sem dano.`); }
       return null;
     }
   }

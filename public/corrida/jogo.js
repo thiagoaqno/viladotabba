@@ -210,7 +210,7 @@ function loop(t) {
   // a física anda em passos fixos de 1/120 s (fisica.js): o tempo do quadro só diz quantos passos dar, então 30 ou 144 quadros
   // por segundo dão a mesma corrida
   if (ativo()) quadroDeFisica(real); else quadroParado(real);
-  updateGhosts(dt, race.net ? Math.min(1, race.acc / PASSO) : 1); // (os outros carros na hora do meu desenho: rede.js)
+  updateGhosts(dt, t); // (os outros carros na hora do meu desenho, pela hora do QUADRO da tela: rede.js)
   recordLap();
   if (me() && ativo() && !race.net && performance.now() - race.lastSent > 100) { race.lastSent = performance.now(); socket.emit("pos", { x: race.car.x, y: race.car.y, z: race.car.z, a: race.car.a, v: race.car.v, prog: myProg() }); }
   const somF1 = E.S?.config.regras === "f1"; // regras de F1: o motor V6 turbo (motor-v6.js; ?motor=v10 traz o V10), com o limitador e os carros dos outros

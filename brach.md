@@ -1,18 +1,22 @@
-# A largada espera todos carregarem (a TV volta) e o médio no tempo do Thiago
+# Monza em escala real (feita pelo Kiro)
 
-O que ficou de fora do #620, que foi mesclado antes destes dois ajustes:
+O Kiro fez Monza e começou Barcelona no mesmo branch, sem push. Este PR traz **só Monza**. Barcelona fica de fora: o traçado novo dela entraria no site com o cenário ainda no tamanho antigo.
 
-- **A largada espera todo mundo carregar:** a transmissão de TV volta na corrida avulsa (20 s; 25 s na carreira). Ela e as luzes só seguem quando todos os jogadores conectados já carregaram a pista: o navegador manda `carregou` quando a cena desenha, e a TV encurta para o tempo dela a partir dali, pelo mesmo caminho do pular. Ninguém trava a sala: a espera vai até no máximo 40 s (`CARGA_MAX_MS` em `corrida.js`). Testado no servidor com um cliente: a TV larga contando 60 s e, depois do `carregou`, acaba em 20 s, com as luzes 8 s depois. Não foi testado ainda com dois jogadores de verdade.
-- **Níveis dos robôs, com o 1:04,5 do Thiago em Mônaco como a média do médio.** Em cada nível, a folga sobre o tempo ideal e a fração do limite nas curvas:
-  - **difícil:** 0% e 96%, o médio de antes;
-  - **médio:** 8% e 92%;
-  - **fácil:** 13% e 85%.
+- **Traçado real:** convertido da linha central real (bacinger/f1-circuits `it-1922`, por `ferramentas/circuitos-f1.js`). Antes era desenhado à mão.
+- **Comprimento real:** `scale` 4,221 → 8,081. A volta mede 5 793 m, os do circuito.
+- **Largura:** 58 u = 12 m. A largura de Monza não está publicada; 12 m é o mínimo da FIA (estimativa).
+- **Relevo:** do EU-DEM (`pista-real.js it-1922 monza --dem eudem25m --raio 3 --meia 6`).
+- **Cenário só de Monza:**
+  - chão sólido no nível do asfalto (`kit/monza/chao.js`);
+  - painéis, mastros e placas no chão (`kit/monza/ambiente.js`);
+  - placas das curvas na escala (eram 21,7 × 10,8 m, agora 8,7 × 4,3 m);
+  - `escala` e `escalaGente` em `gps/monza.js`.
+- **Robôs e recordes:** a linha dos robôs foi refeita (4 635 pontos, o mesmo número da pista). A migração `047-monza-escala-real.sql` zera os recordes de Monza.
+- **Carreira:** Monza entra em `PISTAS_TRABALHADAS`.
+- **Ferramenta:** `ferramentas/medir-quebra.js`, que mede a quebra de inclinação.
 
-  Medido em Mônaco, no seco, com 21 robôs, 2 voltas, a direção e a bateria novas. Todos terminaram e ninguém ficou preso. As melhores voltas:
-  - **difícil:** 58,1 a 73,1 s (o 73 foi um robô atrasado numa disputa);
-  - **médio:** 62,4 a 67,2 s, média de ~64,8 s;
-  - **fácil:** 68,0 a 75,9 s.
+Separado do branch do Kiro: os arquivos só de Monza vieram inteiros. Do `pistas.js` e do `corrida-linhas-f1.json` veio só a parte de Monza, e o bloco de Barcelona ficou como está na main. Os prints conferidos estão em `C:\Users\thiag\Downloads\lts\prints\monza\` (largada, Parabolica, vista geral e primeira pessoa). Os números completos estão na seção de Monza em `planos/escala-real.md`.
 
-Só `node --check` e as corridas no servidor; a suíte fica com o CI.
+Só `node --check`.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

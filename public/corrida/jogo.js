@@ -155,6 +155,7 @@ export function startRace(st) {
   if (f1 && st.clima?.chove) Sound.prepararChuva(); // o ruído fica pronto antes de o jogo desenhar a corrida
   aquecerPista(tr, ceu);
   if (!raf) raf = requestAnimationFrame(loop);
+  if (f1 && mine && st.phase === "race") requestAnimationFrame(() => requestAnimationFrame(() => act("carregou"))); // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
 export function stopRace() { clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); limparClima(); }

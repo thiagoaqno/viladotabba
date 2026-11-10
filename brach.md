@@ -1,11 +1,9 @@
-# Capa na tela inicial e capas na tela de carregamento
+# Som do rádio antes de falar e som do ERS ligando
 
-As imagens que o Thiago fez com o ChatGPT viram as capas do jogo, convertidas de PNG (cerca de 2 MB cada) para JPG (de 213 a 262 KB).
+Os dois sons são sintetizados no navegador (Web Audio), como o motor. Se aparecer o arquivo de verdade, ele toca no lugar, sem mexer no código.
 
-- **Tela inicial da Corrida** (`menu.css`, `menu.js`): a capa (`capa-inicio.jpg`: os três pilotos em Mônaco) fica atrás do menu. A garagem 3D, com o carro girando, só abre com o painel **Garagem** e é desligada quando ele fecha; a capa volta. A tela inicial fica mais leve, porque a placa de vídeo não desenha mais o carro o tempo todo, e o carregamento some assim que o menu aparece, sem esperar o carro 3D.
-- **Tela de carregamento** (`index.html`): sorteia uma de três capas (`carregamento-kimi.jpg`, `carregamento-verts.jpg`, `carregamento-hamil.jpg`), com o mesmo escurecido à esquerda para o texto aparecer.
-
-A `capa-carregamento.png` antiga continua no repositório: a vitrine da carreira (`temporada/vitrine.css`) ainda usa ela.
+- **Rádio da equipe** (`radio.js`): antes da voz do engenheiro, o chiado de abrir o canal e dois bipes subindo (1 150 e 1 550 Hz, onda quadrada abafada como o rádio); no fim, depois do clique de fechar, um bipe mais grave. A voz entra depois da abertura. Arquivo de verdade: `public/corrida/radio/bip.mp3` (toca no lugar da abertura sintetizada).
+- **ERS ligando** (`sons.js`, `jogo.js`): ao apertar a tecla do ERS (E) com a bateria entregando, uma subida elétrica (220 a 1 900 Hz em 0,32 s), um estalo agudo no começo e um sininho no fim. Só no aperto do piloto, não no automático (que liga e desliga sozinho), e no máximo um a cada 1,5 s. Arquivo de verdade: `public/corrida/sons/ers-liga-1.mp3`, com `"ers-liga": 1` em `sons/indice.json`.
 
 Conferido com `node --check`; o Thiago testa jogando.
 

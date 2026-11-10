@@ -225,6 +225,11 @@ function loop(t) {
   Sound.torcida(correndo ? nivelDaTorcida(race.tr, race.car.x, race.car.y) : 0, race.car.v);
   if (correndo && race.drsAtivo && !race.drsSom) Sound.tocar("drs", 0.6); // a asa abrindo
   race.drsSom = !!race.drsAtivo;
+  // o ERS ligando na tecla (o overtake): o som só no aperto do piloto, não no automático (que liga e desliga sozinho), e no máximo um a cada 1,5 s
+  // (a borda é a da tecla com o ERS entregando: se o automático já estava ligado no vácuo, o aperto toca do mesmo jeito)
+  const ersTecla = !!(keys.ers && race.ersAtivo);
+  if (correndo && ersTecla && !race.ersSom && sNow() - (race.ersSomEm || 0) > 1500) { Sound.ersLiga(); race.ersSomEm = sNow(); }
+  race.ersSom = ersTecla;
   draw(dt);
   medirQuadro();
   hud();

@@ -47,6 +47,26 @@ export const Sound = (() => {
     umaVez("macaco", 0.55, 1.05); umaVez("pistola", 0.6, 1, 0.18); umaVez("pistola", 0.45, 1, 0.42); return true;
   }
   function fimDoPit() { return umaVez("macaco", 0.6, 0.95); }
+  // o ERS ligando (o overtake na tecla): o arquivo sons/ers-liga-<n>.mp3, se existir no índice (sons/indice.json); sem ele, o sintetizado:
+  // uma subida elétrica (dente de serra e quadrada uma quinta acima, de 220 a 1 900 Hz em 0,32 s, num passa-faixa que sobe junto), um
+  // estalo de ruído agudo no começo e um sininho no fim
+  function ersLiga() {
+    const c = ctx(); if (!c || !on) return;
+    if (umaVez("ers-liga", 0.6)) return;
+    const t = c.currentTime, f = c.createBiquadFilter(), g = c.createGain();
+    f.type = "bandpass"; f.Q.value = 4; f.frequency.setValueAtTime(600, t); f.frequency.exponentialRampToValueAtTime(3200, t + 0.32);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.03); g.gain.setValueAtTime(0.09, t + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.46);
+    for (const [tipo, k] of [["sawtooth", 1], ["square", 1.5]]) {
+      const o = c.createOscillator(); o.type = tipo; o.frequency.setValueAtTime(220 * k, t); o.frequency.exponentialRampToValueAtTime(1900 * k, t + 0.32);
+      o.connect(f); o.start(t); o.stop(t + 0.5);
+    }
+    f.connect(g).connect(master);
+    const n = Math.floor(c.sampleRate * 0.06), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = c.createBufferSource(), hp = c.createBiquadFilter(), gs = c.createGain(); s.buffer = b; hp.type = "highpass"; hp.frequency.value = 3000; gs.gain.value = 0.06;
+    s.connect(hp).connect(gs).connect(master); s.start(t);
+    tone(2400, 0.14, { type: "sine", vol: 0.045, at: 0.3 });
+  }
   function tone(f, dur, { type = "square", vol = 0.12, at = 0 } = {}) {
     const c = ctx(); if (!c || !on) return; const t = c.currentTime + at;
     const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
@@ -234,7 +254,7 @@ export const Sound = (() => {
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

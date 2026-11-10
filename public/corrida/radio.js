@@ -57,7 +57,7 @@ function silenciar(v) {
 }
 if (temDOM) {
   document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-radio-botao]"); if (b) { silenciar(); e.stopPropagation(); } }, true);
-  const primeiro = () => { const x = contexto(); if (x && x.c.state === "suspended") x.c.resume(); proximo(); }; // o navegador só libera o áudio depois de um toque
+  const primeiro = () => { const x = contexto(); if (x && x.c.state === "suspended") x.c.resume(); carregar({ id: "bip" }); proximo(); }; // (bip.mp3: a abertura do rádio, se o arquivo existir) // o navegador só libera o áudio depois de um toque
   window.addEventListener("pointerdown", primeiro, { once: true, capture: true }); window.addEventListener("keydown", primeiro, { once: true, capture: true });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", desenharBotoes); else desenharBotoes();
 }
@@ -76,20 +76,37 @@ function ruido(c, dur, vol, destino, t) {
   const s = c.createBufferSource(), g = c.createGain(), fl = c.createBiquadFilter();
   fl.type = "bandpass"; fl.frequency.value = 2200; g.gain.value = vol; s.buffer = b; s.connect(fl).connect(g).connect(destino); s.start(t);
 }
+// o bipe do rádio da equipe (sintetizado): uma onda quadrada curta, abafada como o rádio (passa-baixa de 3 kHz)
+function bip(c, f, dur, vol, destino, t) {
+  const o = c.createOscillator(), g = c.createGain(), fl = c.createBiquadFilter();
+  o.type = "square"; o.frequency.value = f; fl.type = "lowpass"; fl.frequency.value = 3000;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.006); g.gain.setValueAtTime(vol, t + dur - 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(fl).connect(g).connect(destino); o.start(t); o.stop(t + dur + 0.02);
+}
+// a abertura do rádio, antes da voz: o arquivo /corrida/radio/bip.mp3, se existir (o som de verdade, quando o Thiago achar); sem ele, o
+// sintetizado: o chiado de abrir o canal e dois bipes subindo. Devolve quantos segundos ela dura (a voz entra depois)
+function abertura(c, destino, t) {
+  const b = buffers.get("bip");
+  if (b) { const s = c.createBufferSource(); s.buffer = b; s.connect(destino); s.start(t); return b.duration + 0.03; }
+  ruido(c, 0.06, 0.07, destino, t);
+  bip(c, 1150, 0.06, 0.05, destino, t + 0.05); bip(c, 1550, 0.08, 0.05, destino, t + 0.13);
+  return 0.26;
+}
 // o HUD mostra o cartão "RÁDIO" do engenheiro enquanto ele fala (evento `radio:fala` com { on })
 function avisarFala(on, atraso) { if (!temDOM) return; const ir = () => window.dispatchEvent(new CustomEvent("radio:fala", { detail: { on } })); if (atraso > 0.01) setTimeout(ir, atraso * 1000); else ir(); }
 function tocar(buf, fim) {
   const x = contexto(); if (!x || x.c.state === "suspended") return false;
-  const c = x.c, t = c.currentTime + 0.02, ini = t + 0.09;
+  const c = x.c, t = c.currentTime + 0.02;
   const alto = c.createBiquadFilter(), baixo = c.createBiquadFilter(), g = c.createGain(), s = c.createBufferSource();
   alto.type = "highpass"; alto.frequency.value = 300; baixo.type = "lowpass"; baixo.frequency.value = 3000; g.gain.value = 2.6; s.buffer = buf;
   const comp = c.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 4; // (a voz mais alta que o motor, sem estourar)
   s.connect(alto).connect(baixo).connect(g).connect(comp).connect(x.destino);
   if (x.abafar) x.abafar(true);
+  const ini = t + abertura(c, x.destino, t);                   // o chiado e os bipes de abrir o rádio
   avisarFala(true, ini - c.currentTime);
-  ruido(c, 0.07, 0.08, x.destino, t);                         // o clique de abrir o rádio
   s.start(ini); ruido(c, buf.duration + 0.04, 0.012, x.destino, ini); // chiado leve por baixo da voz
   ruido(c, 0.1, 0.07, x.destino, ini + buf.duration);         // o clique de fechar
+  if (!buffers.has("bip")) bip(c, 950, 0.07, 0.04, x.destino, ini + buf.duration + 0.05); // e um bipe mais grave
   s.onended = () => { if (x.abafar) x.abafar(false); avisarFala(false, 0); fim(); }; return true;
 }
 function proximo() {

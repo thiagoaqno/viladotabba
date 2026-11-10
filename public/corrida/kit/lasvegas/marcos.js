@@ -6,7 +6,7 @@
 // Tudo só acende de noite (tr.noite: o laço de kit/bahrein/base.js). Peça só desta pista; nada daqui muda a física (os marcos ficam atrás da barreira).
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
-import { D, K, ALT, marco } from "./mundo.js";
+import { D, K, KR, ALT, marco } from "./mundo.js";
 import { luzDaNoite, materialDaNoite, soDeNoite } from "../bahrein/base.js";
 import { instancias } from "../comum.js";
 
@@ -65,7 +65,7 @@ export function sphere(tr, add, hAt) {
   let acc = 1, ultimo = performance.now() / 1000;
   luzDaNoite(tr).quadro.push((noite, foco) => {
     const agora = performance.now() / 1000; acc += agora - ultimo; ultimo = agora;
-    if (!noite || !foco || acc < 0.11) return; if (Math.hypot(foco.x - m.cx, foco.y - m.cz) > 3200) return; acc = 0;
+    if (!noite || !foco || acc < 0.11) return; if (Math.hypot(foco.x - m.cx, foco.y - m.cz) > 3200 * KR) return; acc = 0;
     const i = Math.floor(agora / 9) % CENAS.length; ctx.save(); CENAS[i](ctx, 256, 128, agora); ctx.restore();
     ctx.strokeStyle = "rgba(0,0,0,0.22)"; ctx.lineWidth = 1; for (let k = 0; k <= 256; k += 4) { ctx.beginPath(); ctx.moveTo(k, 0); ctx.lineTo(k, 128); ctx.stroke(); } // os módulos de LED
     tex.needsUpdate = true;
@@ -112,7 +112,7 @@ export function fontesDoBellagio(tr, add, hAt) {
   atualiza(0);
   luzDaNoite(tr).quadro.push((noite, foco) => {
     const agora = performance.now() / 1000; acc += agora - ultimo; ultimo = agora; if (acc < 0.06 || !foco) return;
-    if (Math.hypot(foco.x - lago.cx, foco.y - lago.cz) > 1800) return; acc = 0;
+    if (Math.hypot(foco.x - lago.cx, foco.y - lago.cz) > 1800 * KR) return; acc = 0;
     matDia.color.setHex(noite ? 0xd8e4ff : 0x9db4cc); atualiza(agora);
   });
   vivo(tr, im, spray); tr.fontesLV = { jatos: jatos.length, lago: lago.A };
@@ -172,7 +172,7 @@ export function highRoller(tr, add, hAt) {
   const pos = (a) => { for (let k = 0; k < 28; k++) { const q = a + (k / 28) * tau; d.position.set(m.cx, y0 + hub + Math.sin(q) * (R + 3 * K), m.cz + Math.cos(q) * (R + 3 * K)); d.rotation.set(0, 0, 0); d.scale.set(1, 1, 1); d.updateMatrix(); cab.setMatrixAt(k, d.matrix); } cab.instanceMatrix.needsUpdate = true; };
   pos(0);
   luzDaNoite(tr).quadro.push((noite, foco) => {
-    const agora = performance.now() / 1000, dt = agora - ultimo; ultimo = agora; acc += dt; if (acc < 0.05 || !foco) return; if (Math.hypot(foco.x - m.cx, foco.y - m.cz) > 3200) return; acc = 0;
+    const agora = performance.now() / 1000, dt = agora - ultimo; ultimo = agora; acc += dt; if (acc < 0.05 || !foco) return; if (Math.hypot(foco.x - m.cx, foco.y - m.cz) > 3200 * KR) return; acc = 0;
     ang += 0.05 * 0.052; grupo.rotation.x = ang; pos(-ang);
     const hue = (agora * 0.08) % 1; aro2.material.color.setHSL(hue, 1, noite ? 0.6 : 0.7); // o aro de LED muda de cor
   });
@@ -200,7 +200,7 @@ export function campanario(tr, add, hAt) {
 // =============================== o vulcão do Mirage ===============================
 export function vulcao(tr, add, hAt) {
   const m = marco("mirage", 36.1212, -115.1744, [200, 160, 100]);
-  let lago = null; for (const l of tr.lagosLV || []) { const d = Math.hypot(l.cx - m.cx, l.cz - m.cz); if (d < 420 && (!lago || d < lago.d)) lago = { ...l, d }; }
+  let lago = null; for (const l of tr.lagosLV || []) { const d = Math.hypot(l.cx - m.cx, l.cz - m.cz); if (d < 420 * KR && (!lago || d < lago.d)) lago = { ...l, d }; }
   const x = lago ? lago.cx : m.cx - 40, z = lago ? lago.cz : m.cz, y = lago ? lago.y : hAt(m.cx, m.cz), R = 30 * K * 0.8, Hc = 17 * K * 0.9;
   const g = new THREE.ConeGeometry(R, Hc, 18, 5, true), p = g.attributes.position; for (let i = 0; i < p.count; i++) { const a = Math.sin(i * 12.9898) * 43758.5453; p.setX(i, p.getX(i) * (1 + (a - Math.floor(a) - 0.5) * 0.28)); p.setZ(i, p.getZ(i) * (1 + (Math.sin(i * 78.233) * 4375.5 % 1 - 0.5) * 0.28)); } g.computeVertexNormals();
   const rocha = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x4a423b, roughness: 1, flatShading: true })); rocha.position.set(x, y + Hc / 2, z); rocha.castShadow = true; rocha.name = "lasvegas-vulcao"; add(rocha);

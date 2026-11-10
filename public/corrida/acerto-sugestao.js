@@ -39,6 +39,17 @@ function efeito(a) {
   partes.push(a.altura <= 0.25 ? "baixo: pode raspar no fim da reta" : a.altura >= 0.75 ? "alto: nunca raspa, perde um pouco de aderência" : "altura média");
   return partes.join(" · ");
 }
+// os números do acerto para a tela (a MESMA conta de sim.js, extraDoAcerto e afundaAero), no fim da reta (400 u/s, ~300 km/h) e numa curva
+// média (150 u/s, ~110 km/h): a carga e o arrasto em % do padrão e a folga do assoalho em cm (negativa = raspando)
+const afundaAero = (a, v) => 0.045 * forcaDaAsa(a) * Math.min(1.6, (Math.max(0, v) / 400) ** 2);
+function extra(a, v) {
+  const asa = forcaDaAsa(a), folga = alturaParada(a) - afundaAero(a, v), raspa = Math.max(0, -folga) / 0.01, solo = 1 + (0.05 - alturaParada(a)) * 2;
+  return { carga: asa * solo * (1 - Math.min(0.35, raspa * 0.12)), arrasto: (1 + (asa - 1) * 1.6) * (1 + Math.min(0.5, raspa * 0.15)), folga };
+}
+function numeros(a) {
+  const curva = extra(a, 150), reta = extra(a, 400);
+  return { carga: Math.round((curva.carga - 1) * 100), arrasto: Math.round((reta.arrasto - 1) * 100), folgaCm: Math.round(reta.folga * 1000) / 10, afundaCm: Math.round(afundaAero(a, 400) * 1000) / 10 };
+}
 const NIVEIS_ESTRATEGISTA = ["de base", "experiente", "de elite"];
-root.AcertoSugestao = { PADRAO, chave, limpo, lerGuardado, guardar, alturaParada, forcaDaAsa, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase, efeito, cm, NIVEIS_ESTRATEGISTA };
+root.AcertoSugestao = { PADRAO, chave, limpo, lerGuardado, guardar, alturaParada, forcaDaAsa, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase, efeito, cm, afundaAero, numeros, NIVEIS_ESTRATEGISTA };
 })(typeof window !== "undefined" ? window : globalThis);

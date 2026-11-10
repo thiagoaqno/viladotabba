@@ -305,8 +305,26 @@ function lerControle() {
 
 // ---------- ligar uma vez ----------
 let ligado = false;
+// a capa animada (menu.css, .mn-capa): as fatias da imagem andam com o mouse; sem mouse (celular), um vaivém lento sozinho
+let capaAlvo = [0, 0], capaAgora = [0, 0], capaRaf = 0, capaMouse = 0;
+function montarCapa() {
+  const palco = $("mnPalco"); if (!palco || palco.querySelector(".mn-capa")) return;
+  const c = document.createElement("div"); c.className = "mn-capa"; c.setAttribute("aria-hidden", "true");
+  c.innerHTML = '<i class="c-fundo"></i><i class="c-nuvens"></i><i class="c-pilotos"></i><i class="c-carros"></i><i class="c-velocidade"></i><i class="c-brilho"></i>';
+  palco.prepend(c);
+  addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; capaMouse = performance.now(); capaAlvo = [(e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1]; }, { passive: true });
+  const passo = (t) => {
+    capaRaf = requestAnimationFrame(passo);
+    if (!naTela || document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (t - capaMouse > 4000) capaAlvo = [Math.sin(t / 5200) * 0.6, Math.sin(t / 7300) * 0.35]; // parado ou no celular: o vaivém sozinho
+    capaAgora = capaAgora.map((v, i) => v + (capaAlvo[i] - v) * 0.06);
+    c.style.setProperty("--mx", capaAgora[0].toFixed(4)); c.style.setProperty("--my", capaAgora[1].toFixed(4));
+  };
+  if (!capaRaf) capaRaf = requestAnimationFrame(passo);
+}
 function ligarUmaVez() {
   if (ligado) return; ligado = true;
+  montarCapa();
   $("mn").addEventListener("click", aoClicar);
   $("mn").addEventListener("pointermove", aoMoverBrilho, { passive: true });
   addEventListener("keydown", aoTeclar);

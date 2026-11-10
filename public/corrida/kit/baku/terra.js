@@ -3,7 +3,7 @@
 // do OpenStreetMap e em manchas dentro dos parques) e os postes de luz de ferro com globos, que acendem ao entardecer. InstancedMesh em tudo.
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
-import { D, VK, NIVEL_DO_MAR, distanciaDoMar, poligonoDentro, fundoBaku } from "./mundo.js";
+import { D, KR, VK, NIVEL_DO_MAR, distanciaDoMar, poligonoDentro, fundoBaku } from "./mundo.js";
 import { livre, ocupado, sorteio, instancias } from "../comum.js";
 import { materialDaNoite } from "../bahrein/base.js";
 
@@ -13,7 +13,7 @@ const ruido = (x, z, s) => { const v = Math.sin(x * 0.043 + s) * Math.cos(z * 0.
 
 // a cor de cada ponto do terreno: (x, z, altura em unidades, normal.y) -> [r, g, b]
 export function corDoChao() {
-  const CEL = 200, grade = new Map(), polis = D.verde.map((v) => { const P = []; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (let k = 1; k < v.length; k += 2) { P.push([v[k], v[k + 1]]); x0 = Math.min(x0, v[k]); x1 = Math.max(x1, v[k]); z0 = Math.min(z0, v[k + 1]); z1 = Math.max(z1, v[k + 1]); } return { tipo: v[0], P, caixa: [x0, z0, x1, z1] }; });
+  const CEL = 200 * KR, grade = new Map(), polis = D.verde.map((v) => { const P = []; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (let k = 1; k < v.length; k += 2) { P.push([v[k], v[k + 1]]); x0 = Math.min(x0, v[k]); x1 = Math.max(x1, v[k]); z0 = Math.min(z0, v[k + 1]); z1 = Math.max(z1, v[k + 1]); } return { tipo: v[0], P, caixa: [x0, z0, x1, z1] }; });
   const k = (a, b) => a * 100003 + b;
   for (const p of polis) for (let i = Math.floor(p.caixa[0] / CEL); i <= Math.floor(p.caixa[2] / CEL); i++) for (let j = Math.floor(p.caixa[1] / CEL); j <= Math.floor(p.caixa[3] / CEL); j++) (grade.get(k(i, j)) || grade.set(k(i, j), []).get(k(i, j))).push(p);
   const tipoEm = (x, z) => { let t = 0; const l = grade.get(k(Math.floor(x / CEL), Math.floor(z / CEL))); if (l) for (const p of l) if (x >= p.caixa[0] && x <= p.caixa[2] && z >= p.caixa[1] && z <= p.caixa[3] && poligonoDentro(p.P, x, z)) t = Math.max(t, p.tipo === 2 ? 2 : 1); return t; };
@@ -27,7 +27,7 @@ export function corDoChao() {
       c = mistura(RUA, [0.7, 0.66, 0.58], n1 * 0.6);
       if (metros > 45) c = mistura(c, SECO, Math.min(0.8, (metros - 45) / 70)); // o morro lá em cima é seco, de arbustos e pedra
     }
-    if (sMar > -260 && tipo !== 2) c = mistura(c, MARMORE, 0.42 * (1 - Math.max(0, -sMar - 60) / 200)); // o calçadão da orla, claro
+    if (sMar > -260 * KR && tipo !== 2) c = mistura(c, MARMORE, 0.42 * (1 - Math.max(0, -sMar - 60 * KR) / (200 * KR))); // o calçadão da orla, claro
     if (ny < 0.93) c = mistura(c, ROCHA, Math.min(1, (0.93 - ny) / 0.2)); // pedra onde a encosta é íngreme
     if (sMar > -30) c = mistura(c, AREIA, 0.45 * (1 + sMar / 30));
     const f = 0.94 + n2 * 0.12; return [c[0] * f, c[1] * f, c[2] * f];
@@ -55,7 +55,7 @@ const pecas = {
 
 export function arvores(tr, add, { hAt, predioEm }) {
   const r = sorteio(4242), listas = { platano: [], pinheiro: [], palmeira: [], cipreste: [] }, w = tr.t.world;
-  const cabe = (x, z, raio) => x > -400 && z > -400 && x < w + 400 && z < w + 400 && livre(tr, x, z, 22 + raio) && !ocupado(tr, x, z) && !predioEm(x, z, raio * 0.4) && distanciaDoMar(x, z) < -8 && fundoBaku(tr, x, z) < -4;
+  const cabe = (x, z, raio) => x > -400 * KR && z > -400 * KR && x < w + 400 * KR && z < w + 400 * KR && livre(tr, x, z, 22 + raio) && !ocupado(tr, x, z) && !predioEm(x, z, raio * 0.4) && distanciaDoMar(x, z) < -8 && fundoBaku(tr, x, z) < -4;
   const poe = (tipo, x, z, s) => { if (!cabe(x, z, 11 * s)) return false; listas[tipo].push({ x, y: hAt(x, z), z, s, r: r() * 6.3, t: 0.86 + r() * 0.26 }); return true; };
   for (const [x, z] of D.arvores) { const alto = hAt(x, z) / VK > 30; poe(r() < 0.1 ? "palmeira" : alto && r() < 0.5 ? "pinheiro" : r() < 0.3 ? "cipreste" : "platano", x + (r() - 0.5) * 3, z + (r() - 0.5) * 3, 0.85 + r() * 0.5); }
   for (const v of D.verde) { // manchas dentro dos parques (o Bulevar) e da mata

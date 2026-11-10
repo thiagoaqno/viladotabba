@@ -19,6 +19,7 @@ function gaivotasDaBaia(tr) {
 }
 
 export const GP_BAKU = {
+  escala: 0.4, escalaGente: 0.69, // escala real das peças do kit (arquibancada, barreira do escape, placas, gente): as mesmas de Interlagos e Spa
   mundo: { relevo: relevoBaku, fundo: fundoBaku, agua: aguaBaku, cor: corDoChao, nivelMar: NIVEL_DO_MAR, banda: (tr) => tr.W / 2 + 26 }, // o chão de verdade (pista.js `mundoDe`)
   asfalto: true,
   chao: {

@@ -589,7 +589,7 @@ const PISTAS = {
     // tocariam afastados), norte em cima, na proporção de verdade; o relevo é o SRTM de 30 m (do mar Cáspio, a -27 m, à subida da Cidade Velha).
     // Rua SEM muro em volta: a barreira só existe onde a pista real tem (`muros`, em frações da volta; recuo = da borda do asfalto até a face da barreira; negativo = a pista estreita, na Cidade
     // Velha, a ~7,6 m de largura de verdade) e a física usa o mesmo mapa (`murosDoEscape`); onde não há muro, o carro sai da pista. As áreas de asfalto pintado de escape estão em SUPERFICIES_ESCAPE.
-    scale: 7.591, width: 58, minLap: 70, flat: 40, fall: 239, largada: 0.6602023608768971, hillsSuave: true, muroFolga: 9, // (o centro do carro 2026 para a 9 u da barreira: a meia largura dele é ~7,9; antes 12, do carro antigo)
+    scale: 7.591, width: 58, minLap: 70, flat: 40, fall: 239, largada: 0.6602023608768971, hillsSuave: true, muroFolga: 6, // (o centro do carro para a 6 u da linha da barreira: a meia largura do carro de 2026 é 4,55 u (9,1 u, 1,9 m) e a face da barreira fica 1,2 u para dentro da linha (kit/baku/barreiras.js). Era 9, da meia largura do carro antigo (7,9): o carro parava quase 1 m antes de encostar, uma parede invisível, pior na Cidade Velha estreita)
     muros: [
       [0, 1, 1, 9, 1], [0.0235, 0.9765, -1, 9, 6], // a rua toda, menos o lado do corredor dos boxes (sem muro: a mureta do box é da física dos boxes)
       [0.012, 0.058, 1, 62, 14], [0.078, 0.1, 1, 40, 12], // curva 1 e curva 2: a área de escape de asfalto pintado do lado de fora

@@ -39,10 +39,13 @@ function medirPerf(room, ms, dt) {
   room.perf = null;
 }
 const ROBOS_F1_MS = 8; // o laço dos robôs nas regras de F1 (o passo da física é pelo tempo real: Robos.tempoDoPasso)
+// A transmissão (e com ela as luzes) espera todos os jogadores conectados carregarem a pista: o navegador manda `carregou` quando a cena já
+// desenhou; com todos prontos, a TV encurta para os TV_*_MS dela a partir dali (o mesmo caminho do pular). Ninguém trava a sala: no máximo CARGA_MAX_MS.
+const CARGA_MAX_MS = 40000;
 const LUZES_MS = 3500; // regras de F1: o tempo até acender a primeira das cinco luzes (a largada vem 4 s mais a espera sorteada depois)
 // regras de F1: a transmissão de TV (a pista, o clima, o campeonato e o grid) tem tempo próprio ANTES das luzes: 25 s numa
 // temporada (com a tabela do campeonato), 20 s fora dela. `CORRIDA_TV_MS` troca os dois (0 desliga: os testes de rede usam).
-const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 0; // (a corrida avulsa larga sem a transmissão de TV: com ela, do Largar às luzes eram ~30 s. A carreira mantém, e lá dá para pular)
+const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 20000;
 const MAX_PLAYERS = 8, COUNTDOWN_MS = 4500, AFTER_FIRST_MS = 60000, MAX_RACE_MS = 45 * 60000; // 45 min: dá para as 21 voltas
 const COLORS = ["#e63946", "#1e88e5", "#43a047", "#fdd835", "#8e24aa", "#fb8c00", "#00acc1", "#f06292"];
 const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "🦄", "🐙", "👻", "🤡", "🦁", "🐵", "🐧", "🏎️"];
@@ -198,6 +201,14 @@ module.exports = function attachCorrida(io) {
     }).catch((e) => { room.preparandoTracado = false; console.warn("Corrida: falha ao preparar traçado", e.message); });
     return true;
   }
+  function liberarCarga(room) {
+    const c = room.carga; if (!c || !room.tvAte) return;
+    if (room.order.some((id) => { const q = room.players[id]; return q && !q.bot && q.sockets && q.sockets.size && !c.prontos.has(id); })) return; // ainda falta gente carregar
+    room.carga = null;
+    const novo = Date.now() + c.tvMs, delta = room.tvAte - novo; if (delta <= 0) return;
+    room.tvAte -= delta; room.startAt -= delta; if (room.clima) room.clima.t0 = room.startAt;
+    broadcast(room);
+  }
   // ---------- corrida ----------
   // A classificação (regras de F1) já escolheu a semente e os robôs; ela chama `startRace(room, grid)` com os ids na ordem do grid.
   function startRace(room, grid) {
@@ -220,7 +231,9 @@ module.exports = function attachCorrida(io) {
     // a transmissão de TV vem antes de tudo: `tvAte` é quando ela acaba e as luzes só começam depois (LUZES_MS + as cinco luzes)
     const tvMs = !f1 ? 0 : process.env.CORRIDA_TV_MS ? Math.max(0, Number(process.env.CORRIDA_TV_MS) || 0) : room.temporada ? TV_TEMPORADA_MS : TV_AVULSA_MS;
     const inicioPreparoGrid = Date.now();
-    room.tvAte = tvMs ? inicioPreparoGrid + tvMs : null; room.tvPulos = new Set(); room.tv = tvMs ? room.tvTemporada || {} : null;
+    const esperaCarga = tvMs && room.order.some((id) => { const q = room.players[id]; return q && !q.bot && q.sockets && q.sockets.size; }) ? CARGA_MAX_MS : 0;
+    room.tvAte = tvMs ? inicioPreparoGrid + esperaCarga + tvMs : null; room.tvPulos = new Set(); room.tv = tvMs ? room.tvTemporada || {} : null;
+    room.carga = esperaCarga ? { prontos: new Set(), tvMs } : null; // (quem já carregou a pista; `liberarCarga` encurta a TV quando todos chegam)
     room.startAt = (room.tvAte || Date.now()) + (f1 ? Math.round(LUZES_MS + (4 + room.luzes.espera) * 1000) : COUNTDOWN_MS);
     room.endAt = null;
     room.clima = room.sorteioClima ? { ...room.sorteioClima.corrida, t0: room.startAt } : null; // o relógio da chuva começa na largada
@@ -610,7 +623,7 @@ module.exports = function attachCorrida(io) {
       const { room, me } = ctx();
       if (!room) return fail(cb, "Você não está numa sala.");
       const type = data.type, isHost = me && room.host === me.id;
-      if (room.temporada && !["qpronto", "confirmarLargada", "montagemGrid", "box", "batida", "sector", "pneu", "tvpular"].includes(type)) return fail(cb, "Este GP é controlado pela sede da temporada.");
+      if (room.temporada && !["qpronto", "confirmarLargada", "montagemGrid", "box", "batida", "sector", "pneu", "tvpular", "carregou"].includes(type)) return fail(cb, "Este GP é controlado pela sede da temporada.");
       const err = (() => {
         if (type === "color") {
           if (!me || room.phase === "race") return "Só dá para trocar fora da corrida.";
@@ -742,6 +755,10 @@ module.exports = function attachCorrida(io) {
           if (!perto || agora - me.pos.at > 1500) return "ignorado";
           if (!aplicarBatida(room, me, Math.min(forca, teto), tipo)) return "ignorado";
           return;
+        }
+        if (type === "carregou") { // regras de F1: este jogador já carregou a pista; com todos os conectados prontos, a TV encurta para o tempo dela a partir de agora
+          if (!room.carga || room.phase !== "race" || !me) return "ignorado";
+          room.carga.prontos.add(me.id); liberarCarga(room); return;
         }
         if (type === "tvpular") { // regras de F1: pulou a transmissão de TV; quando todos os humanos presentes pulam, as luzes vêm já
           const agora = Date.now();

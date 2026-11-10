@@ -163,7 +163,7 @@ export function startRace(st) {
   if (f1 && mine) { const novo = !acertoGuardado(st.config.pista); usarPista(st.config.pista); carregarIdeais(); if (novo && st.phase === "race" && sNow() < st.startAt) alternarAcerto(true); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
-export function stopRace() { clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); limparClima(); }
+export function stopRace() { clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
 function resize() {
   const w = window.innerWidth, hh = window.innerHeight;
   renderer.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); ajustarTela(w, hh);
@@ -226,6 +226,17 @@ function loop(t) {
   // o pneu na zebra (race.naZebra, medido no desenho) e a torcida de quem passa perto das arquibancadas (torcida-som.js)
   const correndo = !!me() && ativo() && sNow() >= race.startAt;
   Sound.zebra(correndo && race.naZebra && !race.car.air ? race.car.v : 0);
+  // os efeitos novos (sons.js; só tocam quando o arquivo gravado existe): o assoalho raspando (a folga do acerto acabou), a suspensão
+  // batendo no fundo, a brita e a grama ao sair da pista, o vento (mais forte no cockpit), o ERS acabando no meio do uso e o limitador do box
+  const k = race.kart, vC = Math.abs(race.car.v || 0);
+  Sound.raspa(correndo && k && k.folga < 0.004 && vC > 120 ? (0.004 - k.folga) / 0.015 : 0);
+  if (k && k.pancada) { k.pancada = false; if (correndo) Sound.fundo(); }
+  Sound.foraDaPista(correndo && race.offroad && !race.car.air ? (race.car.amb?.superficie === "brita" ? "brita" : "grama") : null, vC);
+  Sound.vento(correndo ? vC : 0, (camEstado.modo || camMode) === "cockpit");
+  const carga = race.ers ? race.ers.carga : 1;
+  if (correndo && race.ersAntes > 0.001 && carga <= 0.001 && race.ersAtivoAntes) Sound.ersFim();
+  race.ersAntes = carga; race.ersAtivoAntes = !!race.ersAtivo;
+  if (correndo && race.box?.fase === "entra" && sNow() > (race.limitadorAte || 0)) { race.limitadorAte = sNow() + 550; Sound.limitador(); }
   if (!race.tr.mapaTorcida) montarMapaDaTorcida(race.tr, scene);
   Sound.torcida(correndo ? nivelDaTorcida(race.tr, race.car.x, race.car.y) : 0, race.car.v);
   if (correndo && race.drsAtivo && !race.drsSom) Sound.tocar("drs", 0.6); // a asa abrindo

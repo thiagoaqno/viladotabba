@@ -136,7 +136,8 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   // a SUSPENSÃO (acerto-carro.js): afunda com a asa e a velocidade e nas compressões (a variação do caimento), com mola e amortecedor
   // (segue o alvo em ~0,08 s); a folga do assoalho é a altura parada menos o quanto afundou
   const ac = fx.acerto || ACERTO_CARRO_PADRAO, dPitch = (pitch - (k.pitchAntes ?? pitch)) / Math.max(dt, 1e-3); k.pitchAntes = pitch;
-  const alvoAfunda = afundaAero(ac, v) + Math.min(0.03, Math.max(0, dPitch) * 0.02);
+  const bate = Math.min(0.03, Math.max(0, dPitch) * 0.02), alvoAfunda = afundaAero(ac, v) + bate;
+  if (bate > 0.012 && v > 150 && performance.now() > (k.pancadaAte || 0)) { k.pancada = true; k.pancadaAte = performance.now() + 600; } // a suspensão bate no fundo (jogo.js toca o som do meu carro)
   k.afunda = (k.afunda ?? 0) + (alvoAfunda - (k.afunda ?? 0)) * (1 - Math.exp(-dt * 12));
   k.folga = alturaParada(ac) - k.afunda;
   const suspY = (alturaParada(ac) - alturaParada(ACERTO_CARRO_PADRAO) - k.afunda) * KS * SUSP_VER;

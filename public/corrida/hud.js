@@ -24,6 +24,11 @@ window.addEventListener("radio:fala", (ev) => {
 });
 
 // ---------- placar da corrida ----------
+// Histerese da torre: o progresso de cada carro chega nos pacotes do servidor em ritmos diferentes (quem está perto de mim 33 vezes por
+// segundo, o resto 8 a 17), então dois carros lado a lado alternavam quem tinha o número mais novo e trocavam de posição na torre sem
+// ninguém passar. Agora um só toma a posição do outro quando está TROCA_PONTOS pontos da pista à frente (2 pontos de 6 u: 2,5 m, meio
+// carro); dentro disso vale a ordem de antes.
+const TROCA_PONTOS = 2, ordemAntes = new Map();
 export function standings() {
   if (!E.S || !race) return [];
   const rows = E.S.players.map((p) => {
@@ -33,7 +38,13 @@ export function standings() {
     const prog = E.ME && p.id === E.ME.id ? (race.net && race.progServidor != null ? race.progServidor : myProg()) : gh ? gh.prog : -1e9;
     return { id: p.id, p, prog, done: p.finish != null ? p.finish + (p.acrescimo || 0) : null }; // regras de F1: os acréscimos (um composto só, limitador) contam
   });
-  return rows.sort((a, b) => (a.done != null || b.done != null ? (a.done ?? 1e9) - (b.done ?? 1e9) : b.prog - a.prog));
+  rows.sort((a, b) => {
+    if (a.done != null || b.done != null) return (a.done ?? 1e9) - (b.done ?? 1e9);
+    const d = b.prog - a.prog, ra = ordemAntes.get(a.id), rb = ordemAntes.get(b.id);
+    return Math.abs(d) < TROCA_PONTOS && ra != null && rb != null ? ra - rb : d;
+  });
+  ordemAntes.clear(); rows.forEach((r, i) => ordemAntes.set(r.id, i));
+  return rows;
 }
 export function hud() {
   if (!E.S) return;

@@ -79,41 +79,25 @@ const PISTAS = {
   },
   monza: {
     name: "Monza", sub: "O Templo da Velocidade: a reta dos boxes, a Variante del Rettifilo, a Curva Grande e Biassono, a Variante della Roggia, as duas Lesmo, o Serraglio, a Variante Ascari, a reta de trás e a Parabolica",
+    // Autodromo Nazionale Monza: 5787 m. Traçado de bacinger/f1-circuits (it-1922, licença MIT: ver o cabeçalho dos traçados convertidos)
+    // convertido por ferramentas/circuitos-f1.js: a linha central real em 65 vértices, a linha de chegada no primeiro
     // autódromo dentro do Parque de Monza: asfalto, zebra alta nas chicanes e área de escape (sem muro colado). Quase plano
-    scale: 3.7, width: 112, minLap: 35, walls: false, flat: 40, fall: 220, largada: 0.4, hillsSuave: true,
-    // relevo: o autódromo é quase plano (uns 12 m de diferença): sobe de leve da Curva Grande até as Lesmo e desce até o Ascari e a Parabolica
-    // relevo real por ferramentas/pista-real.js (eudem25m); as barreiras seguem a regra automática, porque o OSM mapeia pouco aqui
-    hills: [[0,27],[0.01,29],[0.02,31],[0.03,33],[0.04,36],[0.05,39],[0.06,42],[0.07,44],[0.08,44],[0.09,43],[0.1,38],[0.11,36],[0.12,40],[0.13,43],[0.14,42],[0.15,41],[0.16,41],[0.17,43],[0.18,45],[0.19,47],[0.2,47],[0.21,46],[0.22,43],[0.23,41],[0.24,40],[0.25,40],[0.26,43],[0.27,47],[0.28,49],[0.29,48],[0.3,43],[0.31,35],[0.32,30],[0.33,32],[0.34,38],[0.35,45],[0.36,49],[0.37,49],[0.38,48],[0.39,49],[0.4,49],[0.41,48],[0.42,47],[0.43,47],[0.44,47],[0.45,45],[0.46,42],[0.47,42],[0.48,45],[0.49,46],[0.5,43],[0.51,40],[0.52,36],[0.53,33],[0.54,34],[0.55,34],[0.56,32],[0.57,30],[0.58,26],[0.59,22],[0.6,19],[0.61,16],[0.62,12],[0.63,9],[0.64,9],[0.65,11],[0.66,15],[0.67,17],[0.68,16],[0.69,12],[0.7,8],[0.71,7],[0.72,6],[0.73,6],[0.74,8],[0.75,10],[0.76,8],[0.77,5],[0.78,4],[0.79,6],[0.8,8],[0.81,10],[0.82,12],[0.83,14],[0.84,15],[0.85,15],[0.86,17],[0.87,18],[0.88,19],[0.89,21],[0.9,22],[0.91,21],[0.92,20],[0.93,22],[0.94,23],[0.95,24],[0.96,25],[0.97,24],[0.98,22],[0.99,24],[1,27]],
-    // o traçado vem da linha central real do circuito (OpenStreetMap), ajustada em vértices curva por curva, no mesmo sentido
-    // (horário, com o norte para cima): a largada sobe para o norte pela reta dos boxes
+    scale: 8.081, width: 58, minLap: 67, walls: false, flat: 149, fall: 823, largada: 0.325, hillsSuave: true,
+    // ESCALA REAL (lote + traçado real): traçado convertido de it-1922; `scale` por ferramentas/escala-lote.js (volta real 5793 m);
+    // `width` 58 u = 12 m (a largura de Monza não está publicada: 12 m é o mínimo da FIA, estimativa). Relevo por ferramentas/pista-real.js (eudem25m, --raio 3 --meia 6).
+    // relevo: 181 a 199 m de altitude, 18,5 m de desnível (89 u), inclinação máxima 6,5% em 0.441 (sobe da Curva Grande às Lesmo e ao Ascari, desce na Parabolica).
+    // barreiras pela regra automática: o OSM mapeia pouco aqui (sem barreira em 84% do lado 1 e 49% do lado -1; o corte para `muros` é 30% em cada lado).
+    hills: [[0,37],[0.01,37],[0.02,35],[0.03,37],[0.04,40],[0.05,42],[0.06,44],[0.07,43],[0.08,39],[0.09,40],[0.1,46],[0.11,50],[0.12,55],[0.13,59],[0.14,64],[0.15,70],[0.16,75],[0.17,78],[0.18,80],[0.19,76],[0.2,68],[0.21,65],[0.22,72],[0.23,77],[0.24,76],[0.25,73],[0.26,73],[0.27,77],[0.28,82],[0.29,85],[0.3,84],[0.31,82],[0.32,76],[0.33,73],[0.34,71],[0.35,72],[0.36,77],[0.37,85],[0.38,89],[0.39,87],[0.4,76],[0.41,62],[0.42,54],[0.43,56],[0.44,68],[0.45,81],[0.46,88],[0.47,88],[0.48,87],[0.49,88],[0.5,88],[0.51,87],[0.52,85],[0.53,85],[0.54,85],[0.55,82],[0.56,75],[0.57,75],[0.58,81],[0.59,83],[0.6,78],[0.61,71],[0.62,63],[0.63,59],[0.64,60],[0.65,60],[0.66,57],[0.67,53],[0.68,46],[0.69,38],[0.7,32],[0.71,27],[0.72,20],[0.73,14],[0.74,13],[0.75,17],[0.76,24],[0.77,28],[0.78,27],[0.79,20],[0.8,13],[0.81,9],[0.82,8],[0.83,8],[0.84,11],[0.85,14],[0.86,13],[0.87,8],[0.88,4],[0.89,6],[0.9,11],[0.91,15],[0.92,18],[0.93,21],[0.94,24],[0.95,25],[0.96,27],[0.97,30],[0.98,32],[0.99,35],[1,37]],
     points: [
-      [426, 583, 17], // Variante del Rettifilo (1), à direita, no fim da reta dos boxes (a chicane é maior que a real, para caber na pista)
-      [466, 583, 17], // Variante del Rettifilo (2), à esquerda
-      [436, 461, 384], // Curva Grande, longa à direita
-      [443, 344, 243], // Curva Grande
-      [455, 300, 181], // Curva Grande
-      [481, 251, 164], // Curva Grande
-      [539, 197, 228], // Curva Grande
-      [621, 162, 269], // Curva Biassono (3), saída
-      [939, 134, 38], // Variante della Roggia (4), à esquerda
-      [960, 103, 50], // Variante della Roggia (5), à direita
-      [1165, 42, 64], // Lesmo 1 (6), à direita
-      [1186, 42, 48], // Lesmo 1 (6)
-      [1205, 52, 34], // Lesmo 1 (6)
-      [1224, 85, 85], // Lesmo 1 (6), saída
-      [1240, 251, 60], // Lesmo 2 (7), à direita, o mais fechado
-      [1234, 272, 26], // Lesmo 2 (7)
-      [981, 419, 1475], // Serraglio, a curva leve à esquerda
-      [643, 717, 79], // Variante Ascari (8), à esquerda
-      [640, 786, 104], // Variante Ascari (9), à direita
-      [596, 842, 123], // Variante Ascari (10), à esquerda
-      [523, 1512, 84], // Curva Alboreto (Parabolica, 11), à direita no fim da reta de trás
-      [514, 1535, 42], // Parabolica
-      [484, 1556, 53], // Parabolica
-      [448, 1556, 66], // Parabolica
-      [406, 1531, 108], // Parabolica
-      [379, 1492, 121], // Parabolica
-      [362, 1421, 233], // Parabolica, saída para a reta dos boxes
+      [449, 975, 0], [480, 619, 549], [484, 609, 25], [500, 601, 33], [504, 597, 19], [506, 591, 60], [492, 536, 343], [489, 511, 326],
+      [496, 412, 444], [501, 387, 176], [511, 361, 198], [521, 342, 150], [535, 322, 190], [557, 300, 194], [583, 281, 233], [614, 265, 214],
+      [649, 254, 257], [680, 248, 597], [756, 242, 0], [914, 231, 205], [923, 226, 23], [931, 211, 30], [938, 205, 56], [977, 196, 868],
+      [1102, 154, 599], [1114, 152, 45], [1126, 152, 42], [1136, 156, 49], [1148, 163, 48], [1158, 177, 42], [1162, 193, 483], [1176, 328, 489],
+      [1175, 340, 27], [1171, 349, 28], [1156, 359, 989], [987, 452, 1154], [954, 474, 698], [876, 541, 0], [688, 708, 0], [672, 722, 80],
+      [667, 729, 22], [665, 739, 84], [668, 771, 81], [664, 787, 65], [660, 797, 59], [652, 806, 113], [630, 828, 53], [626, 835, 45],
+      [624, 847, 683], [609, 969, 0], [583, 1186, 215], [564, 1403, 0], [561, 1419, 44], [554, 1430, 50], [539, 1443, 51], [520, 1448, 49],
+      [503, 1447, 70], [481, 1438, 88], [464, 1425, 90], [450, 1409, 106], [440, 1390, 152], [431, 1361, 169], [426, 1326, 700], [425, 1203, 1162],
+      [437, 1078, 0],
     ],
   },
   barcelona: {

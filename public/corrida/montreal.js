@@ -23,7 +23,7 @@ import { Montador, solido } from "./kit/montagem.js";
 import { registrarMarcasMontreal } from "./kit/montreal/marcas.js";
 import { terraMontreal, matRelva, NIVEL } from "./kit/montreal/terra.js";
 import { predioDosBoxes2019 } from "./kit/montreal/predio.js";
-import { muros, blocos, muroDosCampeoesMontreal, MURO_LAT } from "./kit/montreal/muros.js";
+import { muros, blocos, muroDosCampeoesMontreal } from "./kit/montreal/muros.js";
 import { skyline, ponteJacquesCartier, biosfera } from "./kit/montreal/cidade.js";
 import { bordos, choupos, bandeirasDaTorcida } from "./kit/montreal/parque.js";
 import { beiradaSolida } from "./kit/montreal/chao.js";

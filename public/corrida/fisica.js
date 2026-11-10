@@ -2,6 +2,7 @@
 // prevista aqui e mandada pelo servidor; o fim deste arquivo); nas outras salas, a física arcade de sempre (`physics`, abaixo),
 // agora também em passo fixo, para quem tem mais quadros por segundo não andar mais rápido.
 import { SECTORS, E, carOf, socket, sNow, tempoReal, me, P, checkpoint, toast } from "./estado.js";
+import { ACERTO_CARRO } from "./acerto-carro.js";
 import { Sound } from "./sons.js";
 import { atualizarClima } from "./clima.js";
 import { trackFrame, groundH } from "./pista.js";
@@ -332,6 +333,7 @@ export function quadroDeFisica(dt) {
   if (f1) {
     montarAmbiente(R);
     const net = R.net, fim = tempoReal() - g.acc * 1000; // a hora do servidor em que o último passo deste quadro termina
+    R.car.acerto = ACERTO_CARRO; // a previsão anda com o mesmo acerto que o servidor recebe
     for (let i = 0; i < g.passos; i++) { net.tPasso = fim - (g.passos - 1 - i) * (PASSO * 1000); guardarAnterior(R); passoF1(R); }
     sincronizar(R); enviarEntradas(performance.now());
   } else for (let i = 0; i < g.passos; i++) { guardarAnterior(R); physics(PASSO); }
@@ -361,7 +363,8 @@ export function enviarEntradas(agora) {
     const n = Math.min(120, c.tick - net.enviado), k = new Array(n);
     for (let i = 0; i < n; i++) k[i] = net.cod[(net.enviado + i) & MASCARA];
     const tt = net.tf[(net.enviado + n) & MASCARA]; // (a hora do servidor em que o último passo do pacote terminou; sem ela o servidor usa a da chegada)
-    socket.emit("inp", tt > 0 ? { s: R.startAt, t0: net.enviado, k, tt } : { s: R.startAt, t0: net.enviado, k });
+    const ac = [ACERTO_CARRO.asa, ACERTO_CARRO.altura]; // o acerto do carro vai junto (o servidor roda o meu carro com ele)
+    socket.emit("inp", tt > 0 ? { s: R.startAt, t0: net.enviado, k, tt, ac } : { s: R.startAt, t0: net.enviado, k, ac });
     net.enviado += n;
   }
   net.ultimoEnvio = agora;

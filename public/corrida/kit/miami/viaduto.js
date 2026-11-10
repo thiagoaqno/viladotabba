@@ -2,9 +2,12 @@
 // pintadas, as muretas, a viga de baixo, os pilares com a travessa (só onde ficam longe da pista, e logo antes e depois de cada cruzamento),
 // os postes de luz, a placa verde sobre a pista e os carros que andam de verdade (InstancedMesh, dois sentidos, duas faixas cada).
 // O caminho é uma lista de pontos [x, z]; as pontas descem em rampa até o chão.
+// Tamanho real (1 m = 4,8 u): pista de 20,8 m de largura (2 faixas de 3,5 m por sentido mais os acostamentos), viga de 2,5 m, mureta de 1 m, pilar de 1,9 m,
+// poste de luz de 9 m, pórtico da placa com 5,1 m livres sob ela, carros de 4,5 m a 25 a 30 m/s e o vão livre sob a viga de uns 10 m.
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { instancias, sorteio } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
 
 const suave = (t) => t * t * (3 - 2 * t);
 
@@ -14,7 +17,7 @@ export function viaduto(tr, add, { caminho, alto = 66, largura = 100, rampa = 38
   const comp = curva.getLength(), N = Math.max(8, Math.round(comp / 10)), amostras = curva.getSpacedPoints(N);
   // o perfil: sobe em rampa nas pontas (a altura é a do chão + alto × a subida) e se mantém no meio
   const centro = amostras.map((p, i) => {
-    const s = (i / N) * comp, sub = suave(Math.max(0, Math.min(1, Math.min(s / rampa, (comp - s) / rampa)))), chao = tr.chao(p.x, p.z);
+    const s = (i / N) * comp, sub = suave(Math.max(0, Math.min(1, Math.min(s / rampa, (comp - s) / rampa)))), chao = nivelDoChao(tr, p.x, p.z);
     return { x: p.x, z: p.z, y: chao + 2 + (alto - 2) * sub, s, chao };
   });
   centro.forEach((p, i) => { const a = centro[Math.max(0, i - 1)], b = centro[Math.min(N, i + 1)], dx = b.x - a.x, dz = b.z - a.z, l = Math.hypot(dx, dz) || 1; p.tx = dx / l; p.tz = dz / l; p.nx = -p.tz; p.nz = p.tx; });
@@ -36,8 +39,8 @@ export function viaduto(tr, add, { caminho, alto = 66, largura = 100, rampa = 38
   }) });
   fita([[-meia, 0], [meia, 0]], pista, 128);
   const conc = M(0xcfccc3, { roughness: 0.95, side: THREE.DoubleSide }), vig = M(0x9a9890, { roughness: 1, side: THREE.DoubleSide });
-  fita([[-meia, 0], [-meia, 8], [-meia - 4, 8], [-meia - 4, -2], [-meia - 8, -10]], conc, 30); // a mureta e o beiral da esquerda
-  fita([[meia, 0], [meia, 8], [meia + 4, 8], [meia + 4, -2], [meia + 8, -10]], conc, 30);
+  fita([[-meia, 0], [-meia, 5], [-meia - 4, 5], [-meia - 4, -2], [-meia - 8, -10]], conc, 30); // a mureta e o beiral da esquerda
+  fita([[meia, 0], [meia, 5], [meia + 4, 5], [meia + 4, -2], [meia + 8, -10]], conc, 30);
   fita([[-meia - 8, -10], [-meia * 0.45, -12], [meia * 0.45, -12], [meia + 8, -10]], vig, 40); // a viga de baixo (caixão)
   // os pilares: onde ficam longe da pista (os dois fustes a W/2 + 44 do asfalto) e logo antes e depois de cada cruzamento
   const fustes = [];
@@ -61,29 +64,29 @@ export function viaduto(tr, add, { caminho, alto = 66, largura = 100, rampa = 38
   const hastes = [], bracos = [], lampadas = [];
   for (let i = 4; i < N - 4; i += 7) {
     const p = centro[i], ang = Math.atan2(p.tx, p.tz); if (p.y - p.chao < 20) continue;
-    for (const q of [-1, 1]) { const x = p.x + p.nx * q * (meia - 2), z = p.z + p.nz * q * (meia - 2); hastes.push({ x, y: p.y + 13, z, sx: 1.2, sy: 26, sz: 1.2, r: ang }); bracos.push({ x: x - p.nx * q * 6, y: p.y + 26, z: z - p.nz * q * 6, sx: 12, sy: 1, sz: 1, r: ang + Math.PI / 2 }); lampadas.push({ x: x - p.nx * q * 11, y: p.y + 25.2, z: z - p.nz * q * 11, sx: 3.4, sy: 1, sz: 2, r: ang + Math.PI / 2 }); }
+    for (const q of [-1, 1]) { const x = p.x + p.nx * q * (meia - 2), z = p.z + p.nz * q * (meia - 2); hastes.push({ x, y: p.y + 22, z, sx: 1.2, sy: 44, sz: 1.2, r: ang }); bracos.push({ x: x - p.nx * q * 6, y: p.y + 44, z: z - p.nz * q * 6, sx: 12, sy: 1, sz: 1, r: ang + Math.PI / 2 }); lampadas.push({ x: x - p.nx * q * 11, y: p.y + 43.2, z: z - p.nz * q * 11, sx: 3.4, sy: 1, sz: 2, r: ang + Math.PI / 2 }); }
   }
   instancias((o) => { g.add(o); return o; }, caixa, M(0x565b62), hastes, { sombra: false });
   instancias((o) => { g.add(o); return o; }, caixa, M(0x565b62), bracos, { sombra: false });
   instancias((o) => { g.add(o); return o; }, caixa, new THREE.MeshBasicMaterial({ color: 0xfff0c4, toneMapped: false }), lampadas, { sombra: false });
   // a placa verde sobre a pista, num pórtico (no trecho elevado mais perto do meio)
   if (placa) {
-    const i = placa.i ?? Math.floor(N * 0.5), p = centro[i], ang = Math.atan2(p.tx, p.tz), x = p.x, z = p.z, tex = canvasTex(512, 160, (c, w, h) => {
+    const i = placa.perto ? centro.reduce((m, q, k) => (Math.hypot(q.x - placa.perto[0], q.z - placa.perto[1]) < Math.hypot(centro[m].x - placa.perto[0], centro[m].z - placa.perto[1]) ? k : m), 0) : (placa.i ?? Math.floor(N * 0.5)), p = centro[i], ang = Math.atan2(p.tx, p.tz), x = p.x, z = p.z, tex = canvasTex(512, 160, (c, w, h) => {
       c.fillStyle = "#0b6b3a"; c.fillRect(0, 0, w, h); c.strokeStyle = "#ffffff"; c.lineWidth = 6; c.strokeRect(8, 8, w - 16, h - 16);
       c.fillStyle = "#ffffff"; c.font = "900 46px Arial, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
       c.fillText(placa.texto1, w / 2, h * 0.33, w - 60); c.font = "700 36px Arial, sans-serif"; c.fillText(placa.texto2, w / 2, h * 0.72, w - 60);
     }, false);
     const grp = new THREE.Group(); grp.position.set(x, p.y, z); grp.rotation.y = ang; g.add(grp);
-    for (const q of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(2, 34, 2), M(0x707880)); f.position.set(q * (meia + 5), 17, 0); grp.add(f); }
-    const viga = new THREE.Mesh(new THREE.BoxGeometry(2 * meia + 14, 3, 3), M(0x707880)); viga.position.set(0, 34, 0); grp.add(viga);
-    for (const sd of [1, -1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(60, 18.75), new THREE.MeshBasicMaterial({ map: tex, side: THREE.FrontSide })); pl.position.set(0, 26.5, sd * 1.7); pl.rotation.y = sd > 0 ? 0 : Math.PI; grp.add(pl); }
+    for (const q of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(2, 44, 2), M(0x707880)); f.position.set(q * (meia + 5), 22, 0); grp.add(f); }
+    const viga = new THREE.Mesh(new THREE.BoxGeometry(2 * meia + 14, 3, 3), M(0x707880)); viga.position.set(0, 44, 0); grp.add(viga);
+    for (const sd of [1, -1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(60, 18.75), new THREE.MeshBasicMaterial({ map: tex, side: THREE.FrontSide })); pl.position.set(0, 34, sd * 1.7); pl.rotation.y = sd > 0 ? 0 : Math.PI; grp.add(pl); }
   }
-  // os carros: duas faixas por sentido, em InstancedMesh (carroçaria e vidro), que andam pelo caminho enquanto o jogo roda
+  // os carros (44 × 8 u de modelo × 0,46 a 0,52: 4,2 a 4,8 m; 115 a 145 u/s são 24 a 30 m/s): duas faixas por sentido, em InstancedMesh (carroçaria e vidro), que andam pelo caminho enquanto o jogo roda
   const lista = [], cores = ["#e9e9ec", "#1d1f24", "#b3262e", "#274c8f", "#9aa0a8", "#d9b24a", "#ff5fa2", "#0aa3ad", "#f08a24"];
   const elevados = centro.filter((p) => p.y - p.chao > 40), s0 = elevados.length ? elevados[0].s : 0, s1 = elevados.length ? elevados[elevados.length - 1].s : comp;
   for (let k = 0; k < carros; k++) {
-    const sentido = k % 2 ? 1 : -1, faixa = (rr() < 0.5 ? 0.3 : 0.7) * meia * sentido;
-    lista.push({ s: s0 + rr() * (s1 - s0), v: (36 + rr() * 30) * (sentido > 0 ? 1 : -1) * 1.4, u: faixa, cor: cores[(rr() * cores.length) | 0], esc: 0.9 + rr() * 0.25 });
+    const sentido = k % 2 ? 1 : -1, faixa = (rr() < 0.5 ? 0.25 : 0.72) * meia * sentido;
+    lista.push({ s: s0 + rr() * (s1 - s0), v: (115 + rr() * 30) * (sentido > 0 ? 1 : -1), u: faixa, cor: cores[(rr() * cores.length) | 0], esc: 0.46 + rr() * 0.06 });
   }
   const geoC = new THREE.BoxGeometry(44, 8, 18), geoV = new THREE.BoxGeometry(22, 6.5, 16);
   const cm = new THREE.InstancedMesh(geoC, new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.2 }), carros), vm = new THREE.InstancedMesh(geoV, M(0x1c2630, { roughness: 0.2, metalness: 0.4 }), carros);
@@ -100,7 +103,10 @@ export function viaduto(tr, add, { caminho, alto = 66, largura = 100, rampa = 38
     for (const o of lista) { o.s += o.v * dt; if (o.s > s1) o.s = s0; if (o.s < s0) o.s = s1; }
     posicionar(); cm.instanceMatrix.needsUpdate = vm.instanceMatrix.needsUpdate = true;
   };
-  const info = { nome, comprimento: Math.round(comp), pilares: fustes.length, carros, alto };
+  // a conferência do cruzamento: onde a faixa do tabuleiro passa sobre o asfalto, o vão livre sob a viga (de caixão, 2,5 m) e se algum pilar caiu no asfalto
+  const sobre = centro.filter((p) => tr.distAt(p.x, p.z) < W / 2 + meia), vao = sobre.length ? Math.min(...sobre.map((p) => p.y - 12 - tr.chao(p.x, p.z))) : null;
+  const pilaresNoAsfalto = fustes.filter((i) => [-1, 1].some((q) => tr.distAt(centro[i].x + centro[i].nx * q * meia * 0.5, centro[i].z + centro[i].nz * q * meia * 0.5) < W / 2)).length;
+  const info = { nome, comprimento: Math.round(comp), pilares: fustes.length, carros, alto, cruza: sobre.length ? { cruzamentos: sobre.filter((p, k) => !k || sobre[k - 1].s < p.s - 15).length, amostras: sobre.length, vaoMinM: +(vao / 4.8).toFixed(1) } : null, pilaresNoAsfalto };
   (tr.viadutosMiami ||= []).push(info);
   return { animar, info };
 }

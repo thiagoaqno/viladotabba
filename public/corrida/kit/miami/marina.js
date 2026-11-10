@@ -1,11 +1,14 @@
 // Miami — a "marina" falsa do paddock: o chão de asfalto pintado de água em volta de dois píeres de madeira, com os iates (superiates de
 // três conveses, de dois, veleiros e lanchas) atracados dos dois lados, tudo em InstancedMesh (uma geometria por tipo de barco). Em volta,
 // a mureta de concreto, o calçadão, os postes de luz e as bandeiras de flâmula. O barco não flutua de verdade: é um chão pintado (como no GP).
+// Tamanho real (1 m = 4,8 u): superiate de 40 a 52 m (casco de 6 m de boca no modelo, vezes 1,7), iate de 17 a 23 m (vezes 1,2), veleiro de 13 m com mastro de 18 m,
+// lancha de 8 a 10 m (vezes 1,2); píer de 2,9 m de largura, poste de luz de 4,6 m, casinha do capitão de 3,3 × 3,5 × 4,2 m.
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { Montador, solido, tom, letreiro, comTextura } from "../montagem.js";
 import { marcaTex } from "../marcas.js";
 import { instancias, sorteio } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
 
 // o casco: a planta em ponta de seta, extrudada para cima (x comprido, y para cima, a proa em +x)
 function plantaDoCasco(L, B, bico = 0.28) {
@@ -77,13 +80,13 @@ export const texMadeira = () => canvasTex(64, 64, (x, w, h, rr) => { x.fillStyle
 /** A marina inteira: `x, z, rot` o centro e a rotação do retângulo `a × b` (meias medidas). Devolve a contagem de barcos. */
 export function marina(tr, add, { x, z, rot = 0, a = 180, b = 100, semente = 21 }) {
   const rr = sorteio(semente), c = Math.cos(rot), s = Math.sin(rot);
-  let hi = -1e9; for (const u of [-a, 0, a]) for (const v of [-b, 0, b]) hi = Math.max(hi, tr.chao(x + c * u - s * v, z + s * u + c * v));
+  let hi = -1e9, lo = 1e9; for (const u of [-a, 0, a]) for (const v of [-b, 0, b]) { const h = nivelDoChao(tr, x + c * u - s * v, z + s * u + c * v); hi = Math.max(hi, h); lo = Math.min(lo, h); }
   hi += 0.4;
   const g = new THREE.Group(); g.name = "miami-marina"; g.position.set(x, hi, z); g.rotation.y = -rot; add(g); // (o grupo gira para o x local coincidir com o ângulo `rot`)
   const mad = new THREE.MeshStandardMaterial({ map: texMadeira(), roughness: 0.85 }); mad.map.repeat.set(1, 1);
   const concreto = M(0xd6d2c8, { roughness: 0.9 }), S = solido(), m = new Montador();
   // o chão pintado de água: um bloco de asfalto que vai até o terreno e, por cima, a tinta
-  const base = new THREE.Mesh(new THREE.BoxGeometry(2 * a + 30, 14, 2 * b + 30), M(0x3b3d43, { roughness: 1 })); base.position.y = -7.2; base.receiveShadow = true; g.add(base);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(2 * a + 30, hi - lo + 12, 2 * b + 30), M(0x3b3d43, { roughness: 1 })); base.position.y = -(hi - lo + 12) / 2 - 0.2; base.receiveShadow = true; g.add(base);
   const agua = new THREE.Mesh(new THREE.PlaneGeometry(2 * a, 2 * b), new THREE.MeshStandardMaterial({ map: texAgua(), roughness: 0.22, metalness: 0.15, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
   agua.material.map.repeat.set(a / 40, b / 40); agua.rotation.x = -Math.PI / 2; agua.position.y = 0.3; agua.receiveShadow = true; agua.name = "miami-marina-agua"; g.add(agua);
   // a mureta de concreto e o calçadão de madeira em volta (o chão sobe uns 3 acima da água)
@@ -96,16 +99,16 @@ export function marina(tr, add, { x, z, rot = 0, a = 180, b = 100, semente = 21 
   // os dois píeres de madeira, presos ao calçadão do oeste, com os cabeços e os postes
   const pierV = [-b * 0.46, b * 0.46], pierL = 2 * a - 26;
   for (const v of pierV) {
-    qMad.caixa(mad, [-a + pierL / 2 + 4, 1.4, v], [pierL, 1.1, 9], { cor: "#ffffff", uv: [pierL / 24, 0.4] });
-    for (let px = -a + 10; px < a - 14; px += 34) for (const sd of [-1, 1]) m.cilindro(S, [px, 2.4, v + sd * 4.8], [0.9, 3.2], { cor: "#5a4630", seg: 6 });
+    qMad.caixa(mad, [-a + pierL / 2 + 4, 1.4, v], [pierL, 1.1, 14], { cor: "#ffffff", uv: [pierL / 24, 0.6] });
+    for (let px = -a + 10; px < a - 14; px += 34) for (const sd of [-1, 1]) m.cilindro(S, [px, 2.4, v + sd * 7.4], [0.9, 3.2], { cor: "#5a4630", seg: 6 });
     for (let px = -a + 18; px < a - 14; px += 68) { m.cilindro(S, [px, 6, v], [0.7, 8], { cor: "#555b62", seg: 6 }); }
   }
   const lamp = []; // os postes de luz das duas beiradas
-  for (let px = -a + 6; px <= a - 6; px += 52) for (const sz of [-1, 1]) { m.cilindro(S, [px, 8, sz * (b + Q / 2 - 1)], [0.6, 11], { cor: "#454b52", seg: 6 }); lamp.push([px, 14.4, sz * (b + Q / 2 - 1)]); }
+  for (let px = -a + 6; px <= a - 6; px += 52) for (const sz of [-1, 1]) { m.cilindro(S, [px, 13, sz * (b + Q / 2 - 1)], [0.7, 21], { cor: "#454b52", seg: 6 }); lamp.push([px, 24.4, sz * (b + Q / 2 - 1)]); }
   // a casinha do capitão do porto e o painel com o nome
-  m.caixa(S, [a + Q / 2, 11, -b * 0.4], [9, 16, 12], { cor: "#f2efe6" }); m.caixa(S, [a + Q / 2, 20.5, -b * 0.4], [11, 1.6, 14], { cor: "#0aa3ad" });
+  m.caixa(S, [a + Q / 2, 11.4, -b * 0.4], [16, 17, 20], { cor: "#f2efe6" }); m.caixa(S, [a + Q / 2, 21, -b * 0.4], [18, 1.6, 22], { cor: "#0aa3ad" });
   // as flâmulas: um cordão entre os postes, em aqua, rosa e branco
-  for (let px = -a + 6; px < a - 58; px += 52) for (let t = 0; t < 8; t++) { const fx = px + 4 + t * 6, fy = 14.4 - Math.sin((t / 7) * Math.PI) * 1.4; for (const sz of [-1, 1]) m.caixa(S, [fx, fy - 1.3, sz * (b + Q / 2 - 1)], [2.6, 2.6, 0.2], { cor: ["#0aa3ad", "#ff5fa2", "#ffffff"][t % 3], ry: 0 }); }
+  for (let px = -a + 6; px < a - 58; px += 52) for (let t = 0; t < 8; t++) { const fx = px + 4 + t * 6, fy = 24.4 - Math.sin((t / 7) * Math.PI) * 1.4; for (const sz of [-1, 1]) m.caixa(S, [fx, fy - 1.8, sz * (b + Q / 2 - 1)], [3.4, 3.4, 0.2], { cor: ["#0aa3ad", "#ff5fa2", "#ffffff"][t % 3], ry: 0 }); }
   g.add(m.montar("marina-peças")); g.add(qMad.montar("marina-madeira"));
   const luz = new THREE.MeshBasicMaterial({ color: 0xfff1c9, toneMapped: false });
   instancias((o) => { g.add(o); return o; }, new THREE.SphereGeometry(1.6, 6, 4), luz, lamp.map(([x0, y0, z0]) => ({ x: x0, y: y0, z: z0 })), { sombra: false });
@@ -114,15 +117,15 @@ export function marina(tr, add, { x, z, rot = 0, a = 180, b = 100, semente = 21 
   painel.position.set(0, 9, -b - Q + 2); g.add(painel); const painel2 = painel.clone(); painel2.position.z = b + Q - 2; painel2.rotation.y = Math.PI; g.add(painel2);
 
   // os barcos: uma lista por tipo; atracados dos dois lados dos píeres, de proa para um lado ou para o outro
-  const tipos = ["super", "medio", "vela", "lancha"], geos = Object.fromEntries(tipos.map((t) => [t, geoDoBarco(t)])), listas = { super: [], medio: [], vela: [], lancha: [] };
+  const BASE = { super: 1.7, medio: 1.2, vela: 1, lancha: 1.2 }, tipos = ["super", "medio", "vela", "lancha"], geos = Object.fromEntries(tipos.map((t) => [t, geoDoBarco(t)])), listas = { super: [], medio: [], vela: [], lancha: [] };
   const filas = [[pierV[0], -1], [pierV[0], 1], [pierV[1], -1], [pierV[1], 1]];
   for (const [v, lado] of filas) {
     let px = -a + 36;
     while (px < a - 30) {
       const escolha = rr(), tipo = escolha < 0.3 ? "super" : escolha < 0.58 ? "medio" : escolha < 0.82 ? "vela" : "lancha", gi = geos[tipo];
-      const sc = 0.9 + rr() * 0.2, L = gi.L * sc;
+      const sc = (0.9 + rr() * 0.2) * BASE[tipo], L = gi.L * sc;
       if (px + L > a - 22) break;
-      const vv = v + lado * (4.5 + (gi.B * sc) / 2 + 1);
+      const vv = v + lado * (7 + (gi.B * sc) / 2 + 1);
       listas[tipo].push({ x: px + L / 2, y: 0.9, z: vv, sx: sc, sy: sc, sz: sc, r: rr() < 0.5 ? 0 : Math.PI });
       px += L + 8 + rr() * 10;
     }

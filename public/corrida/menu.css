@@ -11,7 +11,8 @@ body.em-home.mn-ajustes .utilbar .vol{width:100%}
 @keyframes mnDesce{from{opacity:0;transform:translateY(-8px)}}
 
 .mn{--mn-acc:#e10600;--mn-corte:14px;--mn-t:cubic-bezier(.2,.8,.2,1);position:fixed;inset:0;z-index:2;display:grid;grid-template-columns:minmax(320px,32vw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"topo topo" "menu frase" "cartoes cartoes" "pe pe";overflow:hidden auto;color:#fff;font-family:var(--body);scrollbar-width:thin;background:#05060a url('/corrida/fundo-carreira-entrada.webp') center/cover no-repeat}
-.mn:not(.sem3d) .mn-palco{background:#05060a}
+.mn-palco{background:#05060a url(/corrida/capa-inicio.jpg) 62% center/cover no-repeat} /* a capa da tela inicial; com a Garagem aberta, o carro 3D (o canvas) cobre a capa */
+.mn.com3d .mn-palco{background-image:none}
 .mn-palco{position:fixed;inset:0;z-index:0}
 .mn-palco canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
 .mn-veu{position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(90deg,#040509f2 0%,#040509b8 22%,#04050900 46%),linear-gradient(0deg,#040509f0 0%,#04050955 22%,#04050900 38%),linear-gradient(180deg,#04050999 0,#04050900 16%)}

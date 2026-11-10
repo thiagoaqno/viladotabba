@@ -1,13 +1,12 @@
-# Montreal: passada visual na escala real
+# Capa na tela inicial e capas na tela de carregamento
 
-O comprimento, a largura, o relevo e as linhas dos robôs de Montreal já estavam na `main`. Esta é a passada visual.
+As imagens que o Thiago fez com o ChatGPT viram as capas do jogo, convertidas de PNG (cerca de 2 MB cada) para JPG (de 213 a 262 KB).
 
-- **Base sólida e chão no nível** (`kit/montreal/chao.js`, novo): uma fita de grama colada na borda do asfalto, sem vão, e um corte de concreto sob a pista. Os muros, as placas, a tribuna e as árvores pousam em `nivelDoChao`.
-- **Ambiente próprio** (`kit/montreal/ambiente.js`, novo): as placas de frenagem (com poste), os mastros com a bandeira do Canadá e os postos dos fiscais no chão e atrás do alambrado. O do kit deixava tudo solto no ar.
-- **Arquibancada principal no tamanho real** (`kit/montreal/tribuna.js`, novo): 24 degraus de 0,5 × 0,75 m (antes 12 degraus de 1,25 × 1,77 m, do carro grande).
-- **Peças no tamanho real:** o prédio dos boxes de 2019 (térreo de 5 m, 13,3 m até a laje), os muros de 1,25 m com o alambrado, o Muro dos Campeões, os blocos, o skyline, os bordos e os choupos.
-- **Pórtico da largada:** a faixa acompanha a escala.
+- **Tela inicial da Corrida** (`menu.css`, `menu.js`): a capa (`capa-inicio.jpg`: os três pilotos em Mônaco) fica atrás do menu. A garagem 3D, com o carro girando, só abre com o painel **Garagem** e é desligada quando ele fecha; a capa volta. A tela inicial fica mais leve, porque a placa de vídeo não desenha mais o carro o tempo todo, e o carregamento some assim que o menu aparece, sem esperar o carro 3D.
+- **Tela de carregamento** (`index.html`): sorteia uma de três capas (`carregamento-kimi.jpg`, `carregamento-verts.jpg`, `carregamento-hamil.jpg`), com o mesmo escurecido à esquerda para o texto aparecer.
 
-Sem prints: o Thiago testa jogando e manda o que quebrou. Conferido com `node --check`.
+A `capa-carregamento.png` antiga continua no repositório: a vitrine da carreira (`temporada/vitrine.css`) ainda usa ela.
+
+Conferido com `node --check`; o Thiago testa jogando.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

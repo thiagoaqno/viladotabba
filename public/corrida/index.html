@@ -148,6 +148,8 @@
   <div class="preparo-conteudo"><span class="preparo-marca">CORRIDA <small>DA GALERA</small></span><span class="preparo-linha" aria-hidden="true"></span><strong>Preparando a garagem</strong><p id="preparoMensagem">Os carros e circuitos estão chegando.</p><a href="/" class="preparo-voltar">← Voltar para a Vila</a><button id="preparoTentar" type="button" hidden onclick="location.reload()">Tentar novamente</button></div>
 </div>
 <script>
+// a tela de carregamento sorteia uma das capas (o fundo escuro da esquerda fica, para o texto aparecer)
+(function () { var c = ["kimi", "verts", "hamil"], e = document.getElementById("preparoCorrida"); if (e) e.style.backgroundImage = "linear-gradient(90deg,#080b11e8 0%,#080b11a8 38%,#080b1122 80%),url(/corrida/carregamento-" + c[Math.floor(Math.random() * c.length)] + ".jpg)"; })();
 window.falhaPreparoCorrida = function () { document.getElementById("preparoMensagem").textContent = "Não foi possível iniciar a corrida. Confira sua conexão e tente novamente."; document.getElementById("preparoTentar").hidden = false; };
 window.preparoPronto = function () {
   clearTimeout(window.timerPreparoCorrida);

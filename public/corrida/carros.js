@@ -156,7 +156,7 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   // Assoalho raspa nas zebras ou nas compressões em alta velocidade. Emissão limitada por tempo.
   if (fx.f1 && !fx.bala && !fx.rodando && !menosMovimento.matches && v > 230 && Math.abs(z - ground) < 4 && (fx.zebra || Math.abs(pitch) > 0.045) && k.faiscaGP <= 0) {
     k.faiscaGP = 0.12;
-    faiscas(x - Math.cos(a) * k.L * 0.43, ground + 1.5, y - Math.sin(a) * k.L * 0.43, "#ffd6a0", 4, 32);
+    faiscas(x - Math.cos(a) * k.L * 0.43, ground + 1.5, y - Math.sin(a) * k.L * 0.43, "#ff9a3a", 7, 34, { vx: Math.cos(a) * v, vz: Math.sin(a) * v }); // o titânio do assoalho: laranja
   }
   for (const f of k.chamas) { f.visible = !!fx.turbo; if (f.visible) f.scale.set(1, 1, 0.7 + Math.random() * 0.7); }
   const tinta = k.kt.pintura;
@@ -172,7 +172,7 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   k.faisca -= dt;
   if ((fx.derrapa || fx.estrela || fx.bala) && k.faisca <= 0 && v > 60) {
     k.faisca = 0.05; const fx0 = Math.cos(a), fy0 = Math.sin(a);
-    for (const s of [-1, 1]) faiscas(x - fx0 * 16 - fy0 * s * 9, z + 2, y - fy0 * 16 + fx0 * s * 9, fx.bala ? "#ff7a1a" : fx.estrela ? "#ffd84a" : fx.derrapa > 1 ? "#ff9a20" : "#6cc8ff", 2, 22);
+    for (const s of [-1, 1]) faiscas(x - fx0 * 16 - fy0 * s * 9, z + 2, y - fy0 * 16 + fx0 * s * 9, fx.bala ? "#ff7a1a" : fx.estrela ? "#ffd84a" : fx.derrapa > 1 ? "#ff9a20" : "#6cc8ff", 2, 22, { vx: fx0 * v, vz: fy0 * v });
   }
 }
 // na câmera de cockpit do MEU carro o capacete e o corpo do piloto somem (as luvas no volante ficam); jogo.js chama a cada quadro com o modo da câmera
@@ -207,15 +207,32 @@ export function carPreview(cv, color, model, mods) {
   const img = new Image(); img.onload = () => { const c = cv.getContext("2d"); c.clearRect(0, 0, cv.width, cv.height); c.drawImage(img, 0, 0, cv.width, cv.height); }; img.src = url;
 }
 
-// fumaça dos pneus e poeira da grama
-const puffs = [], puffGeo = new THREE.IcosahedronGeometry(1, 2), puffMats = {}, puffLivres = {};
+// FUMAÇA dos pneus e poeira da grama: cada nuvem é um quadrado virado para a câmera (o mesmo truque dos jogos), com uma textura de
+// fumaça macia (várias manchas de gradiente sobrepostas, a borda sumindo) e um giro próprio, iluminada pela cena (Lambert, com a luz
+// dos postes) e com um pouco de emissão para não ficar preta de costas para o sol. Ela sobe e se espalha, incha e se dissolve. Antes
+// era uma esfera facetada que inchava: lia como uma bola cinza.
+const FUMACA_TEX = (() => {
+  const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+  let s = 1337; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 26; i++) { // manchas: mais densas no meio, mais ralas na borda
+    const d = r() * 34, a = r() * Math.PI * 2, cx = 64 + Math.cos(a) * d, cy = 64 + Math.sin(a) * d, raio = 18 + r() * 26;
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, raio); g.addColorStop(0, `rgba(255,255,255,${0.16 + r() * 0.16})`); g.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  }
+  const borda = x.createRadialGradient(64, 64, 30, 64, 64, 64); borda.addColorStop(0, "rgba(0,0,0,0)"); borda.addColorStop(1, "rgba(0,0,0,1)"); // a borda some (nada de quadrado aparecendo)
+  x.globalCompositeOperation = "destination-out"; x.fillStyle = borda; x.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const puffs = [], puffGeo = new THREE.PlaneGeometry(2.2, 2.2), puffMats = {}, puffLivres = {};
+// o quadrado olha para a câmera que está desenhando (vale para todas: a primeira pessoa, a TV, o espelho), girado no próprio eixo
+function virarParaCamera(renderer, cena, cam) { this.quaternion.copy(cam.quaternion); this.rotateZ(this.userData.giro || 0); this.updateMatrixWorld(); }
 // Os materiais das nuvens ficam guardados para a próxima nuvem (por cor) e nunca são descartados com `dispose()`: o three.js apaga o
 // programa da placa de vídeo quando o último material dele é descartado, e a nuvem seguinte (a de uma batida ou de uma derrapagem,
 // com a pista de noite e a luz dos postes no sombreador) precisava compilar tudo de novo, dezenas de ms de trava a cada vez.
 const materialDaNuvem = (cor) => {
   const m = (puffLivres[cor] ||= []).pop();
   if (m) { m.opacity = 0.6; return m; }
-  const novo = (puffMats[cor] ||= new THREE.MeshLambertMaterial({ color: cor, transparent: true, opacity: 0.6, depthWrite: false })).clone();
+  const novo = (puffMats[cor] ||= new THREE.MeshLambertMaterial({ color: cor, emissive: new THREE.Color(cor).multiplyScalar(0.22), map: FUMACA_TEX, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide })).clone();
   luzNoMaterial(novo); // já com a luz dos postes: é o mesmo sombreador que a largada compilou (aquecerPista), sem uma segunda compilação 1,5 s depois
   return novo;
 };
@@ -223,9 +240,9 @@ const guardarMaterial = (p) => (puffLivres[p.cor] ||= []).push(p.m.material);
 // vida: quanto tempo a nuvem dura; cresce: quanto ela incha por segundo; op: quão densa começa
 export function puff(x, y, z, color = "#e6e6e6", s = 3, vida = 0.7, cresce = 1.6, op = 0.56) {
   if (puffs.length > 220) { const o = puffs.shift(); scene.remove(o.m); guardarMaterial(o); }
-  const m = new THREE.Mesh(puffGeo, materialDaNuvem(color)); m.position.set(x, y, z); m.scale.setScalar(s); scene.add(m);
-  puffs.push({ m, cor: color, t: vida, t0: vida, op, cresce, vy: 6 + Math.random() * 6, vx: (Math.random() - 0.5) * 8, vz: (Math.random() - 0.5) * 8 });
+  const m = new THREE.Mesh(puffGeo, materialDaNuvem(color)); m.position.set(x, y, z); m.scale.setScalar(s); m.userData.giro = Math.random() * Math.PI * 2; m.onBeforeRender = virarParaCamera; scene.add(m);
+  puffs.push({ m, cor: color, t: vida * 1.3, t0: vida * 1.3, op, cresce, vy: 5 + Math.random() * 5, vx: (Math.random() - 0.5) * 10, vz: (Math.random() - 0.5) * 10, rodar: (Math.random() - 0.5) * 1.4 });
 }
 // uma nuvem escondida, para a largada já compilar o shader da fumaça (ver amostrasDeEfeitos em efeitos.js)
-export function amostraDeFumaca() { const m = new THREE.Mesh(puffGeo, new THREE.MeshLambertMaterial({ color: "#e6e6e6", transparent: true, opacity: 0.6, depthWrite: false })); m.visible = false; return m; }
-export function stepPuffs(dt) { for (let i = puffs.length - 1; i >= 0; i--) { const p = puffs[i]; p.t -= dt; if (p.t <= 0) { scene.remove(p.m); guardarMaterial(p); puffs.splice(i, 1); continue; } p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; p.m.scale.multiplyScalar(1 + dt * p.cresce); p.m.material.opacity = (p.t / p.t0) * p.op; } }
+export function amostraDeFumaca() { const m = new THREE.Mesh(puffGeo, materialDaNuvem("#e6e6e6")); m.visible = false; return m; }
+export function stepPuffs(dt) { for (let i = puffs.length - 1; i >= 0; i--) { const p = puffs[i]; p.t -= dt; if (p.t <= 0) { scene.remove(p.m); guardarMaterial(p); puffs.splice(i, 1); continue; } p.vy *= Math.exp(-dt * 0.8); p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; p.m.scale.multiplyScalar(1 + dt * p.cresce); p.m.userData.giro += p.rodar * dt; const u = p.t / p.t0; p.m.material.opacity = Math.min(1, (1 - u) * 6) * u * p.op; } } // (entra rápido, some devagar)

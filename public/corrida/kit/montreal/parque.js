@@ -7,19 +7,21 @@ import * as THREE from "three";
 import { M } from "../../cena.js";
 import { instancias, livre, ocupado, sorteio } from "../comum.js";
 import { bandeiraCanada, bandeiraQuebec } from "./marcas.js";
+import { nivelDoChao } from "./chao.js";
 
 export const FOLHAS_BORDO = ["#3f8a2f", "#4a9a35", "#2f7a2c", "#5aa83c", "#3a8030", "#68b043", "#357f2e", "#4f9f38"];
 const cor = (c) => new THREE.Color(c);
 const colorir = (m, lista) => { if (!m) return null; lista.forEach((o, k) => m.setColorAt(k, cor(o.c))); m.instanceColor.needsUpdate = true; return m; };
-const solo = (tr, x, z) => Math.max(tr.chao(x, z) - 1.5, tr.terraMontreal ? tr.terraMontreal.ALTO : -0.55);
+const solo = (tr, x, z) => Math.max(nivelDoChao(tr, x, z), tr.terraMontreal ? tr.terraMontreal.ALTO : -0.55); // (o chão que se vê: a fita de chao.js perto da pista, a malha longe dela)
 
 /**
+ * (ESCALA REAL, 1 u = 0,2083 m: os bordos de 19 a 35 m → 15 a 25 m e os choupos de 44 a 60 m → 21 a 29 m, a altura de um choupo-da-Lombardia de verdade; o tronco do bordo de 1,9 m → 0,9 m de diâmetro.)
  * Os bordos, pela ilha toda: sorteados numa grade (um por célula de `passo`, com folga e aceitos com a chance `chance(x, z, d)`),
  * onde há terra firme. A copa é uma bola baixa de dois lóbulos (mais um terceiro, às vezes) com o tronco curto e grosso.
  * @param {object} cfg · caixa: [x0, z0, x1, z1] · passo (80) · chance(x, z, d) → 0..1 (d: distância à pista) · altura: [90, 170] · folga (extra além da copa)
  */
 export function bordos(tr, add, cfg = {}) {
-  const { W } = tr, r = sorteio(cfg.semente ?? 1976), [x0, z0, x1, z1] = cfg.caixa, passo = cfg.passo ?? 80, alturas = cfg.altura || [90, 170], terra = tr.terraMontreal;
+  const { W } = tr, r = sorteio(cfg.semente ?? 1976), [x0, z0, x1, z1] = cfg.caixa, passo = cfg.passo ?? 80, alturas = cfg.altura || [72, 120], terra = tr.terraMontreal;
   const lobos = [], troncos = [], conicas = [], vermelhos = ["#7a3030", "#6b2f3f"];
   for (let z = z0; z < z1; z += passo) for (let x = x0; x < x1; x += passo) {
     const px = x + (r() - 0.5) * passo * 0.9, pz = z + (r() - 0.5) * passo * 0.9, d = tr.distAt(px, pz);
@@ -28,11 +30,11 @@ export function bordos(tr, add, cfg = {}) {
     const alt = alturas[0] + r() * (alturas[1] - alturas[0]), larg = alt * (0.4 + r() * 0.12);
     if (!livre(tr, px, pz, larg + (cfg.folga ?? 14))) continue;
     const h = solo(tr, px, pz), c = r() < 0.05 ? vermelhos[(r() * 2) | 0] : FOLHAS_BORDO[(r() * FOLHAS_BORDO.length) | 0];
-    if (r() < (cfg.coniferas ?? 0.06)) { conicas.push({ x: px, y: h + alt * 0.55, z: pz, sx: larg * 0.5, sy: alt * 1.1, sz: larg * 0.5, r: r() * 6, c: "#24502b" }); troncos.push({ x: px, y: h + alt * 0.1, z: pz, sx: alt * 0.03, sy: alt * 0.2, sz: alt * 0.03 }); continue; }
+    if (r() < (cfg.coniferas ?? 0.06)) { conicas.push({ x: px, y: h + alt * 0.55, z: pz, sx: larg * 0.5, sy: alt * 1.1, sz: larg * 0.5, r: r() * 6, c: "#24502b" }); troncos.push({ x: px, y: h + alt * 0.1, z: pz, sx: alt * 0.02, sy: alt * 0.2, sz: alt * 0.02 }); continue; }
     lobos.push({ x: px, y: h + alt * 0.62, z: pz, sx: larg, sy: alt * 0.34, sz: larg, r: r() * 6, c });
     const a = r() * 6.28, q = larg * 0.4; lobos.push({ x: px + Math.cos(a) * q, y: h + alt * 0.82, z: pz + Math.sin(a) * q, sx: larg * 0.7, sy: alt * 0.26, sz: larg * 0.7, r: r() * 6, c: cor(c).offsetHSL(0.01, 0.02, 0.05).getStyle() });
     if (r() < 0.4) lobos.push({ x: px - Math.cos(a) * q, y: h + alt * 0.74, z: pz - Math.sin(a) * q, sx: larg * 0.62, sy: alt * 0.22, sz: larg * 0.62, r: r() * 6, c: cor(c).offsetHSL(-0.01, 0, -0.03).getStyle() });
-    troncos.push({ x: px, y: h + alt * 0.3, z: pz, sx: alt * 0.045, sy: alt * 0.6, sz: alt * 0.045 });
+    troncos.push({ x: px, y: h + alt * 0.3, z: pz, sx: alt * 0.022, sy: alt * 0.6, sz: alt * 0.022 }); // o tronco de 0,9 m de diâmetro, em vez de 1,9 m
   }
   const material = new THREE.MeshStandardMaterial({ roughness: 0.95, flatShading: true });
   colorir(instancias(add, new THREE.IcosahedronGeometry(1, 0), material, lobos, { sombra: false, nome: `${tr.id}-bordos-copas` }), lobos);
@@ -47,7 +49,7 @@ export function bordos(tr, add, cfg = {}) {
  * em até `fileiras` fileiras separadas por `entre`. `lados`: os dois lados da linha afastados `recuo`.
  */
 export function choupos(tr, add, linha, cfg = {}) {
-  const r = sorteio(cfg.semente ?? 33), passo = cfg.passo ?? 46, fileiras = cfg.fileiras ?? 2, entre = cfg.entre ?? 44, alturas = cfg.altura || [210, 290], lista = [], troncos = [], terra = tr.terraMontreal;
+  const r = sorteio(cfg.semente ?? 33), passo = cfg.passo ?? 46, fileiras = cfg.fileiras ?? 2, entre = cfg.entre ?? 44, alturas = cfg.altura || [100, 140], lista = [], troncos = [], terra = tr.terraMontreal;
   const verdes = ["#3d7f2e", "#468a33", "#32702a", "#52913a", "#2f6a2a"];
   for (let k = 0; k + 1 < linha.length; k++) {
     const [ax, az] = linha[k], [bx, bz] = linha[k + 1], len = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / len, uz = (bz - az) / len;

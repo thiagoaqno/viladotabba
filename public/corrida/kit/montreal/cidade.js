@@ -11,6 +11,9 @@ import { sorteio } from "../comum.js";
 import { Montador, solido } from "../montagem.js";
 
 const cor3 = (c) => new THREE.Color(c);
+// As alturas, de memória (não conferi numa fonte aberta nesta passada; 1 u = 0,2083 m): Place Ville-Marie 188 m, 1000 de la Gauchetière 205 m, Tour de la Bourse 190 m, as torres da Basílica de Notre-Dame 69 m, a Torre do Relógio 45 m (210 u, como estava).
+const PVM = 900, GAUCHETIERE = 984, BOURSE = 912, TORRES_BASILICA = 331;
+// A janela e o andar são a repetição da textura (4 colunas × 4 andares no vidro, 3 × 3 na pedra): `jan` e `andar` são o tamanho da repetição em u. Antes 9 × 14 u: janela de 0,5 m e andar de 0,7 m. Agora janela de ~2,9 m e andar de ~3,75 m (56 × 72 u).
 
 function janelas(vidro) {
   return canvasTex(32, 32, (x, w, h, rr) => {
@@ -21,7 +24,7 @@ function janelas(vidro) {
 }
 class Lote {
   constructor() { this.p = []; this.c = []; this.uv = []; this.i = []; }
-  caixa(x, z, y0, sx, sy, sz, ry, baixo, topo, jan = 9, andar = 14) {
+  caixa(x, z, y0, sx, sy, sz, ry, baixo, topo, jan = 56, andar = 72) {
     const co = Math.cos(ry), si = Math.sin(ry), q = (dx, dz) => [x + dx * co + dz * si, z - dx * si + dz * co];
     const cant = [q(-sx / 2, -sz / 2), q(sx / 2, -sz / 2), q(sx / 2, sz / 2), q(-sx / 2, sz / 2)], larg = [sx, sz, sx, sz];
     for (let f = 0; f < 4; f++) {
@@ -62,7 +65,7 @@ export function skyline(tr, add, costa, { z0 = 1500, z1 = 5600, miolo = [2700, 4
   const chao = (x, z) => -0.55 - 3;
   const torre = (x, z, sx, sy, sz, hex, lote = vid, o = {}) => {
     const y0 = chao(x, z), ry = o.ry ?? (r() < 0.5 ? 0.12 : 0.32 + r() * 0.2), dist = Math.min(1, Math.max(0, (costa(z) - x) / 1000)), [b, t] = tom(hex, dist);
-    lote.caixa(x, z, y0, sx, sy, sz, ry, b, t, o.jan ?? 9, o.andar ?? 14);
+    lote.caixa(x, z, y0, sx, sy, sz, ry, b, t, o.jan ?? 56, o.andar ?? 72);
     if (o.degrau) topos.caixa(x, z, y0 + sy, sx * 0.6, o.degrau, sz * 0.6, ry, b, t, 12, 14);
     if (o.antena) topos.caixa(x, z, y0 + sy + (o.degrau || 0), 3, o.antena, 3, 0, cor3("#d8dde2").lerp(ar, 0.4), cor3("#e84a4a").lerp(ar, 0.3), 3, 14);
     return y0;
@@ -71,23 +74,23 @@ export function skyline(tr, add, costa, { z0 = 1500, z1 = 5600, miolo = [2700, 4
   for (let k = 0; k < quantas; k++) {
     const z = z0 + r() * (z1 - z0), u = (z - zc) / (meia * 2.2), centro = Math.max(0, 1 - Math.abs(u) ** 1.4), prof = 160 + r() * 1100 * (0.5 + 0.5 * centro), x = costa(z) - prof;
     const alta = r() < 0.55 * centro + 0.06, sy = (alta ? 600 + r() * 520 : 150 + r() * 330) * escala * (0.55 + 0.45 * centro), sx = 60 + r() * 60, sz = 60 + r() * 60;
-    torre(x, z, sx, sy, sz, r() < 0.28 ? pedras[(r() * pedras.length) | 0] : vidros[(r() * vidros.length) | 0], r() < 0.28 ? ped : vid, { degrau: alta && r() < 0.4 ? 50 + r() * 70 : 0, antena: alta && r() < 0.35 ? 100 + r() * 150 : 0, jan: 9 + r() * 6 });
+    torre(x, z, sx, sy, sz, r() < 0.28 ? pedras[(r() * pedras.length) | 0] : vidros[(r() * vidros.length) | 0], r() < 0.28 ? ped : vid, { degrau: alta && r() < 0.4 ? 50 + r() * 70 : 0, antena: alta && r() < 0.35 ? 100 + r() * 150 : 0, jan: 52 + r() * 12 });
   }
-  for (let z = z0 + 200; z < z1 - 400; z += 110 + r() * 90) torre(costa(z) - 60 - r() * 40, z, 160 + r() * 140, 55 + r() * 60, 70 + r() * 40, pedras[(r() * pedras.length) | 0], ped, { ry: 0.12, jan: 14, andar: 12 }); // o cais baixo
+  for (let z = z0 + 200; z < z1 - 400; z += 110 + r() * 90) torre(costa(z) - 60 - r() * 40, z, 160 + r() * 140, 55 + r() * 60, 70 + r() * 40, pedras[(r() * pedras.length) | 0], ped, { ry: 0.12, jan: 44, andar: 54 }); // o cais baixo
   // a Place Ville-Marie: a torre em cruz de vidro azul, e a de vidro escuro ao lado
   const pv = [costa(zc) - 560, zc - 120];
-  const y0 = torre(pv[0], pv[1], 150, 1000 * escala, 44, "#2d6a96", vid, { ry: 0.12, jan: 14 }); torre(pv[0], pv[1], 44, 1000 * escala, 150, "#2d6a96", vid, { ry: 0.12, jan: 14 });
-  topos.caixa(pv[0], pv[1], y0 + 1000 * escala, 8, 70, 8, 0, cor3("#d8dde2").lerp(ar, 0.4), cor3("#e84a4a").lerp(ar, 0.3), 3, 14);
+  const y0 = torre(pv[0], pv[1], 150, PVM * escala, 44, "#2d6a96", vid, { ry: 0.12, jan: 56 }); torre(pv[0], pv[1], 44, PVM * escala, 150, "#2d6a96", vid, { ry: 0.12, jan: 56 });
+  topos.caixa(pv[0], pv[1], y0 + PVM * escala, 8, 70, 8, 0, cor3("#d8dde2").lerp(ar, 0.4), cor3("#e84a4a").lerp(ar, 0.3), 3, 14);
   // o "1000 de la Gauchetière": a base de vidro e o topo em pirâmide, a mais alta do cais
-  const g = [costa(zc + 380) - 700, zc + 380], y1 = torre(g[0], g[1], 96, 860 * escala, 96, "#3b6f8f", vid, { ry: 0.3, jan: 12 });
-  const [gb, gt] = tom("#c8d4de", 0.4); topos.piramide(g[0], g[1], y1 + 860 * escala, 96, 130, 0.3, gb, gt);
-  torre(costa(zc - 500) - 620, zc - 500, 70, 760 * escala, 70, "#101c28", vid, { ry: 0.2, jan: 16 }); // a Tour de la Bourse, escura e esguia
+  const g = [costa(zc + 380) - 700, zc + 380], y1 = torre(g[0], g[1], 96, GAUCHETIERE * escala, 96, "#3b6f8f", vid, { ry: 0.3, jan: 48 });
+  const [gb, gt] = tom("#c8d4de", 0.4); topos.piramide(g[0], g[1], y1 + GAUCHETIERE * escala, 96, 130, 0.3, gb, gt);
+  torre(costa(zc - 500) - 620, zc - 500, 70, BOURSE * escala, 70, "#101c28", vid, { ry: 0.2, jan: 64 }); // a Tour de la Bourse, escura e esguia
   // a Basílica de Notre-Dame: a nave de pedra e as duas torres gêmeas, de frente para o rio (no Vieux-Port, mais ao sul)
   const bz = zc + 1150, bx = costa(bz) - 230;
-  torre(bx, bz, 110, 120, 80, "#b8ad98", ped, { ry: 0.1, jan: 10, andar: 20 });
-  for (const s of [-1, 1]) { const yb = torre(bx + 55, bz + s * 24, 34, 310, 34, "#b4a994", ped, { ry: 0.1, jan: 6, andar: 20 }); topos.piramide(bx + 55, bz + s * 24, yb + 310, 34, 60, 0.1, ...tom("#7c8a8f", 0.4)); }
+  torre(bx, bz, 110, 120, 80, "#b8ad98", ped, { ry: 0.1, jan: 40, andar: 60 });
+  for (const s of [-1, 1]) { const yb = torre(bx + 55, bz + s * 24, 34, TORRES_BASILICA, 34, "#b4a994", ped, { ry: 0.1, jan: 24, andar: 60 }); topos.piramide(bx + 55, bz + s * 24, yb + TORRES_BASILICA, 34, 60, 0.1, ...tom("#7c8a8f", 0.4)); }
   // a Torre do Relógio, na ponta do cais
-  const rz = z0 + 150, rx = costa(rz) - 40, yr = torre(rx, rz, 30, 210, 30, "#c9bea6", ped, { ry: 0.05, jan: 5, andar: 18 }); topos.piramide(rx, rz, yr + 210, 30, 50, 0.05, ...tom("#5f7f78", 0.4));
+  const rz = z0 + 150, rx = costa(rz) - 40, yr = torre(rx, rz, 30, 210, 30, "#c9bea6", ped, { ry: 0.05, jan: 20, andar: 54 }); topos.piramide(rx, rz, yr + 210, 30, 50, 0.05, ...tom("#5f7f78", 0.4));
   const matV = new THREE.MeshStandardMaterial({ map: janelas(true), vertexColors: true, roughness: 0.35, metalness: 0.25, fog: false });
   const matP = new THREE.MeshStandardMaterial({ map: janelas(false), vertexColors: true, roughness: 0.85, fog: false });
   const matT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.4, fog: false, side: THREE.DoubleSide });
@@ -100,12 +103,12 @@ export function skyline(tr, add, costa, { z0 = 1500, z1 = 5600, miolo = [2700, 4
  * três vãos grandes de arco de treliça no meio e as treliças baixas nas pontas.
  */
 export function ponteJacquesCartier(tr, add, { de, ate, alto = 150, trelica = 250 } = {}) {
-  const dx = ate[0] - de[0], dz = ate[1] - de[1], L = Math.hypot(dx, dz), m = new Montador(), S = solido(), VERDE = "#5f8a74", VERDE2 = "#78a58e", LARG = 44;
+  const dx = ate[0] - de[0], dz = ate[1] - de[1], L = Math.hypot(dx, dz), m = new Montador(), S = solido(), VERDE = "#5f8a74", VERDE2 = "#78a58e", LARG = 100; // (de memória: a ponte tem seis faixas, uns 20 m de largura; antes 44 u = 9 m)
   // quadro local: x ao longo da ponte, y para cima, z de lado
   const viga = (x0, y0, x1, y1, z, cor = VERDE, esp = 3.2) => { const l = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0); m.caixa(S, [(x0 + x1) / 2, (y0 + y1) / 2, z], [l, esp, esp], { cor, rz: ang }); };
   m.caixa(S, [L / 2, alto, 0], [L, 5, LARG], { cor: "#8a9096" }); // o tabuleiro
   for (const s of [-1, 1]) m.caixa(S, [L / 2, alto + 5, s * (LARG / 2)], [L, 6, 1.6], { cor: "#aab0b5" }); // o guarda-corpo
-  for (let x = 160; x < L - 100; x += 330) m.caixa(S, [x, (alto - 6) / 2 - 20, 0], [22, alto + 28, 18], { cor: "#a9a59b" }); // os pilares, até o fundo do rio
+  for (let x = 160; x < L - 100; x += 330) m.caixa(S, [x, (alto - 6) / 2 - 20, 0], [22, alto + 28, LARG * 0.6], { cor: "#a9a59b" }); // os pilares, até o fundo do rio
   // os vãos de arco no meio: 3 vãos, cada um com a corda de cima em parábola e verticais e diagonais
   const meio = L / 2, vao = Math.min(1100, L * 0.24), pilares = [meio - vao * 1.5, meio - vao * 0.5, meio + vao * 0.5, meio + vao * 1.5];
   for (let k = 0; k < 3; k++) {

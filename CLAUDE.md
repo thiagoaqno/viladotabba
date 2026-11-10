@@ -8,7 +8,7 @@ Site de jogos com os amigos, tudo em português. Hoje o projeto principal é **s
 - **Nunca apagar o `node_modules` compartilhado.** Para remover um worktree, primeiro rode `cmd /c rmdir <worktree>\node_modules`, confira que sumiu, e só depois `git worktree remove`. O `--force` com a junção no lugar já apagou o `node_modules` de todos.
 - **Testes:** não crie testes e não rode a suíte; só `node --check` (os arquivos de `public/corrida/` são módulos: confira com `node --input-type=module --check < arquivo.js`). A suíte roda no CI do GitHub. Teste antigo que quebra só porque um número mudou: apague e anote.
 - **Sem número inventado:** todo número anotado é medido.
-- **Visual só com prints:** mudança de cenário ou de gráfico só vai para PR com prints conferidos. Script pronto: `C:\Users\thiag\Downloads\lts\ferramentas-prints\prints.js` (uso nas 2 primeiras linhas), sempre em primeiro plano com `timeout 900`, porque a cena desenha no processador (SwiftShader) e leva minutos. Servidor de teste: `PORT=33xx DB_PATH=:memory: node server.js`.
+- **Visual sem prints:** mudança de cenário ou de gráfico vai direto para PR, conferida com `node --check`; o Thiago testa jogando e manda print do que quebrou (pedido dele, 2026-11-10: os prints pelo SwiftShader levavam dezenas de minutos). Se precisar de um print mesmo assim: `C:/Users/thiag/Downloads/lts/ferramentas-prints/prints.js`. Servidor de teste: `PORT=33xx DB_PATH=:memory: node server.js`.
 - **PRs pequenos para a `main`**, um por assunto ou pista. O merge (e com ele o deploy, que publica a `main` a cada push) é do Thiago.
 - Commit termina com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. O `brach.md` descreve o que mudou no branch (vira o texto do PR).
 

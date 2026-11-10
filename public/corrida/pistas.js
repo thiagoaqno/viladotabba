@@ -101,41 +101,33 @@ const PISTAS = {
     ],
   },
   barcelona: {
-    name: "Barcelona", sub: "Circuit de Barcelona-Catalunya: a reta dos boxes, Elf e Renault, a curva 3 longa, Repsol e Seat, a subida até a Campsa cega, La Caixa, Banc de Sabadell e a reta final",
-    // autódromo de verdade: asfalto largo, brita e área de escape dos dois lados (sem muro colado)
-    scale: 2.72, width: 130, minLap: 30, walls: false, flat: 40, fall: 220, largada: 0.3,
-    // relevo: a reta dos boxes quase plana, desce até a Elf, sobe a curva 3 e a reta até a Seat, e continua subindo (Würth, curvas 7-8)
-    // até o alto da Campsa, o ponto mais alto; da La Caixa em diante desce por Sabadell até a reta final
-    hills: [[0, 8], [0.08, 7], [0.17, 4], [0.22, 10], [0.31, 24], [0.36, 30], [0.43, 38], [0.5, 50], [0.55, 62], [0.6, 72], [0.64, 76], [0.7, 68], [0.74, 58], [0.8, 40], [0.88, 22], [0.95, 12], [1, 8]],
-    // desenhada em cima do mapa oficial do circuito (layout atual, 14 curvas), no mesmo sentido: a largada desce para o sudoeste do mapa
+    name: "Barcelona", sub: "Circuit de Barcelona-Catalunya: a reta dos boxes, Elf e Renault, a curva 3 longa, Repsol e Seat, a subida até a Campsa cega, La Caixa, Banc de Sabadell e a reta final (layout atual, sem chicane)",
+    // Circuit de Barcelona-Catalunya: 4664 m. Traçado de bacinger/f1-circuits (es-1991, licença MIT: ver o cabeçalho dos traçados convertidos)
+    // convertido por ferramentas/circuitos-f1.js: a linha central real em 124 vértices, a linha de chegada no primeiro
+    // autódromo de verdade: asfalto largo, brita e área de escape dos dois lados (sem muro colado). Layout atual: a última curva (16) é uma curva só, sem a chicane
+    scale: 4.346, width: 58, minLap: 54, walls: false, flat: 133, fall: 733, largada: 0.346, hillsSuave: true,
+    // ESCALA REAL (lote + traçado real): traçado convertido de es-1991; `scale` por ferramentas/escala-lote.js (volta real 4657 m);
+    // `width` 58 u = 12 m (a largura de Barcelona não está publicada: 12 m é o mínimo da FIA, estimativa). Relevo por ferramentas/pista-real.js (eudem25m, --raio 3 --meia 6).
+    // relevo: 113 a 145 m de altitude, 32,9 m de desnível (158 u), inclinação máxima 8,9% em 0.568 (desce até a Elf, sobe a curva 3 e até o alto da Campsa; da La Caixa em diante desce até a reta final).
+    // barreiras pela regra automática: sem barreira mapeada em 69% do lado 1 e 54% do lado -1 (o corte para `muros` é 30% em cada lado).
+    hills: [[0,42],[0.01,41],[0.02,40],[0.03,38],[0.04,33],[0.05,30],[0.06,31],[0.07,31],[0.08,26],[0.09,15],[0.1,5],[0.11,5],[0.12,9],[0.13,12],[0.14,13],[0.15,12],[0.16,12],[0.17,18],[0.18,26],[0.19,36],[0.2,47],[0.21,52],[0.22,52],[0.23,53],[0.24,58],[0.25,65],[0.26,75],[0.27,90],[0.28,107],[0.29,119],[0.3,123],[0.31,121],[0.32,112],[0.33,98],[0.34,91],[0.35,99],[0.36,105],[0.37,102],[0.38,100],[0.39,103],[0.4,106],[0.41,102],[0.42,95],[0.43,83],[0.44,67],[0.45,56],[0.46,52],[0.47,48],[0.48,43],[0.49,36],[0.5,28],[0.51,21],[0.52,20],[0.53,24],[0.54,33],[0.55,45],[0.56,61],[0.57,80],[0.58,99],[0.59,113],[0.6,120],[0.61,119],[0.62,114],[0.63,108],[0.64,102],[0.65,99],[0.66,98],[0.67,98],[0.68,94],[0.69,87],[0.7,78],[0.71,72],[0.72,71],[0.73,76],[0.74,83],[0.75,91],[0.76,100],[0.77,112],[0.78,128],[0.79,145],[0.8,156],[0.81,158],[0.82,155],[0.83,149],[0.84,139],[0.85,123],[0.86,108],[0.87,95],[0.88,83],[0.89,71],[0.9,64],[0.91,58],[0.92,55],[0.93,56],[0.94,56],[0.95,50],[0.96,47],[0.97,47],[0.98,48],[0.99,45],[1,42]],
     points: [
-      [1176, 615, 0], // linha de chegada, no meio da reta dos boxes (que desce para o sudoeste)
-      [690, 1374, 117], // Elf (1), à direita no fim da reta
-      [655, 1391, 55], // Elf (1), saída
-      [565, 1339, 88], // Renault (2), à esquerda
-      [401, 1457, 136], // curva 3, a longa à direita
-      [267, 1385, 146], // curva 3
-      [264, 1221, 269], // curva 3, saída
-      [464, 906, 75], // curva 4 (Repsol), à direita
-      [563, 934, 87], // curva 4
-      [567, 1042, 164], // curva 4, saída
-      [425, 1262, 68], // Seat (5), o grampo à esquerda
-      [460, 1308, 61], // Seat (5)
-      [686, 1208, 265], // Würth (6), à direita, subindo
-      [789, 1056, 94], // curvas 7-8, à esquerda, subindo
-      [785, 1021, 61], // curvas 7-8
-      [714, 972, 153], // curvas 7-8, saída
-      [614, 732, 127], // Campsa (9), cega no alto
-      [644, 658, 134], // Campsa (9), saída
-      [1186, 393, 45], // La Caixa (10), o grampo no fim da reta de trás
-      [1169, 361, 97], // La Caixa (10)
-      [1044, 331, 87], // curva 11, à esquerda
-      [959, 387, 76], // Banc de Sabadell (12), a curva longa à direita
-      [889, 352, 65], // Banc de Sabadell (12)
-      [896, 280, 93], // Banc de Sabadell (12), saída
-      [1082, 132, 190], // curva 13, à direita
-      [1325, 280, 123], // curva 14, à direita
-      [1341, 359, 127], // curva 14, e a reta final
+      [1105, 731, 0], [709, 1362, 0], [699, 1377, 102], [688, 1388, 57], [681, 1392, 26], [675, 1394, 49], [653, 1394, 51], [642, 1391, 102],
+      [611, 1371, 196], [599, 1366, 66], [579, 1362, 69], [560, 1364, 60], [545, 1370, 266], [460, 1433, 265], [429, 1446, 133], [409, 1449, 121],
+      [375, 1447, 128], [355, 1442, 108], [332, 1430, 118], [307, 1408, 151], [293, 1390, 153], [285, 1376, 133], [277, 1354, 146], [273, 1336, 172],
+      [270, 1305, 210], [271, 1281, 188], [275, 1255, 330], [285, 1221, 345], [294, 1197, 212], [304, 1177, 0], [429, 975, 0], [449, 947, 109],
+      [460, 937, 55], [475, 929, 64], [494, 926, 52], [515, 931, 67], [533, 942, 102], [549, 957, 74], [560, 976, 96], [566, 995, 98],
+      [568, 1020, 206], [567, 1037, 114], [564, 1054, 120], [548, 1090, 318], [529, 1121, 0], [457, 1231, 1189], [441, 1260, 65], [439, 1275, 43],
+      [441, 1288, 38], [450, 1301, 38], [461, 1308, 41], [476, 1312, 36], [492, 1309, 412], [630, 1247, 0], [653, 1235, 210], [671, 1223, 276],
+      [697, 1201, 243], [718, 1178, 326], [756, 1121, 1165], [785, 1073, 208], [790, 1061, 43], [790, 1054, 30], [789, 1044, 45], [785, 1034, 48],
+      [779, 1026, 50], [771, 1018, 107], [742, 1001, 207], [729, 990, 101], [719, 980, 105], [709, 966, 571], [627, 774, 876], [624, 760, 82],
+      [622, 748, 114], [625, 714, 96], [630, 701, 89], [645, 677, 118], [663, 660, 126], [692, 643, 0], [808, 582, 0], [1156, 406, 0],
+      [1166, 399, 41], [1174, 389, 33], [1177, 378, 30], [1176, 366, 39], [1170, 353, 44], [1160, 343, 89], [1147, 333, 76], [1130, 326, 96],
+      [1115, 322, 147], [1094, 320, 139], [1070, 321, 84], [1048, 329, 158], [1024, 342, 180], [991, 369, 187], [970, 381, 56], [959, 384, 69],
+      [946, 384, 60], [937, 382, 51], [926, 378, 74], [911, 368, 59], [901, 357, 70], [892, 338, 64], [889, 318, 67], [891, 301, 68],
+      [897, 287, 52], [904, 278, 83], [920, 263, 0], [1042, 164, 424], [1054, 158, 74], [1066, 154, 97], [1086, 151, 132], [1101, 151, 72],
+      [1118, 155, 78], [1133, 162, 386], [1211, 214, 0], [1292, 265, 465], [1301, 272, 71], [1310, 282, 96], [1322, 303, 99], [1329, 326, 109],
+      [1330, 346, 128], [1328, 369, 77], [1322, 386, 327], [1271, 470, 0],
     ],
   },
   silverstone: {
@@ -845,7 +837,7 @@ if (PISTAS.singapura) { PISTAS.singapura.muros = MUROS_SINGAPURA; PISTAS.singapu
 // Faixas de escape usadas pela cena e pela física (frações da volta).
 const SUPERFICIES_ESCAPE = {
   "bahrein": {"brita": [[0.31, 0.352, "fora"], [0.6, 0.63, "fora"], [0.658, 0.696, "fora"]], "largura": 36},
-  "barcelona": {"brita": [[0.15, 0.177, "fora"], [0.178, 0.2, "fora"], [0.205, 0.268, "fora"], [0.34, 0.4, "fora"], [0.432, 0.46, "fora"], [0.527, 0.545, "fora"], [0.595, 0.632, "fora"], [0.728, 0.762, "fora"], [0.778, 0.825, "fora"], [0.835, 0.88, "fora"], [0.9, 0.935, "fora"]], "listrado": [[0.152, 0.176, "dentro"], [0.208, 0.266, "dentro"], [0.342, 0.4, "dentro"], [0.597, 0.63, "dentro"], [0.78, 0.822, "dentro"], [0.902, 0.934, "dentro"]], "largura": 24},
+  "barcelona": {"brita": [[0.142, 0.165, "fora"], [0.165, 0.186, "fora"], [0.196, 0.254, "fora"], [0.33, 0.38, "fora"], [0.419, 0.445, "fora"], [0.53, 0.55, "fora"], [0.58, 0.615, "fora"], [0.714, 0.765, "fora"], [0.77, 0.81, "fora"], [0.835, 0.864, "fora"], [0.89, 0.926, "fora"]], "listrado": [[0.144, 0.164, "dentro"], [0.198, 0.252, "dentro"], [0.332, 0.379, "dentro"], [0.582, 0.613, "dentro"], [0.771, 0.808, "dentro"], [0.892, 0.924, "dentro"]], "largura": 24},
   "catar": {"largura": 26, "britaCurvas": 776},
   "interlagos": {"brita": [[0.45, 0.505, "fora"], [0.545, 0.59, "fora"], [0.62, 0.655, "fora"]], "listrado": [[0.06, 0.125, "fora"], [0.31, 0.37, "fora"], [0.74, 0.775, "fora"]], "largura": 56}, // (as frações do traçado real: S do Senna, Descida do Lago e Junção; brita na Ferradura, no Pinheirinho e no Bico de Pato)
   "melbourne": {"brita": [[0.055, 0.09, "fora"], [0.13, 0.17, "fora"], [0.26, 0.31, "fora"], [0.66, 0.72, "fora"], [0.76, 0.82, "fora"], [0.87, 0.92, "fora"]], "listrado": [[0.085, 0.11, "fora"], [0.53, 0.56, "fora"], [0.69, 0.73, "fora"]]},
@@ -1024,7 +1016,7 @@ function cruzouSetor(pts, n, k, ax, ay, bx, by, z, meia) {
 // Detecção, abertura e fim do DRS clássico, em frações da volta. A zona dos boxes cruza a linha de chegada.
 const DRS = {
   monaco: [[0.928, 0.9408, 0.0565]], interlagos: [[0.945, 0.975, 0.058], [0.185, 0.215, 0.3]], // a reta dos boxes (da curva 15 ao S do Senna) e a Reta Oposta (da Curva do Sol à Descida do Lago)
-  barcelona: [[0.92, 0.96, 0.08], [0.42, 0.45, 0.52]], silverstone: [[0.92, 0.95, 0.05], [0.38, 0.41, 0.49]],
+  barcelona: [[0.92, 0.96, 0.08], [0.575, 0.625, 0.705]], silverstone: [[0.92, 0.95, 0.05], [0.38, 0.41, 0.49]],
   monza: [[0.92, 0.96, 0.07], [0.48, 0.51, 0.60]], deserto: [[0.92, 0.95, 0.05]],
   tokyo: [[0.92, 0.95, 0.05]], rio: [[0.92, 0.95, 0.05]], nurburgring: [[0.92, 0.95, 0.05]],
   laguna: [[0.92, 0.95, 0.05]], losangeles: [[0.92, 0.95, 0.05]], serra: [[0.92, 0.95, 0.05]],

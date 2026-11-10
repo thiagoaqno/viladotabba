@@ -21,6 +21,8 @@ import { Montador, solido } from "./kit/montagem.js";
 import { tribunaPrincipal, complexoDosBoxes, torreDeCronometragem, motorhome, carretasEm, bandeiraEspanha, bandeiraCatalunya, CAMISAS_ESPANHA } from "./kit/barcelona/pecas.js";
 import { vegetacaoMediterranea } from "./kit/barcelona/vegetacao.js";
 import { serra, povoados } from "./kit/barcelona/paisagem.js";
+import { beiradaSolida, nivelDoChao } from "./kit/barcelona/chao.js";
+import { ambienteBarcelona, postesDRS } from "./kit/barcelona/ambiente.js";
 
 export const TORCIDA = CAMISAS_ESPANHA;
 const VERMELHO = "#c8102e", AMARELO = "#ffc400", BRANCO = "#f4f3f0";
@@ -58,12 +60,14 @@ function reta(tr, { add }) {
   predio.position.set(xP, -0.3, Z); predio.rotation.y = Math.PI; g.add(predio);
   tr.torreDeControleBCN = { x: xP, z: Z + 62 - 30 };
   // a tribuna principal, do outro lado: a asa de alumínio sobre os dois lances de degraus vermelhos e brancos
-  const tribuna = tribunaPrincipal({ comprimento: comp, publico: 0.42 });
+  // (a tribuna foi desenhada a 1 u ≈ 10 cm: × 0,48 = 0,1 ÷ 0,2083 nas alturas e no fundo, só com a escala real do GP; a gente com a escalaGente)
+  const E = tr.escala ?? 1, sT = E < 1 ? 0.1 / 0.2083 : 1;
+  const tribuna = tribunaPrincipal({ comprimento: comp, publico: 0.42, escala: sT, gente: E < 1 ? tr.escalaGente ?? 1 : 1 });
   tribuna.position.set(xT, -3, zT); g.add(tribuna);
-  const upper = tribuna.userData.fileiras.filter((f) => f.y > 109);
-  for (let j = 0; j < 70; j++) { // as bandeiras nos degraus de cima (a Espanha e a Catalunha)
+  const upper = tribuna.userData.fileiras.filter((f) => f.y > 109 * sT);
+  for (let j = 0; j < 70; j++) { // as bandeiras nos degraus de cima (a Espanha e a Catalunha), na mão de quem está sentado
     const f = upper[(j * 7) % upper.length], u = xT - comp / 2 + 20 + ((j * 97) % (comp - 40)), [fx, fz] = mundo(u, zT + f.z);
-    flagsTorcida.push({ x: fx, y: p.h - 3 + f.y + 7, z: fz, ry: aoLongo(p) + (((j * 13) % 10) - 5) * 0.06, s: 0.9 + ((j * 3) % 5) * 0.1 });
+    flagsTorcida.push({ x: fx, y: p.h - 3 + f.y + (E < 1 ? 3 : 7), z: fz, ry: aoLongo(p) + (((j * 13) % 10) - 5) * 0.06, s: 0.9 + ((j * 3) % 5) * 0.1 });
   }
   tr.arquibancadas ||= []; tr.arquibancadas.push([n - Math.ceil((comp / 2 - xT) / 6), n - 1], [0, Math.floor((xT + comp / 2) / 6)]); // o som da torcida
   for (let x = xT - comp / 2 - 60; x <= xT + comp / 2 + 60; x += 70) for (const z of [zT - 160, zT - 330]) reservar(x, z, 150); // a tribuna e o telhado, até o fundo
@@ -81,18 +85,20 @@ function reta(tr, { add }) {
 
 function paddock(tr, g, z0, xc) { // xc: o meio do prédio dos boxes, ao longo da reta
   const textos = ["HOSPITALITY", "PADDOCK CLUB", "MEDIA", "EQUIPES", "VIP"], cores = ["#d62a1f", "#ff7a1a", "#2fb8a3", "#1d4fd8", "#13804a"];
+  // com a escala real: a tenda no tamanho do kit (21 × 14 m, não × 1,6) e as carretas × 0,55 (7,7 m de altura e 5,8 m de largura viram 4,2 e 3,2 m)
+  const real = (tr.escala ?? 1) < 1, sTenda = real ? 1 : 1.6, sCarreta = real ? 0.55 : 1;
   for (let k = 0; k < 5; k++) { // os motorhomes, de costas para o prédio dos boxes (a frente olha para ele)
     const mh = motorhome({ cor: cores[k], texto: textos[k], comprimento: 130 });
     mh.position.set(xc + (k - 2) * 210, 0.4, z0 + 40); mh.rotation.y = Math.PI; g.add(mh);
   }
   [["CATALUNYA", "#c60b1e"], ["MONTMELÓ", "#17325c"], ["VALLÈS", "#1f6f3a"]].forEach(([texto, corFaixa], k) => {
     const t = tendaPaddock({ modulos: 3, filas: 2, texto, corFaixa, corMesas: "#c8102e" });
-    t.scale.setScalar(1.6); t.position.set(xc + (k - 1) * 300, 0.4, z0 + 220); t.rotation.y = Math.PI; g.add(t);
+    t.scale.setScalar(sTenda); t.position.set(xc + (k - 1) * 300, 0.4, z0 + 220); t.rotation.y = Math.PI; g.add(t);
   });
   const m = new Montador();
-  carretasEm(m, xc - 3.5 * 124, z0 + 340, CORES_EQUIPE, 124);
-  carretasEm(m, xc - 3.5 * 124, z0 + 420, CORES_EQUIPE.slice().reverse(), 124);
-  g.add(m.montar("barcelona-paddock-carretas"));
+  carretasEm(m, -3.5 * 124, 0, CORES_EQUIPE, 124);
+  carretasEm(m, -3.5 * 124, 80 / sCarreta, CORES_EQUIPE.slice().reverse(), 124);
+  const carretas = m.montar("barcelona-paddock-carretas"); carretas.scale.setScalar(sCarreta); carretas.position.set(xc, 0, z0 + 340); g.add(carretas);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -102,7 +108,8 @@ function paddock(tr, g, z0, xc) { // xc: o meio do prédio dos boxes, ao longo d
 // da curva (o ápice do trecho decide). Só fica o módulo cujos cantos estão a mais de `recuo - 5` de qualquer trecho da pista e fora do que já está
 // ocupado; o pé de cada um desce até o chão mais baixo debaixo dele (e ganha fundação), então a tribuna acompanha a encosta.
 function tribunasDeCurva(tr, add, lista) {
-  const { pts, n, W } = tr, fund = new Montador(), S = solido(); tr.arquibancadas ||= []; let total = 0;
+  // E: o degrau real tem uns 0,5 m de subida e 0,7 m de fundo (6 × 8,5 u × a escala); o número de fileiras cresce para a tribuna ter a mesma altura e o mesmo fundo de antes (como Spa)
+  const { pts, n, W } = tr, E = tr.escala ?? 1, AL = 6 * E, FU = 8.5 * E, fund = new Montador(), S = solido(); tr.arquibancadas ||= []; let total = 0;
   const feitas = [], porTrecho = [];
   for (const { f0, f1, lado: ld = "fora", recuo = 116, degraus = 9, cobertura = null, publico = 0.36, semente = 1, comprimento = 168 } of lista) {
     const a = Math.floor(f0 * n), b = Math.floor(f1 * n); let ap = a;
@@ -120,15 +127,16 @@ function tribunasDeCurva(tr, add, lista) {
       if (!ok) continue;
       const { lm, dg, fm, cantos } = ok;
       const base = Math.min(...cantos.map(([u, d]) => { const [qx, qz] = ponto(p, lado, L + d, u * 0.9); return tr.chao(qx, qz); })) - 4;
+      const ng = Math.round(dg / E); // as fileiras de verdade
       const t = tribunaCoberta({
-        comprimento: lm - 8, degraus: dg, altura: 6, fundo: 8.5, secoes: Math.max(3, Math.round(lm / 40)), cores: [VERMELHO, BRANCO, VERMELHO, AMARELO],
+        comprimento: lm - 8, degraus: ng, altura: AL, fundo: FU, secoes: Math.max(3, Math.round(lm / 40)), cores: [VERMELHO, BRANCO, VERMELHO, AMARELO],
         cobertura, estrutura: "#8a9096", publico, semente: 40 + semente * 7 + k, alcance: 0.66, folga: 16, vao: 50, camisas: CAMISAS_ESPANHA,
       });
       t.position.set(x, base, z); t.rotation.y = ry0(p, lado); add(t); total++; feitos++;
       const [gx, gz] = ponto(p, lado, L + fm / 2); fund.caixa(S, [gx, base - 6, gz], [lm - 6, 12, fm], { cor: "#8f8c84", ry: ry0(p, lado) }); // a fundação, debaixo do chão
-      for (let j = 0; j < 7; j++) { // as bandeiras nos degraus de cima
-        const u = (r() - 0.5) * (lm - 30), fila = 4 + Math.floor(r() * Math.max(1, dg - 4)), [fx, fz] = ponto(p, lado, L + 4 + fila * 8.5, u);
-        flagsTorcida.push({ x: fx, y: base + (fila + 1) * 6 + 7, z: fz, ry: aoLongo(p) + (r() - 0.5) * 0.6, s: 0.9 + r() * 0.5 });
+      for (let j = 0; j < 7; j++) { // as bandeiras nos degraus de cima, na mão de quem está sentado (o pé da haste 3 u acima do assento)
+        const u = (r() - 0.5) * (lm - 30), fila = Math.floor(ng * 0.45 + r() * ng * 0.5), [fx, fz] = ponto(p, lado, L + (fila + 0.5) * FU, u);
+        flagsTorcida.push({ x: fx, y: base + (fila + 1) * AL + 3, z: fz, ry: aoLongo(p) + (r() - 0.5) * 0.6, s: 0.9 + r() * 0.5 });
       }
       for (let i = ic - Math.floor(lm / 12); i <= ic + Math.floor(lm / 12); i += 3) { const q = pts[((i % n) + n) % n]; feitas.push([q.x + q.nx * lado * (L + fm * 0.5), q.y + q.ny * lado * (L + fm * 0.5), 70]); }
       tr.arquibancadas.push([(ic - Math.floor(lm / 12) + n) % n, (ic + Math.floor(lm / 12)) % n]); // o som da torcida
@@ -143,9 +151,9 @@ function tribunasDeCurva(tr, add, lista) {
 // ---------------------------------------------------------------------------------------------------------------------
 // 3. As placas com o nome de cada curva
 // ---------------------------------------------------------------------------------------------------------------------
-const CURVAS = [["ELF", 1, 0.162], ["RENAULT", 3, 0.225], ["REPSOL", 4, 0.352], ["SEAT", 5, 0.443], ["CAMPSA", 9, 0.607], ["LA CAIXA", 10, 0.74], ["BANC SABADELL", 12, 0.8], ["", 14, 0.918]];
+const CURVAS = [["ELF", 1, 0.155], ["RENAULT", 3, 0.222], ["REPSOL", 4, 0.355], ["SEAT", 5, 0.431], ["CAMPSA", 9, 0.597], ["LA CAIXA", 10, 0.726], ["BANC SABADELL", 12, 0.789], ["", 14, 0.908]];
 function placasDasCurvas(tr, { add }) {
-  const { pts, n, W } = tr, vs = [], uv = [], idx = [], m = new Montador(), S = solido();
+  const { pts, n, W } = tr, E = tr.escala ?? 1, vs = [], uv = [], idx = [], m = new Montador(), S = solido();
   const atlas = canvasTex(1024, 512, (x) => {
     CURVAS.forEach(([nome, num], k) => {
       const c = k % 4, rr = Math.floor(k / 4), x0 = c * 256, y0 = rr * 256;
@@ -166,13 +174,15 @@ function placasDasCurvas(tr, { add }) {
       if (escolhido) break;
     }
     if (!escolhido) return;
-    const [lado, x, z] = escolhido, y = tr.chao(x, z);
+    const [lado, x, z] = escolhido, y = nivelDoChao(tr, x, z);
     // a placa gira um pouco para quem vem de trás (a frente aponta para a pista e um pouco contra o sentido da corrida)
     const nx = -lado * p.nx - 0.55 * p.tx, nz = -lado * p.ny - 0.55 * p.ty, len = Math.hypot(nx, nz), ex = nz / len, ez = -nx / len; // (ex, ez): o eixo largo da placa
-    const w = 84, h = 84, y0 = y + 30, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3;
+    // a placa no tamanho real (× a escala do cenário: 84×84 u = 17,5 m vira 7 m), a base a 30 × escala do chão (2,5 m), em dois postes até o meio dela
+    const w = 84 * E, h = 84 * E, y0 = y + 30 * E, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3;
     for (const [a, b] of [[-1, 0], [1, 0], [-1, 1], [1, 1]]) { vs.push(x + ex * a * w / 2, y0 + b * h, z + ez * a * w / 2); uv.push(((a + 1) / 2 + c) / 4, 1 - (rr + 1 - b) / 2); }
     idx.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
-    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 6), y + 15, z + ez * s * (w / 2 - 6)], [3, 33, 3], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) });
+    const alturaPoste = y0 - y + h * 0.5 + 0.5; // do chão (0,5 enterrado) até o meio da placa
+    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 6 * E), y - 0.5 + alturaPoste / 2, z + ez * s * (w / 2 - 6 * E)], [3 * E, alturaPoste, 3 * E], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) });
     tr.reservado.push([x, z, 28]);
   });
   if (!idx.length) return;
@@ -186,7 +196,7 @@ function placasDasCurvas(tr, { add }) {
 // 4. O asfalto vermelho com o nome do circuito, por dentro da curva 13
 // ---------------------------------------------------------------------------------------------------------------------
 function asfaltoVermelho(tr, { add }) {
-  const { pts, n, W } = tr, f0 = 0.84, f1 = 0.874, a = Math.floor(f0 * n), b = Math.floor(f1 * n), dentro = sinalDaCurva(pts, n, Math.floor(0.855 * n)), l0 = W / 2 + 8, l1 = l0 + 56;
+  const { pts, n, W } = tr, f0 = 0.836, f1 = 0.862, a = Math.floor(f0 * n), b = Math.floor(f1 * n), dentro = sinalDaCurva(pts, n, Math.floor(0.849 * n)), l0 = W / 2 + 8, l1 = l0 + 56;
   const ok = [a, (a + b) >> 1, b].every((i) => { const p = pts[i % n]; return [l0, l1].every((l) => { const [x, z] = ponto(p, dentro, l); return tr.distAt(x, z) >= l - 6; }); });
   if (!ok) return;
   const mat = tinta(canvasTex(128, 512, (x, w, h, rr) => { // u: do lado da pista para dentro; v: ao longo da volta (o texto lê a favor dela)
@@ -208,8 +218,9 @@ function bandeirasTorcida(tr, { add }) {
   for (const q of tr.arqDegraus || []) {
     for (let i = q.i0; i <= q.i1; i += 6) {
       if (r() < 0.4) continue;
-      const p = pts[i % n], fila = Math.floor(r() * q.degraus), [x, z] = ponto(p, q.lado, Math.abs(q.l0) + 4.5 + fila * 9);
-      lista.push({ x, y: p.h + 4 + (fila + 1) * 6 + 3, z, ry: aoLongo(p) + (r() - 0.5) * 0.7, s: 0.8 + r() * 0.5 });
+      // o degrau da arquibancada do kit (`prof`, `alt`, `base`, já na escala do GP): a haste na mão de quem está sentado, 3 u acima do assento
+      const prof = q.prof ?? 9, alt = q.alt ?? 6, b0 = q.base ?? 4, p = pts[i % n], fila = Math.floor(r() * q.degraus), [x, z] = ponto(p, q.lado, Math.abs(q.l0) + (fila + 0.5) * prof);
+      lista.push({ x, y: p.h + b0 + (fila + 1) * alt + 3, z, ry: aoLongo(p) + (r() - 0.5) * 0.7, s: 0.8 + r() * 0.5 });
     }
   }
   if (!lista.length) return;
@@ -231,20 +242,24 @@ function bandeirasTorcida(tr, { add }) {
 export function cenarioBarcelona(tr, ctx) {
   tr.reservado ||= [];
   tr.camisasGP = TORCIDA; // a torcida solta de vida.js também veste vermelho e amarelo
+  beiradaSolida(tr, ctx.add); // a base sólida: a fita de grama no nível do asfalto e o corte de concreto na borda (a pista não é uma folha)
   reta(tr, ctx);
-  tribunasDeCurva(tr, ctx.add, [
-    { f0: 0.142, f1: 0.188, lado: "fora", recuo: 120, degraus: 10, cobertura: "#f6f6f4", semente: 1 }, // Elf
-    { f0: 0.218, f1: 0.262, lado: "dentro", recuo: 120, degraus: 9, cobertura: "#f6f6f4", semente: 2 }, // a curva 3, no meio da curva
-    { f0: 0.344, f1: 0.386, lado: "fora", recuo: 116, degraus: 8, cobertura: null, semente: 3 }, // Repsol
-    { f0: 0.598, f1: 0.632, lado: "fora", recuo: 116, degraus: 10, cobertura: "#f6f6f4", semente: 4 }, // a Campsa, na encosta
-    { f0: 0.722, f1: 0.764, lado: "fora", recuo: 112, degraus: 11, cobertura: "#f6f6f4", semente: 5 }, // La Caixa
+  tribunasDeCurva(tr, ctx.add, [ // (as frações do traçado real de es-1991)
+    { f0: 0.135, f1: 0.178, lado: "fora", recuo: 120, degraus: 10, cobertura: "#f6f6f4", semente: 1 }, // Elf
+    { f0: 0.205, f1: 0.25, lado: "dentro", recuo: 120, degraus: 9, cobertura: "#f6f6f4", semente: 2 }, // a curva 3, no meio da curva
+    { f0: 0.333, f1: 0.376, lado: "fora", recuo: 116, degraus: 8, cobertura: null, semente: 3 }, // Repsol
+    { f0: 0.583, f1: 0.617, lado: "fora", recuo: 116, degraus: 10, cobertura: "#f6f6f4", semente: 4 }, // a Campsa, na encosta
+    { f0: 0.708, f1: 0.75, lado: "fora", recuo: 112, degraus: 11, cobertura: "#f6f6f4", semente: 5 }, // La Caixa
   ]);
   placasDasCurvas(tr, ctx);
   asfaltoVermelho(tr, ctx);
 }
 
-export function depoisBarcelona(tr, ctx) {
+export function depoisBarcelona(tr, ctx, ambiente) {
   const { add } = ctx;
+  // o ambiente no chão (painéis atrás da brita, placas de frenagem e postos no chão), no lugar do do kit que flutua; e o poste das placas de DRS
+  if (ambiente) ambienteBarcelona(tr, add, ambiente);
+  postesDRS(tr);
   // as serras do horizonte e os povoados do Vallès
   serra(tr, add, { angulo: -2.4, afastamento: 1500, altura: 820, largura: 6600, tipo: "mesa", mato: "#3d5233", rocha: "#b87c55", longe: "#9fb2c2", semente: 1 }); // Sant Llorenç del Munt, a noroeste
   serra(tr, add, { angulo: 3.05, afastamento: 1600, altura: 700, largura: 5600, tipo: "agulhas", mato: "#475c3a", rocha: "#b08461", longe: "#a8b6c4", semente: 2 }); // Montserrat, a oeste
@@ -260,8 +275,9 @@ export function depoisBarcelona(tr, ctx) {
     for (let k = 0; k < 6; k++) for (let j = 0; j < 2; j++) { x.fillStyle = (k + j) % 2 ? "#f4f4f2" : "#c60b1e"; x.fillRect(14 + k * 9, 14 + j * 18 + (k % 2) * 0, 9, 18); }
     x.fillStyle = "#ffffff"; x.font = "900 36px Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("GRAN PREMI D'ESPANYA · CIRCUIT DE BARCELONA-CATALUNYA", w / 2 + 30, h / 2 + 2, w - 130);
   }, false);
+  const E = tr.escala ?? 1; // a viga do pórtico de pista.js fica a 62 × a escala: a faixa vai nela (a 62 u fixos ela ficava 7 m acima da viga, solta no ar)
   for (const s of [1, -1]) {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4), new THREE.MeshBasicMaterial({ map: faixa, side: THREE.FrontSide }));
-    f.position.set(p.x, p.h + 62, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(1.7); add(f);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4 * E), new THREE.MeshBasicMaterial({ map: faixa, side: THREE.FrontSide }));
+    f.position.set(p.x, p.h + 62 * E, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(1.7); add(f);
   }
 }

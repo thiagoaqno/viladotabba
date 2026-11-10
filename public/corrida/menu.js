@@ -22,19 +22,22 @@ const nomePiloto = () => ($("hName")?.value || store.get("galera:name") || "").t
 // ---------- a entrada e a saída da tela ----------
 export function menuNaTela(sim) {
   if (sim === naTela) return; naTela = sim;
-  if (!sim) { fecharAjustes(); clearInterval(timerResumo); clearInterval(timerPad); garagem?.parar(); garagem = null; return; } // a corrida precisa da GPU inteira
+  if (!sim) { fecharAjustes(); clearInterval(timerResumo); clearInterval(timerPad); desligarGaragem(); return; } // a corrida precisa da GPU inteira
   ligarUmaVez();
   $("mnNomeTopo").textContent = nomePiloto() || "Piloto";
   $("hName").value = nomePiloto();
-  ligarGaragem(); carregarCarreira(); carregarGrupos(); pedirResumo(); desenharCartoes(); resumoDaEstante();
+  window.preparoPronto?.(); // (a tela inicial é a capa, uma imagem: a garagem 3D só abre no painel Garagem)
+  carregarCarreira(); carregarGrupos(); pedirResumo(); desenharCartoes(); resumoDaEstante();
   timerResumo = setInterval(pedirResumo, 15000); timerPad = setInterval(lerControle, 90);
   if (!painel) requestAnimationFrame(() => { if (!document.activeElement || document.activeElement === document.body) itensDoMenu()[0]?.focus({ preventScroll: true }); });
 }
+// a garagem 3D (o carro girando) só existe com o painel Garagem aberto: a tela inicial é a capa (menu.css, .mn-palco), e a GPU fica livre
+function desligarGaragem() { garagem?.parar(); garagem = null; $("mn").classList.remove("carro-vindo", "com3d"); }
 async function ligarGaragem() {
   try {
     modGaragem ||= await import("/corrida/garagem3d.js");
-    if (!naTela || garagem) return;
-    $("mn").classList.add("carro-vindo");
+    if (!naTela || garagem || painel !== "garagem") return;
+    $("mn").classList.add("carro-vindo", "com3d");
     let carroPronto = false;
     garagem = modGaragem.criarGaragem($("mnPalco"), {
       aoCarregar: () => { carroPronto = true; $("mn").classList.remove("carro-vindo"); },
@@ -129,7 +132,7 @@ function abrirPainel(nome, focar) {
   $("hErr").textContent = "";
   const p = $("mnPainel"); p.classList.remove("entra"); void p.offsetWidth; p.classList.add("entra");
   desenharSecao(nome);
-  if (!ehCelular()) garagem?.vista("painel");
+  if (nome === "garagem") { if (garagem) garagem.vista(ehCelular() ? "celular" : "painel"); else ligarGaragem(); } else desligarGaragem();
   if (focar !== false) requestAnimationFrame(() => (focar || p.querySelector(`.mn-sec.on button:not(:disabled), .mn-sec.on input, .mn-sec.on a`))?.focus({ preventScroll: true }));
   if (ehCelular()) p.scrollIntoView({ block: "start", behavior: "smooth" });
 }
@@ -137,7 +140,7 @@ function fecharPainel() {
   if (!painel) return; const de = document.querySelector(`#mnMenu [data-painel="${painel}"]`);
   painel = null; delete $("mn").dataset.painel; $("mnPainel").classList.add("hidden");
   document.querySelectorAll("#mnMenu [data-painel]").forEach((b) => { b.classList.remove("aberto"); b.removeAttribute("aria-expanded"); });
-  if (!ehCelular()) garagem?.vista("menu");
+  desligarGaragem();
   (de || focoAntes)?.focus({ preventScroll: true });
 }
 const seg = (itens, atual, attr, rot) => `<div class="mn-campo"><span class="mn-rot">${rot}</span><div class="mn-seg" role="group" aria-label="${rot}">${itens.map(([v, l]) => `<button type="button" class="${String(atual) === String(v) ? "on" : ""}" data-${attr}="${v}" aria-pressed="${String(atual) === String(v)}">${l}</button>`).join("")}</div></div>`;

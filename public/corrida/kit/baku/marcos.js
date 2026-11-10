@@ -4,7 +4,7 @@
 // partir das fotos de referência (ver o PR); as posições vêm do OpenStreetMap (kit/baku/dados.js).
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
-import { D, poligonoDentro } from "./mundo.js";
+import { D, poligonoDentro, KR } from "./mundo.js";
 import { blocoDePedra, foraDoCaminho, PEDRA_BAKU } from "./predios.js";
 import { emissivoDaNoite } from "../bahrein/base.js";
 
@@ -152,7 +152,7 @@ export function palacioDoGoverno(tr, add, hAt, lista) {
 // A de verdade (310 m) fica a uns 3 km, no morro; aqui ela é puxada para a mesma direção, a uns 2,7 km do centro do mundo, para aparecer no horizonte como nas fotos.
 export function torreTV(tr, add, hAt) {
   const p = D.marcos.torreTV; if (!p) return;
-  const cx = tr.t.world / 2, cz = tr.t.world / 2, dx = p[0] - cx, dz = p[1] - cz, d = Math.hypot(dx, dz), alvo = Math.min(d, 2900), x = cx + (dx / d) * alvo, z = cz + (dz / d) * alvo;
+  const cx = tr.t.world / 2, cz = tr.t.world / 2, dx = p[0] - cx, dz = p[1] - cz, d = Math.hypot(dx, dz), alvo = Math.min(d, 2900 * KR), x = cx + (dx / d) * alvo, z = cz + (dz / d) * alvo;
   const H = 310 * K * 0.9, g = new THREE.Group(), branco = M(0xe6e8ea, { roughness: 0.6 });
   const fuste = new THREE.Mesh(new THREE.CylinderGeometry(5, 9, H * 0.62, 12), branco); fuste.position.y = H * 0.31; g.add(fuste);
   const cesto = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 18, 14), M(0xcfd3d8, { roughness: 0.4 })); cesto.position.y = H * 0.55; g.add(cesto);

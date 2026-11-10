@@ -3,7 +3,7 @@
 // Donzela, o Palácio do Governo, as três Flame Towers com a fachada de LED, o Bulevar com as árvores e os postes de globos, e as barreiras de
 // concreto com a cerca de tela só onde a pista real as tem (`muros` de pistas.js: o mesmo mapa da física). Os dados vêm de kit/baku/dados.js
 // (ferramentas/baku-dados.js os gera). O traçado é a linha central real do circuito.
-import { D, fundoBaku } from "./kit/baku/mundo.js";
+import { D, fundoBaku, KR } from "./kit/baku/mundo.js";
 import { lerPredios, indiceDePredios, predios } from "./kit/baku/predios.js";
 import { flameTowers, torreDaDonzela, muralha, palacioDoGoverno, torreTV } from "./kit/baku/marcos.js";
 import { barreirasBaku } from "./kit/baku/barreiras.js";
@@ -28,7 +28,7 @@ export function cenarioBaku(tr, ctx, cfg) {
   const lista = lerPredios(tr);
   if (!lista.some((b) => b.esp === 5)) { // o ponto do Palácio do Governo cai no pátio da planta em H: o maior prédio num raio de 150 é ele
     const g = D.marcos.governo; let melhor = null;
-    for (const b of lista) { const d = Math.hypot(b.cx - g[0], b.cz - g[1]); if (d < 150 && !b.esp && (!melhor || b.caixa[2] - b.caixa[0] + b.caixa[3] - b.caixa[1] > melhor.caixa[2] - melhor.caixa[0] + melhor.caixa[3] - melhor.caixa[1])) melhor = b; }
+    for (const b of lista) { const d = Math.hypot(b.cx - g[0], b.cz - g[1]); if (d < 150 * KR && !b.esp && (!melhor || b.caixa[2] - b.caixa[0] + b.caixa[3] - b.caixa[1] > melhor.caixa[2] - melhor.caixa[0] + melhor.caixa[3] - melhor.caixa[1])) melhor = b; }
     if (melhor) melhor.esp = 5;
   }
   const predioEm = indiceDePredios(lista); tr.predioEmBaku = predioEm;

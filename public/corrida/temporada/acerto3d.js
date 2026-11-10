@@ -55,6 +55,7 @@ export async function montarAcerto(palco, equipeId) {
   raf = requestAnimationFrame(laco);
   return {
     canvas: cv,
+    redimensionar: ajusta, // (a pintura da Central apaga os atributos width/height do canvas: o desenho volta a 300 × 150 e estica)
     // `alturaParadaM` e `afundaM`: em metros, em volta do padrão (acerto-sugestao.js); `asa` de 0 a 1 inclina o flap (mais asa, mais em pé)
     ajustar({ alturaParadaM, afundaM, asa }) { parado = alturaParadaM; rapido = alturaParadaM - afundaM; flap = (0.5 - asa) * 0.7; },
     parar,

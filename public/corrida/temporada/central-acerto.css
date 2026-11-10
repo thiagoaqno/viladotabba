@@ -85,7 +85,7 @@
 .ac-equipe{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .ac-radio{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--ac-card);border:1px solid var(--ac-borda);border-left:4px solid var(--eq,#e10600)}
 .ac-av{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:var(--cx-tx);color:var(--cx-bg)}
-.ac-radio:last-child .ac-av{background:var(--cx-roxo);color:#fff}
+.ac-av-engenheiro{background:#4a5568!important;color:#fff!important}.ac-av-estrategista{background:var(--cx-roxo)!important;color:#fff!important}
 .ac-radio-txt{flex:1;min-width:0;display:grid;gap:2px}
 .ac-radio-txt>small:first-child{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--cx-tx2)}
 .ac-radio-txt p{margin:2px 0;font-style:italic}
@@ -99,3 +99,9 @@
 .ac-raspa-vel span{font-size:12px;color:var(--cx-tx2)}
 .ac-raspa-vel.perigo{border-left-color:var(--cx-verm)}.ac-raspa-vel.perigo b{color:var(--cx-verm)}
 .ac-raspa-vel.nunca b{font-size:22px}
+
+/* a legenda do E (engenheiro) e do S (estrategista) */
+.ac-legenda{margin:0;font-size:12px;line-height:1.7;color:var(--cx-tx2)}
+.ac-legenda .ac-sug{position:relative;display:inline-block;transform:none;margin:0 4px 0 0;vertical-align:1px}
+.ac-legenda .ac-sug::after{display:none}
+.ac-legenda .ac-sug-estrategista{margin-left:10px}

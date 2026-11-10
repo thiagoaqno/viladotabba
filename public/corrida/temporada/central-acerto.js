@@ -68,16 +68,17 @@ function html(c) {
         <div class="ac-sugs">${marca("engenheiro", "E", sg.engenheiro, campo)}${marca("estrategista", "S", sg.estrategista, campo)}</div></div>
       <div class="ac-param-pe"><span>${h(menos)}</span><small>${h(dica)}</small><span>${h(mais)}</span></div></div>`;
   const radio = (quem, titulo, a, sub) => a ? `<article class="ac-radio">
-      <div class="ac-av">${quem === "engenheiro" ? "EN" : "ES"}</div>
+      <div class="ac-av ac-av-${quem}">${quem === "engenheiro" ? "E" : "S"}</div>
       <div class="ac-radio-txt"><small>${h(sub)}</small><b>${h(titulo)}</b><p>"${h(A().frase(a))}"</p><small class="ac-ef">${h(A().efeito(a))}</small></div>
       <button type="button" class="cx-bt" data-cx-acerto-usar="${quem}">Usar</button></article>` : "";
   return `<div class="ac ${raspa ? "ac-raspa" : ""}" style="${estilo(atual)}">
     <header class="ac-topo"><div class="ac-topo-txt"><small class="cx-rot">Acerto do carro · etapa ${etapa}</small><h2>${UI.bandeira ? UI.bandeira(id) : ""}<span>${h(nome)}</span></h2>${ficha(id, c)}</div><div class="ac-mapa" aria-hidden="true">${mapa}</div></header>
     <div class="ac-grade">
-      <section class="ac-palco"><div class="ac-palco-rot"><span class="on">Parado</span><span>Fim da reta</span><em class="ac-raspa-selo">Raspando</em></div><div class="ac-palco3d"><canvas aria-label="O carro da equipe, de lado, com a suspensão subindo e descendo"></canvas></div><div class="ac-reserva">${CARRO}</div><small class="ac-palco-pe">A suspensão afunda com a carga da asa no fim da reta; o carro mostra 4 × o curso para dar para ver.</small></section>
+      <section class="ac-palco${carro3d ? " ac-3d-pronto" : ""}"><div class="ac-palco-rot"><span class="on">Parado</span><span>Fim da reta</span><em class="ac-raspa-selo">Raspando</em></div><div class="ac-palco3d"><canvas aria-label="O carro da equipe, de lado, com a suspensão subindo e descendo"></canvas></div><div class="ac-reserva">${CARRO}</div><small class="ac-palco-pe">A suspensão afunda com a carga da asa no fim da reta; o carro mostra 4 × o curso para dar para ver.</small></section>
       <section class="ac-ajustes">
         ${parametro("asa", "Asa (downforce)", "Menos", "Mais", "aderência na curva × velocidade na reta")}
         ${parametro("altura", "Altura do carro", "Baixo", "Alto", "efeito solo × risco de raspar")}
+        <p class="ac-legenda"><i class="ac-sug ac-sug-engenheiro">E</i> onde o <b>engenheiro da equipe</b> propõe (seguro, sem raspar) <i class="ac-sug ac-sug-estrategista">S</i> onde o <b>estrategista</b> sugere (o melhor para a pista; o de base erra um pouco). Os botões "Usar", embaixo, põem o acerto de cada um.</p>
         <div class="ac-medidores" data-cx-acerto-med>${medidores(atual)}</div>
         <div class="ac-acoes"><button type="button" class="cx-contorno" data-cx-acerto-padrao>Carro padrão</button><small>Guardado para ${h(nome)}. O painel P da corrida mexe no mesmo.</small></div>
       </section>
@@ -92,7 +93,7 @@ function montar3d(c) {
   requestAnimationFrame(() => {
     const cv = document.querySelector(".ac-palco3d canvas"), id = c.prox && c.prox.pista; if (!cv || !id) return;
     const a = A().lerGuardado(id) || A().PADRAO;
-    if (carro3d && carro3d.canvas === cv) { cv.closest(".ac-palco")?.classList.add("ac-3d-pronto"); return ajustar3d(a); } // (a pintura da Central tira a classe: põe de volta)
+    if (carro3d && carro3d.canvas === cv) { cv.closest(".ac-palco")?.classList.add("ac-3d-pronto"); carro3d.redimensionar(); return ajustar3d(a); } // (depois de cada pintura: a classe e o tamanho do desenho, que a pintura apaga)
     if (montando) return; montando = true;
     carro3d?.parar(); carro3d = null;
     import("/corrida/temporada/acerto3d.js").then((m) => m.montarAcerto(cv.closest(".ac-palco3d"), c.s.equipe)).then((x) => { carro3d = x; montando = false; ajustar3d(A().lerGuardado(id) || A().PADRAO); cv.closest(".ac-palco")?.classList.add("ac-3d-pronto"); })

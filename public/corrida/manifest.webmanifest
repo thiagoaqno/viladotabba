@@ -1,0 +1,16 @@
+{
+  "name": "Corrida da Galera",
+  "short_name": "Corrida",
+  "description": "A Fórmula 1 da galera: carreira, multiplayer e as pistas de verdade.",
+  "start_url": "/corrida/",
+  "scope": "/corrida/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#080b11",
+  "theme_color": "#080b11",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/corrida/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/corrida/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

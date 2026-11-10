@@ -26,7 +26,8 @@ import { f1Pronto, atualizarVolante, TAM } from "./f1.js";
 import { propsPronto } from "./props.js";
 import { startItems, stopItems, stepItems } from "./itens.js";
 import { passoEfeitos, limparEfeitos, amostrasDeEfeitos } from "./efeitos.js";
-import { ACERTO_CARRO } from "./acerto-carro.js";
+import { ACERTO_CARRO, usarPista, acertoGuardado, carregarIdeais } from "./acerto-carro.js";
+import { alternarAcerto } from "./acerto.js";
 import { animarVida } from "./vida.js";
 import { ceuPronto, luzPendente } from "./ceu.js";
 import { desenhar, ajustarTela, medirQuadro, comecarMedida, compilarPos, prepararBrilhos, definirEstacao } from "./pos.js";
@@ -156,7 +157,10 @@ export function startRace(st) {
   if (f1 && st.clima?.chove) Sound.prepararChuva(); // o ruído fica pronto antes de o jogo desenhar a corrida
   aquecerPista(tr, ceu);
   if (!raf) raf = requestAnimationFrame(loop);
-  if (f1 && mine && st.phase === "race") requestAnimationFrame(() => requestAnimationFrame(() => act("carregou"))); // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
+  if (f1 && mine && st.phase === "race") requestAnimationFrame(() => requestAnimationFrame(() => act("carregou")));
+  // o acerto do carro desta pista (um por pista: acerto-carro.js); na primeira corrida numa pista sem acerto guardado, o painel abre no grid
+  // com a proposta do engenheiro e a sugestão do estrategista (acerto.js)
+  if (f1 && mine) { const novo = !acertoGuardado(st.config.pista); usarPista(st.config.pista); carregarIdeais(); if (novo && st.phase === "race" && sNow() < st.startAt) alternarAcerto(true); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
 export function stopRace() { clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); limparClima(); }

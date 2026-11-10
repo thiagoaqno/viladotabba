@@ -1,0 +1,122 @@
+{
+ "monaco": {
+  "asa": 1,
+  "altura": 0,
+  "ganho": 0.909
+ },
+ "interlagos": {
+  "asa": 0.25,
+  "altura": 0.15,
+  "ganho": 0.125
+ },
+ "monza": {
+  "asa": 0,
+  "altura": 0.35,
+  "ganho": 1.877
+ },
+ "barcelona": {
+  "asa": 1,
+  "altura": 0.3,
+  "ganho": 0.677
+ },
+ "silverstone": {
+  "asa": 1,
+  "altura": 0.35,
+  "ganho": 0.521
+ },
+ "melbourne": {
+  "asa": 0,
+  "altura": 0.15,
+  "ganho": 0.429
+ },
+ "xangai": {
+  "asa": 0.6,
+  "altura": 0.25,
+  "ganho": 0.151
+ },
+ "suzuka": {
+  "asa": 1,
+  "altura": 0.45,
+  "ganho": 0.421
+ },
+ "bahrein": {
+  "asa": 0,
+  "altura": 0.2,
+  "ganho": 0.797
+ },
+ "jeddah": {
+  "asa": 0.65,
+  "altura": 0.3,
+  "ganho": 0.206
+ },
+ "miami": {
+  "asa": 0,
+  "altura": 0.25,
+  "ganho": 0.218
+ },
+ "montreal": {
+  "asa": 0,
+  "altura": 0.2,
+  "ganho": 0.74
+ },
+ "redbullring": {
+  "asa": 0.35,
+  "altura": 0.2,
+  "ganho": 0.165
+ },
+ "spa": {
+  "asa": 0.4,
+  "altura": 0.35,
+  "ganho": 0.147
+ },
+ "hungaroring": {
+  "asa": 1,
+  "altura": 0.2,
+  "ganho": 0.32
+ },
+ "zandvoort": {
+  "asa": 0.9,
+  "altura": 0.15,
+  "ganho": 0.219
+ },
+ "madri": {
+  "asa": 1,
+  "altura": 0.3,
+  "ganho": 0.372
+ },
+ "baku": {
+  "asa": 0,
+  "altura": 0.15,
+  "ganho": 0.404
+ },
+ "singapura": {
+  "asa": 0.75,
+  "altura": 0.2,
+  "ganho": 0.216
+ },
+ "austin": {
+  "asa": 0.6,
+  "altura": 0.3,
+  "ganho": 0.237
+ },
+ "mexico": {
+  "asa": 0,
+  "altura": 0.3,
+  "ganho": 0.609
+ },
+ "lasvegas": {
+  "asa": 0.6,
+  "altura": 0.3,
+  "ganho": 0.156
+ },
+ "catar": {
+  "asa": 1,
+  "altura": 0.3,
+  "ganho": 0.415
+ },
+ "abudhabi": {
+  "asa": 0.2,
+  "altura": 0.25,
+  "ganho": 0.318
+ }
+}

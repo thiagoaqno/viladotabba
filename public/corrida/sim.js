@@ -148,6 +148,9 @@ function vacuoAlvo(c, outros) {
 // O volante do piloto automático (robôs e fantasma): olha LD_K s à frente; soma ao ângulo de roda o contra-esterço pela deriva da traseira
 // (K_TRASEIRA rad de roda por rad de deriva: segura a saída de curva) e a diferença entre a guinada pedida e a que o carro faz (K_GUINADA).
 const LD_K = 0.6, K_TRASEIRA = 2, K_GUINADA = 0.5;
+// VIRADA_MAX: o teto do volante dos robôs (e do fantasma e do robô que assume um carro), o mesmo que quem joga tem no teclado e no controle
+// (ACERTO_PADRAO.virada em volante.js, acertado pelo Thiago jogando): todos com a mesma dirigibilidade, ninguém faz curva que o outro não faz.
+const VIRADA_MAX = 0.75;
 // fatorOlhar permite antecipar o ponto de mira em trechos específicos; os demais pilotos conservam a distância padrão.
 function pilotoAutomatico(c, tr, spec, vAlvo, latAlvo, saida = {}, fatorOlhar = 1) {
   const p = D.parametros(spec), n = tr.n, v = Math.max(c.v, 30), Ld = Math.max(22, v * LD_K * fatorOlhar);
@@ -156,6 +159,7 @@ function pilotoAutomatico(c, tr, spec, vAlvo, latAlvo, saida = {}, fatorOlhar = 
   let e = Math.atan2(ty - c.y, tx - c.x) - c.a; e = Math.atan2(Math.sin(e), Math.cos(e));
   if (c.amb && c.amb.pn && c.amb.pn.arcade) saida.steer = D.volanteParaGuinada(p, Math.max(0, c.v), (2 * Math.sin(e) / Ld) * Math.max(0, c.v)); // macio (arcade): o volante dá guinada, não ângulo de roda
   else { const delta = Math.atan2(2 * p.L * Math.sin(e), Ld * ESC) + K_TRASEIRA * (c.alR || 0) + K_GUINADA * (2 * Math.sin(e) / Ld * v - (c.r||0)) * p.L / Math.max(v * ESC,20), dm = D.volanteMaximo(p, Math.max(0, c.v) * ESC); saida.steer = limite(delta / dm, -1, 1); }
+  saida.steer = limite(saida.steer, -VIRADA_MAX, VIRADA_MAX); // (o mesmo teto de volante de quem joga: volante.js, ACERTO_PADRAO.virada)
   saida.gas = c.v < vAlvo ? 1 : 0; saida.brake = c.v > vAlvo * 1.04 ? 1 : 0; if (saida.brake) saida.gas = 0;
   saida.ers = 0; saida.respawn = 0; saida.pedido = null; saida.marcha = 0;
   return saida;
@@ -198,6 +202,7 @@ function pilotoLinha(c, tr, spec, vAlvo, latAlvo, saida = {}, op = PILOTO_LINHA)
   const w = op.w, r = v * k - 2 * op.z * w * Math.sin(erroRumo) - (w * w * erroLado) / v;
   if (c.amb && c.amb.pn && c.amb.pn.arcade) saida.steer = D.volanteParaGuinada(p, Math.max(0, c.v), r);
   else { const delta = Math.atan((p.L * r) / (v * ESC)) + K_TRASEIRA * (c.alR || 0) + K_GUINADA * (r - (c.r || 0)) * p.L / Math.max(v * ESC, 20), dm = D.volanteMaximo(p, Math.max(0, c.v) * ESC); saida.steer = limite(delta / dm, -1, 1); }
+  saida.steer = limite(saida.steer, -VIRADA_MAX, VIRADA_MAX); // (o mesmo teto de volante de quem joga: volante.js, ACERTO_PADRAO.virada)
   // Acelerador modulado (item 1): full gás quando bem abaixo do alvo, rampa suave
   // até coast (=0) no alvo. O freio continua com a histerese de 4% do pilotoAutomatico.
   saida.brake = c.v > vAlvo * 1.04 ? 1 : 0;

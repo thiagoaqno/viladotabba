@@ -63,7 +63,8 @@ export const GP_SUZUKA = {
   depois: (tr, ctx) => {
     depoisSuzuka(tr, ctx);
     // o bosque que fecha a pista dos dois lados: cedros e folhosas, depois da área de escape (kit/parque.js)
-    parque(tr, ctx.add, { de: 0.085, ate: 0.94, recuo: 36, fundo: 150, alturas: [90, 175], densidade: 0.75, coniferas: 0.55, semente: 3109,
+    parque(tr, ctx.add, { de: 0.085, ate: 0.94, recuo: 36, fundo: 150, folga: 100, // (folga 100: o tronco a pelo menos 100 u do centro de qualquer trecho, para a copa (raio até ~84 u) não passar por cima da pista; com a folga padrão do kit (36) uma árvore avançava sobre a curva)
+      alturas: [90, 175], densidade: 0.75, coniferas: 0.55, semente: 3109,
       folhas: ["#3f7a33", "#4d8a3a", "#2f6a2d", "#5c9a40", "#6aa043"] });
   },
   vida: {

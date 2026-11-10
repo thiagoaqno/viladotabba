@@ -7,6 +7,8 @@ import { clima } from "./clima.js";
 import { criarPiloto, animarPiloto, ocultarPiloto as ocultarPilotoDe, soltarPiloto } from "./f1-piloto.js";
 let kartChegou = false; f1Pronto.then(() => { kartChegou = true; }); // a foto da garagem é refeita quando o modelo 3D chega
 import { faiscas } from "./efeitos.js";
+import { ACERTO_CARRO_PADRAO, alturaParada, afundaAero } from "./acerto-carro.js";
+const SUSP_VER = 3; // a suspensão desenhada com 3 × o curso calculado: centímetros não se veem da câmera (o raspar usa a conta sem exagero)
 import { luzNoMaterial } from "./kit/luz-postes.js";
 import { modeloItem } from "./modelos.js";
 
@@ -131,7 +133,14 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   // atingido: o kart dá um pulo, gira e fica com estrelinhas rodando na cabeça
   if (fx.rodando) { if (!k.rodava) k.tAt = 0; k.tAt += dt; }
   k.rodava = !!fx.rodando;
-  k.body.position.y = fx.rodando && k.tAt < 0.6 ? Math.sin((k.tAt / 0.6) * Math.PI) * 14 : 0;
+  // a SUSPENSÃO (acerto-carro.js): afunda com a asa e a velocidade e nas compressões (a variação do caimento), com mola e amortecedor
+  // (segue o alvo em ~0,08 s); a folga do assoalho é a altura parada menos o quanto afundou
+  const ac = fx.acerto || ACERTO_CARRO_PADRAO, dPitch = (pitch - (k.pitchAntes ?? pitch)) / Math.max(dt, 1e-3); k.pitchAntes = pitch;
+  const alvoAfunda = afundaAero(ac, v) + Math.min(0.03, Math.max(0, dPitch) * 0.02);
+  k.afunda = (k.afunda ?? 0) + (alvoAfunda - (k.afunda ?? 0)) * (1 - Math.exp(-dt * 12));
+  k.folga = alturaParada(ac) - k.afunda;
+  const suspY = (alturaParada(ac) - alturaParada(ACERTO_CARRO_PADRAO) - k.afunda) * KS * SUSP_VER;
+  k.body.position.y = (fx.rodando && k.tAt < 0.6 ? Math.sin((k.tAt / 0.6) * Math.PI) * 14 : 0) + suspY;
   k.tontura.visible = !!fx.rodando; if (fx.rodando) { k.tontura.rotation.y += dt * 7; k.tontura.position.y = 24 + Math.sin(k.tAt * 9) * 1.2; }
   if (fx.rodando) k.giro += dt * 13;
   else if (k.giro > 0) { const fim = Math.ceil(k.giro / (Math.PI * 2) - 1e-6) * Math.PI * 2; k.giro += dt * 9; if (k.giro >= fim) k.giro = 0; } // termina a volta inteira
@@ -154,8 +163,10 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   k.discoMat.opacity = k.calor;
   k.faiscaGP -= dt;
   // Assoalho raspa nas zebras ou nas compressões em alta velocidade. Emissão limitada por tempo.
-  if (fx.f1 && !fx.bala && !fx.rodando && !menosMovimento.matches && v > 230 && Math.abs(z - ground) < 4 && (fx.zebra || Math.abs(pitch) > 0.045) && k.faiscaGP <= 0) {
-    k.faiscaGP = 0.12;
+  // raspa: na zebra ou nas compressões rápidas, como antes, ou quando a folga do assoalho acaba (asa demais para a altura escolhida)
+  const raspa = k.folga < 0.004, folgaFaisca = raspa ? Math.min(1, (0.004 - k.folga) / 0.015) : 0;
+  if (fx.f1 && !fx.bala && !fx.rodando && !menosMovimento.matches && Math.abs(z - ground) < 4 && ((v > 230 && (fx.zebra || Math.abs(pitch) > 0.045)) || (raspa && v > 120)) && k.faiscaGP <= 0) {
+    k.faiscaGP = raspa ? 0.12 - folgaFaisca * 0.08 : 0.12; // raspando mais, mais faísca
     faiscas(x - Math.cos(a) * k.L * 0.43, ground + 1.5, y - Math.sin(a) * k.L * 0.43, "#ff9a3a", 7, 34, { vx: Math.cos(a) * v, vz: Math.sin(a) * v }); // o titânio do assoalho: laranja
   }
   for (const f of k.chamas) { f.visible = !!fx.turbo; if (f.visible) f.scale.set(1, 1, 0.7 + Math.random() * 0.7); }

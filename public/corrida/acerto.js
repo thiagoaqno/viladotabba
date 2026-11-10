@@ -8,6 +8,11 @@ const CAMPOS = [
   { id: "volta", nome: "Volta ao centro", dica: "segundos para o volante voltar ao soltar a tecla", passo: 0.005, fmt: (v) => v.toFixed(3) + " s" },
   { id: "curva", nome: "Curva do analógico", dica: "controle: maior = mais macio no começo do curso", passo: 0.05, fmt: (v) => v.toFixed(2) },
 ];
+import { ACERTO_CARRO, acertarCarro, acertoCarroPadrao, alturaParada, forcaDaAsa } from "./acerto-carro.js";
+const CAMPOS_CARRO = [
+  { id: "asa", nome: "Asa (downforce)", dica: "mais asa: o carro afunda mais na reta (na próxima etapa: mais aderência na curva e mais arrasto na reta)", fmt: () => Math.round(forcaDaAsa(ACERTO_CARRO) * 100) + "%" },
+  { id: "altura", nome: "Altura do carro", dica: "mais baixo: afunda até raspar o assoalho (faísca); mais alto: nunca raspa", fmt: () => (alturaParada(ACERTO_CARRO) * 100).toFixed(1) + " cm" },
+];
 let painel = null;
 function montar() {
   const V = window.Volante;
@@ -21,17 +26,24 @@ function montar() {
       <input type="range" data-c="${c.id}" min="${a}" max="${b}" step="${c.passo}" style="width:100%;accent-color:#e10600">
       <small style="color:#ffffff90;font-weight:500">${c.dica}</small></label>`;
   }).join("");
+  const linhasCarro = CAMPOS_CARRO.map((c) => `<label style="display:block;margin:8px 0 2px"><span style="display:flex;justify-content:space-between"><b>${c.nome}</b><output data-vc="${c.id}"></output></span>
+      <input type="range" data-cc="${c.id}" min="0" max="1" step="0.01" style="width:100%;accent-color:#e10600">
+      <small style="color:#ffffff90;font-weight:500">${c.dica}</small></label>`).join("");
   painel.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><b style="flex:1;font-size:18px;letter-spacing:.06em;text-transform:uppercase">Acerto da direção</b><button type="button" data-fechar style="background:none;border:1px solid #ffffff33;color:#fff;width:28px;height:28px;cursor:pointer">✕</button></div>
     ${linhas}
+    <b style="display:block;margin-top:12px;padding-top:8px;border-top:1px solid #ffffff2a;font-size:16px;letter-spacing:.06em;text-transform:uppercase">Acerto do carro</b>
+    ${linhasCarro}
+    <button type="button" data-padrao-carro style="width:100%;margin-top:6px;padding:6px;background:#ffffff18;border:1px solid #ffffff2a;color:#fff;cursor:pointer">Carro padrão</button>
     <div style="display:flex;gap:8px;margin-top:10px"><button type="button" data-padrao style="flex:1;padding:6px;background:#ffffff18;border:1px solid #ffffff2a;color:#fff;cursor:pointer">Padrão (antiga ajustada)</button><button type="button" data-copiar style="flex:1;padding:6px;background:#e10600;border:0;color:#fff;cursor:pointer">Copiar valores</button></div>
     <small style="display:block;margin-top:6px;color:#ffffff90;font-weight:500">P abre e fecha. Vale na hora, com a corrida rolando.</small>`;
   document.body.appendChild(painel);
-  const atualizar = () => { for (const c of CAMPOS) { painel.querySelector(`[data-c="${c.id}"]`).value = V.ACERTO[c.id]; painel.querySelector(`[data-v="${c.id}"]`).textContent = c.fmt(V.ACERTO[c.id]); } };
-  painel.addEventListener("input", (e) => { const c = e.target.dataset.c; if (c) { V.acertar(c, e.target.value); atualizar(); } });
+  const atualizar = () => { for (const c of CAMPOS_CARRO) { painel.querySelector(`[data-cc="${c.id}"]`).value = ACERTO_CARRO[c.id]; painel.querySelector(`[data-vc="${c.id}"]`).textContent = c.fmt(); } for (const c of CAMPOS) { painel.querySelector(`[data-c="${c.id}"]`).value = V.ACERTO[c.id]; painel.querySelector(`[data-v="${c.id}"]`).textContent = c.fmt(V.ACERTO[c.id]); } };
+  painel.addEventListener("input", (e) => { const c = e.target.dataset.c, cc = e.target.dataset.cc; if (c) { V.acertar(c, e.target.value); atualizar(); } if (cc) { acertarCarro(cc, e.target.value); atualizar(); } });
   painel.addEventListener("keydown", (e) => e.stopPropagation()); // (as setas nos controles deslizantes não pilotam nem mexem no MFD)
   painel.addEventListener("click", (e) => {
     if (e.target.closest("[data-fechar]")) alternarAcerto(false);
     else if (e.target.closest("[data-padrao]")) { V.acertoPadrao(); atualizar(); }
+    else if (e.target.closest("[data-padrao-carro]")) { acertoCarroPadrao(); atualizar(); }
     else if (e.target.closest("[data-copiar]")) { const txt = JSON.stringify(V.ACERTO); try { navigator.clipboard.writeText(txt); } catch (err) {} e.target.textContent = "Copiado!"; setTimeout(() => { e.target.textContent = "Copiar valores"; }, 1500); }
   });
   atualizar();

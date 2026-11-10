@@ -11,7 +11,7 @@ const FALAS = F.FALAS.concat(F.PECAS || []); // as falas inteiras e os pedaços 
 const PASTA = path.join(__dirname, "..", "public", "corrida", "radio");
 // a voz: --voz <id> (o GERAR-VOZES-CORRIDA.bat passa), senão ELEVENLABS_VOICE_ID, senão a padrão do engenheiro
 const argv = process.argv.slice(2), iv = argv.indexOf("--voz");
-const VOZ = (iv >= 0 ? String(argv[iv + 1] || "").trim() : "") || (process.env.ELEVENLABS_VOICE_ID || "").trim() || "pNInz6obpgDQGcFmaJgB";
+const VOZ = (iv >= 0 ? String(argv[iv + 1] || "").trim() : "") || (process.env.ELEVENLABS_VOICE_ID || "").trim() || "oCWW6YTSEVFt26dBO8vU"; // (a voz do engenheiro que o Thiago escolheu na ElevenLabs)
 const VOZ_SPOTTER = (process.env.ELEVENLABS_VOICE_SPOTTER || "").trim() || VOZ; // a voz do observador (spot*.mp3); sem ela, a mesma do engenheiro
 const refazer = argv.includes("--refazer"), estimar = argv.includes("--estimar");
 

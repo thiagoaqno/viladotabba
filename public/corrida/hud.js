@@ -54,6 +54,8 @@ export function hud() {
   // contagem 3, 2, 1, VAI! (nas regras de F1 a largada são as cinco luzes: sem número, só o apito quando apagam)
   const luz = !!race.luzes;
   let big = "";
+  // no grid, uns segundos antes das luzes: o engenheiro lembra que o ERS só entra depois de 50 km/h (uma vez por largada, só para quem corre)
+  if (left > 1.5 && left < 7 && m && !race.avisoErsLargada && E.S.phase === "race") { race.avisoErsLargada = true; radioF1("erslargada", { forcar: true }); }
   if (left > 0) { const n = Math.ceil(left); big = !luz && n <= 3 ? String(n) : ""; if (!luz && n <= 3 && race.beeped !== n) { race.beeped = n; Sound.beep(false); } }
   else if (left > -1) { big = luz ? "" : "VAI!"; if (race.beeped !== 0) { race.beeped = 0; Sound.beep(true); radioF1("largada"); objetivoDaCorrida(); } }
   luzesDaLargada(left);

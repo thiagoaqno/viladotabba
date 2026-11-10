@@ -11,7 +11,7 @@ rem O que sobrou dos .bat antigos (gerar-radio.bat, gerar-narrador.bat, GERAR-FA
 where node >nul 2>nul || (echo Node nao encontrado. Instale o Node 22 ou mais novo: https://nodejs.org & echo. & pause & exit /b 1)
 
 set "VOZ_NARRADOR_PADRAO=nPczCjzI2devNBz1zQrb"
-set "VOZ_ENGENHEIRO_PADRAO=pNInz6obpgDQGcFmaJgB"
+set "VOZ_ENGENHEIRO_PADRAO=oCWW6YTSEVFt26dBO8vU"
 
 echo ============================================================
 echo   Vozes da Corrida (ElevenLabs)

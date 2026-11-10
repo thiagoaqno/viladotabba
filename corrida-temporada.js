@@ -58,6 +58,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
     socket.on("montagem", (d = {}, resposta) => mudar(socket, resposta, (s) => { Regras.aplicarMontagem(s, d); }));
     socket.on("piloto", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.contratarPiloto(s, d.id)));
     socket.on("engenheiro", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.contratarEngenheiro(s, d.area, Number(d.nivel))));
+    socket.on("nivel", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.mudarNivel(s, d.nivel))); // a dificuldade dos robôs no meio da carreira
     socket.on("desenvolver", (_, resposta) => mudar(socket, resposta, (s) => Regras.desenvolver(s)));
     socket.on("renovar", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.renovar(s, Number(d.anos))));
     socket.on("aceitarProposta", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.aceitarProposta(s, d.equipe)));

@@ -63,7 +63,7 @@ function renderizar() {
   const codigoHTML = codigo ? `<div class="campeao" role="status"><b>Guarde seu código</b><p>Ele recupera a temporada em outro navegador. Ao recuperar, o token anterior deixa de valer.</p><div class="codebox">${h(codigo)}</div><button id="copiar">Copiar código</button><button id="esconder">Já guardei</button></div>` : "";
   const C = window.Central;
   C.usarRender(renderizar);
-  const ctx = { s, t, eq, im, prox, ativo, terminou, previsao, botao, gps, rival: im.rival, mercado, caixaMensagens, codigoHTML, nMensagens: 4, dinheiro, minhas: C.estatisticas(gps) };
+  const ctx = { s, t, eq, im, prox, ativo, terminou, previsao, botao, gps, rival: im.rival, mercado, caixaMensagens, codigoHTML, nMensagens: 4, dinheiro, minhas: C.estatisticas(gps), mudarNivel: async (nivel) => { const r = await pedir("nivel", { nivel }); if (r?.ok) falar("Dificuldade dos robôs: vale a partir do próximo GP."); } };
   C.pintar(app, C.html(ctx));
   C.depois(ctx);
   if (window.Radio) { window.Radio.desenharBotoes(); window.Radio.uma("sede", () => { window.Radio.dizer("boasvindas"); if (!terminou) setTimeout(() => window.Radio.dizer("proximogp"), 7000); }); }

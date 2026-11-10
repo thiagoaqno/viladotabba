@@ -1,23 +1,26 @@
 // Miami — o Beach Club do paddock: o deque de madeira com a piscina turquesa, as espreguiçadeiras e os guarda-sóis em aqua, rosa e branco
 // (InstancedMesh), o pavilhão branco de dois andares com pérgula e o letreiro, o bar de palha, as cabanas listradas e os cordões de lâmpadas.
 // Origem no centro; o pavilhão fica no fundo (z negativo) e a piscina na frente.
+// Tamanho real (1 m = 4,8 u): piscina de 34 × 10 m, espreguiçadeira de 0,7 × 1,9 m, guarda-sol de 2,5 m de altura e 3 m de diâmetro, térreo de 5 m, primeiro andar de vidro de 3 m,
+// cabana de 2,5 m, bar de palha de 4,5 m de raio. (O pavilhão de 40 × 7,5 m, o bar e as cabanas já eram desse tamanho.)
 import * as THREE from "three";
 import { M } from "../../cena.js";
 import { Montador, solido, tom } from "../montagem.js";
 import { marcaTex } from "../marcas.js";
 import { instancias, sorteio } from "../comum.js";
 import { texAgua, texMadeira } from "./marina.js";
+import { nivelDoChao } from "./chao.js";
 
 const AQUA = "#0aa3ad", ROSA = "#ff5fa2", BRANCO = "#f7f6f1";
 
 export function beachClub(tr, add, { x, z, rot = 0, a = 130, b = 90, semente = 33, palmas = null }) {
   const rr = sorteio(semente), c = Math.cos(rot), s = Math.sin(rot);
-  let hi = -1e9; for (const u of [-a, 0, a]) for (const v of [-b, 0, b]) hi = Math.max(hi, tr.chao(x + c * u - s * v, z + s * u + c * v));
+  let hi = -1e9, lo = 1e9; for (const u of [-a, 0, a]) for (const v of [-b, 0, b]) { const h = nivelDoChao(tr, x + c * u - s * v, z + s * u + c * v); hi = Math.max(hi, h); lo = Math.min(lo, h); }
   hi += 0.5;
   const g = new THREE.Group(); g.name = "miami-beach-club"; g.position.set(x, hi, z); g.rotation.y = -rot; add(g);
   const S = solido(), m = new Montador(), mad = new THREE.MeshStandardMaterial({ map: texMadeira(), roughness: 0.85 }), mm = new Montador();
   // o chão: um bloco que desce até o terreno e o deque de madeira por cima
-  const base = new THREE.Mesh(new THREE.BoxGeometry(2 * a, 12, 2 * b), M(0xd9c79a, { roughness: 1 })); base.position.y = -6; base.receiveShadow = true; g.add(base);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(2 * a, hi - lo + 10, 2 * b), M(0xd9c79a, { roughness: 1 })); base.position.y = -(hi - lo + 10) / 2; base.receiveShadow = true; g.add(base);
   mm.caixa(mad, [0, 0.3, 0], [2 * a - 2, 0.7, 2 * b - 2], { cor: "#ffffff", uv: [a / 14, b / 14] });
   // a piscina: borda branca, água turquesa e degraus
   const pa = a * 0.62, pb = b * 0.26, pz = b * 0.12;
@@ -27,15 +30,15 @@ export function beachClub(tr, add, { x, z, rot = 0, a = 130, b = 90, semente = 3
   m.caixa(S, [0, 1.7, pz], [3, 0.4, 2 * pb], { cor: "#ffffff" }); // a faixa de raia do meio
   // as espreguiçadeiras (duas fileiras de cada lado da piscina) e os guarda-sóis
   const camas = [], sois = [];
-  for (const sz of [-1, 1]) for (let px = -pa + 6; px <= pa - 6; px += 17) {
-    const zc = pz + sz * (pb + 14);
+  for (const sz of [-1, 1]) for (let px = -pa + 6; px <= pa - 6; px += 9) {
+    const zc = pz + sz * (pb + 9);
     camas.push({ x: px, y: 1.6, z: zc, sx: 1, sy: 1, sz: 1, r: sz > 0 ? 0 : Math.PI, cor: [AQUA, ROSA, BRANCO][Math.floor(rr() * 3)] });
-    if (rr() < 0.55) sois.push({ x: px + 6, y: 1, z: zc + sz * 12, cor: [AQUA, ROSA, BRANCO, "#ffd23f"][Math.floor(rr() * 4)] });
+    if (rr() < 0.3) sois.push({ x: px + 4.5, y: 1, z: zc + sz * 10, cor: [AQUA, ROSA, BRANCO, "#ffd23f"][Math.floor(rr() * 4)] });
   }
-  const cama = new THREE.BoxGeometry(5, 1.1, 14), camasM = instancias((o) => { g.add(o); return o; }, cama, new THREE.MeshStandardMaterial({ roughness: 0.7 }), camas, { sombra: false, nome: "miami-camas" });
+  const cama = new THREE.BoxGeometry(3.4, 1.6, 9.2), camasM = instancias((o) => { g.add(o); return o; }, cama, new THREE.MeshStandardMaterial({ roughness: 0.7 }), camas, { sombra: false, nome: "miami-camas" });
   const col = new THREE.Color(); camas.forEach((o, k) => camasM.setColorAt(k, col.set(o.cor))); camasM.instanceColor.needsUpdate = true;
-  const haste = new THREE.CylinderGeometry(0.45, 0.45, 26, 5); haste.translate(0, 13, 0);
-  const copa = new THREE.ConeGeometry(15, 5.5, 12, 1, true); copa.translate(0, 27.5, 0);
+  const haste = new THREE.CylinderGeometry(0.3, 0.3, 12, 5); haste.translate(0, 6, 0);
+  const copa = new THREE.ConeGeometry(7.2, 2.6, 12, 1, true); copa.translate(0, 13.3, 0);
   instancias((o) => { g.add(o); return o; }, haste, M(0xe9e6df), sois, { sombra: false, nome: "miami-sois-hastes" });
   const copas = instancias((o) => { g.add(o); return o; }, copa, new THREE.MeshStandardMaterial({ roughness: 0.8, side: THREE.DoubleSide }), sois, { sombra: true, nome: "miami-sois" });
   if (copas) { sois.forEach((o, k) => copas.setColorAt(k, col.set(o.cor))); copas.instanceColor.needsUpdate = true; }
@@ -45,12 +48,12 @@ export function beachClub(tr, add, { x, z, rot = 0, a = 130, b = 90, semente = 3
   m.caixa(S, [0, 11, pzP + PD / 2 + 0.2], [PW - 8, 14, 0.8], { cor: "#1c2b36" }); // a vidraça do térreo
   for (let px = -PW / 2 + 6; px <= PW / 2 - 5; px += 11) m.caixa(S, [px, 11, pzP + PD / 2 + 0.6], [0.8, 14, 1], { cor: "#e9e6df" });
   m.caixa(S, [0, 24.6, pzP], [PW + 6, 1.4, PD + 8], { cor: "#ffffff" }); // a laje do terraço
-  m.caixa(S, [0, 30, pzP + PD / 2 - 1], [PW - 6, 8, 1], { cor: "#2b3a46" }); // o primeiro andar recuado, de vidro
-  for (let px = -PW / 2 + 6; px <= PW / 2 - 5; px += 11) m.caixa(S, [px, 30, pzP + PD / 2], [0.8, 8, 1.2], { cor: "#ffffff" });
-  m.caixa(S, [0, 34.5, pzP - 4], [PW - 6, 1.2, PD - 14], { cor: "#ffffff" });
-  for (let px = -PW / 2 + 4; px <= PW / 2 - 4; px += 4.4) m.caixa(S, [px, 36.2, pzP + 2], [1.6, 1.2, PD + 4], { cor: "#c6a171" }); // a pérgula
+  m.caixa(S, [0, 32, pzP + PD / 2 - 1], [PW - 6, 14.5, 1], { cor: "#2b3a46" }); // o primeiro andar recuado, de vidro
+  for (let px = -PW / 2 + 6; px <= PW / 2 - 5; px += 11) m.caixa(S, [px, 32, pzP + PD / 2], [0.8, 14.5, 1.2], { cor: "#ffffff" });
+  m.caixa(S, [0, 40, pzP - 4], [PW - 6, 1.2, PD - 14], { cor: "#ffffff" });
+  for (let px = -PW / 2 + 4; px <= PW / 2 - 4; px += 4.4) m.caixa(S, [px, 41.7, pzP + 2], [1.6, 1.2, PD + 4], { cor: "#c6a171" }); // a pérgula
   for (let k = 0; k < 8; k++) { const px = -PW / 2 + 8 + k * ((PW - 16) / 7); m.caixa(S, [px, 19.6, pzP + PD / 2 + 7], [(PW - 16) / 7 - 2, 1, 14], { cor: k % 2 ? ROSA : AQUA, rx: 0.32 }); } // os toldos do térreo
-  for (const sx of [-1, 1]) m.caixa(S, [sx * (PW / 2 + 2), 22, pzP + 2], [3, 44, 3], { cor: AQUA });
+  for (const sx of [-1, 1]) m.caixa(S, [sx * (PW / 2 + 2), 26, pzP + 2], [3, 52, 3], { cor: AQUA });
   // o bar de palha: cabana redonda com a cobertura de palha e o balcão
   for (const sx of [-1, 1]) {
     const bx = sx * a * 0.78, bz = b * 0.1;
@@ -68,7 +71,7 @@ export function beachClub(tr, add, { x, z, rot = 0, a = 130, b = 90, semente = 3
   g.add(m.montar("beach-club-pecas")); g.add(mm.montar("beach-club-deque"));
   // o letreiro no alto do pavilhão (nos dois lados da pérgula)
   const letreiro = new THREE.Mesh(new THREE.PlaneGeometry(PW * 0.5, 9), new THREE.MeshBasicMaterial({ map: marcaTex("mibeach", 512, 64), side: THREE.DoubleSide }));
-  letreiro.position.set(0, 41, pzP + PD / 2 + 2); g.add(letreiro);
+  letreiro.position.set(0, 48, pzP + PD / 2 + 2); g.add(letreiro);
   // as palmeiras do deque
   if (palmas) for (let k = 0; k < 9; k++) { const u = -a + 12 + k * ((2 * a - 24) / 8), v = k % 2 ? b - 6 : -b + 6; palmas.poe(x + c * u - s * v, z + s * u + c * v, hi, 0.8 + rr() * 0.4, rr() * 6); }
   for (let u = -a; u <= a + 1; u += 60) for (let v = -b; v <= b + 1; v += 60) tr.reservado.push([x + c * u - s * v, z + s * u + c * v, 70]);

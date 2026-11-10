@@ -38,6 +38,8 @@ const SITUACOES = {
   pneusgastos: ["Os pneus estão desgastados. Avalie uma parada.", "A vida dos pneus está baixa. Fique atento à aderência."],
   corridachuva: ["A pista está molhada. Atenção à aderência.", "Temos água na pista. Cuidado com a tração."],
   corridaseca: ["A pista está seca no momento.", "Condições de pista seca por enquanto."],
+  // antes de apagarem as luzes: a regra de 2026 do ERS na largada (o MGU-K só entrega depois de 50 km/h; sim.js e f1-regras.js)
+  erslargada: ["Lembrete: o ERS só entra depois dos cinquenta por hora. A largada é no motor.", "Na largada o elétrico fica travado até cinquenta por hora. Cuidado com a patinada.", "ERS bloqueado até os cinquenta. Solte a embreagem com calma.", "Arrancada só no motor. O ERS libera a partir de cinquenta por hora."],
 };
 // Variações a mais: entram DEPOIS das de cada situação, para os números dos mp3 que já existem não mudarem.
 const MAIS = {

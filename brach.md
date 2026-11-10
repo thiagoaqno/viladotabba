@@ -1,10 +1,11 @@
-# Miami: passada visual na escala real
+# Montreal: passada visual na escala real
 
-O comprimento, a largura, o relevo e as linhas dos robôs de Miami já estavam na `main`. Esta é a passada visual: as peças só de Miami no tamanho real e no chão.
+O comprimento, a largura, o relevo e as linhas dos robôs de Montreal já estavam na `main`. Esta é a passada visual.
 
-- **Base sólida e chão no nível** (`kit/miami/chao.js`, novo, cópia própria do de Xangai): uma fita de grama colada na borda do asfalto, sem vão, e um corte de concreto sob a pista. `nivelDoChao` é onde as peças pousam.
-- **Ambiente próprio** (`kit/miami/ambiente.js`, novo): as bandeiras, as placas de frenagem, os postos dos fiscais e a cerca de detritos no chão e atrás da barreira. O do kit deixava tudo na altura da pista, no ar onde o chão desce.
-- **Peças no tamanho real** (1 m = 4,8 u): o estádio, o paddock, a marina, o Beach Club, os viadutos, as palmeiras e a praia, com as posições refeitas para a pista de 5 412 m.
+- **Base sólida e chão no nível** (`kit/montreal/chao.js`, novo): uma fita de grama colada na borda do asfalto, sem vão, e um corte de concreto sob a pista. Os muros, as placas, a tribuna e as árvores pousam em `nivelDoChao`.
+- **Ambiente próprio** (`kit/montreal/ambiente.js`, novo): as placas de frenagem (com poste), os mastros com a bandeira do Canadá e os postos dos fiscais no chão e atrás do alambrado. O do kit deixava tudo solto no ar.
+- **Arquibancada principal no tamanho real** (`kit/montreal/tribuna.js`, novo): 24 degraus de 0,5 × 0,75 m (antes 12 degraus de 1,25 × 1,77 m, do carro grande).
+- **Peças no tamanho real:** o prédio dos boxes de 2019 (térreo de 5 m, 13,3 m até a laje), os muros de 1,25 m com o alambrado, o Muro dos Campeões, os blocos, o skyline, os bordos e os choupos.
 - **Pórtico da largada:** a faixa acompanha a escala.
 
 Sem prints: o Thiago testa jogando e manda o que quebrou. Conferido com `node --check`.

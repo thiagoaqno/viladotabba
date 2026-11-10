@@ -43,7 +43,7 @@
 @keyframes acFaisca{0%,48%{opacity:0}52%,88%{opacity:1}92%,100%{opacity:0}}
 .ac-raspa .ac-prancha{fill:#ff8a00}
 .ac-palco-pe{position:relative;color:var(--cx-tx2);font-size:11px;margin-top:4px}
-.ac-palco3d{position:relative;flex:1;min-height:240px}
+.ac-palco3d{position:relative;width:100%;aspect-ratio:16/9;margin:auto 0}
 .ac-palco3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ac-reserva{display:none}
 .ac-palco:not(.ac-3d-pronto) .ac-palco3d{display:none}
@@ -91,3 +91,11 @@
 .ac-radio-txt p{margin:2px 0;font-style:italic}
 .ac-radio-txt .ac-ef{color:var(--cx-tx2);font-size:12px}
 .ac-carregando{color:var(--cx-tx2)}
+
+/* a velocidade em que o assoalho começa a raspar (o destaque dos medidores) */
+.ac-raspa-vel{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 14px;padding:12px 14px;border-left:4px solid var(--cx-verde);background:var(--cx-hover)}
+.ac-raspa-vel small{grid-column:1/-1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--cx-tx2)}
+.ac-raspa-vel b{font-size:clamp(24px,2.6vw,34px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.ac-raspa-vel span{font-size:12px;color:var(--cx-tx2)}
+.ac-raspa-vel.perigo{border-left-color:var(--cx-verm)}.ac-raspa-vel.perigo b{color:var(--cx-verm)}
+.ac-raspa-vel.nunca b{font-size:22px}

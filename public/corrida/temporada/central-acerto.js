@@ -27,7 +27,9 @@ const sinal = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
 function medidores(a) {
   const n = A().numeros(a), folga = n.folgaCm, raspa = folga < 0;
   const barra = (v, max) => { const w = Math.min(50, (Math.abs(v) / max) * 50); return `<i class="ac-m-fill ${v < 0 ? "neg" : "pos"}" style="${v < 0 ? `right:50%` : `left:50%`};width:${w}%"></i>`; };
-  return `<div class="ac-med"><span>Carga aerodinâmica <small>aderência numa curva média</small></span><b>${sinal(n.carga)}%</b><div class="ac-m">${barra(n.carga, 30)}<i class="ac-m-meio"></i></div></div>
+  const vr = n.raspaKmh, perigo = vr != null && vr < 300;
+  const raspaHTML = `<div class="ac-raspa-vel ${vr == null ? "nunca" : perigo ? "perigo" : "ok"}"><small>Começa a raspar no chão a</small><b>${vr == null ? "nunca raspa" : `${vr} km/h`}</b><span>${vr == null ? "a altura aguenta a carga da asa em qualquer velocidade" : perigo ? "abaixo da velocidade do fim da reta (~300 km/h): vai raspar nas retas" : "acima de ~300 km/h: só no vácuo ou com o ERS"}</span></div>`;
+  return raspaHTML + `<div class="ac-med"><span>Carga aerodinâmica <small>aderência numa curva média</small></span><b>${sinal(n.carga)}%</b><div class="ac-m">${barra(n.carga, 30)}<i class="ac-m-meio"></i></div></div>
     <div class="ac-med"><span>Arrasto <small>no fim da reta, a ~300 km/h</small></span><b>${sinal(n.arrasto)}%</b><div class="ac-m ac-m-inv">${barra(n.arrasto, 90)}<i class="ac-m-meio"></i></div></div>
     <div class="ac-med ${raspa ? "raspa" : folga < 0.4 ? "justo" : ""}"><span>Folga do assoalho <small>no fim da reta (o carro afunda ${String(n.afundaCm).replace(".", ",")} cm)</small></span><b>${raspa ? `raspa ${String(-folga).replace(".", ",")} cm` : `${String(folga).replace(".", ",")} cm`}</b><div class="ac-m ac-m-folga"><i class="ac-m-fill ${raspa ? "neg" : "pos"}" style="left:0;width:${Math.max(4, Math.min(100, ((folga + 3) / 7) * 100)).toFixed(0)}%"></i></div></div>`;
 }

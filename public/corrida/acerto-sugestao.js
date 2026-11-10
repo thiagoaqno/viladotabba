@@ -46,10 +46,16 @@ function extra(a, v) {
   const asa = forcaDaAsa(a), folga = alturaParada(a) - afundaAero(a, v), raspa = Math.max(0, -folga) / 0.01, solo = 1 + (0.05 - alturaParada(a)) * 2;
   return { carga: asa * solo * (1 - Math.min(0.35, raspa * 0.12)), arrasto: (1 + (asa - 1) * 1.6) * (1 + Math.min(0.5, raspa * 0.15)), folga };
 }
+// a velocidade em que o assoalho começa a raspar: onde o quanto o carro afunda (4,5 cm × força da asa × (v / 400 u/s)², até 1,6 ×) passa da
+// altura parada. Em km/h como o painel do jogo mostra (u/s × 0,75, jogo.js); null = não raspa em nenhuma velocidade (o afundar para em 1,6 ×)
+function raspaKmh(a) {
+  const x = alturaParada(a) / (0.045 * forcaDaAsa(a));
+  return x >= 1.6 ? null : Math.round(400 * Math.sqrt(x) * 0.75);
+}
 function numeros(a) {
   const curva = extra(a, 150), reta = extra(a, 400);
-  return { carga: Math.round((curva.carga - 1) * 100), arrasto: Math.round((reta.arrasto - 1) * 100), folgaCm: Math.round(reta.folga * 1000) / 10, afundaCm: Math.round(afundaAero(a, 400) * 1000) / 10 };
+  return { carga: Math.round((curva.carga - 1) * 100), arrasto: Math.round((reta.arrasto - 1) * 100), folgaCm: Math.round(reta.folga * 1000) / 10, afundaCm: Math.round(afundaAero(a, 400) * 1000) / 10, raspaKmh: raspaKmh(a) };
 }
 const NIVEIS_ESTRATEGISTA = ["de base", "experiente", "de elite"];
-root.AcertoSugestao = { PADRAO, chave, limpo, lerGuardado, guardar, alturaParada, forcaDaAsa, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase, efeito, cm, afundaAero, numeros, NIVEIS_ESTRATEGISTA };
+root.AcertoSugestao = { PADRAO, chave, limpo, lerGuardado, guardar, alturaParada, forcaDaAsa, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase, efeito, cm, afundaAero, numeros, raspaKmh, NIVEIS_ESTRATEGISTA };
 })(typeof window !== "undefined" ? window : globalThis);

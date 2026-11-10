@@ -58,6 +58,7 @@ function montar() {
     <small data-pista style="display:block;color:#ffffff90;font-weight:500"></small>
     <div data-sugestoes></div>
     ${linhasCarro}
+    <div data-raspa-vel style="margin:6px 0 2px;padding:6px 8px;background:#ffffff10;border-left:3px solid #2ecc71"></div>
     <button type="button" data-padrao-carro style="width:100%;margin-top:6px;${BOTAO}">Carro padrão (tudo no meio)</button>
     <b style="${TITULO}">Acerto da direção</b>
     ${linhas}
@@ -67,6 +68,7 @@ function montar() {
   atualizar = () => {
     const id = pistaDoAcerto(), nome = id && window.Pistas?.PISTAS?.[id]?.name;
     painel.querySelector("[data-pista]").textContent = nome ? `Para ${nome}` : "";
+    { const el = painel.querySelector("[data-raspa-vel]"), vr = window.AcertoSugestao?.raspaKmh(ACERTO_CARRO); if (el) { el.textContent = vr == null ? "Não raspa em nenhuma velocidade" : `Começa a raspar no chão a ${vr} km/h`; el.style.borderLeftColor = vr != null && vr < 300 ? "#e10600" : "#2ecc71"; } } // (acerto-sugestao.js)
     for (const c of CAMPOS_CARRO) { painel.querySelector(`[data-cc="${c.id}"]`).value = ACERTO_CARRO[c.id]; painel.querySelector(`[data-vc="${c.id}"]`).textContent = c.fmt(); }
     for (const c of CAMPOS) { painel.querySelector(`[data-c="${c.id}"]`).value = V.ACERTO[c.id]; painel.querySelector(`[data-v="${c.id}"]`).textContent = c.fmt(V.ACERTO[c.id]); }
   };

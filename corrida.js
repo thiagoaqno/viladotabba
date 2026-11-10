@@ -70,7 +70,7 @@ module.exports = function attachCorrida(io) {
       robos: Math.max(0, Math.min(f1 ? Robos.GRID_F1 - 1 : 7, int(c.robos, 0))), // nas regras de F1 o grid tem até 22 carros
       classificacao: f1 && c.classificacao === "pular" ? "pular" : f1 ? "completa" : "pular", // F1: Q1, Q2 e Q3 antes da corrida, ou grid pela ordem dos pilotos
       cambio: c.cambio === "manual" ? "manual" : "auto",
-      ers: f1 && c.ers === "manual" ? "manual" : "auto",
+      ers: f1 && c.ers === "auto" ? "auto" : "manual", // o ERS é MANUAL por padrão (pedido do Thiago, 2026-11-10): segura E para usar; "auto" só se a sala escolher
       clima: f1 && F1.OPCOES_DE_CLIMA.includes(c.clima) ? c.clima : "aleatorio", // F1: aleatório (a previsão do GP), seco, chuva ou variável (começa seco e chove no meio)
       nivel: Robos.NIVEIS[c.nivel] ? c.nivel : "medio",
       contrarrelogio: f1 && c.contrarrelogio === true, // sozinho na pista, com o fantasma da sua melhor volta correndo junto (jogo.js)

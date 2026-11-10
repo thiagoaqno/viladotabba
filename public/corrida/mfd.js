@@ -370,7 +370,7 @@ const ATU = {
     const ers = race.ers; if (!ers) return; const F = F1U(), carga = pc(ers.carga), m = ctx.modoErs;
     set(r.eBat, "t", carga + "%"); set(r.eBatB, "w", carga + "%"); set(r.eBatB, "c", race.ersAtivo ? "on" : carga < 20 ? "baixo" : carga < 50 ? "medio" : "bom"); set(r.eEst, "t", m ? m.texto : "—");
     const rec = pc((ers.recarga || 0) / F.ERS_MAX_RECARGA); set(r.eRecB, "w", rec + "%"); set(r.eRecT, "t", rec + "%");
-    set(r.eModo, "t", E.S.config.ers === "manual" ? "Manual (segure E)" : "Automático");
+    set(r.eModo, "t", E.S.config.ers === "manual" ? "Manual (segure Shift)" : "Automático");
     const pronto = !!ctx.m && ctx.m.drsZona >= 0; set(r.eDrs, "t", race.drsAtivo ? "Aberto" : pronto ? "Disponível na zona" : "Indisponível");
   },
   box(ctx, r) {

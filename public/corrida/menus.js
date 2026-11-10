@@ -204,7 +204,7 @@ function renderGP(m, isHost, f1, c, t) {
     + `</div>`);
   trocar($("gpMaisCorpo"), `<div class="sn-opcoes">`
     + campo("Câmbio", seg([["auto", "Automático"], ["manual", "Manual"]], c.cambio || "auto", "cambio", "Câmbio"), "Manual para todo mundo: Shift sobe a marcha, Ctrl direito reduz (no celular, os botões + e −). Os robôs continuam no automático.")
-    + (f1 ? campo("ERS", seg([["auto", "Automático"], ["manual", "Manual (E)"]], c.ers === "manual" ? "manual" : "auto", "ers", "ERS"), "A bateria recarrega na frenagem. No manual, segure E ou o botão ERS para desdobrar.")
+    + (f1 ? campo("ERS", seg([["auto", "Automático"], ["manual", "Manual (Shift)"]], c.ers === "auto" ? "auto" : "manual", "ers", "ERS"), "A bateria recarrega na frenagem. No manual, segure Shift esquerdo (ou a tecla escolhida em Controles) ou o botão ERS do controle para desdobrar.")
       + campo("Classificação", seg([["completa", "Q1, Q2 e Q3"], ["pular", "Pular"]], c.classificacao === "pular" ? "pular" : "completa", "quali", "Classificação"), "Voltas lançadas com o relógio: o Q1 tira os 5 mais lentos, o Q2 mais 5 e o Q3 decide a pole. Pulando, o grid segue a ordem dos pilotos da sala.")
       + (E.S.previsao && window.PrevisaoUI && !temporada ? `<div class="sn-grupo sn-prev">${window.PrevisaoUI.html(E.S.previsao, { voltas: c.voltas })}</div>` : "")
       : campo("Caixas de itens", seg([["true", "Ligadas"], ["false", "Desligadas"]], String(!!c.caixas), "caixas", "Caixas de itens"), "Banana, cascos, cogumelo, estrela e bomba espalhados pela pista.")

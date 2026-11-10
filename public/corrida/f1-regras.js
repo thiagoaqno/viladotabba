@@ -126,11 +126,16 @@ function drsHabilitado({ volta, intervalo, amarela, safety, drs = false }) {
 // A bateria varia de verdade ao longo da volta: enche forte na frenagem (até ERS_MAX_RECARGA por volta), gasta devagar na reta no modo automático
 // (ERS_GASTO_SUAVE, só acima de 20%) e gasta forte (ERS_GASTO) só no overtake: colado no carro da frente ou com o botão no modo manual.
 // O gasto suave do automático tem um orçamento por volta (ERS_ORCAMENTO_AUTO): senão ele gastava tudo o que entrava e a bateria ficava parada no piso.
-const ERS_MAX_RECARGA = 1.5, ERS_GASTO = 0.2, ERS_GASTO_SUAVE = 0.12, ERS_PISO_AUTO = 0.2, ERS_PISO_OVERTAKE = 0.05, ERS_ORCAMENTO_AUTO = 0.75;
+// Pela regra de 2026 (2026-11-10): a carga 0..1 é a janela de 4 MJ da bateria (o limite de variação do estado de carga por volta); o MGU-K entrega
+// e recupera até 350 kW; a recuperação por volta vai até 8,5 MJ; a FIA limitou o MGU-K a 250 kW fora das zonas de aceleração. Então:
+// overtake 350 kW = 4 MJ em 11,4 s (0,0875/s); automático 250 kW (0,0625/s); recarga freando 350 kW (0,0875/s), aliviando na mesma proporção de
+// antes (0,0333/s); teto por volta 8,5/4 = 2,125 janelas, e o orçamento do automático é o mesmo teto. O ganho de potência (ERS_POTENCIA) não é da regra.
+const ERS_MAX_RECARGA = 2.125, ERS_GASTO = 0.0875, ERS_GASTO_SUAVE = 0.0625, ERS_PISO_AUTO = 0.2, ERS_PISO_OVERTAKE = 0.05, ERS_ORCAMENTO_AUTO = 2.125;
+const ERS_RECARGA_FREIO = 0.0875, ERS_RECARGA_ALIVIO = 0.0333;
 const ersNovo = () => ({ carga: 0.65, recarga: 0, volta: 0 });
 function carregarErs(ers, dt, freando, semGas, volta) {
   if (volta !== ers.volta) { ers.volta = volta; ers.recarga = 0; ers.suave = 0; }
-  const ganho = Math.min(Math.max(0, ERS_MAX_RECARGA - ers.recarga), Math.max(0, 1 - ers.carga), Math.max(0, dt) * (freando ? 0.4 : semGas ? 0.15 : 0));
+  const ganho = Math.min(Math.max(0, ERS_MAX_RECARGA - ers.recarga), Math.max(0, 1 - ers.carga), Math.max(0, dt) * (freando ? ERS_RECARGA_FREIO : semGas ? ERS_RECARGA_ALIVIO : 0));
   ers.carga = limite(ers.carga + ganho, 0, 1); ers.recarga += ganho;
   return ganho;
 }

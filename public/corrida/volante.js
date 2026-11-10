@@ -13,29 +13,32 @@ const ajustar = (campo, v) => (Number.isFinite(+v) ? limite(+v, LIMITES[campo][0
 function analogico(x, zona = PADRAO.zona, sens = PADRAO.p) {
   const z = limite(zona, 0, 0.9), a = Math.abs(x || 0);
   if (a < z) return 0;
-  return Math.sign(x) * limite(((a - z) / (1 - z)) ** CURVA * sens, 0, 1);
+  return Math.sign(x) * limite(((a - z) / (1 - z)) ** ACERTO.curva * sens, 0, 1) * ACERTO.virada; // (o teto é a virada do acerto)
 }
-// Na escala real a pista ficou com ~metade da largura (12 m contra 25 m): cada toque passou a ocupar o dobro da pista. A física do volante
-// e dos robôs não muda; só a ENTRADA do jogador é suavizada, para cada toque voltar a ocupar a mesma fração da pista que ocupava na pista antiga.
-// (medido no McLaren padrão, deslocamento 0,6 s após o toque em fração da meia-pista; os números no PR da direção em escala real)
-const CURVA = 1.8;              // analógico mais macio no meio do curso, ainda chega a 1 no batente (era 1,4; apertadinha ocupava o dobro da pista)
-// O teclado vira em RAMPA (só a entrada do jogador, fora da física), com DUAS velocidades na subida: macia perto do centro (SOBE_INI) e
-// rápida perto do batente (SOBE_FIM). Assim a apertadinha é suave para guiar, mas chegar ao fim de curso não demora. A taxa cresce com
-// o quanto o volante já virou. VOLTA (rápida) é a volta ao centro ao soltar. Os robôs não passam por aqui.
-// (SOBE_INI 3,55: o começo macio que o Thiago achou bom de guiar; SOBE_FIM 8: o batente no tempo que o 5,32 dava, ~0,19 s, 2026-11-09)
-const SOBE_INI = 3.55, SOBE_FIM = 8, VOLTA = 10;
-const SOBE = SOBE_INI; // (compat.: a taxa no centro)
+// O ACERTO DA DIREÇÃO (só a ENTRADA do jogador; a física e os robôs não mudam, e o servidor recebe o mesmo `steer`, então nada sai de sincronia).
+// Na escala real as curvas ficaram ~1,8 vez mais abertas (o raio cresceu com o `scale`) e a pista tem metade da largura: a mesma curva pede
+// ~55% do volante. O PADRÃO é a direção antiga encolhida para a escala nova: a mesma resposta no tempo (o batente em 0,2 s, a volta ao centro em
+// 0,125 s, como a rampa da física fazia) só que até `virada` em vez de até 1, e o analógico com a curva antiga (1,4) e o mesmo teto.
+// O painel de acerto (tecla P, acerto.js) muda estes valores ao vivo e guarda em "corrida:acerto-direcao".
+const ACERTO_PADRAO = { virada: 0.75, sobe: 0.15, volta: 0.125, curva: 1.4 }; // (os valores que o Thiago acertou no painel jogando, 2026-11-10; partiram da antiga encolhida: 0,55 / 0,2 / 0,125 / 1,4)
+const ACERTO_LIMITES = { virada: [0.25, 1.2], sobe: [0.05, 0.8], volta: [0.05, 0.5], curva: [1, 2.5] };
+const ACERTO = { ...ACERTO_PADRAO };
+try { const v = JSON.parse(localStorage.getItem("corrida:acerto-direcao") || "null"); if (v) for (const k of Object.keys(ACERTO_PADRAO)) if (Number.isFinite(+v[k])) ACERTO[k] = limite(+v[k], ...ACERTO_LIMITES[k]); } catch (e) {}
+function acertar(campo, valor) { if (!(campo in ACERTO_PADRAO)) return; ACERTO[campo] = Number.isFinite(+valor) ? limite(+valor, ...ACERTO_LIMITES[campo]) : ACERTO_PADRAO[campo]; try { localStorage.setItem("corrida:acerto-direcao", JSON.stringify(ACERTO)); } catch (e) {} }
+function acertoPadrao() { Object.assign(ACERTO, ACERTO_PADRAO); try { localStorage.removeItem("corrida:acerto-direcao"); } catch (e) {} }
+const CURVA = ACERTO_PADRAO.curva;
+// O teclado vira em RAMPA até `virada`: sobe em `sobe` segundos de 0 ao batente e volta ao centro em `volta` segundos (velocidades proporcionais à virada).
 function rampa(alvo, atual, dt) {
   const d = alvo - atual, t = limite(dt || 0, 0, 0.1);
   const voltando = Math.abs(alvo) < Math.abs(atual) || alvo * atual < 0;
-  // subindo: a taxa vai de SOBE_INI (centro) a SOBE_FIM (batente), conforme |atual|; voltando ao centro: rápido
-  const k = voltando ? VOLTA : SOBE_INI + (SOBE_FIM - SOBE_INI) * Math.min(1, Math.abs(atual));
+  const k = ACERTO.virada / (voltando ? ACERTO.volta : ACERTO.sobe);
   return atual + limite(d, -t * k, t * k);
 }
+const SOBE = ACERTO_PADRAO.virada / ACERTO_PADRAO.sobe, VOLTA = ACERTO_PADRAO.virada / ACERTO_PADRAO.volta; // (compat.: as taxas do padrão, por segundo)
 // O teclado (ou o botão de toque): -1, 0 ou 1 vira o quanto o volante vira (`sens`, de 0,3 a 1,5; acima de 1 só limita em 1).
-const teclado = (dir, sens = PADRAO.k) => limite((dir || 0) * sens, -1, 1);
+const teclado = (dir, sens = PADRAO.k) => limite((dir || 0) * sens, -1, 1) * ACERTO.virada; // (o batente do teclado é a virada do acerto)
 
-const api = { LIMITES, PADRAO, ajustar, analogico, teclado, rampa, CURVA, SOBE, SOBE_INI, SOBE_FIM, VOLTA };
+const api = { LIMITES, PADRAO, ajustar, analogico, teclado, rampa, CURVA, SOBE, VOLTA, ACERTO, ACERTO_PADRAO, ACERTO_LIMITES, acertar, acertoPadrao };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Volante = api;
 })(typeof self !== "undefined" ? self : this);

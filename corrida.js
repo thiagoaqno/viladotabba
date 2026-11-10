@@ -29,10 +29,20 @@ const { rid, novoCodigo, limparNome: cleanName, ok, falha: fail, contexto, ligar
 const noite = require("./noite.js"); // o placar da Noite da Galera (quem ganhou e quem perdeu cada partida)
 const nomesDe = (room, ids) => ids.map((id) => room.players[id] && !room.players[id].bot && room.players[id].name).filter(Boolean); // robô não entra no placar da Noite
 
+// CORRIDA_PERF=1: mede quanto o passo dos robôs (o laço de 50 ms) custa no servidor e imprime a cada 200 passos: média, p95 e pior, em ms, e o dt real
+const PERF = !!process.env.CORRIDA_PERF;
+function medirPerf(room, ms, dt) {
+  const m = room.perf || (room.perf = { v: [], dt: [] }); m.v.push(ms); m.dt.push(dt);
+  if (m.v.length < 200) return;
+  const s = [...m.v].sort((a, b) => a - b), d = [...m.dt].sort((a, b) => a - b), r = (x) => x.toFixed(1);
+  console.log(`perf ${room.config.pista} robôs=${room.order.filter((id) => room.players[id].bot).length}: passo média ${r(s.reduce((a, b) => a + b) / s.length)} ms, p95 ${r(s[Math.floor(s.length * 0.95)])}, pior ${r(s[s.length - 1])}; dt p95 ${r(d[Math.floor(d.length * 0.95)] * 1000)} ms, pior ${r(d[d.length - 1] * 1000)} ms`);
+  room.perf = null;
+}
+const ROBOS_F1_MS = 8; // o laço dos robôs nas regras de F1 (o passo da física é pelo tempo real: Robos.tempoDoPasso)
 const LUZES_MS = 3500; // regras de F1: o tempo até acender a primeira das cinco luzes (a largada vem 4 s mais a espera sorteada depois)
 // regras de F1: a transmissão de TV (a pista, o clima, o campeonato e o grid) tem tempo próprio ANTES das luzes: 25 s numa
 // temporada (com a tabela do campeonato), 20 s fora dela. `CORRIDA_TV_MS` troca os dois (0 desliga: os testes de rede usam).
-const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 20000;
+const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 0; // (a corrida avulsa larga sem a transmissão de TV: com ela, do Largar às luzes eram ~30 s. A carreira mantém, e lá dá para pular)
 const MAX_PLAYERS = 8, COUNTDOWN_MS = 4500, AFTER_FIRST_MS = 60000, MAX_RACE_MS = 45 * 60000; // 45 min: dá para as 21 voltas
 const COLORS = ["#e63946", "#1e88e5", "#43a047", "#fdd835", "#8e24aa", "#fb8c00", "#00acc1", "#f06292"];
 const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "🦄", "🐙", "👻", "🤡", "🦁", "🐵", "🐧", "🏎️"];
@@ -251,6 +261,7 @@ module.exports = function attachCorrida(io) {
         // nas regras de F1, os robôs andam o tempo real que passou (o timer não bate certinho em 50 ms: Robos.tempoDoPasso)
         const dtRobos = room.config.regras === "f1" ? Robos.tempoDoPasso(room) : 0.05;
         if (dtRobos <= 0) return;
+        const t0Perf = PERF ? process.hrtime.bigint() : 0n; if (PERF) setImmediate(() => medirPerf(room, Number(process.hrtime.bigint() - t0Perf) / 1e6, dtRobos));
         Robos.passo(room, dtRobos, (p, s) => { if (onSector(room, p, s)) broadcast(room); }, (e, d) => {
           if (e === "box") { concluirParada(room, room.players[d.id], d); return broadcast(room); } // um robô acabou a parada
           if (e === "batida") { if (aplicarBatida(room, room.players[d.id], d.forca, d.tipo, Date.now(), d.chave)) broadcast(room); return; } // um robô bateu (no muro ou em outro carro)
@@ -261,7 +272,7 @@ module.exports = function attachCorrida(io) {
         if (room.config.regras === "f1") return; // (nas regras de F1 os robôs vão no `snap` junto com os humanos)
         const lista = room.order.map((id) => room.players[id]).filter((p) => p && p.bot && p.pos).map((p) => ({ id: p.id, x: p.pos.x, y: p.pos.y, z: p.pos.z, a: p.pos.a, v: p.pos.v, prog: p.pos.prog, laps: p.laps, t: Date.now() }));
         nsp.to(room.code).volatile.emit("ghosts", lista);
-      }, 50);
+      }, room.config.regras === "f1" ? ROBOS_F1_MS : 50); // (F1: os robôs andam a ~60 Hz; a 50 ms o Windows batia a cada 66,7 ms e as posições deles saíam em saltos de 15 por segundo, as microtravadas)
     }
     if (room.config.caixas) {
       let frame = 0;

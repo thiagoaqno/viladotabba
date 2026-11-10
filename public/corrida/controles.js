@@ -11,6 +11,7 @@ import { menuBoxTecla, menuBoxPad } from "./box-menu.js";
 import { mfd, mfdTecla, mfdPad, mfdAtivo, acoes, teclaBox, digitoPneu, cancelarBoxTecla } from "./mfd.js";
 import { acoesDaTecla, botoesDe, ui, volante } from "./teclas.js";
 import { abrirTeclas } from "./teclas-ui.js";
+import { alternarAcerto } from "./acerto.js";
 import { abrirCamera, fecharCamera, cameraAberta } from "./camera-ui.js";
 import { estiloHud, definirEstiloHud } from "./hud-telemetria.js";
 
@@ -22,6 +23,7 @@ const ATALHOS = {
   radio: () => { if (window.Radio) toast(window.Radio.silenciar() ? "Rádio desligado" : "Rádio ligado"); },
   telaCheia: () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} },
   controles: () => abrirTeclas(),
+  acerto: () => alternarAcerto(),
 };
 
 // H: o HUD em três estados, clássico → telemetria → sem HUD (a pista limpa, só a cena) → clássico. O estilo fica guardado (hud-telemetria.js);

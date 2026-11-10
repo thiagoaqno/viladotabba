@@ -25,6 +25,9 @@ const SONS = [
   { id: "batida-carro-media", n: 3, seg: 1.2, texto: `Two carbon fibre bodywork panels colliding, sharp crack and rubber scrub, ${LIMPO}` },
   { id: "batida-carro-forte", n: 3, seg: 2, texto: `Hard collision of two carbon fibre bodies, loud crunch, splintering pieces and rubber tyres scrubbing, ${LIMPO}` },
   { id: "chegada", n: 2, seg: 5, texto: "Huge outdoor stadium crowd erupting into cheers and applause with a few air horns, celebration, no music, no announcer, no fireworks" },
+  // o ERS ligando (sons.js, ersLiga) e a abertura do rádio da equipe antes da voz (radio.js, abertura): sem falar de carro, motor nem corrida
+  { id: "ers-liga", n: 2, seg: 0.8, texto: `Short futuristic electric power surge activation, rising high voltage whine with a crisp electric crackle and a bright digital confirmation chime at the end, energy boost, ${LIMPO}` },
+  { id: "radio-bip", n: 2, seg: 0.6, texto: `Short two-tone electronic radio transmission chirp, quick digital beep beep with a soft static squelch click, push-to-talk walkie-talkie opening a channel, ${LIMPO}` },
   { id: "chuva", n: 1, seg: 12, laco: true, texto: "Steady medium rain falling on wet asphalt and puddles outdoors, soft continuous hiss and patter, no thunder, no wind, no traffic, no music" },
 ];
 

@@ -1,13 +1,10 @@
-# Montreal: passada visual na escala real
+# Som do rádio antes de falar e som do ERS ligando
 
-O comprimento, a largura, o relevo e as linhas dos robôs de Montreal já estavam na `main`. Esta é a passada visual.
+Os dois sons são sintetizados no navegador (Web Audio), como o motor. Se aparecer o arquivo de verdade, ele toca no lugar, sem mexer no código.
 
-- **Base sólida e chão no nível** (`kit/montreal/chao.js`, novo): uma fita de grama colada na borda do asfalto, sem vão, e um corte de concreto sob a pista. Os muros, as placas, a tribuna e as árvores pousam em `nivelDoChao`.
-- **Ambiente próprio** (`kit/montreal/ambiente.js`, novo): as placas de frenagem (com poste), os mastros com a bandeira do Canadá e os postos dos fiscais no chão e atrás do alambrado. O do kit deixava tudo solto no ar.
-- **Arquibancada principal no tamanho real** (`kit/montreal/tribuna.js`, novo): 24 degraus de 0,5 × 0,75 m (antes 12 degraus de 1,25 × 1,77 m, do carro grande).
-- **Peças no tamanho real:** o prédio dos boxes de 2019 (térreo de 5 m, 13,3 m até a laje), os muros de 1,25 m com o alambrado, o Muro dos Campeões, os blocos, o skyline, os bordos e os choupos.
-- **Pórtico da largada:** a faixa acompanha a escala.
+- **Rádio da equipe** (`radio.js`): antes da voz do engenheiro, o chiado de abrir o canal e dois bipes subindo (1 150 e 1 550 Hz, onda quadrada abafada como o rádio); no fim, depois do clique de fechar, um bipe mais grave. A voz entra depois da abertura. Arquivo de verdade: `public/corrida/radio/bip.mp3` (toca no lugar da abertura sintetizada).
+- **ERS ligando** (`sons.js`, `jogo.js`): ao apertar a tecla do ERS (E) com a bateria entregando, uma subida elétrica (220 a 1 900 Hz em 0,32 s), um estalo agudo no começo e um sininho no fim. Só no aperto do piloto, não no automático (que liga e desliga sozinho), e no máximo um a cada 1,5 s. Arquivo de verdade: `public/corrida/sons/ers-liga-1.mp3`, com `"ers-liga": 1` em `sons/indice.json`.
 
-Sem prints: o Thiago testa jogando e manda o que quebrou. Conferido com `node --check`.
+Conferido com `node --check`; o Thiago testa jogando.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

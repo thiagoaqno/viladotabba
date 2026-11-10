@@ -1,0 +1,107 @@
+/* Corrida da Galera — a aba ACERTO da carreira (central-acerto.js): o topo com o GP e o mapa, o carro de lado com a asa e a suspensão, os
+   ajustes com as marcas do engenheiro (E) e do estrategista (S), os medidores da física e os rádios da equipe. Cores do tema da Central
+   (--cx-*) e da equipe (--eq, --eq-at), no claro e no escuro. */
+.ac{display:grid;gap:18px;color:var(--cx-tx);--ac-card:var(--cx-bg2);--ac-borda:var(--cx-lin)}
+.ac-topo{display:flex;align-items:center;gap:20px;padding:18px 22px;background:linear-gradient(110deg,var(--eq,#e10600) 0 6px,var(--ac-card) 6px);border:1px solid var(--ac-borda);box-shadow:var(--cx-sombra)}
+.ac-topo-txt{flex:1;min-width:0}
+.ac-topo h2{font-size:clamp(26px,3.4vw,44px);font-weight:700!important;letter-spacing:-.02em!important;margin:2px 0 6px!important}
+.ac-topo h2{display:flex;align-items:center;gap:12px}
+.ac-topo h2 img,.ac-topo h2 svg,.ac-topo h2 .cx-bandeira{height:.8em;width:auto;flex:none;box-shadow:0 0 0 1px var(--cx-lin)}
+.ac-ficha{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:4px}
+.ac-ficha-i{display:grid;gap:1px}
+.ac-ficha-i small{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--cx-tx2)}
+.ac-ficha-i b{font-size:15px;font-variant-numeric:tabular-nums}
+.ac-mapa{width:min(170px,26vw);height:110px;flex:none;color:var(--cx-tx);display:grid;place-items:center}
+.ac-mapa svg{max-width:100%;max-height:110px;width:auto;height:100%;display:block}
+.ac-grade{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
+@media (max-width:900px){.ac-grade{grid-template-columns:1fr}.ac-mapa{width:120px}}
+
+/* o palco: o carro de lado */
+.ac-palco{position:relative;padding:16px 18px 12px;background:radial-gradient(ellipse at 50% 85%,var(--cx-hover),transparent 70%),var(--ac-card);border:1px solid var(--ac-borda);overflow:hidden;min-height:260px;display:flex;flex-direction:column}
+.ac-palco::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--cx-trilho) 1px,transparent 1px),linear-gradient(90deg,var(--cx-trilho) 1px,transparent 1px);background-size:32px 32px;opacity:.45;pointer-events:none}
+.ac-palco-rot{position:relative;display:flex;gap:6px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.ac-palco-rot span{padding:4px 10px;border:1px solid var(--ac-borda);color:var(--cx-tx2);animation:acRot 3.6s infinite}
+.ac-palco-rot span:last-child{animation-delay:-1.8s}
+@keyframes acRot{0%,45%{background:var(--eq,#e10600);color:#fff;border-color:transparent}50%,100%{background:transparent;color:var(--cx-tx2)}}
+.ac-carro{position:relative;width:100%;height:auto;margin:auto 0;color:var(--cx-tx)}
+.ac-rodas circle{fill:#16171a}
+.ac-rodas .ac-aro{fill:none;stroke:#5b5f66;stroke-width:5}
+.ac-corpo{transform:translateY(var(--parado));animation:acSuspensao 3.6s cubic-bezier(.45,0,.2,1) infinite;transition:transform .25s}
+@keyframes acSuspensao{0%,40%{transform:translateY(var(--parado))}50%,90%{transform:translateY(var(--rapido))}100%{transform:translateY(var(--parado))}}
+.ac-pintura{fill:var(--eq,#e10600);stroke:#0006;stroke-width:1.5}
+.ac-capo{fill:#0f1013}
+.ac-halo{stroke:#2b2d33;stroke-width:6;stroke-linecap:round}
+.ac-prancha{fill:#3a2a1a}
+.ac-braco{stroke:#2b2d33;stroke-width:4;stroke-linecap:round}
+.ac-asa-d rect{fill:#121316}
+.ac-asa-d .ac-flap{transform-box:view-box;transform-origin:62px 168px;transform:rotate(calc(var(--asa-ang) * -0.5))}
+.ac-asa-t .ac-placa{fill:#121316}
+.ac-asa-t .ac-perfil rect{fill:#121316}
+.ac-asa-t .ac-perfil{transform-box:view-box;transform-origin:566px 70px;transform:rotate(calc(var(--asa-ang) * -1));transition:transform .2s}
+.ac-faisca{opacity:0;stroke:#ffb347;stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 4px #ff8a00)}
+.ac-raspa .ac-faisca{animation:acFaisca 3.6s infinite}
+@keyframes acFaisca{0%,48%{opacity:0}52%,88%{opacity:1}92%,100%{opacity:0}}
+.ac-raspa .ac-prancha{fill:#ff8a00}
+.ac-palco-pe{position:relative;color:var(--cx-tx2);font-size:11px;margin-top:4px}
+.ac-palco3d{position:relative;width:100%;aspect-ratio:16/9;margin:auto 0}
+.ac-palco3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ac-reserva{display:none}
+.ac-palco:not(.ac-3d-pronto) .ac-palco3d{display:none}
+.ac-palco:not(.ac-3d-pronto) .ac-reserva{display:block;margin:auto 0}
+.ac-raspa-selo{display:none;margin-left:auto;padding:4px 10px;font-style:normal;background:var(--cx-verm);color:#fff;animation:acFaisca 3.6s infinite}
+.ac-raspa .ac-raspa-selo{display:inline-block}
+@media (prefers-reduced-motion:reduce){.ac-corpo,.ac-palco-rot span,.ac-raspa .ac-faisca{animation:none}.ac-raspa .ac-faisca{opacity:1}}
+
+/* os ajustes */
+.ac-ajustes{display:grid;gap:14px;align-content:start;padding:16px 18px;background:var(--ac-card);border:1px solid var(--ac-borda)}
+.ac-param{display:grid;gap:6px}
+.ac-param-topo{display:flex;align-items:center;justify-content:space-between;font-size:15px}
+.ac-chip{min-width:72px;text-align:center;padding:4px 10px;font-weight:800;font-variant-numeric:tabular-nums;background:var(--eq,#e10600);color:var(--eq-txt,#fff)}
+.ac-trilho{position:relative;padding-top:16px}
+.ac-trilho input[type=range]{width:100%;margin:0;accent-color:var(--eq-at,var(--eq,#e10600));height:22px;cursor:pointer}
+.ac-sugs{position:absolute;inset:0 9px auto 9px;height:16px;pointer-events:none}
+.ac-sug{position:absolute;top:0;transform:translateX(-50%);font-style:normal;font-size:10px;font-weight:900;line-height:14px;width:16px;text-align:center;border-radius:2px;color:#fff}
+.ac-sug::after{content:"";position:absolute;left:50%;top:14px;width:1px;height:10px;background:currentColor;opacity:.6}
+.ac-sug-engenheiro{background:#4a5568}
+.ac-sug-estrategista{background:var(--cx-roxo)}
+.ac-param-pe{display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--cx-tx2)}
+.ac-param-pe small{font-weight:600;text-transform:none;letter-spacing:0;text-align:center}
+.ac-medidores{display:grid;gap:10px;padding-top:10px;border-top:1px solid var(--ac-borda)}
+.ac-med{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
+.ac-med span{font-weight:700;font-size:13px}
+.ac-med span small{display:block;font-weight:500;color:var(--cx-tx2);font-size:11px}
+.ac-med b{font-variant-numeric:tabular-nums;font-size:15px}
+.ac-m{grid-column:1/-1;position:relative;height:8px;background:var(--cx-trilho);overflow:hidden}
+.ac-m-fill{position:absolute;top:0;bottom:0;background:var(--cx-verde);transition:width .2s}
+.ac-m-fill.neg{background:var(--cx-verm)}
+.ac-m-inv .ac-m-fill.pos{background:var(--cx-verm)}.ac-m-inv .ac-m-fill.neg{background:var(--cx-verde)}
+.ac-m-meio{position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;background:var(--cx-tx);opacity:.5}
+.ac-med.justo b{color:var(--cx-amb)}.ac-med.raspa b{color:var(--cx-verm)}
+.ac-m-folga .ac-m-fill.pos{background:var(--cx-verde)}
+.ac-acoes{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ac-acoes small{color:var(--cx-tx2)}
+
+/* a equipe no rádio */
+.ac-equipe{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.ac-radio{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--ac-card);border:1px solid var(--ac-borda);border-left:4px solid var(--eq,#e10600)}
+.ac-av{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:var(--cx-tx);color:var(--cx-bg)}
+.ac-av-engenheiro{background:#4a5568!important;color:#fff!important}.ac-av-estrategista{background:var(--cx-roxo)!important;color:#fff!important}
+.ac-radio-txt{flex:1;min-width:0;display:grid;gap:2px}
+.ac-radio-txt>small:first-child{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--cx-tx2)}
+.ac-radio-txt p{margin:2px 0;font-style:italic}
+.ac-radio-txt .ac-ef{color:var(--cx-tx2);font-size:12px}
+.ac-carregando{color:var(--cx-tx2)}
+
+/* a velocidade em que o assoalho começa a raspar (o destaque dos medidores) */
+.ac-raspa-vel{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 14px;padding:12px 14px;border-left:4px solid var(--cx-verde);background:var(--cx-hover)}
+.ac-raspa-vel small{grid-column:1/-1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--cx-tx2)}
+.ac-raspa-vel b{font-size:clamp(24px,2.6vw,34px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.ac-raspa-vel span{font-size:12px;color:var(--cx-tx2)}
+.ac-raspa-vel.perigo{border-left-color:var(--cx-verm)}.ac-raspa-vel.perigo b{color:var(--cx-verm)}
+.ac-raspa-vel.nunca b{font-size:22px}
+
+/* a legenda do E (engenheiro) e do S (estrategista) */
+.ac-legenda{margin:0;font-size:12px;line-height:1.7;color:var(--cx-tx2)}
+.ac-legenda .ac-sug{position:relative;display:inline-block;transform:none;margin:0 4px 0 0;vertical-align:1px}
+.ac-legenda .ac-sug::after{display:none}
+.ac-legenda .ac-sug-estrategista{margin-left:10px}

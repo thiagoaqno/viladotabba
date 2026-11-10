@@ -67,6 +67,24 @@ export const Sound = (() => {
     s.connect(hp).connect(gs).connect(master); s.start(t);
     tone(2400, 0.14, { type: "sine", vol: 0.045, at: 0.3 });
   }
+  // OS EFEITOS NOVOS da ElevenLabs (GERAR-SONS-PISTA.bat): só tocam quando o arquivo existe; sem ele, silêncio (não há versão sintetizada).
+  // Os laços (o assoalho raspando, a brita, a grama, o vento) entram e saem pelo volume; os de uma vez (o fundo, o ERS acabando, o
+  // limitador) tocam quando jogo.js manda.
+  const lacosNovos = {};
+  function lacoNivel(id, vol, rate = 1, tau = 0.08) {
+    if (!lacosNovos[id] && !(vol > 0.001)) return;
+    const c = ctx(); if (!c || !tem(id)) return;
+    if (!lacosNovos[id]) lacosNovos[id] = laco(c, escolher(id));
+    const t = c.currentTime, L = lacosNovos[id];
+    L.g.gain.setTargetAtTime(on ? Math.max(0, vol) : 0, t, tau); L.src.playbackRate.setTargetAtTime(rate, t, 0.1);
+  }
+  const raspa = (n) => lacoNivel("raspa", Math.min(1, n) * 0.7, 0.9 + Math.min(1, n) * 0.3, 0.04);
+  function foraDaPista(sup, v) { // sup: "brita", "grama" ou null (no asfalto)
+    const a = Math.min(1, Math.abs(v || 0) / 250);
+    lacoNivel("brita", sup === "brita" ? 0.25 + 0.55 * a : 0, 0.8 + 0.4 * a, 0.05);
+    lacoNivel("grama", sup === "grama" ? 0.2 + 0.5 * a : 0, 0.8 + 0.4 * a, 0.05);
+  }
+  const vento = (v, dentro) => { const a = Math.min(1.3, Math.abs(v || 0) / 400); lacoNivel("vento", a * a * (dentro ? 0.55 : 0.22), 0.85 + 0.3 * a, 0.3); };
   function tone(f, dur, { type = "square", vol = 0.12, at = 0 } = {}) {
     const c = ctx(); if (!c || !on) return; const t = c.currentTime + at;
     const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
@@ -254,7 +272,7 @@ export const Sound = (() => {
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.6); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

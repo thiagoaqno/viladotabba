@@ -28,6 +28,13 @@ echo   chegada (2)          a festa da bandeirada
 echo   chuva (1)            chuva caindo no asfalto, em laco
 echo   ers-liga (2)         o ERS ligando na tecla (o overtake)
 echo   radio-bip (2)        os bipes do radio da equipe antes da voz
+echo   raspa (2)            o assoalho raspando no chao (acerto do carro), em laco
+echo   fundo (3)            a suspensao batendo no fundo nas compressoes
+echo   brita (2)            o pneu na brita, em laco
+echo   grama (2)            o pneu na grama, em laco
+echo   vento (1)            o vento no cockpit, crescendo com a velocidade, em laco
+echo   ers-fim (2)          a bateria acabando no meio da reta
+echo   limitador (1)        o bipe do limitador do box
 echo.
 echo O que gerar?
 echo   1) So os que faltam

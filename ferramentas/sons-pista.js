@@ -28,6 +28,15 @@ const SONS = [
   // o ERS ligando (sons.js, ersLiga) e a abertura do rádio da equipe antes da voz (radio.js, abertura): sem falar de carro, motor nem corrida
   { id: "ers-liga", n: 2, seg: 0.8, texto: `Short futuristic electric power surge activation, rising high voltage whine with a crisp electric crackle and a bright digital confirmation chime at the end, energy boost, ${LIMPO}` },
   { id: "radio-bip", n: 2, seg: 0.6, texto: `Short two-tone electronic radio transmission chirp, quick digital beep beep with a soft static squelch click, push-to-talk walkie-talkie opening a channel, ${LIMPO}` },
+  // os efeitos novos (2026-11-10): o assoalho raspando (acerto do carro), a suspensão batendo no fundo, a brita e a grama ao sair da pista,
+  // o vento no cockpit, o ERS acabando e o bipe do limitador do box. Nenhum fala: tocam pelo que acontece com o carro (sons.js)
+  { id: "raspa", n: 2, seg: 2, laco: true, texto: `Continuous harsh grinding scrape of a hard wooden plank and titanium skid blocks dragging on rough asphalt at high speed, gritty friction rasp, ${LIMPO}` },
+  { id: "fundo", n: 3, seg: 0.6, texto: `Single short heavy dull thud of a stiff suspension bottoming out, deep low thump with a small metallic knock, ${LIMPO}` },
+  { id: "brita", n: 2, seg: 3, laco: true, texto: `Continuous crunching of rubber tyres rolling fast over loose gravel stones, pebbles spraying and rattling, ${LIMPO}` },
+  { id: "grama", n: 2, seg: 3, laco: true, texto: `Continuous rough rumble of rubber tyres rolling fast over bumpy grass and dirt, soft thuds and swishing blades of grass, ${LIMPO}` },
+  { id: "vento", n: 1, seg: 6, laco: true, texto: "Steady strong wind rushing past an open helmet at very high speed, constant airy roar and buffeting, no gusts stopping, no music, no voices" },
+  { id: "ers-fim", n: 2, seg: 0.7, texto: `Short electric power-down, a descending high voltage whine fading out with a soft low digital blip, energy depleted, ${LIMPO}` },
+  { id: "limitador", n: 1, seg: 0.4, texto: `Single short soft electronic beep, a clean mid-pitched dashboard warning tone, ${LIMPO}` },
   { id: "chuva", n: 1, seg: 12, laco: true, texto: "Steady medium rain falling on wet asphalt and puddles outdoors, soft continuous hiss and patter, no thunder, no wind, no traffic, no music" },
 ];
 

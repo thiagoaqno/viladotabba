@@ -5,12 +5,12 @@
 // para ~2 mil prédios. Os prédios que a pista larga do jogo atropelaria andam para trás, inteiros, até a distância da barreira.
 import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
-import { D, K, ALT, poligonoDentro } from "./mundo.js";
+import { D, K, KR, ALT, poligonoDentro } from "./mundo.js";
 import { emissivoDaNoite, soDeNoite } from "../bahrein/base.js";
 
 const M_ALTURA = K * ALT; // unidades de altura por metro de parede
 const JANELA = 3.2 * K, ANDAR = 3.6 * M_ALTURA; // o módulo da fachada em unidades do mundo
-const CELULA = 1500;
+const CELULA = 1500 * KR;
 const hash = (n) => { let h = (n * 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; return (h >>> 0) / 4294967296; };
 const area2 = (P) => { let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - b[0] * a[1]; } return s; };
 const rgb = (h) => { const c = new THREE.Color(h); return [c.r, c.g, c.b]; };
@@ -107,7 +107,7 @@ export function lerPredios(tr) {
     let cx = 0, cz = 0, x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const [x, z] of P) { cx += x; cz += z; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
     cx /= P.length; cz /= P.length;
     let baixo = Infinity, alto = -Infinity; for (const [x, z] of [...P, [cx, cz]]) { const g = tr.chao(x, z) - 1.5; baixo = Math.min(baixo, g); alto = Math.max(alto, g); }
-    const alturaReal = metros * M_ALTURA, perto = tr.distAt(cx, cz) < 300, h = Math.max(perto ? 26 : 14, alturaReal);
+    const alturaReal = metros * M_ALTURA, perto = tr.distAt(cx, cz) < 300 * KR, h = Math.max((perto ? 26 : 14) * KR, alturaReal);
     lista.push({ P, esp, cor: e[1] & 7, metros, h, cx, cz, caixa: [x0, z0, x1, z1], baixo, alto, topo: alto + h, id: lista.length });
   }
   tr.prediosLV = { empurrados, descartados };

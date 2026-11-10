@@ -11,8 +11,23 @@ body.em-home.mn-ajustes .utilbar .vol{width:100%}
 @keyframes mnDesce{from{opacity:0;transform:translateY(-8px)}}
 
 .mn{--mn-acc:#e10600;--mn-corte:14px;--mn-t:cubic-bezier(.2,.8,.2,1);position:fixed;inset:0;z-index:2;display:grid;grid-template-columns:minmax(320px,32vw) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"topo topo" "menu frase" "cartoes cartoes" "pe pe";overflow:hidden auto;color:#fff;font-family:var(--body);scrollbar-width:thin;background:#05060a url('/corrida/fundo-carreira-entrada.webp') center/cover no-repeat}
-.mn-palco{background:#05060a url(/corrida/capa-inicio.jpg) 62% center/cover no-repeat} /* a capa da tela inicial; com a Garagem aberta, o carro 3D (o canvas) cobre a capa */
-.mn.com3d .mn-palco{background-image:none}
+.mn-palco{background:#05060a} /* a capa da tela inicial é a .mn-capa (abaixo); com a Garagem aberta, o carro 3D (o canvas) cobre tudo */
+/* ---- a capa animada: a mesma imagem em três fatias (o céu e a cidade atrás, os pilotos no meio, os carros e a pista na frente), com a
+   borda macia (máscara), cada uma andando um tanto com o mouse (--mx, --my: -1 a 1, suavizados em menu.js): a diferença é a
+   profundidade. Por cima: nuvens passando, um brilho de luz que cruza a imagem e as linhas de velocidade embaixo dos carros. ---- */
+.mn-capa{position:absolute;inset:-4%;overflow:hidden;--mx:0;--my:0;pointer-events:none}
+.mn.com3d .mn-capa{display:none}
+.mn-capa i{position:absolute;inset:0;background:url(/corrida/capa-inicio.jpg) 62% center/cover no-repeat;will-change:transform}
+.mn-capa .c-fundo{transform:translate3d(calc(var(--mx) * -10px),calc(var(--my) * -6px),0) scale(1.03)}
+.mn-capa .c-pilotos{-webkit-mask-image:linear-gradient(180deg,transparent 2%,#000 18%,#000 58%,transparent 76%);mask-image:linear-gradient(180deg,transparent 2%,#000 18%,#000 58%,transparent 76%);transform:translate3d(calc(var(--mx) * -22px),calc(var(--my) * -12px),0) scale(1.05)}
+.mn-capa .c-carros{-webkit-mask-image:linear-gradient(180deg,transparent 64%,#000 78%);mask-image:linear-gradient(180deg,transparent 64%,#000 78%);transform:translate3d(calc(var(--mx) * -40px),calc(var(--my) * -16px),0) scale(1.08)}
+.mn-capa .c-nuvens{background:radial-gradient(ellipse 22% 7% at 20% 14%,#ffffff2e,transparent 70%),radial-gradient(ellipse 30% 8% at 70% 9%,#ffffff24,transparent 70%),radial-gradient(ellipse 18% 6% at 48% 22%,#ffffff1c,transparent 70%);background-size:200% 100%;animation:mnNuvens 60s linear infinite;transform:translate3d(calc(var(--mx) * -6px),0,0)}
+.mn-capa .c-brilho{background:linear-gradient(105deg,transparent 40%,#fff6dc22 48%,#fff6dc38 50%,#fff6dc22 52%,transparent 60%);background-size:250% 100%;animation:mnBrilho 9s ease-in-out infinite;mix-blend-mode:screen}
+.mn-capa .c-velocidade{top:72%;background:repeating-linear-gradient(90deg,transparent 0 60px,#ffffff10 60px 140px,transparent 140px 260px);-webkit-mask-image:linear-gradient(180deg,transparent,#000 40%,#000 70%,transparent);mask-image:linear-gradient(180deg,transparent,#000 40%,#000 70%,transparent);animation:mnVelocidade 0.9s linear infinite;mix-blend-mode:screen;opacity:.55}
+@keyframes mnNuvens{from{background-position:0 0}to{background-position:-200% 0}}
+@keyframes mnBrilho{0%,15%{background-position:120% 0}70%,100%{background-position:-60% 0}}
+@keyframes mnVelocidade{from{background-position:0 0}to{background-position:260px 0}}
+@media (prefers-reduced-motion:reduce){.mn-capa i{transform:none!important;animation:none!important}.mn-capa .c-velocidade,.mn-capa .c-brilho{display:none}}
 .mn-palco{position:fixed;inset:0;z-index:0}
 .mn-palco canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
 .mn-veu{position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(90deg,#040509f2 0%,#040509b8 22%,#04050900 46%),linear-gradient(0deg,#040509f0 0%,#04050955 22%,#04050900 38%),linear-gradient(180deg,#04050999 0,#04050900 16%)}

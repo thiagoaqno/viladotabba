@@ -616,9 +616,11 @@ const PISTAS = {
     // Marina Bay Street Circuit (layout de 2023: 19 curvas): 4943 m. Linha central de bacinger/f1-circuits (sg-2008, licença MIT: ver o cabeçalho dos traçados convertidos), no SENTIDO DA CORRIDA
     // (anti-horário: a reta dos boxes sobe para o norte e a curva 1 é à esquerda; o arquivo vem no horário), convertida por ferramentas/singapura-dados.js (a mesma conversão de Mônaco),
     // norte em cima e na proporção de verdade. Os muros vêm de `muros` (só onde a pista real tem barreira) e a pista não tem muro em volta.
-    scale: 4.17, width: 84, minLap: 45, walls: false, wall: 14, flat: 400, fall: 260, largada: 0.4904153354632588, hillsSuave: true,
+    // ESCALA REAL (ferramentas/cidade-escala-real.js singapura): a cidade inteira (pista, dados do OpenStreetMap e relevo) passou da régua de 1 u = 0,264 m para a da física, 1 u = 0,2083 m
+    // (× 1,2689); a volta mede 4 920 m (oficial: 4 940 m). `width` 58 u = 12 m (estimativa).
+    scale: 5.291, width: 58, minLap: 57, walls: false, wall: 14, flat: 508, fall: 330, largada: 0.4904153354632588, hillsSuave: true,
     // relevo: quase plano (2 a 7 m), 3 unidades por metro
-    hills: [[0,9], [0.0558,12], [0.0883,9.6], [0.166,10.2], [0.2,12.6], [0.26,16.2], [0.3374,21], [0.38,18.6], [0.4173,18], [0.47,15.6], [0.5172,12.6], [0.54,11.4], [0.575,16.2], [0.591,10.8], [0.645,15], [0.7042,15], [0.758,13.8], [0.8537,10.8], [0.9,9], [0.9475,7.2], [1,9]],
+    hills: [[0,14.4],[0.0558,19.2],[0.0883,15.4],[0.166,16.3],[0.2,20.2],[0.26,25.9],[0.3374,33.6],[0.38,29.8],[0.4173,28.8],[0.47,25],[0.5172,20.2],[0.54,18.2],[0.575,25.9],[0.591,17.3],[0.645,24],[0.7042,24],[0.758,22.1],[0.8537,17.3],[0.9,14.4],[0.9475,11.5],[1,14.4]],
     points: [
       [1421, 700, 0], [1407, 607, 0], [1402, 572, 0], [1400, 543, 0], [1394, 459, 297], [1389, 434, 26], [1376, 428, 23], [1355, 427, 167],
       [1319, 420, 101], [1296, 398, 0], [1279, 379, 21], [1262, 380, 23], [1248, 398, 59], [1242, 418, 148], [1239, 469, 316], [1240, 494, 89],

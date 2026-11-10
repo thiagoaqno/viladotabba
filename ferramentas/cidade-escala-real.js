@@ -13,8 +13,10 @@ const RAIZ = path.join(__dirname, ".."), U_POR_M = 1 / 0.2083;
 const id = process.argv[2];
 // as regras de cada cidade: como cada chave de dados.js guarda as coordenadas
 //   "pt": [x, z] · "pts": [[x, z], ...] · "listaPts": [[[x, z], ...], ...] · "plano:n": [a0..a(n-1), x0, z0, x1, z1, ...] (as n primeiras não são coordenadas)
-//   "mapaPt": { nome: [x, z] } · "grade": { x0, z0 } (o passo é em metros) · "manter": não mexe
+//   "marcosLV": [{ cx, cz, w, d (unidades), h (metros) }] · "nomePt": [nome, x, z, ...] · "objsP": [{ ..., P: [[x, z], ...] }] (a largura `larg` é em metros) · "mapaPt": { nome: [x, z] } · "grade": { x0, z0 } (o passo é em metros) · "manter": não mexe
 const REGRAS = {
+  lasvegas: { marcos: "marcosLV", relevo: "grade", lagos: "listaPts", verde: "plano:1", fontes: "pts", arvores: "pts", vias: "plano:2", predios: "plano:2", lugares: "nomePt", frac: "manter", versao: "manter" },
+  singapura: { marcos: "mapaPt", frac: "manter", agua: "listaPts", rios: "objsP", pontes: "objsP", piers: "listaPts", verde: "plano:1", campos: "plano:1", arvores: "pts", predios: "plano:2", versao: "manter" },
   baku: { marcos: "mapaPt", relevo: "grade", mar: "pts", piers: "listaPts", verde: "plano:1", muralha: "listaPts", arvores: "pts", predios: "plano:2", frac: "manter", versao: "manter" },
 };
 const regras = REGRAS[id];
@@ -33,6 +35,9 @@ for (const [chave, v] of Object.entries(D)) {
   if (r === "pt") pt(v);
   else if (r === "pts") v.forEach(pt);
   else if (r === "listaPts") v.forEach((l) => l.forEach(pt));
+  else if (r === "marcosLV") v.forEach((m) => { m.cx = r1(m.cx * f); m.cz = r1(m.cz * f); m.w = r1(m.w * f); m.d = r1(m.d * f); });
+  else if (r === "nomePt") v.forEach((a) => { a[1] = r1(a[1] * f); a[2] = r1(a[2] * f); });
+  else if (r === "objsP") v.forEach((o) => o.P.forEach(pt));
   else if (r === "mapaPt") Object.values(v).forEach(pt);
   else if (r === "grade") { v.x0 = r1(v.x0 * f); v.z0 = r1(v.z0 * f); }
   else if (r.startsWith("plano:")) { const n = Number(r.slice(6)); for (const a of v) for (let i = n; i < a.length; i++) a[i] = r1(a[i] * f); }

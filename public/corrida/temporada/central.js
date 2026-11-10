@@ -6,7 +6,7 @@
 const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const Pilotos = () => root.F1Pilotos, Eq = () => root.F1Equipes, Reg = () => root.F1Temporada, Gi = () => root.GpInfo, Gar = () => root.F1Garagem;
 const dois = (n) => String(n).padStart(2, "0");
-const ABAS = [["central", "Central"], ["calendario", "Calendário"], ["classif", "Classificação"], ["analise", "Análise"], ["desenvolvimento", "Desenvolvimento"], ["contratos", "Contratos"]];
+const ABAS = [["central", "Central"], ["calendario", "Calendário"], ["classif", "Classificação"], ["analise", "Análise"], ["desenvolvimento", "Desenvolvimento"], ["acerto", "Acerto"], ["contratos", "Contratos"]];
 const ATTR = [["aero", "Aerodinâmica", "Asa dianteira"], ["chassi", "Chassi", "Assoalho"], ["motor", "Unidade de potência", "Motor"], ["freios", "Freios", "Freio dianteiro"], ["suspensao", "Suspensão", "Suspensão"], ["confiab", "Confiabilidade", "Câmbio"]];
 // onde cada peça fica no carro (metros, sistema do modelo; o bico aponta para -z) e para onde o rótulo vai, em px da tela
 const PONTOS = { aero: { p: [0.25, 0.12, -2.05], dx: -150, dy: 80 }, chassi: { p: [-0.55, 0.14, 0.2], dx: -190, dy: 110 }, motor: { p: [0, 0.82, 0.6], dx: -120, dy: -110 }, freios: { p: [0.72, 0.3, -1.42], dx: 130, dy: 96 }, suspensao: { p: [-0.72, 0.42, 1.35], dx: -170, dy: -40 }, confiab: { p: [0, 0.5, 1.85], dx: -30, dy: -130 } };
@@ -226,8 +226,11 @@ function brilho(e) {
 function html(c) {
   ctxAtual = c; const { s, eq, codigoHTML } = c;
   const rotulo = (id, nome) => (c.grupo && id === "contratos" ? "Equipe" : nome);
-  const corpo = aba === "calendario" ? calendario(c) : aba === "classif" ? classificacao(c) : aba === "desenvolvimento" ? desenvolvimento(c) : aba === "contratos" ? root.CentralContrato.html(c) : aba === "analise" ? root.CentralAnalise.html(c) : central(c);
-  const ajustes = `<button type="button" class="cx-tema" data-cx-tema aria-pressed="${escuro}"><span>Modo escuro</span><b>${escuro ? "Ligado" : "Desligado"}</b></button><p class="cx-menu-caixa"><span>Caixa</span><b>${h(c.dinheiro(s.caixa))}</b></p>`;
+  const corpo = aba === "calendario" ? calendario(c) : aba === "classif" ? classificacao(c) : aba === "desenvolvimento" ? desenvolvimento(c) : aba === "contratos" ? root.CentralContrato.html(c) : aba === "acerto" && root.CentralAcerto ? root.CentralAcerto.html(c) : aba === "analise" ? root.CentralAnalise.html(c) : central(c);
+  // a dificuldade dos robôs, mudável no meio da carreira (vale a partir do próximo GP); na temporada com os amigos, só o anfitrião muda
+  const NIV = [["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]];
+  const nivelHTML = c.mudarNivel ? `<label class="cx-tema" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>Dificuldade dos robôs</span><select data-cx-nivel aria-label="Dificuldade dos robôs">${NIV.map(([v, n]) => `<option value="${v}" ${(s.nivel || "medio") === v ? "selected" : ""}>${n}</option>`).join("")}</select></label>` : "";
+  const ajustes = `${nivelHTML}<button type="button" class="cx-tema" data-cx-tema aria-pressed="${escuro}"><span>Modo escuro</span><b>${escuro ? "Ligado" : "Desligado"}</b></button><p class="cx-menu-caixa"><span>Caixa</span><b>${h(c.dinheiro(s.caixa))}</b></p>`;
   return `<div class="cx ${c.grupo ? "cx-grupo" : ""}" data-aba="${h(aba)}">
     <header class="cx-topo"><div class="cx-faixa"><a class="cx-faixa-logo" href="/corrida/" title="Voltar ao menu da Corrida">${marca(s.equipe)}</a><i class="cx-barrinha" aria-hidden="true"></i><h1>${h(eq.nome)}</h1></div>
       <div class="cx-conta">${BR}<i class="cx-barrinha" aria-hidden="true"></i><b>${h(s.nome)}</b>${(() => { const nova = root.Stories ? root.Stories.preparar(c) : -1; // com notícia nova, o perfil ganha o anel roxo dos stories e abre eles
@@ -264,7 +267,7 @@ function trocarAba(a, render) { const ordem = (x) => ABAS.findIndex((q) => q[0] 
 function abrirMensagens() { const d = dialogo("cxMsgDlg", "cx-msgs"); d.innerHTML = `<form method="dialog"><button class="cx-dlg-x" aria-label="Fechar">✕</button></form>${ctxAtual?.caixaMensagens || ""}`; d.showModal(); }
 // devolve true se o clique era desta tela
 function clique(alvo, render) {
-  if (root.CentralAnalise?.clique(alvo, render) || root.CentralContrato?.clique(alvo, render)) return true;
+  if (root.CentralAnalise?.clique(alvo, render) || root.CentralContrato?.clique(alvo, render) || root.CentralAcerto?.clique(alvo, render)) return true;
   if (alvo.hasAttribute("data-cx-tema")) { escuro = !escuro; try { localStorage.setItem(CHAVE_TEMA, escuro ? "escuro" : "claro"); } catch {} aplicarTema(); return true; }
   if (alvo.dataset.cxAba) { trocarAba(alvo.dataset.cxAba, render); return true; }
   if (alvo.dataset.cxTabela) { tabela = alvo.dataset.cxTabela; if (aba !== "classif") return (trocarAba("classif", render), true); render(); return true; }
@@ -273,7 +276,10 @@ function clique(alvo, render) {
   if (alvo.hasAttribute("data-cx-msg")) { abrirMensagens(); return true; }
   return false;
 }
-document.addEventListener("change", (e) => { if (document.body.classList.contains("cx-on") && renderAtual) root.CentralAnalise?.mudou(e, renderAtual); });
+document.addEventListener("change", (e) => {
+  if (e.target?.matches?.("[data-cx-nivel]") && ctxAtual?.mudarNivel) { ctxAtual.mudarNivel(e.target.value); return; } // a dificuldade dos robôs (o menu de ajustes)
+  if (document.body.classList.contains("cx-on") && renderAtual) root.CentralAnalise?.mudou(e, renderAtual);
+});
 document.addEventListener("click", (e) => { if (!document.body.classList.contains("cx-on")) return; const m = document.querySelector(".cx-menu[open]"); if (m && !e.target.closest(".cx-menu")) m.open = false; const l = e.target.closest?.("tr[data-piloto]"); if (l) abrirPiloto(l.dataset.piloto); });
 
 // ---------- teclado e controle: as abas, voltar e o foco pelas setas ----------

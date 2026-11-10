@@ -81,6 +81,11 @@ function contratarPiloto(s, id) {
   const custo = Math.max(5, Math.round((p.ritmo - 70) * 0.7));
   gastar(s, custo); s.piloto2 = id; return s;
 }
+// a dificuldade dos robôs no meio da carreira: vale a partir do próximo GP (cada GP lê s.nivel quando abre a sala)
+function mudarNivel(s, nivel) {
+  if (!NIVEIS.includes(nivel)) throw Error("Nível dos robôs inválido.");
+  s.nivel = nivel; return s;
+}
 function contratarEngenheiro(s, area, nivel) {
   const lista = ENGENHEIROS[area];
   if (!lista || ![0, 1, 2].includes(nivel)) throw Error("Engenheiro inválido.");
@@ -288,7 +293,7 @@ function proximaTemporada(s) {
   const sorteado = sortearCalendario(s.tamanho, s.semente, s.calendario.map((g) => g.pista));
   s.calendario = sorteado.calendario; s.calendarioSemente = sorteado.semente; return s;
 }
-const api = { CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
+const api = { CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Temporada = api;
 })(typeof window !== "undefined" ? window : globalThis);

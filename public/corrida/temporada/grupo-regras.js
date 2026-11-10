@@ -89,7 +89,8 @@ function escolherEquipe(sala, pid, equipe) {
 }
 function definirOpcoes(sala, pid, d = {}) {
   if (sala.host !== pid) throw Error("Só o anfitrião muda o calendário e os robôs.");
-  if (sala.fase !== "sala") throw Error("O formato já foi fechado: a temporada começou.");
+  // com a temporada rodando, só a dificuldade dos robôs muda (vale a partir do próximo GP); o calendário e as voltas ficam
+  if (sala.fase !== "sala" && (d.tamanho != null || d.voltas != null)) throw Error("O formato já foi fechado: a temporada começou.");
   const o = sala.opcoes;
   if (d.tamanho != null) { if (!TAMANHOS.includes(Number(d.tamanho))) throw Error("Calendário inválido."); o.tamanho = Number(d.tamanho); }
   if (d.voltas != null) { if (!VOLTAS.includes(Number(d.voltas))) throw Error("Número de voltas inválido."); o.voltas = Number(d.voltas); }

@@ -9,7 +9,7 @@
 //   T11 0,539 · T12 0,553 · Anderson Bridge 0,56-0,58 · T13 (o grampo em frente ao Fullerton) 0,591 · Esplanade Bridge e Esplanade Drive 0,6-0,69 ·
 //   T14 (Raffles Avenue) 0,704 · T15 0,758 · reta da Raffles Avenue 0,76-0,85 · T16 0,854 · T17 0,864 · T18 0,925 · T19 0,948 (o Singapore Flyer).
 import { cenarioSingapura, depoisSingapura } from "../singapura.js";
-import { D } from "../kit/singapura/mundo.js";
+import { D, KR } from "../kit/singapura/mundo.js";
 import { alturaDoTerreno, corDoChao, distanciaDaAgua } from "../kit/singapura/mundo.js";
 import { PATROCINIO_SG } from "../kit/singapura/barreiras.js";
 import { pertoDe } from "../kit/som.js";
@@ -18,6 +18,7 @@ const BOXES = window.Pistas.PISTAS.singapura.boxes;
 const F = D.frac.curvas;
 
 export const GP_SINGAPURA = {
+  escala: 0.4, escalaGente: 0.69, // escala real das peças do kit (arquibancada, barreira do escape, placas, gente): as mesmas de Interlagos e Spa
   asfalto: true,
   chao: {
     margem: { cor: "#5a5b60" }, // o asfalto de rua que sobra até a zebra
@@ -34,7 +35,7 @@ export const GP_SINGAPURA = {
   murosProprios: true, // o desenho das barreiras é de ../kit/singapura/barreiras.js, em cima de tr.murosEscape (os mesmos trechos da colisão)
   cenario: (tr, ctx) => cenarioSingapura(tr, ctx), // a água, os prédios, os marcos, as barreiras, as arquibancadas e o pit building
   depois: (tr, ctx) => depoisSingapura(tr, ctx), // a luz da noite, as árvores e a vida
-  terreno: { S: 240, pedacos: 6, altura: alturaDoTerreno, cor: corDoChao }, // a baía e o rio afundam o chão; a cor sai dos parques e das ruas
+  terreno: { S: Math.round(240 * KR), pedacos: 6, altura: alturaDoTerreno, cor: corDoChao }, // a baía e o rio afundam o chão; a cor sai dos parques e das ruas
   boxes: { garagens: false, mureta: true }, // só o corredor e a mureta: as garagens, o Pit Building e os terraços são de ../kit/singapura/boxes.js
   ambiente: { paineis: false, mastros: false, cerca: false, marcas: PATROCINIO_SG, posto: "sia", placas: [100, 50], outdoors: PATROCINIO_SG, bandeira: [0xef3340, 0xffffff] }, // a barreira, a tela e os painéis são nossos
   horizonte: false, // sem os morros genéricos: o horizonte é a cidade
@@ -42,10 +43,10 @@ export const GP_SINGAPURA = {
   sem: { outdoors: true, olhos: true, setas: true, mastros: true, rodas: true, dirigivel: true, bandeirolas: true }, // Singapura tem a Flyer de verdade (kit/singapura/flyer.js), não a roda-gigante do kit
   vida: {
     helicoptero: true,
-    gaivotas: (tr) => [[4500, 5800], [3300, 5600], [5200, 5500]].map(([x, z]) => ({ x, z, raio: 260 })).filter((g) => distanciaDaAgua(g.x, g.z) > 0), // sobre a baía
+    gaivotas: (tr) => [[4500, 5800], [3300, 5600], [5200, 5500]].map(([x, z]) => ({ x: x * KR, z: z * KR, raio: 260 * KR })).filter((g) => distanciaDaAgua(g.x, g.z) > 0), // sobre a baía
     som: {
       cidade: () => 0.9,
-      porto: (tr, x, y) => Math.max(0, Math.min(1, 1 - Math.max(0, -distanciaDaAgua(x, y)) / 420)),
+      porto: (tr, x, y) => Math.max(0, Math.min(1, 1 - Math.max(0, -distanciaDaAgua(x, y)) / (420 * KR))),
       campo: () => 0,
     },
   },

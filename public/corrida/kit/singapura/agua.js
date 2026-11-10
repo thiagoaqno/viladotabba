@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { soDeNoite, luzDaNoite } from "../bahrein/base.js";
-import { D, ANEIS, NIVEL_AGUA, distanciaDaAgua } from "./mundo.js";
+import { D, KR, ANEIS, NIVEL_AGUA, distanciaDaAgua } from "./mundo.js";
 
 // o plano de água: cada anel vira um polígono (a água do Marina Bay é verde-azulada de dia e quase preta de noite, com a cidade refletida)
 export function agua(tr, add) {
@@ -32,7 +32,7 @@ export function agua(tr, add) {
 }
 
 // o paredão da margem: uma tira vertical de concreto do fundo até a calçada (o chão do jogo desce numa rampa suave, o paredão tapa a rampa)
-export function paredoes(tr, add, { alcance = 900 } = {}) {
+export function paredoes(tr, add, { alcance = 900 * KR } = {}) {
   const vs = [], idx = [], mat = M(0x9a9a94, { roughness: 0.95, side: THREE.DoubleSide });
   for (const P of ANEIS) for (let i = 0; i < P.length; i++) {
     const a = P[i], b = P[(i + 1) % P.length], l = Math.hypot(b[0] - a[0], b[1] - a[1]), passos = Math.max(1, Math.ceil(l / 28));

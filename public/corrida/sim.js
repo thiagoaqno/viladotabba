@@ -260,7 +260,10 @@ function passo(c, ent, amb, tr, ev) {
   const amb2 = c.amb || (c.amb = {});
   amb2.chao = estrada; amb2.superficie = superficie; amb2.subida = (h1 - h0) / 10; amb2.ar = c.air; amb2.manual = !!amb.manual; amb2.marchaManual = ent.marcha || c.marcha;
   amb2.pn = pn; amb2.dano = dano; amb2.drs = drs; amb2.ers = ersAtivo; amb2.vacuo = vac; amb2.curva = curva;
-  amb2.tetoV = amb.f1 ? spec.vmax * pn.final * dano.final * F1.TETO_VELOCIDADE : Infinity;
+  amb2.extra = c.acerto ? extraDoAcerto(c.acerto, Math.abs(c.v || 0), amb2.extraAc || (amb2.extraAc = {})) : null; // o acerto do carro (asa e altura)
+  // SEM teto de velocidade (pedido do Thiago, 2026-11-10): a velocidade final sai da potência contra o arrasto (dinamica.js). O teto fixo
+  // (spec.vmax × TETO_VELOCIDADE) escondia o arrasto da asa (a asa cheia ganhava em quase toda pista) e o ganho de DRS, ERS e vácuo na reta.
+  amb2.tetoV = Infinity;
   amb2.limiteV = bandeira < 1 ? bandeira * spec.vmax * pn.final * dano.final * (1 + (drs ? F1.DRS_GANHO * (spec.drs ?? 1) : 0)) : Infinity;
   // a dinâmica
   const xAnt = c.x, yAnt = c.y;
@@ -691,7 +694,29 @@ function reconciliar(c, st, tr, ctx) {
   return { erro, dentro, dx: ox - c.x, dy: oy - c.y, da };
 }
 
-const api = { VACUO_ALCANCE, VACUO_LARGURA, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+// ---------- o ACERTO DO CARRO (asa e altura, de 0 a 1: o painel P, acerto-carro.js) ----------
+// A mesma conta no servidor (o carro de quem joga roda lá) e na previsão do navegador. Em metros: a altura parada vai de 2,5 a 7,5 cm; o
+// carro afunda 4,5 cm × a força da asa (0,8 a 1,2) × (v / 400 u/s)² (ordem de grandeza de um F1, para acertar jogando: não medido).
+// Vira os multiplicadores soltos da dinâmica (dinamica.js, amb.extra):
+//   carga   = a força da asa × o efeito solo (mais baixo, até +5%; mais alto, até -5%) × o que se perde raspando (o assoalho descola o ar);
+//   arrasto = 1 + 1,6 × o que a asa passa do meio (0,68 a 1,32: mais asa, mais arrasto e menos velocidade final) × o atrito do assoalho raspando.
+// O equilíbrio (carga de -20% a +20%, arrasto 1,6 × isso) foi escolhido com ferramentas/acerto-ideal.js: com ele o melhor acerto varia como na
+// F1 de verdade (asa cheia em Mônaco e no Hungaroring, mínima em Monza e Baku, no meio em Spa e Las Vegas); com +40% de carga e +24% de
+// arrasto, a asa cheia era a melhor em 22 das 24 pistas.
+// Raspando: cada centímetro abaixo do chão tira 12% da carga (até 35%) e põe 15% de arrasto (até 50%). Sem acerto (os robôs), o padrão.
+const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5 });
+const alturaParada = (a) => 0.025 + a.altura * 0.05;
+const forcaDaAsa = (a) => 0.8 + a.asa * 0.4;
+const afundaAero = (a, v) => 0.045 * forcaDaAsa(a) * Math.min(1.6, (Math.max(0, v) / 400) ** 2);
+function extraDoAcerto(a, v, o = {}) {
+  const asa = forcaDaAsa(a), folga = alturaParada(a) - afundaAero(a, v), raspa = Math.max(0, -folga) / 0.01, solo = 1 + (0.05 - alturaParada(a)) * 2;
+  o.potencia = 1; o.grip = 1; o.freio = 1; o.tracao = 1;
+  o.carga = asa * solo * (1 - Math.min(0.35, raspa * 0.12));
+  o.arrasto = (1 + (asa - 1) * 1.6) * (1 + Math.min(0.5, raspa * 0.15));
+  o.raspa = raspa;
+  return o;
+}
+const api = { ACERTO_PADRAO, alturaParada, forcaDaAsa, afundaAero, extraDoAcerto, VACUO_ALCANCE, VACUO_LARGURA, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

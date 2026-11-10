@@ -594,7 +594,7 @@ const PISTAS = {
       [0, 1, 1, 9, 1], [0.0235, 0.9765, -1, 9, 6], // a rua toda, menos o lado do corredor dos boxes (sem muro: a mureta do box é da física dos boxes)
       [0.012, 0.058, 1, 62, 14], [0.078, 0.1, 1, 40, 12], // curva 1 e curva 2: a área de escape de asfalto pintado do lado de fora
       [0.226, 0.254, 1, 30, 12], [0.262, 0.288, -1, 22, 10], // curvas 3 e 4
-      [0.403, 0.466, 0, -20, 36], // a Cidade Velha (curvas 8 a 12): a barreira entra no asfalto dos dois lados e a pista fica com 56 de largura (a de 96 em volta)
+      [0.403, 0.466, 0, -9, 36], // a Cidade Velha (curvas 8 a 12): a barreira entra no asfalto dos dois lados e a pista fica com 40 de largura, 8,3 m (a de 58 em volta; a rua de verdade tem ~7,6 m: um pouco de folga para jogar). Com o -20 de antes, na largura nova, sobravam 3,75 m
       [0.575, 0.62, 1, 26, 12], [0.645, 0.675, 1, 20, 12], // curvas 15 e 16
     ],
     // o relevo é o SRTM de 30 m na escala do traçado, sem exagero (ferramentas/pista-real.js az-2016 baku --dem srtm30m --raio 4)

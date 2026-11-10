@@ -26,6 +26,8 @@ echo   batida-muro-leve, -media, -forte (3 cada)
 echo   batida-carro-leve, -media, -forte (3 cada)
 echo   chegada (2)          a festa da bandeirada
 echo   chuva (1)            chuva caindo no asfalto, em laco
+echo   ers-liga (2)         o ERS ligando na tecla (o overtake)
+echo   radio-bip (2)        os bipes do radio da equipe antes da voz
 echo.
 echo O que gerar?
 echo   1) So os que faltam

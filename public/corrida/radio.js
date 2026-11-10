@@ -57,7 +57,7 @@ function silenciar(v) {
 }
 if (temDOM) {
   document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-radio-botao]"); if (b) { silenciar(); e.stopPropagation(); } }, true);
-  const primeiro = () => { const x = contexto(); if (x && x.c.state === "suspended") x.c.resume(); carregar({ id: "bip" }); proximo(); }; // (bip.mp3: a abertura do rádio, se o arquivo existir) // o navegador só libera o áudio depois de um toque
+  const primeiro = () => { const x = contexto(); if (x && x.c.state === "suspended") x.c.resume(); carregarAberturas(); proximo(); }; // (bip.mp3: a abertura do rádio, se o arquivo existir) // o navegador só libera o áudio depois de um toque
   window.addEventListener("pointerdown", primeiro, { once: true, capture: true }); window.addEventListener("keydown", primeiro, { once: true, capture: true });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", desenharBotoes); else desenharBotoes();
 }
@@ -69,6 +69,17 @@ function carregar(f) {
   const x = contexto(); if (!x || typeof fetch !== "function") return Promise.resolve(null);
   return fetch(`/corrida/radio/${f.id}.mp3`).then((r) => { if (!r.ok) throw new Error("sem arquivo"); return r.arrayBuffer(); })
     .then((b) => x.c.decodeAudioData(b)).then((buf) => (buffers.set(f.id, buf), buf)).catch(() => (faltam.add(f.id), null)); // sem mp3: fica em silêncio
+}
+// as aberturas gravadas do rádio (os bipes antes da voz, da ElevenLabs: GERAR-SONS-PISTA.bat, "radio-bip"): o índice dos sons
+// (sons/indice.json) diz quantas versões há; cada fala sorteia uma. Sem nenhuma, tenta o radio/bip.mp3 antigo.
+const aberturas = [];
+function carregarAberturas() {
+  const x = contexto(); if (!x || typeof fetch !== "function" || aberturas.carregando) return; aberturas.carregando = true;
+  fetch("/corrida/sons/indice.json").then((r) => (r.ok ? r.json() : {})).then((ind) => {
+    const n = (ind && ind["radio-bip"]) || 0;
+    if (!n) return carregar({ id: "bip" }).then((b) => { if (b) aberturas.push(b); });
+    for (let k = 1; k <= n; k++) fetch(`/corrida/sons/radio-bip-${k}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => b && x.c.decodeAudioData(b)).then((buf) => { if (buf) aberturas.push(buf); }).catch(() => {});
+  }).catch(() => {});
 }
 function ruido(c, dur, vol, destino, t) {
   const n = Math.max(1, Math.floor(c.sampleRate * dur)), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
@@ -86,7 +97,7 @@ function bip(c, f, dur, vol, destino, t) {
 // a abertura do rádio, antes da voz: o arquivo /corrida/radio/bip.mp3, se existir (o som de verdade, quando o Thiago achar); sem ele, o
 // sintetizado: o chiado de abrir o canal e dois bipes subindo. Devolve quantos segundos ela dura (a voz entra depois)
 function abertura(c, destino, t) {
-  const b = buffers.get("bip");
+  const b = aberturas.length ? aberturas[Math.floor(Math.random() * aberturas.length)] : null;
   if (b) { const s = c.createBufferSource(); s.buffer = b; s.connect(destino); s.start(t); return b.duration + 0.03; }
   ruido(c, 0.06, 0.07, destino, t);
   bip(c, 1150, 0.06, 0.05, destino, t + 0.05); bip(c, 1550, 0.08, 0.05, destino, t + 0.13);
@@ -106,7 +117,7 @@ function tocar(buf, fim) {
   avisarFala(true, ini - c.currentTime);
   s.start(ini); ruido(c, buf.duration + 0.04, 0.012, x.destino, ini); // chiado leve por baixo da voz
   ruido(c, 0.1, 0.07, x.destino, ini + buf.duration);         // o clique de fechar
-  if (!buffers.has("bip")) bip(c, 950, 0.07, 0.04, x.destino, ini + buf.duration + 0.05); // e um bipe mais grave
+  if (!aberturas.length) bip(c, 950, 0.07, 0.04, x.destino, ini + buf.duration + 0.05); // e um bipe mais grave
   s.onended = () => { if (x.abafar) x.abafar(false); avisarFala(false, 0); fim(); }; return true;
 }
 function proximo() {

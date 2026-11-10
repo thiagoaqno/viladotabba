@@ -20,7 +20,7 @@ function analogico(x, zona = PADRAO.zona, sens = PADRAO.p) {
 // ~55% do volante. O PADRÃO é a direção antiga encolhida para a escala nova: a mesma resposta no tempo (o batente em 0,2 s, a volta ao centro em
 // 0,125 s, como a rampa da física fazia) só que até `virada` em vez de até 1, e o analógico com a curva antiga (1,4) e o mesmo teto.
 // O painel de acerto (tecla P, acerto.js) muda estes valores ao vivo e guarda em "corrida:acerto-direcao".
-const ACERTO_PADRAO = { virada: 0.75, sobe: 0.15, volta: 0.125, curva: 1.4 }; // (os valores que o Thiago acertou no painel jogando, 2026-11-10; partiram da antiga encolhida: 0,55 / 0,2 / 0,125 / 1,4)
+const ACERTO_PADRAO = { virada: 1, sobe: 0.05, volta: 0.05, curva: 1.4 }; // (2026-11-10: de volta à direção ANTIGA, a pedido dos amigos do Thiago: o volante inteiro e quase na hora (a rampa da física, 5/s, é quem segura), a curva 1,4. Quem mexeu no painel P fica com os próprios valores, guardados no navegador. O acerto do Thiago era 0,75 / 0,15 / 0,125 / 1,4)
 const ACERTO_LIMITES = { virada: [0.25, 1.2], sobe: [0.05, 0.8], volta: [0.05, 0.5], curva: [1, 2.5] };
 const ACERTO = { ...ACERTO_PADRAO };
 try { const v = JSON.parse(localStorage.getItem("corrida:acerto-direcao") || "null"); if (v) for (const k of Object.keys(ACERTO_PADRAO)) if (Number.isFinite(+v[k])) ACERTO[k] = limite(+v[k], ...ACERTO_LIMITES[k]); } catch (e) {}

@@ -150,7 +150,7 @@ function vacuoAlvo(c, outros) {
 const LD_K = 0.6, K_TRASEIRA = 2, K_GUINADA = 0.5;
 // VIRADA_MAX: o teto do volante dos robôs (e do fantasma e do robô que assume um carro), o mesmo que quem joga tem no teclado e no controle
 // (ACERTO_PADRAO.virada em volante.js, acertado pelo Thiago jogando): todos com a mesma dirigibilidade, ninguém faz curva que o outro não faz.
-const VIRADA_MAX = 0.75;
+const VIRADA_MAX = 0.6; // (a mesma virada máxima do jogador, ACERTO_PADRAO de volante.js: 0,6 desde 2026-11-10)
 // fatorOlhar permite antecipar o ponto de mira em trechos específicos; os demais pilotos conservam a distância padrão.
 function pilotoAutomatico(c, tr, spec, vAlvo, latAlvo, saida = {}, fatorOlhar = 1) {
   const p = D.parametros(spec), n = tr.n, v = Math.max(c.v, 30), Ld = Math.max(22, v * LD_K * fatorOlhar);

@@ -124,10 +124,21 @@ socket.on("item:hit", (e) => onHit(e, race));
 socket.on("item:hazards", setHazards);
 socket.on("item:boom", (e) => { Sound.crash(110); onBoom(e); });
 // Põe os outros carros na pose do quadro: a MESMA hora do meu carro desenhado (agora menos um passo: o desenho do meu carro fica entre o passo
-// anterior e o atual). `alpha` não é mais preciso (o relógio é contínuo).
-const POSE = {};
-export function updateGhosts(dt) {
-  const k = 1 - Math.exp(-dt * 30), rt = sNow() - ATRASO, Sm = window.Sim, T = tempoReal() - PASSO_MS;
+// anterior e o atual). A hora é a do QUADRO da tela (`tQuadro`, a do requestAnimationFrame), a mesma régua do meu carro (a física dele anda
+// pelo tempo entre quadros), e não a do relógio no instante em que o código chega aqui: essa varia alguns ms de um quadro para o outro (0, 1
+// ou 2 passos de física antes), o que numa tela de 60 Hz (16,7 ms por quadro) some, mas numa de 144 ou 240 Hz (4,2 ms) é meio quadro de
+// tranco nos outros carros. O acerto do relógio da rede (até 2 ms de uma vez, a cada 2 s) também entra devagar no desenho: OFF_DESLIZA ms por
+// segundo (0,2% da velocidade, invisível); um acerto grande (> 25 ms: a primeira sincronia) entra de uma vez.
+const POSE = {}, OFF_DESLIZA = 2;
+let offDesenho = null;
+function horaDoQuadro(dt, tQuadro) {
+  const off = relogioF1.off;
+  if (offDesenho === null || Math.abs(off - offDesenho) > 25) offDesenho = off;
+  else offDesenho += Math.max(-OFF_DESLIZA * dt, Math.min(OFF_DESLIZA * dt, off - offDesenho));
+  return Number.isFinite(tQuadro) ? performance.timeOrigin + tQuadro + offDesenho - PASSO_MS : tempoReal() - PASSO_MS;
+}
+export function updateGhosts(dt, tQuadro) {
+  const k = 1 - Math.exp(-dt * 30), rt = sNow() - ATRASO, Sm = window.Sim, T = horaDoQuadro(dt, tQuadro);
   for (const gh of race.ghosts.values()) {
     if (gh.mod) { // regras de F1
       if (!gh.mod.buf.length) continue;

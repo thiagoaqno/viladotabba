@@ -290,10 +290,10 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0 };
+const FOLGA_F1 = { facil: 0.15, medio: 0, dificil: 0 }; // (fácil 4% → 15%: na escala real até o fácil era difícil para quem joga no teclado, 2026-11-10)
 // quem joga anda bem acima do "ideal" medido pelo perfil (o pneu segura mais do que a conta supõe): por nível, o robô usa esta
 // fração a mais do limite das curvas, por cima do nível que dá o ideal. No difícil ele vai no limite de verdade.
-const EMPURRAO_F1 = { facil: 0.86, medio: 0.96, dificil: 1 }; // (o médio é o difícil de antes; o difícil vai além) // (o difícil mira 3% abaixo do ideal: quem joga bem já bate o ideal)
+const EMPURRAO_F1 = { facil: 0.76, medio: 0.96, dificil: 1 }; // (o médio é o difícil de antes; o difícil vai além) // (o difícil mira 3% abaixo do ideal: quem joga bem já bate o ideal)
 function referenciaF1(room) {
   const pista = room.config.pista;
   const pf = perfil(pista, F1Equipes.specDaEquipe("mclaren"));

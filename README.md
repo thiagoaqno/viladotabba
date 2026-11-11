@@ -1,143 +1,100 @@
-# Leilão da Galera
+<p align="center">
+  <img src="public/corrida/icone-256.png" width="120" alt="Corrida da Galera">
+</p>
 
-Site multiplayer para montar times (ou hambúrgueres, pizzas, drinks…) por leilão: a roleta sorteia o item, cada participante dá lance, o maior leva e as moedas são controladas sozinhas.
+<h1 align="center">Corrida da Galera</h1>
 
-**Hospedagem:** para colocar no ar no Fly.io (servidor em São Paulo), siga o [DEPLOY-FLY.md](DEPLOY-FLY.md).
+<p align="center"><b>Fórmula 1 com os amigos, no navegador ou instalado no PC.</b><br>
+Grid de 22 carros, as equipes e os pilotos de 2026, 25 pistas, carreira, safety car, box, chuva e ERS.</p>
 
-**Moderação das carreiras em grupo:** [abrir o painel privado](https://leilao-de-times.fly.dev/admin/carreira). O acesso usa a conta GitHub do moderador; a configuração inicial está em [DEPLOY-FLY.md](DEPLOY-FLY.md#painel-visual-privado).
+<p align="center">
+  <a href="https://viladotabba.com/corrida/"><b>▶ Jogar agora no navegador</b></a> ·
+  <a href="https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe"><b>⬇ Baixar para Windows</b></a> ·
+  <a href="https://viladotabba.com/">A Vila da Galera</a>
+</p>
 
-**Ludo da Galera:** ludo de 2 a 4 jogadores (4 peões, ou 2 no modo rápido), em `/ludo/`. Joga com **2 dados** (padrão; o organizador pode voltar para 1): cada dado é uma jogada, num peão ou em dois (toque no dado para escolher qual usar), e dobradinha joga de novo (três seguidas perdem a vez). Com 1 dado: sai da base com 6 (opção: 1 ou 6), tirou 6 joga de novo, três 6 seguidos perdem a vez, comer ou chegar em casa dá outra jogada, estrelas são casas seguras e dois peões juntos formam uma torre (opção de barreira). O dado é rolado no servidor.
+<p align="center"><img src="public/corrida/capa-carregamento.png" width="900" alt="A largada em Interlagos"></p>
 
-**Vila da Galera (lobby):** a página inicial (http://localhost:3000) é um mapinha 2D. Ande com as setas/WASD (ou o direcional no celular), chegue na porta de uma casinha e aperte Espaço (ou A) para entrar no jogo. Também dá para clicar/tocar numa casinha que o boneco anda sozinho. Quem estiver no lobby ao mesmo tempo aparece andando com o nick em cima da cabeça (canal `/vila`, em `vila.js`). O leilão fica em `/leilao/`. Nicks têm no máximo 8 caracteres.
+---
 
-**Galeramon (batalha na vila):** clique no boneco de um amigo na vila (ou fique de frente para ele e aperte Espaço) para desafiar. Cada um monta o time de 3 bichos no botão 🐾 Time. É por turnos, estilo Pokémon, com 18 bichos (paródias de animais brasileiros) e 7 tipos: Fogo, Água, Grama, Raio, Pedra, Psíquico e Normal (Fogo > Grama > Água > Fogo, Raio > Água e Psíquico, Pedra > Fogo e Raio, Psíquico > Pedra). Bichos, golpes e tipos ficam em `public/galeramon/dados.js`, os desenhos em `public/galeramon/sprites.js` e as contas da batalha (feitas no servidor) em `galeramon.js`.
+## O que tem no jogo
 
-**Modo Pokémon:** no desafio dá para escolher Galeramon ou Pokémon. O modo Pokémon tem os 649 Pokémon de Kanto, Johto, Hoenn, Sinnoh e Unova (com Wonder Guard do Shedinja, Truant do Slaking, Huge Power do Azumarill, Transform do Ditto, Metronome, Splash do Magikarp, Counter/Mirror Coat do Wobbuffet, Hidden Power do Unown e Belly Drum) com atributos, golpes e a tabela de tipos oficiais, e usa os sprites do FireRed/LeafGreen (até o 386), do Platinum (4ª geração) e do Black/White (5ª geração), carregados na hora do PokeAPI (nenhuma imagem fica no site). Os dados ficam em `public/galeramon/pokemon.js`. Os sprites são da Nintendo: deixe o link só entre amigos. Para desligar o modo, rode o servidor com `POKEMON=0`.
+- **Corrida rápida** contra 21 robôs, com três níveis, clima aleatório, seco, chuva ou variável, e classificação opcional (Q1, Q2 e Q3).
+- **Carreira solo**: escolha a equipe, desenvolva o carro peça por peça, contrate pilotos e engenheiros e dispute o campeonato.
+- **Temporada com os amigos**: cada um na sua equipe (dois podem dividir a mesma), mercado disputado, e quem chega depois entra numa equipe com vaga no meio da temporada.
+- **Multiplayer**: abra uma sala, mande o link e corram juntos, com robôs completando o grid.
+- **Contrarrelógio e treino livre**, com o fantasma da sua melhor volta e o acerto do carro liberado.
+- **Regras de F1 de verdade**: pneus que gastam e esquentam, pit stop com a equipe de mecânicos, DRS, ERS manual, bandeiras, limites de pista, punições, safety car e a transmissão de TV antes da largada.
+- **Acerto do carro** (asa e altura) por pista, com a proposta do engenheiro e a sugestão do estrategista.
+- **Câmeras** de cockpit, T-cam, bico, de fora e de TV, com retrovisores e o retrovisor virtual.
+- **Volante e controle**: tudo remapeável, força no volante nos Logitech (G25, G27, G29, Driving Force) e vibração no controle.
+- **Configurações como nos jogos**: predefinições gráficas (e a personalizada), resolução, sombras, efeitos, áudio por canal e o painel compacto em primeira pessoa.
 
-**Modo Naruto Shippuden:** nas batalhas por turnos da Vila e no Ginásio em tempo real, monte um time de 3 entre 12 ninjas. Jutsus consomem chakra; nos turnos, Concentrar recupera 35 pontos; no Ginásio, o chakra regenera durante a luta. Cada jogador pode usar duas Substituições para escapar de ataques. Os dados ficam em `public/galeramon/naruto.js`, e os sprites e seus créditos em `public/galeramon/naruto-sprites/` e `public/galeramon/NARUTO-ASSETS.md`.
+<p align="center">
+  <img src="public/corrida/carregamento-bortoleto-interlagos.webp" width="290" alt="Bortoleto em Interlagos">
+  <img src="public/corrida/carregamento-hamilton-suzuka.webp" width="290" alt="Hamilton em Suzuka">
+  <img src="public/corrida/carregamento-antonelli-monza.webp" width="290" alt="Antonelli em Monza">
+</p>
+<p align="center">
+  <img src="public/corrida/carregamento-alonso.webp" width="290" alt="Alonso em Las Vegas">
+  <img src="public/corrida/carregamento-perez.webp" width="290" alt="Pérez em Singapura">
+  <img src="public/corrida/carregamento-ferrari-mexico.webp" width="290" alt="A Ferrari no México">
+</p>
 
-**Banco da Galera:** o mesmo site também tem um jogo de tabuleiro de compra e venda de cidades, de 2 a 6 jogadores, em `/banco/` (ex.: http://localhost:3000/banco/). Quem manda uma cidade a leilão ganha 10% do lance vencedor de comissão (se outro jogador levar). As regras estão no botão "Regras" da página.
+## Jogar
 
-**Uno da Galera:** jogo de cartas com as regras oficiais, de 2 a 8 jogadores, em `/uno/` (ex.: http://localhost:3000/uno/).
+### No navegador
+Abra **https://viladotabba.com/corrida/**, escreva o seu nome e escolha o modo. Funciona no Chrome e no Edge, no computador. No celular, dá para jogar com os botões na tela.
 
-**Sinuca da Galera:** bola 8 no estilo 8 Ball Pool, de 2 a 8 jogadores, em duplas (2x2) ou individual (rei da mesa ou mata-mata), em `/sinuca/` (ex.: http://localhost:3000/sinuca/). As regras e os controles estão no botão "Regras" da página.
+### Instalado no Windows (mais leve e sem ping jogando sozinho)
+1. Baixe o **[CorridaDaGalera-Setup.exe](https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe)**.
+2. Abra o arquivo. Se o Windows mostrar "O Windows protegeu o computador", clique em **Mais informações → Executar assim mesmo** (o programa não tem a assinatura paga da Microsoft).
+3. **Avançar → Instalar**. Não pede senha de administrador.
 
-**Truco da Galera:** truco paulista (baralho limpo, manilha pela vira, jogo até 12) para 4 jogadores em duplas ou 6 em trios (dá para jogar de 2 também), em `/truco/` (ex.: http://localhost:3000/truco/). Tem truco/seis/nove/doze, mão de onze, mão de ferro, carta coberta e sinais para o parceiro.
+O programa roda o jogo no próprio PC:
+- **Sozinho** (corrida rápida, contrarrelógio, treino e carreira solo): roda inteiro no seu computador, sem ping, e funciona até sem internet.
+- **Com os amigos**: entra nas salas do site, do mesmo jeito que quem joga pelo navegador.
+- **Recordes**: os feitos sem internet sobem para o site quando a internet volta.
+- **Atualizações**: ao abrir, o jogo pergunta antes de baixar e baixa só o que mudou.
 
-**Botão da Galera:** futebol de botão com tampinhas, de 2 a 8 jogadores, em `/botao/` (ex.: http://localhost:3000/botao/). Na vila é o quiosque do lado direito da praça. Times de 1x1 até 4x4 (pode ser desigual, como 3x2), ou cada um por si (rei do campo / mata-mata). Cada time tem de 2 a 7 tampinhas (o organizador escolhe; o padrão é 5, numa formação de quadra 2-2, 3-1, 1-2-1 ou 1-1-2, com a tampinha 1 de goleiro; com outra quantidade a arrumação é fixa) e as tampinhas têm o desenho do uniforme (Corinthians, São Paulo, Santos, Palmeiras e outras; se os dois lados escolherem o mesmo time, o segundo joga com a segunda camisa). Cada vez tem 3 toques (configurável): todo peteleco conta, e num time com mais gente cada toque é de um jogador (um passa, o outro recebe). Falta (bater primeiro numa tampinha adversária) passa a vez, e gol vale de qualquer lugar do campo, até de trás do meio (só não vale com falta antes). A mira mostra só a seta de força (onde a tampinha bate e para onde a bola vai é no olho); o organizador pode ligar a "mira com trajetória", que volta a mostrar a linha até a peça e para onde a bola vai. O organizador escolhe: toques por vez, mesa fechada ou com lateral, goleiro (um bloquinho que o time arruma na própria vez e que trava na vez do adversário), bola parada com a tampinha arrumada, super palhetada (passes enchem uma barra) e o estádio (mesa de madeira, MorumBIS, Neo Química Arena, Nubank Parque ou Arena da Baixada, nas cores do time da casa). O servidor simula cada peteleco (`public/botao/fisica.js`) e as regras ficam em `botao.js`.
+## Rodar o código no seu PC
 
-**Corrida da Galera:** corrida de carros esportivos (sem poderes) em 3D, com a câmera atrás do carro, de 1 a 8 pilotos, em `/corrida/` (ex.: http://localhost:3000/corrida/). Na vila é o Autódromo, no fim do mapa (depois da rua de baixo). Mônaco, Interlagos e Tóquio são 1,5× maiores (o traçado é multiplicado por `scale` em `pistas.js`, e o mundo da pista cresce junto) e mais largas. Dá para jogar com controle (RT acelera, LT freia, analógico vira). Três pistas com relevo: Mônaco (guard-rail, a subida até o Cassino, o porto com iates), Interlagos (a descida do S do Senna, uma lombada na Reta Oposta onde o kart voa, o Mergulho e a subida dos boxes) e Tóquio (de noite, com neon, dois viadutos, uma rampa de pulo e o Fuji). Subida freia, descida embala e, numa lombada rápida, o kart sai do chão. Mais duas pistas vieram de um traçado feito por outra IA (curvas suaves em metros), convertido para o nosso formato: Los Angeles (pôr do sol, viaduto da freeway com pilares, placa verde em cima da pista e o letreiro "GALERA" no morro) e Rio de Janeiro (reta da orla com calçadão de ondas, areia, guarda-sóis e mar, Pão de Açúcar, subida pela mata com casinhas coloridas, Cristo no morro e os Arcos da Lapa por cima da pista). **Vácuo:** logo atrás de outro carro, na mesma linha, o seu anda até 12% mais (aparecem linhas de vento); quem fica mais de 1 s no vácuo e sai de trás ganha o estilingue, um empurrão curto para ultrapassar. **Fantasma do recorde:** a sua volta mais rápida em cada pista fica salva no navegador; nas próximas corridas um carro dourado refaz essa volta junto com você, e o placar mostra, ponto a ponto, quantos segundos você está na frente ou atrás dela. Os outros karts são fantasmas: cada navegador roda a física do próprio kart e só manda a posição, então ninguém bate em ninguém e a internet lenta não atrapalha. O 3D é Three.js (`public/corrida/jogo.js`): asfalto, zebras, muros, chão com relevo, prédios, árvores e arquibancadas são montados a partir do traçado. Cinco carros esportivos em 3D (Samurai GT, inspirado no Skyline R34; Raio V12, superesportivo italiano; Pimentinha, hatch tipo Golf GTI; Oito-Seis, o AE86 do drift; e Muscle 69, tipo Mustang), com velocidade final, aceleração, aderência e resistência diferentes; a ficha aparece na sala em fileiras de LED. Na sala dá para personalizar a cor, as rodas (prata, pretas, douradas ou bronze), o aerofólio (sem, baixo ou alto) e as faixas (dupla no capô ou lateral), e os amigos veem o seu carro do jeito que você montou. Três câmeras (tecla C ou o botão 🎥): perto do carro (padrão), primeira pessoa (de dentro, vendo o capô) e longe. A física é arcade com aderência limitada: entrou rápido demais na curva, o pneu satura, o kart escorrega para fora e perde velocidade, então tem que frear antes. As pistas são desenhadas por vértices com o raio exato de cada curva (grampos, esquinas de 90°, chicanes). O servidor (`corrida.js`) faz a largada sincronizada e conta as voltas pelos 4 setores da pista, na ordem e com tempo mínimo de volta (contra atalho). Traçados, relevo de cada pista (altura ao longo da volta) e carros em `public/corrida/pistas.js`. Pistas novas inspiradas no Mario Kart 64: Circuito do Luigi, Terra do Sorvete e Estrada Arco-íris (no espaço, com viadutos que se cruzam).
+Precisa do **[Node.js](https://nodejs.org/) 24** (ou 22.13 em diante).
 
-**Tiro da Galera:** FPS de arena em 3D, x1 ou x2, em `/tiro/` (ex.: http://localhost:3000/tiro/). Na vila é a Arena de Tiro, no canto de baixo à direita. Partida em rodadas no estilo CS (primeiro a 3, 5 ou 8): cada um tem uma vida por rodada, e quem eliminar o outro time leva a rodada. Acabou o tempo, ganha quem tem mais gente viva (depois, mais vida somada). No começo de cada rodada (4 segundos parado) dá para escolher a arma principal (tecla 1; apertar de novo troca): AK-47 (automática, 36 de dano no corpo, um tiro na cabeça mata, recuo que sobe nas primeiras balas e depois balança para os lados) ou AWP (um tiro no corpo mata, mira com dois níveis de zoom no botão direito). Todo mundo também tem a Desert Eagle (tecla 2: 53 de dano, 7 balas, tiro na cabeça mata) e a faca (tecla 3: você corre mais rápido; botão esquerdo corta, o direito dá a facada forte, e pelas costas é muito mais forte). Q volta para a arma anterior. O mapa tem alturas diferentes: a torre do meio com escada até o topo, ninhos de sniper com parapeito e passarelas com degraus (dá para subir degraus andando). Andando, pulando ou atirando em rajada a bala espalha, como no CS; com Shift você anda devagar, sem barulho de passo. Cada navegador roda o próprio movimento e manda a posição ~30 vezes por segundo; o servidor manda UM pacote com todo mundo 20 vezes por segundo, e os outros aparecem 100 ms no passado, interpolados. Quem decide o acerto é o servidor (`tiro.js`): ele guarda o último segundo de posições e volta no tempo (meio ping + 100 ms) para ver onde o alvo estava na tela de quem atirou. O mapa, as armas, a física e o teste de tiro ficam em `public/tiro/arena.js` (usado pelo navegador e pelo servidor); o 3D é feito com Three.js (`public/tiro/jogo.js`), e os sons são sintetizados na hora. Tem o modo "Treinar sozinho", com alvos que andam. Quem morre cai como boneco de pano (ragdoll, `public/ragdoll.js`): o corpo é empurrado na direção do tiro, dobra joelhos e cotovelos, bate nas paredes e caixas e some afundando no chão; tiro na cabeça joga a cabeça para trás. Precisa de teclado e mouse.
-
-**Pelada da Galera:** futsal em 3D, do 1x1 ao 5x5 (quadra de 48 x 30 m e gols de 5,2 m), em `/pelada/` (ex.: http://localhost:3000/pelada/). Na vila é a Quadra da Pelada, no canto de baixo à esquerda. A quadra é cercada por placas e alambrado, então a bola nunca sai e o jogo não para; o jogo dura 3, 5 ou 8 minutos. Cada time pode ter um goleiro (alguém do time escolhe "Goleiro" na sala): ele pega a bola com a mão dentro da área, segura até 6 segundos e se joga com Espaço + A/D. W/A/S/D andam (na câmera de TV, W é sempre "para cima" na tela), as setas apontam o chute, K/J/L (ou o mouse) chutam, passam e dão cavadinha, Q/E põem efeito (a bola faz curva), Shift dá o pique e a rodinha do mouse dá o carrinho (quem estiver na frente cai). C troca a câmera: atrás do jogador, TV (sempre seguindo você) ou primeira pessoa. Em primeira pessoa dá para olhar para o chão (e ver a bola no pé). Os jogadores têm joelhos e cotovelos que dobram na corrida e um corpo "molinho" feito com física de mola: o tronco (a coluna, presa na cintura) tomba para a frente quando o jogador arranca, joga para trás quando freia e deita para dentro das curvas, passando um pouco do ponto e voltando como gelatina; a cabeça e os braços seguem o tronco com atraso, balançando soltos. Quem leva carrinho cai como boneco de pano (ragdoll) e levanta logo depois. **Skins zoeiras** (CR7, Neymar, Lula, Bob Esponja e Levi, além do padrão): cada um escolhe na tela inicial, na sala ou na pausa (troca na hora, até no meio do jogo, e todo mundo vê). Cada skin é um boneco de caixinhas com as mesmas molas e ragdoll, e a camisa continua com a cor do time; se você colocar um modelo 3D em `public/pelada/modelos/<skin>.glb` (cr7, neymar, lula, bob_esponja, levi), ele é carregado com o GLTFLoader no lugar do boneco (ajuste de tamanho, altura e rotação em `SKINS_CONFIG`, no `jogo.js`; as animações "Run"/"Idle" do arquivo são usadas). **Quadras:** o organizador escolhe na sala entre Society (grama, fim de tarde), Rio (quadra de rua de cimento colorido, mureta de tijolo grafitada, sol forte, morro cheio de casinhas e o Cristo lá longe) e Ginásio (taco de madeira liso que brilha, refletores no teto com a luz pintada no piso, vidro em volta e arquibancada escura; roda tão leve quanto as outras); só o visual muda. Fotos de piso opcionais em `public/pelada/texturas/` (grama.jpg, cimento.jpg, madeira.jpg) entram como base do desenho. O chute tem assistência estilo FIFA, só no último terço do campo: se a mira está a menos de 35° do gol (do meio ou das traves), a bola vai para dentro do gol (mirou entre as traves, fica onde você mirou; mirou para fora, vai no canto mais perto). Fora desse cone, ou com efeito (Q/E), vale a mira pura. A bola tem física de futsal (`campo.js`, a mesma no servidor e no navegador): gravidade de jogo (25 m/s², sobe e cai rápido), arrasto do ar, quique baixo (0,45), atrito forte rolando (o passe para se ninguém dominar) e efeito Magnus no Q/E (força = velocidade × giro, curva no ar e um pouquinho rolando). Quem está parado ou vai ao encontro da bola amortece no peito/pé, e a bola fica colada. **Passe assistido:** procura o companheiro num cone de 45° para cada lado da mira, e a força escolhe quem: passe fraquinho vai no mais perto, carregando mais ele procura mais longe (barra cheia ~28 m); enquanto você carrega, um anel verde aparece embaixo de quem vai receber. A bola sai na medida para chegar rolando nele, mirando onde ele vai estar se estiver correndo; para mais de 18 m vira lançamento pelo alto. **Controle (Xbox/PlayStation):** funciona na Pelada, no Rocket e na Corrida. Na Pelada, no layout clássico do FIFA com controle do Xbox: analógico esquerdo corre e mira com a direção exata, direito mexe a câmera, A passe, B chute, X cruzamento alto (procura um companheiro adiantado e a bola cai na área; sem ninguém, na marca do pênalti) e, sem a bola, carrinho (carrinho só de quem está sem a bola), Y cavadinha, RB + B chute colocado (sai na hora com força máxima e curva para o gol), RB + A passe colocado (tenso, no companheiro mais alinhado com a mira), LB troca de jogador (contra bots), RT pique, LT segurar, R3 pular/cabecear, View câmera, Menu pausa. No teclado: U cruza, R segurado + K/J dá o colocado, T troca de jogador; no Rocket, RT acelera, LT ré, A pula, B turbo. **Condução estilo FIFA:** quem está mais perto da bola rasteira fica com ela no pé: a bola vai a uns 0,6 m na frente (andando), um pouco mais longe correndo e com toques mais longos no pique, e acompanha as viradas. A posse tem inércia: ombro a ombro a bola continua com quem tinha; o marcador só toma se ficar bem mais perto (25 cm) e com a bola na frente dele (parado no caminho ou entrando na frente). O carrinho tira de vez, por trás, de frente ou de lado, e derruba quem estava com a bola. **Corpo a corpo:** ninguém atravessa ninguém. Quem corre para cima de outro jogador para e empurra (quem está no pique empurra mais, na ombrada), e a barreira da falta e o goleiro robô também são sólidos; caído, no carrinho ou no mergulho, não bloqueia. Como cada navegador mexe o próprio jogador, a conta usa onde o outro está agora (o último pacote andado para a frente pelo atraso dele: 100 ms + metade do ping), e perto de você o boneco dele é desenhado nessa posição. **Segurar (F, ou ✋ no celular):** perto de um adversário (até 1,3 m), com ou sem bola, você puxa a camisa dele: ele corre a 55% da velocidade, e você fica mais lento (85%) e sem pique, com o braço esticado nele. Cada puxão dura no máximo 1,5 s, depois espera 2 s; os dois veem um aviso. Logo depois do chute a bola solta, e na falta a condução fica desligada. Online, enquanto você conduz, a bola é simulada no seu navegador (como o seu jogador) e vai junto nos seus pacotes; o servidor só confere se é plausível e continua decidindo roubo e carrinho. Assim ela não "arrasta" esperando o servidor, e vira junto com o corpo. O corpo vira para onde você manda, com velocidade de giro limitada (correndo, uma meia-volta leva ~0,4 s); numa virada grande a bola vem para perto do pé, como uma puxada de sola, e dá a volta junto. Para quem assiste, a bola de quem conduz é desenhada no mesmo relógio que o boneco dele. **Contra bots:** "Jogar contra bots" na tela inicial, do 1x1 ao 5x5 e em Fácil, Médio ou Difícil, sem servidor (a bola e os bots rodam no navegador, como no treino). O seu time tem bots companheiros, o outro é só de bots, e cada um tem goleiro robô; 4 minutos. O bot mais perto da bola vai nela, os outros guardam posição acompanhando a bola; com a bola, conduzem para o gol desviando de quem vem, passam quando apertados e chutam de perto, e também dão carrinho e cabeceiam. LB (ou T) troca para o companheiro mais perto da bola (de novo, o próximo; a câmera desliza do jogador antigo até o novo em ~0,45 s, sem pulo); no passe para um companheiro, o controle vai junto com a bola na hora (e, se ele dominar uma bola solta, também). **Amistoso online com bots:** na sala, o organizador liga "🤖 Completar com bots": cada time joga com 4 na linha e 1 goleiro, quem entrou joga e os lugares que sobram são de bots (dá para 1x1, 2x1, 3x4, 4x4…, ou até só um time de humanos). A IA dos bots roda no servidor (`peladaBots.js`, com a mesma física de `campo.js`): o mais perto da bola vai nela, os outros guardam posição, e com a bola conduzem, passam (no Strikers, com o passe planejado) e chutam; o goleiro bot acompanha a bola e repõe rápido. LB/T troca de corpo com o bot do time mais perto da bola. No passe para um bot, um humano assume quem recebe: se tem outro humano no time, vai ele (o mais perto do receptor); senão, quem passou. Passe para um humano não troca ninguém. Tem "Treinar a pé" e "Bater falta" (sozinho, contra barreira e goleiro robô). Em cima de cada gol tem uma placa dizendo onde você ataca ("ATAQUE AQUI") e qual é o seu gol, e uma seta na tela aponta para onde atacar (no Botão, a rede fica da cor de quem defende, com uma plaquinha). As camisas são as mesmas do futebol de botão. Cada navegador mexe o próprio jogador e manda a posição ~30 vezes por segundo; a bola é do servidor (`pelada.js`), que roda a física 60 vezes por segundo e manda UM pacote com a bola e todo mundo 20 vezes por segundo (bem menos internet). O navegador prevê a bola com a mesma física e corrige a diferença aos poucos. Quadra, camisas, carros e física em `public/pelada/campo.js`; o 3D é Three.js (`public/pelada/jogo.js`). Precisa de teclado e mouse.
-
-**Pelada — controles e jogo:** teclado e mouse remapeáveis (menu de pausa ou sala → "Remapear teclado e mouse"). Passe de toque assistido (trava no pé de quem recebe), passe longo segurando o passe por 1 s, bola enfiada (L / Y), cavadinha (Z / LB). Jogador fixo como no Pro Clubs (a troca de jogador do FIFA é opcional): passe sem a bola pede a bola, e aparece um 🙋 em cima de quem pediu. Condução com toques e aceleração suave. 17 skins (Homem-Aranha, Naruto, Tartaruga Ninja, Ghostface, Gojo, Woody, Pikachu, Ben 10, Shrek, CJ, Steve...), e todo jogador tem o marcador do time (anel no chão, losango na cabeça e braçadeira).
-
-**Rocket da Galera:** futebol de carro estilo Rocket League em `/rocket/`, numa casa separada da vila (a Garagem do Rocket, na rua nova lá embaixo). Usa o mesmo servidor e a mesma página da Pelada, no modo carros: arena fechada com uma bola gigante (pintada de bola de praia) que usa a física da bola do Rocket League: gravidade de 650 uu/s, quique 0,6, atrito 0,35 que vira giro, arrasto do ar e o impulso extra que a Psyonix dá quando o carro bate na bola; uma marca amarela no chão mostra onde ela vai cair. Também tem turbo (com pads no chão), pulo duplo e mortal, derrapagem e 4 carros pixelados inspirados no GT-R R34, no 911, na F40 e na M3. Do 1x1 ao 5x5. A arena é um ginásio coberto (piso de taco, rampa e parede acolchoada na cor de cada time, vidro em cima, refletores no teto e arquibancada) e não tem quina viva: o chão vira parede numa curva de 7 m, a parede vira teto do mesmo jeito e os cantos também são curvos (`arenaSDF` e `rampa` em `campo.js`). A bola sobe pela curva, e o carro anda na rampa (deita junto) e, embalado, decola no alto dela.
-
-**Batalha da Galera:** batalha de balões de kart estilo Mario Kart em `/batalha/` (na vila é a Arena da Batalha, na rua nova). De 2 a 8 karts (o organizador pode completar com robôs), partidas de 2, 3 ou 5 minutos. A arena tem 120 x 120 m, com um planalto no meio (sobe por rampas), mirantes nos cantos e rampas de pulo, além de um minimapa. Cada um começa com 3 balões; as caixas "?" dão um item aleatório (quem está atrás no placar ganha itens melhores): banana, casco verde (vai reto e quica), casco vermelho (persegue), cogumelo (turbo que estoura balão na trombada), estrela (invencível) e bomba (explode em área). Estourar um balão de alguém vale 1 ponto. Quem perde os 3 balões vira fantasma por 8 segundos, perde metade dos pontos e volta com 3 balões. Ganha quem tiver mais pontos no fim. W/S aceleram e freiam, A/D viram, Shift derrapa (segurando numa curva e soltando, ganha um mini-turbo), Espaço usa o item (segurando S, joga para trás). Cada navegador dirige o próprio kart; o servidor (`batalha.js`) manda nos itens, nas caixas e nos balões, roda 60 vezes por segundo e manda um pacote com tudo 20 vezes por segundo. Para disfarçar o atraso, a caixa quebra na hora em que você passa, a roleta do item gira enquanto o servidor confirma, e quem leva um item roda, solta confete e perde o balão com animação. As regras ficam em `public/batalha/regras.js` (usado pelo servidor e pelo treino contra robôs, que roda só no navegador); o 3D é Three.js (`public/batalha/jogo.js`). Arenas: Praça da Fonte, Rosquinha, Forte de Blocos, Dois Andares e Arranha-céu (as quatro últimas inspiradas no Mario Kart 64; nas que têm buraco ou borda sem muro, quem cai perde um balão).
-
-**Tênis da Galera:** tênis arcade em 3D (inspirado no Mario Tennis) em `/tenis/` (na vila é o Clube de Tênis, na rua nova). Simples (1x1) ou duplas (2x2), online com a galera e/ou robôs (3 dificuldades), ou treino contra robôs sem internet. O golpe é "armado": aperte antes da bola chegar (J top spin, K cortada, L balão, U curtinha; no controle A, B, Y, X) e o jogador bate sozinho quando a bola entra no alcance — quanto antes, mais forte. Armado, ele só desacelera devagar e o direcional vira a mira (uma marca no chão mostra para onde a bola vai). Bola alta antes de quicar vira smash. Saque em dois toques (joga para cima e bate lá no alto), andando para os lados antes. Placar oficial (15-30-40, iguais, vantagem), set de 2, 3, 4 ou 6 games com tie-break. Os bonecos e as skins são os da Pelada. Regras em `public/tenis/regras.js` (servidor e navegador), servidor em `tenis.js`.
-
-**Dominó da Galera:** dominó por pontos de batida (comum 1, carroça 2, lá-e-lô 3, cruzada 4; jogo fechado dá 1 para quem tiver menos pontos na mão), em `/domino/` (ex.: http://localhost:3000/domino/). Três jeitos de jogar, escolhidos na sala: **dupla** (4 jogadores, 7 pedras cada, parceiro de frente), **cada um por si** (2 a 4 jogadores, 7 pedras cada; com 2 ou 3 sobra monte e o organizador liga ou desliga a compra: quem não tem pedra que sirva compra até poder jogar) e **burrinho** (2 a 6 jogadores, 3 pedras cada, compra sempre; quem fica com mais pontos na mão quando alguém bate é o burrinho 🫏). A mesa se arruma para 2 a 6 lugares, o monte fica num canto (a pedra comprada voa até quem comprou) e, quando alguém passa, o punho bate duas vezes na mesa (toc, toc) com ondinhas e o avatar treme. A primeira mão começa com a maior carroça (a de sena, se não estiver no monte).
-
-**Celular:** o Tiro, a Pelada, o Rocket e a Batalha mostram botões na tela em aparelho de toque (`public/toque.js`): joystick à esquerda, arrastar o lado direito para olhar (Tiro e Pelada) e botões grandes (atirar, mira, chute, passe, turbo, item...). Cada botão aperta a mesma tecla do computador. É melhor jogar com o celular deitado.
-
-## Rodar no seu PC
-1. Instale o Node.js (versão 18 ou mais nova): https://nodejs.org
-2. Abra um terminal nesta pasta e rode:
-   ```
-   npm install
-   npm start
-   ```
-3. Abra http://localhost:3000
-
-Para os amigos entrarem de outras casas, exponha o seu PC com um túnel gratuito, por exemplo:
+```bash
+git clone https://github.com/thiagoaqno/viladotabba.git
+cd viladotabba
+npm ci
+npm start
 ```
-npx cloudflared tunnel --url http://localhost:3000
-```
-Ele mostra um link https://....trycloudflare.com. É só mandar esse link para a galera.
 
-## Testes
-- `npm test`: testes rápidos em Node, sem navegador. Física e regras que o servidor e o navegador dividem (passe assistido, `movePlayer`, assistências, Botão, Dominó), o servidor de verdade jogando com clientes do Socket.io (uma mão de dominó em cada modo, 7 tampinhas no Botão, pelada com bots) e as respostas de criar/entrar/assistir/reconectar de todos os jogos, comparadas com `tests/salas-esperado.json`.
-- `npm run test:e2e`: testes no navegador (Playwright). Todas as páginas abrem sem erro, dois navegadores entram e começam cada jogo, a Pelada e o Rocket em todos os modos, o passe chegando online, uma mão de dominó com 3 navegadores e o celular sem zoom no toque duplo. Usa o Chromium do Playwright (`npx playwright install chromium`) ou, se ele não estiver instalado, o Chrome (ou o Edge) do computador.
-- A Pelada e o Tiro têm um gancho para os testes: abra a página com `#debug` no fim do endereço e use `window.__pelada` (ou `window.__tiro`) no console. `__pelada.avancar(seg)` anda o jogo na hora (o navegador de teste roda a poucos quadros por segundo).
+Abra **http://localhost:3000/corrida/**. Para jogar com alguém na mesma rede, use o IP do seu PC no lugar de `localhost`.
+
+Variáveis úteis:
+- `PORT`: a porta (3000).
+- `DB_PATH`: o banco SQLite (`./dados/galera.db`; `:memory:` para um banco descartável).
+- `CORRIDA_SITE`: o site a que o programa de PC se liga.
+
+**Testes da Corrida:** `npm run test:corrida` (o `npm test` roda os de todos os jogos).
 
 ## Como o código está organizado
-- `server.js` sobe o Express e o leilão; cada jogo é um módulo com o seu canal do Socket.io (`banco.js`, `uno.js`, `sinuca.js`, `truco.js`, `domino.js`, `ludo.js`, `botao.js`, `corrida.js`, `vila.js`, `tiro.js`, `pelada.js`, `batalha.js`).
-- `salas.js`: as peças de sala que todo jogo usa (código de 5 letras, nome, entrar no canal, reconexão com id + token, respostas `{ok, error}`, a faxina das salas paradas e o ping). O que muda de um jogo para outro (limite de jogadores, times, mensagens) fica no módulo do jogo.
-- `public/comum.js` (`window.Comum`): os utilitários das páginas (`$`, `h`, `store`, aviso, `act`, relógio do servidor, confete, emoji flutuante e o botão de som).
-- Física e regras que rodam iguais no servidor e no navegador: `public/pelada/campo.js`, `public/botao/fisica.js`, `public/domino/regras.js`, `public/sinuca/fisica.js`, `public/tiro/arena.js`, `public/batalha/regras.js`.
-- Pelada, Tiro e Corrida: o `jogo.js` de cada pasta é o módulo de entrada (começa o jogo, laço principal e câmera) e importa os outros módulos da pasta: `estado.js` (o que todos dividem; o que é reatribuído por mais de um módulo fica no objeto `E`, ex.: `E.charge`), `rede.js`, `menus.js`, `cena.js`, `sons.js`, `hud.js`, `controles.js` e os de cada jogo (na Pelada: `arenas.js`, `bonecos.js`, `bola.js`, `bots.js`, `strikers.js`).
-- Banco, Leilão, Sinuca e Botão: o script da página fica em arquivos ao lado do `index.html`, por assunto (ex.: `banco/sala.js`, `mesa.js`, `painel.js`), carregados em ordem e dividindo as mesmas variáveis globais.
 
-## Deixar online de graça (Render)
-A Vercel não mantém conexões em tempo real abertas, então use o Render:
-1. Suba esta pasta para um repositório no GitHub.
-2. Em https://render.com crie um **Web Service** a partir do repositório.
-3. Build command: `npm install` · Start command: `npm start`
-4. Pronto: o Render te dá um link público.
+| Onde | O quê |
+|---|---|
+| `server.js` | Express + Socket.io: serve o site e abre os canais de cada jogo |
+| `corrida*.js` | O servidor da Corrida: salas, robôs, física com autoridade do servidor, direção de prova, classificação e carreira |
+| `public/corrida/` | O jogo no navegador (Three.js, sem etapa de build): pistas, carros, HUD, câmeras, sons e menus |
+| `public/corrida/pistas.js` e `gps/` | O traçado e a configuração de cada GP; `kit/` tem as peças de cenário |
+| `desktop/` | O programa de PC (o lançador e o instalador, montados pela action "Programa de PC") |
+| `migracoes/` | O banco SQLite, uma migração por arquivo |
 
-No plano gratuito o servidor "dorme" depois de um tempo parado, e o primeiro acesso demora uns 30 segundos para acordar. As salas ficam na memória, então se o servidor reiniciar a sala se perde.
+Um mapa mais detalhado está em [`CLAUDE.md`](CLAUDE.md) e em [`docs/mapa-completo.md`](docs/mapa-completo.md).
 
-## Temas
-Ao criar a sala, escolha um tema: futsal ou futebol 11x11 (lendas ou atuais), CS, Valorant, hambúrguer, pizza, drink, sobremesa ou personalizado.
-- Informe quantos **participantes** vão jogar e quantas **sobras** quer na roleta (por padrão, uma por participante).
-- O site sorteia a lista respeitando as categorias de cada tema (ex.: 1 goleiro, 1 defensor, 1 meio e 2 atacantes por time no futsal).
-- A lista e os nomes (jogador/ingrediente, time/pizza…) podem ser editados. Use **⭐ Salvar como meu tema** para guardar no navegador.
-- Para criar um tema fixo para todo mundo, edite `public/presets.js`.
-- **Composição** (para temas com categorias):
-  - *Mínimo obrigatório* (padrão): todo mundo precisa ter as categorias obrigatórias do tema, como 1 goleiro no futebol ou 1 IGL e 1 AWPer no CS. O site guarda a vaga para elas, e quem já tem o obrigatório não pode pegar os últimos que sobraram enquanto alguém ainda precisar.
-  - *Exata*: cada um termina exatamente com a composição do tema (ex.: 1 goleiro, 1 defensor, 1 meio e 2 atacantes no futsal).
-  - *Livre*: sem regra.
-  - A categoria de cada item é o texto entre parênteses, como em "Neuer (Goleiro)".
+## A Vila da Galera
 
-## Modos de leilão (escolhidos ao criar a sala)
+A Corrida mora dentro da **[Vila da Galera](https://viladotabba.com/)**, um site de jogos com os amigos que também tem futebol (carreira de treinador, futsal, pelada 3D), jogos de mesa (Uno, Truco, Dominó, Banco, Ludo, Sinuca) e mais. O próximo passo é a Vila virar um **GP de F1**: as casinhas de cada jogo ao redor de um circuito, com os carrinhos correndo enquanto a galera escolhe o que jogar.
 
-### 🔒 Lance secreto
-- Ninguém vê o lance dos outros até todos darem o seu.
-- Maior lance leva. Empate é decidido por sorteio entre os empatados.
-- **Pulos:** cada time pode pular um número limitado de jogadores (padrão 1).
-- **Tempo (opcional):** quando acaba, quem não deu lance usa um pulo (se tiver) ou dá o lance mínimo.
+---
 
-### 🔨 Lance aberto
-- Todo mundo vê os lances na hora e vai cobrindo a oferta (sempre pelo menos +1).
-- Cada lance novo reinicia o cronômetro. Quando ele zera, quem está na frente leva.
-- Quem não quer mais disputar clica em **Sair**. Se todos os outros saírem (ou não tiverem moedas para cobrir), o jogador é vendido na hora.
-- O organizador pode **bater o martelo** antes do tempo acabar.
-
-### 🏁 Reta final (vale para os dois modos)
-- Enquanto a roleta tem jogadores de sobra, dá para recusar: se ninguém der lance, o jogador fica "sem time".
-- Quando o número de jogadores na roleta fica igual (ou menor) ao número de vagas abertas, começa a reta final.
-- Na reta final, se ninguém der lance, o jogador vai por sorteio, pelo lance mínimo, para um dos times que ainda têm vaga.
-
-## Regras gerais
-- **Lance máximo:** você sempre precisa guardar o lance mínimo para cada vaga que ainda falta, então nunca fica sem moedas para completar o time.
-- **Ninguém deu lance:** o jogador fica "sem time". O organizador pode devolver esses jogadores à roleta.
-- **Reiniciar:** no fim da página, o organizador pode reiniciar o leilão (pede confirmação e a palavra REINICIAR). Todo mundo volta com moedas e pulos cheios, os times são esvaziados e a lista volta inteira para a roleta, com os mesmos participantes e regras.
-- **Desfazer:** o organizador pode desfazer a última compra. O jogador volta para a roleta e as moedas são devolvidas.
-- Se alguém fechar a aba ou cair a internet, é só abrir o link de novo que volta para o mesmo time.
-
-## Resultado com suspense (sem API, grátis)
-1. No card **Resultado**, copie o prompt e cole no ChatGPT ou no Claude.
-2. Copie a resposta (botão de copiar da própria IA) e cole em **🎬 Resposta da IA**.
-3. Clique em **Publicar com suspense**: o site divide a resposta pelos títulos (## Rodada 1, ## Final…) e esconde tudo.
-4. Clique em **▶ Revelar próxima**, e cada parte aparece na tela de todo mundo ao mesmo tempo.
-
-O servidor só envia para os participantes as partes já reveladas, então ninguém consegue espiar o campeão.
-
-## ⚽ Simulação pelas notas do FC 27 (futebol e futsal)
-Nos temas de futebol e futsal, cada jogador tem a nota do **EA FC 27** (lendas usam a versão Icon). Quando o leilão termina, o organizador clica em **⚽ Simular campeonato**: o site sorteia placares e autores dos gols com base na força dos times, com a resenha da galera, e o resultado é revelado parte por parte para todo mundo (modo suspense).
-
-- **Notas:** ficam em `public/ratings.js`. Nota com `[nota, "est"]` é estimativa (jogador sem nota oficial divulgada). Jogador fora da lista entra com 75.
-- **Bordões da galera:** ficam em `public/bordoes.js` (frases por apelido, gritos de lavada, frases do narrador e as **pérolas do futebol**, que os jogadores soltam na entrevista, cada uma na situação certa: gol, zebra, lavada, pênalti perdido, título…). Dá para editar e adicionar gente nova.
-- **Formação:** cada participante escolhe a sua (futsal: 2-2, 3-1, 1-2-1, 1-1-2; campo: 4-3-3, 4-4-2, 3-5-2, 4-2-3-1, 3-4-3, 5-3-2) ou deixa na automática. O organizador escolhe se a formação é **fluida** (muda até a simulação) ou **travada** (escolhida na sala de espera, não muda depois que o leilão começa). Fora de posição o jogador rende menos: atacante no meio 90% e na defesa 80%; defensor no meio 90% e no ataque 80%; linha no gol e goleiro na linha 50%. Meias têm dois tipos: **volante** (95% na defesa, 85% no ataque) e **meia-atacante** (95% no ataque, 85% na defesa); a lista de quem é quem fica em `public/ratings.js` (`MEIAS`). Tabela completa em `public/escalacao.js`, constante `FIT`.
-- **Química (estilo FIFA):** no campinho, linhas ligam os vizinhos de escalação. Verde = mesmo país e já jogaram no mesmo clube; amarela = mesmo país ou mesmo clube; vermelha = nada em comum. Química alta faz o jogador render até 4% a mais na simulação, e baixa até 4% a menos. País e clubes ficam em `public/quimica.js` (jogador fora da lista conta como química média).
-- **Card do campeão:** quando todas as partes do resultado forem reveladas, aparece o botão **🖼️ Baixar card do campeão** para todo mundo. Ele gera uma imagem (1080×1350) com o campeão, a escalação no campinho com as notas e os gols, a campanha, o artilheiro e a pérola do título. No celular, abre direto o menu de compartilhar (WhatsApp etc.).
-- **Formatos:** 2 times = série melhor de 3; mais times = pontos corridos + final (ou semifinais, com 6+), ou mata-mata direto.
-
-## 🍽️ Batalha dos pratos (hambúrguer, pizza, drink, sobremesa)
-Quando o leilão acaba, o organizador clica em **Abrir votação**. Cada participante dá nota de 1 a 10 para os pratos dos outros, e o site junta com a nota de três jurados fictícios que avaliam os ingredientes e as combinações (metade júri, metade galera). Depois é só **Encerrar votação e julgar** e revelar parte por parte. As notas dos ingredientes e as combinações ficam em `juri.js`.
-
-CS e Valorant continuam com o **Copiar prompt** para usar no Claude ou no ChatGPT (e publicar com suspense). Nos temas de comida, o prompt também continua disponível.
+<p align="center"><img src="public/corrida/carregamento-hamilton-verstappen.webp" width="600" alt="Hamilton e Verstappen no paddock"></p>
+<p align="center"><sub>Fórmula 1, F1 e os nomes das equipes e dos pilotos pertencem aos seus donos.</sub></p>

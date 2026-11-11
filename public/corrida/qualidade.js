@@ -46,7 +46,7 @@ export const PREDEF = {
 const ITENS_PREDEF = Object.keys(PREDEF.baixa);
 // "auto": o pixelRatio da qualidade (Baixa 1×, Média 1,25×, Alta 1,5×); "nativa": o da tela; os números: a altura do desenho em pixels
 export const RESOLUCOES = [["auto", "Automática (pela qualidade)"], ["nativa", "Nativa da tela"], ["2160", "2160p (4K)"], ["1440", "1440p"], ["1080", "1080p"], ["900", "900p"], ["720", "720p"], ["540", "540p"]];
-const EXTRAS = { retroVirtual: "desligado", painelDentro: true }; // (fora das predefinições: o gosto de cada um)
+const EXTRAS = { retroVirtual: "desligado", painelDentro: true, mapa: "baixo" }; // (mapa: o minimapa embaixo à esquerda ou em cima à direita, configuracoes.css) // (fora das predefinições: o gosto de cada um)
 const lerCfg = () => { try { const c = JSON.parse(localStorage.getItem(CHAVE_CFG) || "null"); return c && typeof c === "object" ? c : null; } catch { return null; } };
 let cfgSalva = lerCfg();
 const montarCfg = (nivel) => ({ predef: nivel, ...PREDEF[nivel], ...EXTRAS, ...(cfgSalva || {}) });

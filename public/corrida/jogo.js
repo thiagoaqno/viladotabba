@@ -8,6 +8,7 @@ import * as ForcaVolante from "./forca-volante.js";
 import { quadroRetrovisor } from "./retrovisor.js";
 import "./configuracoes.js"; // (a tela Configurações: gráficos, controle, áudio e geral)
 import { graficos } from "./qualidade.js";
+import { estiloHud } from "./hud-telemetria.js";
 import { montarMapaDaTorcida, nivelDaTorcida } from "./torcida-som.js";
 import { atualizarClima } from "./clima.js";
 import { passoClima, limparClima, exercitarChuva } from "./clima-visual.js";
@@ -425,8 +426,11 @@ function draw(dt) {
   quadroRetrovisor(race.kart, mode); // o retrovisor virtual, por cima da tela já desenhada (retrovisor.js; Configurações > Gráficos)
   } finally { scene.matrixWorldAutoUpdate = true; }
   // a câmera de dentro do carro troca o mostrador grande pelo painel compacto do canto (hud-painel.js, #hDentro; Configurações > Geral)
-  const dentro = (mode === "cockpit" || mode === "onboard" || mode === "bico") && graficos().painelDentro;
+  // (só no estilo Novo, e se a opção estiver ligada; o estilo Compacto usa o painel do canto em qualquer câmera; telemetria e clássico, nunca)
+  const est = estiloHud(), dentro = est === "compacto" || (est === "classico" && (mode === "cockpit" || mode === "onboard" || mode === "bico") && graficos().painelDentro);
   if (race.camDentro !== dentro) { race.camDentro = dentro; $("race").classList.toggle("cam-dentro", dentro); }
+  const mapaCima = graficos().mapa === "cima"; // o minimapa em cima à direita (Configurações > Geral; configuracoes.css)
+  if (race.mapaCima !== mapaCima) { race.mapaCima = mapaCima; $("race").classList.toggle("mapa-cima", mapaCima); }
 }
 // Transmissão de TV (transmissao.js): nas corridas de F1, antes das luzes e com tempo próprio (`race.tvAte`, vindo do servidor).
 // Esc pula (o botão e o toque também, no módulo). Nada de TV para quem só assiste.

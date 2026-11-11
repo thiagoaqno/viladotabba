@@ -78,7 +78,8 @@ export function theWing(tr, add) {
   // "SILVERSTONE" no vidro, no meio do prédio (um pouco à frente do vidro, na mesma inclinação)
   {
     const um = (uA + uB) / 2, meia = Math.min(60, (uB - uA) * 0.32), a = 0.42, b = 0.82, li = (t) => lF + (lV - lF) * t - 0.6, yi = (t) => T_FAIXA + (T_VIDRO - T_FAIXA) * t;
-    const L = { vs: [], uv: [0, 0, 1, 0, 1, 1, 0, 1], idx: [0, 1, 2, 0, 2, 3] };
+    // (o texto corre no sentido da pista; a normal aponta para a direita, então do lado +1 quem olha da pista o veria espelhado: o uv vira)
+    const L = { vs: [], uv: lado > 0 ? [1, 0, 0, 0, 0, 1, 1, 1] : [0, 0, 1, 0, 1, 1, 0, 1], idx: [0, 1, 2, 0, 2, 3] };
     L.vs.push(...em(um - meia, li(a), yi(a)), ...em(um + meia, li(a), yi(a)), ...em(um + meia, li(b), yi(b)), ...em(um - meia, li(b), yi(b)));
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(L.vs, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(L.uv, 2)); g.setIndex(L.idx);
     const m = new THREE.Mesh(g, letras); m.renderOrder = 2; m.name = "silverstone-wing-letras"; grupo.add(m);

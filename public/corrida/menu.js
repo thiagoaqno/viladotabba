@@ -28,18 +28,35 @@ let treinoPedido = (() => {
     return { pista, equipe };
   } catch { return null; }
 })();
+// O PROGRAMA DE PC (corrida-pc.js): jogando sozinho, a sala abre no servidor do próprio PC mesmo com internet (sem ping). Com o site no ar,
+// "Largar" (corrida rápida direto) e o contrarrelógio recarregam a página em /corrida/?solo=<config>, que liga o socket no PC (o /corrida/pc.js
+// vê o ?solo= e não manda para o site); a sala é criada aqui na volta. Saindo da corrida para o menu, a página volta para o site.
+const PC = window.CORRIDA_PC, pcOnline = !!(PC?.pc && PC.servidor && !PC.local), pcLocal = !!PC?.local;
+let soloPedido = (() => {
+  try {
+    const q = new URLSearchParams(location.search), d = q.get("solo"); if (!d) return null;
+    q.delete("solo"); history.replaceState(null, "", location.pathname + (q.size ? "?" + q : "") + location.hash);
+    return JSON.parse(d);
+  } catch { return null; }
+})();
+function noPC(config, inicio) {
+  if (!pcOnline || !exigirNome()) return false;
+  location.href = "/corrida/?solo=" + encodeURIComponent(JSON.stringify({ config, inicio })); return true;
+}
 const nomePiloto = () => ($("hName")?.value || store.get("galera:name") || "").trim();
 
 // ---------- a entrada e a saída da tela ----------
 export function menuNaTela(sim) {
   if (sim === naTela) return; naTela = sim;
   if (!sim) { fecharAjustes(); clearInterval(timerResumo); clearInterval(timerPad); desligarGaragem(); return; } // a corrida precisa da GPU inteira
+  if (pcLocal && !soloPedido && !treinoPedido) { location.replace("/corrida/"); return; } // (o programa de PC: o menu é sempre o do site)
   ligarUmaVez();
   $("mnNomeTopo").textContent = nomePiloto() || "Piloto";
   $("hName").value = nomePiloto();
   window.preparoPronto?.(); // (a tela inicial é a capa, uma imagem: a garagem 3D só abre no painel Garagem)
   carregarCarreira(); carregarGrupos(); pedirResumo(); desenharCartoes(); resumoDaEstante();
   timerResumo = setInterval(pedirResumo, 15000); timerPad = setInterval(lerControle, 90);
+  if (soloPedido) { const s = soloPedido; soloPedido = null; return criar(s.config, s.inicio); } // (o programa de PC: a sala sozinho, no PC)
   if (treinoPedido) { const t = treinoPedido; treinoPedido = null; return largarTreino(t); }
   if (!painel) requestAnimationFrame(() => { if (!document.activeElement || document.activeElement === document.body) itensDoMenu()[0]?.focus({ preventScroll: true }); });
 }
@@ -226,8 +243,8 @@ function criar(config, inicio) {
   });
 }
 const configRapida = () => ({ pista: rapida.pista, regras: "f1", voltas: rapida.voltas, nivel: rapida.nivel, robos: 21, clima: rapida.clima, classificacao: rapida.classificacao });
-function largarRapida(largar) { store.set(CHAVE_RAPIDA, rapida); criar(configRapida(), { equipe: equipeDoCarro(), largar }); }
-function largarContra() { store.set(CHAVE_CONTRA, contra); criar({ pista: contra.pista, regras: "f1", voltas: contra.voltas, robos: 0, clima: "seco", classificacao: "pular", contrarrelogio: true }, { equipe: equipeDoCarro(), pneu: "macio", largar: true }); }
+function largarRapida(largar) { store.set(CHAVE_RAPIDA, rapida); const c = configRapida(), i = { equipe: equipeDoCarro(), largar }; if (largar && noPC(c, i)) return; criar(c, i); } // (a sala para ajustar fica no site: dá para chamar os amigos)
+function largarContra() { store.set(CHAVE_CONTRA, contra); const c = { pista: contra.pista, regras: "f1", voltas: contra.voltas, robos: 0, clima: "seco", classificacao: "pular", contrarrelogio: true }, i = { equipe: equipeDoCarro(), pneu: "macio", largar: true }; if (noPC(c, i)) return; criar(c, i); }
 function largarTreino(t) {
   if (!PISTAS[t.pista]) return;
   contra.pista = t.pista; // (se faltar o nome, o painel do contrarrelógio já fica nesta pista)

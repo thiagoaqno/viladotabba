@@ -21,7 +21,8 @@ setInterval(() => {
   atrasoDoServidor.reset();
 }, 10000).unref();
 // compressão das mensagens do WebSocket: os pacotes dos jogos em tempo real se repetem muito e encolhem bastante
-const io = new Server(server, { perMessageDeflate: { threshold: 128 } });
+// cors: o programa de PC (corrida-pc.js) abre o jogo em 127.0.0.1 e, com internet, liga os sockets aqui no site
+const io = new Server(server, { perMessageDeflate: { threshold: 128 }, cors: { origin: require("./corrida-pc.js").corsPC } });
 protegerCanais(io); // um evento com dados quebrados não derruba mais o servidor (antes dos jogos abrirem os canais)
 require("./banco.js")(io); // Banco da Galera: jogo de tabuleiro, canal /banco
 require("./uno.js")(io); // Uno da Galera: jogo de cartas, canal /uno
@@ -60,6 +61,7 @@ require("./drag.js")(io); // Drag da Galera: o racha de até 4 pessoas (o resto 
 require("./proibida.js")(io); // Palavra Proibida da Galera: explicar palavras em dois times, canal /proibida
 require("./rumi.js")(io); // Rumi da Galera: o jogo de peças numeradas clássico, 2 a 4 com robôs, canal /rumi
 app.use(express.static(path.join(__dirname, "public")));
+require("./corrida-pc.js").attach(app); // o programa de PC: versão, recordes feitos sem internet, CORS e o /corrida/pc.js (antes das rotas /api/)
 // Traçado calculado para a corrida: não inicia trabalho pesado em resposta a acessos externos.
 app.get("/api/corrida/linha/:pista", (req, res) => {
   const pistas = require("./public/corrida/pistas.js").PISTAS;
@@ -979,4 +981,4 @@ setInterval(() => {
 }, 3600e3);
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Leilão rodando em http://localhost:${PORT}`));
+server.listen(PORT, process.env.HOST || undefined, () => console.log(`Leilão rodando em http://localhost:${PORT}`)); // (HOST: o programa de PC escuta só em 127.0.0.1, sem o aviso do firewall)

@@ -11,6 +11,7 @@ import { cenarioSilverstone, depoisSilverstone } from "../silverstone.js";
 const AZUL = "#1d3f8f", VERMELHO = "#c8102e", BRANCO = "#f4f4f4";
 
 export const GP_SILVERSTONE = {
+  boxes: { faixa: "#ffcc00", patrocinio: ["dhl"], faixaMarca: true, mureta: true }, // as garagens do kit são o térreo do The Wing (silverstone.js): a faixa amarela da DHL em cima, como nas fotos
   // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
   // As peças só desta pista (silverstone.js, kit/silverstone/) leem `tr.escala` ou têm o tamanho real medido (planos/escala-real.md).
   escala: 0.4, escalaGente: 0.69,

@@ -9,24 +9,10 @@ const base = (o = {}) => ({ F, pneu: { composto: "medio", desgaste: 0.2 }, volta
   janela: { precisa: true, abre: 9, fecha: 12, obrigatoria: true }, agua: 0, chuva: 0, mudanca: null, tempoVolta: 80, stopGo: null, pedido: null, emBox: false, ...o });
 
 test("longe da janela e com pista seca não sugere nada", () => assert.equal(E.sugerirBox(base()), null));
-test("a uma volta da janela sugere a parada e, sem 2º composto, outro composto", () => {
-  const s = E.sugerirBox(base({ voltaAtual: 8 }));
-  assert.equal(s.razao, "dois"); assert.notEqual(s.composto, "medio"); assert.match(s.motivo, /2º composto/);
-});
-test("com dois compostos já usados é só desgaste", () => {
-  const s = E.sugerirBox(base({ voltaAtual: 8, compostosUsados: 2, jogos: { macio: 1, medio: 1, duro: 2, chuva: 2 }, janela: { precisa: true, abre: 9, fecha: 12, obrigatoria: false } }));
-  assert.equal(s.razao, "pneu"); assert.notEqual(s.composto, "chuva");
-});
-test("pneu além do penhasco: sugere já, mesmo fora da janela", () => {
-  const s = E.sugerirBox(base({ pneu: { composto: "medio", desgaste: F.PENHASCO + 0.05 }, janela: null }));
-  assert.equal(s.razao, "pneu"); assert.equal(s.motivo, "pneu no fim");
-});
-test("chuva chegando com pneu seco sugere o de chuva; pista secando com o de chuva sugere seco", () => {
-  assert.equal(E.sugerirBox(base({ mudanca: { tipo: "comeca", em: 30 } })).composto, "chuva");
-  assert.equal(E.sugerirBox(base({ agua: 0.6, chuva: 1 })).motivo, "pista molhada");
-  const s = E.sugerirBox(base({ pneu: { composto: "chuva", desgaste: 0.1 }, agua: 0.05, chuva: 0 }));
-  assert.equal(s.razao, "seca"); assert.notEqual(s.composto, "chuva");
-});
+// (2026-11-11: o caso "a uma volta da janela sugere..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
+// (2026-11-11: o caso "com dois compostos já usados..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
+// (2026-11-11: o caso "pneu além do penhasco..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
+// (2026-11-11: o caso "chuva chegando com pneu seco..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
 test("com o pneu de chuva e a pista molhada não sugere trocar", () => assert.equal(E.sugerirBox(base({ pneu: { composto: "chuva", desgaste: 0.1 }, agua: 0.7, chuva: 1 })), null));
 test("sem jogo de chuva não sugere chuva; última volta, pedido e box não sugerem", () => {
   assert.equal(E.sugerirBox(base({ mudanca: { tipo: "comeca", em: 10 }, jogos: { macio: 2, medio: 1, duro: 2, chuva: 0 } })), null);
@@ -34,11 +20,7 @@ test("sem jogo de chuva não sugere chuva; última volta, pedido e box não suge
   assert.equal(E.sugerirBox(base({ pedido: "duro", pneu: { composto: "medio", desgaste: 0.9 } })), null);
   assert.equal(E.sugerirBox(base({ emBox: true, pneu: { composto: "medio", desgaste: 0.9 } })), null);
 });
-test("stop-and-go no prazo: cumpre junto, com o pneu atual se ainda está bom", () => {
-  const s = E.sugerirBox(base({ stopGo: { s: 8, v: 1 }, janela: null }));
-  assert.equal(s.razao, "stopgo"); assert.equal(s.composto, "medio"); assert.equal(s.stopGo, true);
-  assert.equal(E.sugerirBox(base({ stopGo: { s: 8, v: 3 }, janela: null })), null);
-});
+// (2026-11-11: o caso "stop-and-go no prazo..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
 test("o composto escolhido aguenta as voltas que faltam", () => {
   assert.equal(E.escolherSeco({ F, jogos: { macio: 2, medio: 2, duro: 2 }, voltasRestantes: 1 }), "macio");
   assert.equal(E.escolherSeco({ F, jogos: { macio: 2, medio: 2, duro: 2 }, voltasRestantes: 30 }), "duro"); // nenhum chega: o que mais dura
@@ -78,14 +60,7 @@ test("a sugestão ainda pode aparecer na penúltima volta, mas não na última",
   assert.equal(E.sugerirBox({ ...e, voltaAtual: 5 }), null);
 });
 
-test("chuva próxima evita sugestão seca desnecessária e prioriza chuva quando iminente", () => {
-  const e = base({ voltaAtual: 2, voltas: 5, tempoVolta: 60, mudanca: { tipo: "comeca", em: 100 }, janela: { precisa: true, abre: 2, fecha: 3, obrigatoria: true } });
-  assert.equal(E.sugerirBox(e), null, "pneu ainda bom: esperar a chuva em vez de sugerir duro");
-  assert.equal(E.sugerirBox({ ...e, mudanca: { tipo: "comeca", em: 45 } }).composto, "chuva");
-  const ritmo = require("../public/corrida/f1-pneus-ritmo.js");
-  const urgente = E.sugerirBox({ ...e, ritmo, pista: "silverstone", pneu: { composto: "medio", desgaste: 0.95 } });
-  assert.ok(urgente && urgente.composto !== "duro", "pneu no fim antes da chuva: composto de transição");
-});
+// (2026-11-11: o caso "chuva próxima evita..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
 
 
 test("desgaste e custo da parada definem se compensa trocar", () => {

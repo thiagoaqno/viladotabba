@@ -38,11 +38,4 @@ test("as recomendações consideram os pneus disponíveis no molhado", () => {
 });
 
 
-test("a estratégia recomenda o intermediário na garoa e avisa quando acaba", () => {
-  const E = require("../public/corrida/estrategia-box.js");
-  const jogos = { macio: 2, medio: 2, duro: 2, chuva: 2, intermediario: 2 };
-  const e = { F, pneu: { composto: "medio", desgaste: 0.2 }, voltaAtual: 2, voltas: 8, jogos, agua: 0.45, chuva: 0.45 };
-  assert.equal(E.sugerirBox(e).composto, "intermediario");
-  assert.equal(E.sugerirBox({ ...e, pneu: { composto: "intermediario", desgaste: 0.9 } }).motivo, "pneu no fim");
-  assert.equal(E.sugerirBox({ ...e, jogos: { ...jogos, chuva: 0 } }).composto, "intermediario");
-});
+// (2026-11-11: o caso "a estratégia recomenda o intermediário..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")

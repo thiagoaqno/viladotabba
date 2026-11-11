@@ -115,7 +115,7 @@ export function enfeitarMais(tr, add, r, alturaEm, V) {
   }
   V.fenos = [];
   if (id === "deserto") for (let k = 0; k < 10; k++) {
-    const m = add(new THREE.Mesh(new THREE.IcosahedronGeometry(7, 1), new THREE.MeshStandardMaterial({ color: 0xa8854a, wireframe: true }))); m.castShadow = true;
+    const m = add(new THREE.Mesh(new THREE.IcosahedronGeometry(7, 1), new THREE.MeshStandardMaterial({ color: 0xa8854a, wireframe: true }))); m.castShadow = true; m.userData.rolando = true; // (rola de um lado para o outro da pista, de propósito: a conferência de invasão não conta)
     const i = Math.floor((n * k) / 10), p = pts[i]; V.fenos.push({ m, i, lado: -borda - 60, vel: 18 + r() * 14, p });
   }
   V.holofotes = [];

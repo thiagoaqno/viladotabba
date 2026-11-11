@@ -50,6 +50,8 @@ socket.on("recorde", (r) => {
 });
 // a pista escolhida no lobby já vai sendo montada, com a foto do céu, para a largada não travar (jogo.js, prepararPista)
 let preparada = null, montando = false;
+// a cor da minha equipe (o carrinho da tela de carregamento vem pintado nela)
+const corDaMinhaEquipe = (st) => { const eu = E.ME && st.players?.find((p) => p.id === E.ME.id); return (eu && eu.equipe && window.EQUIPES_F1?.[eu.equipe]?.cor) || null; };
 const preparar = (id, hora) => { const chave = `${id}:${hora}`; if (id && chave !== preparada) { preparada = chave; try { prepararPista(id, hora); } catch (e) { console.warn("Corrida: pista não preparada", e); } } };
 // ---------- estado vindo do servidor ----------
 socket.on("state", (st) => {
@@ -59,7 +61,7 @@ socket.on("state", (st) => {
     if (!E.entradaDireta) { show("lobby"); renderLobby(); }
     stopRace(); $("quali").classList.add("hidden");
     // a corrida rápida passa um instante pelo lobby, que já começa a montar a pista (segundos de página parada): a tela de carregamento entra antes
-    if (E.entradaDireta) { mostrarCarga(PISTAS[st.config.pista]?.name || "Corrida", "Montando a pista"); const id = st.config.pista, hora = st.config.hora; setTimeout(() => preparar(id, hora), 60); }
+    if (E.entradaDireta) { mostrarCarga(PISTAS[st.config.pista]?.name || "Corrida", "Montando a pista", corDaMinhaEquipe(st)); const id = st.config.pista, hora = st.config.hora; setTimeout(() => preparar(id, hora), 60); }
     else { esconderCarga(); preparar(st.config.pista, st.config.hora); }
     return;
   }
@@ -67,7 +69,7 @@ socket.on("state", (st) => {
   show("race");
   // a primeira montagem: a tela de carregamento entra, o navegador a desenha (60 ms), e só então a pista é montada (antes, a página congelava sem nada na
   // frente). setTimeout e não requestAnimationFrame: com a janela escondida (quem troca de janela carregando) o quadro não vem, e a pista nunca era montada
-  if (!race) { if (!montando) { montando = true; mostrarCarga(PISTAS[st.config.pista]?.name || "Corrida", "Montando a pista"); setTimeout(() => { montando = false; if (E.S && E.S.phase !== "lobby" && !race) startRace(E.S); atualizarCarga(); }, 60); } }
+  if (!race) { if (!montando) { montando = true; mostrarCarga(PISTAS[st.config.pista]?.name || "Corrida", "Montando a pista", corDaMinhaEquipe(st)); setTimeout(() => { montando = false; if (E.S && E.S.phase !== "lobby" && !race) startRace(E.S); atualizarCarga(); }, 60); } }
   else if (race.startAt !== st.startAt && !adiantarLargada(st)) startRace(st);
   atualizarCarga();
   if (race) race.safety = st.direcao?.safety || null;

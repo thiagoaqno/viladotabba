@@ -146,6 +146,7 @@ test('a classificação com um humano: três sessões, eliminações e o grid de
   t.mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'], now: 1_000_000 });
   const room = salaDe(['h']), grids = [], deps = depsDe(grids), h = room.players.h;
   Quali.iniciar(room, deps);
+  Quali.carregou(room, "h", deps); // (o Q1 espera quem joga carregar a pista: o navegador manda `carregou` depois do aquecimento, #666)
   const q = room.quali;
   assert.deepEqual(q.sessoes, [20, 15, 10]); assert.equal(q.ativos.length, 20);
   // antes de abrir o relógio, a volta não conta

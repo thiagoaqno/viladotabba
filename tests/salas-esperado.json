@@ -745,6 +745,7 @@
     "camposDoEstado": [
       "bonusMontagem",
       "boxReady",
+      "carga",
       "chefes",
       "clima",
       "code",

@@ -190,6 +190,8 @@ function estadoF1(texto) {
 }
 function desenharAvisos() {
   const box = $("avisosF1"); if (!box) return;
+  // os avisos ficam no bloco do minimapa, logo acima dele (embaixo à esquerda: pedido do Thiago, 2026-11-11)
+  const bl = $("mini")?.parentNode; if (bl && box.parentNode !== bl) bl.insertBefore(box, bl.firstChild);
   const f = filaAvisos(), lista = f.visiveis(Date.now());
   if (box._versao === f.versao) return; box._versao = f.versao;
   const vivos = new Set();

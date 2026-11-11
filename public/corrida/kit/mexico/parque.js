@@ -182,35 +182,34 @@ export function palacioDosEsportes(tr, add, alvo, k = 1) {
 // ---------------------------------------------------------------------------------------------------------------------
 // A Peraltada antiga: um pedaço do anel inclinado de concreto, que ficou de fora do circuito (rampa que sobe para fora, muro alto, mato nas juntas)
 // ---------------------------------------------------------------------------------------------------------------------
-export function peraltada(tr, add, { caixa = [120, 700, 700, 1600], raios = [300, 380], largura = 96 } = {}) {
-  const SEG = 36;
-  let melhor = null;
-  for (let cx = caixa[0]; cx <= caixa[1]; cx += 60) for (let cz = caixa[2]; cz <= caixa[3]; cz += 60) for (const R of raios) for (let a0 = 0; a0 < 360; a0 += 15) {
-    let minimo = 1e9;
-    for (let k = 0; k <= 7; k++) {
-      const t = ((a0 + k * 11) * Math.PI) / 180;
-      for (const rr of [R - largura / 2, R + largura / 2 + 12]) { const x = cx + Math.cos(t) * rr, z = cz + Math.sin(t) * rr; minimo = Math.min(minimo, tr.distAt(x, z) - tr.W / 2); if (x < 40 || z < 40 || ocupado(tr, x, z)) minimo = -1; }
-    }
-    if (minimo > 70 && (!melhor || Math.abs(minimo - 120) < Math.abs(melhor.minimo - 120))) melhor = { cx, cz, R, a0, minimo }; // perto o bastante para ser visto da pista
-  }
-  if (!melhor) return null;
-  const { cx, cz, R, a0 } = melhor, pos = [], col = [], idx = [], c = new THREE.Color();
-  const arco = (80 * Math.PI) / 180, t0 = (a0 * Math.PI) / 180, y0 = tr.chao(cx + Math.cos(t0 + arco / 2) * R, cz + Math.sin(t0 + arco / 2) * R) + 0.2, alto = 30;
-  for (let k = 0; k <= SEG; k++) {
-    const t = t0 + (arco * k) / SEG, ci = Math.cos(t), si = Math.sin(t), rIn = R - largura / 2, rOut = R + largura / 2;
-    const linha = k % 4 < 2 ? 0 : 1;
-    const pts = [[rIn - 8, -10, "#8a8c8f"], [rIn - 8, 0, "#8a8c8f"], [rIn, 0.6, "#5e6064"], [R - 12, alto * 0.45, linha ? "#6a6c70" : "#5e6064"], [R + 12, alto * 0.55, "#5e6064"], [rOut, alto, "#55575b"], [rOut + 1.5, alto + 8, "#b9bcc0"], [rOut + 6, alto + 8, "#b9bcc0"], [rOut + 6, -10, "#9b9ea2"]];
-    for (const [rr, y, cor] of pts) { c.set(cor); pos.push(cx + ci * rr, y0 + y, cz + si * rr); col.push(c.r, c.g, c.b); }
-    if (k) { const n = pts.length; for (let j = 0; j < n - 1; j++) { const a = (k - 1) * n + j, b = a + n; idx.push(a, b, a + 1, a + 1, b, b + 1); } }
-  }
+export function peraltada(tr, add, traco, { largura = 67 } = {}) {
+  // a Peraltada antiga, no lugar de verdade (kit/mexico/mapa.js: a linha `highway=raceway` do OpenStreetMap): a fita de concreto inclinada, mais alta por fora (à esquerda de quem anda, na curva à direita),
+  // com o paredão e as lâmpadas na crista. A fita pára onde chegaria perto demais da pista de hoje (nas duas pontas ela emenda com o circuito e ali o jogo não tem a rampa)
+  const alto = 30, w = largura / 2, perfil = [[-w - 8, -10, "#8a8c8f"], [-w - 8, 0, "#8a8c8f"], [-w, 0.6, "#5e6064"], [-12, alto * 0.45, "#6a6c70"], [12, alto * 0.55, "#5e6064"], [w, alto, "#55575b"], [w + 1.5, alto + 8, "#b9bcc0"], [w + 6, alto + 8, "#b9bcc0"], [w + 6, -10, "#9b9ea2"]]; // (o desvio é para fora da curva: negativo = dentro, baixo)
+  // a linha em amostras de ~30 u, com a tangente e a normal de fora (esquerda de quem anda)
+  const am = [];
+  for (let i = 0; i + 1 < traco.length; i++) { const a = traco[i], b = traco[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]), m = Math.max(1, Math.round(L / 30)); for (let k = 0; k < m; k++) am.push([a[0] + ((b[0] - a[0]) * k) / m, a[1] + ((b[1] - a[1]) * k) / m]); }
+  am.push(traco[traco.length - 1]);
+  const dados = am.map((p, i) => { const q = am[Math.max(0, i - 1)], r = am[Math.min(am.length - 1, i + 1)], tx = r[0] - q[0], tz = r[1] - q[1], L = Math.hypot(tx, tz) || 1; return { x: p[0], z: p[1], nx: tz / L, nz: -tx / L }; });
+  const bom = (d) => [-largura / 2 - 8, 0, largura / 2 + 8].every((o) => tr.distAt(d.x + d.nx * o, d.z + d.nz * o) > tr.W / 2 + 34 && !ocupado(tr, d.x + d.nx * o, d.z + d.nz * o));
+  let melhor = null, ini = null; // o maior trecho seguido de amostras boas
+  for (let i = 0; i <= dados.length; i++) { if (i < dados.length && bom(dados[i])) { if (ini === null) ini = i; } else if (ini !== null) { if (!melhor || i - ini > melhor[1] - melhor[0]) melhor = [ini, i]; ini = null; } }
+  if (!melhor || melhor[1] - melhor[0] < 4) return null;
+  const faixa = dados.slice(melhor[0], melhor[1]), pos = [], col = [], idx = [], c = new THREE.Color(), R = perfil.length;
+  faixa.forEach((d, k) => {
+    const y0 = nivelDoChao(tr, d.x, d.z) + 0.2, linha = k % 4 < 2 ? 0 : 1;
+    for (const [o, y, cor] of perfil) { c.set(cor === "#6a6c70" && linha ? "#5e6064" : cor); pos.push(d.x + d.nx * o, y0 + y, d.z + d.nz * o); col.push(c.r, c.g, c.b); }
+    if (k) for (let j = 0; j < R - 1; j++) { const a = (k - 1) * R + j, b = a + R; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+  });
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
   const m = add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }))); m.receiveShadow = true; m.name = "mexico-peraltada";
-  // as barreiras fechando as pontas e as lâmpadas dos postes na crista
+  // as lâmpadas dos postes na crista (a cada 8 amostras) e as barreiras fechando as duas pontas
   const mm = new Montador(), S = solido();
-  for (const t of [t0, t0 + arco]) { const x = cx + Math.cos(t) * R, z = cz + Math.sin(t) * R; mm.caixa(S, [x - cx, y0 + 12, z - cz], [96, 24, 4], { cor: "#d56a2c", ry: -t + Math.PI / 2 }); }
-  for (let k = 1; k < 8; k++) { const t = t0 + (arco * k) / 8, x = cx + Math.cos(t) * (R + largura / 2 + 4), z = cz + Math.sin(t) * (R + largura / 2 + 4); mm.cilindro(S, [x - cx, y0 + alto + 30, z - cz], [1.4, 60], { cor: "#a8adb2", seg: 5 }); }
-  const gr = mm.montar("mexico-peraltada-detalhes"); gr.position.set(cx, 0, cz); add(gr);
-  for (let k = 0; k <= 6; k++) { const t = t0 + (arco * k) / 6; tr.reservado.push([cx + Math.cos(t) * R, cz + Math.sin(t) * R, 90]); }
-  tr.peraltadaMexico = { x: cx, z: cz, R, de: a0, minimo: Math.round(melhor.minimo) };
+  faixa.forEach((d, k) => { if (k % 8 === 4) { const x = d.x + d.nx * (largura / 2 + 4), z = d.z + d.nz * (largura / 2 + 4), y = nivelDoChao(tr, x, z); mm.cilindro(S, [x, y + alto + 26, z], [1.4, 60], { cor: "#a8adb2", seg: 5 }); } });
+  for (const d of [faixa[0], faixa[faixa.length - 1]]) { const y = nivelDoChao(tr, d.x, d.z); mm.caixa(S, [d.x, y + 12, d.z], [largura + 6, 24, 4], { cor: "#d56a2c", ry: Math.atan2(d.nx, d.nz) }); }
+  add(mm.montar("mexico-peraltada-detalhes"));
+  tr.reservado ||= [];
+  for (let k = 0; k < faixa.length; k += 2) tr.reservado.push([faixa[k].x, faixa[k].z, 90]);
+  tr.peraltadaMexico = { amostras: faixa.length, de: [Math.round(faixa[0].x), Math.round(faixa[0].z)], ate: [Math.round(faixa[faixa.length - 1].x), Math.round(faixa[faixa.length - 1].z)] };
   return tr.peraltadaMexico;
 }

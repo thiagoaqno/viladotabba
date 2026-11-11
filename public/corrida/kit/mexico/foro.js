@@ -1,46 +1,26 @@
-// Cidade do México — o Foro Sol: o estádio de beisebol onde o circuito atravessa a arquibancada (curvas 12 a 16). Só código, sem foto nem modelo.
-// O estádio cabe no miolo da alça do fim da volta, encolhido: a arquibancada em ferradura (uma elipse de degraus lotados de camisa verde,
-// branca e vermelha, aberta onde a pista passa perto), o muro do campo com o acolchoado e os painéis, o gramado listrado com o losango
-// de terra e as linhas, o pódio no meio do campo virado para a torcida, as bandeiras do México no alto, as torres de refletores, o placar e a
-// fumaça verde, branca e vermelha que sobe do campo. Escala da física (1 u = 0,208 m; a pista agora é de tamanho real, e o estádio coube só no miolo da alça: é menor que o Foro Sol de verdade). Peças repetidas em InstancedMesh; o resto, uma malha por material.
+// Cidade do México — o Foro Sol (hoje Estadio GNP Seguros), o estádio de beisebol que a pista atravessa. Só código, sem foto nem modelo; a planta é a do OpenStreetMap (kit/mexico/mapa.js).
+// Na vida real o circuito entra no estádio pelo lado aberto (leste), cruza o campo ENTRE as duas arquibancadas, a Norte e a Sul (cada uma em L, com o canto de fora arredondado), e sai pelo oeste
+// por baixo de um corredor coberto que liga as duas pontas: as arquibancadas ficam em volta da pista, em três lados. Aqui, os mesmos contornos: a Norte e a Sul de dois andares com o corredor de
+// concreto no meio, a cobertura de telha cor de chocolate (`roof:colour` do mapa) sobre a parte de trás, o muro do campo com os painéis, o gramado listrado entre a pista e as arquibancadas, o corredor
+// coberto sobre a pista, o pódio no meio do campo (o do GP fica no estádio), as bandeiras do México no alto, as torres de luz e a fumaça verde, branca e vermelha. Peças repetidas em InstancedMesh.
+// (Na corrida o Foro Sol leva uns 28 500 torcedores, segundo El Informador, 17/07/2015.)
 import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
-import { Montador, solido, comTextura, letreiro, tom } from "../montagem.js";
+import { Montador, solido, vidro, comTextura } from "../montagem.js";
 import { marcaTex } from "../marcas.js";
-import { instancias, sorteio } from "../comum.js";
+import { instancias, sorteio, livre } from "../comum.js";
+import { nivelDoChao } from "./chao.js";
+import { FORO } from "./mapa.js";
+import { montarTribuna, CORES_MX, CAMISAS_MX } from "./tribuna.js";
 
-export const CORES_MX = { verde: "#006847", branco: "#f4f4f0", vermelho: "#ce1126" };
-export const CAMISAS_MX = ["#0a7a4a", "#f4f4f0", "#ce1126", "#f4f4f0", "#0a7a4a", "#ce1126", "#1b1b1b", "#ffd23f"];
+export { CORES_MX, CAMISAS_MX };
 
-// a textura da torcida: fileiras de camisa (verde, branco, vermelho) com a cabeça por cima; repete a cada fileira
-function torcidaTex() {
-  return canvasTex(64, 128, (x, w, h, rr) => {
-    x.fillStyle = "#3b3f46"; x.fillRect(0, 0, w, h);
-    const linhas = 8, alt = h / linhas;
-    for (let j = 0; j < linhas; j++) {
-      x.fillStyle = "#2c3036"; x.fillRect(0, j * alt + alt - 2, w, 2);
-      for (let i = 0; i < 16; i++) {
-        if (rr() < 0.08) continue;
-        const cx = i * 4 + 1;
-        x.fillStyle = CAMISAS_MX[(rr() * CAMISAS_MX.length) | 0]; x.fillRect(cx, j * alt + alt * 0.42, 3, alt * 0.5);
-        x.fillStyle = ["#f1c7a5", "#d9a37a", "#a8714a", "#7a4a2a", "#5a3820"][(rr() * 5) | 0]; x.fillRect(cx, j * alt + alt * 0.18, 3, alt * 0.26);
-        if (rr() < 0.12) { x.fillStyle = "#ffd23f"; x.fillRect(cx - 1, j * alt + alt * 0.1, 5, 2); } // um chapéu de mariachi (sombrero) aqui e ali
-      }
-    }
+// o gramado listrado do campo (o corte da máquina, em faixas)
+function gramadoTex() {
+  return canvasTex(256, 256, (x, w, h, rr) => {
+    for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? "#4f9a3e" : "#5aa646"; x.fillRect(0, i * (h / 8), w, h / 8 + 1); }
+    for (let i = 0; i < 900; i++) { x.fillStyle = rr() < 0.5 ? "#00000012" : "#ffffff10"; x.fillRect(rr() * w, rr() * h, 1 + rr() * 2, 1 + rr() * 3); }
   });
-}
-
-// o gramado listrado com o losango de terra e as linhas, desenhado numa elipse (uv planar: 0..1 sobre o retângulo que a contém)
-function campoTex() {
-  return canvasTex(512, 256, (x, w, h) => {
-    for (let i = 0; i < 16; i++) { x.fillStyle = i % 2 ? "#4f9a3e" : "#5aa646"; x.fillRect(i * (w / 16), 0, w / 16 + 1, h); }
-    const cx = w * 0.5, cy = h * 0.5, r = h * 0.34;
-    x.fillStyle = "#b98a58"; x.beginPath(); x.moveTo(cx, cy - r); x.lineTo(cx + r, cy); x.lineTo(cx, cy + r); x.lineTo(cx - r, cy); x.closePath(); x.fill();
-    x.fillStyle = "#5aa646"; const s = r * 0.62; x.beginPath(); x.moveTo(cx, cy - s); x.lineTo(cx + s, cy); x.lineTo(cx, cy + s); x.lineTo(cx - s, cy); x.closePath(); x.fill();
-    x.strokeStyle = "#f4f4f0"; x.lineWidth = 2; x.beginPath(); x.moveTo(cx, cy + r); x.lineTo(cx + w * 0.42, cy + r - h * 0.5 * 1.05); x.moveTo(cx, cy + r); x.lineTo(cx - w * 0.42, cy + r - h * 0.5 * 1.05); x.stroke();
-    x.fillStyle = "#b98a58"; x.beginPath(); x.arc(cx, cy, r * 0.22, 0, 7); x.fill();
-    x.fillStyle = "#f4f4f0"; for (const [px, py] of [[cx, cy + r], [cx + r, cy], [cx - r, cy]]) x.fillRect(px - 4, py - 4, 8, 8);
-  }, false);
 }
 
 export function bandeiraMexico(w = 96, h = 56) {
@@ -52,116 +32,54 @@ export function bandeiraMexico(w = 96, h = 56) {
   }, false);
 }
 
-// uma faixa de elipse entre os raios (A - d0, B - d0) e (A - d1, B - d1), de t0 a t1, nas alturas y0 e y1. `cor` opcional (cor por vértice).
-function faixaEl(l, A, B, d0, y0, d1, y1, t0, t1, seg, { uvU = 1, uvV = 1, cor = null } = {}) {
-  const base = l.pos.length / 3;
-  for (let k = 0; k <= seg; k++) {
-    const t = t0 + ((t1 - t0) * k) / seg;
-    for (const [d, y, v] of [[d0, y0, 0], [d1, y1, uvV]]) {
-      l.pos.push((A - d) * Math.cos(t), y, (B - d) * Math.sin(t)); l.uv.push(((k / seg) * uvU), v);
-      if (cor) l.col.push(cor.r, cor.g, cor.b);
-    }
-    if (k < seg) { const a = base + k * 2; l.idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-  }
-}
-const novo = () => ({ pos: [], uv: [], idx: [], col: [] });
-function malha(l, mat, comCor = false) {
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.Float32BufferAttribute(l.pos, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(l.uv, 2));
-  if (comCor) g.setAttribute("color", new THREE.Float32BufferAttribute(l.col, 3));
-  g.setIndex(l.idx); g.computeVertexNormals();
-  const m = new THREE.Mesh(g, mat); m.castShadow = m.receiveShadow = true; return m;
-}
+// o miolo do campo: a frente da Norte, a frente da Sul e a boca de leste (a linha entre as duas pontas de leste)
+const POLI_CAMPO = [FORO.norte.frente[0], FORO.norte.frente[1], FORO.norte.frente[2], FORO.sul.frente[2], FORO.sul.frente[1], FORO.sul.frente[0]];
+const dentro = (poli, x, z) => { let c = false; for (let i = 0, j = poli.length - 1; i < poli.length; j = i++) { const [xi, zi] = poli[i], [xj, zj] = poli[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) c = !c; } return c; };
 
 /**
- * O Foro Sol numa elipse de semieixos A e B (a parede de fora) centrada em (cx, cz). `ok(x, z)` diz se o ponto pode ficar ali (longe da pista):
- * a seção da ferradura que não passa é tirada, e é por esse vão que a pista "atravessa" a arquibancada. Devolve o que montou.
+ * O campo: o gramado em células de 16 u no miolo entre as duas arquibancadas, no chão que se vê (+0,25), só onde a célula inteira está a mais de `folga` da borda da pista
+ * (a faixa de grama seca junto do asfalto fica como está). Devolve a malha e o número de células.
  */
-// A arquibancada leva o degrau do kit na escala do cenário (`tr.escala`: 9 × 6 u ficam 3,6 × 2,4 u no GP, 0,75 × 0,5 m; aqui a altura é 5,6 u × escala = 0,47 m e o fundo 9 u × escala = 0,75 m); `degraus` (um múltiplo de 8, as 8 fileiras da textura da torcida)
-// sai de `fundo` ÷ fundo do degrau, a menos que venha na chamada. Antes eram 16 degraus de 1,17 m (a escala da física sem a escala do cenário): a gente ficava 2,5 vezes maior que o degrau.
-export function foroSol(tr, add, { cx, cz, A, B, fundo = 56, degraus = null, ok, semente = 11 }) {
-  const E = tr.escala ?? 1, alturaDegrau = 5.6 * E, fundoDegrau = 9 * E, linhas = degraus ?? Math.max(8, Math.round(fundo / fundoDegrau / 8) * 8);
-  const SEG = 72, topo = 4 + linhas * alturaDegrau, a0 = A - fundo, b0 = B - fundo;
-  let y0 = tr.chao(cx, cz) - 0.6; // o campo fica no nível do chão do centro (abaixo, com a arquibancada pronta, sobe para o nível dela)
-  const g = new THREE.Group(); g.name = "foro-sol"; g.position.set(cx, y0, cz);
-  const mundo = (d, t) => [cx + (A - d) * Math.cos(t), cz + (B - d) * Math.sin(t)];
-  // as seções em pé: as que ficam a mais de uma folga da pista nos dois cantos de cada borda
-  const em = [];
-  for (let k = 0; k < SEG; k++) {
-    const ta = (k / SEG) * Math.PI * 2, tb = ((k + 1) / SEG) * Math.PI * 2, tm = (ta + tb) / 2;
-    const bom = [ta, tm, tb].every((t) => [0, fundo].every((d) => { const [x, z] = mundo(d, t); return ok(x, z); }) && ok(...mundo(-8, t)));
-    if (bom) em.push([ta, tb]);
+function campo(tr, add, poli, folga = 20, passo = 16) {
+  const xs = poli.map((p) => p[0]), zs = poli.map((p) => p[1]), x0 = Math.floor(Math.min(...xs) / passo) * passo, x1 = Math.max(...xs), z0 = Math.floor(Math.min(...zs) / passo) * passo, z1 = Math.max(...zs);
+  const pos = [], uv = [], idx = [], ok = new Map(), bom = (x, z) => { const k = x + "," + z; if (!ok.has(k)) ok.set(k, dentro(poli, x, z) && livre(tr, x, z, folga)); return ok.get(k); };
+  let celulas = 0;
+  for (let x = x0; x < x1; x += passo) for (let z = z0; z < z1; z += passo) {
+    if (![[x, z], [x + passo, z], [x, z + passo], [x + passo, z + passo]].every(([a, b]) => bom(a, b))) continue;
+    const k = pos.length / 3;
+    for (const [a, b] of [[x, z], [x + passo, z], [x, z + passo], [x + passo, z + passo]]) { pos.push(a, nivelDoChao(tr, a, b) + 0.25, b); uv.push(a / 64, b / 64); }
+    idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); celulas++;
   }
-  // fiapos soltos de uma seção só ficam feios: tira a seção sem vizinha
-  const ativas = em.length > 3 ? em.filter(([ta, tb]) => em.some(([, ub]) => Math.abs(ub - ta) < 1e-6) || em.some(([ua]) => Math.abs(ua - tb) < 1e-6)) : em;
-  // na escala real o chão sob a ferradura não é plano (a pista sobe até ~9 m perto dela): o estádio assenta no nível de 85% das alturas sob as seções que ficam em pé,
-  // as arquibancadas mais baixas ficam sobre o aterro (que desce até o ponto mais baixo) e as mais altas, no máximo, com a base um pouco enterrada
-  if (ativas.length) {
-    const alt = [];
-    for (const [ta, tb] of ativas) for (const d of [0, fundo / 2, fundo]) alt.push(tr.chao(...mundo(d, (ta + tb) / 2)));
-    alt.sort((p, q) => p - q); y0 = alt[Math.floor(alt.length * 0.85)] - 0.6; g.position.y = y0; tr.foroAltMin = alt[0];
-  }
-  const rake = novo(), conc = novo(), muro = novo(), corConc = new THREE.Color("#c9ccd0"), corFundo = new THREE.Color("#a9adb3");
-  for (const [ta, tb] of ativas) {
-    const comp = (tb - ta) * ((A + B) / 2), u = comp / 30;
-    faixaEl(rake, A, B, fundo, 3, 0, topo, ta, tb, 1, { uvU: u, uvV: linhas / 8 });                        // os degraus lotados
-    faixaEl(conc, A, B, 0, -6, 0, topo + 22, ta, tb, 1, { cor: corFundo });                                 // a parede de trás
-    faixaEl(conc, A, B, 0, topo + 22, 4, topo + 24, ta, tb, 1, { cor: corConc });                           // o beiral
-    faixaEl(conc, A, B, fundo, -6, fundo, 3, ta, tb, 1, { cor: corConc });                                  // o pé da arquibancada
-    faixaEl(muro, A, B, fundo + 5, 0, fundo + 5, 7, ta, tb, 1, { uvU: u * 0.5, uvV: 1 });                   // o muro do campo, acolchoado
-  }
-  if (ativas.length) {
-    g.add(malha(rake, comTextura(torcidaTex(), { roughness: 0.9 })));
-    g.add(malha(conc, M(0xffffff, { roughness: 0.85, vertexColors: true, side: THREE.DoubleSide }), true));
-    const mm = malha(muro, comTextura(canvasTex(64, 16, (x, w, h) => { x.fillStyle = "#14502f"; x.fillRect(0, 0, w, h); x.fillStyle = "#ffd23f"; x.fillRect(0, 0, w, 3); x.fillStyle = "#f4f4f0"; x.fillRect(0, h - 3, w, 3); })), true);
-    g.add(mm);
-  }
-  // o campo: um disco achatado com o gramado
-  const campo = new THREE.Mesh(new THREE.CircleGeometry(1, 48), comTextura(campoTex(), { roughness: 1 }));
-  campo.rotation.x = -Math.PI / 2; campo.scale.set(a0 + 5, b0 + 5, 1); campo.position.y = 0.35; campo.receiveShadow = true;
-  // o uv do CircleGeometry vai de 0 a 1 no quadrado que o contém: dá certo com a escala elíptica
-  g.add(campo);
-  const fundoAterro = 14 + Math.max(0, y0 - (tr.foroAltMin ?? y0)), aterro = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, fundoAterro, 48), M(0xb5ab98, { roughness: 1 })); aterro.scale.set(A + 6, 1, B + 6); aterro.position.y = -fundoAterro / 2 - 0.5; g.add(aterro);
+  if (!celulas) return { celulas: 0 };
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  const m = add(new THREE.Mesh(g, comTextura(gramadoTex(), { roughness: 1, side: THREE.FrontSide }))); m.receiveShadow = true; m.name = "foro-campo";
+  return { celulas, malha: m };
+}
 
-  // o pódio no meio do campo, de frente para a maior parte da torcida
-  let fx = 0, fz = 0; for (const [ta, tb] of ativas) { const t = (ta + tb) / 2; fx += Math.cos(t) * A; fz += Math.sin(t) * B; }
-  const rot = ativas.length ? Math.atan2(fx, fz) : 0; // a frente do pódio (+z local) aponta para o centro da massa de torcida
-  const pod = podio(E); pod.position.set(0, 0.4, 0); pod.rotation.y = rot; g.add(pod);
-  add(g);
-
-  // as bandeiras do México no alto da parede de trás, em InstancedMesh (mastro e pano), e a fumaça
-  const r = sorteio(semente), mastros = [], panos = [];
-  ativas.forEach(([ta, tb], k) => {
-    if (k % 2) return;
-    const t = (ta + tb) / 2, [x, z] = mundo(0, t), altura = 38 + r() * 8, ang = -t + Math.PI / 2 + (r() - 0.5) * 0.5;
-    mastros.push({ x, y: y0 + topo + 22 + altura / 2, z, sx: 0.7, sy: altura, sz: 0.7 });
-    panos.push({ x: x + Math.cos(ang) * 14, y: y0 + topo + 22 + altura - 8, z: z - Math.sin(ang) * 14, sx: 28, sy: 16, sz: 1, r: ang });
-  });
-  instancias(add, new THREE.CylinderGeometry(1, 1, 1, 6), M(0xe9e9e9, { roughness: 0.5 }), mastros, { nome: "foro-mastros" });
-  instancias(add, new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: bandeiraMexico(), side: THREE.DoubleSide, roughness: 0.8 }), panos, { sombra: false, nome: "foro-bandeiras" });
-
-  // as torres de refletores nos quatro cantos da elipse (as que cabem)
-  const m = new Montador(), S = solido(), torres = [];
-  for (const t of [0.6, Math.PI - 0.6, Math.PI + 0.6, -0.6]) {
-    const [x, z] = mundo(-6, t); if (!ok(x, z)) continue;
-    const lx = x - cx, lz = z - cz;
-    m.cilindro(S, [lx, 60, lz], [1.6, 130], { cor: "#aeb4ba", seg: 6 });
-    m.caixa(S, [lx, 134, lz], [30, 16, 3], { cor: "#d9dde2", ry: -t + Math.PI / 2 });
-    m.caixa(S, [lx, 134, lz], [28, 14, 3.4], { cor: "#fff3c4", ry: -t + Math.PI / 2 });
-    torres.push([x, z]);
+// o corredor coberto sobre a pista: o piso, as paredes de vidro, o telhado cor de chocolate, apoiado nas pontas das duas arquibancadas (os encontros descem até o chão, dentro das paredes de ponta)
+function ponte(tr, add, q) {
+  const E = tr.escala ?? 0.4, m = new Montador(), S = solido(), V = vidro();
+  const [p0, p1, p2, p3] = q, uvx = [(p1[0] - p0[0] + p2[0] - p3[0]) / 2, (p1[1] - p0[1] + p2[1] - p3[1]) / 2], vvx = [(p3[0] - p0[0] + p2[0] - p1[0]) / 2, (p3[1] - p0[1] + p2[1] - p1[1]) / 2];
+  const lu = Math.hypot(...uvx), lv = Math.hypot(...vvx), cx = (p0[0] + p1[0] + p2[0] + p3[0]) / 4, cz = (p0[1] + p1[1] + p2[1] + p3[1]) / 4, ry = -Math.atan2(uvx[1], uvx[0]);
+  const ux = uvx[0] / lu, uz = uvx[1] / lu, vx = vvx[0] / lv, vz = vvx[1] / lv; // os eixos do quadrilátero (u: para leste; v: da Norte para a Sul)
+  const h = tr.pts[tr.indiceAt(cx, cz)].h, vao = 74 * E; // o vão livre da passarela do kit (74 × a escala), 6,2 m sobre o asfalto
+  const base = h + vao, espessura = 8, parede = 22, telhado = 3;
+  m.caixa(S, [cx, base + espessura / 2, cz], [lu, espessura, lv], { cor: "#b4b8be", ry });                                        // o piso
+  for (const s of [-1, 1]) m.caixa(V, [cx + ux * s * (lu / 2 - 0.6), base + espessura + parede / 2, cz + uz * s * (lu / 2 - 0.6)], [1.2, parede, lv], { cor: "#2c4a5a", ry }); // as paredes de vidro, leste e oeste
+  m.caixa(S, [cx, base + espessura + parede + telhado / 2, cz], [lu + 8, telhado, lv + 6], { cor: "#d2691e", ry });                // o telhado (`roof:colour` chocolate)
+  for (const s of [-1, 1]) { // os encontros: do chão até o piso, dentro das paredes das pontas (a 4 u da borda, para o lado da arquibancada)
+    const px = cx + vx * s * (lv / 2 + 4), pz = cz + vz * s * (lv / 2 + 4), chao = nivelDoChao(tr, px, pz) - 3;
+    m.caixa(S, [px, (chao + base + espessura) / 2, pz], [lu, base + espessura - chao, 8], { cor: "#a9adb3", ry });
   }
-  const torresG = m.montar("foro-torres"); torresG.position.set(cx, y0, cz); add(torresG);
-
-  const fumaca = fumacaMexicana(add, { x: cx, y: y0, z: cz, a: a0, b: b0, rot });
-  const info = { degraus: linhas, topo, x: cx, z: cz, A, B, secoes: ativas.length, de: SEG, torres: torres.length, bandeiras: panos.length, rot, fumaca, y: y0 };
-  return info;
+  const g = m.montar("foro-corredor-coberto"); add(g);
+  return { x: cx, z: cz, vao, base };
 }
 
 // o pódio: o palco baixo, os três degraus (1º no meio e mais alto), o fundo com o letreiro e as bandeiras, o tapete verde, branco e vermelho
-function podio(E = 1) { // os degraus do pódio (14, 10 e 7 u: 2,9 m, 2,1 m e 1,5 m, mais que um piloto de 1,75 m) × a escala do cenário: 1,17 m, 0,83 m e 0,58 m sobre o palco de 0,83 m
+function podio(E = 1) { // os degraus do pódio (14, 10 e 7 u de altura de projeto × a escala do cenário: 1,17 m, 0,83 m e 0,58 m sobre o palco de 0,83 m)
   const m = new Montador(), S = solido(), g = new THREE.Group();
-  m.caixa(S, [0, 2, 0], [92, 4, 40], { cor: "#2b2f36" });                                          // o palco
-  for (let i = 0; i < 3; i++) m.caixa(S, [-30 + i * 30, 4.5, -16 + 0 * i], [8, 1, 3], { cor: ["#006847", "#f4f4f0", "#ce1126"][i] }); // o tapete (listras)
+  m.caixa(S, [0, -2, 0], [92, 12, 40], { cor: "#2b2f36" });                                         // o palco (desce 8 u para dentro do chão: o campo é inclinado)
+  for (let i = 0; i < 3; i++) m.caixa(S, [-30 + i * 30, 4.5, -16], [8, 1, 3], { cor: ["#006847", "#f4f4f0", "#ce1126"][i] }); // o tapete (listras)
   for (const [x, h, c] of [[0, 14 * E, "#ffd23f"], [-26, 10 * E, "#d7dce1"], [26, 7 * E, "#c98a4b"]]) {
     m.caixa(S, [x, 4 + h / 2, 2], [22, h, 16], { cor: "#f4f4f0" });
     m.caixa(S, [x, 4 + h / 2, 10.2], [22, h, 0.4], { cor: c });
@@ -177,23 +95,61 @@ function podio(E = 1) { // os degraus do pódio (14, 10 e 7 u: 2,9 m, 2,1 m e 1,
 }
 
 // a fumaça verde, branca e vermelha do campo: puffs em InstancedMesh que sobem, abrem e somem; só se mexe com a câmera perto
-function fumacaMexicana(add, { x, y, z, a, b, rot }) {
-  const N = 66, geo = new THREE.IcosahedronGeometry(1, 1), mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false });
+function fumacaMexicana(add, { x, y, z }) {
+  const N = 54, geo = new THREE.IcosahedronGeometry(1, 1), mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false });
   const m = add(new THREE.InstancedMesh(geo, mat, N)), c = new THREE.Color(), d = new THREE.Object3D(), r = sorteio(77);
   const cores = ["#00a86b", "#ffffff", "#e0242b"], puffs = [];
   for (let i = 0; i < N; i++) {
-    const cor = i % 3, fila = Math.floor(i / 3), lado = (fila % 2 ? 1 : -1), px = (cor - 1) * 34 * 1.0 + lado * (a * 0.38) * (0.6 + r() * 0.4), pz = (r() - 0.5) * b * 0.9;
-    puffs.push({ x: px, z: pz, fase: r(), vel: 0.08 + r() * 0.05, esc: 9 + r() * 7, deriva: (r() - 0.5) * 8 }); m.setColorAt(i, c.set(cores[cor]));
+    const cor = i % 3, lado = Math.floor(i / 3) % 2 ? 1 : -1;
+    puffs.push({ x: (cor - 1) * 34 + lado * (95 + r() * 30), z: (r() - 0.5) * 30, fase: r(), vel: 0.08 + r() * 0.05, esc: 9 + r() * 7, deriva: (r() - 0.5) * 8 }); m.setColorAt(i, c.set(cores[cor]));
   }
   m.instanceColor.needsUpdate = true; m.name = "foro-fumaca"; m.frustumCulled = false;
   const posa = (t) => {
     puffs.forEach((p, i) => {
       const s = (p.fase + t * p.vel) % 1, h = s * 70, e = p.esc * (0.5 + s * 1.5);
-      const lx = p.x + p.deriva * s, lz = p.z; const cs = Math.cos(rot), sn = Math.sin(rot);
-      d.position.set(x + lx * cs + lz * sn, y + 1 + h + e * 0.3, z - lx * sn + lz * cs); d.scale.setScalar(Math.max(0.01, e * (1 - s * 0.35))); d.updateMatrix(); m.setMatrixAt(i, d.matrix);
+      d.position.set(x + p.x + p.deriva * s, y + 1 + h + e * 0.3, z + p.z); d.scale.setScalar(Math.max(0.01, e * (1 - s * 0.35))); d.updateMatrix(); m.setMatrixAt(i, d.matrix);
     });
     m.instanceMatrix.needsUpdate = true;
   };
   posa(0);
   return { N, animar: (t, foco) => { if (!foco || (foco.x - x) ** 2 + (foco.y - z) ** 2 < 900 ** 2) posa(t); }, mesh: m };
+}
+
+/**
+ * Monta o Foro Sol no lugar de verdade e devolve o que fez ({ norte, sul, ponte, campo, podio, fumaca ... }). Tudo é cenário: a pista passa pelo vão entre as duas arquibancadas.
+ */
+export function foroSol(tr, add) {
+  const E = tr.escala ?? 0.4, D = FORO.profundidade, miolo = [1400, 2450]; // o miolo do campo: o ponto do lado de dentro que orienta as normais
+  const norte = montarTribuna(tr, add, { frente: FORO.norte.frente, foco: miolo, D, tipo: "estadio", cobertura: "chocolate", vaoCobertura: 0.55, nome: "foro-norte", muroPainel: 0 });
+  const sul = montarTribuna(tr, add, { frente: FORO.sul.frente, foco: miolo, D, tipo: "estadio", cobertura: "chocolate", vaoCobertura: 0.55, nome: "foro-sul", muroPainel: 1 });
+  const cor = ponte(tr, add, FORO.ponte);
+  const gramado = campo(tr, add, POLI_CAMPO);
+  // o pódio no meio do campo, na faixa de grama da Norte, de frente para o lado da Sul
+  const px = 1400, pz = 2290, pod = podio(E); pod.position.set(px, nivelDoChao(tr, px, pz) - 0.1, pz); pod.rotation.y = 0; add(pod);
+  // as bandeiras do México no alto da cobertura (uma a cada 3 colunas) e as torres de luz atrás da parede de trás
+  const r = sorteio(11), mastros = [], panos = [], m = new Montador(), S = solido(), torres = [];
+  for (const t of [norte, sul]) t.topos.forEach((q, k) => {
+    const yb = q.y + 6 * 12 * E + 8 - 3; // o alto da cobertura na ponta de trás (a 6 u da parede)
+    const altura = 38 + r() * 8, ang = Math.atan2(-q.dx, -q.dz) + (r() - 0.5) * 0.5;
+    if (k % 3 === 0) {
+      mastros.push({ x: q.x + q.dx * 2, y: yb + altura / 2, z: q.z + q.dz * 2, sx: 0.7, sy: altura, sz: 0.7 });
+      panos.push({ x: q.x + q.dx * 2 + Math.cos(ang) * 14, y: yb + altura - 8, z: q.z + q.dz * 2 - Math.sin(ang) * 14, sx: 28, sy: 16, sz: 1, r: ang });
+    }
+    if (k === 0 || k === Math.floor(t.topos.length / 2) || k === t.topos.length - 1) { // a torre de luz: atrás da parede, mais alta que a cobertura
+      const x = q.x + q.dx * 16, z = q.z + q.dz * 16, ch = nivelDoChao(tr, x, z) - 2, topo = yb + 44;
+      m.cilindro(S, [x, (ch + topo) / 2, z], [1.6, topo - ch], { cor: "#aeb4ba", seg: 6 });
+      m.caixa(S, [x, topo + 6, z], [30, 16, 3], { cor: "#d9dde2", ry: Math.atan2(-q.dx, -q.dz) }); m.caixa(S, [x, topo + 6, z], [28, 14, 3.4], { cor: "#fff3c4", ry: Math.atan2(-q.dx, -q.dz) });
+      torres.push([x, z]);
+    }
+  });
+  instancias(add, new THREE.CylinderGeometry(1, 1, 1, 6), M(0xe9e9e9, { roughness: 0.5 }), mastros, { nome: "foro-mastros" });
+  instancias(add, new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: bandeiraMexico(), side: THREE.DoubleSide, roughness: 0.8 }), panos, { sombra: false, nome: "foro-bandeiras" });
+  add(m.montar("foro-torres"));
+  const fumaca = fumacaMexicana(add, { x: px, y: nivelDoChao(tr, px, pz), z: pz });
+  // o campo, o corredor e o pódio ficam reservados (as árvores e a torcida solta não entram) e a torcida do som cobre o estádio
+  tr.reservado ||= [];
+  for (let x = 1100; x <= 1700; x += 60) for (let z = 2180; z <= 2860; z += 60) if (dentro(POLI_CAMPO, x, z)) tr.reservado.push([x, z, 50]);
+  tr.reservado.push([cor.x, cor.z, 90]);
+  tr.arquibancadas ||= []; tr.arquibancadas.push([Math.floor(0.875 * tr.n), Math.floor(0.935 * tr.n)]);
+  return { norte, sul, ponte: cor, campo: gramado.celulas, torres: torres.length, bandeiras: panos.length, podio: [px, pz], fumaca, y: nivelDoChao(tr, px, pz) };
 }

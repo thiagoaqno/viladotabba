@@ -6,7 +6,9 @@
 import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
 
-const KM = 4.8, F0 = 0.695, F1 = 0.765, L_CAIS = 110, L_FIM = 760, PIER = 30 * KM, LARG_PIER = 2.5 * KM;
+// (2026-11-11, na pista antiga: a marina maior, a pedido do Thiago — "muita areia e pouca água". Medido: do lado de fora, de 0,60 a 0,80, nenhum
+// trecho da pista chega a menos de 100 u até 1 500 u; em 0,80 a volta seguinte já passa a 160 u, por isso ela para em 0,79)
+const KM = 4.8, F0 = 0.66, F1 = 0.79, L_CAIS = 110, L_FIM = 1100, PIER = 30 * KM, LARG_PIER = 2.5 * KM;
 
 function rng(s) { return () => { s |= 0; s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -34,9 +36,10 @@ export function marinaYas(tr, add) {
   };
   const texAgua = canvasTex(256, 256, (x, w, h, rr) => { x.fillStyle = "#1c5d70"; x.fillRect(0, 0, w, h); for (let k = 0; k < 220; k++) { x.fillStyle = rr() < 0.5 ? "#ffffff14" : "#0a2f3d22"; x.fillRect(rr() * w, rr() * h, 10 + rr() * 30, 2); } });
   texAgua.wrapS = texAgua.wrapT = THREE.RepeatWrapping;
-  const agua = new THREE.MeshStandardMaterial({ map: texAgua, color: 0xbfe3ea, roughness: 0.12, metalness: 0.35, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  // a água: azul de marina e quase sem espelho (com metalness 0,35 ela refletia o céu enevoado do deserto e ficava da cor da areia)
+  const agua = new THREE.MeshStandardMaterial({ map: texAgua, color: 0x2a7f96, roughness: 0.3, metalness: 0, envMapIntensity: 0.35, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
   fita(L_CAIS, L_FIM, 0.35, 0.35, agua, "abudhabi-marina-agua", 60);
-  const pedra = new THREE.MeshStandardMaterial({ color: 0xd9cdb4, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  const pedra = new THREE.MeshStandardMaterial({ color: 0xd9cdb4, roughness: 0.85, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
   fita(tr.W / 2 + 34, L_CAIS, 0.4, 0.4, pedra, "abudhabi-marina-calcadao"); // o calçadão de pedra clara entre a barreira e o cais
   // a borda do cais: a parede de concreto do calçadão até um pouco abaixo da água
   { const vs = [], idx = []; for (let i = i0, k = 0; i <= i1; i++, k++) { const [x, z] = em(i, L_CAIS); const c = chao(x, z); vs.push(x, c + 0.45, z, x, c - 2, z); if (i < i1) idx.push(k * 2, k * 2 + 2, k * 2 + 1, k * 2 + 1, k * 2 + 2, k * 2 + 3); }
@@ -48,7 +51,7 @@ export function marinaYas(tr, add) {
   for (let k = 1; k <= nPier; k++) {
     const i = i0 + Math.round((k * PIER) / 6), t = (i - i0) / (i1 - i0), cabe = (L_FIM - L_CAIS) * Math.min(1, Math.sin(Math.PI * t) * 3) - 60;
     if (cabe < 120) continue;
-    const len = Math.min(cabe, 200 + r() * 180), p = pts[i % n];
+    const len = Math.min(cabe, 300 + r() * 350), p = pts[i % n];
     piers.push({ i, len });
     // os iates encostados dos dois lados do píer, um atrás do outro, cada um de um tamanho (15 a 45 m)
     for (const s of [-1, 1]) {

@@ -189,15 +189,25 @@ export function criarBoxesDaCorrida(tr, cena, escala) {
       for (const [k, e] of equipes) if (!usadas.has(k)) e.eq.g.visible = false;
       for (const a of lista) {
         let e = equipes.get(a.c.equipe);
-        if (!e) {
-          const eq = criarEquipeBox(a.c.equipe, a.c.cor || "#888888"); eq.g.scale.setScalar(escala);
-          eq.g.traverse((o) => { if (o.isSkinnedMesh && PECAS_FORA.includes(o.name)) o.visible = false; });
-          cena.add(eq.g); e = { eq }; equipes.set(a.c.equipe, e);
-        }
+        if (!e) { e = { eq: nova(a.c.equipe, a.c.cor) }; equipes.set(a.c.equipe, e); }
         e.eq.g.visible = true; e.eq.g.position.set(a.p.x, a.p.h, a.p.z); e.eq.g.rotation.y = a.p.rot;
         e.eq.atualizar({ fase: a.fase, t: a.t, composto: a.c.composto });
       }
     },
+    // as equipes [{ equipe, cor }] montadas ANTES da largada, bem abaixo do chão e visíveis, para o aquecimento da pista (jogo.js) compilar os
+    // shaders delas (as malhas com esqueleto) e subir as texturas: montadas na primeira vez que um carro entrava no box, travavam o jogo.
+    // Devolve os grupos (o aquecimento os esconde depois; `atualizar` mostra cada um quando a equipe estiver no box).
+    preparar(lista) {
+      return carregarMecanicos().then(() => { pronto = true; return lista.filter((x) => x.equipe).map(({ equipe, cor }) => {
+        let e = equipes.get(equipe); if (!e) { e = { eq: nova(equipe, cor) }; equipes.set(equipe, e); }
+        e.eq.g.visible = true; e.eq.g.position.set(0, -1e5, 0); e.eq.atualizar({ fase: "troca", t: 0.5 }); return e.eq.g;
+      }); }, () => []);
+    },
     soltar() { for (const e of equipes.values()) e.eq.soltar(); equipes.clear(); },
   };
+  function nova(equipe, cor) {
+    const eq = criarEquipeBox(equipe, cor || "#888888"); eq.g.scale.setScalar(escala);
+    eq.g.traverse((o) => { if (o.isSkinnedMesh && PECAS_FORA.includes(o.name)) o.visible = false; });
+    cena.add(eq.g); return eq;
+  }
 }

@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { M, canvasTex } from "../../cena.js";
 import { marcaTex } from "../marcas.js";
 
-const T_GARAGEM = 27, T_FAIXA = 37, T_VIDRO = 96, T_TETO = 102, T_PONTA = 135; // alturas (u) acima do asfalto
+const T_GARAGEM = 55, T_FAIXA = 65, T_VIDRO = 124, T_TETO = 130, T_PONTA = 163; // alturas (u) acima do asfalto (+28 desde 2026-11-11: as garagens do kit, corredor-boxes.js, ficaram mais altas)
 const BALANCO = 34, FUNDO = 140, PONTA = 70; // o teto avança 34 u (7 m) além da fachada; o prédio tem 140 u (29 m) de fundo; cada bico avança 70 u (15 m)
 export function theWing(tr, add) {
   const F1 = window.F1Regras, cor = F1?.corredor(tr.t, tr.n, tr.W); if (!cor) return null;

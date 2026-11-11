@@ -105,7 +105,11 @@ function criarSafetyCar() {
 function prepararDaCorrida(tr) {
   if (!race || E.S?.config.regras !== "f1") return Promise.resolve([]);
   if (!race.safetyKart) race.safetyKart = criarSafetyCar();
-  const sc = race.safetyKart.g; sc.visible = true; sc.position.set(0, -1e5, 0);
+  // logo abaixo do chão, no centro da área da sombra do sol (±260 em volta do carro), para o aquecimento preparar também a
+  // versão de SOMBRA dos materiais dele. Lá em −100.000 ela nunca era desenhada, e os shaders de sombra nasciam na primeira entrada do
+  // safety car (medido: ~300 ms parado, 2026-11-11). A tela de carregamento cobre, e ele se esconde no fim do aquecimento
+  const alvoSol = sun.target.position; // (o centro da área da sombra: é para lá que o sol aponta)
+  const sc = race.safetyKart.g; sc.visible = true; sc.position.set(alvoSol.x, alvoSol.y - 40, alvoSol.z);
   if (tr.corredor && race.mecanicos === undefined) race.mecanicos = criarBoxesDaCorrida(tr, scene, KS * CARS3.equilibrado.L / TAM);
   if (!race.mecanicos?.preparar) return Promise.resolve([sc]);
   // UMA equipe basta para compilar (o shader com esqueleto é o mesmo para todas): as 11 eram 242 bonecos montados e desenhados na contagem, e o

@@ -141,7 +141,7 @@ function iniciar(room) {
   const bots = room.order.filter((id) => room.players[id]?.bot);
   room.direcao = { amarelo: null, safety: null, avisoIncidente: false, avisoSafety: false,
     setorIncidente: Math.floor(r() * T.SECTORS), incidenteId: bots[Math.floor(r() * bots.length)] || null,
-    scEm: room.config.voltas >= 4 && r() < 0.4 ? 1.25 + r() * Math.max(1, room.config.voltas - 3) : null,
+    scEm: process.env.CORRIDA_SC_EM ? +process.env.CORRIDA_SC_EM : room.config.voltas >= 4 && r() < 0.4 ? 1.25 + r() * Math.max(1, room.config.voltas - 3) : null, // (CORRIDA_SC_EM: só para testes, força o safety car nessa volta)
     scDura: 10000 + Math.floor(r() * 4000),
     pista: T.pontos(t, 6), ultimaAtualizacao: 0 };
   for (const id of room.order) Object.assign(room.players[id], { drsZona: -1, penal: 0, avisosLimite: 0,

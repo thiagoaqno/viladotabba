@@ -192,7 +192,9 @@ export function boxesGP(tr, add, cfg = {}) {
     if (k >= 0) faixas[k].push([v0, alvo.vs.length / 3]);
   };
   const luz = (...a) => { emLuz = true; caixa(...a); emLuz = false; };
-  const fundo = 16, alt = 14, pele = "#e2b48c", cinza = "#8c8f96", comGaragem = cfg.garagens !== false;
+  // alt: a altura da marquise (1 u ≈ 10 cm). Era 14, e a abertura (alt − 6) dava 0,8 m: menor que os mecânicos (~1,5 m) e quase do tamanho
+  // do carro. Com 42 a abertura tem uns 3,6 m, como uma garagem de F1 (pedido do Thiago, 2026-11-11). `e`: o braço prateado sobe junto
+  const fundo = 16, alt = 42, e = alt / 14, pele = "#e2b48c", cinza = "#8c8f96", comGaragem = cfg.garagens !== false;
   // a garagem só é construída onde nenhum outro trecho da pista passa mais perto do que ela está do próprio (Mônaco, Zandvoort...)
   const garagemLivre = (ref, tx, ty, nx, ny, largura) => [0, fundo + 3].every((b) => [-1, 0, 1].every((s) => tr.distAt(ref.x + nx * b + tx * s * largura / 2, ref.y + ny * b + ty * s * largura / 2) >= Math.abs(cor.garagemLat) + meia / 2 + b - 4));
   cor.garagens.forEach((u, k) => {
@@ -224,10 +226,10 @@ export function boxesGP(tr, add, cfg = {}) {
       caixa(ref, tx, ty, nx, ny, 0, -0.4, alt + 1.2, passo, 0.4, 3, "#e9e9e6");
       caixa(ref, tx, ty, nx, ny, 0, fundo / 2 - 1, alt + 11.2, passo, fundo + 3, 1.2, "#25282d");
       // o braço prateado da garagem (a "gantry"): o poste na fachada e a viga por cima da faixa de trabalho, com a luz na ponta
-      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -1.4, 0.6, 0.9, 0.9, 10, "#c9ccd2");
-      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -9, 10.2, 0.9, 16, 0.9, "#c9ccd2");
-      luz(ref, tx, ty, nx, ny, largura / 2 - 2.4, -16.6, 8.4, 1.4, 1.4, 1.8, "#f4f8ff");
-      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -16.6, 7.6, 1.6, 0.4, 0.8, c, k);
+      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -1.4, 0.6, 0.9, 0.9, 10 * e, "#c9ccd2");
+      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -9, 10.2 * e, 0.9, 16, 0.9, "#c9ccd2");
+      luz(ref, tx, ty, nx, ny, largura / 2 - 2.4, -16.6, 10.2 * e - 1.8, 1.4, 1.4, 1.8, "#f4f8ff");
+      caixa(ref, tx, ty, nx, ny, largura / 2 - 2.4, -16.6, 10.2 * e - 2.6, 1.6, 0.4, 0.8, c, k);
       // a placa da equipe sobre a abertura (o logo e o nome) e o logo grande no fundo
       const fachada = new THREE.Mesh(new THREE.PlaneGeometry(largura, 5.2), new THREE.MeshBasicMaterial({ map: placaDaEquipe(idEq, nomeEq, c, 640, 104, true), side: THREE.DoubleSide }));
       fachada.position.set(ref.x - nx * 1.25, ref.h + alt - 3, ref.y - ny * 1.25); fachada.rotation.y = Math.atan2(-nx, -ny); fachada.name = `${tr.id}-garagem-${idEq}`;

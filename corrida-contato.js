@@ -64,7 +64,12 @@ function outrosNaHora(room, p, t, perto) {
   for (const id of room.order) {
     const q = room.players[id]; if (!q || q === p) continue;
     if (perto && q.bot && q.pos && Number.isFinite(q.pos.x) && (q.pos.x - perto.x) ** 2 + (q.pos.y - perto.y) ** 2 > PERTO2) continue; // (longe: não bate neste passo)
-    const H = K.hist.get(id), m = { id, x: 0, y: 0, z: 0, a: 0, vx: 0, vy: 0, r: 0, ...geometria(q), dnf: !!q.dnf, fant: q.finish != null || fantasmaDoBox(q, t) };
+    // (um objeto por carro, reaproveitado: era um novo, com as medidas copiadas, para cada par de carros a cada sub-passo da física, e a lista dos
+    // outros era ~15% do tempo do servidor com 22 robôs. Quem usa a lista a usa na hora: contatoPasso, logo abaixo)
+    const pool = K.pool || (K.pool = new Map()), H = K.hist.get(id), g = geometria(q);
+    let m = pool.get(id); if (!m) pool.set(id, m = {});
+    m.id = id; m.x = m.y = m.z = m.a = m.vx = m.vy = m.r = 0; m.L = g.L; m.W = g.W; m.massa = g.massa; m.dnf = !!q.dnf; m.fant = q.finish != null || fantasmaDoBox(q, t);
+    m.de = m.pre = m.culpa = undefined;
     if (H && H.n) em(H, t, m);
     else if (q.pos) { m.x = q.pos.x; m.y = q.pos.y; m.z = q.pos.z || 0; m.a = q.pos.a; m.vx = Math.cos(q.pos.a) * (q.pos.v || 0); m.vy = Math.sin(q.pos.a) * (q.pos.v || 0); }
     else continue;

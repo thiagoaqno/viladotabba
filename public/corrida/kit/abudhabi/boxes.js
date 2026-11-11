@@ -6,7 +6,7 @@
 import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
 
-const KM = 4.8, T_GARAGEM = 27, ANDAR = 4.2 * KM, BALANCO = 3 * KM, FUNDO = 30 * KM;
+const KM = 4.8, T_GARAGEM = 55, ANDAR = 4.2 * KM, BALANCO = 3 * KM, FUNDO = 30 * KM; // (T_GARAGEM era 27: as garagens do kit embaixo, corredor-boxes.js, ficaram mais altas em 2026-11-11)
 export function predioDosBoxes(tr, add) {
   const F1 = window.F1Regras, cor = F1?.corredor(tr.t, tr.n, tr.W); if (!cor) return null;
   const { pts, n } = tr, lado = cor.lado, G = Math.abs(cor.garagemLat); // (o garagemLat já vem com o sinal do lado: com o lado multiplicado de novo, o prédio ia para o lado de lá da pista)

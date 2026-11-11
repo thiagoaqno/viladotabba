@@ -27,12 +27,20 @@ export function montarCentro() {
     <div class="gc-lado gc-vel">${arco("gRpmArco", "rpm")}<div class="gc-txt"><small>KM/H</small><b id="pVel">0</b><em id="gRpm">0</em></div></div></div>
     <div class="gc-ers"><i id="gErsBarra"></i></div>
     <div class="gc-baixo"><span class="gc-botao" id="gBotao">⚡</span><b id="pOver">OVERTAKE</b><span class="gc-drs" id="gDrs">DRS</span></div>${htmlHudTelemetria()}`;
+  // o painel compacto da primeira pessoa (no canto de baixo à direita, como no jogo da F1): o modo do ERS, a bateria, o OVERTAKE e a
+  // velocidade. Aparece no lugar do mostrador grande com a câmera de dentro do carro (#race.cam-dentro: jogo.js; Configurações > Geral)
+  if (!$("hDentro")) {
+    const d = document.createElement("div"); d.id = "hDentro"; d.className = "hud"; d.setAttribute("aria-label", "Bateria e velocidade");
+    d.innerHTML = `<div class="hd-ers"><span class="hd-modo" id="hdModo">BALANCED</span><b id="hdPct">0%</b><span class="hd-over" id="hdOver">OVERTAKE</span></div><div class="hd-vel"><small>KM/H</small><b id="hdVel">0</b></div>`;
+    el.parentNode.insertBefore(d, el.nextSibling);
+  }
 }
 // ctx: { m, kmh, modoErs }
 export function atualizarCentro(ctx) {
   const m = ctx.m, rpm = Math.min(1, race.rpm || 0), carga = race.ers ? race.ers.carga : 0, ativo = !!race.ersAtivo;
   $("race").classList.toggle("hud-telemetria", estiloHud() === "telemetria");
   if (estiloHud() === "telemetria") atualizarHudTelemetria($("hCentro"), { kmh: ctx.kmh, marcha: !m ? "—" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1), modo: ctx.modoErs.texto, bateria: carga, rpm, acel: race.car.gasP, freio: race.car.brkP, drs: race.drsAtivo });
+  if ($("hDentro")) { set($("hdVel"), "t", ctx.kmh); set($("hdPct"), "t", Math.round(carga * 100) + "%"); set($("hdModo"), "t", ctx.modoErs.texto); set($("hdOver"), "c", "hd-over" + (ativo ? " on" : carga > 0.12 ? " pronto" : "")); }
   set($("pVel"), "t", ctx.kmh); set($("pMarcha"), "t", !m ? "" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1));
   set($("gRpm"), "t", M().rpmReal(rpm, ctx.kmh));
   const acesas = Math.round(rpm * N_LED), leds = $("gLeds").children;

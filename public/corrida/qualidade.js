@@ -32,29 +32,65 @@ const ehToque = () => {
   try { return matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); } catch { return false; }
 };
 
-let salva = lerSalva(), auto = padraoDoAparelho({ toque: ehToque(), nucleos: navigator.hardwareConcurrency || 0 }), efetiva = salva || auto, rebaixada = false;
-const ouvintes = [];
+// ---------- as opções de gráficos (a tela Configurações, configuracoes.js) ----------
+// A qualidade de cima virou o item "Efeitos" (o pós-processamento de pos.js). Junto dela: a resolução do desenho, as sombras do sol, os
+// retrovisores do carro, o detalhe dos carros dos adversários, o retrovisor virtual e o painel em primeira pessoa. As predefinições Baixa,
+// Média e Alta põem tudo de uma vez; mexer em qualquer item vira "Personalizada" (ex.: tudo no baixo, mas com os retrovisores ligados).
+// Fica em localStorage ("corrida:graficos"). Sem nada guardado, segue a predefinição do aparelho (padraoDoAparelho).
+const CHAVE_CFG = "corrida:graficos";
+export const PREDEF = {
+  baixa: { efeitos: "baixa", resolucao: "auto", sombras: "desligadas", espelhos: false, adversarios: "simples" },
+  media: { efeitos: "media", resolucao: "auto", sombras: "baixas", espelhos: true, adversarios: "detalhados" },
+  alta: { efeitos: "alta", resolucao: "auto", sombras: "altas", espelhos: true, adversarios: "detalhados" },
+};
+const ITENS_PREDEF = Object.keys(PREDEF.baixa);
+// "auto": o pixelRatio da qualidade (Baixa 1×, Média 1,25×, Alta 1,5×); "nativa": o da tela; os números: a altura do desenho em pixels
+export const RESOLUCOES = [["auto", "Automática (pela qualidade)"], ["nativa", "Nativa da tela"], ["2160", "2160p (4K)"], ["1440", "1440p"], ["1080", "1080p"], ["900", "900p"], ["720", "720p"], ["540", "540p"]];
+const EXTRAS = { retroVirtual: "desligado", painelDentro: true }; // (fora das predefinições: o gosto de cada um)
+const lerCfg = () => { try { const c = JSON.parse(localStorage.getItem(CHAVE_CFG) || "null"); return c && typeof c === "object" ? c : null; } catch { return null; } };
+let cfgSalva = lerCfg();
+const montarCfg = (nivel) => ({ predef: nivel, ...PREDEF[nivel], ...EXTRAS, ...(cfgSalva || {}) });
+
+let salva = (cfgSalva && NIVEIS.includes(cfgSalva.efeitos) ? cfgSalva.efeitos : null) || lerSalva(), auto = padraoDoAparelho({ toque: ehToque(), nucleos: navigator.hardwareConcurrency || 0 }), efetiva = salva || auto, rebaixada = false;
+let cfg = montarCfg(salva || auto);
+const ouvintes = [], ouvintesCfg = [];
 const avisar = () => { pintarBotao(); for (const f of ouvintes) f(efetiva); };
+export const graficos = () => ({ ...cfg });
+export function aoMudarGraficos(f) { ouvintesCfg.push(f); }
+// muda um ou mais itens; `predef` (baixa, media, alta) põe a predefinição inteira
+export function mudarGraficos(parcial = {}) {
+  const novo = { ...cfg, ...parcial };
+  if (PREDEF[parcial.predef]) Object.assign(novo, PREDEF[parcial.predef]);
+  else novo.predef = Object.keys(PREDEF).find((k) => ITENS_PREDEF.every((i) => PREDEF[k][i] === novo[i])) || "personalizada";
+  cfg = novo; cfgSalva = cfg;
+  try { localStorage.setItem(CHAVE_CFG, JSON.stringify(cfg)); } catch {}
+  if (NIVEIS.includes(cfg.efeitos)) { salva = cfg.efeitos; rebaixada = false; gravar(salva); if (salva !== efetiva) { efetiva = salva; avisar(); } else { pintarBotao(); for (const f of ouvintes) f(efetiva); } }
+  for (const f of ouvintesCfg) f(graficos());
+}
 
 // A cena.js entrega o contexto WebGL assim que cria o renderer: o nome da placa decide o padrão (quando o jogador não escolheu)
 export function detectarPlaca(gl) {
   let gpu = "";
   try { const e = gl.getExtension("WEBGL_debug_renderer_info"); if (e) gpu = String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL) || ""); } catch {}
   auto = padraoDoAparelho({ toque: ehToque(), nucleos: navigator.hardwareConcurrency || 0, gpu });
-  if (!salva) efetiva = auto;
+  if (!salva) { efetiva = auto; cfg = montarCfg(auto); }
   return gpu;
 }
 // a qualidade em uso agora (a escolhida, ou a Média quando a Alta ficou lenta)
 export const qualidade = () => efetiva;
 export const escolhida = () => salva || auto;
 export const foiRebaixada = () => rebaixada;
-export const pixelRatioDe = (n) => Math.min(window.devicePixelRatio || 1, RAZAO[n] || 1);
+export function pixelRatioDe(n) {
+  const r = cfg.resolucao, tela = window.devicePixelRatio || 1;
+  if (r === "nativa") return tela;
+  const alt = Number(r); if (alt > 0) return Math.max(0.3, Math.min(tela * 1.5, alt / Math.max(1, window.innerHeight))); // (a altura escolhida, pela altura da janela)
+  return Math.min(tela, RAZAO[n] || 1);
+}
 export function aoMudar(f) { ouvintes.push(f); }
 // o jogador escolheu: vale já e fica guardada
 export function definir(n) {
   if (!NIVEIS.includes(n)) return;
-  salva = n; rebaixada = false; gravar(n);
-  if (n !== efetiva) { efetiva = n; avisar(); } else pintarBotao();
+  mudarGraficos({ predef: n }); // (o botão e a tecla G trocam a predefinição inteira)
 }
 // o jogo ficou lento: desce sem mexer na escolha guardada (o jogador pode voltar a subir no botão)
 export function rebaixar(n) { if (n === efetiva) return; efetiva = n; rebaixada = true; avisar(); }

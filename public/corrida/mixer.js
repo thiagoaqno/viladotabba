@@ -3,7 +3,7 @@
 // Abre pelos botões [data-mixer] (no menu da corrida e nos ajustes do menu inicial). Tudo fica guardado no navegador e vale na hora.
 import { Sound } from "./sons.js";
 
-const CANAIS = [
+export const CANAIS = [ // (também na tela Configurações > Áudio, configuracoes.js)
   ["geral", "Volume geral", "tudo junto"],
   ["motor", "Motor", "o seu carro e os dos outros"],
   ["efeitos", "Efeitos", "batidas, zebra, pneu, assoalho raspando, ERS, box"],
@@ -12,8 +12,8 @@ const CANAIS = [
   ["narrador", "Narrador", "a transmissão de TV"],
   ["musica", "Música", "o tocador de músicas"],
 ];
-const ler = (k) => (k === "geral" ? Sound.nivel : k === "musica" ? window.MusicaCarreira?.nivel?.() ?? null : Sound.mixer()[k]);
-function mudar(k, v) {
+export const ler = (k) => (k === "geral" ? Sound.nivel : k === "musica" ? window.MusicaCarreira?.nivel?.() ?? null : Sound.mixer()[k]);
+export function mudar(k, v) {
   if (k === "geral") { Sound.volume(v); for (const id of ["volume", "volCorrida"]) { const el = document.getElementById(id); if (el) el.value = Math.round(v * 100); } }
   else if (k === "musica") window.MusicaCarreira?.volume?.(v);
   else Sound.mixer(k, v);

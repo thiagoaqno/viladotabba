@@ -1,6 +1,7 @@
 // Corrida da Galera — os carros de Fórmula 1 em 3D, a vitrine da garagem e a fumaça.
 import * as THREE from "three";
 import { scene } from "./cena.js";
+import { graficos } from "./qualidade.js";
 import { soltarEspelhos } from "./espelhos.js";
 import { montarF1, animarF1, animarDrs, soltarF1, trocarComposto, f1Pronto, coresDa, TAM, PINTURAS } from "./f1.js";
 import { clima } from "./clima.js";
@@ -100,7 +101,8 @@ const LOD1 = new Set(["gear_switch", "interior_details_1", "interior_details_2",
 const LOD2 = new Set(["back_suspension_1", "front_suspension", "car_body_2", "McLaren_mp4_5_2", "detalhes", "mecanica", "capacete", "viseira"]); // (e, bem longe, a cabeça)
 export function lodKart(k, d) {
   if (!k || !k.g) return;
-  const n = d > LOD_LONGE ? 2 : d > LOD_PERTO ? 1 : 0;
+  const fLod = graficos().adversarios === "simples" ? 0.4 : 1; // (Configurações > Gráficos: adversários simples tiram as peças pequenas mais cedo)
+  const n = d > LOD_LONGE * fLod ? 2 : d > LOD_PERTO * fLod ? 1 : 0;
   if (k.lod === n && k.lodMats === k.mats) return; // (k.mats muda quando o modelo de F1 chega: aí as peças são outras)
   k.lod = n; k.lodMats = k.mats;
   if (!k.lodPecas || k.lodPecasDe !== k.mats) { k.lodPecas = []; k.lodPecasDe = k.mats; k.g.traverse((o) => { if (o.isMesh && (LOD1.has(o.name) || LOD2.has(o.name))) k.lodPecas.push(o); }); }

@@ -1,7 +1,7 @@
 // Corrida da Galera — o 3D básico: renderer, cena, câmera e luzes.
 import * as THREE from "three";
 import { $, rng } from "./estado.js";
-import { detectarPlaca, qualidade, pixelRatioDe } from "./qualidade.js";
+import { detectarPlaca, qualidade, pixelRatioDe, graficos, aoMudarGraficos } from "./qualidade.js";
 
 // ---------- corrida em 3D (Three.js): pista com relevo, câmera atrás do kart ----------
 // Mundo: o traçado continua em 2D (x, y de 0 a 1600, igual ao servidor), e cada ponto da pista tem uma altura h.
@@ -21,6 +21,17 @@ export const sun = new THREE.DirectionalLight(0xfff1dc, 2.2);
 sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.5;
 Object.assign(sun.shadow.camera, { left: -260, right: 260, top: 260, bottom: -260, near: 10, far: 1600 });
 scene.add(sun, sun.target);
+// as sombras pelas Configurações (qualidade.js): desligadas, baixas (512) ou altas (1024, a de sempre). Ligar e desligar refaz os shaders,
+// então só muda quando o jogador escolhe (nunca sozinho no meio da corrida)
+export const TAM_SOMBRA = { baixas: 512, altas: 1024 };
+let sombraAtual = null;
+export function aplicarSombras() {
+  const s = graficos().sombras, liga = s !== "desligadas", px = TAM_SOMBRA[s] || 1024;
+  if (sombraAtual === s) return; sombraAtual = s;
+  if (renderer.shadowMap.enabled !== liga) { renderer.shadowMap.enabled = liga; scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; }); }
+  if (liga && sun.shadow.mapSize.x !== px) { sun.shadow.mapSize.set(px, px); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+}
+aplicarSombras(); aoMudarGraficos(aplicarSombras);
 const maxAniso = renderer.capabilities.getMaxAnisotropy();
 export function canvasTex(w, hh, draw, repeat = true) {
   const c = document.createElement("canvas"); c.width = w; c.height = hh; draw(c.getContext("2d"), w, hh, rng(w * 7 + hh * 3));

@@ -27,12 +27,12 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { renderer, scene, cam, sun } from "./cena.js";
+import { renderer, scene, cam, sun, TAM_SOMBRA } from "./cena.js";
 import { clima } from "./clima.js";
 import { varrerLuzPostes, LUZ } from "./kit/luz-postes.js";
 import { E, toast } from "./estado.js";
 import { VERNIZ, TETO_CARRO } from "./f1-pintura.js";
-import { qualidade, aoMudar, pixelRatioDe, rebaixar, restaurar } from "./qualidade.js";
+import { qualidade, aoMudar, pixelRatioDe, rebaixar, restaurar, graficos } from "./qualidade.js";
 
 // ---------- os ajustes de cada qualidade (mexa aqui para afinar) ----------
 const AJUSTE = {
@@ -349,10 +349,10 @@ function aplicar(n) {
   const antes = nivel; nivel = n;
   if (n >= 1 !== antes >= 1) aplicarRazao();
   if (n >= 2 !== antes >= 2) { // só o tamanho do mapa de sombra: o navegador refaz a textura dele, sem recompilar nenhum shader no meio da corrida
-    const px = n >= 2 ? 512 : 1024; sun.shadow.mapSize.set(px, px);
+    const px = n >= 2 ? 512 : (TAM_SOMBRA[graficos().sombras] || 1024); sun.shadow.mapSize.set(px, px); // (sem passar da escolhida nas Configurações)
     if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
   }
-  if (n >= 3 !== antes >= 3) { renderer.shadowMap.enabled = n < 3; scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; }); ligarGanho(n >= 3 || qualidade() === "baixa" ? 0 : 1); } // o último recurso: aí sim recompila
+  if (n >= 3 !== antes >= 3) { renderer.shadowMap.enabled = n < 3 && graficos().sombras !== "desligadas"; scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; }); ligarGanho(n >= 3 || qualidade() === "baixa" ? 0 : 1); } // o último recurso: aí sim recompila
 }
 // chamada a cada corrida nova: o relógio dos 6 s recomeça
 export function comecarMedida() {

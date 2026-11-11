@@ -1,5 +1,15 @@
 [
   {
+    "id": "2026-11-11-configuracoes",
+    "data": "2026-11-11",
+    "itens": [
+      "Tela de Configurações nova, como nos jogos: Gráficos, Controle, Áudio e Geral",
+      "Escolha da resolução e predefinições gráficas personalizáveis (ex.: tudo no baixo, mas com os retrovisores ligados)",
+      "Retrovisor virtual: a faixa fina no alto e no centro da tela",
+      "Painel compacto em primeira pessoa, no canto de baixo à direita"
+    ]
+  },
+  {
     "id": "2026-11-11-desempenho",
     "data": "2026-11-11",
     "itens": [

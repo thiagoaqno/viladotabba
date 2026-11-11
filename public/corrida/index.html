@@ -19,6 +19,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,800;1,900&family=Manrope:wght@400;500;600;700;800&family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="/corrida/entrada.css">
 <link rel="stylesheet" href="/corrida/hud-f1.css">
+<link rel="stylesheet" href="/corrida/configuracoes.css">
 <link rel="stylesheet" href="/corrida/barra.css">
 <link rel="stylesheet" href="/corrida/hud-mfd.css">
 <link rel="stylesheet" href="/corrida/hud-telemetria.css">
@@ -175,8 +176,8 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
 <div class="wrap">
   <div class="utilbar">
     <div class="roomtag hidden" id="roomTag"><span class="lbl muted">Sala</span><span class="code" id="rCode"></span><button class="small" id="btnInvite" title="Copiar convite"><span class="lg">Convidar</span><span class="sm">🔗</span></button></div>
-    <button class="ghost small" id="btnSound" title="Som">🔊</button><button class="ghost small" type="button" data-mixer title="Mixer: o volume de cada som">Mixer</button><button class="ghost small" id="btnLinhaFreio" type="button" aria-pressed="false">Linha de frenagem: desativada</button><button class="ghost small" id="btnGraficos" title="Qualidade dos gráficos"><span class="lg">Gráficos: </span><span class="sm">🎞️ </span><span id="grNivel">Média</span></button><button class="ghost small" data-radio-botao aria-label="Voz do engenheiro"></button><input type="range" class="vol" id="volume" min="0" max="100" aria-label="Volume do som" title="Volume">
-    <button class="ghost small hidden" id="btnTemaSala" type="button" aria-pressed="false">Modo escuro</button><button class="ghost small" id="btnTeclas" title="Controles: remapear teclas e botões"><span class="lg">Controles</span><span class="sm">⌨️</span></button><button class="ghost small" id="btnRules" title="Como jogar"><span class="lg">Como jogar</span><span class="sm">❔</span></button>
+    <button class="ghost small" type="button" data-config title="Configurações: gráficos, controle, áudio e geral">⚙ Configurações</button><button class="ghost small" id="btnSound" title="Som">🔊</button><button class="ghost small cfg-movido" type="button" data-mixer title="Mixer: o volume de cada som">Mixer</button><button class="ghost small cfg-movido" id="btnLinhaFreio" type="button" aria-pressed="false">Linha de frenagem: desativada</button><button class="ghost small cfg-movido" id="btnGraficos" title="Qualidade dos gráficos"><span class="lg">Gráficos: </span><span class="sm">🎞️ </span><span id="grNivel">Média</span></button><button class="ghost small cfg-movido" data-radio-botao aria-label="Voz do engenheiro"></button><input type="range" class="vol cfg-movido" id="volume" min="0" max="100" aria-label="Volume do som" title="Volume">
+    <button class="ghost small hidden cfg-movido" id="btnTemaSala" type="button" aria-pressed="false">Modo escuro</button><button class="ghost small cfg-movido" id="btnTeclas" title="Controles: remapear teclas e botões"><span class="lg">Controles</span><span class="sm">⌨️</span></button><button class="ghost small" id="btnRules" title="Como jogar"><span class="lg">Como jogar</span><span class="sm">❔</span></button>
   </div>
   <section id="home" class="hidden">
     <div class="mn" id="mn">
@@ -191,7 +192,7 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
             <span id="mnNomeTopo">Piloto</span>
             <svg class="mn-bandeira" viewBox="0 0 28 20" role="img" aria-label="Brasil"><rect width="28" height="20" rx="2" fill="#009b3a"/><path d="M14 2.6 25.4 10 14 17.4 2.6 10Z" fill="#fedf00"/><circle cx="14" cy="10" r="4.4" fill="#002776"/><path d="M9.7 9.2c3-.5 6.2.2 8.5 1.9" fill="none" stroke="#fff" stroke-width=".8"/></svg>
           </button>
-          <button type="button" class="mn-engrenagem" id="mnAjustes" aria-label="Som, gráficos e controles" aria-expanded="false" title="Som, gráficos e controles"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.4ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z" transform="translate(-1 0)"/></svg></button>
+          <button type="button" class="mn-engrenagem" id="mnAjustes" data-config aria-label="Configurações" aria-expanded="false" title="Configurações: gráficos, controle, áudio e geral"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.4-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.7a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.4 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.7h4l.4-2.7a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.4ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z" transform="translate(-1 0)"/></svg></button>
         </div>
       </header>
 
@@ -368,6 +369,7 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
     <button id="bRespawn" type="button" title="Voltar para a pista"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg><span class="rot">Pista</span></button>
     <button id="bMenu" type="button" aria-expanded="false" aria-controls="tbMenu" title="Menu: som, câmera, controles e sair" aria-label="Menu"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <div class="tb-menu" id="tbMenu" hidden>
+      <button type="button" class="tb-item" data-config title="Gráficos, controle, áudio e geral">⚙ Configurações</button>
       <div class="tb-som"><button type="button" data-radio-botao aria-label="Voz do engenheiro"></button><input type="range" class="vol" id="volCorrida" min="0" max="100" aria-label="Volume do som" title="Volume"><button type="button" class="tb-item" data-mixer title="Mixer: o volume do motor, dos efeitos, do ambiente, do rádio, do narrador e da música">Mixer</button></div>
       <button type="button" class="tb-item" id="bCamAjuste" title="Ajustar a câmera (H): FOV, altura, distância, inclinação e tremor"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>Ajustar a câmera</span><kbd>H</kbd></button>
       <button type="button" class="tb-item" id="bLinhaFreio" title="Ativar ou desativar a linha de frenagem" aria-pressed="false">Linha</button>

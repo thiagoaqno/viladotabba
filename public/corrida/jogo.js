@@ -5,6 +5,9 @@ import * as THREE from "three";
 import { E, PISTAS, SECTORS, COLORS, CARROS, carOf, socket, $, sNow, me, P, act, checkpoint } from "./estado.js";
 import { Sound } from "./sons.js";
 import * as ForcaVolante from "./forca-volante.js";
+import { quadroRetrovisor } from "./retrovisor.js";
+import "./configuracoes.js"; // (a tela Configurações: gráficos, controle, áudio e geral)
+import { graficos } from "./qualidade.js";
 import { montarMapaDaTorcida, nivelDaTorcida } from "./torcida-som.js";
 import { atualizarClima } from "./clima.js";
 import { passoClima, limparClima, exercitarChuva } from "./clima-visual.js";
@@ -415,7 +418,11 @@ function draw(dt) {
   const vref = (src === c ? carOf(me()) : CARROS.equilibrado).vmax;
   // (de cima não tem desfoque: o chão inteiro borrado só atrapalha a ver a pista)
   desenhar(mode === "cima" || mode === "tv" ? 0 : Math.min(1, Math.max(0, (Math.abs(src.v || 0) / vref - 0.4) / 0.5)) + (turbo ? 0.4 : 0));
+  quadroRetrovisor(race.kart, mode); // o retrovisor virtual, por cima da tela já desenhada (retrovisor.js; Configurações > Gráficos)
   } finally { scene.matrixWorldAutoUpdate = true; }
+  // a câmera de dentro do carro troca o mostrador grande pelo painel compacto do canto (hud-painel.js, #hDentro; Configurações > Geral)
+  const dentro = (mode === "cockpit" || mode === "onboard" || mode === "bico") && graficos().painelDentro;
+  if (race.camDentro !== dentro) { race.camDentro = dentro; $("race").classList.toggle("cam-dentro", dentro); }
 }
 // Transmissão de TV (transmissao.js): nas corridas de F1, antes das luzes e com tempo próprio (`race.tvAte`, vindo do servidor).
 // Esc pula (o botão e o toque também, no módulo). Nada de TV para quem só assiste.

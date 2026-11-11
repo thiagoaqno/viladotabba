@@ -31,7 +31,9 @@ jobs:
           New-Item -ItemType Directory -Force dist/app, dist/node | Out-Null
           Copy-Item (Get-Command node).Source dist/node/node.exe
           # o jogo: tudo, menos o que só serve para desenvolver
-          robocopy . dist/app /E /NFL /NDL /NJH /NJS /XD .git .github .claude dados tests docs planos dist saida desktop ferramentas-prints test-results playwright-report /XF *.md fly.toml
+          # (as pastas a pular vão com o caminho inteiro: só o nome pularia também as de dentro do node_modules, como as dist/ das bibliotecas)
+          $fora = '.git','.github','.claude','dados','tests','docs','planos','dist','saida','desktop','ferramentas-prints','test-results','playwright-report' | ForEach-Object { Join-Path $PWD $_ }
+          robocopy . dist/app /E /NFL /NDL /NJH /NJS /XD $fora /XF *.md fly.toml
           if ($LASTEXITCODE -ge 8) { exit 1 } else { $global:LASTEXITCODE = 0 }
           Set-Content -NoNewline -Encoding ascii dist/site.txt "${{ inputs.site }}"
           # o ícone: um .ico com o PNG de 192 px dentro (o formato aceita PNG direto)
@@ -41,6 +43,16 @@ jobs:
           $w.Write([Byte]192); $w.Write([Byte]192); $w.Write([Byte]0); $w.Write([Byte]0); $w.Write([UInt16]1); $w.Write([UInt16]32)
           $w.Write([UInt32]$png.Length); $w.Write([UInt32]22); $w.Write($png); $w.Flush()
           [IO.File]::WriteAllBytes("dist/corrida.ico", $ico.ToArray())
+      - name: Conferir que o jogo montado liga
+        shell: pwsh
+        run: |
+          # liga o servidor da pasta dist (o mesmo que o programa liga) e pede a página da Corrida: um arquivo faltando para aqui, não no PC de quem instala
+          $env:PORT = "31999"; $env:DB_PATH = ":memory:"; $env:HOST = "127.0.0.1"
+          $p = Start-Process -FilePath dist/node/node.exe -ArgumentList server.js -WorkingDirectory dist/app -PassThru -RedirectStandardError erro.txt -RedirectStandardOutput saida.txt
+          $ok = $false
+          for ($i = 0; $i -lt 60 -and -not $ok; $i++) { Start-Sleep 1; try { $ok = (Invoke-WebRequest http://127.0.0.1:31999/corrida/pc.js -UseBasicParsing).StatusCode -eq 200 } catch { if ($p.HasExited) { break } } }
+          if (-not $p.HasExited) { Stop-Process $p -Force }
+          if (-not $ok) { Get-Content erro.txt, saida.txt; exit 1 }
       - name: Compilar o lançador
         shell: pwsh
         run: |

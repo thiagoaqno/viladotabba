@@ -4,7 +4,7 @@
 // montando a pista, preparando os gráficos, esperando os pilotos. Os pneus giram, a faixa do asfalto corre e as linhas de velocidade passam
 // só com `transform` (o navegador desenha isso fora da linha principal): tudo continua se mexendo enquanto a montagem ocupa a página.
 // Interação: o fundo e o carro seguem o mouse (paralaxe) e um clique (ou espaço) acelera o carro, com fumaça e pneus mais rápidos.
-const CAPAS = ["carregamento-kimi.jpg", "carregamento-verts.jpg", "carregamento-hamil.jpg", "carregamento-bortoleto.webp", "carregamento-russell.webp", "carregamento-leclerc.webp", "carregamento-senna.jpg"];
+const CAPAS = ["carregamento-kimi.jpg", "carregamento-verts.jpg", "carregamento-hamil.jpg", "carregamento-bortoleto.webp", "carregamento-russell.webp", "carregamento-leclerc.webp", "carregamento-senna.jpg", "carregamento-perez.webp", "carregamento-alonso.webp", "carregamento-bottas.webp"];
 const DICAS = ["Segure Shift esquerdo para usar o ERS", "P abre o acerto do carro: asa e altura", "B chama o box; 1 a 5 escolhem o pneu", "C troca a câmera; J ajusta a sua", "M abre e fecha o som; o mixer fica no menu", "Na largada, o ERS só entra depois dos 50 km/h"];
 // o quanto o carro já andou em cada etapa (0 a 1)
 const ETAPAS = [[/^Montando/, 0.12], [/^Preparando/, 0.45], [/^Esperando/, 0.78], [/^Quase/, 0.9]];

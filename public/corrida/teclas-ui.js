@@ -38,7 +38,7 @@ function desenhar() {
     const chips = lista.length ? lista.map((v) => `<span class="tk-c">${chip(aba, v)}<button type="button" data-id="${a.id}" data-tirar="${v}" aria-label="Tirar ${chip(aba, v)}">×</button></span>`).join("") : '<span class="tk-vazio">sem tecla</span>';
     html += `<div class="tk-l${esperando ? " esp" : ""}" data-id="${a.id}"><span class="tk-n">${a.nome}</span><span class="tk-v">${esperando ? `<em>${cap.aviso || (aba === "k" ? "Aperte a tecla…" : "Aperte o botão…")}</em>` : chips}</span><button type="button" data-mudar="${a.id}">${esperando ? "Cancelar" : "Mudar"}</button></div>`;
   }
-  $("tkVolante").innerHTML = volanteHTML(); $("tkLista").innerHTML = html; $("tkRestaurar").disabled = !temTrocas();
+  $("tkVolante").innerHTML = volanteHTML() + (aba === "p" && window.ForcaVolante ? window.ForcaVolante.html() : ""); // (a força no volante e a vibração: forca-volante.js) $("tkLista").innerHTML = html; $("tkRestaurar").disabled = !temTrocas();
 }
 export function abrirTeclas() { montar(); ui.aberto = true; desenhar(); tela.classList.remove("hidden"); const f = tela.querySelector("#tkPronto"); if (f) f.focus(); }
 function fechar() { cancelar(); ui.aberto = false; if (tela) tela.classList.add("hidden"); }

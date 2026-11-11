@@ -230,6 +230,15 @@ function temporadaCorridaPorToken(token) {
   if (!tokenValido(token)) return null;
   return lerTemporada(bd().prepare("SELECT * FROM corrida_temporadas WHERE token_hash = ?").get(hash(token)));
 }
+// O programa de PC (corrida-pc.js): a carreira solo que estava no site vem para o banco do PC com o MESMO token (o navegador do programa
+// já o tem guardado). Só cria se ainda não existe; o código de recuperação do site não vem (o do PC é novo e não é mostrado).
+function importarTemporadaCorrida(token, nome, dados) {
+  if (!tokenValido(token) || temporadaCorridaPorToken(token)) return temporadaCorridaPorToken(token);
+  const agora = Date.now();
+  bd().prepare("INSERT INTO corrida_temporadas (token_hash, recuperacao_hash, nome, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(hash(token), hash(novoCodigoRecuperacao()), String(nome).slice(0, 40), JSON.stringify(dados), agora, agora);
+  return temporadaCorridaPorToken(token);
+}
 function temporadaCorridaPorId(id) {
   return lerTemporada(bd().prepare("SELECT * FROM corrida_temporadas WHERE id = ?").get(id));
 }
@@ -505,4 +514,4 @@ const historicoPokemon = (treinador, limite = 20) => bd().prepare("SELECT ator, 
   .map((r) => ({ ator: r.ator, tipo: r.tipo, captura: r.captura, antes: JSON.parse(r.antes || "null"), depois: JSON.parse(r.depois || "null"), em: Number(r.criado_em) }));
 
 module.exports = { registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
-Object.assign(module.exports, { excluirTemporadaCorrida, criarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });
+Object.assign(module.exports, { excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });

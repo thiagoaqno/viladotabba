@@ -112,7 +112,7 @@ socket.on("excluida", () => { if (!window.SedeGrupo.ativo) { esquecerCarreira();
 function irAoGP(acesso) {
   if (!acesso?.code) return;
   localStorage.setItem("corrida:" + acesso.code, JSON.stringify({ code: acesso.code, id: acesso.id, token: acesso.token }));
-  location.href = "/corrida/?sala=" + encodeURIComponent(acesso.code);
+  location.href = "/corrida/?sala=" + encodeURIComponent(acesso.code) + (window.CORRIDA_PC?.pc ? "&pc=1" : ""); // (no programa de PC, o GP da carreira solo roda no PC: corrida-pc.js)
 }
 app.addEventListener("submit", async (e) => {
   if (e.target.id === "nova") { e.preventDefault(); const f = new FormData(e.target); guardar(await pedir("criar", Object.fromEntries(f))); }

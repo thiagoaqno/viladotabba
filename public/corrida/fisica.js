@@ -184,6 +184,7 @@ export function physics(dt, spec = carOf(me())) {
 // um intervalo entre uma batida e outra, o mesmo daqui)
 function avisarBatida(forca, tipo) {
   const F1 = window.F1Regras;
+  if (forca >= F1.BATIDA_MIN) window.ForcaVolante?.batida(forca); // (o tranco no volante e no controle: forca-volante.js)
   if (!race.pneu || !(forca >= F1.BATIDA_MIN) || (race.batidaT || 0) > sNow()) return;
   race.batidaT = sNow() + F1.BATIDA_INTERVALO;
   act2("batida", { forca: Math.round(forca), tipo });

@@ -6,7 +6,7 @@ decisões dos primeiros dias estão em `PROJETO.md`, e o que mudou nesta branch 
 ## Visão geral
 
 - Site de jogos para jogar com os amigos, tudo em português.
-  - A página inicial (`/`) é a **Vila**: um mapinha pixel-art em que cada prédio leva a um jogo.
+  - A página inicial (`/`) é a **Vila**: um autódromo em pixel-art visto de cima, em que cada prédio leva a um jogo.
 - **Servidor:** Node + Express 5 + Socket.io 4, em `server.js`.
   - `haxball.js` atende `/haxball`: futebol de discos 2D de 1x1 a 5x5. O servidor roda a física de `public/haxball/regras.js` a 60 Hz e envia quadros a 20 Hz; `public/haxball/jogo.js` desenha o canvas (campo e arquibancada numa tela escondida, discos interpolados 70 ms atrás, gol com rede que estufa, "GOL!" e confete) e envia movimento/chute. Robôs: `H.robo(m, disco, nivel)` em `regras.js` (papéis divididos só entre os robôs: atacante contorna por trás da bola, goleiro, posição), ligados pelo servidor a cada passo; o anfitrião usa as ações `bot` e `completar`, e `config.nivel`. Bola presa na parede por 4 s volta para o campo. Salas por código, espectador, times, revanche, "Treinar contra robôs" e controles de toque. Teste: `tests/haxball.test.js`.
   - Cada jogo é um módulo `<jogo>.js` na raiz, com o seu canal (namespace) `/<jogo>`.
@@ -432,39 +432,38 @@ Para achar algo dentro de um jogo:
 
 ## Vila (o mapa)
 
-- **Tudo em `public/index.html`:**
-  - `GAMES` lista os prédios: `x`, `y`, `w`, `h`, `doors`, `bairro`, cores do telhado e um sinal para o desenho do
-    telhado (`casino`, `uno`, `tenis`...);
-  - `POSICOES` escalona os prédios em quarteirões; ao movê-los, ajusta as portas antes da conversão para coordenadas do mapa;
-  - `BAIRROS` traz o nome de cada grupo e a posição da placa de orientação;
-  - o chão é feito de tipos de casa: `c` pedra clara, `p` ladrilho de ligação, `o` praça circular,
-    `r` alameda de tijolos, `a` calçada da Paulista, `v` asfalto, `b` ciclovia, `z` faixa de pedestre, `g` gramado, `f` flores, `t` árvore,
-    `m` capacho da porta e `h` grama alta (Pokémon selvagens, `vila-mato.js`);
-  - `TREES`, `LAMPS`, `BENCHES` e `FOUNTAIN` são a decoração;
-  - `TERRENOS` são os lotes vazios para os jogos novos (chão `l`, obra, sólido; `drawTerreno` desenha o tapume e
-    a placa "EM BREVE", e a casa logo abaixo do meio, `t.placa`, abre o aviso `TERRENO_LUGAR`). Jogo novo: tire o
-    terreno da lista e ponha o prédio em `GAMES` no mesmo lugar;
-  - `TELAO` é o painel da estante da galera sob uma cobertura de lona colorida na praça (`drawTelao`, `TELAO_LUGAR`, `/api/estante`).
-- `drawBuilding` desenha os prédios, e cada jogo tem o seu `if (g.<sinal>)` para o telhado.
-- **Grama alta e Pokédex:** o encontro (`#cap`, `abrirEncontro`, `mostrarTimeDoEncontro`) é uma tela de "versus" em `public/vila/versus.css` (o seu time à esquerda, o selvagem no holofote à direita com a ficha, as ações embaixo; `--t` o tipo, `--r` a raridade); a Pokédex (`#pokedex`, `abrirPokedex`/`desenharPokedex`, com busca e filtros) em `public/vila/pokedex.css`.
-- **Tamanho do mapa:** `MW` x `MH` (96x60). A vila (90x54, `VW` x `VH`) começa em `OX`, `OY` (3, 3). As coordenadas
-  de `GAMES`, `LAMPS`, `TERRENOS` e do resto são locais e deslocadas ao carregar. `vila.js` repete `MW`, `MH`, `OX`, `OY`
-  e os IDs de jogos: precisam bater.
-- **A Avenida Paulista (tudo em `POSICOES`, linhas locais):** os jogos de mesa na primeira fileira (linha 3), a alameda
-  (8-9), a segunda fileira com o Conjunto Nacional (a Sede da Carreira, com o letreiro `drawLetreiro`), o Ginásio e o
-  Parque Trianon (a grama alta, `GRAMA` em `vila/mato.js`); o calçadão (15-17) e a avenida (18-27: calçada `a`,
-  asfalto `v`, ciclovia vermelha `b` no canteiro, faixas `z` nas ruas cruzadas `RUAS_X`, com `SEMAFOROS`); depois os
-  esportes, com o Leilão no **MASP** (`masp: true`, `drawMasp`: as vigas vermelhas e o vão livre), a praça com a fonte, o
-  `TELAO`, os `FOODTRUCKS`, a antena da Gazeta (`ANTENA`) e o painel de LED (`PAINEL`); ao sul, a fileira dos ginásios:
-  os 4 líderes e os **6 treinadores, cada um no seu prédio** (`lider`, e `treinador` nos treinadores; ninguém fica na rua).
-- **A vida da avenida (`passoVida(dt)`, `drawVida`, `drawVidaChao`):** pedestres (`PEDESTRES`), ciclistas na ciclovia,
-  artistas de rua (música, bolhas, balões), os líderes e treinadores na porta (`DONOS`), pombos que voam quando alguém
-  chega, sombras de nuvem, o texto correndo no painel, a luz da antena piscando, o vapor dos food trucks e o ciclo do
-  semáforo. As pessoas entram na mesma ordem de profundidade dos jogadores. Coisa parada (chão, prédios, marcos) vai em
-  `pedaco`; o que mexe vai em `drawVida`.
-- **Desenho:** `pedaco(cx, cy)` desenha o mapa em blocos de 32x32 casas. O jogador começa no calçadão, diante do MASP;
-  o minimapa mostra o mapa todo quando acionado.
-- **Quem aparece para quem:** o servidor usa somente a zona da rua (`z: ""`) e limita posições ao mapa compacto.
+- **Tudo em `public/index.html`:** a Vila é um autódromo visto de cima (desde 2026-11-11; antes era a Avenida Paulista).
+  - `GAMES` lista os jogos (nome, descrição, cores); `LUGARES` diz onde fica cada um: `[x, y, w, h, estilo, bairro]`, em
+    casas da vila. A porta é sempre na parede de baixo (`portas`), o capacho logo abaixo. Os estilos de prédio:
+    `tenda` (tendas piramidais da Fan Zone), `quadra` (quadras abertas com alambrado), `pavilhao` (hospitality de telhado
+    branco com o nome pintado: `LOGOS`), `hangar` (chapa ondulada e portão de enrolar), `box` (as garagens do pit) e
+    `autodromo` (a Corrida: arquibancada coberta, telão do nome e fachada de vidro). Cada estilo tem o seu `draw*`, e
+    `drawBuilding` escolhe pelo `g.estilo`.
+  - **A pista:** `TRACADO` são os pontos da linha do meio; `PISTA` é a Catmull-Rom fechada reamostrada a cada `DS`
+    casa (`pts`, `ang`, `curva`, `ritmo` para os carros frearem, `curvas` para zebra e brita). Toda casa a menos de
+    `FAIXA_PISTA` da linha é sólida (`P`). `drawPista` pinta em camadas (guard-rail, escape, linha branca, zebra,
+    asfalto), mais a linha de chegada em `LARGADA`, o grid e as placas. As `PASSARELAS` viram caminho (`n`) e o tabuleiro
+    delas é desenhado por cima dos carros (`drawSobrePista`, com o pórtico das luzes da largada).
+  - **O layout:** ao norte, a Fan Zone (13 tendas dos jogos de mesa, as 4 quadras, a roda-gigante `RODA`, `PAINEL` de
+    LED, `FOODTRUCKS`); dentro da pista, o paddock (Ginásio e a grama alta, `HELI`, centro de mídia, a Sede e o Leilão,
+    a torre da direção de prova, o `TELAO`, a praça com `LOGO_CHAO`, `EXPOSICAO`, `CANTEIROS` e `VASOS`, os
+    `CAMINHOES`) e os dez boxes (`BOXES`: os 4 líderes e os 6 treinadores) de frente para o pit lane (`q`) e o muro (`W`);
+    ao sul da reta, as `ARQUIBANCADAS`, o Autódromo (a Corrida), a `TORRE` dos recordes, o `PODIO` e o estacionamento
+    (`e`, `ESTACIONADOS`); a leste, os hangares (Drag, Rocket, Batalha, Tiro).
+  - O chão: `g` grama, `t` árvore, `c` concreto, `a` asfalto, `q` pit lane, `W` muro do pit, `P` pista, `n` passarela,
+    `e` estacionamento, `w` lago, `f` flores, `h` grama alta, `m` capacho, `l` terreno (`TERRENOS`, vazio hoje).
+- **Grama alta e Pokédex:** o encontro (`#cap`, `abrirEncontro`, `mostrarTimeDoEncontro`) é uma tela de "versus" em `public/vila/versus.css`; a Pokédex (`#pokedex`, `abrirPokedex`/`desenharPokedex`) em `public/vila/pokedex.css`. O retângulo da grama é `GRAMA` em `public/vila/mato.js`.
+- **Tamanho do mapa:** `MW` x `MH` (178x134). A vila (172x128, `VW` x `VH`) começa em `OX`, `OY` (3, 3). As coordenadas
+  de `LUGARES` e dos enfeites são locais e deslocadas ao carregar. `vila.js` repete `MW`, `MH`, `OX`, `OY`, `SPAWN` e
+  os IDs de jogos: precisam bater.
+- **A vida (`passoVida(dt)`, `drawVida`):** os carros de F1 (`CARROS`, `passoCarros`, `drawCarros`: freiam pelo `ritmo` e
+  trocam de faixa para ultrapassar), a turma andando (`PEDESTRES`, cada um num trecho livre das `FILEIRAS_GENTE`), os
+  líderes na porta dos boxes (`DONOS`), a roda-gigante (`drawRoda`), o rotor (`drawRotor`), o LED, a fumaça dos food
+  trucks e as nuvens. Coisa parada vai em `pedaco`; o que mexe vai no quadro.
+- **Desenho:** `pedaco(cx, cy)` desenha o mapa em blocos de 32x32 casas (no máximo 24 na memória) e é refeito quando a
+  fonte de pixel chega. O jogador começa no `SPAWN`, no logo da praça do paddock; o zoom sai de `resize` (`w / 400`,
+  `h / 270`).
+- **Quem aparece para quem:** o servidor usa somente a zona da rua (`z: ""`) e limita posições ao mapa.
 
 ## Testes
 

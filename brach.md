@@ -1,31 +1,24 @@
-# Robôs de F1: o difícil para de rodar (sem grip falso)
+# Vila: a Paulista vira o Autódromo da Galera
 
-## O problema
-O #692 subiu o difícil para 1,2. No perfil do robô (`Piloto.perfilDoNivel`) esse nível vira `latK = f * f` sem teto: 1,2 pede 44% a mais de aceleração lateral do que o pneu segura. O robô entra rápido demais, roda, bate e fecha a volta mais devagar do que o médio.
+## O que muda
+A Vila deixa a Avenida Paulista e vira um autódromo de F1 visto de cima, no estilo das imagens de referência. O mapa ficou bem maior: de 96x60 para 178x134 casas. A câmera também ficou mais perto: o zoom sai de `w / 400`, `h / 270` (antes era 440 e 320).
 
-## A correção
-- `corrida-piloto.js`: `latK` para em 1, como o `freioK` já parava. O robô nunca mira uma curva acima do que o pneu segura.
-- `corrida-robos.js`: o difícil volta a 1 no `EMPURRAO_F1` (com o teto, qualquer valor acima de 1 dá o mesmo ritmo).
+- **A pista:** é um circuito fechado com reta principal, curvas com zebra vermelha e branca, brita, guard-rail, linha de chegada quadriculada, grid numerado e placas de patrocínio. Na pista só passam carros de F1: 11 carros nas cores das equipes, que freiam nas curvas e trocam de faixa para ultrapassar. Há quatro passarelas sobre a pista e um pórtico com as cinco luzes da largada.
+- **Os prédios grandes:** a Corrida é o Autódromo, ao sul da reta, com a arquibancada coberta, o telão com o nome e a fachada de vidro. A Sede da Carreira e a Casa de Leilão são os dois pavilhões de hospitality do paddock, com o nome pintado no telhado.
+- **Os 10 ginásios** (4 líderes e 6 treinadores) ficam nos 10 boxes, de frente para o pit lane. Cada box tem a cor do tipo, o número, o carro na garagem, os pneus empilhados e a vaga pintada no chão. Os líderes ficam na porta.
+- **A Fan Zone**, ao norte, tem as tendas dos jogos de mesa, as quadras abertas (Pelada, Tênis, Futevôlei e Haxball), a roda-gigante, o painel de LED e os food trucks.
+- **O paddock** tem o Ginásio com a grama alta na frente, o heliponto, o centro de mídia, a torre da direção de prova, o telão da estante, o centro médico, os caminhões das equipes e a praça com o logo no chão e um carro em exposição.
+- **A leste**, depois da passarela, ficam os hangares do Drag, do Rocket, da Batalha e do Tiro. **Ao sul** ficam as arquibancadas, a torre dos recordes, o pódio e o estacionamento.
+- O minimapa mostra o mapa inteiro com a pista desenhada.
 
-## Medido
-Bancada: um robô sozinho, pista seca, pneu macio novo a cada volta, sementes 951 e 952, voltas 2 e 3.
+## Arquivos
+- `public/index.html`: o mapa (`LUGARES`, `TRACADO`/`PISTA`, enfeites), o desenho (estilos de prédio, pista, enfeites) e a vida (carros, gente, roda-gigante, rotor, luzes da largada).
+- `vila.js`: `MW`/`MH` novos e o `SPAWN` no paddock.
+- `public/vila/mato.js`: a grama alta saiu do Parque Trianon e foi para a frente do Ginásio (18x6 casas).
+- `docs/mapa-completo.md`: a seção "Vila (o mapa)" descreve o autódromo.
+- `tests/e2e/vila-layout.spec.js` foi apagado: ele testava a Paulista (calçada, ciclovia, MASP, tamanho 96x60, o início em 37,30).
 
-Mônaco, Verstappen na Red Bull:
-
-| nível | antes (main) | depois |
-|---|---|---|
-| fácil | 55,6 a 56,2 s | igual |
-| médio | 50,1 a 50,9 s, 2 batidas/volta | igual |
-| difícil | 58,8 a 66,1 s, 4 a 6 batidas/volta | 50,1 a 50,9 s, 2 batidas/volta |
-
-Difícil em outras pistas (Norris na McLaren), melhor volta antes → depois: Interlagos 39,05 → 38,60 s; Monza 42,50 → 39,75 s; Silverstone 50,90 → 44,80 s; Suzuka 52,15 → 44,25 s (sem batidas antes nem depois: era só a curva lenta por causa do excesso).
-
-## O que fica para depois
-Com o teto, o difícil fica igual ao médio. Os caminhos medidos para ganhar ritmo sem inventar grip deram pouco:
-- frear mais tarde (`PILOTO.antecipa` 0,28 → 0,22): −0,15 s em Mônaco, +0,1 s em Interlagos e Monza;
-- deixar o ERS passar da velocidade final na reta: nada (o robô não chega na final nessas pistas);
-- mirar mais perto no volante: pior (51 a 54 s).
-
-O que ainda custa tempo em Mônaco nos três níveis: duas batidas por volta no muro da saída da chicane do túnel (fração 0,655, a ~265 km/h na conta do jogo), onde o carro passa 4 u para fora da linha que já encosta no limite.
-
-`node --check` em `corrida-piloto.js` e `corrida-robos.js`: ok.
+## Conferido
+- `node --check` no script da página e no `vila.js`.
+- Um script montou o mapa com o mesmo código da página e conferiu: os 35 jogos têm caminho desde o início, nenhum prédio se sobrepõe a outro nem fica em cima da pista, e as frentes do telão, da torre e do pódio e as saídas das passarelas são alcançáveis.
+- A página abriu no navegador sem erro no console. Os carros andam, e o paddock, os boxes, a Fan Zone, o Autódromo e a curva leste aparecem desenhados.

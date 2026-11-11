@@ -47,7 +47,8 @@ static class Corrida {
         servidor.ErrorDataReceived += (s, e) => { if (e.Data != null) lock (log) log.WriteLine(e.Data); };
         servidor.BeginOutputReadLine(); servidor.BeginErrorReadLine();
       } catch (Exception e) { MessageBox.Show("Não foi possível ligar o jogo: " + e.Message, "Corrida da Galera"); return; }
-      for (int i = 0; i < 600 && !PortaAberta(); i++) { // até 60 s (o primeiro arranque monta o banco)
+      // espera o jogo RESPONDER (não só a porta abrir), até 3 min: a primeira vez monta o banco e confere a atualização
+      for (int i = 0; i < 1800 && !Responde(); i++) {
         if (servidor.HasExited) { MessageBox.Show("O jogo fechou ao ligar. Veja " + Path.Combine(dados, "servidor.log"), "Corrida da Galera"); return; }
         Thread.Sleep(100);
       }
@@ -61,6 +62,12 @@ static class Corrida {
       MessageBox.Show("A Corrida abriu no seu navegador. Feche esta mensagem quando terminar de jogar para desligar o jogo.", "Corrida da Galera");
     }
     if (servidor != null && !servidor.HasExited) { try { servidor.Kill(); } catch { } }
+  }
+  static bool Responde() {
+    try {
+      var r = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:" + PORTA + "/corrida/"); r.Timeout = 1500;
+      using (var resp = (HttpWebResponse)r.GetResponse()) return (int)resp.StatusCode == 200;
+    } catch { return false; }
   }
   static bool PortaAberta() {
     try { using (var c = new TcpClient()) { var r = c.BeginConnect(IPAddress.Loopback, PORTA, null, null); bool ok = r.AsyncWaitHandle.WaitOne(200) && c.Connected; return ok; } }

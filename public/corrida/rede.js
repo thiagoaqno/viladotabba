@@ -19,7 +19,7 @@ export function enter(r) {
   if (!r.ok) { $("hErr").textContent = r.error; return; }
   E.ME = { code: r.code, id: r.id, token: r.token };
   if (r.id) store.set("corrida:" + r.code, E.ME);
-  history.replaceState(null, "", "/corrida/?sala=" + r.code);
+  history.replaceState(null, "", "/corrida/?sala=" + r.code + (window.CORRIDA_PC?.local ? "&pc=1" : "")); // (o programa de PC: a sala do PC continua no PC num F5)
   $("roomTag").classList.remove("hidden"); $("rCode").textContent = r.code; document.body.classList.add("inroom");
 }
 $("btnCreate").onclick = () => { const name = $("hName").value.trim(); store.set("galera:name", name); socket.emit("create", { name, skin: store.get("galera:skin") }, enter); };

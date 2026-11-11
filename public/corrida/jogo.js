@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { E, PISTAS, SECTORS, COLORS, CARROS, carOf, socket, $, sNow, me, P, act, checkpoint } from "./estado.js";
 import { Sound } from "./sons.js";
+import * as ForcaVolante from "./forca-volante.js";
 import { montarMapaDaTorcida, nivelDaTorcida } from "./torcida-som.js";
 import { atualizarClima } from "./clima.js";
 import { passoClima, limparClima, exercitarChuva } from "./clima-visual.js";
@@ -205,7 +206,7 @@ export function startRace(st) {
   if (f1 && mine) { const novo = !acertoGuardado(st.config.pista); usarPista(st.config.pista); carregarIdeais(); if (novo && st.phase === "race" && sNow() < st.startAt) alternarAcerto(true); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
-export function stopRace() { clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
+export function stopRace() { ForcaVolante.parar(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
 function resize() {
   const w = window.innerWidth, hh = window.innerHeight;
   renderer.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); ajustarTela(w, hh);
@@ -268,6 +269,8 @@ function loop(t) {
   // o pneu na zebra (race.naZebra, medido no desenho) e a torcida de quem passa perto das arquibancadas (torcida-som.js)
   const correndo = !!me() && ativo() && sNow() >= race.startAt;
   Sound.zebra(correndo && race.naZebra && !race.car.air ? race.car.v : 0);
+  // a força no volante Logitech e a vibração do controle (forca-volante.js): o mesmo que o som sente (zebra, grama/brita) e o volante do carro
+  ForcaVolante.quadro({ correndo, v: race.car.v, steer: race.car.steer, slip: race.car.slip, zebra: race.naZebra && !race.car.air, fora: race.offroad && !race.car.air }, dt);
   // os efeitos novos (sons.js; só tocam quando o arquivo gravado existe): o assoalho raspando (a folga do acerto acabou), a suspensão
   // batendo no fundo, a brita e a grama ao sair da pista, o vento (mais forte no cockpit), o ERS acabando no meio do uso e o limitador do box
   const k = race.kart, vC = Math.abs(race.car.v || 0);

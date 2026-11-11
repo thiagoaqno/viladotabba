@@ -47,9 +47,13 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
         entrar(socket, { id: nova.id, dados }, nova.token, resposta, nova.recuperacao);
       } catch (e) { erro(resposta, e); }
     });
-    socket.on("abrir", (d = {}, resposta) => {
-      try { const linha = bd.temporadaCorridaPorToken(d.token); if (!linha) throw Error("Save não encontrado neste navegador. Use o código de recuperação."); entrar(socket, linha, d.token, resposta); }
-      catch (e) { erro(resposta, e); }
+    socket.on("abrir", async (d = {}, resposta) => {
+      try {
+        // no programa de PC (a carreira solo roda no PC, sem ping): o save que só existe no site vem para cá na primeira vez (corrida-pc.js)
+        const linha = bd.temporadaCorridaPorToken(d.token) || await require("./corrida-pc.js").trazerCarreiraDoSite(d.token);
+        if (!linha) throw Error("Save não encontrado neste navegador. Use o código de recuperação.");
+        entrar(socket, linha, d.token, resposta);
+      } catch (e) { erro(resposta, e); }
     });
     socket.on("recuperar", (d = {}, resposta) => {
       try { const linha = bd.recuperarTemporadaCorrida(d.codigo); if (!linha) throw Error("Código de recuperação inválido."); entrar(socket, linha, linha.token, resposta); }

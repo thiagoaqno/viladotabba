@@ -19,6 +19,9 @@ jobs:
   montar:
     runs-on: windows-latest
     steps:
+      # os arquivos com as quebras de linha do repositório (LF), iguais aos do site: assim a atualização sozinha (corrida-pc-atualizar.js)
+      # não acha diferença onde só mudou a quebra de linha
+      - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

@@ -91,7 +91,8 @@ function parametros(room, p, nivel) {
     defende: Math.max(0, Math.min(0.9, nivel.defende * (0.6 + perfil.defesa * 0.4))),
     // com os carros parelhos a diferença de velocidade é pequena: antes era preciso 6 a 8,5 a mais para tentar, e a fila só freava
     // atrás (parecia que os robôs travavam). Agora 2,5 a 4,5 bastam, e a nova tentativa vem mais cedo
-    diferencaMinima: 4.5 - ataque * 2, espera: Math.round(450 + perfil.paciencia * 500),
+    // (2026-11-11: 1 a 3, a pedido do Thiago: com menos diferença o robô tenta passar em vez de frear atrás; a bateria no ataque ajuda a criar a diferença)
+    diferencaMinima: 3 - ataque * 2, espera: Math.round(450 + perfil.paciencia * 500),
     desgaste: 1.05 - perfil.pneus * 0.1 };
 }
 module.exports = { PERFIS, PILOTAGEM, CAMPOS, BOXES, original, dePiloto, limpar, ajustar, pressao, parametros };

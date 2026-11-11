@@ -6,18 +6,18 @@
 //   y    altura: sobe ou desce a câmera, em metros do carro
 //   z    dentro do carro: avanço (+ para a frente); na perseguição: distância (+ afasta)
 //   incl inclinação do olhar, em graus (+ olha para cima)
-//   trem tremor da câmera, em % (0 desliga, 100 é o do jogo, até 200)
+//   trem tremor da câmera, em % (0 desliga, 100 é o tremor cheio, até 200; o padrão é 10 em todas, pedido do Thiago em 2026-11-11)
 import { store } from "./estado.js";
 
 export const CHAVE = "corrida:camera";
 // as câmeras que têm ajuste (a aérea e a TV são automáticas)
 export const EDITAVEIS = ["cockpit", "onboard", "bico", "perto", "longe"];
 export const PADROES = {
-  cockpit: { fov: 64, x: 0, y: 0, z: 0, incl: 0, trem: 100 },
-  onboard: { fov: 62, x: 0, y: 0, z: 0, incl: -7, trem: 100 }, // (a T-cam olha para baixo: o halo, o bico e as rodas da frente entram no quadro)
-  bico: { fov: 70, x: 0, y: 0, z: 0, incl: 0, trem: 100 },
-  perto: { fov: 60, x: 0, y: 0, z: 0, incl: 0, trem: 100 },
-  longe: { fov: 54, x: 0, y: 0, z: 0, incl: 0, trem: 100 },
+  cockpit: { fov: 64, x: 0, y: 0, z: 0, incl: 0, trem: 10 },
+  onboard: { fov: 62, x: 0, y: 0, z: 0, incl: -7, trem: 10 }, // (a T-cam olha para baixo: o halo, o bico e as rodas da frente entram no quadro)
+  bico: { fov: 70, x: 0, y: 0, z: 0, incl: 0, trem: 10 },
+  perto: { fov: 60, x: 0, y: 0, z: 0, incl: 0, trem: 10 },
+  longe: { fov: 54, x: 0, y: 0, z: 0, incl: 0, trem: 10 },
 };
 const DENTRO = new Set(["cockpit", "onboard", "bico"]);
 export const dentroDoCarro = (id) => DENTRO.has(id);
@@ -28,7 +28,7 @@ const CAMPOS = [
   { id: "y", nome: "Altura", un: " m", dica: "sobe ou desce a câmera", min: -1, max: 1, passo: 0.05, dec: 2 },
   { id: "z", nome: "Avanço", un: " m", dica: "leva a câmera para a frente ou para trás", min: -0.6, max: 1.2, passo: 0.05, dec: 2 },
   { id: "incl", nome: "Inclinação", un: "°", dica: "olha mais para cima ou para baixo", min: -15, max: 15, passo: 0.5, dec: 1 },
-  { id: "trem", nome: "Tremor da câmera", un: "%", dica: "0 desliga; 100 é o do jogo", min: 0, max: 200, passo: 5 },
+  { id: "trem", nome: "Tremor da câmera", un: "%", dica: "0 desliga; o padrão é 10; 100 é o tremor cheio", min: 0, max: 200, passo: 5 },
 ];
 // (na perseguição a altura e a distância têm mais folga, porque a câmera anda muito mais longe do carro)
 const FORA = { x: { min: -4, max: 4 }, y: { min: -2, max: 6 }, z: { nome: "Distância", dica: "afasta ou aproxima a câmera do carro", min: -3, max: 8 } };

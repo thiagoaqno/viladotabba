@@ -1,5 +1,16 @@
 [
   {
+    "id": "2026-11-11-desempenho",
+    "data": "2026-11-11",
+    "itens": [
+      "Jogo bem mais leve: na mesma corrida rápida de 21 robôs, de 40 para 74 quadros por segundo (medido num notebook com RTX 2060)",
+      "O programa abre o jogo na placa de vídeo forte e sem as opções que pesavam no Edge",
+      "A largada não trava mais o servidor (os robôs não dão mais aquela engasgada)",
+      "O narrador espera a tela de carregamento fechar",
+      "O acerto do carro é só no lobby: não abre mais na transmissão nem no grid"
+    ]
+  },
+  {
     "id": "2026-11-11-pc",
     "data": "2026-11-11",
     "itens": [

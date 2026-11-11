@@ -20,8 +20,6 @@ import { Montador, solido } from "./kit/montagem.js";
 import { sopraelevata } from "./kit/monza/sopraelevata.js";
 import { complexoDosBoxes, podioMonza, torreCronometragem, torreDeLuz, bandeiraItalia, bandeiraTifosi } from "./kit/monza/pecas.js";
 import { bosque, folhasCaidas, gramado, carvalhoDoAscari } from "./kit/monza/parque.js";
-import { beiradaSolida, nivelDoChao } from "./kit/monza/chao.js";
-import { ambienteMonza, postesDRS } from "./kit/monza/ambiente.js";
 
 // a torcida da Ferrari: quase tudo vermelho, com o branco e o amarelo da Scuderia e o verde da bandeira
 export const TIFOSI = ["#d4001a", "#d4001a", "#c8102e", "#e63946", "#d4001a", "#ffffff", "#ffd23f", "#009246", "#111111", "#d4001a"];
@@ -158,7 +156,7 @@ function tribunasDaParabolica(tr, { add }) {
 const CURVAS = [["VARIANTE DEL RETTIFILO", 1, 0.125], ["CURVA GRANDE", 3, 0.2], ["VARIANTE DELLA ROGGIA", 4, 0.338], ["CURVA DI LESMO 1", 5, 0.405], ["CURVA DI LESMO 2", 6, 0.458],
   ["CURVA DEL SERRAGLIO", 7, 0.53], ["VARIANTE ASCARI", 8, 0.655], ["PARABOLICA - C. ALBORETO", 11, 0.885]];
 function placasDasCurvas(tr, { add }) {
-  const { pts, n, W } = tr, E = tr.escala ?? 1, vs = [], uv = [], idx = [], m = new Montador(), S = solido();
+  const { pts, n, W } = tr, vs = [], uv = [], idx = [], m = new Montador(), S = solido();
   const atlas = canvasTex(1024, 512, (x) => {
     CURVAS.forEach(([nome, num], k) => {
       const c = k % 4, rr = Math.floor(k / 4), x0 = c * 256, y0 = rr * 128;
@@ -178,15 +176,13 @@ function placasDasCurvas(tr, { add }) {
       if (escolhido) break;
     }
     if (!escolhido) return;
-    const [lado, x, z] = escolhido, y = nivelDoChao(tr, x, z);
+    const [lado, x, z] = escolhido, y = tr.chao(x, z);
     // a placa gira um pouco para quem vem de trás (a frente aponta para a pista e um pouco contra o sentido da corrida)
     const nx = -lado * p.nx - 0.55 * p.tx, nz = -lado * p.ny - 0.55 * p.ty, len = Math.hypot(nx, nz), ex = nz / len, ez = -nx / len; // (ex, ez): o eixo largo da placa
-    // a placa no tamanho real (× a escala do cenário: 104×52 u = 21,7×10,8 m viram 8,7×4,3 m), com a base a 26 × escala do chão (uns 2,2 m), em dois postes até o chão
-    const w = 104 * E, h = 52 * E, y0 = y + 26 * E, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3;
+    const w = 104, h = 52, y0 = y + 26, c = k % 4, rr = Math.floor(k / 4), base = vs.length / 3;
     for (const [a, b] of [[-1, 0], [1, 0], [-1, 1], [1, 1]]) { vs.push(x + ex * a * w / 2, y0 + b * h, z + ez * a * w / 2); uv.push(((a + 1) / 2 + c) / 4, 1 - (rr + 1 - b) / 4); }
     idx.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
-    const alturaPoste = y0 - y + h * 0.5; // do chão até o meio da placa
-    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 6 * E), y + alturaPoste / 2, z + ez * s * (w / 2 - 6 * E)], [2.6 * E, alturaPoste, 2.6 * E], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) });
+    for (const s of [-1, 1]) m.caixa(S, [x + ex * s * (w / 2 - 6), y + 13, z + ez * s * (w / 2 - 6)], [2.6, 28, 2.6], { cor: "#d9dbdd", ry: Math.atan2(ex, ez) });
     tr.reservado.push([x, z, 26]);
   });
   if (!idx.length) return;
@@ -227,7 +223,6 @@ function bandeirasTorcida(tr, { add }) {
 export function cenarioMonza(tr, ctx) {
   tr.reservado ||= [];
   tr.camisasGP = TIFOSI; // a torcida solta de vida.js também veste vermelho
-  beiradaSolida(tr, ctx.add); // a base sólida: a fita de grama no nível do asfalto e o corte de concreto na borda (a pista não é uma folha)
   reta(tr, ctx);
   sopraelevata(tr, ctx.add);
   escapeDaParabolica(tr, ctx);
@@ -235,11 +230,8 @@ export function cenarioMonza(tr, ctx) {
   placasDasCurvas(tr, ctx);
 }
 
-export function depoisMonza(tr, ctx, ambiente) {
+export function depoisMonza(tr, ctx) {
   const { add } = ctx;
-  // o ambiente no chão (painéis na borda, placas de frenagem e postos no chão), no lugar do do kit que flutua; e o poste das placas de DRS
-  if (ambiente) ambienteMonza(tr, add, ambiente);
-  postesDRS(tr);
   // o parque: o gramado em faixas junto da pista, o bosque (copas em dois lóbulos, árvores altas e grossas, as mais fundas encostadas na frente
   // e uma cortina de longe, numa malha só por tipo), as folhas caídas junto das fileiras e o velho carvalho do Ascari.
   gramado(tr, add, {});

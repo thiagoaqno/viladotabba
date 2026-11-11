@@ -11,13 +11,10 @@ const VERMELHO = "#d52b1e", BRANCO = "#f4f4f2", AZUL = "#1b4f9c";
 const tribuna = (de, ate, lado, degraus, o = {}) => ({ de, ate, lado, degraus, cor: VERMELHO, encosto: BRANCO, cobertura: false, torcida: CAMISAS_MONTREAL, ...o });
 
 export const GP_MONTREAL = {
-  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
-  // As peças só desta pista (kit/montreal/) já estão no tamanho real: a passada visual de 2026-11 (base sólida, chão no nível, nada no ar).
-  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6a6c70" }, // o asfalto cinza junto da zebra
-    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 547, fora: 354 }, // as zebras vermelhas e brancas
+    zebra: { cores: ["#d62828", "#f4f4f4"], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 30,
   },
@@ -36,9 +33,8 @@ export const GP_MONTREAL = {
     tribuna(0.208, 0.232, -1, 7), tribuna(0.328, 0.364, -1, 8, { cor: AZUL }), tribuna(0.502, 0.53, -1, 8), // T3 e T4, T6 e T7, T8 e T9
     tribuna(0.936, 0.952, 1, 7, { cobertura: true }), // a chicane final, junto ao corredor
   ] },
-  cenario: (tr, ctx) => cenarioMontreal(tr, ctx, GP_MONTREAL.ambienteMontreal), // a ilha, a água, a base sólida, os boxes, a arquibancada principal, os muros, o Muro dos Campeões, as placas e o ambiente no chão
-  sem: { mastros: true }, // os mastros altos de vida-mais.js não: as bandeiras são as de kit/montreal/ambiente.js, de pé no chão
-  ambiente: { // (movido para `ambienteMontreal` no fim do arquivo: o do kit deixa placas, mastros e postos no ar, feitos para um guard-rail que Montreal não tem)
+  cenario: (tr, ctx) => cenarioMontreal(tr, ctx), // a ilha, a água, os boxes, a arquibancada principal, os muros, o Muro dos Campeões e as placas
+  ambiente: {
     marcas: ["gpcanada", "gilles", "quebec", "canada", "montreal", "jeandrapeau", "notredame", "bienvenue"],
     outdoors: ["gpcanada", "gilles", "quebec", "canada", "montreal", "jeandrapeau"],
     posto: "gilles", bandeira: [0xd52b1e, 0xffffff], placas: [150, 100, 50], cerca: false, // a bandeira do Canadá; o alambrado é o dos muros
@@ -54,5 +50,3 @@ export const GP_MONTREAL = {
   horizonte: false, // a terra, a água e o skyline são modelados
   depois: (tr, ctx) => depoisMontreal(tr, ctx),
 };
-// o ambiente do kit (kit/ambiente.js) deixa as placas de frenagem, os mastros e os postos no ar: Montreal usa o seu (kit/montreal/ambiente.js), chamado em `cenario` com a mesma configuração
-GP_MONTREAL.ambienteMontreal = GP_MONTREAL.ambiente; delete GP_MONTREAL.ambiente;

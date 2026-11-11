@@ -48,22 +48,21 @@ function estacionamento(tr, add, F, [s0, s1, v0, v1]) {
   const asfalto = new THREE.MeshStandardMaterial({ roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, map: canvasTex(64, 64, (c, w, h) => {
     c.fillStyle = "#54565c"; c.fillRect(0, 0, w, h); c.fillStyle = "#f1f1ee"; c.fillRect(0, 0, 2, h); c.fillRect(w - 2, 0, 2, h);
   }) });
-  // vaga de 2,5 × 5,2 m (12 × 25 u; antes 5 × 11,7 m) e carro de 1,8 × 4,6 m (8,6 × 22 u; o de antes tinha 3,75 × 9,6 m e 1,9 m de altura, quase um caminhão)
-  asfalto.map.repeat.set((s1 - s0) / 12, 1);
-  piso(tr, add, F, [s0, s1, v0, v1], asfalto, { y: 0.4, passo: 60, uv: [(s1 - s0) / 12, 1], nome: "bahrein-estacionamento" });
+  asfalto.map.repeat.set((s1 - s0) / 24, 1);
+  piso(tr, add, F, [s0, s1, v0, v1], asfalto, { y: 0.4, passo: 60, uv: [(s1 - s0) / 24, 1], nome: "bahrein-estacionamento" });
   const corpos = [], cabines = [], cores = ["#d9d9d6", "#25272b", "#a02b2b", "#2c4f8a", "#c9c3b4", "#6b6f75", "#e8e4d6"], cor = new THREE.Color();
-  const fil = Math.floor((v1 - v0) / 28);
-  for (let s = s0 + 7; s < s1 - 4; s += 12) for (let j = 0; j < fil; j++) {
+  const fil = Math.floor((v1 - v0) / 56);
+  for (let s = s0 + 14; s < s1 - 8; s += 24) for (let j = 0; j < fil; j++) {
     if (r() > 0.62) continue;
-    const q = F.at(s, v0 + 4 + j * 28 + 13); corpos.push({ ...q, c: cores[(r() * cores.length) | 0] });
+    const q = F.at(s, v0 + 8 + j * 56 + 26); corpos.push({ ...q, c: cores[(r() * cores.length) | 0] });
   }
   if (!corpos.length) return;
-  const geoC = new THREE.BoxGeometry(8.6, 4.4, 22), geoT = new THREE.BoxGeometry(7.4, 3, 11);
+  const geoC = new THREE.BoxGeometry(18, 9, 46), geoT = new THREE.BoxGeometry(15, 6, 24);
   const mc = new THREE.InstancedMesh(geoC, M(0xffffff, { roughness: 0.5, metalness: 0.2 }), corpos.length), mt = new THREE.InstancedMesh(geoT, M(0x1a2430, { roughness: 0.3 }), corpos.length), d = new THREE.Object3D();
   corpos.forEach((o, k) => {
     const y = tr.chao(o.x, o.z) + 0.4;
-    d.position.set(o.x, y + 3.3, o.z); d.rotation.set(0, o.ry, 0); d.scale.set(1, 1, 1); d.updateMatrix(); mc.setMatrixAt(k, d.matrix); mc.setColorAt(k, cor.set(o.c));
-    d.position.set(o.x, y + 7.1, o.z); d.updateMatrix(); mt.setMatrixAt(k, d.matrix);
+    d.position.set(o.x, y + 6, o.z); d.rotation.set(0, o.ry, 0); d.scale.set(1, 1, 1); d.updateMatrix(); mc.setMatrixAt(k, d.matrix); mc.setColorAt(k, cor.set(o.c));
+    d.position.set(o.x, y + 13, o.z); d.updateMatrix(); mt.setMatrixAt(k, d.matrix);
   });
   mc.castShadow = mt.castShadow = true; mc.name = mt.name = "bahrein-carros"; add(mc); add(mt);
   void cabines;
@@ -85,9 +84,8 @@ export function praca(tr, add, { torre = null, boxes = null } = {}) {
   }
   // o gramado entre a pista e a praça, com a fileira de tamareiras da beira (a da foto)
   const sA = sF(0.928), sB = sF(0.972);
-  // (as distâncias ao eixo eram de quando a pista tinha 120 u de largura: agora são a partir da borda, W / 2 + 38 a W / 2 + 90, como antes)
-  piso(tr, add, F, [sA, sB, tr.W / 2 + 38, tr.W / 2 + 90], verde, { y: 0.3, passo: 40, nome: "bahrein-gramado" });
-  for (let s = sA + 10; s < sB; s += 26) { const q = F.at(s, tr.W / 2 + 58); if (solta(q.x, q.z, 22)) pt(q.x, q.z); }
+  piso(tr, add, F, [sA, sB, 98, 150], verde, { y: 0.3, passo: 40, nome: "bahrein-gramado" });
+  for (let s = sA + 10; s < sB; s += 26) { const q = F.at(s, 118); if (solta(q.x, q.z, 22)) pt(q.x, q.z); }
   // atrás do prédio dos boxes: a rua de serviço, o gramado do paddock e as tendas brancas com as mesas vermelhas
   if (boxes) {
     const b = boxes, sI = F.sDe(b.i0 / n), sF2 = sI + b.comprimento, v1 = b.v0 + b.fundo;

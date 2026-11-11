@@ -15,13 +15,10 @@ const BOXES = window.Pistas.PISTAS.austin.boxes;
 const VERMELHO = "#bf0a30", BRANCO = "#f4f4f2";
 
 export const GP_AUSTIN = {
-  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
-  // As peças só desta pista ainda não leem `tr.escala`: isso é da passada visual (planos/escala-real.md).
-  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 553, fora: 358 }, // as zebras vermelhas e brancas
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,
   },

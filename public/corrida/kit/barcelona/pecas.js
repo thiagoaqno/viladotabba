@@ -78,18 +78,16 @@ const PELES = ["#f1c7a5", "#d9a37a", "#a8714a", "#7a4a2a", "#e8b896"];
 const CORPO = new THREE.BoxGeometry(2.4, 4.4, 1.8), CABECA = new THREE.OctahedronGeometry(1, 0); CABECA.scale(0.8, 0.85, 0.8); // a cabeça é um octaedro (8 triângulos)
 
 /** A torcida sentada nos degraus: um InstancedMesh de corpos (a camisa) e um de cabeças. `fileiras`: [{ y, z }] do degrau; vai de x0 a x1. */
-// `gente`: o tamanho da pessoa (a escalaGente do GP: a pessoa sentada de 1,45 m vira 1,0 m com 0,69) e, junto, o espaço entre os assentos
-export function torcidaNosDegraus(fileiras, x0, x1, { publico = 0.5, semente = 5, camisas = CAMISAS_ESPANHA, corredores = 150, gente = 1 } = {}) {
-  const r = sorteio(semente), corpos = [], cabecas = [], G = gente;
-  for (const { y, z } of fileiras) for (let x = x0 + 3; x < x1 - 2; x += 6.2 * G) {
+export function torcidaNosDegraus(fileiras, x0, x1, { publico = 0.5, semente = 5, camisas = CAMISAS_ESPANHA, corredores = 150 } = {}) {
+  const r = sorteio(semente), corpos = [], cabecas = [];
+  for (const { y, z } of fileiras) for (let x = x0 + 3; x < x1 - 2; x += 6.2) {
     if (Math.abs(((x - x0) % corredores) - corredores / 2) < 5.5 || r() > publico) continue;
-    corpos.push([x + (r() - 0.5) * 1.2 * G, y + 3.1 * G, z, camisas[(r() * camisas.length) | 0]]); cabecas.push([x + (r() - 0.5) * 1.2 * G, y + 6.1 * G, z, PELES[(r() * PELES.length) | 0]]);
+    corpos.push([x + (r() - 0.5) * 1.2, y + 3.1, z, camisas[(r() * camisas.length) | 0]]); cabecas.push([x + (r() - 0.5) * 1.2, y + 6.1, z, PELES[(r() * PELES.length) | 0]]);
   }
   const g = new THREE.Group(); g.name = "torcida";
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.9 }), matCabeca = new THREE.MeshStandardMaterial({ roughness: 0.9 }), d = new THREE.Object3D();
   if (!corpos.length) return g;
   const c = new THREE.InstancedMesh(CORPO, mat, corpos.length), h = new THREE.InstancedMesh(CABECA, matCabeca, corpos.length), cor = new THREE.Color();
-  d.scale.setScalar(G);
   corpos.forEach(([x, y, z, camisa], k) => { d.position.set(x, y, z); d.updateMatrix(); c.setMatrixAt(k, d.matrix); c.setColorAt(k, cor.set(camisa)); });
   cabecas.forEach(([x, y, z, pele], k) => { d.position.set(x, y, z); d.updateMatrix(); h.setMatrixAt(k, d.matrix); h.setColorAt(k, cor.set(pele)); });
   c.castShadow = false; g.add(c, h); g.userData.pessoas = corpos.length;
@@ -101,7 +99,7 @@ export function torcidaNosDegraus(fileiras, x0, x1, { publico = 0.5, semente = 5
  * @param {object} o · comprimento: ao longo da pista (1500) · publico: 0 (vazia) a 1 (lotada) · semente · bico: a ponta curva em -x (padrão sim)
  * @returns {THREE.Group} com userData { largura, profundidade, alto, pessoas, fileiras: [{ y, z }] (os degraus, para pôr as bandeiras) }
  */
-export function tribunaPrincipal({ comprimento: L = 1500, publico = 0.42, semente = 11, bico = true, escala: s = 1, gente = 1 } = {}) {
+export function tribunaPrincipal({ comprimento: L = 1500, publico = 0.42, semente = 11, bico = true } = {}) {
   const m = new Montador(), S = solido(), V = vidro(), x0 = -L / 2, x1 = L / 2;
   const A = comTextura(texAssentos(0)), B = comTextura(texAssentos(1)), CONC = "#b4b1a8", ESCURO = "#5a554d";
   const T0 = 14, FUNDO0 = 8.5, SOBE = 5.5, DECK = 46, T1 = 16, FUNDO1 = 8.75, YDECK = T0 * SOBE; // dois lances de degraus com o corredor no meio
@@ -171,15 +169,9 @@ export function tribunaPrincipal({ comprimento: L = 1500, publico = 0.42, sement
     for (const [pz, py, ph, rx] of [[-62, 112, 108, 0.28], [-20, 112, 120, 0.12]]) m.caixa(S, [bx, py, pz], [4, ph, 4], { cor: "#9aa0a6", rx }); // as escoras
     m.caixa(S, [bx - 20, 120, -108], [3, 120, 3], { cor: "#cfd2d6" });
   }
-  // `escala`: a peça foi desenhada a 1 u ≈ 10 cm; na física (1 u = 0,2083 m) as alturas e o fundo × 0,48 (0,1 ÷ 0,2083) dão o tamanho real (o degrau de
-  // 5,5 × 8,5 u vira 0,55 × 0,85 m e a cobertura fica a uns 27 m); o comprimento ao longo da pista não muda (depende da reta). A gente não estica:
-  // fica fora da escala da estrutura e tem o próprio tamanho (`gente`, a escalaGente do GP), nos degraus já na altura certa.
-  const estrutura = m.montar("barcelona-tribuna-principal");
-  estrutura.scale.set(1, s, s);
-  const g = new THREE.Group(); g.name = "barcelona-tribuna-principal-grupo"; g.add(estrutura);
-  const reais = fileiras.map(({ y, z }) => ({ y: y * s, z: z * s }));
-  const torcida = torcidaNosDegraus(reais, x0, x1, { publico, semente, gente }); g.add(torcida);
-  g.userData = { largura: L, profundidade: (-zFundo + 30) * s, alto: 262 * s, pessoas: torcida.userData.pessoas || 0, fileiras: reais, yTopo: yTopo * s, torcida: true };
+  const g = m.montar("barcelona-tribuna-principal");
+  const gente = torcidaNosDegraus(fileiras, x0, x1, { publico, semente }); g.add(gente);
+  g.userData = { largura: L, profundidade: -zFundo + 30, alto: 262, pessoas: gente.userData.pessoas || 0, fileiras, yTopo, torcida: true };
   return g;
 }
 

@@ -226,7 +226,7 @@ function perfilF1(pf, f) {
   let v = mapa.get(q);
   if (!v && pf.linha.hi) { // pistas de GP: o ritmo do piloto novo (corrida-piloto.js), com os limites de verdade do carro
     const lat = Float64Array.from({ length: pf.n }, (_, i) => pf.lat[(i + 2) % pf.n]);
-    v = Piloto.perfilDoNivel(pf.pts, lat, pf.c, aderRef(), q, pf.t.janelaRitmo);
+    v = Piloto.perfilDoNivel(pf.pts, lat, pf.c, aderRef(), q);
     if (mapa.size >= 30) mapa.delete(mapa.keys().next().value);
     mapa.set(q, v);
   }
@@ -290,10 +290,10 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.13, medio: 0.08, dificil: 0 }; // (2026-11-10: o médio mira o 1:04,5 do Thiago em Mônaco) // (fácil 4% → 15%: na escala real até o fácil era difícil para quem joga no teclado, 2026-11-10)
+const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0 }; // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
 // quem joga anda bem acima do "ideal" medido pelo perfil (o pneu segura mais do que a conta supõe): por nível, o robô usa esta
 // fração a mais do limite das curvas, por cima do nível que dá o ideal. No difícil ele vai no limite de verdade.
-const EMPURRAO_F1 = { facil: 0.85, medio: 0.92, dificil: 0.96 }; // (o médio é o difícil de antes; o difícil vai além) // (o difícil mira 3% abaixo do ideal: quem joga bem já bate o ideal)
+const EMPURRAO_F1 = { facil: 0.86, medio: 0.96, dificil: 1 }; // (o médio é o difícil de antes; o difícil vai além) (de volta à escala antiga, 2026-11-11)
 function referenciaF1(room) {
   const pista = room.config.pista;
   const pf = perfil(pista, F1Equipes.specDaEquipe("mclaren"));
@@ -429,11 +429,7 @@ function estiloDe(room, p, rng) {
   const estreita = T.PISTAS[room.config.pista].width <= LARGURA_ESTREITA;
   return { dentro: (rng() * 2 - 1) * (estreita ? 0.5 : 1), lado: (rng() * 2 - 1) * (estreita ? 2 : 9), look: pil && Estilos.PERFIS[pil.id] ? 2 + Math.min(3, Math.floor((1 - Estilos.dePiloto(pil.id).frenagem) * 4)) : 2 + Math.floor(rng() * 4), erroK: nivel * (pil ? 0.5 + (100 - pil.constancia) / 40 : 1), erros: F1.sorteio(`erros:${room.semente}:${p.id}`) };
 }
-// atrás de um HUMANO o robô guarda mais espaço: quem joga freia sem aviso, e o robô só percebe a freada medindo a desaceleração entre uma passagem
-// e outra; colado a 12 u (2,5 m) a 300 km/h ele chegava com o pedal atrasado e acertava a traseira em cheio. RESERVA_HUMANO: segundos da velocidade do
-// robô somados à folga (a 300 km/h, ~60 u = 12 m); FREADA_HUMANO: quanto tempo da freada medida ele conta (a dos robôs fica nos 0,25 s de sempre)
-const RESERVA_HUMANO = 0.15, FREADA_HUMANO = 0.45;
-const L_CARRO = 26.4, W_CARRO = 9.1; // o carro em unidades da pista (carros.js: 5,5 m x 1,9 m, escala 4,8)
+const L_CARRO = 44, W_CARRO = 26; // o carro em unidades da pista (carros.js: 4,4 m x 2,6 m, escala 10)
 // os 3 círculos do carro (como em colisao.js, que é do navegador)
 function circulos(pos) {
   const r = W_CARRO * 0.45, d = Math.max(0, L_CARRO / 2 - r), fx = Math.cos(pos.a), fy = Math.sin(pos.a);
@@ -473,10 +469,10 @@ function contatos(room, emit) {
 // Devolve o desvio do traçado, o limite de velocidade, se tem alguém à frente, os lados bloqueados e os limites laterais.
 const ALEM_MONACO = 14; // Mônaco, disputa: o centro do carro pode passar até 14 u do `teto` das barreiras (o muro físico fica a ~15, `muroFolga` 9), e até W/2 - 9 onde a rua é mais larga
 const ATAQUE_PERTO_MONACO = L_CARRO * 2.5; // Mônaco: só começa a ultrapassar com o alvo a até 2,5 carros (ao longo da pista), onde o lado medido ainda vale
-const MARG_PARADO = 10; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 9,1
+const MARG_PARADO = 28; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 26
 const ARRANQUE_INI_MS = 2000, ARRANQUE_RAMPA_MS = 4000, ARRANQUE_SEM_ULT_MS = 3500; // a largada: a reserva de espaço à frente volta ao normal entre 2 s e 6 s, e sem ultrapassagem nos primeiros 3,5 s
 // (2026-11: mais agressivos depois dos carros parelhos: emparelham mais cedo, mais perto de lado, e o difícil defende mais)
-const TRANSITO_NIVEL = { facil: { margem: 17, antec: 0.95, defende: 0.2 }, medio: { margem: 13.5, antec: 1.3, defende: 0.55 }, dificil: { margem: 12.5, antec: 1.5, defende: 0.65 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
+const TRANSITO_NIVEL = { facil: { margem: 48, antec: 0.95, defende: 0.2 }, medio: { margem: 38, antec: 1.3, defende: 0.55 }, dificil: { margem: 35, antec: 1.5, defende: 0.65 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
 // a distância (u) até o ponto em que o perfil exige frear a partir da velocidade `v` (0: já freando; Infinity: nada nos próximos 540 u)
 function distanciaDaFreada(fis, n, i, v) { const lim = v * 0.9; for (let k = 0; k <= 90; k++) if (fis[(i + k) % n] < lim) return k * STEP; return Infinity; }
 // o lado de dentro da próxima curva de verdade (+1: lado de lat positivo; -1; 0 sem curva nos próximos ~600 u)
@@ -510,9 +506,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
   // a folga lateral entre carros acompanha a largura da pista: nas de 104 ou mais vale a de sempre; numa mais estreita (Mônaco, 84) a faixa em que o robô anda (maxLat = W/2 - 18) cabe menos, e uma folga de 44 jogava o carro de lado contra o muro
   const margemNormal = niv.margem * Math.min(1, (T.PISTAS[room.config.pista].width - 36) / 68);
   const monaco = room.config.pista === "monaco";
-  // (nunca menos que a largura do carro e mais 3: na escala real a pista tem 58 u e a conta acima dava ~4 u entre os centros, menos que um carro, e os
-  // robôs se encostavam ao emparelhar, viravam fantasma e perdiam a volta)
-  const MARG = monaco ? W_CARRO + Math.max(0, margemNormal - W_CARRO) * 0.5 : Math.max(W_CARRO + 3, margemNormal);
+  const MARG = monaco ? W_CARRO + Math.max(0, margemNormal - W_CARRO) * 0.5 : margemNormal;
   const dFreio = plano.dFreio ?? Infinity, dentro = plano.dentro || 0, meu = ia.sim;
   const tx = ponto.tx, ty = ponto.ty, vlatMeu = meu ? meu.vx * -ty + meu.vy * tx : 0;
   const out = { desvio: 0, freio: Infinity, encontrou: false, bloqPos: false, bloqNeg: false, draft: 0, limMin: -Infinity, limMax: Infinity, tras: null };
@@ -545,11 +539,11 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       if (lado > 0) { out.bloqPos = true; out.limMax = Math.min(out.limMax, latOutro - MARG); } else { out.bloqNeg = true; out.limMin = Math.max(out.limMin, latOutro + MARG); }
       if (!ia.ult || ia.ult.id !== oid) out.ladoDeOutro = true; // (alguém além do carro que estou passando está ao meu lado)
     }
-    if (frente > 22 && frente < Sim.VACUO_ALCANCE && distancia * STEP > 8 && Math.abs(lado) < Sim.VACUO_LARGURA + frente * 0.04) out.draft = Math.max(out.draft, 1 - (frente - 22) / (Sim.VACUO_ALCANCE - 22)); // (o mesmo rastro de Sim.vacuoAlvo)
+    if (frente > 22 && frente < 450 && distancia * STEP > 8 && Math.abs(lado) < 24 + frente * 0.06) out.draft = Math.max(out.draft, 1 - (frente - 22) / 428); // (o mesmo rastro longo de Sim.vacuoAlvo)
     // quanto ele está freando (a desaceleração medida de uma passagem à outra): quem vem atrás conta com mais 0,25 s do mesmo freio
     const visto = (ia.vistos || (ia.vistos = {}))[oid] || (ia.vistos[oid] = { ov, t: now, a: 0 }), dtv = (now - visto.t) / 1000;
     if (dtv >= 0.04) { visto.a += (Math.max(-300, Math.min(100, (ov - visto.ov) / dtv)) - visto.a) * Math.min(1, dtv * 6); visto.ov = ov; visto.t = now; }
-    const humano = !o.bot, ovPlano = Math.max(0, ov + Math.min(0, visto.a) * (humano ? FREADA_HUMANO : 0.25));
+    const ovPlano = Math.max(0, ov + Math.min(0, visto.a) * 0.25);
     const aproxima = Math.max(0, ia.v - ovPlano); // a velocidade com que me aproximo dele
     // Depois que abriu espaço lateral suficiente, o carro ultrapassado já não está na mesma faixa:
     // continuar seguindo a velocidade dele ali fazia o robô andar lado a lado sem conseguir passar.
@@ -559,11 +553,11 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     const alvoDaManobra = ia.ult?.id === oid;
     const separados = !alvoDaManobra ? perto : monaco ? Math.abs(ia.lat - latOutro) : ia.ult.lento ? perto : Math.min(perto, Math.abs(ia.lat - ondeEsta(o, distancia).lat));
     const faixaLivre = alvoDaManobra && separados >= W_CARRO + 3;
-    if (frente > 0 && distancia * STEP > 8 && !faixaLivre && Math.abs(lado) < W_CARRO + 8 + Math.min(10, aproxima * 0.1)) { // na minha faixa (quem chega rápido vê a faixa mais larga), à frente (W_CARRO + 8: era 34, a largura do carro antigo, 26, mais 8; com o carro real a pista de 58 u inteira virava "a minha faixa" e o robô nunca emparelhava)
+    if (frente > 0 && distancia * STEP > 8 && !faixaLivre && Math.abs(lado) < 34 + Math.min(10, aproxima * 0.1)) { // na minha faixa (quem chega rápido vê a faixa mais larga), à frente
       // reserva espaço para o freio progressivo da física (o pedal leva ~0,2 s para subir) e para o da frente frear mais forte que o previsto
       // (na largada o pelotão sai junto: a reserva de espaço cresce aos poucos, de quase nada no grid, onde os carros estão a 4 u um do outro, até
       // a de sempre; senão a fila de trás esperava cada carro da frente andar, uma fileira de cada vez)
-      const folga = frente - L_CARRO - (12 + Math.min(15, k[i] * 1000) + aproxima * 0.1 + (humano ? ia.v * RESERVA_HUMANO : 0)) * arranque - 1;
+      const folga = frente - L_CARRO - (12 + Math.min(15, k[i] * 1000) + aproxima * 0.1) * arranque - 1;
       const desacel = D.frenagemMaxima(c, ia.v, 0, plano.aderenciaFreio) * 0.75;
       let lim = folga <= 0 ? ovPlano * 0.82 : Math.sqrt(Math.max(0, ovPlano * ovPlano + 2 * desacel * folga));
       // Já decidiu ultrapassar este carro mas ainda está na faixa dele: um fio de velocidade (sem encostar) para o volante ter o que virar

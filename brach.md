@@ -1,10 +1,12 @@
-# Som do rádio antes de falar e som do ERS ligando
+# Guia da escala real: o estado depois do #608
 
-Os dois sons são sintetizados no navegador (Web Audio), como o motor. Se aparecer o arquivo de verdade, ele toca no lugar, sem mexer no código.
+Atualiza `planos/escala-real-guia.md` com o estado de agora:
 
-- **Rádio da equipe** (`radio.js`): antes da voz do engenheiro, o chiado de abrir o canal e dois bipes subindo (1 150 e 1 550 Hz, onda quadrada abafada como o rádio); no fim, depois do clique de fechar, um bipe mais grave. A voz entra depois da abertura. Arquivo de verdade: `public/corrida/radio/bip.mp3` (toca no lugar da abertura sintetizada).
-- **ERS ligando** (`sons.js`, `jogo.js`): ao apertar a tecla do ERS (E) com a bateria entregando, uma subida elétrica (220 a 1 900 Hz em 0,32 s), um estalo agudo no começo e um sininho no fim. Só no aperto do piloto, não no automático (que liga e desliga sozinho), e no máximo um a cada 1,5 s. Arquivo de verdade: `public/corrida/sons/ers-liga-1.mp3`, com `"ers-liga": 1` em `sons/indice.json`.
+- o site está na versão estável (a main voltou para antes da escala real pelo #608);
+- todo o trabalho de escala real está no branch `feat/escala-real-pistas`, que já tem a volta do #608 desfeita lá dentro, para o mega PR trazer a escala real de volta em vez de apagá-la;
+- Mônaco está com a outra conta, na pasta `klk/escala-monaco`;
+- o fluxo de trabalho: uma cópia por pista a partir do integrador, sem PR, e um mega PR no fim.
 
-Conferido com `node --check`; o Thiago testa jogando.
+Só documentação. O arquivo é igual ao do branch de integração, para não dar conflito no mega PR.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -46,16 +46,6 @@ export function detectarPlaca(gl) {
 }
 // a qualidade em uso agora (a escolhida, ou a Média quando a Alta ficou lenta)
 export const qualidade = () => efetiva;
-// Os carros dos ADVERSÁRIOS (o seu fica sempre completo): quanto detalhe cada um tem pela distância (`lodKart` em carros.js). "auto" segue a
-// qualidade em uso (Baixa → Mínimo, Média → Leve, Alta → Completo; se a Alta cai para a Média sozinha, os carros acompanham). A escolha fica
-// em localStorage ("corrida:carros-adv"); a tela de ajustes da sala e o MFD (Ajustes) mudam.
-export const CARROS_ADV = ["auto", "completo", "leve", "minimo"];
-export const NOMES_CARROS = { auto: "Automático", completo: "Completo", leve: "Leve", minimo: "Mínimo" };
-const CHAVE_CARROS = "corrida:carros-adv";
-let carrosAdv = "auto"; try { const v = localStorage.getItem(CHAVE_CARROS); if (CARROS_ADV.includes(v)) carrosAdv = v; } catch {}
-export const carrosEscolha = () => carrosAdv;
-export const carrosAdversarios = () => (carrosAdv !== "auto" ? carrosAdv : { baixa: "minimo", media: "leve", alta: "completo" }[efetiva] || "leve");
-export function definirCarros(v) { if (!CARROS_ADV.includes(v)) return; carrosAdv = v; try { localStorage.setItem(CHAVE_CARROS, v); } catch {} }
 export const escolhida = () => salva || auto;
 export const foiRebaixada = () => rebaixada;
 export const pixelRatioDe = (n) => Math.min(window.devicePixelRatio || 1, RAZAO[n] || 1);

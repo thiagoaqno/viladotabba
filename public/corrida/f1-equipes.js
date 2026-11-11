@@ -93,9 +93,8 @@ function quebraDaConfiab(confiab) {
 // `m` já tem que ter passado por `validar` (ou ser uma padrão); níveis fora de 0..MAX_NIVEL são cortados mesmo assim.
 function specDaMontagem(m, nome = "Carro de F1") {
   const n = {}; for (const k of ORDEM) n[k] = Math.max(0, Math.min(MAX_NIVEL, Math.round(+m[k] || 0)));
-  // PARELHO: quanto de cada nível conta (1 = o nível inteiro). Em 7/nov ficou 0,6 ("carros mais parelhos"); o Thiago pediu de volta os carros desiguais
-  // de antes (2026-11-09), com a ultrapassagem vindo da bateria e não do vácuo
-  const PARELHO = 1, c = (x) => 3 + (x - 3) * PARELHO;
+  // carros mais parelhos: cada nível conta 60% da distância até o nível médio (3), então a equipe forte e a fraca ficam mais perto
+  const PARELHO = 0.6, c = (x) => 3 + (x - 3) * PARELHO;
   const motor = c(n.motor), aero = c(n.aero), chassi = c(n.chassi), freios = c(n.freios), suspensao = c(n.suspensao), confiab = c(n.confiab), e = estilo(n);
   return {
     name: nome, inspo: ESTILOS[e].inspo, desc: ESTILOS[e].nome, estilo: e, chave: ORDEM.map((k) => n[k]).join("-"),

@@ -175,8 +175,8 @@ function perseguicao(x) {
   const fx = Math.cos(C.a), fy = Math.sin(C.a), a = rm ? 0 : C.acel;
   // acelerando, a câmera sobe e se afasta; freando, desce e chega mais perto
   // (como no jogo de F1: a próxima fica a uns 5,2 m do carro e 1,5 m acima; a afastada, a uns 9,8 m e 2,9 m; o ajuste do jogador soma metros)
-  const back = Math.max(12, (near ? 31 + speedK * (rm ? 2.4 : 7.2) + a * 3 : 59 + speedK * (rm ? 4.8 : 13) + a * 5.4) + C.surge * 6 + A.z * KS);
-  const up = (near ? 8.7 + speedK * 0.9 + a * 1.9 : 17.4 + speedK * 2.4 + a * 4.2) + A.y * KS;
+  const back = Math.max(12, (near ? 52 + speedK * (rm ? 4 : 12) + a * 5 : 98 + speedK * (rm ? 8 : 22) + a * 9) + C.surge * 6 + A.z * KS);
+  const up = (near ? 14.5 + speedK * 1.5 + a * 3.2 : 29 + speedK * 4 + a * 7) + A.y * KS;
   const lat = A.x * KS, wx = src.x - fx * back - fy * lat, wz = src.y - fy * back + fx * lat;
   const y = Math.max((src.z || 0) + up, groundH(tr, wx, wz, nearest(tr, wx, wz, R.idx)) + (near ? 8 : 6));
   if (!C.pos) C.pos = V3(wx, y, wz); else { C.pos.x = wx; C.pos.z = wz; C.pos.y += (y - C.pos.y) * (1 - Math.exp(-dt * 9)); }

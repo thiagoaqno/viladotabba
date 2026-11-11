@@ -17,21 +17,14 @@ import { predioBoxesJeddah, texturaBandeiraSaudita } from "./kit/jeddah/predio-b
 import { cidadeJeddah } from "./kit/jeddah/cidade.js";
 import { palmeiras, arbustos, semearPalmeiras } from "./kit/jeddah/palmeiras.js";
 import { holofotes } from "./kit/holofotes.js";
-import { tendaPaddock } from "./kit/coberturas.js";
-import { tribunaReal } from "./kit/jeddah/tribuna.js";
-import { beiradaSolida, nivelDoChao } from "./kit/jeddah/chao.js";
-import { ambienteJeddah, postesDRS } from "./kit/jeddah/ambiente.js";
+import { tendaPaddock, tribunaCoberta } from "./kit/coberturas.js";
 import { Montador, solido, letreiro } from "./kit/montagem.js";
 import { livre, ocupado, sorteio, instancias } from "./kit/comum.js";
 
 const ESCALA = 1.35; // o prédio de verdade é bem maior que o desenho
 // uma tribuna coberta do kit 2 ao lado da pista: só nasce onde a frente e o fundo dela ficam livres do asfalto e de outras peças
-// A tribuna no tamanho real (kit/jeddah/tribuna.js, `tribunaReal`): o degrau é o de `tr.escala` (6 × escala de altura e 9 × escala de fundo, 0,5 × 0,75 m; o de `tribunaCoberta` do kit era 5 × 7,5 u = 1,04 × 1,56 m),
-// a gente tem 1,7 m e a cobertura sobe 5,4 m acima do degrau. Os `degraus` das chamadas são os de antes (7,5 u de fundo por degrau): `fileiras` os converte para o degrau de hoje (mesma altura e mesmo fundo).
-const fileiras = (tr, degraus) => Math.max(2, Math.round(degraus * 7.5 / (9 * (tr.escala ?? 1))));
-const CAMISAS = ["#ffffff", "#f4f1e6", "#e8e4d8", "#ffffff", "#0a7f45", "#c8102e", "#1b1b1b"]; // túnicas brancas, lenços verdes e vermelhos (a torcida de gps/jeddah.js)
 function tribunaEm(tr, add, [fa, fb], lado, { comprimento = 170, degraus = 8, lat = null, cores = ["#0a7f45", "#f4f4f4"] } = {}) {
-  const { pts, n, W } = tr, L = lat ?? (tr.wallLat + 40), prof = fileiras(tr, degraus) * 9 * (tr.escala ?? 1) + 16;
+  const { pts, n, W } = tr, L = lat ?? (tr.wallLat + 40), prof = degraus * 7.5 + 16;
   let f = null;
   for (let q = fa; q <= fb && f === null; q += 0.004) {
     const p = pts[Math.floor(q * n) % n]; let ok = true;
@@ -42,7 +35,7 @@ function tribunaEm(tr, add, [fa, fb], lado, { comprimento = 170, degraus = 8, la
     if (ok) f = q;
   }
   if (f === null) return null;
-  const p = pts[Math.floor(f * n) % n], t = tribunaReal({ escala: tr.escala ?? 1, comprimento, degraus: fileiras(tr, degraus), cores, secoes: 4, publico: 0.55, cobertura: "#f6f6f4", camisas: CAMISAS, vao: 56 });
+  const p = pts[Math.floor(f * n) % n], t = tribunaCoberta({ comprimento, degraus, cores, secoes: 4, publico: 0.55, cobertura: "#f6f6f4" });
   const pos = colocar(tr, t, Math.floor(f * n), lado * L, { paraPista: true }); add(t);
   for (let dx = -comprimento / 2; dx <= comprimento / 2; dx += 40) tr.reservado.push([p.x + p.nx * lado * (L + prof / 2) + p.tx * dx, p.y + p.ny * lado * (L + prof / 2) + p.ty * dx, prof / 2 + 26]);
   (tr.arquibancadas ||= []); const i0 = Math.floor(f * n) - Math.floor(comprimento / 12), i1 = Math.floor(f * n) + Math.floor(comprimento / 12); tr.arquibancadas.push([i0, i1]); // o som da torcida
@@ -70,8 +63,7 @@ const PREDIO = { lat: 158, comprimento: 540, profundidade: 54 }; // a frente do 
 function colocar(tr, g, i, lat, { paraPista = true, dx = 0, y = null } = {}) {
   const p = tr.pts[((i % tr.n) + tr.n) % tr.n], s = Math.sign(lat) * (paraPista ? -1 : 1);
   const x = p.x + p.nx * lat + p.tx * dx, z = p.y + p.ny * lat + p.ty * dx;
-  g.position.set(x, y ?? nivelDoChao(tr, x, z), z); // (o chão que se vê: a fita de kit/jeddah/chao.js perto da pista, a malha longe dela)
-  g.rotation.y = Math.atan2(p.nx * s, p.ny * s); // (estava dentro do comentário da linha de cima: nada girava, e as tribunas e os telões atravessavam a pista nas curvas)
+  g.position.set(x, y ?? tr.chao(x, z) - 1.5, z); g.rotation.y = Math.atan2(p.nx * s, p.ny * s);
   return { x, z };
 }
 
@@ -84,10 +76,9 @@ function geoPoste() {
   return mergeGeometries([col(haste, "#e9ebec"), col(braco, "#e9ebec"), col(cabeca, "#fff2c8")]);
 }
 
-export function cenarioJeddah(tr, ctx, ambiente) {
+export function cenarioJeddah(tr, ctx) {
   const { add, hAt } = ctx, { pts, n, W } = tr, r = sorteio(2026);
   tr.reservado ||= [];
-  beiradaSolida(tr, add); // a base sólida da pista e o chão no nível do asfalto, dos dois lados (kit/jeddah/chao.js)
   const mar = (tr.marJeddah = marJeddah(tr, ctx));
 
   // ---- o prédio dos boxes, na linha de chegada, atrás das garagens do corredor ----
@@ -98,7 +89,7 @@ export function cenarioJeddah(tr, ctx, ambiente) {
   // as bandeiras da Arábia Saudita nos mastros do alto do prédio (pano de duas faces, sem luz)
   const bandMat = new THREE.MeshBasicMaterial({ map: texturaBandeiraSaudita(), side: THREE.DoubleSide });
   for (const [mx, my, mz] of predio.userData.mastros) {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(18, 12), bandMat); f.position.set(mx + 9.5, my - 6.5, mz); predio.add(f);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(26, 17), bandMat); f.position.set(mx + 13.5, my - 9, mz); predio.add(f);
   }
   // as tendas do paddock (kit 2) atrás do prédio, do lado do norte, viradas para a lagoa
   for (const dx of [150, 285]) {
@@ -113,13 +104,12 @@ export function cenarioJeddah(tr, ctx, ambiente) {
 
   // ---- as palmeiras: pela corniche, em volta do prédio e nas duas beiradas da pista ----
   const lista = [], baixas = [];
-  // as palmeiras da orla pousam no talude de mar.js (a -1,2 a 64 u da calçada, a 1,0 a 22 u); `s` de 0,75 a 1,1 dá 10 a 15 m (a palmeira de geoPalmeira tem 13,3 m)
   mar.orla.forEach((o, i) => {
     if (i % 2 || o.ix < 0.5) return; // só a costa oeste (e as pontas)
-    for (const d of [30, 46]) { const x = o.x + o.ix * d + (r() - 0.5) * 8, z = o.z + o.iz * d; if (!livre(tr, x, z, 40) || ocupado(tr, x, z)) continue; lista.push({ x, y: -1.2 + (64 - d) / 42 * 2.2 - 0.2, z, s: 0.75 + r() * 0.35, r: r() * 6.28 }); }
+    for (const d of [30, 46]) { const x = o.x + o.ix * d + (r() - 0.5) * 8, z = o.z + o.iz * d; if (!livre(tr, x, z, 40) || ocupado(tr, x, z)) continue; lista.push({ x, y: tr.chao(x, z) - 1.5 + 0.5, z, s: 1 + r() * 0.5, r: r() * 6.28 }); }
   });
-  lista.push(...semearPalmeiras(tr, { dMin: 98, dMax: 240, passo: 6, chance: 0.55, semente: 71, escala: [0.75, 1.1] }));
-  lista.push(...semearPalmeiras(tr, { de: 0.86, ate: 1.06, lados: [1], dMin: 200, dMax: 330, passo: 5, chance: 0.8, semente: 72, escala: [0.75, 1.1] })); // atrás da arquibancada principal
+  lista.push(...semearPalmeiras(tr, { dMin: 98, dMax: 240, passo: 6, chance: 0.55, semente: 71 }));
+  lista.push(...semearPalmeiras(tr, { de: 0.86, ate: 1.06, lados: [1], dMin: 200, dMax: 330, passo: 5, chance: 0.8, semente: 72 })); // atrás da arquibancada principal
   for (const p of semearPalmeiras(tr, { dMin: 80, dMax: 130, passo: 5, chance: 0.5, semente: 73, tipo: "arbusto", folga: 22 })) baixas.push(p);
   palmeiras(add, lista, { nome: `${tr.id}-palmeiras` }); arbustos(add, baixas, { nome: `${tr.id}-arbustos` });
 
@@ -130,7 +120,7 @@ export function cenarioJeddah(tr, ctx, ambiente) {
 
   // ---- o mar: a fonte, a mesquita, a marina e os barcos ----
   const zF = 3500, xF = mar.xCosta(zF) - 700;
-  const fonte = fonteReiFahd({ altura: 1250 }); fonte.grupo.position.set(xF, 0.5, zF); add(fonte.grupo); tr.fonteJeddah = { x: xF, z: zF };
+  const fonte = fonteReiFahd({ altura: 820 }); fonte.grupo.position.set(xF, 0.5, zF); add(fonte.grupo); tr.fonteJeddah = { x: xF, z: zF };
   const zM = 2560, xM = mar.xCosta(zM) - 285, mesq = mesquitaFlutuante({}); mesq.position.set(xM, 0.5, zM); mesq.rotation.y = Math.PI / 2; mesq.scale.setScalar(2.2); add(mesq);
   const pier = new THREE.Mesh(new THREE.BoxGeometry(18, 2, 175), new THREE.MeshStandardMaterial({ color: 0xd9d0b8, roughness: 0.9 })); pier.position.set(xM + 215, 1.4, zM); pier.rotation.y = Math.PI / 2; add(pier);
   tr.mesquitaJeddah = { x: xM, z: zM };
@@ -139,8 +129,6 @@ export function cenarioJeddah(tr, ctx, ambiente) {
   // ---- as torres de holofotes (corrida noturna) e a cidade ----
   holofotes(tr, add, { passo: 62, recuo: 56, alto: 78 });
   cidadeJeddah(tr, ctx);
-  // o muro, a cerca, as bandeiras, as placas de frenagem e os postos, de pé no chão (kit/jeddah/ambiente.js; o do kit deixa tudo na altura da pista), e o poste das placas de DRS de pista.js
-  ambienteJeddah(tr, add, ambiente); postesDRS(tr);
   tr.animarJeddah = (dt, foco, t) => { fonte.animar(t); barcos.animar(dt, foco, t); };
 }
 
@@ -149,9 +137,9 @@ export function cenarioJeddah(tr, ctx, ambiente) {
 export function depoisJeddah(tr, { add }) {
   const anterior = tr.animarPista;
   tr.animarPista = (dt, foco, t) => { anterior?.(dt, foco, t); tr.animarJeddah?.(dt, foco, t); };
-  const p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx), E = tr.escala ?? 1; // (a viga do pórtico de pista.js está a 62 × a escala e tem 10 × a escala de altura: a faixa de 8,4 × a escala vai nela)
+  const p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx);
   for (const s of [1, -1]) {
-    const faixa = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4 * E), new THREE.MeshBasicMaterial({ map: marcaTex("saudigp", 1024, 64), side: THREE.FrontSide }));
-    faixa.position.set(p.x, p.h + 62 * E, p.y); faixa.rotation.y = rot + (s > 0 ? 0 : Math.PI); faixa.translateZ(s * 1.7); add(faixa);
+    const faixa = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4), new THREE.MeshBasicMaterial({ map: marcaTex("saudigp", 1024, 64), side: THREE.FrontSide }));
+    faixa.position.set(p.x, p.h + 62, p.y); faixa.rotation.y = rot + (s > 0 ? 0 : Math.PI); faixa.translateZ(s * 1.7); add(faixa);
   }
 }

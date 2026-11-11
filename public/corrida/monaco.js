@@ -74,7 +74,7 @@ function arquibancadasMonaco(tr, add, predioEm) {
 export function cenarioMonaco(tr, ctx) {
   const { add, hAt } = ctx, { pts, n } = tr, L = tr.wallLat, reservado = (tr.reservado ||= []);
   tr.arquibancadas = [];
-  tr.elevarGente = 12 * (tr.escala ?? 1); // a galera e os fiscais sobem sobre degraus para aparecer por cima da barreira (alta, até 20)
+  tr.elevarGente = 12; // a galera e os fiscais sobem sobre degraus para aparecer por cima da barreira (alta, até 20)
   if (Math.abs(D.projecao.mundo - tr.t.world) > 1) console.warn("Mônaco: os dados (kit/monaco/dados.js) foram gerados para outro tamanho de mundo; rode ferramentas/monaco-dados.js de novo");
   const lista = lerPredios(tr); adensarRua(tr, lista); const predioEm = indiceDePredios(lista);
   tr.predioEmMonaco = predioEm;

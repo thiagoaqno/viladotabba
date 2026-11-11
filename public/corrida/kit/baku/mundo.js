@@ -4,8 +4,6 @@
 import DADOS from "./dados.js";
 
 export const D = DADOS;
-// quanto a régua do mundo cresceu desde o desenho (1 u = 0,415 m, k = 2,4096): as distâncias fixas em unidades do cenário (grades, folgas) multiplicam por KR
-export const KR = D.projecao.k / 2.4096;
 export const VK = D.projecao.vk; // unidades de altura por metro de altitude
 export const NIVEL_DO_MAR = (-27 - D.projecao.mn) * VK; // o mar Cáspio fica a -27 m; a altura da pista é a altitude menos a da volta mais baixa
 const suave = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
@@ -35,7 +33,7 @@ export function altitude(x, z) {
 
 // ---------- o mar: a distância com sinal até a costa de OpenStreetMap (positivo na água) ----------
 let sdf = null;
-const CEL = 40 * KR, MARGEM = 1400 * KR;
+const CEL = 40, MARGEM = 1400;
 function montarMar() {
   const P = D.mar, n = P.length, mundo = D.projecao.mundo, x0 = -MARGEM, N = Math.ceil((mundo + MARGEM * 2) / CEL) + 1, g = new Float32Array(N * N);
   if (n < 3) { g.fill(-9999); sdf = { g, N, x0 }; return; }

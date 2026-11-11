@@ -7,9 +7,6 @@ import { canvasTex } from "../../cena.js";
 import { sorteio } from "../comum.js";
 
 const cor3 = (c) => new THREE.Color(c);
-// As torres de verdade em unidades (1 u = 0,2083 m): a Eureka Tower tem 297 m no total (1 426 u: o corpo de 1 170, a coroa dourada de 160 e a antena de 96; antes 1 910 u = 398 m), as Rialto Towers 251 m e 185 m (1 205 e 890 u; antes
-// 1 050 e 880), a Australia 108 tem 317 m (1 522 u; antes 1 250). Só as torres de fundo (as 150 do miolo, de 135 a 280 m) vão pelo `escala`.
-const EUREKA = 1170, COROA = 160, ANTENA = 96, RIALTO = [1205, 890], AUSTRALIA108 = 1522;
 
 // a textura das janelas: vidro com a grade clara (`vidro`) ou fachada de pedra com janelinhas
 function janelas(vidro) {
@@ -71,14 +68,14 @@ export function cidade(tr, add, { x0, x1, z0, fundo = 1000, escala = 1, bruma = 
   // as de sempre: Eureka Tower (vidro azul escuro, a coroa dourada e a faixa vermelha), Rialto (dois blocos de vidro preto), Australia 108
   const eu = [cx + meia * 0.28, z0 - 260];
   if (livre(eu[0], eu[1])) {
-    const y0 = torre(eu[0], eu[1], 96, EUREKA, 96, "#17304d", vid, { ry: 0.2 });
-    topos.caixa(eu[0], eu[1], y0 + EUREKA, 100, COROA, 100, 0.2, cor3("#c99a1c").lerp(ar, 0.2), cor3("#ffd54a").lerp(ar, 0.15), 40, 14);
-    topos.caixa(eu[0], eu[1], y0 + EUREKA + COROA, 4, ANTENA, 4, 0, cor3("#cfd4d9").lerp(ar, 0.3), cor3("#cfd4d9").lerp(ar, 0.3), 3, 14);
-    topos.caixa(eu[0] - 49, eu[1] + 49, y0, 8, EUREKA, 8, 0.2, cor3("#b3202c").lerp(ar, 0.3), cor3("#d6303c").lerp(ar, 0.2), 4, 14); // a faixa vermelha da quina
+    const y0 = torre(eu[0], eu[1], 96, 1500 * escala, 96, "#17304d", vid, { ry: 0.2 });
+    topos.caixa(eu[0], eu[1], y0 + 1500 * escala, 100, 190, 100, 0.2, cor3("#c99a1c").lerp(ar, 0.2), cor3("#ffd54a").lerp(ar, 0.15), 40, 14);
+    topos.caixa(eu[0], eu[1], y0 + 1500 * escala + 190, 4, 220, 4, 0, cor3("#cfd4d9").lerp(ar, 0.3), cor3("#cfd4d9").lerp(ar, 0.3), 3, 14);
+    topos.caixa(eu[0] - 49, eu[1] + 49, y0, 8, 1500 * escala, 8, 0.2, cor3("#b3202c").lerp(ar, 0.3), cor3("#d6303c").lerp(ar, 0.2), 4, 14); // a faixa vermelha da quina
   }
-  for (const [dx, h, g] of [[-0.18, RIALTO[0], "#0f161d"], [-0.14, RIALTO[1], "#151e27"]]) { const x = cx + meia * dx, z = z0 - 200 - (g === "#0f161d" ? 0 : 90); if (livre(x, z)) torre(x, z, 100, h, 80, g, vid, { ry: 0.1, jan: 18 }); }
+  for (const [dx, h, g] of [[-0.18, 1050, "#0f161d"], [-0.14, 880, "#151e27"]]) { const x = cx + meia * dx, z = z0 - 200 - (g === "#0f161d" ? 0 : 90); if (livre(x, z)) torre(x, z, 100, h * escala, 80, g, vid, { ry: 0.1, jan: 18 }); }
   const au = [cx + meia * 0.05, z0 - 380];
-  if (livre(au[0], au[1])) { const y0 = torre(au[0], au[1], 90, AUSTRALIA108, 90, "#1a4666", vid, { ry: 0.5, jan: 14 }); topos.caixa(au[0], au[1], y0 + 560, 118, 70, 118, 0.5, cor3("#d9a91f").lerp(ar, 0.25), cor3("#ffd24a").lerp(ar, 0.2), 30, 14); }
+  if (livre(au[0], au[1])) { const y0 = torre(au[0], au[1], 90, 1250 * escala, 90, "#1a4666", vid, { ry: 0.5, jan: 14 }); topos.caixa(au[0], au[1], y0 + 560, 118, 70, 118, 0.5, cor3("#d9a91f").lerp(ar, 0.25), cor3("#ffd24a").lerp(ar, 0.2), 30, 14); }
   const matV = new THREE.MeshStandardMaterial({ map: janelas(true), vertexColors: true, roughness: 0.35, metalness: 0.25, fog: false });
   const matP = new THREE.MeshStandardMaterial({ map: janelas(false), vertexColors: true, roughness: 0.85, fog: false });
   const matT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.4, fog: false });

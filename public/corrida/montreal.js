@@ -4,7 +4,7 @@
 // 1. a terra e a água: a ilha, o rio em volta, a bacia olímpica de remo ao lado das retas, a ilha Sainte-Hélène (kit/montreal/terra.js);
 // 2. a reta dos boxes (um quadro só, com o x ao longo da pista e o z para o lado dos boxes, o oeste): a plataforma de gramado, o prédio dos
 //    boxes de 2019 (kit/montreal/predio.js), o paddock atrás (motorhomes, tendas e carretas) e, do outro lado, a arquibancada principal
-//    em quatro módulos (kit/montreal/tribuna.js, no tamanho real) com a bacia olímpica atrás;
+//    em quatro módulos (kit 2: tribunaCoberta) com a bacia olímpica atrás;
 // 3. os muros de concreto com alambrado, os blocos vermelhos e brancos e o Muro dos Campeões ("Bienvenue au Québec") na saída da chicane
 //    final (kit/montreal/muros.js);
 // 4. o que se vê ao longe: o skyline de Montreal a oeste, a ponte Jacques-Cartier ao norte e o Biosfera na ilha Sainte-Hélène
@@ -17,18 +17,15 @@
 import * as THREE from "three";
 import { marcaTex } from "./kit/marcas.js";
 import { lotes, instancias, sorteio, sinalDaCurva, livre } from "./kit/comum.js";
-import { tendaPaddock } from "./kit/coberturas.js";
+import { tribunaCoberta, tendaPaddock } from "./kit/coberturas.js";
 import { boxEquipe } from "./kit/box-equipe.js";
 import { Montador, solido } from "./kit/montagem.js";
 import { registrarMarcasMontreal } from "./kit/montreal/marcas.js";
 import { terraMontreal, matRelva, NIVEL } from "./kit/montreal/terra.js";
 import { predioDosBoxes2019 } from "./kit/montreal/predio.js";
-import { muros, blocos, muroDosCampeoesMontreal } from "./kit/montreal/muros.js";
+import { muros, blocos, muroDosCampeoesMontreal, MURO_LAT } from "./kit/montreal/muros.js";
 import { skyline, ponteJacquesCartier, biosfera } from "./kit/montreal/cidade.js";
 import { bordos, choupos, bandeirasDaTorcida } from "./kit/montreal/parque.js";
-import { beiradaSolida } from "./kit/montreal/chao.js";
-import { ambienteMontreal, postesDRS } from "./kit/montreal/ambiente.js";
-import { tribunaReal } from "./kit/montreal/tribuna.js";
 
 registrarMarcasMontreal();
 
@@ -82,19 +79,17 @@ function reta(tr, { add }) {
   predio.position.set(0, -0.3, PREDIO.lat); predio.rotation.y = Math.PI; g.add(predio);
   for (let x = -PREDIO.comprimento / 2; x <= PREDIO.comprimento / 2; x += 60) reservar(x, PREDIO.lat + PREDIO.fundo / 2, 78);
   // a arquibancada principal, do outro lado: quatro módulos de concreto de frente para os boxes, a bacia olímpica atrás
-  // (escala real: a tribuna de kit/montreal/tribuna.js, com o degrau de tr.escala, 6 × E de altura e 9 × E de fundo; a de antes, tribunaCoberta,
-  // tinha o degrau de 1,25 × 1,77 m do carro grande. 24 degraus de 0,5 m dão 12 m de altura, perto dos 12 degraus × 1,25 m de antes)
-  const zT = -(W / 2 + 36), E = tr.escala ?? 1, DEG = 24, dH = 6 * E, dF = 9 * E;
+  const zT = -(W / 2 + 36);
   for (let k = 0; k < 4; k++) {
-    const t = tribunaReal({
-      escala: E, comprimento: 300, degraus: DEG, secoes: 6, publico: 0.62, semente: 21 + k * 5, alcance: k % 3 === 0 ? 0.75 : 0.5, vao: 60,
+    const t = tribunaCoberta({
+      comprimento: 300, degraus: 12, altura: 6, fundo: 8.5, secoes: 6, publico: 0.62, semente: 21 + k * 5, alcance: k % 3 === 0 ? 0.75 : 0.5, folga: 16, vao: 60,
       cores: k % 2 ? ["#d52b1e", "#f4f4f2", "#d52b1e", "#1b4f9c", "#f4f4f2", "#d52b1e"] : ["#f4f4f2", "#d52b1e", "#f4f4f2", "#d52b1e", "#1b4f9c", "#f4f4f2"],
       cobertura: k % 3 === 0 ? "#f6f6f4" : null, estrutura: "#8a9096", camisas: CAMISAS,
     });
-    t.position.set((k - 1.5) * 306, -0.45, zT); g.add(t);
+    t.position.set((k - 1.5) * 306, -1.2, zT); g.add(t);
     for (let j = 0; j < 7; j++) { // as bandeiras nos degraus de cima
-      const u = (k - 1.5) * 306 + (j - 3) * 40 + ((j * 37 + k * 11) % 17) - 8, fila = 10 + ((j * 3 + k) % 12), [fx, fz] = mundo(u, zT - 1.5 - fila * dF);
-      flags.push({ x: fx, y: p.h + (fila + 1) * dH + 2, z: fz, ry: aoLongo(p) + (((j * 13 + k * 7) % 10) - 5) * 0.08, s: 0.9 + ((j + k) % 5) * 0.12 });
+      const u = (k - 1.5) * 306 + (j - 3) * 40 + ((j * 37 + k * 11) % 17) - 8, fila = 5 + ((j * 3 + k) % 6), [fx, fz] = mundo(u, zT - 3 - fila * 8.5);
+      flags.push({ x: fx, y: p.h + (fila + 1) * 6 + 5, z: fz, ry: aoLongo(p) + (((j * 13 + k * 7) % 10) - 5) * 0.08, s: 0.9 + ((j + k) % 5) * 0.12 });
     }
   }
   const m = new Montador(), S = solido();
@@ -188,15 +183,13 @@ function placasDasCurvas(tr, { add }) {
 // ---------------------------------------------------------------------------------------------------------------------
 // O antes (cenario) e o depois (depois) do GP
 // ---------------------------------------------------------------------------------------------------------------------
-export function cenarioMontreal(tr, ctx, ambiente) {
+export function cenarioMontreal(tr, ctx) {
   tr.reservado ||= [];
   tr.camisasGP = CAMISAS; // a torcida solta de vida.js também veste vermelho e branco
   terraMontreal(tr, ctx);
-  beiradaSolida(tr, ctx.add); // a base sólida da pista e a grama no nível do asfalto, dos dois lados (kit/montreal/chao.js)
   reta(tr, ctx);
   paredes(tr, ctx);
   placasDasCurvas(tr, ctx);
-  if (ambiente) ambienteMontreal(tr, ctx.add, ambiente); // as bandeiras, as placas de frenagem e os postos, no chão e atrás do alambrado (kit/montreal/ambiente.js)
 }
 
 export function depoisMontreal(tr, ctx) {
@@ -213,13 +206,11 @@ export function depoisMontreal(tr, ctx) {
   choupos(tr, add, lin(-60), { fileiras: 1, passo: 70, semente: 12 }); // e alguns do lado de cá, junto da água
   choupos(tr, add, Array.from({ length: 40 }, (_, k) => [C(1500 + k * 100) - 40, 1500 + k * 100]), { fileiras: 1, passo: 60, semente: 13 }); // o cais do Vieux-Port, do outro lado do rio
   bandeirasDaTorcida(tr, add, tr.retaMontreal?.flags || []);
-  postesDRS(tr); // as placas de DRS de pista.js ganham poste até o chão
   // a faixa do circuito no pórtico da largada (o de pista.js): uma de cada lado da viga, a da frente com a normal contra o sentido da volta
-  // (a viga do pórtico de pista.js está a 62 × a escala e tem 10 × a escala de altura: a faixa de 8,4 × a escala vai nela)
-  const p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx), E = tr.escala ?? 1;
+  const p = tr.pts[0], L = tr.W / 2 + 14, rot = -Math.atan2(p.ny, p.nx);
   for (const [s, nome] of [[1, "gpcanada"], [-1, "gilles"]]) {
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4 * E), new THREE.MeshBasicMaterial({ map: marcaTex(nome, 1024, 64), side: THREE.FrontSide }));
-    f.position.set(p.x, p.h + 62 * E, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(s * 1.7); add(f);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(2 * L - 6, 8.4), new THREE.MeshBasicMaterial({ map: marcaTex(nome, 1024, 64), side: THREE.FrontSide }));
+    f.position.set(p.x, p.h + 62, p.y); f.rotation.y = rot + (s > 0 ? 0 : Math.PI); f.translateZ(s * 1.7); add(f);
   }
   void instancias;
 }

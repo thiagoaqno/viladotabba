@@ -14,24 +14,21 @@ const BOXES = window.Pistas.PISTAS.redbullring.boxes;
 const VERMELHO = "#d62828", BRANCO = "#f4f4f2";
 
 export const GP_REDBULLRING = {
-  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
-  // As peças só desta pista leem `tr.escala` ou já estão medidas em metros (a passada visual: planos/escala-real.md).
-  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6b6c71" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 577, fora: 417 }, // as zebras vermelhas e brancas
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 360, fora: 260 }, // as zebras vermelhas e brancas
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 22,
   },
   // o escape: a brita bege automática do lado de fora das curvas fechadas e as duas faixas de SUPERFICIES_ESCAPE (pistas.js), as mesmas que a física lê
-  escape: { corBrita: "#cfc4a4", largura: 26, britaCurvas: 673, brita: [[0.84, 0.875, -1], [0.89, 0.93, -1]] },
-  cenario: (tr, ctx) => cenarioRedBullRing(tr, ctx, GP_REDBULLRING.ambienteAustria), // o chão sólido, o ambiente (painéis, placas e postos no chão), a reta dos boxes, o touro, as tribunas, os sítios, as encostas e as placas
+  escape: { corBrita: "#cfc4a4", largura: 26, britaCurvas: 420, brita: [[0.84, 0.875, -1], [0.89, 0.93, -1]] },
+  cenario: (tr, ctx) => cenarioRedBullRing(tr, ctx), // a reta dos boxes, o touro, as tribunas, os sítios, as encostas e as placas
   ambiente: {
     marcas: ["spielberg", "gpaustria", "steiermark", "murtal", "kernoel", "backhendl", "strudel", "schilcher", "zeltweg", "knittelfeld"],
     outdoors: ["spielberg", "gpaustria", "steiermark", "murtal", "kernoel", "backhendl", "strudel", "schilcher", "seckau", "aichfeld", "mur", "oesterreich"],
-    posto: "spielberg", // (sem cerca e sem os mastros de duas cores: a cerca é a barreira de pista.js (`muros` em pistas.js) e as bandeiras são as da torcida)
-    placas: [200, 100, 50], // as placas de 200, 100 e 50 m, com poste até o chão
+    posto: "spielberg", cerca: false, // a cerca é a barreira de pista.js (`muros` em pistas.js)
+    mastros: false, placas: [200, 100, 50], // sem os mastros de duas cores do kit (a Áustria é vermelho, branco e vermelho: as bandeiras são as da torcida) e as placas de 200, 100 e 50 m
   },
   beira: {}, // sem as árvores pálidas de sempre: o abetal e as folhosas são de ../kit/redbullring/paisagem.js, em `depois`
   horizonte: false, // as montanhas e os morros são de ../kit/redbullring/paisagem.js
@@ -42,5 +39,3 @@ export const GP_REDBULLRING = {
     som: { campo: () => 0.9, cidade: 0.06 }, // vento nos abetos e passarinhos; as cidades ficam longe
   },
 };
-// o ambiente do kit (kit/ambiente.js) deixa painéis e placas de frenagem no ar: o Red Bull Ring usa o seu (kit/redbullring/ambiente.js), chamado em `cenario` com a mesma configuração
-GP_REDBULLRING.ambienteAustria = GP_REDBULLRING.ambiente; delete GP_REDBULLRING.ambiente;

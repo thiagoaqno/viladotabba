@@ -10,9 +10,8 @@ const CALENDARIO = [
   ["barcelona", "Barcelona"], ["redbullring", "Áustria"], ["silverstone", "Grã-Bretanha"], ["spa", "Bélgica"], ["hungaroring", "Hungria"], ["zandvoort", "Holanda"], ["monza", "Itália"], ["madri", "Madri"],
   ["baku", "Azerbaijão"], ["singapura", "Singapura"], ["austin", "Estados Unidos"], ["mexico", "Cidade do México"], ["interlagos", "São Paulo"], ["lasvegas", "Las Vegas"], ["catar", "Catar"], ["abudhabi", "Abu Dhabi"],
 ];
-// As pistas do sorteio dos calendários de 4 e 8 GPs e da temporada completa (a chave é a mesma de `pistas.js`): só as que já estão em ESCALA REAL
-// com o cenário conferido (planos/escala-real.md). As outras continuam na corrida avulsa; entram aqui quando ficarem prontas.
-const PISTAS_TRABALHADAS = ["melbourne", "suzuka", "jeddah", "monaco", "redbullring", "silverstone", "spa", "hungaroring", "zandvoort", "madri", "mexico", "interlagos", "catar", "abudhabi", "xangai", "monza", "barcelona"];
+// As pistas do sorteio dos calendários de 4 e 8 GPs e da temporada completa: hoje, todas as do CALENDARIO (a chave é a mesma de `pistas.js`).
+const PISTAS_TRABALHADAS = CALENDARIO.map(([pista]) => pista);
 // mulberry32 sobre o hash do texto (a mesma família de f1-regras.js `sorteio`, sem depender dele aqui)
 function gerador(semente) {
   let a = 2166136261; for (const c of String(semente)) { a ^= c.charCodeAt(0); a = Math.imul(a, 16777619); } a = (a >>> 0) || 1;

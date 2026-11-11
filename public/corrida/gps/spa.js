@@ -16,13 +16,10 @@ const VERMELHO = "#c8102e", BRANCO = "#f4f4f2", AMARELO = "#f2c500", PRETO = "#1
 const arq = (de, ate, lado, degraus, cor, encosto, cobertura = false) => ({ de, ate, lado, degraus, cor, encosto, cobertura, torcida: CAMISAS_SPA });
 
 export const GP_SPA = {
-  // a escala do cenário (1 u = 0,2083 m, 4,8 u por metro): as peças do kit foram desenhadas para o carro antigo (as mesmas de Interlagos: degrau 0,4 m ÷ 1,25 m e barreira
-  // 0,75 m ÷ 1,77 m dão 0,4; a pessoa de pé, 1,75 m ÷ 2,54 m, 0,69). As peças só de Spa (../spa.js e ../kit/spa/) leem a mesma `tr.escala`.
-  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#6d6e72" }, // o asfalto cinza da faixa junto da zebra
-    zebra: { cores: [VERMELHO, BRANCO], dentro: 653, fora: 422 }, // as zebras vermelhas e brancas (raios das curvas ×1,92 com a escala real: as mesmas curvas de antes têm zebra)
+    zebra: { cores: [VERMELHO, BRANCO], dentro: 340, fora: 220 }, // as zebras vermelhas e brancas
     amarelas: [[0.326, 0.35], [0.944, 0.963], [0.027, 0.046]], // as zebras altas: Les Combes, a chicane do Bus Stop e a saída da La Source
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,

@@ -58,9 +58,8 @@ export function physics(dt, spec = carOf(me())) {
   const F1 = window.F1Regras, pn = race.pneu ? F1.aderencia(race.pneu) : null;
   const dano = pn ? F1.efeitoDoDano(m && m.dano) : null; // cada 1% de dano reduz os atributos do carro em 1%
   const dirProva = E.S?.direcao, setor = Math.floor(race.idx / (tr.n / SECTORS));
-  const drsLigado = !!E.S?.config?.drs; // a F1 de 2026 não tem DRS: desligado por padrão, religa com config.drs
-  const zona = drsLigado ? F1.zonaDRS(race.idx / tr.n, tr.t.drs) : -1, amarela = dirProva?.amarelo?.setor === setor;
-  const drs = !!(drsLigado && pn && m && m.drsZona === zona && zona >= 0 && !keys.brake && !amarela && !dirProva?.safety);
+  const zona = F1.zonaDRS(race.idx / tr.n, tr.t.drs), amarela = dirProva?.amarelo?.setor === setor;
+  const drs = !!(pn && m && m.drsZona === zona && zona >= 0 && !keys.brake && !amarela && !dirProva?.safety);
   const ers = race.ers;
   if (ers) F1.carregarErs(ers, dt, keys.brake && vf > 40, !keys.gas, m?.laps || 0);
   const ersAuto = E.S?.config.ers !== "manual";
@@ -248,7 +247,7 @@ function montarAmbiente(R) {
 // os outros carros como o fim do meu passo os vê: a mesma pose do desenho (pose.js, Outro.pose), lida na hora do servidor em que o passo termina.
 // `folga`: a previsão de batida só vale com os carros enterrados mais que isto (u), tanto quanto o erro que a previsão do outro carro costuma ter
 // com o atraso desta rede (2 m por segundo de atraso, entre 10 e 40 cm): o navegador nunca bate onde o servidor, que vê a pose de verdade, não bateria.
-const MODELOS = [], EU = { L: 26.4, W: 9.1, massa: 800 }, POSE = {}, M_POR_U = 0.75 / 3.6;
+const MODELOS = [], EU = { L: 44, W: 26, massa: 800 }, POSE = {}, M_POR_U = 0.75 / 3.6;
 function outrosDoPasso(R, T) {
   let n = 0;
   for (const [id, gh] of R.ghosts) {

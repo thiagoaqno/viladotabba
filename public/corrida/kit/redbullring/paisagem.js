@@ -10,10 +10,6 @@ import * as THREE from "three";
 import { M } from "../../cena.js";
 import { livre, ocupado, sorteio } from "../comum.js";
 import { ruido, lim, passo01, dentroDaVolta } from "./lugar.js";
-import { nivelDoChao } from "./chao.js";
-
-// a altura das árvores (1 u = 0,2083 m): o abeto da Estíria tem de 25 a 35 m, 125 a 170 u (antes 170 a 300 u, 35 a 62 m)
-export const ALTURA_DO_ABETO = [125, 170];
 
 /** 0 no pasto aberto e 1 na mata fechada (manchas de ~400 a ~900 de largura, com borda macia). */
 export const mataEm = (x, z) => passo01(0.4, 0.58, ruido(x / 520, z / 520, 7) * 0.65 + ruido(x / 210, z / 210, 8) * 0.35);
@@ -52,12 +48,10 @@ export function encostasVerdes(tr, add, { fecho = () => 1, inicio = 380, fim = 1
   g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.BufferAttribute(cores, 3)); g.setIndex(idx); g.computeVertexNormals();
   const malha = add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true })));
   malha.name = `${tr.id}-encostas`; malha.receiveShadow = false; malha.castShadow = false;
-  const alturaEm = (x, z) => { // a altura da malha (a mesma divisão em dois triângulos de cima: o chão que se vê, não a bilinear)
+  const alturaEm = (x, z) => {
     const u = (x - x0) / passo, v = (z - x0) / passo; if (u < 0 || v < 0 || u >= nn || v >= nn) return 0;
     const i = Math.floor(u), j = Math.floor(v), fu = u - i, fv = v - j, a = alt[j * lado + i], b = alt[j * lado + i + 1], c = alt[(j + 1) * lado + i], d = alt[(j + 1) * lado + i + 1];
-    if (a + b + c + d < 0.5) return 0;
-    if (Math.abs(a - d) < Math.abs(b - c)) return fv >= fu ? a + (c - a) * fv + (d - c) * fu : a + (b - a) * fu + (d - b) * fv; // a diagonal a-d: (a, c, d) e (a, d, b)
-    return fu + fv <= 1 ? a + (b - a) * fu + (c - a) * fv : d + (c - d) * (1 - fu) + (b - d) * (1 - fv); // a diagonal b-c: (a, c, b) e (b, c, d)
+    return a + (b - a) * fu + (c - a) * fv + (a - b - c + d) * fu * fv;
   };
   tr.encostasAustria = { alturaEm, triangulos: idx.length / 3 };
   return { alturaEm, malha };
@@ -114,10 +108,10 @@ const material = () => new THREE.MeshStandardMaterial({ roughness: 0.95, flatSha
 /**
  * A mata da beira: logo depois da cerca, árvores altas dos dois lados onde `mataEm` manda (o pasto fica aberto), menos onde há arquibancada, prédio ou outro
  * trecho da pista. A fileira da frente tem mais folhosa e lariço (a borda clara da mata); atrás vem o abetal escuro.
- * @param {object} cfg { recuo=70, fundo=300, passo=2, densidade=1.6, alturas=ALTURA_DO_ABETO, semente, de, ate, evitar: [{ f0, f1, lado, lat0, lat1 }] }
+ * @param {object} cfg { recuo=70, fundo=300, passo=2, densidade=1.6, alturas=[170, 300], semente, de, ate, evitar: [{ f0, f1, lado, lat0, lat1 }] }
  */
 export function bosqueDaBeira(tr, add, cfg = {}) {
-  const { pts, n, W } = tr, r = sorteio(cfg.semente ?? 4242), d0 = W / 2 + (cfg.recuo ?? 70), fundo = cfg.fundo ?? 300, [aMin, aMax] = cfg.alturas || ALTURA_DO_ABETO;
+  const { pts, n, W } = tr, r = sorteio(cfg.semente ?? 4242), d0 = W / 2 + (cfg.recuo ?? 70), fundo = cfg.fundo ?? 300, [aMin, aMax] = cfg.alturas || [170, 300];
   const densidade = cfg.densidade ?? 1.6, passo = cfg.passo ?? 2, ate = cfg.ate ?? 1, de = cfg.de ?? 0, evitar = cfg.evitar || [];
   const piceas = [], copas = [], troncos = [];
   for (let i = Math.floor(de * n); i < Math.floor(ate * n); i += passo) {
@@ -129,12 +123,12 @@ export function bosqueDaBeira(tr, add, cfg = {}) {
       if (evitar.some((q) => q.lado === lado && i >= q.f0 * n && i <= q.f1 * n && d + larg > q.lat0 - 10 && d - larg < q.lat1 + 14)) continue;
       const rm = tr.murosEscape?.[lado]?.[i % n]; if (rm && d - larg < W / 2 + rm + 10) continue; // entre a pista e a barreira, nada
       if (!livre(tr, x, z, larg + 12) || ocupado(tr, x, z, i % n)) continue;
-      const y = nivelDoChao(tr, x, z) - 0.4; // no chão que se vê (a fita junto da pista, a malha longe), o pé 0,08 m dentro dele
+      const y = tr.chao(x, z) - 1.5;
       if (folhosa) {
         const tipo = r(), c = tipo < 0.4 ? VERDES_LARICIO[(r() * 3) | 0] : tipo < 0.7 ? VERDES_BETULA[(r() * 4) | 0] : VERDES_FAIA[(r() * 4) | 0];
         copas.push({ x, y: y + alt * 0.66, z, sx: larg, sy: alt * 0.36, sz: larg, r: r() * 6, c });
         troncos.push({ x, y: y + alt * 0.28, z, sx: alt * 0.022, sy: alt * 0.56, sz: alt * 0.022, c: tipo >= 0.4 && tipo < 0.7 ? "#e9e7df" : "#5b4a38" });
-      } else piceas.push({ x, y: y - alt * 0.02, z, sx: larg, sy: alt, sz: larg, r: r() * 6, c: VERDES_PICEA[(r() * VERDES_PICEA.length) | 0] });
+      } else piceas.push({ x, y, z, sx: larg, sy: alt, sz: larg, r: r() * 6, c: VERDES_PICEA[(r() * VERDES_PICEA.length) | 0] });
     }
   }
   const mat = material();
@@ -153,11 +147,11 @@ export function florestaDeLonge(tr, add, rel, { passo = 100, minDist = 250, dens
     if (d < minDist) continue;
     const mata = mataEm(px, pz), prob = lim((d - minDist) / 400, 0.15, 1) * densidade * mata * (0.35 + 0.65 * fecho(px, pz)); // o vale aberto tem menos mata e mais pasto
     if (r() > prob || ocupado(tr, px, pz)) continue;
-    const y = Math.max(nivelDoChao(tr, px, pz), rel.alturaEm(px, pz) - 3) - 0.4, alto = 120 + r() * 55; // (a malha do morro está 3 u abaixo da altura dela; o abeto de longe tem de 25 a 37 m: antes 150 a 340 u)
+    const y = Math.max(tr.chao(px, pz), rel.alturaEm(px, pz) - 3) - 1.5, alto = 150 + r() * 190;
     if (ruido(px / 260, pz / 260, 17) > 0.76 && r() < 0.7) {
       const w = alto * 0.38; copas.push({ x: px, y: y + alto * 0.36, z: pz, sx: w, sy: alto * 0.3, sz: w, r: r() * 6, c: (r() < 0.5 ? VERDES_LARICIO : VERDES_FAIA)[(r() * 3) | 0] });
       troncos.push({ x: px, y: y + alto * 0.15, z: pz, sx: alto * 0.02, sy: alto * 0.3, sz: alto * 0.02, c: "#6a5a45" });
-    } else { const w = alto * (0.2 + r() * 0.06); piceas.push({ x: px, y: y - alto * 0.02, z: pz, sx: w, sy: alto, sz: w, r: r() * 6, c: VERDES_PICEA[(r() * VERDES_PICEA.length) | 0] }); }
+    } else { const w = alto * (0.2 + r() * 0.06); piceas.push({ x: px, y, z: pz, sx: w, sy: alto, sz: w, r: r() * 6, c: VERDES_PICEA[(r() * VERDES_PICEA.length) | 0] }); }
   }
   const mat = material();
   instanciar(add, geoPiceia(true), mat, piceas, `${tr.id}-piceas-longe`);
@@ -173,10 +167,10 @@ export function fardosNosPastos(tr, add, { semente = 6161, quantos = 120, de = 6
   for (let tent = 0; tent < quantos * 12 && fardos.length < quantos; tent++) {
     const p = pts[Math.floor(r() * n)], lado = r() < 0.5 ? -1 : 1, d = W / 2 + de + r() * (ate - de), x = p.x + p.nx * lado * d, z = p.y + p.ny * lado * d;
     if (mataEm(x, z) > 0.25 || !livre(tr, x, z, de - 10) || ocupado(tr, x, z)) continue;
-    const rot = r() * 6.28, grupo = 1 + ((r() * 3) | 0);
-    for (let k = 0; k < grupo; k++) { const gx = x + Math.cos(rot) * k * 7, gz = z + Math.sin(rot) * k * 7; if (!livre(tr, gx, gz, de - 10) || ocupado(tr, gx, gz)) continue; fardos.push({ x: gx, y: nivelDoChao(tr, gx, gz) + 2.7, z: gz, sx: 1, sy: 1, sz: 1, r: rot }); } // cada fardo no chão que se vê, a base 0,06 m dentro
+    const y = tr.chao(x, z) - 1.5, rot = r() * 6.28, grupo = 1 + ((r() * 3) | 0);
+    for (let k = 0; k < grupo; k++) { const gx = x + Math.cos(rot) * k * 15, gz = z + Math.sin(rot) * k * 15; if (!livre(tr, gx, gz, de - 10) || ocupado(tr, gx, gz)) continue; fardos.push({ x: gx, y: y + 6, z: gz, sx: 1, sy: 1, sz: 1, r: rot }); }
   }
-  const geo = new THREE.CylinderGeometry(3, 3, 5.8, 10); geo.rotateZ(Math.PI / 2); // o fardo redondo de 1,3 m de diâmetro por 1,2 m de largura (antes 2,7 m e 2,5 m)
+  const geo = new THREE.CylinderGeometry(6.5, 6.5, 12, 10); geo.rotateZ(Math.PI / 2);
   instanciar(add, geo, M(0xd8bd62, { roughness: 1, flatShading: true }), fardos.map((o) => ({ ...o, c: "#ffffff" })), `${tr.id}-fardos`);
   tr.fardosAustria = fardos.length;
   return fardos.length;

@@ -7,7 +7,7 @@ import { Montador, solido } from "../montagem.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { materialDaNoite, soDeNoite, emissivoDaNoite } from "../bahrein/base.js";
 import { predios, materialFachada, JANELA, ANDAR } from "./predios.js";
-import { D, K, KR, NIVEL_AGUA, distanciaDaAgua, marco } from "./mundo.js";
+import { D, K, NIVEL_AGUA, distanciaDaAgua, marco } from "./mundo.js";
 
 const poligono = (e) => { const P = []; for (let k = 2; k < e.length; k += 2) P.push([e[k], e[k + 1]]); return P; };
 const doEsp = (codigo, filtro = () => true) => D.predios.filter((e) => (e[1] >> 3) === codigo && filtro(e));
@@ -50,11 +50,11 @@ function marinaBaySands(tr, add, mont, mats) {
     for (const lado of [-1, 1]) {
       const cx = t.x + fx * lado * Wd * 0.27, cz = t.z + fz * lado * Wd * 0.27, w = Wd * 0.34, l = Math.max(L, Wd);
       const P = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([s, u]) => [cx - fz * s * l / 2 + fx * u * w / 2, cz + fx * s * l / 2 + fz * u * w / 2]);
-      lista.push({ P, esp: 0, cor: 2, metros: 0, h: altura, cx, cz, caixa: [cx - 80 * KR, cz - 80 * KR, cx + 80 * KR, cz + 80 * KR], baixo: y0, alto: y0, topo: y0 + altura, id: 9000 + lista.length + torres.indexOf(t) * 2, dt: [-fx * lado * Wd * 0.2, -fz * lado * Wd * 0.2], corTopo: [0.55, 0.57, 0.6] });
+      lista.push({ P, esp: 0, cor: 2, metros: 0, h: altura, cx, cz, caixa: [cx - 80, cz - 80, cx + 80, cz + 80], baixo: y0, alto: y0, topo: y0 + altura, id: 9000 + lista.length + torres.indexOf(t) * 2, dt: [-fx * lado * Wd * 0.2, -fz * lado * Wd * 0.2], corTopo: [0.55, 0.57, 0.6] });
     }
     // o átrio que une as pernas até a metade da altura
     const cxa = t.x, cza = t.z, wa = Wd * 0.26, la = Math.max(L, Wd) * 0.96, Pa = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([s, u]) => [cxa - fz * s * la / 2 + fx * u * wa / 2, cza + fx * s * la / 2 + fz * u * wa / 2]);
-    lista.push({ P: Pa, esp: 0, cor: 7, metros: 0, h: altura * 0.55, cx: cxa, cz: cza, caixa: [cxa - 80 * KR, cza - 80 * KR, cxa + 80 * KR, cza + 80 * KR], baixo: y0, alto: y0, topo: y0 + altura * 0.55, id: 9100 + torres.indexOf(t), corTopo: [0.7, 0.72, 0.75] });
+    lista.push({ P: Pa, esp: 0, cor: 7, metros: 0, h: altura * 0.55, cx: cxa, cz: cza, caixa: [cxa - 80, cza - 80, cxa + 80, cza + 80], baixo: y0, alto: y0, topo: y0 + altura * 0.55, id: 9100 + torres.indexOf(t), corTopo: [0.7, 0.72, 0.75] });
     predios(tr, add, lista, { ignorar: () => false });
     // o brilho da fachada à noite (a escada de luzes que sobe pelas pernas): fitas finas e acesas nos cantos
     for (const lado of [-1, 1]) {
@@ -114,7 +114,7 @@ function flyer(tr, add, mont, mats) {
   posicionar(0);
   const antes = tr.animarPista;
   let ultimo = -1;
-  tr.animarPista = (dt, foco, t) => { antes?.(dt, foco, t); tr.relogioFlyer = (tr.relogioFlyer || 0) + dt; if (foco && Math.hypot(foco.x - fxm, foco.y - fzm) > 3200 * KR) return; if (Math.floor(tr.relogioFlyer * 8) === ultimo) return; ultimo = Math.floor(tr.relogioFlyer * 8); posicionar(tr.relogioFlyer); };
+  tr.animarPista = (dt, foco, t) => { antes?.(dt, foco, t); tr.relogioFlyer = (tr.relogioFlyer || 0) + dt; if (foco && Math.hypot(foco.x - fxm, foco.y - fzm) > 3200) return; if (Math.floor(tr.relogioFlyer * 8) === ultimo) return; ultimo = Math.floor(tr.relogioFlyer * 8); posicionar(tr.relogioFlyer); };
   tr.reservado.push([fxm, fzm, 30 * K]);
   tr.flyerSG = { x: fxm, z: fzm, raio: R, altura: hub + R };
 }

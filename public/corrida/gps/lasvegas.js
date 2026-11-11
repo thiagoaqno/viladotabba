@@ -15,7 +15,6 @@ const P = window.Pistas.PISTAS.lasvegas, BOXES = P.boxes; // o corredor dos boxe
 const F = D.frac;
 
 export const GP_LASVEGAS = {
-  escala: 0.4, escalaGente: 0.69, // escala real das peças do kit (arquibancada, barreira do escape, placas, gente): as mesmas de Interlagos e Spa
   mundo: { relevo: relevoLV, fundo: fundoLV, agua: aguaLV, cor: corDoChao, nivelMar: NIVEL_DO_MAR, banda: (tr) => tr.W / 2 + 26 }, // o chão de verdade (pista.js `mundoDe`)
   asfalto: true,
   chao: {

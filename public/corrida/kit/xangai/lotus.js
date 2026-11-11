@@ -7,7 +7,6 @@ import * as THREE from "three";
 import { Montador, solido, vidro } from "../montagem.js";
 import { NIVEL, planoDaAgua } from "./agua.js";
 import { ponto, indice, ruido } from "./lugar.js";
-import { nivelDoChao } from "./chao.js";
 
 const VERDE_A = new THREE.Color("#79ab8e"), VERDE_B = new THREE.Color("#93c2a5"), BORDA = new THREE.Color("#c4dfca"), BAIXO = new THREE.Color("#ecf2ee");
 const NIVEL_DECK = NIVEL + 9;
@@ -51,8 +50,8 @@ function passadico(m, S, a, b, larg = 9, estacas = true) {
   m.caixa(S, [cx, cy, cz], [larg, 0.9, len + 0.6], { cor: "#b8a687", ry, rx });
   const nx = Math.cos(ry), nz = -Math.sin(ry); // o lado do passadiço
   for (const s of [-1, 1]) {
-    m.caixa(S, [cx + nx * s * larg / 2, cy + 5.3, cz + nz * s * larg / 2], [0.7, 0.8, len + 0.6], { cor: "#a42a25", ry, rx }); // o corrimão a 1,1 m do piso (eram 0,7 m)
-    for (let t = 0; t <= len; t += 12) { const q = t / len; m.caixa(S, [a[0] + dx * q + nx * s * larg / 2, a[1] + dy * q + 2.65, a[2] + dz * q + nz * s * larg / 2], [0.7, 5.3, 0.7], { cor: "#a42a25" }); }
+    m.caixa(S, [cx + nx * s * larg / 2, cy + 3.2, cz + nz * s * larg / 2], [0.7, 0.8, len + 0.6], { cor: "#a42a25", ry, rx });
+    for (let t = 0; t <= len; t += 12) { const q = t / len; m.caixa(S, [a[0] + dx * q + nx * s * larg / 2, a[1] + dy * q + 1.6, a[2] + dz * q + nz * s * larg / 2], [0.7, 3.2, 0.7], { cor: "#a42a25" }); }
   }
   if (estacas) for (let t = 6; t < len; t += 34) { const q = t / len, y = a[1] + dy * q; m.cilindro(S, [a[0] + dx * q, (y + NIVEL - 4) / 2, a[2] + dz * q], [0.9, y - NIVEL + 4], { cor: "#5d3b2c", seg: 5 }); }
 }
@@ -74,7 +73,6 @@ export function paddockSobreOLago(tr, add, { lado = -1, atras = 192, ao0 = 0 } =
     aos.forEach((ao, j) => {
       const jit = (ruido(ao / 90, k / 90, 5 + fi) - 0.5) * 50, p = ponto(tr, 0, lado * (atras + k + jit * 0.6), ao0 + ao + jit), R = Rb * (0.82 + 0.5 * ruido(p.x / 70, p.z / 70, 9));
       if (campo(p.x, p.z) < R * 1.3 + 18) return;
-      if (tr.distAt(p.x, p.z) < tr.W / 2 + R * 1.15 + 30) return; // nem em cima de outro trecho da pista (a reta de trás passa ao lado do lago do paddock)
       if (pavilhoes.some((q) => Math.hypot(q.x - p.x, q.z - p.z) < q.R + R + 34)) return;
       linha.push({ x: p.x, z: p.z, R, ao, k, fi, ry: Math.atan2(p.p.ty, p.p.tx) });
     });
@@ -117,13 +115,13 @@ export function paddockSobreOLago(tr, add, { lado = -1, atras = 192, ao0 = 0 } =
     // da beira do deck até a praia (onde o campo passa de -4), de rampa em rampa até o chão
     let sx = A.x + ux * A.R * 0.98, sz = A.z + uz * A.R * 0.98, t = 0;
     while (t < d && campo(sx, sz) > -4) { sx += ux * 4; sz += uz * 4; t += 4; }
-    const chaoY = nivelDoChao(tr, sx, sz) + 0.2, praia = [sx, Math.max(chaoY, NIVEL + 0.4), sz]; // (o chão que se vê: a fita de chao.js perto da pista, a malha longe)
+    const chaoY = tr.chao(sx, sz) - 1.2 + 1.2, praia = [sx, Math.max(chaoY, NIVEL + 0.4), sz];
     passadico(m, S, [A.x + ux * A.R * 0.98, y0, A.z + uz * A.R * 0.98], praia, 9);
     // e, de lá, o caminho de pedra até o prédio
     const passos = Math.max(1, Math.floor(Math.hypot(dir.x - sx, dir.z - sz) / 26));
     for (let s = 0; s < passos; s++) {
-      const q0 = s / passos, q1 = (s + 1) / passos, x0 = sx + (dir.x - sx) * q0, z0 = sz + (dir.z - sz) * q0, x1 = sx + (dir.x - sx) * q1, z1 = sz + (dir.z - sz) * q1, yy = nivelDoChao(tr, (x0 + x1) / 2, (z0 + z1) / 2) + 0.1;
-      m.caixa(S, [(x0 + x1) / 2, yy, (z0 + z1) / 2], [9.5, 1.4, Math.hypot(x1 - x0, z1 - z0) + 0.5], { cor: "#cfc7b6", ry: Math.atan2(x1 - x0, z1 - z0) });
+      const q0 = s / passos, q1 = (s + 1) / passos, x0 = sx + (dir.x - sx) * q0, z0 = sz + (dir.z - sz) * q0, x1 = sx + (dir.x - sx) * q1, z1 = sz + (dir.z - sz) * q1, yy = tr.chao((x0 + x1) / 2, (z0 + z1) / 2) + 0.3;
+      m.caixa(S, [(x0 + x1) / 2, yy, (z0 + z1) / 2], [9.5, 0.8, Math.hypot(x1 - x0, z1 - z0) + 0.5], { cor: "#cfc7b6", ry: Math.atan2(x1 - x0, z1 - z0) });
     }
     caminhos++;
   }

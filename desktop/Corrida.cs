@@ -16,11 +16,11 @@ using System.Windows.Forms;
 static class Corrida {
   const int PORTA = 31517;
   // A janela do jogo é o motor do Chromium (o mesmo de um programa em Electron), num perfil só do jogo: sem abas, sem extensões, sem
-  // nada da navegação do dia a dia. As chaves abaixo tiram os freios que um navegador põe para economizar: a placa de vídeo sempre
-  // liberada (mesmo nas que estão na lista de bloqueio), o desenho pela GPU e o jogo sem desacelerar quando a janela perde o foco.
-  const string OTIMIZADO = " --disable-extensions --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy"
-    + " --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows"
-    + " --force_high_performance_gpu --disable-features=CalculateNativeWinOcclusion";
+  // nada da navegação do dia a dia. As chaves: a placa de vídeo FORTE nos notebooks com duas (sem ela, o Edge desenha na integrada:
+  // medido num i7-10750H com Intel UHD + RTX 2060, 2026-11-11) e o jogo sem desacelerar quando a janela perde o foco. As de desenho que
+  // tinham vindo junto (--enable-zero-copy, --enable-gpu-rasterization, --ignore-gpu-blocklist, CalculateNativeWinOcclusion) PIORAVAM:
+  // na mesma corrida rápida de 21 robôs, 38 quadros/s com elas e 64 sem elas (Edge, RTX 2060).
+  const string OTIMIZADO = " --force_high_performance_gpu --disable-extensions --disable-background-timer-throttling --disable-renderer-backgrounding";
   [STAThread]
   static void Main() {
     string pasta = AppDomain.CurrentDomain.BaseDirectory;

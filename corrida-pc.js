@@ -44,13 +44,18 @@ function attach(app) {
     } catch (e) { res.status(500).json({ ok: false }); }
   });
 
+  const Atualizar = require("./corrida-pc-atualizar.js");
+  Atualizar.rotasDoSite(app); // a lista dos arquivos do programa e cada arquivo, para ele se atualizar sozinho
+
   // ---- daqui para baixo, só no programa de PC ----
-  let online = false, ultimoAviso = "";
+  let online = false, ultimoAviso = "", avisoAtualizacao = "";
   app.get("/corrida/pc.js", (req, res) => {
     res.set("Cache-Control", "no-store").type("application/javascript");
-    res.send(`window.CORRIDA_PC = ${JSON.stringify({ pc: !!SITE, servidor: online ? SITE : "", aviso: ultimoAviso })};\n${PC_JS}`);
+    res.send(`window.CORRIDA_PC = ${JSON.stringify({ pc: !!SITE, servidor: online ? SITE : "", aviso: avisoAtualizacao || ultimoAviso })};\n${PC_JS}`);
   });
   if (!SITE) return;
+  // ao abrir, com internet: baixa só os arquivos que mudaram no site (corrida-pc-atualizar.js); vale na próxima abertura
+  setTimeout(() => Atualizar.atualizar(SITE, (t) => { avisoAtualizacao = t; }).catch((e) => console.warn("Atualização:", e.message)), 3000).unref();
   async function conferir() {
     try {
       const r = await fetch(SITE + "/api/corrida/versao", { signal: AbortSignal.timeout(5000) }), v = await r.json();

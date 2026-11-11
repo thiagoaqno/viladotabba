@@ -42,7 +42,8 @@ const lim = (v, a, b) => Math.max(a, Math.min(b, v));
 // ---------- as medidas do carro, tiradas da malha ----------
 // Padrão: o modelo F1 de agora (metros do modelo; f = para a frente a partir do meio do carro, y = acima do chão).
 const PADRAO = { tcam: { f: -0.3, y: 1.1 }, bico: { f: 1.75, y: 0.52 } };
-function medidas(kart) {
+// (exportada: a prévia da câmera na sala, ajustes-lobby.js, usa as mesmas medidas da T-cam e do bico)
+export function medidas(kart) {
   if (kart.medidas) return kart.medidas;
   const kt = kart.kt;
   if (!kt || !kt.rodas.length) return PADRAO; // o modelo ainda não montou: vale o padrão e tenta de novo no outro quadro

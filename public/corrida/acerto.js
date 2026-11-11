@@ -4,7 +4,11 @@
 //  - o ACERTO DA DIREÇÃO (window.Volante.ACERTO, volante.js: virada, tempo até o batente, volta ao centro e curva do analógico), que só
 //    mexe na ENTRADA do jogador. "Copiar valores" põe os números da direção na área de transferência para virarem o padrão do jogo.
 // O painel abre sozinho no grid da primeira corrida numa pista sem acerto guardado (jogo.js).
-import { E, me } from "./estado.js";
+import { E, me, sNow, toast } from "./estado.js";
+// O acerto só se mexe ANTES da largada (corrida) ou da abertura da sessão (classificação), como no parque fechado da F1. No jogo local
+// (localhost) o painel continua abrindo durante a corrida, para o Thiago acertar a direção jogando (pedido dele, 2026-11-11).
+const LOCAL = typeof location !== "undefined" && /^(localhost|127.0.0.1|[::1])$/.test(location.hostname);
+const valendo = () => { const S = E.S; return !!S && (S.phase === "race" || S.phase === "quali") && !!S.startAt && sNow() >= S.startAt; };
 import { ACERTO_CARRO, acertarCarro, acertoCarroPadrao, usarAcerto, alturaParada, forcaDaAsa, pistaDoAcerto, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase } from "./acerto-carro.js";
 const CAMPOS = [
   { id: "virada", nome: "Virada máxima", dica: "o quanto o volante vira com a tecla no fim (1 = o batente da física)", passo: 0.01, fmt: (v) => v.toFixed(2) },
@@ -84,8 +88,11 @@ function montar() {
   });
 }
 export function alternarAcerto(abrir) {
+  if (abrir !== false && valendo() && !LOCAL && (!painel || painel.style.display === "none")) { toast("O acerto do carro só muda antes da largada."); return; }
   if (!painel) montar();
   const ver = abrir ?? painel.style.display === "none";
   painel.style.display = ver ? "" : "none";
   if (ver) { atualizar(); desenharSugestoes(); }
 }
+// as luzes apagaram com o painel aberto: ele fecha (fora do jogo local)
+setInterval(() => { if (painel && painel.style.display !== "none" && valendo() && !LOCAL) { alternarAcerto(false); toast("Largou: o acerto ficou como estava."); } }, 1000);

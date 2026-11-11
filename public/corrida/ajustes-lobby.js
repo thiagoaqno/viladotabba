@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { makeKart, dropKart, ocultarPiloto, MODS_PADRAO } from "./carros.js";
 import { quadroEspelhosPreview } from "./espelhos.js";
 import { EDITAVEIS, camposDe, ajusteDe, definir, restaurarCamera } from "./camera-ajuste.js";
+import { medidas } from "./cameras.js";
 import { ajusteEspelho, definirEspelho, restaurarEspelhos } from "./retrovisores-ajuste.js";
 import { NOMES } from "./cameras.js";
 import { estiloHud, definirEstiloHud, htmlHudTelemetria, atualizarHudTelemetria, posicionarHudNoHalo } from "./hud-telemetria.js";
@@ -67,13 +68,14 @@ function quadro() {
   camera.aspect = w / h; const a = ajusteDe(modo), scale = kart.sc * 10, eye = kart.kt.olho;
   ocultarPiloto(kart, modo === "cockpit"); kart.roof.visible = modo !== "cockpit"; kart.cabin.visible = modo === "perto" || modo === "longe";
   if (modo === "cockpit") camera.position.set(0, eye.y * scale + 1.5 + a.y * 10, eye.z * scale - a.z * 10);
-  else if (modo === "onboard") camera.position.set(0, (1.1 + a.y) * scale, (0.3 - a.z) * scale);
-  else if (modo === "bico") camera.position.set(0, (0.52 + a.y) * scale, (-1.75 - a.z) * scale);
+  // a T-cam e o bico na MESMA conta da corrida (cameras.js): a posição medida no modelo (medidas: em cima da entrada de ar, e logo atrás da ponta do nariz)
+  // vezes o tamanho do carro, e o ajuste do jogador em metros × KS (antes a prévia usava 1,1 m e -0,3 m fixos e multiplicava o ajuste pelo tamanho do carro)
+  else if (modo === "onboard" || modo === "bico") { const M = medidas(kart)[modo === "onboard" ? "tcam" : "bico"]; camera.position.set(0, M.y * scale + a.y * 10, -(M.f * scale) - a.z * 10); }
   else camera.position.set(0, (modo === "perto" ? 15 : 29) + a.y * 10, (modo === "perto" ? 52 : 98) + a.z * 10);
   camera.position.x = a.x * 10; camera.fov = a.fov;
   // Mesma mira da corrida em pista plana e com o carro parado; o tremor depende da velocidade.
   const fora = modo === "perto" || modo === "longe", distancia = fora ? (modo === "perto" ? 60 : 85) : 70;
-  const alvoY = fora ? 4 : modo === "cockpit" ? eye.y * scale * 0.5 - (kart.kt.olhoBaixo || 0) * 70 : (modo === "onboard" ? 1.1 * scale * 0.42 : 0.52 * scale * 0.6);
+  const alvoY = fora ? 4 : modo === "cockpit" ? eye.y * scale * 0.5 - (kart.kt.olhoBaixo || 0) * 70 : (modo === "onboard" ? medidas(kart).tcam.y * scale * 0.42 : medidas(kart).bico.y * scale * 0.6);
   camera.lookAt(camera.position.x, alvoY + Math.tan(a.incl * Math.PI / 180) * distancia, fora ? -distancia : camera.position.z - distancia); camera.updateProjectionMatrix();
   posicionarHudNoHalo(host.querySelector(".hud-tele"), kart, camera, modo, host);
   quadroEspelhosPreview(kart, renderer, cena); renderer.render(cena, camera);

@@ -9,7 +9,7 @@ import { renderer, scene, cam } from "./cena.js";
 import { qualidade } from "./qualidade.js";
 import { ajusteEspelho } from "./retrovisores-ajuste.js";
 
-const LARG = 256, FOV_H = 34 * Math.PI / 180, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]), PERTO = 120; // PERTO: até onde (unidades) uma câmera de fora ainda refaz o espelho
+const LARG = 160, FOV_H = 34 * Math.PI / 180, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]), PERTO = 120; // PERTO: até onde (unidades) uma câmera de fora ainda refaz o espelho
 const GEO = new THREE.PlaneGeometry(1, 1);
 const v = new THREE.Vector3(), d = new THREE.Vector3(), cima = new THREE.Vector3(), olho = new THREE.Vector3(), M = new THREE.Matrix4();
 let contador = 0;
@@ -19,8 +19,8 @@ function criar(kart) {
   const eye = new THREE.Vector3(0, kt.olho ? kt.olho.y : 0.84, kt.olho ? kt.olho.z : 0.3); // a cabeça do piloto, no quadro do carro
   const itens = lista.map((e) => {
     const centro = new THREE.Vector3(...e.centro), n = new THREE.Vector3(...e.n), r = new THREE.Vector3(...e.r), u = new THREE.Vector3(...e.u);
-    const razao = Math.max(1.5, Math.min(6, e.w / e.h)), alt = Math.max(48, Math.min(128, Math.round(LARG / razao)));
-    const rt = new THREE.WebGLRenderTarget(LARG, alt, { type: THREE.HalfFloatType, generateMipmaps: false });
+    const razao = Math.max(1.5, Math.min(6, e.w / e.h)), alt = Math.max(32, Math.min(80, Math.round(LARG / razao)));
+    const rt = new THREE.WebGLRenderTarget(LARG, alt, { generateMipmaps: false }); // (160 px de largura e 8 bits por cor: o espelho é pequeno na tela; era 256 px em meio-float)
     rt.texture.wrapS = THREE.RepeatWrapping; rt.texture.repeat.x = -1; rt.texture.offset.x = 1; // espelhada
     const mat = new THREE.MeshBasicMaterial({ map: rt.texture }), painel = new THREE.Mesh(GEO, mat);
     painel.scale.set(e.w * 0.98, e.h * 0.98, 1); painel.position.copy(centro).addScaledVector(n, 0.004); painel.quaternion.setFromRotationMatrix(M.makeBasis(r, u, n)); // (o plano olha para onde a face olha)
@@ -30,7 +30,7 @@ function criar(kart) {
     // assim se vê a pista e os carros atrás e, na borda de dentro, só um pedacinho da lateral do próprio carro. O raio do olho refletido pela face
     // apontava para a carroceria)
     const lado = Math.sign(centro.x || 1), refl = new THREE.Vector3(); void eye; void n;
-    const camera = new THREE.PerspectiveCamera(2 * Math.atan(Math.tan(FOV_H / 2) / razao) * 180 / Math.PI, razao, 0.5, 1800);
+    const camera = new THREE.PerspectiveCamera(2 * Math.atan(Math.tan(FOV_H / 2) / razao) * 180 / Math.PI, razao, 0.5, 900); // (até 900 u, uns 190 m: mais longe que isso, num retrovisor, é um ponto; era 1.800 e cada espelho desenhava quase a pista toda)
     return { e, lado, centro: centro.clone().addScaledVector(n, 0.03), refl, rt, mat, painel, cam: camera, feito: false };
   });
   return (kart.espelho = { itens });

@@ -7,9 +7,10 @@
 import { E, me, sNow, toast } from "./estado.js";
 // O acerto só se mexe ANTES da largada (corrida) ou da abertura da sessão (classificação), como no parque fechado da F1. No jogo local
 // (localhost) o painel continua abrindo durante a corrida, para o Thiago acertar a direção jogando (pedido dele, 2026-11-11).
-const LOCAL = typeof location !== "undefined" && /^(localhost|127.0.0.1|[::1])$/.test(location.hostname);
+const LOCAL = typeof location !== "undefined" && /^(localhost|127.0.0.1|[::1])$/.test(location.hostname) && !window.CORRIDA_PC?.pc; // (o programa de PC também roda em 127.0.0.1, mas é jogo de verdade)
 // No contrarrelógio (e no treino livre da carreira, que é um contrarrelógio: menu.js, ?treino=) não há parque fechado: o acerto muda com o carro andando.
-const valendo = () => { const S = E.S; return !!S && !S.config?.contrarrelogio && (S.phase === "race" || S.phase === "quali") && !!S.startAt && sNow() >= S.startAt; };
+// (desde 2026-11-11 vale a sessão inteira, não só depois das luzes: o acerto é só no lobby, nem na transmissão nem no grid)
+const valendo = () => { const S = E.S; return !!S && !S.config?.contrarrelogio && (S.phase === "race" || S.phase === "quali"); };
 import { ACERTO_CARRO, acertarCarro, acertoCarroPadrao, usarAcerto, alturaParada, forcaDaAsa, pistaDoAcerto, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase } from "./acerto-carro.js";
 const CAMPOS = [
   { id: "virada", nome: "Virada máxima", dica: "o quanto o volante vira com a tecla no fim (1 = o batente da física)", passo: 0.01, fmt: (v) => v.toFixed(2) },
@@ -89,11 +90,11 @@ function montar() {
   });
 }
 export function alternarAcerto(abrir) {
-  if (abrir !== false && valendo() && !LOCAL && (!painel || painel.style.display === "none")) { toast("O acerto do carro só muda antes da largada."); return; }
+  if (abrir !== false && valendo() && !LOCAL && (!painel || painel.style.display === "none")) { toast("O acerto do carro só muda no lobby, antes da corrida."); return; }
   if (!painel) montar();
   const ver = abrir ?? painel.style.display === "none";
   painel.style.display = ver ? "" : "none";
   if (ver) { atualizar(); desenharSugestoes(); }
 }
 // as luzes apagaram com o painel aberto: ele fecha (fora do jogo local)
-setInterval(() => { if (painel && painel.style.display !== "none" && valendo() && !LOCAL) { alternarAcerto(false); toast("Largou: o acerto ficou como estava."); } }, 1000);
+setInterval(() => { if (painel && painel.style.display !== "none" && valendo() && !LOCAL) { alternarAcerto(false); toast("A sessão começou: o acerto ficou como estava."); } }, 1000);

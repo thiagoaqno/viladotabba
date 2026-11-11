@@ -70,7 +70,8 @@ const PREDIO = { lat: 158, comprimento: 540, profundidade: 54 }; // a frente do 
 function colocar(tr, g, i, lat, { paraPista = true, dx = 0, y = null } = {}) {
   const p = tr.pts[((i % tr.n) + tr.n) % tr.n], s = Math.sign(lat) * (paraPista ? -1 : 1);
   const x = p.x + p.nx * lat + p.tx * dx, z = p.y + p.ny * lat + p.ty * dx;
-  g.position.set(x, y ?? nivelDoChao(tr, x, z), z); // (o chão que se vê: a fita de kit/jeddah/chao.js perto da pista, a malha longe dela) g.rotation.y = Math.atan2(p.nx * s, p.ny * s);
+  g.position.set(x, y ?? nivelDoChao(tr, x, z), z); // (o chão que se vê: a fita de kit/jeddah/chao.js perto da pista, a malha longe dela)
+  g.rotation.y = Math.atan2(p.nx * s, p.ny * s); // (estava dentro do comentário da linha de cima: nada girava, e as tribunas e os telões atravessavam a pista nas curvas)
   return { x, z };
 }
 

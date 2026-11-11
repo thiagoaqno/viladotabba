@@ -1,0 +1,62 @@
+# Corrida da Galera — monta o PROGRAMA DE PC (o instalador para Windows) e publica na release "programa-pc" do GitHub.
+# Roda só quando o Thiago manda (Actions > Programa de PC > Run workflow): é o "lançar update". O link para baixar fica sempre o mesmo:
+#   https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe
+# O que vai dentro: o lançador (desktop/Corrida.cs), um node.exe e o jogo (server.js e public/, sem testes nem docs).
+name: Programa de PC
+
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: "Endereço do site (para jogar online e mandar os recordes), ex.: https://exemplo.com"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  montar:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Dependências do jogo (sem as de teste)
+        run: npm ci --omit=dev
+      - name: Montar a pasta dist
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/app, dist/node | Out-Null
+          Copy-Item (Get-Command node).Source dist/node/node.exe
+          # o jogo: tudo, menos o que só serve para desenvolver
+          robocopy . dist/app /E /NFL /NDL /NJH /NJS /XD .git .github .claude dados tests docs planos dist saida desktop ferramentas-prints test-results playwright-report /XF *.md fly.toml
+          if ($LASTEXITCODE -ge 8) { exit 1 } else { $global:LASTEXITCODE = 0 }
+          Set-Content -NoNewline -Encoding ascii dist/site.txt "${{ inputs.site }}"
+          # o ícone: um .ico com o PNG de 192 px dentro (o formato aceita PNG direto)
+          $png = [IO.File]::ReadAllBytes("public/corrida/icone-192.png")
+          $ico = New-Object IO.MemoryStream; $w = New-Object IO.BinaryWriter($ico)
+          $w.Write([UInt16]0); $w.Write([UInt16]1); $w.Write([UInt16]1)
+          $w.Write([Byte]192); $w.Write([Byte]192); $w.Write([Byte]0); $w.Write([Byte]0); $w.Write([UInt16]1); $w.Write([UInt16]32)
+          $w.Write([UInt32]$png.Length); $w.Write([UInt32]22); $w.Write($png); $w.Flush()
+          [IO.File]::WriteAllBytes("dist/corrida.ico", $ico.ToArray())
+      - name: Compilar o lançador
+        shell: pwsh
+        run: |
+          & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" -nologo -target:winexe -win32icon:dist/corrida.ico -r:System.Windows.Forms.dll "-out:dist/Corrida da Galera.exe" desktop/Corrida.cs
+          if (!(Test-Path "dist/Corrida da Galera.exe")) { exit 1 }
+      - name: Montar o instalador
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $env:VERSAO_PC = "1.0.${{ github.run_number }}"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" desktop/instalador.iss
+          if (!(Test-Path saida/CorridaDaGalera-Setup.exe)) { exit 1 }
+      - name: Publicar na release programa-pc
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view programa-pc 2>$null
+          if ($LASTEXITCODE -ne 0) { gh release create programa-pc --title "Corrida da Galera para PC" --notes "O instalador da Corrida da Galera para Windows. Baixe, instale e jogue: funciona sem internet, e com internet entra nas salas do site." }
+          gh release upload programa-pc saida/CorridaDaGalera-Setup.exe --clobber

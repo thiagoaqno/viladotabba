@@ -39,11 +39,11 @@ jobs:
           robocopy . dist/app /E /NFL /NDL /NJH /NJS /XD $fora /XF *.md fly.toml
           if ($LASTEXITCODE -ge 8) { exit 1 } else { $global:LASTEXITCODE = 0 }
           Set-Content -NoNewline -Encoding ascii dist/site.txt "${{ inputs.site }}"
-          # o ícone: um .ico com o PNG de 192 px dentro (o formato aceita PNG direto)
-          $png = [IO.File]::ReadAllBytes("public/corrida/icone-192.png")
+          # o ícone: um .ico com o PNG de 256 px dentro (public/corrida/icone-256.png; no .ico, largura e altura 0 = 256 px; o formato aceita PNG direto)
+          $png = [IO.File]::ReadAllBytes("public/corrida/icone-256.png")
           $ico = New-Object IO.MemoryStream; $w = New-Object IO.BinaryWriter($ico)
           $w.Write([UInt16]0); $w.Write([UInt16]1); $w.Write([UInt16]1)
-          $w.Write([Byte]192); $w.Write([Byte]192); $w.Write([Byte]0); $w.Write([Byte]0); $w.Write([UInt16]1); $w.Write([UInt16]32)
+          $w.Write([Byte]0); $w.Write([Byte]0); $w.Write([Byte]0); $w.Write([Byte]0); $w.Write([UInt16]1); $w.Write([UInt16]32)
           $w.Write([UInt32]$png.Length); $w.Write([UInt32]22); $w.Write($png); $w.Flush()
           [IO.File]::WriteAllBytes("dist/corrida.ico", $ico.ToArray())
       - name: Conferir que o jogo montado liga

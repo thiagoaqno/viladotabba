@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <script src="/semzoom.js"></script>
 <title>Vila da Galera</title>
-<link rel="icon" href="/emblema.svg" type="image/svg+xml">
+<link rel="icon" href="/vila-icone.png" type="image/png">
 <script>
   // links antigos do leilão (/?sala=ABCDE) agora vivem em /leilao/
   if (new URLSearchParams(location.search).get("sala")) location.replace("/leilao/" + location.search);
@@ -24,7 +24,7 @@ button{font:inherit;cursor:pointer}
 
 .top{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:max(10px,env(safe-area-inset-top)) 14px 10px;pointer-events:none}
 .brand{display:flex;align-items:center;gap:10px;pointer-events:auto;background:#0a1233cc;border:2px solid #ffffff22;border-radius:14px;padding:6px 14px 6px 8px;backdrop-filter:blur(4px)}
-.brand img{width:30px;height:34px}
+.brand img{width:34px;height:34px;border-radius:8px}
 .brand h1{margin:0;font:400 24px/1 "Lilita One",sans-serif;letter-spacing:.01em}
 .brand h1 span{color:var(--gold)}
 .brand small{display:block;font:600 12px Figtree,sans-serif;color:#9fb0d9;margin-top:3px}
@@ -237,7 +237,7 @@ canvas.mini.off{display:none}
 html,body{background:#80b795;color:var(--ink)}
 .top{align-items:flex-start;padding:max(12px,env(safe-area-inset-top)) 14px 0}
 .brand{background:#fff9e9f5;color:#203a37;border:2px solid #ffffff;border-radius:18px;box-shadow:0 5px 0 #28675966,0 9px 25px #17453a22;padding:8px 14px 8px 9px;gap:9px;backdrop-filter:none}
-.brand img{width:30px;height:34px}
+.brand img{width:34px;height:34px;border-radius:8px}
 .avenida-label{display:block;color:#d85649;font:800 11px/1 "Bricolage Grotesque",sans-serif;letter-spacing:.025em}
 .brand h1{font:800 22px/.98 "Bricolage Grotesque",sans-serif;letter-spacing:-.045em;margin:3px 0 0}
 .brand h1 span{color:#203a37}
@@ -273,7 +273,7 @@ canvas.mini{width:132px;height:132px;background:#76ac83;border:3px solid #fff9e9
 <canvas id="mini" class="mini" width="64" height="64" aria-hidden="true"></canvas>
 
 <header class="top">
-  <div class="brand"><img src="/emblema.svg" alt=""><div><span class="avenida-label">Av. Paulista</span><h1>Vila da <span>Galera</span></h1><small id="online">conectando…</small></div></div>
+  <div class="brand"><img src="/vila-logo.png" alt=""><div><span class="avenida-label">Av. Paulista</span><h1>Vila da <span>Galera</span></h1><small id="online">conectando…</small></div></div>
   <div class="tools">
     <button class="tbtn" id="bNick" title="Trocar o nick">👤 <span class="tx" id="bNickTx">Nick</span></button>
     <button class="tbtn battle" id="bTeam" title="Batalhas de Galeramon, Pokémon ou Naruto Shippuden">⚔️<span class="tx keep"> Batalha</span></button>

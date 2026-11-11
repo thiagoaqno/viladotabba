@@ -4,26 +4,29 @@ Depois de configurado uma vez, **todo merge na `main` publica sozinho**: o GitHu
 
 Enquanto os segredos do passo 4 não estiverem cadastrados, o deploy é pulado sem erro.
 
-## 1. A chave de deploy (no seu PC, uma vez)
+Tudo abaixo dá para fazer pelo **console web da VPS** (hPanel da Hostinger > VPS > o botão do terminal no navegador), sem instalar nada no PC.
 
-No PowerShell do seu PC:
+## 1. Descobrir como a VPS está (uma vez)
 
-```powershell
-ssh-keygen -t ed25519 -C "deploy-github" -f $HOME\.ssh\deploy_vps -N '""'
-Get-Content $HOME\.ssh\deploy_vps.pub
-```
-
-Isso cria duas coisas: `deploy_vps` (a chave **privada**, que vai para o GitHub) e `deploy_vps.pub` (a **pública**, que vai para a VPS). A linha que o segundo comando mostra é a pública.
-
-## 2. Autorizar a chave na VPS (uma vez)
-
-Entre na VPS como sempre (o terminal do hPanel da Hostinger ou `ssh usuario@ip`) e cole a linha da chave pública no fim deste arquivo:
+Cole no console e veja o resultado (ou mande para o Claude):
 
 ```bash
-mkdir -p ~/.ssh && chmod 700 ~/.ssh
-nano ~/.ssh/authorized_keys      # cole a linha no fim, salve com Ctrl+O, Enter, Ctrl+X
-chmod 600 ~/.ssh/authorized_keys
+whoami; hostname -I; node -v; (pm2 list || echo "sem pm2"); ls ~; find / -maxdepth 4 -name server.js -not -path "*/node_modules/*" 2>/dev/null
 ```
+
+Isso mostra o usuário (vai em `VPS_USER`), o IP (vai em `VPS_HOST`; o primeiro número), a versão do Node, se o jogo já roda pelo pm2 e em que pasta está o `server.js` (vai em `VPS_PASTA`, se não for `~/viladotabba`).
+
+## 2. A chave de deploy, criada na própria VPS (uma vez)
+
+No console:
+
+```bash
+ssh-keygen -t ed25519 -C deploy-github -f ~/.ssh/deploy_github -N ""
+mkdir -p ~/.ssh && cat ~/.ssh/deploy_github.pub >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
+cat ~/.ssh/deploy_github
+```
+
+O último comando mostra a chave **privada**, das linhas `-----BEGIN OPENSSH PRIVATE KEY-----` até `-----END OPENSSH PRIVATE KEY-----`. Selecione tudo, com essas duas linhas, e copie: ela vai no segredo `VPS_SSH_KEY` do passo 4. Não mande essa chave para ninguém.
 
 ## 3. O jogo rodando pelo pm2 (uma vez)
 
@@ -53,8 +56,8 @@ Aba **Secrets**, botão **New repository secret**:
 
 | Nome | O que pôr |
 |---|---|
-| `VPS_HOST` | o IP da VPS (está no hPanel, na página da VPS) |
-| `VPS_USER` | o usuário com que você entra na VPS (muitas vezes `root`) |
+| `VPS_HOST` | o IP da VPS (o do passo 1, ou o da página da VPS no hPanel) |
+| `VPS_USER` | o usuário do passo 1 (muitas vezes `root`) |
 | `VPS_SSH_KEY` | o conteúdo inteiro do arquivo `deploy_vps` (a chave **privada**; no PC: `Get-Content $HOME\.ssh\deploy_vps`), incluindo as linhas `-----BEGIN` e `-----END` |
 | `VPS_PORT` | só se o SSH da VPS não for na porta 22 |
 

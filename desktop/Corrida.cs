@@ -15,6 +15,12 @@ using System.Windows.Forms;
 
 static class Corrida {
   const int PORTA = 31517;
+  // A janela do jogo é o motor do Chromium (o mesmo de um programa em Electron), num perfil só do jogo: sem abas, sem extensões, sem
+  // nada da navegação do dia a dia. As chaves abaixo tiram os freios que um navegador põe para economizar: a placa de vídeo sempre
+  // liberada (mesmo nas que estão na lista de bloqueio), o desenho pela GPU e o jogo sem desacelerar quando a janela perde o foco.
+  const string OTIMIZADO = " --disable-extensions --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy"
+    + " --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows"
+    + " --force_high_performance_gpu --disable-features=CalculateNativeWinOcclusion";
   [STAThread]
   static void Main() {
     string pasta = AppDomain.CurrentDomain.BaseDirectory;
@@ -48,7 +54,7 @@ static class Corrida {
     }
     string edge = AcharEdge();
     if (edge != null) {
-      var janela = Process.Start(new ProcessStartInfo(edge, "--app=" + url + " --user-data-dir=\"" + Path.Combine(dados, "janela") + "\" --no-first-run --start-maximized --autoplay-policy=no-user-gesture-required") { UseShellExecute = false });
+      var janela = Process.Start(new ProcessStartInfo(edge, "--app=" + url + " --user-data-dir=\"" + Path.Combine(dados, "janela") + "\" --no-first-run --start-maximized --autoplay-policy=no-user-gesture-required" + OTIMIZADO) { UseShellExecute = false });
       janela.WaitForExit();
     } else {
       Process.Start(url);

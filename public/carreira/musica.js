@@ -59,6 +59,8 @@
   // a partida tem o som dela (som-partida.js): a música para quando o jogo começa e volta depois, se estava tocando
   // (`tocando` continua guardado como estava: é a vontade da pessoa, não o que a partida fez)
   window.MusicaCarreira = {
+    nivel() { return vol; },
+    volume(v) { vol = Math.max(0, Math.min(1, +v)); volMexido = true; audio.volume = vol; const el = $("mVol"); if (el) el.value = Math.round(vol * 100); guardar(); }, // (o mixer de som da Corrida, corrida/mixer.js)
     calar() { calada = true; audio.pause(); },
     voltar() { if (!calada) return; calada = false; if (tocando) tocar(); },
   };

@@ -12,7 +12,15 @@ const criarMotorF1 = motorEscolhido === "v10" ? criarMotorV10 : criarMotorV6;
 export const Sound = (() => {
   let ac = null, on = store.get("corrida:sound") !== false, eng = null, skidG = null, master = null, volume = Math.max(0, Math.min(1, store.get("corrida:volume") ?? 0.7));
   // todo som passa pelo volume geral (o deslizante do cabeçalho e da corrida)
-  function ctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volume; master.connect(ac.destination); carregarAmostras(ac); } catch { return null; } } if (ac.state === "suspended") ac.resume(); return ac; }
+  // O MIXER: cada tipo de som passa por um canal com o seu volume (corrida:mixer, de 0 a 1), e todos pelo volume geral (master):
+  // o motor (o meu e o dos outros), os efeitos (batidas, zebra, pneu, ERS...), o ambiente (torcida, chuva, vento, o som da pista),
+  // o rádio do engenheiro e o narrador da transmissão. A música é o tocador da carreira (window.MusicaCarreira), fora daqui.
+  const MIX_PADRAO = { motor: 1, efeitos: 1, ambiente: 1, radio: 1, narrador: 1 };
+  const MIX = { ...MIX_PADRAO, ...(store.get("corrida:mixer") || {}) };
+  const CANAL = {};
+  function ctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volume; master.connect(ac.destination);
+    for (const k of Object.keys(MIX_PADRAO)) { CANAL[k] = ac.createGain(); CANAL[k].gain.value = MIX[k]; CANAL[k].connect(CANAL.efeitos); }
+    carregarAmostras(ac); } catch { return null; } } if (ac.state === "suspended") ac.resume(); return ac; }
   // os sons gravados da pista (public/corrida/sons/<id>.mp3, gerados por GERAR-SONS-PISTA.bat com a ElevenLabs): quando existem, a zebra
   // e a torcida tocam eles; sem o arquivo, continua o som sintetizado de cada uma
   // os sons gravados da pista (public/corrida/sons/<id>-<n>.mp3, gerados por GERAR-SONS-PISTA.bat com a ElevenLabs): o índice
@@ -32,12 +40,12 @@ export const Sound = (() => {
     ultima[id] = k; return l[k];
   }
   // um som gravado em laço (uma versão sorteada), que entra e sai devagar pelo volume
-  function laco(c, buf) { const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf; src.loop = true; g.gain.value = 0; src.connect(g).connect(master); src.start(); return { src, g }; }
+  function laco(c, buf, canal = CANAL.efeitos) { const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf; src.loop = true; g.gain.value = 0; src.connect(g).connect(canal); src.start(); return { src, g }; }
   function umaVez(id, vol, rate = 1, at = 0) {
     const c = ac, buf = escolher(id); if (!c || !buf || !on) return false;
     const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf;
     src.playbackRate.value = rate * (0.96 + Math.random() * 0.08); g.gain.value = vol * (0.88 + Math.random() * 0.24);
-    src.connect(g).connect(master); src.start(c.currentTime + at); return true;
+    src.connect(g).connect(CANAL.efeitos); src.start(c.currentTime + at); return true;
   }
   const tem = (id) => !!(amostras[id] && amostras[id].length);
   // o pit stop em partes limpas: o macaco sobe, as pistolas (duas versões diferentes, uma logo depois da outra) e, no fim da troca, o
@@ -47,34 +55,18 @@ export const Sound = (() => {
     umaVez("macaco", 0.55, 1.05); umaVez("pistola", 0.6, 1, 0.18); umaVez("pistola", 0.45, 1, 0.42); return true;
   }
   function fimDoPit() { return umaVez("macaco", 0.6, 0.95); }
-  // o ERS ligando (o overtake na tecla): o arquivo sons/ers-liga-<n>.mp3, se existir no índice (sons/indice.json); sem ele, o sintetizado:
-  // uma subida elétrica (dente de serra e quadrada uma quinta acima, de 220 a 1 900 Hz em 0,32 s, num passa-faixa que sobe junto), um
-  // estalo de ruído agudo no começo e um sininho no fim
-  function ersLiga() {
-    const c = ctx(); if (!c || !on) return;
-    if (umaVez("ers-liga", 0.6)) return;
-    const t = c.currentTime, f = c.createBiquadFilter(), g = c.createGain();
-    f.type = "bandpass"; f.Q.value = 4; f.frequency.setValueAtTime(600, t); f.frequency.exponentialRampToValueAtTime(3200, t + 0.32);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.03); g.gain.setValueAtTime(0.09, t + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.46);
-    for (const [tipo, k] of [["sawtooth", 1], ["square", 1.5]]) {
-      const o = c.createOscillator(); o.type = tipo; o.frequency.setValueAtTime(220 * k, t); o.frequency.exponentialRampToValueAtTime(1900 * k, t + 0.32);
-      o.connect(f); o.start(t); o.stop(t + 0.5);
-    }
-    f.connect(g).connect(master);
-    const n = Math.floor(c.sampleRate * 0.06), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
-    const s = c.createBufferSource(), hp = c.createBiquadFilter(), gs = c.createGain(); s.buffer = b; hp.type = "highpass"; hp.frequency.value = 3000; gs.gain.value = 0.06;
-    s.connect(hp).connect(gs).connect(master); s.start(t);
-    tone(2400, 0.14, { type: "sine", vol: 0.045, at: 0.3 });
-  }
+  // o ERS ligando (o overtake na tecla): só o som gravado que o Thiago fez (sons/ers-liga-1.mp3, no índice sons/indice.json), bem acima do
+  // motor (1,8 ×, no canal de efeitos do mixer). O sintetizado de antes saiu, e também o zumbido do MGU-K no motor (engine: ers e freio falsos)
+  function ersLiga() { if (!ctx() || !on) return; umaVez("ers-liga", 1.8); }
+
   // OS EFEITOS NOVOS da ElevenLabs (GERAR-SONS-PISTA.bat): só tocam quando o arquivo existe; sem ele, silêncio (não há versão sintetizada).
   // Os laços (o assoalho raspando, a brita, a grama, o vento) entram e saem pelo volume; os de uma vez (o fundo, o ERS acabando, o
   // limitador) tocam quando jogo.js manda.
   const lacosNovos = {};
-  function lacoNivel(id, vol, rate = 1, tau = 0.08) {
+  function lacoNivel(id, vol, rate = 1, tau = 0.08, canal = null) {
     if (!lacosNovos[id] && !(vol > 0.001)) return;
     const c = ctx(); if (!c || !tem(id)) return;
-    if (!lacosNovos[id]) lacosNovos[id] = laco(c, escolher(id));
+    if (!lacosNovos[id]) lacosNovos[id] = laco(c, escolher(id), canal || CANAL.efeitos);
     const t = c.currentTime, L = lacosNovos[id];
     L.g.gain.setTargetAtTime(on ? Math.max(0, vol) : 0, t, tau); L.src.playbackRate.setTargetAtTime(rate, t, 0.1);
   }
@@ -84,12 +76,12 @@ export const Sound = (() => {
     lacoNivel("brita", sup === "brita" ? 0.25 + 0.55 * a : 0, 0.8 + 0.4 * a, 0.05);
     lacoNivel("grama", sup === "grama" ? 0.2 + 0.5 * a : 0, 0.8 + 0.4 * a, 0.05);
   }
-  const vento = (v, dentro) => { const a = Math.min(1.3, Math.abs(v || 0) / 400); lacoNivel("vento", a * a * (dentro ? 0.55 : 0.22), 0.85 + 0.3 * a, 0.3); };
+  const vento = (v, dentro) => { const a = Math.min(1.3, Math.abs(v || 0) / 400); lacoNivel("vento", a * a * (dentro ? 0.55 : 0.22), 0.85 + 0.3 * a, 0.3, CANAL.ambiente); };
   function tone(f, dur, { type = "square", vol = 0.12, at = 0 } = {}) {
     const c = ctx(); if (!c || !on) return; const t = c.currentTime + at;
     const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(master); o.start(t); o.stop(t + dur + 0.02);
+    o.connect(g).connect(CANAL.efeitos); o.start(t); o.stop(t + dur + 0.02);
   }
   // motor de kart: dente de serra e quadrada num filtro; a rotação vem do câmbio (sobe até o corte, cai na troca e dá um
   // tranco), mais o sopro do vento, que cresce com a velocidade
@@ -100,9 +92,9 @@ export const Sound = (() => {
   let ambBus = null, ecoG = null;
   let motorF1 = null; // o motor de F1 (motor-v6.js, ou motor-v10.js com ?motor=v10), criado na primeira vez que as regras de F1 pedem
   let motorBus = null; // os motores de F1 (o meu e os dos outros) passam por aqui: abaixam enquanto o engenheiro fala
-  function barramento() { const c = ctx(); if (!c) return null; if (!ambBus) { ambBus = c.createGain(); ambBus.gain.value = 0; ambBus.connect(master); } return ambBus; }
+  function barramento() { const c = ctx(); if (!c) return null; if (!ambBus) { ambBus = c.createGain(); ambBus.gain.value = 0; ambBus.connect(CANAL.ambiente); } return ambBus; }
   function reverb(c) {
-    const conv = criarReverberacao(c); ecoG = c.createGain(); ecoG.gain.value = 0; conv.connect(ecoG).connect(master); reverbExistente = conv; return conv;
+    const conv = criarReverberacao(c); ecoG = c.createGain(); ecoG.gain.value = 0; conv.connect(ecoG).connect(CANAL.motor); reverbExistente = conv; return conv;
   }
   let reverbExistente = null;
   function engine(speed, racing, gas = true, marchaF1 = 0, rpmF1 = 0, f1 = null) {
@@ -110,10 +102,10 @@ export const Sound = (() => {
     if (!eng) {
       const o = c.createOscillator(), o2 = c.createOscillator(), o3 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
       o.type = "sawtooth"; o2.type = "square"; o3.type = "triangle"; f.type = "lowpass"; f.frequency.value = 700; g.gain.value = 0;
-      o.connect(f); o2.connect(f); o3.connect(f); f.connect(g).connect(master); g.connect(reverb(c)); o.start(); o2.start(); o3.start();
+      o.connect(f); o2.connect(f); o3.connect(f); f.connect(g).connect(CANAL.motor); g.connect(reverb(c)); o.start(); o2.start(); o3.start();
       const len = c.sampleRate, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       const src = c.createBufferSource(), wf = c.createBiquadFilter(), wg = c.createGain(); src.buffer = b; src.loop = true; wf.type = "bandpass"; wf.frequency.value = 600; wf.Q.value = 0.7; wg.gain.value = 0;
-      src.connect(wf).connect(wg).connect(master); src.start();
+      src.connect(wf).connect(wg).connect(CANAL.motor); src.start();
       eng = { o, o2, o3, f, g, wg };
     }
     const v = Math.abs(speed), t = c.currentTime;
@@ -126,7 +118,7 @@ export const Sound = (() => {
     eng.f.frequency.setTargetAtTime(500 + rpm * 1400 + v * 2, t, 0.06);
     eng.g.gain.setTargetAtTime(on && racing && !f1 ? (0.035 + rpm * 0.02) * (troca > 0 ? 0.3 : 1) : 0, t, 0.05);
     eng.wg.gain.setTargetAtTime(on && racing ? Math.min(0.05, v * 0.00011) : 0, t, 0.1);
-    if (f1) { if (!motorF1) { motorBus = c.createGain(); motorBus.connect(master); motorF1 = criarMotorF1(c, motorBus, reverbExistente); } motorF1.atualizar(t, { gas, rpm: rpmF1, marcha: marchaF1 || 1, ativo: on && racing, cam: f1.cam, lim: f1.lim || 0, ers: !!f1.ers, freio: !!f1.freio }); } else if (motorF1) motorF1.silenciar(t);
+    if (f1) { if (!motorF1) { motorBus = c.createGain(); motorBus.connect(CANAL.motor); motorF1 = criarMotorF1(c, motorBus, reverbExistente); } motorF1.atualizar(t, { gas, rpm: rpmF1, marcha: marchaF1 || 1, ativo: on && racing, cam: f1.cam, lim: f1.lim || 0, ers: false, freio: false }); } else if (motorF1) motorF1.silenciar(t);
     if (ambBus) ambBus.gain.setTargetAtTime(on && racing ? 1 : 0, t, 0.4);
     if (!racing && ecoG) ecoG.gain.setTargetAtTime(0, t, 0.1);
   }
@@ -151,7 +143,7 @@ export const Sound = (() => {
       const len = c.sampleRate * 2, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       const src = c.createBufferSource(), fc = c.createBiquadFilter(), gc = c.createGain(), fp = c.createBiquadFilter(), gp = c.createGain();
       src.buffer = b; src.loop = true; fc.type = "bandpass"; fc.frequency.value = 3200; fc.Q.value = 0.35; gc.gain.value = 0; fp.type = "bandpass"; fp.frequency.value = 2600; fp.Q.value = 0.7; gp.gain.value = 0;
-      src.connect(fc).connect(gc).connect(master); src.connect(fp).connect(gp).connect(master); src.start(); chuvaN = { gc, gp };
+      src.connect(fc).connect(gc).connect(CANAL.motor); src.connect(fp).connect(gp).connect(CANAL.motor); src.start(); chuvaN = { gc, gp };
     }
     const t = c.currentTime;
     chuvaN.gc.gain.setTargetAtTime(on ? nivel * 0.028 : 0, t, 0.3); chuvaN.gp.gain.setTargetAtTime(on ? pneus * 0.04 * (0.4 + 0.6 * nivel) : 0, t, 0.2);
@@ -195,7 +187,7 @@ export const Sound = (() => {
       const len = c.sampleRate, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       const ruido = c.createBufferSource(), fr = c.createBiquadFilter(), gr = c.createGain(); ruido.buffer = b; ruido.loop = true; fr.type = "lowpass"; fr.frequency.value = 110; fr.Q.value = 0.7; gr.gain.value = 0.8;
       tom.connect(pulso); ruido.connect(fr).connect(gr).connect(pulso); lfo.connect(prof).connect(pulso.gain); // (o volume pulsa a cada listra)
-      pulso.connect(passa).connect(saida).connect(master); tom.start(); lfo.start(); ruido.start();
+      pulso.connect(passa).connect(saida).connect(CANAL.efeitos); tom.start(); lfo.start(); ruido.start();
       zebraN = { tom, lfo, prof, pulso, passa, saida };
     }
     const t = c.currentTime, a = Math.abs(v || 0), ligado = on && a > 8, hz = Math.min(70, Math.max(6, a / 14));
@@ -214,7 +206,7 @@ export const Sound = (() => {
     if (!torcidaN && !torcidaA && !(nivel > 0.01)) return;
     const c = ctx(); if (!c) return;
     if (tem("torcida")) { // o som gravado: o rumor em laço (entra e sai devagar), o "uuuh" e a buzina quando o carro chega rápido
-      if (!torcidaA) { torcidaA = laco(c, escolher("torcida")); if (torcidaN) { torcidaN.gr.gain.value = 0; torcidaN.gv.gain.value = 0; } }
+      if (!torcidaA) { torcidaA = laco(c, escolher("torcida"), CANAL.ambiente); if (torcidaN) { torcidaN.gr.gain.value = 0; torcidaN.gv.gain.value = 0; } }
       const t = c.currentTime, n = on ? Math.max(0, Math.min(1, nivel)) : 0, rapido = Math.min(1, Math.abs(v || 0) / 300);
       torcidaA.g.gain.setTargetAtTime(n * (0.35 + 0.35 * rapido), t, 0.9);
       if (n > 0.55 && torcidaAntes <= 0.55 && rapido > 0.35 && t > uauAte + 2) {
@@ -229,7 +221,7 @@ export const Sound = (() => {
       const src = c.createBufferSource(); src.buffer = b; src.loop = true;
       const fr = c.createBiquadFilter(), gr = c.createGain(), fv = c.createBiquadFilter(), gv = c.createGain();
       fr.type = "bandpass"; fr.frequency.value = 650; fr.Q.value = 0.6; gr.gain.value = 0; fv.type = "bandpass"; fv.frequency.value = 1900; fv.Q.value = 1.4; gv.gain.value = 0;
-      src.connect(fr).connect(gr).connect(master); src.connect(fv).connect(gv).connect(master); src.start();
+      src.connect(fr).connect(gr).connect(CANAL.ambiente); src.connect(fv).connect(gv).connect(CANAL.ambiente); src.start();
       torcidaN = { fr, gr, fv, gv, buf: b };
     }
     const t = c.currentTime, n = on ? Math.max(0, Math.min(1, nivel)) : 0, rapido = Math.min(1, Math.abs(v || 0) / 300);
@@ -244,7 +236,7 @@ export const Sound = (() => {
     if (n > 0.3 && Math.random() < 0.06 * n) { // palmas soltas
       const len = Math.floor(c.sampleRate * 0.03), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
       const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "highpass"; f.frequency.value = 1200; g.gain.value = 0.03 * n;
-      s.connect(f).connect(g).connect(master); s.start(t + Math.random() * 0.05);
+      s.connect(f).connect(g).connect(CANAL.ambiente); s.start(t + Math.random() * 0.05);
     }
     torcidaAntes = n;
   }
@@ -258,7 +250,7 @@ export const Sound = (() => {
     const k = Math.min(1, forca / 260), t = c.currentTime, len = Math.floor(c.sampleRate * 0.25), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
     const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); src.buffer = b; f.type = "lowpass"; f.frequency.value = 900 + k * 2200; g.gain.value = 0.06 + k * 0.14;
-    src.connect(f).connect(g).connect(master); src.start(t);
+    src.connect(f).connect(g).connect(CANAL.efeitos); src.start(t);
     tone(70 + 30 * (1 - k), 0.18, { type: "sawtooth", vol: 0.08 + k * 0.1 });
   }
   return {
@@ -266,12 +258,14 @@ export const Sound = (() => {
     lap() { [660, 880].forEach((f, i) => tone(f, 0.15, { at: i * 0.12 })); },
     finish() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.18, { at: i * 0.13, type: "triangle", vol: 0.16 })); },
     bump() { tone(90, 0.12, { type: "sawtooth", vol: 0.12 }); },
-    skid(lvl) { const c = ctx(); if (!c) return; if (!skidG) { const len = c.sampleRate, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); src.buffer = b; src.loop = true; f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 6; g.gain.value = 0; src.connect(f).connect(g).connect(master); src.start(); skidG = g; } skidG.gain.setTargetAtTime(on && lvl ? Math.min(0.06, lvl / 4000) : 0, c.currentTime, 0.05); },
+    skid(lvl) { const c = ctx(); if (!c) return; if (!skidG) { const len = c.sampleRate, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); src.buffer = b; src.loop = true; f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 6; g.gain.value = 0; src.connect(f).connect(g).connect(CANAL.efeitos); src.start(); skidG = g; } skidG.gain.setTargetAtTime(on && lvl ? Math.min(0.06, lvl / 4000) : 0, c.currentTime, 0.05); },
     pop() { tone(700, 0.05, { vol: 0.06 }); },
     sling() { [520, 780, 1040].forEach((f, i) => tone(f, 0.12, { at: i * 0.06, type: "sawtooth", vol: 0.07 })); },
+    // o mixer: mixer() devolve os volumes; mixer(canal, v) muda um (de 0 a 1) e guarda
+    mixer(canal, v) { if (canal == null) return { ...MIX }; if (!(canal in MIX_PADRAO)) return null; MIX[canal] = Math.max(0, Math.min(1, +v)); store.set("corrida:mixer", MIX); if (CANAL[canal] && ac) CANAL[canal].gain.setTargetAtTime(MIX[canal], ac.currentTime, 0.05); return MIX[canal]; },
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
-    radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, abafar } : null; }, // o rádio do engenheiro usa o volume geral
-    narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: master, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
+    radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.radio, abafar } : null; }, // o rádio do engenheiro usa o volume geral
+    narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.narrador, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
     crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.6); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();

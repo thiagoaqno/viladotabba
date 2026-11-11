@@ -28,6 +28,7 @@ import { startItems, stopItems, stepItems } from "./itens.js";
 import { passoEfeitos, limparEfeitos, amostrasDeEfeitos } from "./efeitos.js";
 import { ACERTO_CARRO, usarPista, acertoGuardado, carregarIdeais } from "./acerto-carro.js";
 import { alternarAcerto } from "./acerto.js";
+import "./mixer.js"; // (o mixer de som: os botões [data-mixer])
 import { animarVida } from "./vida.js";
 import { ceuPronto, luzPendente } from "./ceu.js";
 import { desenhar, ajustarTela, medirQuadro, comecarMedida, compilarPos, prepararBrilhos, definirEstacao } from "./pos.js";
@@ -239,7 +240,7 @@ function loop(t) {
   if (correndo && race.box?.fase === "entra" && sNow() > (race.limitadorAte || 0)) { race.limitadorAte = sNow() + 550; Sound.limitador(); }
   if (!race.tr.mapaTorcida) montarMapaDaTorcida(race.tr, scene);
   Sound.torcida(correndo ? nivelDaTorcida(race.tr, race.car.x, race.car.y) : 0, race.car.v);
-  if (correndo && race.drsAtivo && !race.drsSom) Sound.tocar("drs", 0.6); // a asa abrindo
+  // (o som da asa abrindo, o DRS, saiu: pedido do Thiago; a F1 de 2026 não tem DRS)
   race.drsSom = !!race.drsAtivo;
   // o ERS ligando na tecla (o overtake): o som só no aperto do piloto, não no automático (que liga e desliga sozinho), e no máximo um a cada 1,5 s
   // (a borda é a da tecla com o ERS entregando: se o automático já estava ligado no vácuo, o aperto toca do mesmo jeito)
@@ -311,7 +312,8 @@ function draw(dt) {
   // o próximo checkpoint acende e pulsa; o perdido fica vermelho; os outros, apagadinhos
   for (const pt of tr.portais || []) {
     const prox = (race.sector + 1) % SECTORS, seguinte = (race.sector + 2) % SECTORS, perdido = race.perdeu === pt.k;
-    pt.g.visible = pt.k === prox || pt.k === seguinte || perdido;
+    // na F1 as bandeiras "CHECKPOINT." não aparecem (pedido do Thiago): a volta continua conferida pelos setores, só não se vê o portal
+    pt.g.visible = E.S?.config.regras !== "f1" && (pt.k === prox || pt.k === seguinte || perdido);
     if (!pt.g.visible) continue;
     pt.mat.color.setHex(perdido ? 0xff5050 : 0xffffff); pt.mat.opacity = pt.k === prox || perdido ? 1 : 0.55;
     pt.panos.forEach((q, j) => { q.rotation.y = pt.base[j] + Math.sin(now / 420 + j * 1.7 + pt.k) * 0.12; }); // balança no vento

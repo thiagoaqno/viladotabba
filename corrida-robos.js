@@ -291,10 +291,11 @@ function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equi
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
 const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0 }; // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
-// quem joga anda bem acima do "ideal" medido pelo perfil (o pneu segura mais do que a conta supõe, e o ERS/DRS da corrida
-// não entram na medida do ideal): por nível, o robô usa esta fração a mais do limite das curvas, por cima do nível que dá o
-// ideal. No médio ele bate o ideal (o difícil de antes) e no difícil passa dele, como quem joga no limite usando o ERS.
-const EMPURRAO_F1 = { facil: 0.86, medio: 1, dificil: 1.2 }; // (2026-11-11: médio e difícil mais rápidos. O ideal é medido SEM ERS/DRS, mas na corrida o robô usa ERS (~+1,3 s em Monaco); por isso o difícil mira 1,2 (passa do ideal, como quem joga no limite e ainda ativa o ERS nas retas). Acima de ~1,3 o ritmo satura: o limite de curva do pneu não cresce mais)
+// por nível, a fração do limite das curvas e da frenagem que o robô usa, por cima do nível que dá o ideal. 1 é o limite do pneu:
+// o perfil (Piloto.perfilDoNivel) para nele, então acima de 1 não muda nada.
+// (2026-11-11, #692 tinha posto o difícil em 1,2: sem o teto, isso era grip que o pneu não tem, e o robô rodava. Medido em Mônaco,
+// Verstappen de Red Bull, macio, seco, sozinho: 1,2 sem teto fazia 58,8 a 66,1 s com 4 a 6 batidas por volta; com o teto, 50,1 a 50,9 s.)
+const EMPURRAO_F1 = { facil: 0.86, medio: 1, dificil: 1 };
 function referenciaF1(room) {
   const pista = room.config.pista;
   const pf = perfil(pista, F1Equipes.specDaEquipe("mclaren"));

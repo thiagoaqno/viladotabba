@@ -170,9 +170,11 @@ function linhaDaPista(pista, t, pts, spec, ref) {
 }
 const temLinhaPronta = (pista, n) => { const a = arquivoDeLinhas()[pista]; return !!a && a.n === n; };
 // O ritmo de um nível `f` sobre o caminho `lat` (índice da pista): o `f` multiplica a velocidade de curva e a frenagem usada.
+// Os dois param no limite do pneu (1): acima dele o robô mirava curva que o pneu não segura, rodava e batia (o difícil 1,2 do
+// #692 dava 58 a 66 s em Mônaco com 4 a 6 batidas por volta, contra 50,1 s do nível 1).
 function perfilDoNivel(pts, lat, spec, ref, f) {
   const g = geometria(pts, lat, JANELA_RITMO), cap = CAP_LINHA(spec, ref);
-  return perfilNoCaminho(g.k, g.ds, cap, { latK: f * f, freioK: Math.min(1, f), soFreio: true }).v;
+  return perfilNoCaminho(g.k, g.ds, cap, { latK: Math.min(1, f * f), freioK: Math.min(1, f), soFreio: true }).v;
 }
 // O que os comandos precisam de um perfil, calculado uma vez
 function contexto(spec, ref) {

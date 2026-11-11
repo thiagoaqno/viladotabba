@@ -15,7 +15,7 @@ import { clima } from "./clima.js";
 const M = () => window.HudMfd, F = () => window.F1Regras;
 export const mfd = { aberto: true, pagina: "pneus", lista: [], linha: {}, ultimo: 0, entrada: "teclado" };
 // o que controles.js registra (a câmera e a torre são dele e do hud.js): { camera(d), torre(): alterna compacta/completa }
-import { estiloHud, definirEstiloHud } from "./hud-telemetria.js";
+import { estiloHud, definirEstiloHud, ESTILOS_HUD } from "./hud-telemetria.js";
 export const acoes = { camera: null, cameraAjuste: null, camNome: () => "", radioRival: null, torreCompacta: () => true, torreAlternar: null, mapaPerto: () => false, mapaAlternar: null };
 const LEITURA = {}; // os últimos dados que o hud passou (as linhas do painel leem daqui)
 let raiz = null, refs = {}, abas = "", paginaVista = null;
@@ -107,7 +107,7 @@ const LINHAS = {
     { rot: "Câmera", valor: () => acoes.camNome(), mudar(d) { if (acoes.camera) acoes.camera(d); } },
     { rot: "Ajuste da câmera", dica: "H", valor: () => "Abrir", mudar() { if (acoes.cameraAjuste) acoes.cameraAjuste(); } },
     { rot: "Mapa", valor: () => (acoes.mapaPerto() ? "Perto" : "Pista inteira"), mudar() { if (acoes.mapaAlternar) acoes.mapaAlternar(); } },
-    { rot: "Estilo do HUD", valor: () => estiloHud() === "telemetria" ? "Telemetria" : "Clássico", mudar() { definirEstiloHud(estiloHud() === "telemetria" ? "classico" : "telemetria"); } },
+    { rot: "Estilo do HUD", valor: () => (ESTILOS_HUD.find(([k]) => k === estiloHud()) || ESTILOS_HUD[0])[1], mudar() { const i = ESTILOS_HUD.findIndex(([k]) => k === estiloHud()); definirEstiloHud(ESTILOS_HUD[(i + 1) % ESTILOS_HUD.length][0]); } },
     { rot: "Rádio", valor: () => (window.Radio && !window.Radio.mudo ? "Ligado" : "Desligado"), mudar() { if (window.Radio) { window.Radio.silenciar(); } } },
   ],
 };

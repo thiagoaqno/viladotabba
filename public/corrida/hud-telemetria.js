@@ -2,11 +2,15 @@
 import { store } from "./estado.js";
 import * as THREE from "three";
 const CHAVE = "corrida:hud-estilo";
+// os estilos (Configurações > Geral): "classico" é o da transmissão da F1 (o novo: torre, setores e o mostrador) e "telemetria" o
+// mostrador alternativo
+// "compacto": o do novo, mas com o painel pequeno do canto (bateria e velocidade: hud-painel.js, #hDentro) em qualquer câmera
+export const ESTILOS_HUD = [["classico", "Novo (F1)"], ["compacto", "Compacto"], ["telemetria", "Telemetria"]]; // (o "antigo", os painéis de antes do estilo F1, saiu: pedido do Thiago, 2026-11-11)
 let estilo = "classico";
-try { if (store.get(CHAVE) === "telemetria") estilo = "telemetria"; } catch (_) {}
+try { const v = store.get(CHAVE); if (ESTILOS_HUD.some(([k]) => k === v)) estilo = v; } catch (_) {}
 export const estiloHud = () => estilo;
 export function definirEstiloHud(valor) {
-  estilo = valor === "telemetria" ? "telemetria" : "classico";
+  estilo = ESTILOS_HUD.some(([k]) => k === valor) ? valor : "classico";
   try { store.set(CHAVE, estilo); } catch (_) {}
   document.getElementById("race")?.classList.toggle("hud-telemetria", estilo === "telemetria");
   window.dispatchEvent(new Event("hud:estilo"));

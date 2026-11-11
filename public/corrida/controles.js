@@ -13,7 +13,7 @@ import { acoesDaTecla, botoesDe, ui, volante } from "./teclas.js";
 import { abrirTeclas } from "./teclas-ui.js";
 import { alternarAcerto } from "./acerto.js";
 import { abrirCamera, fecharCamera, cameraAberta } from "./camera-ui.js";
-import { estiloHud, definirEstiloHud } from "./hud-telemetria.js";
+import { estiloHud, definirEstiloHud, ESTILOS_HUD } from "./hud-telemetria.js";
 
 // os atalhos (teclas.js, grupo "Atalhos"): fazem o mesmo que o botão de cada coisa
 const ATALHOS = {
@@ -26,13 +26,14 @@ const ATALHOS = {
   acerto: () => alternarAcerto(),
 };
 
-// H: o HUD em três estados, clássico → telemetria → sem HUD (a pista limpa, só a cena) → clássico. O estilo fica guardado (hud-telemetria.js);
-// o "sem HUD" vale só nesta corrida, para ninguém abrir o jogo com a tela vazia sem saber por quê.
+// H: passa pelos estilos do HUD (novo, telemetria e clássico: hud-telemetria.js, ESTILOS_HUD) e depois "sem HUD" (a pista limpa) e volta ao
+// novo. O estilo fica guardado; o "sem HUD" vale só nesta corrida, para ninguém abrir o jogo com a tela vazia sem saber por quê.
 function trocarHud() {
   const r = $("race"); if (!r) return;
-  if (r.classList.contains("sem-hud")) { r.classList.remove("sem-hud"); definirEstiloHud("classico"); toast("HUD clássico"); }
-  else if (estiloHud() === "telemetria") { r.classList.add("sem-hud"); toast("Sem HUD (H de novo volta)"); }
-  else { definirEstiloHud("telemetria"); toast("HUD telemetria"); }
+  if (r.classList.contains("sem-hud")) { r.classList.remove("sem-hud"); definirEstiloHud(ESTILOS_HUD[0][0]); toast("HUD " + ESTILOS_HUD[0][1]); return; }
+  const i = ESTILOS_HUD.findIndex(([k]) => k === estiloHud());
+  if (i >= ESTILOS_HUD.length - 1) { r.classList.add("sem-hud"); toast("Sem HUD (H de novo volta)"); return; }
+  definirEstiloHud(ESTILOS_HUD[i + 1][0]); toast("HUD " + ESTILOS_HUD[i + 1][1]);
 }
 
 // câmbio manual: Shift sobe, Ctrl direito desce (redução que estouraria o giro não entra)

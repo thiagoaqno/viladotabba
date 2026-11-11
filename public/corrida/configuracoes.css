@@ -73,11 +73,15 @@
 
 /* os avisos da direção de prova: por cima da faixa "F1 RACE" da torre (o #hTorre: left 10, top 10, 236 de largura, hud-f1.css), cobrindo-a
    enquanto há aviso (a torre é redesenhada inteira de vez em quando: o aviso fica fora dela, só no mesmo lugar) */
-#race.f1avisos #avisosF1 { left: 10px; top: 10px; width: 236px; transform: none; z-index: 5; }
+#race.f1avisos.f1hud #avisosF1 { left: 10px; top: 10px; width: 236px; transform: none; z-index: 5; } /* (só com a torre: no arcade ficam onde eram) */
 #avisosF1 .av-item { grid-template-columns: 24px minmax(0, 1fr); min-height: 38px; box-shadow: 0 2px 8px #0008; } /* (a altura da faixa .tt-topo) */
 #avisosF1 .av-bloco svg { width: 14px; height: 14px; }
 #avisosF1 .av-corpo { gap: 1px; padding: 3px 7px 4px; }
 #avisosF1 .av-cab, #avisosF1 .av-cab small { font-size: 7.5px; }
 #avisosF1 .av-cab .av-logo { width: 16px; height: 7px; }
 #avisosF1 .av-txt { font-size: 10.5px; line-height: 1.1; }
-@media (max-width: 700px) { #race.f1avisos #avisosF1 { left: 6px; top: 6px; width: 176px; } #avisosF1 .av-item { min-height: 30px; } } /* (a faixa da torre também baixa para 30 px: hud-f1.css) */
+@media (max-width: 700px) { #race.f1avisos.f1hud #avisosF1 { left: 6px; top: 6px; width: 176px; } #avisosF1 .av-item { min-height: 30px; } } /* (a faixa da torre também baixa para 30 px: hud-f1.css) */
+
+/* o minimapa em cima, à direita, embaixo do quadro dos tempos (Configurações > Geral > Minimapa) */
+#race.mapa-cima .hud.bl { left: auto; right: 10px; bottom: auto; top: 160px; }
+@media (max-width: 700px) { #race.mapa-cima .hud.bl { top: 120px; right: 6px; } }

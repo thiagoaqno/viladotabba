@@ -19,40 +19,40 @@
 .tt-volta b{font-size:19px;font-weight:700;letter-spacing:.02em}
 #tLinhas{background:#0a0c12cf}
 /* as colunas têm lugar fixo (explícito): uma linha sem plaquinha não puxa as outras para o lado */
-.tl{display:grid;grid-template-columns:26px 4px minmax(0,1fr) auto 20px 58px 18px;align-items:center;column-gap:6px;height:26px;padding:0 6px 0 0;border-bottom:1px solid #ffffff10;font-size:14px;font-weight:600;position:relative;contain:layout paint}
+#hTorre .tl{display:grid;grid-template-columns:26px 4px minmax(0,1fr) auto 20px 58px 18px;align-items:center;column-gap:6px;height:26px;padding:0 6px 0 0;border-bottom:1px solid #ffffff10;font-size:14px;font-weight:600;position:relative;contain:layout paint}
 /* grid-row:1 é essencial: sem ele a plaquinha (coluna 4, depois do pneu na coluna 5 no HTML) volta uma linha e leva a diferença junto para uma segunda linha escondida pela altura da linha: o intervalo sumia para todos */
-.tl>*{grid-row:1}
-.tl>.n{grid-column:1}.tl>.eq{grid-column:2}.tl>.sg{grid-column:3}.tl>.ic{grid-column:4}.tl>.pn{grid-column:5}.tl>.df{grid-column:6}.tl>.vrx{grid-column:7}
-.tl.hidden{display:none}
-.tl .n{justify-self:stretch;height:100%;display:grid;place-items:center;background:#ffffff1a;font-size:13px;font-weight:700}
-.tl.p1 .n{background:#e10600}
-.tl .eq{height:16px;display:block}
-.tl .sg{font-weight:700;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:clip}
-.tl .df{font-style:normal;text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:#e8ebf1;white-space:nowrap}
-.tl .df.lider{color:#fff;font-weight:700}
-.tl .df.m{color:#ffd23f}
-.tl .df.voltas,.tl .df.out{color:#ff7a7a}
+#hTorre .tl>*{grid-row:1}
+#hTorre .tl>.n{grid-column:1}#hTorre .tl>.eq{grid-column:2}#hTorre .tl>.sg{grid-column:3}#hTorre .tl>.ic{grid-column:4}#hTorre .tl>.pn{grid-column:5}#hTorre .tl>.df{grid-column:6}#hTorre .tl>.vrx{grid-column:7}
+#hTorre .tl.hidden{display:none}
+#hTorre .tl .n{justify-self:stretch;height:100%;display:grid;place-items:center;background:#ffffff1a;font-size:13px;font-weight:700}
+#hTorre .tl.p1 .n{background:#e10600}
+#hTorre .tl .eq{height:16px;display:block}
+#hTorre .tl .sg{font-weight:700;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:clip}
+#hTorre .tl .df{font-style:normal;text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:#e8ebf1;white-space:nowrap}
+#hTorre .tl .df.lider{color:#fff;font-weight:700}
+#hTorre .tl .df.m{color:#ffd23f}
+#hTorre .tl .df.voltas,#hTorre .tl .df.out{color:#ff7a7a}
 /* o pneu: a letra do composto, na cor dele, num anel (M amarelo, S vermelho, H branco, W azul para a chuva) */
-.tl .pn{text-decoration:none;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:800;line-height:1;background:#06070b;box-shadow:inset 0 0 0 1.5px currentColor;justify-self:center}
+#hTorre .tl .pn{text-decoration:none;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:800;line-height:1;background:#06070b;box-shadow:inset 0 0 0 1.5px currentColor;justify-self:center}
 /* a volta mais rápida: o cronômetro roxo no fim da linha, e a linha toda roxa (como na TV) */
-.tl .vrx{display:grid;place-items:center;width:18px;height:18px;color:#d9a8ff}
-.tl .vr{width:16px;height:16px}
-.tl.vmr{background:linear-gradient(90deg,#9a2fe0f0,#7b22bfd9);color:#fff}
-.tl.vmr .n{background:#6a1aa8}
-.tl.vmr .vrx{color:#fff}
+#hTorre .tl .vrx{display:grid;place-items:center;width:18px;height:18px;color:#d9a8ff}
+#hTorre .tl .vr{width:16px;height:16px}
+#hTorre .tl.vmr{background:linear-gradient(90deg,#9a2fe0f0,#7b22bfd9);color:#fff}
+#hTorre .tl.vmr .n{background:#6a1aa8}
+#hTorre .tl.vmr .vrx{color:#fff}
 /* box, fora da corrida (DNF), bandeirada e punição: uma plaquinha entre a sigla e o pneu (a coluna existe mesmo vazia) */
-.tl .ic{font-size:10px;font-weight:800;letter-spacing:.04em;line-height:1;color:#ffd23f;white-space:nowrap}
-.tl .ic:not(:empty){padding:2px 4px}
-.tl .ic.box{background:#0b8fd9;color:#fff}
-.tl .ic.dnf{background:#e10600;color:#fff}
-.tl .ic.fim{color:#c9d1db;padding:2px 0}
-.tl.eu{background:#fff;color:#0a0c12}
-.tl.eu .n{background:#0a0c12;color:#fff}.tl.eu.p1 .n{background:#e10600}
-.tl.eu .df,.tl.eu .df.lider{color:#0a0c12}.tl.eu .df.m{color:#9a6a00}.tl.eu .df.voltas,.tl.eu .df.out{color:#c4161c}
-.tl.eu .ic{color:#c4161c}.tl.eu .ic.box,.tl.eu .ic.dnf{color:#fff}.tl.eu .ic.fim{color:#4a5160}
-.tl.eu.vmr{background:linear-gradient(90deg,#9a2fe0,#7b22bf);color:#fff;box-shadow:inset 3px 0 0 #fff}
-.tl.eu.vmr .n{background:#fff;color:#6a1aa8}.tl.eu.vmr .df,.tl.eu.vmr .df.lider{color:#fff}.tl.eu.vmr .ic{color:#ffe36a}
-.tl.out{opacity:.55}
+#hTorre .tl .ic{font-size:10px;font-weight:800;letter-spacing:.04em;line-height:1;color:#ffd23f;white-space:nowrap}
+#hTorre .tl .ic:not(:empty){padding:2px 4px}
+#hTorre .tl .ic.box{background:#0b8fd9;color:#fff}
+#hTorre .tl .ic.dnf{background:#e10600;color:#fff}
+#hTorre .tl .ic.fim{color:#c9d1db;padding:2px 0}
+#hTorre .tl.eu{background:#fff;color:#0a0c12}
+#hTorre .tl.eu .n{background:#0a0c12;color:#fff}#hTorre .tl.eu.p1 .n{background:#e10600}
+#hTorre .tl.eu .df,#hTorre .tl.eu .df.lider{color:#0a0c12}#hTorre .tl.eu .df.m{color:#9a6a00}#hTorre .tl.eu .df.voltas,#hTorre .tl.eu .df.out{color:#c4161c}
+#hTorre .tl.eu .ic{color:#c4161c}#hTorre .tl.eu .ic.box,#hTorre .tl.eu .ic.dnf{color:#fff}#hTorre .tl.eu .ic.fim{color:#4a5160}
+#hTorre .tl.eu.vmr{background:linear-gradient(90deg,#9a2fe0,#7b22bf);color:#fff;box-shadow:inset 3px 0 0 #fff}
+#hTorre .tl.eu.vmr .n{background:#fff;color:#6a1aa8}#hTorre .tl.eu.vmr .df,#hTorre .tl.eu.vmr .df.lider{color:#fff}#hTorre .tl.eu.vmr .ic{color:#ffe36a}
+#hTorre .tl.out{opacity:.55}
 /* o minimapa do traçado inteiro (hud-painel.js desenha) no canto inferior esquerdo */
 #race.f1hud .hud.bl{left:10px;bottom:10px}
 #race.f1hud #mini{width:210px;height:210px;border-radius:0;background:#0a0c12b0;box-shadow:none;filter:none}
@@ -65,7 +65,7 @@
   #hTorre{width:176px;left:6px;top:6px}
   .tt-topo{height:30px;gap:5px;padding-left:5px}.f1logo{width:40px;height:16px}.tt-modo{font-size:16px}.tt-alt{width:24px;height:24px}.tt-alt svg{width:13px;height:13px}
   .tt-volta{height:22px;font-size:11.5px;padding-top:2px;gap:4px}.tt-volta b{font-size:14px}
-  .tl{height:21px;font-size:11.5px;grid-template-columns:19px 3px minmax(0,1fr) auto 16px 44px 14px;column-gap:4px}.tl .df{font-size:11px}.tl .n{font-size:11px}.tl .eq{height:13px}.tl .pn{width:15px;height:15px;font-size:9.5px}.tl .ic{font-size:8.5px}.tl .vrx{width:14px;height:14px}.tl .vr{width:12px;height:12px}
+  #hTorre .tl{height:21px;font-size:11.5px;grid-template-columns:19px 3px minmax(0,1fr) auto 16px 44px 14px;column-gap:4px}#hTorre .tl .df{font-size:11px}#hTorre .tl .n{font-size:11px}#hTorre .tl .eq{height:13px}#hTorre .tl .pn{width:15px;height:15px;font-size:9.5px}#hTorre .tl .ic{font-size:8.5px}#hTorre .tl .vrx{width:14px;height:14px}#hTorre .tl .vr{width:12px;height:12px}
   #race.f1hud #mini{width:118px;height:118px}
   #race.f1hud #hDraft{bottom:150px}
 }
@@ -161,7 +161,7 @@
 @media (pointer:coarse){#hRadioEng{bottom:232px}}
 @media (max-width:700px){#hRadioEng{width:180px;bottom:224px;right:8px}#hRadioEng .rr-linha em{font-size:28px}}
 /* A troca de posição aparece na própria linha, sem cobrir a pista. */
-.tl.trocou .n{padding-right:7px}
-.tl .troca{position:absolute;left:17px;top:50%;transform:translateY(-50%);font-size:8px;line-height:1;font-weight:900;z-index:1}
-.tl .troca.sobe{color:#12b95c}.tl .troca.desce{color:#e52c36}
-@media (max-width:700px){.tl.trocou .n{padding-right:6px}.tl .troca{left:12px;font-size:7px}}
+#hTorre .tl.trocou .n{padding-right:7px}
+#hTorre .tl .troca{position:absolute;left:17px;top:50%;transform:translateY(-50%);font-size:8px;line-height:1;font-weight:900;z-index:1}
+#hTorre .tl .troca.sobe{color:#12b95c}#hTorre .tl .troca.desce{color:#e52c36}
+@media (max-width:700px){#hTorre .tl.trocou .n{padding-right:6px}#hTorre .tl .troca{left:12px;font-size:7px}}

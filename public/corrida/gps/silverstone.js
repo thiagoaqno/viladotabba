@@ -11,6 +11,7 @@ import { cenarioSilverstone, depoisSilverstone } from "../silverstone.js";
 const AZUL = "#1d3f8f", VERMELHO = "#c8102e", BRANCO = "#f4f4f4";
 
 export const GP_SILVERSTONE = {
+  boxes: { faixa: "#ffcc00", patrocinio: ["dhl"], faixaMarca: true, mureta: true }, // as garagens do kit são o térreo do The Wing (silverstone.js): a faixa amarela da DHL em cima, como nas fotos
   asfalto: true,
   chao: {
     margem: { cor: "#6f7075" }, // o asfalto cinza da área de escape, logo depois da zebra

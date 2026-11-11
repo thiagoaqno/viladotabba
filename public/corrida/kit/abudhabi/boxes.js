@@ -9,7 +9,7 @@ import { canvasTex } from "../../cena.js";
 const KM = 4.8, T_GARAGEM = 27, ANDAR = 4.2 * KM, BALANCO = 3 * KM, FUNDO = 30 * KM;
 export function predioDosBoxes(tr, add) {
   const F1 = window.F1Regras, cor = F1?.corredor(tr.t, tr.n, tr.W); if (!cor) return null;
-  const { pts, n } = tr, lado = cor.lado, G = cor.garagemLat;
+  const { pts, n } = tr, lado = cor.lado, G = Math.abs(cor.garagemLat); // (o garagemLat já vem com o sinal do lado: com o lado multiplicado de novo, o prédio ia para o lado de lá da pista)
   const em = (u, l, y) => {
     const i = cor.i0 + Math.floor(u), f = u - Math.floor(u), a = pts[((i % n) + n) % n], b = pts[(((i + 1) % n) + n) % n];
     const nx = a.nx + (b.nx - a.nx) * f, ny = a.ny + (b.ny - a.ny) * f, h = a.h + (b.h - a.h) * f;

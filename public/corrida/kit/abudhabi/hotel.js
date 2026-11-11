@@ -51,7 +51,9 @@ export function hotelW(tr, add) {
   for (let a = 0; a <= NS; a++) {
     const s = a / NS, l = l0 + (l1 - l0) * s, sobe = Math.sin(Math.PI * s), meia = (LARG / 2) * (0.72 + 0.28 * sobe), alto = ALTO * (0.7 + 0.3 * Math.pow(sobe, 0.6));
     // a beirada desce a 8 m sobre os prédios e sobe até a ponte (17,5 m) por cima da pista: quem passa vê a ponte e a casca no alto, sem nada baixo sobre o asfalto
-    const perto = Math.max(0, Math.min(1, (VAO + 60 - Math.abs(l)) / 60)), baixo = 8 * KM + (PONTE0 - 8 * KM) * perto * perto * (3 - 2 * perto);
+    // (perto de QUALQUER trecho da pista, não só do cruzamento: na pista antiga a casca passa também sobre a volta seguinte)
+    const [wx, , wz] = em(0, l, 0), dPista = tr.distAt ? tr.distAt(wx, wz) : Math.abs(l);
+    const perto = Math.max(0, Math.min(1, (tr.W / 2 + 80 - Math.min(Math.abs(l), dPista)) / 60)), baixo = 8 * KM + (PONTE0 - 8 * KM) * perto * perto * (3 - 2 * perto);
     for (let b = 0; b <= NV; b++) {
       const v = (b / NV) * 2 - 1, y = baixo + (alto - baixo) * Math.sqrt(Math.max(0, 1 - Math.pow(Math.abs(v), 2.2)));
       vs.push(...em(v * meia, l, y)); uv.push((l - l0) / (6 * KM), (v * meia) / (6 * KM) + 4);
@@ -92,6 +94,7 @@ export function hotelW(tr, add) {
   const pontos = [l0 + COMP * 0.1, l0 + COMP * 0.3, l0 + COMP * 0.5, -VAO - 30, VAO + 30].filter((l) => l < l1 - 20);
   for (const l of pontos) for (const s of [-1, 1]) {
     const al = s * (LARG / 2) * 0.8, [x, , z] = em(al, l, 0), base = tr.chao(x, z) - h0 - 1;
+    if (tr.distAt && tr.distAt(x, z) < tr.W / 2 + 30) continue; // (a coluna que cairia perto de outro trecho da pista fica de fora)
     barra(em(al, l, base), em(al, l - 20, 8 * KM + 4), 1.6); barra(em(al, l, base), em(al, l + 20, 8 * KM + 4), 1.6);
   }
   add(grupo);

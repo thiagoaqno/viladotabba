@@ -14,7 +14,7 @@ const T_GARAGEM = 27, T_FAIXA = 37, T_VIDRO = 96, T_TETO = 102, T_PONTA = 135; /
 const BALANCO = 34, FUNDO = 140, PONTA = 70; // o teto avança 34 u (7 m) além da fachada; o prédio tem 140 u (29 m) de fundo; cada bico avança 70 u (15 m)
 export function theWing(tr, add) {
   const F1 = window.F1Regras, cor = F1?.corredor(tr.t, tr.n, tr.W); if (!cor) return null;
-  const { pts, n, W } = tr, lado = cor.lado, G = cor.garagemLat;
+  const { pts, n, W } = tr, lado = cor.lado, G = Math.abs(cor.garagemLat); // (o garagemLat já vem com o sinal do lado; aqui o lado é +1, mas fica certo nos dois)
   // o ponto u (pontos a partir de i0, fracionário) da reta, a `l` da linha central (com o lado) e `y` acima do asfalto daquele ponto
   const em = (u, l, y) => {
     const i = cor.i0 + Math.floor(u), f = u - Math.floor(u), a = pts[((i % n) + n) % n], b = pts[(((i + 1) % n) + n) % n];

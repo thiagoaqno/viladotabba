@@ -8,7 +8,7 @@ import { renderer, scene } from "./cena.js";
 import { graficos } from "./qualidade.js";
 
 const L = 512, A = 84, ALCANCE = 900, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]);
-let rt = null, camTras = null, cenaQuadro = null, camQuadro = null, molde = null, contador = 0, medidas = null;
+let ligadoAntes = null, rt = null, camTras = null, cenaQuadro = null, camQuadro = null, molde = null, contador = 0, medidas = null;
 const v = new THREE.Vector3(), d = new THREE.Vector3(), cima = new THREE.Vector3(), tam = new THREE.Vector2();
 
 function montar() {
@@ -32,6 +32,7 @@ function medir(carro) {
 export function quadroRetrovisor(kart, modo) {
   const op = graficos().retroVirtual, ligado = op === "sempre" || (op === "dentro" && DE_DENTRO.has(modo));
   if (molde) molde.style.display = ligado ? "" : "none";
+  if (ligadoAntes !== ligado) { ligadoAntes = ligado; document.getElementById("race")?.classList.toggle("com-retro", ligado); } // (os avisos da direção de prova descem para baixo dele: configuracoes.css)
   if (!ligado || !kart || !kart.kt || !kart.kt.carro) return;
   if (!rt) montar();
   const carro = kart.kt.carro;

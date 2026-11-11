@@ -70,3 +70,6 @@
 /* a moldura do retrovisor virtual (o desenho em si é do retrovisor.js, por baixo dela) */
 #retroMolde { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(36vw, 520px); aspect-ratio: 512 / 84; z-index: 3;
   border: 3px solid #0c0e13; border-radius: 8px; box-shadow: 0 3px 10px #0008, inset 0 0 0 1px #ffffff24; pointer-events: none; }
+
+/* com o retrovisor virtual ligado, os avisos da direção de prova ficam logo embaixo dele, no centro e com a mesma largura */
+#race.f1avisos.com-retro #avisosF1 { left: 50%; transform: translateX(-50%); width: min(36vw, 520px); top: calc(10px + min(36vw, 520px) * 84 / 512 + 8px); }

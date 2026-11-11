@@ -73,8 +73,11 @@ function attach(app) {
 // /api/ de DADOS vão para o site; os arquivos e o que é calculado do próprio jogo (logos, traçado dos robôs, músicas) seguem no PC.
 const PC_JS = `(function () {
   var C = window.CORRIDA_PC, S = C && C.servidor;
-  // no programa, um selo discreto no canto: online (salas do site) ou no PC (sem internet), e o aviso de atualização quando houver
-  if (C && C.pc) addEventListener("DOMContentLoaded", function () { var d = document.createElement("div"); d.textContent = C.aviso || (S ? "Online" : "Sem internet: jogando no seu PC"); d.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:99999;padding:4px 8px;font:600 12px system-ui,sans-serif;color:#fff;background:" + (C.aviso ? "#b8860bdd" : S ? "#1e7e34aa" : "#444a") + ";pointer-events:none;max-width:60vw"; document.body.appendChild(d); if (!C.aviso) setTimeout(function () { d.remove(); }, 6000); });
+  // o jogo SOZINHO (corrida rápida direto, contrarrelógio, treino da carreira: menu.js, ?solo= e ?treino=) roda sempre no PC, mesmo com
+  // internet: sem ping, o carro responde na hora. O site fica para as salas com os amigos, a carreira e os recordes (que sobem sozinhos).
+  if (C && C.pc && /[?&](solo|treino)=/.test(location.search)) { C.local = true; S = ""; }
+  // no programa, um selo discreto no canto: online (salas do site), no PC (sozinho, ou sem internet) e o aviso de atualização quando houver
+  if (C && C.pc) addEventListener("DOMContentLoaded", function () { var d = document.createElement("div"); d.textContent = C.aviso || (C.local ? "Sozinho, rodando no seu PC (sem ping)" : S ? "Online" : "Sem internet: jogando no seu PC"); d.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:99999;padding:4px 8px;font:600 12px system-ui,sans-serif;color:#fff;background:" + (C.aviso ? "#b8860bdd" : S ? "#1e7e34aa" : "#444a") + ";pointer-events:none;max-width:60vw"; document.body.appendChild(d); if (!C.aviso) setTimeout(function () { d.remove(); }, 6000); });
   if (!S) return;
   if (window.io) { var io0 = window.io, io1 = function (ns, op) { return io0(typeof ns === "string" && ns.charAt(0) === "/" ? S + ns : ns, op); }; for (var k in io0) io1[k] = io0[k]; window.io = io1; }
   var LOCAL = /^\\/api\\/(corrida\\/logo|corrida\\/linha|corrida\\/drag\\/musicas|musicas)/, f0 = window.fetch.bind(window);

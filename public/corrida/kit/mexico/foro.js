@@ -107,16 +107,35 @@ export function foroSol(tr, add, { cx, cz, A, B, fundo = 56, degraus = 7, ok, se
     g.add(mm);
   }
   // o campo: um disco achatado com o gramado
-  const campo = new THREE.Mesh(new THREE.CircleGeometry(1, 48), comTextura(campoTex(), { roughness: 1 }));
-  campo.rotation.x = -Math.PI / 2; campo.scale.set(a0 + 5, b0 + 5, 1); campo.position.y = 0.35; campo.receiveShadow = true;
-  // o uv do CircleGeometry vai de 0 a 1 no quadrado que o contém: dá certo com a escala elíptica
-  g.add(campo);
-  const aterro = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 14, 48), M(0xb5ab98, { roughness: 1 })); aterro.scale.set(A + 6, 1, B + 6); aterro.position.y = -7.5; g.add(aterro);
+  // o campo: uma malha que acompanha o chão, dentro da elipse, e PULA a faixa da pista (no México a pista atravessa o estádio: um disco plano
+  // ficava acima do asfalto onde o chão do centro é mais alto que a pista). O uv é o do quadrado da elipse, como era o do disco.
+  const NC = 48, ca = a0 + 5, cb = b0 + 5, vs = [], uv = [], idx = [], fora = (x, z) => !tr.distAt || tr.distAt(x, z) > tr.W / 2 + 6;
+  for (let j = 0; j < NC; j++) for (let i = 0; i < NC; i++) {
+    const u0 = -1 + (2 * i) / NC, u1 = u0 + 2 / NC, v0 = -1 + (2 * j) / NC, v1 = v0 + 2 / NC, um = (u0 + u1) / 2, vm = (v0 + v1) / 2;
+    if (um * um + vm * vm > 1) continue;
+    const cantos = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(([u, v]) => [cx + u * ca, cz + v * cb, u, v]);
+    if (!cantos.every(([x, z]) => fora(x, z))) continue;
+    const k = vs.length / 3; for (const [x, z, u, v] of cantos) { vs.push(x - cx, tr.chao(x, z) - y0 + 0.35, z - cz); uv.push((u + 1) / 2, (v + 1) / 2); }
+    idx.push(k, k + 2, k + 1, k, k + 3, k + 2);
+  }
+  const gc = new THREE.BufferGeometry(); gc.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); gc.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); gc.setIndex(idx); gc.computeVertexNormals();
+  const campo = new THREE.Mesh(gc, comTextura(campoTex(), { roughness: 1, side: THREE.DoubleSide })); campo.receiveShadow = true; g.add(campo);
+  // o aterro sob o estádio: o topo abaixo do ponto mais baixo da pista dentro dele (senão aparecia em cima do asfalto)
+  let hPista = Infinity; for (const q of tr.pts) if (((q.x - cx) / A) ** 2 + ((q.y - cz) / B) ** 2 <= 1.1) hPista = Math.min(hPista, q.h);
+  const desce = Math.min(0, (isFinite(hPista) ? hPista : y0) - y0 - 0.6);
+  const aterro = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 14, 48), M(0xb5ab98, { roughness: 1 })); aterro.scale.set(A + 6, 1, B + 6); aterro.position.y = -7.5 + desce; g.add(aterro);
 
   // o pódio no meio do campo, de frente para a maior parte da torcida
   let fx = 0, fz = 0; for (const [ta, tb] of ativas) { const t = (ta + tb) / 2; fx += Math.cos(t) * A; fz += Math.sin(t) * B; }
   const rot = ativas.length ? Math.atan2(fx, fz) : 0; // a frente do pódio (+z local) aponta para o centro da massa de torcida
-  const pod = podio(); pod.position.set(0, 0.4, 0); pod.rotation.y = rot; g.add(pod);
+  // o lugar do pódio: o ponto livre do gramado (longe da pista, que atravessa o estádio) mais perto do centro
+  let px = 0, pz = 0, pd = Infinity;
+  for (let u = -0.8; u <= 0.8; u += 0.05) for (let v = -0.8; v <= 0.8; v += 0.05) {
+    if (u * u + v * v > 0.64) continue; const x = cx + u * a0, z = cz + v * b0;
+    if (![[0, 0], [40, 0], [-40, 0], [0, 40], [0, -40], [28, 28], [-28, -28], [28, -28], [-28, 28]].every(([dx, dz]) => ok(x + dx, z + dz))) continue; // (o pódio é largo: a folga em volta dele todo)
+    const d = u * u + v * v; if (d < pd) { pd = d; px = u * a0; pz = v * b0; }
+  }
+  const pod = podio(); pod.position.set(px, 0.4, pz); pod.rotation.y = rot; g.add(pod);
   add(g);
 
   // as bandeiras do México no alto da parede de trás, em InstancedMesh (mastro e pano), e a fumaça
@@ -135,14 +154,15 @@ export function foroSol(tr, add, { cx, cz, A, B, fundo = 56, degraus = 7, ok, se
   for (const t of [0.6, Math.PI - 0.6, Math.PI + 0.6, -0.6]) {
     const [x, z] = mundo(-6, t); if (!ok(x, z)) continue;
     const lx = x - cx, lz = z - cz;
-    m.cilindro(S, [lx, 60, lz], [1.6, 130], { cor: "#aeb4ba", seg: 6 });
+    const pe = Math.min(-5, tr.chao(x, z) - y0 - 1); // (o poste desce até o chão do lugar dele, que pode ser mais baixo que o do centro do estádio)
+    m.cilindro(S, [lx, (pe + 125) / 2, lz], [1.6, 125 - pe], { cor: "#aeb4ba", seg: 6 });
     m.caixa(S, [lx, 134, lz], [30, 16, 3], { cor: "#d9dde2", ry: -t + Math.PI / 2 });
     m.caixa(S, [lx, 134, lz], [28, 14, 3.4], { cor: "#fff3c4", ry: -t + Math.PI / 2 });
     torres.push([x, z]);
   }
   const torresG = m.montar("foro-torres"); torresG.position.set(cx, y0, cz); add(torresG);
 
-  const fumaca = fumacaMexicana(add, { x: cx, y: y0, z: cz, a: a0, b: b0, rot });
+  const fumaca = fumacaMexicana(add, { x: cx + px, y: y0, z: cz + pz, a: 45, b: 45, rot }); // (em volta do pódio: no campo inteiro ela passava por cima da pista)
   const info = { x: cx, z: cz, A, B, secoes: ativas.length, de: SEG, torres: torres.length, bandeiras: panos.length, rot, fumaca, y: y0 };
   return info;
 }

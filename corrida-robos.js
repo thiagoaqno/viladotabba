@@ -429,6 +429,10 @@ function estiloDe(room, p, rng) {
   const estreita = T.PISTAS[room.config.pista].width <= LARGURA_ESTREITA;
   return { dentro: (rng() * 2 - 1) * (estreita ? 0.5 : 1), lado: (rng() * 2 - 1) * (estreita ? 2 : 9), look: pil && Estilos.PERFIS[pil.id] ? 2 + Math.min(3, Math.floor((1 - Estilos.dePiloto(pil.id).frenagem) * 4)) : 2 + Math.floor(rng() * 4), erroK: nivel * (pil ? 0.5 + (100 - pil.constancia) / 40 : 1), erros: F1.sorteio(`erros:${room.semente}:${p.id}`) };
 }
+// atrás de um HUMANO o robô guarda mais espaço: quem joga freia sem aviso, e o robô só percebe a freada medindo a desaceleração entre uma passagem
+// e outra; colado a 12 u (2,5 m) a 300 km/h ele chegava com o pedal atrasado e acertava a traseira em cheio. RESERVA_HUMANO: segundos da velocidade do
+// robô somados à folga (a 300 km/h, ~60 u = 12 m); FREADA_HUMANO: quanto tempo da freada medida ele conta (a dos robôs fica nos 0,25 s de sempre)
+const RESERVA_HUMANO = 0.15, FREADA_HUMANO = 0.45;
 const L_CARRO = 26.4, W_CARRO = 9.1; // o carro em unidades da pista (carros.js: 5,5 m x 1,9 m, escala 4,8)
 // os 3 círculos do carro (como em colisao.js, que é do navegador)
 function circulos(pos) {
@@ -545,7 +549,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     // quanto ele está freando (a desaceleração medida de uma passagem à outra): quem vem atrás conta com mais 0,25 s do mesmo freio
     const visto = (ia.vistos || (ia.vistos = {}))[oid] || (ia.vistos[oid] = { ov, t: now, a: 0 }), dtv = (now - visto.t) / 1000;
     if (dtv >= 0.04) { visto.a += (Math.max(-300, Math.min(100, (ov - visto.ov) / dtv)) - visto.a) * Math.min(1, dtv * 6); visto.ov = ov; visto.t = now; }
-    const ovPlano = Math.max(0, ov + Math.min(0, visto.a) * 0.25);
+    const humano = !o.bot, ovPlano = Math.max(0, ov + Math.min(0, visto.a) * (humano ? FREADA_HUMANO : 0.25));
     const aproxima = Math.max(0, ia.v - ovPlano); // a velocidade com que me aproximo dele
     // Depois que abriu espaço lateral suficiente, o carro ultrapassado já não está na mesma faixa:
     // continuar seguindo a velocidade dele ali fazia o robô andar lado a lado sem conseguir passar.
@@ -559,7 +563,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       // reserva espaço para o freio progressivo da física (o pedal leva ~0,2 s para subir) e para o da frente frear mais forte que o previsto
       // (na largada o pelotão sai junto: a reserva de espaço cresce aos poucos, de quase nada no grid, onde os carros estão a 4 u um do outro, até
       // a de sempre; senão a fila de trás esperava cada carro da frente andar, uma fileira de cada vez)
-      const folga = frente - L_CARRO - (12 + Math.min(15, k[i] * 1000) + aproxima * 0.1) * arranque - 1;
+      const folga = frente - L_CARRO - (12 + Math.min(15, k[i] * 1000) + aproxima * 0.1 + (humano ? ia.v * RESERVA_HUMANO : 0)) * arranque - 1;
       const desacel = D.frenagemMaxima(c, ia.v, 0, plano.aderenciaFreio) * 0.75;
       let lim = folga <= 0 ? ovPlano * 0.82 : Math.sqrt(Math.max(0, ovPlano * ovPlano + 2 * desacel * folga));
       // Já decidiu ultrapassar este carro mas ainda está na faixa dele: um fio de velocidade (sem encostar) para o volante ter o que virar

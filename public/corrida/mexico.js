@@ -23,18 +23,15 @@ registrarMarcasMexico();
 // ---------------------------------------------------------------------------------------------------------------------
 // 1. O Foro Sol
 // ---------------------------------------------------------------------------------------------------------------------
+// O lugar de verdade (2026-11-11): o contorno do Estadio GNP Seguros e das arquibancadas Norte e Sul no OpenStreetMap (© colaboradores do OpenStreetMap,
+// ODbL), passado para o mundo do jogo pelo encaixe da linha real mx-1962 (ferramentas/pista-real.js, erro médio de 26 u): a pista ATRAVESSA o estádio
+// de leste a oeste, entre a arquibancada Norte (z 1264 a 1497) e a Sul (z 1567 a 1882), e sai por baixo do corredor coberto (x ≈ 640). Na pista do
+// jogo (120 u de largura, mais larga que a de verdade) as duas não cabem tão perto: a ferradura cobre o estádio inteiro (x 580 a 1060, z 1270 a
+// 1870) e se corta onde a pista passa, e sobram as duas arquibancadas com o carro no meio. Antes o estádio era posto num lugar vazio, fora da pista.
+const FORO_REAL = { cx: 820, cz: 1570, A: 240, B: 300 };
 function oForoSol(tr, { add }) {
-  const A = 200, B = 104, fundo = 56, folga = 30, ok = (x, z) => livre(tr, x, z, folga) && !ocupado(tr, x, z);
-  let melhor = null;
-  for (let cx = 640; cx <= 1020; cx += 20) for (let cz = 1240; cz <= 1420; cz += 10) {
-    let bons = 0;
-    for (let k = 0; k < 72; k++) {
-      const t = (k / 72) * Math.PI * 2;
-      if ([-8, 0, fundo].every((d) => ok(cx + (A - d) * Math.cos(t), cz + (B - d) * Math.sin(t)))) bons++;
-    }
-    if (!melhor || bons > melhor.bons) melhor = { cx, cz, bons };
-  }
-  if (!melhor || melhor.bons < 20) { tr.faltouMexico = (tr.faltouMexico || []).concat([{ nome: "foro" }]); return null; }
+  const { A, B } = FORO_REAL, fundo = 56, folga = 30, ok = (x, z) => livre(tr, x, z, folga) && !ocupado(tr, x, z);
+  const melhor = { cx: FORO_REAL.cx, cz: FORO_REAL.cz };
   const info = foroSol(tr, add, { cx: melhor.cx, cz: melhor.cz, A, B, fundo, degraus: 7, ok });
   // reserva o estádio inteiro (as árvores e a torcida solta não entram)
   for (let u = -A; u <= A; u += 50) for (let v = -B; v <= B; v += 50) if ((u / A) ** 2 + (v / B) ** 2 <= 1.2) tr.reservado.push([melhor.cx + u, melhor.cz + v, 46]);

@@ -2,7 +2,9 @@
 import { E, socket, $, store, relogio, relogioF1, sNow, tempoReal, agoraLocal, toast, act } from "./estado.js";
 import { Sound } from "./sons.js";
 import { show, renderLobby } from "./menus.js";
-import { race, startRace, stopRace, nearest, prepararPista, adiantarLargada } from "./jogo.js";
+import { race, startRace, stopRace, nearest, prepararPista, adiantarLargada, atualizarCarga } from "./jogo.js";
+import { mostrarCarga, esconderCarga } from "./carregando.js";
+import { PISTAS } from "./estado.js";
 import { checkMyLap, renderResults, renderQuali } from "./hud.js";
 import { voltaDaClassificacao } from "./fantasma.js";
 import { onBox, onUse, onHit, onBoom, setHazards } from "./itens.js";
@@ -47,7 +49,9 @@ socket.on("recorde", (r) => {
   toast(r.pos === 1 ? `${meu ? "Você bateu" : `${r.piloto} bateu`} o recorde da pista: ${r.tempo.toFixed(3)} s!` : `${meu ? "Você entrou" : `${r.piloto} entrou`} no quadro de recordes: ${r.pos}º, ${r.tempo.toFixed(3)} s.`, 4000);
 });
 // a pista escolhida no lobby já vai sendo montada, com a foto do céu, para a largada não travar (jogo.js, prepararPista)
-let preparada = null;
+let preparada = null, montando = false;
+// a cor da minha equipe (o carrinho da tela de carregamento vem pintado nela)
+const corDaMinhaEquipe = (st) => { const eu = E.ME && st.players?.find((p) => p.id === E.ME.id); return (eu && eu.equipe && window.EQUIPES_F1?.[eu.equipe]?.cor) || null; };
 const preparar = (id, hora) => { const chave = `${id}:${hora}`; if (id && chave !== preparada) { preparada = chave; try { prepararPista(id, hora); } catch (e) { console.warn("Corrida: pista não preparada", e); } } };
 // ---------- estado vindo do servidor ----------
 socket.on("state", (st) => {
@@ -55,11 +59,19 @@ socket.on("state", (st) => {
   const old = E.S; E.S = st;
   if (st.phase === "lobby") {
     if (!E.entradaDireta) { show("lobby"); renderLobby(); }
-    stopRace(); preparar(st.config.pista, st.config.hora); $("quali").classList.add("hidden"); return;
+    stopRace(); $("quali").classList.add("hidden");
+    // a corrida rápida passa um instante pelo lobby, que já começa a montar a pista (segundos de página parada): a tela de carregamento entra antes
+    if (E.entradaDireta) { mostrarCarga(PISTAS[st.config.pista]?.name || "Corrida", "Montando a pista", corDaMinhaEquipe(st)); const id = st.config.pista, hora = st.config.hora; setTimeout(() => preparar(id, hora), 60); }
+    else { esconderCarga(); preparar(st.config.pista, st.config.hora); }
+    return;
   }
   E.entradaDireta = false;
   show("race");
-  if (!race || (race.startAt !== st.startAt && !adiantarLargada(st))) startRace(st);
+  // a primeira montagem: a tela de carregamento entra, o navegador a desenha (60 ms), e só então a pista é montada (antes, a página congelava sem nada na
+  // frente). setTimeout e não requestAnimationFrame: com a janela escondida (quem troca de janela carregando) o quadro não vem, e a pista nunca era montada
+  if (!race) { if (!montando) { montando = true; mostrarCarga(PISTAS[st.config.pista]?.name || "Corrida", "Montando a pista", corDaMinhaEquipe(st)); setTimeout(() => { montando = false; if (E.S && E.S.phase !== "lobby" && !race) startRace(E.S); atualizarCarga(); }, 60); } }
+  else if (race.startAt !== st.startAt && !adiantarLargada(st)) startRace(st);
+  atualizarCarga();
   if (race) race.safety = st.direcao?.safety || null;
   if (old && old.phase === "race" && st.phase === "results") Sound.finish();
   checkMyLap(old);

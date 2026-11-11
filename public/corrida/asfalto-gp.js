@@ -2,7 +2,10 @@
 import * as THREE from "three";
 import { canvasTex } from "./cena.js";
 
+// a imagem do agregado (1024 × 1024, um milhão de pontos sorteados) é a mesma em toda pista: feita uma vez e guardada; cada pista ganha só uma textura nova em cima dela
+let agregado = null;
 export function asfaltoGP() {
+  if (agregado) { const t = new THREE.CanvasTexture(agregado.image); for (const k of ["colorSpace", "anisotropy", "wrapS", "wrapT"]) t[k] = agregado[k]; return materialDoAsfalto(t); }
   // Agregado fino em escala de centímetros, separado das faixas e do desgaste da volta.
   const textura = canvasTex(1024, 1024, (x, w, h, r) => {
     const imagem = x.createImageData(w, h);
@@ -14,6 +17,10 @@ export function asfaltoGP() {
     }
     x.putImageData(imagem, 0, 0);
   });
+  agregado = textura;
+  return materialDoAsfalto(textura);
+}
+function materialDoAsfalto(textura) {
   const relevo = textura.clone(); relevo.colorSpace = THREE.NoColorSpace;
   const m = new THREE.MeshStandardMaterial({ map: textura, bumpMap: relevo, bumpScale: 0.055, roughness: 0.94, side: THREE.DoubleSide });
   m.userData.asfalto = true; // o clima (clima-visual.js) escurece e dá brilho a este material conforme a água na pista

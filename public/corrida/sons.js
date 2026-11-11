@@ -19,7 +19,7 @@ export const Sound = (() => {
   const MIX = { ...MIX_PADRAO, ...(store.get("corrida:mixer") || {}) };
   const CANAL = {};
   function ctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volume; master.connect(ac.destination);
-    for (const k of Object.keys(MIX_PADRAO)) { CANAL[k] = ac.createGain(); CANAL[k].gain.value = MIX[k]; CANAL[k].connect(CANAL.efeitos); }
+    for (const k of Object.keys(MIX_PADRAO)) { CANAL[k] = ac.createGain(); CANAL[k].gain.value = MIX[k]; CANAL[k].connect(master); } // (cada canal no volume geral; antes ia para CANAL.efeitos, que ainda não existia: o connect falhava, o catch engolia e o som ficava sem os canais)
     carregarAmostras(ac); } catch { return null; } } if (ac.state === "suspended") ac.resume(); return ac; }
   // os sons gravados da pista (public/corrida/sons/<id>.mp3, gerados por GERAR-SONS-PISTA.bat com a ElevenLabs): quando existem, a zebra
   // e a torcida tocam eles; sem o arquivo, continua o som sintetizado de cada uma

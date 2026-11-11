@@ -64,6 +64,7 @@ body.cx-escuro .cx-relevo{filter:grayscale(1) invert(1);opacity:.05}
 .cx .cx-bt{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:clamp(10px,1.5vh,14px) clamp(18px,1.7vw,26px);background:var(--eq);color:var(--eq-txt);font-size:clamp(14px,1.25vw,19px);font-weight:700;white-space:nowrap;transition:filter .15s,transform .18s var(--cx-t),box-shadow .2s}
 .cx .cx-bt:hover:not(:disabled),.cx .cx-bt:focus-visible{background-color:var(--eq);filter:brightness(1.1);transform:translateY(-2px);box-shadow:var(--cx-sombra)}
 .cx .cx-bt:hover:not(:disabled) .cx-seta{transform:translateX(5px)}
+.cx-bts{display:inline-flex;flex-wrap:wrap;gap:10px;margin-left:auto}.cx .cx-bts .cx-bt{margin-left:0}.cx .cx-bt-treino{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px var(--eq);text-decoration:none}.cx .cx-bt-treino:hover,.cx .cx-bt-treino:focus-visible{background:transparent}
 .cx .cx-link,.cx .cx-contorno,.cx .cx-mais{display:inline-flex;align-items:center;gap:8px;color:var(--eq-at);font-weight:700;text-decoration:underline transparent;text-underline-offset:3px;transition:text-decoration-color .15s}
 .cx .cx-link:hover:not(:disabled),.cx .cx-contorno:hover:not(:disabled),.cx .cx-mais:hover:not(:disabled){text-decoration-color:currentColor}
 .cx-espera{color:var(--cx-tx2);font-weight:600}

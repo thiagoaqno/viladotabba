@@ -19,6 +19,15 @@ const rapida = lerStore(CHAVE_RAPIDA, { pista: "monaco", voltas: 3, nivel: "medi
 const contra = lerStore(CHAVE_CONTRA, { pista: "monaco", voltas: 3 });
 const equipeEscolhida = () => { const e = store.get(CHAVE_EQUIPE); return e && FP()?.EQUIPES[e] ? e : null; };
 const equipeDoCarro = () => equipeEscolhida() || carreira?.dados?.equipe || "ferrari";
+// o TREINO LIVRE da carreira (o botão da Central, temporada/sede.js): /corrida/?treino=<pista>&equipe=<equipe> abre direto um contrarrelógio de 10 voltas
+// na pista do próximo GP, com o carro da equipe da carreira, no seco, com o acerto liberado o tempo todo (acerto.js). O endereço é limpo na hora (um F5 não reabre).
+let treinoPedido = (() => {
+  try {
+    const q = new URLSearchParams(location.search), pista = q.get("treino"), equipe = q.get("equipe"); if (!pista) return null;
+    q.delete("treino"); q.delete("equipe"); history.replaceState(null, "", location.pathname + (q.size ? "?" + q : "") + location.hash);
+    return { pista, equipe };
+  } catch { return null; }
+})();
 const nomePiloto = () => ($("hName")?.value || store.get("galera:name") || "").trim();
 
 // ---------- a entrada e a saída da tela ----------
@@ -31,6 +40,7 @@ export function menuNaTela(sim) {
   window.preparoPronto?.(); // (a tela inicial é a capa, uma imagem: a garagem 3D só abre no painel Garagem)
   carregarCarreira(); carregarGrupos(); pedirResumo(); desenharCartoes(); resumoDaEstante();
   timerResumo = setInterval(pedirResumo, 15000); timerPad = setInterval(lerControle, 90);
+  if (treinoPedido) { const t = treinoPedido; treinoPedido = null; return largarTreino(t); }
   if (!painel) requestAnimationFrame(() => { if (!document.activeElement || document.activeElement === document.body) itensDoMenu()[0]?.focus({ preventScroll: true }); });
 }
 // a garagem 3D (o carro girando) só existe com o painel Garagem aberto: a tela inicial é a capa (menu.css, .mn-palco), e a GPU fica livre
@@ -217,6 +227,11 @@ function criar(config, inicio) {
 const configRapida = () => ({ pista: rapida.pista, regras: "f1", voltas: rapida.voltas, nivel: rapida.nivel, robos: 21, clima: rapida.clima, classificacao: rapida.classificacao });
 function largarRapida(largar) { store.set(CHAVE_RAPIDA, rapida); criar(configRapida(), { equipe: equipeDoCarro(), largar }); }
 function largarContra() { store.set(CHAVE_CONTRA, contra); criar({ pista: contra.pista, regras: "f1", voltas: contra.voltas, robos: 0, clima: "seco", classificacao: "pular", contrarrelogio: true }, { equipe: equipeDoCarro(), pneu: "macio", largar: true }); }
+function largarTreino(t) {
+  if (!PISTAS[t.pista]) return;
+  contra.pista = t.pista; // (se faltar o nome, o painel do contrarrelógio já fica nesta pista)
+  criar({ pista: t.pista, regras: "f1", voltas: 10, robos: 0, clima: "seco", classificacao: "pular", contrarrelogio: true }, { equipe: FP()?.EQUIPES[t.equipe] ? t.equipe : equipeDoCarro(), pneu: "medio", largar: true });
+}
 function andarPista(cfg, d) { const l = idsPistas(), i = l.indexOf(cfg.pista); cfg.pista = l[(i + d + l.length) % l.length]; }
 
 // ---------- os cliques ----------

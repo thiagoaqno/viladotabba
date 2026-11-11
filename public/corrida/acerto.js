@@ -8,7 +8,8 @@ import { E, me, sNow, toast } from "./estado.js";
 // O acerto só se mexe ANTES da largada (corrida) ou da abertura da sessão (classificação), como no parque fechado da F1. No jogo local
 // (localhost) o painel continua abrindo durante a corrida, para o Thiago acertar a direção jogando (pedido dele, 2026-11-11).
 const LOCAL = typeof location !== "undefined" && /^(localhost|127.0.0.1|[::1])$/.test(location.hostname);
-const valendo = () => { const S = E.S; return !!S && (S.phase === "race" || S.phase === "quali") && !!S.startAt && sNow() >= S.startAt; };
+// No contrarrelógio (e no treino livre da carreira, que é um contrarrelógio: menu.js, ?treino=) não há parque fechado: o acerto muda com o carro andando.
+const valendo = () => { const S = E.S; return !!S && !S.config?.contrarrelogio && (S.phase === "race" || S.phase === "quali") && !!S.startAt && sNow() >= S.startAt; };
 import { ACERTO_CARRO, acertarCarro, acertoCarroPadrao, usarAcerto, alturaParada, forcaDaAsa, pistaDoAcerto, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase } from "./acerto-carro.js";
 const CAMPOS = [
   { id: "virada", nome: "Virada máxima", dica: "o quanto o volante vira com a tecla no fim (1 = o batente da física)", passo: 0.01, fmt: (v) => v.toFixed(2) },

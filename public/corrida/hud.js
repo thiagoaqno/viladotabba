@@ -114,7 +114,6 @@ export function hud() {
   else if (m && m.shrinkUntil > now) msg = "⚡ ENCOLHIDO PELO RAIO!";
   else if (race.wrong > 1) msg = "⚠️ CONTRAMÃO! (aperte ↺)";
   else if (race.perdeu >= 0 && m && m.finish == null) msg = "⟲ CHECKPOINT PERDIDO: volte nele ou aperte ↺";
-  else if (race.cpT > now - 900 && race.sector > 0) msg = `✓ CHECKPOINT ${race.sector}/${SECTORS}`;
   else if (m && m.finish == null && m.started && m.laps === cfg.voltas - 1 && cfg.voltas > 1 && race.lastLapMsg > now - 2500) msg = "ÚLTIMA VOLTA!";
   else if (race.pneu && race.pneu.desgaste > window.F1Regras.PENHASCO && m && m.finish == null && m.started) { msg = "PNEU NO FIM: segura nas curvas"; radioF1("box"); }
   else if (E.S.endAt && m && m.finish == null) msg = `⏱️ ${Math.max(0, Math.ceil((E.S.endAt - now) / 1000))} s para cruzar`;
@@ -174,7 +173,7 @@ const radioF1 = (situacao, op) => { if (window.Radio && E.S && E.S.config && E.S
 const LOGO_AVISO = LOGO_F1.replace('class="f1logo"', 'class="f1logo av-logo"');
 const NOS_AVISOS = new Map();
 let FILA_AVISOS = null;
-const filaAvisos = () => FILA_AVISOS || (FILA_AVISOS = window.AvisosF1.criarFila());
+const filaAvisos = () => FILA_AVISOS || (FILA_AVISOS = window.AvisosF1.criarFila({ max: 1, ttl: 3800 })); // um aviso por vez (pedido do Thiago, 2026-11-11); os outros esperam a vez
 export function htmlAviso(tipo, texto) {
   const A = window.AvisosF1, t = A.tipoDe(tipo);
   const cab = t.direcao ? '<b>DIREÇÃO DE PROVA</b><small>RACE CONTROL</small>' : `<b>${t.rotulo}</b>`;
@@ -200,7 +199,7 @@ function desenharAvisos() {
     if (!n) { n = document.createElement("div"); n.className = "av-item"; n._tipo = a.tipo; n._txt = a.texto; estiloAviso(n, a.tipo); n.innerHTML = htmlAviso(a.tipo, a.texto); NOS_AVISOS.set(a.id, n); box.appendChild(n); }
     else if (n._tipo !== a.tipo || n._txt !== a.texto) { n._tipo = a.tipo; n._txt = a.texto; estiloAviso(n, a.tipo); n.innerHTML = htmlAviso(a.tipo, a.texto); }
   }
-  for (const [id, n] of NOS_AVISOS) if (!vivos.has(id)) { NOS_AVISOS.delete(id); n.classList.add("sai"); setTimeout(() => n.remove(), 320); } // sai com a animação (CSS) e só então some do DOM
+  for (const [id, n] of NOS_AVISOS) if (!vivos.has(id)) { NOS_AVISOS.delete(id); n.classList.add("sai"); setTimeout(() => n.remove(), 460); } // sai com a animação (CSS) e só então some do DOM
 }
 // o que vira aviso a cada quadro: as linhas novas do log da direção de prova, o DRS liberado, a volta mais rápida, a largada e a bandeirada
 function avisosF1(m, left, now) {
@@ -231,7 +230,12 @@ function avisosF1(m, left, now) {
 // o que não é mensagem de corrida mas a direção de prova manda: a bandeira azul e os limites da pista
 function bandeiraF1(m) {
   if (m && m.azul) return "BANDEIRA AZUL: deixe passar";
-  if (m && m.avisosLimite) return `LIMITES DA PISTA ${m.avisosLimite}/4`;
+  // os limites da pista só aparecem enquanto o carro está fora da pista, ou por 4 s quando chega uma advertência nova (antes ficava fixo)
+  if (m && m.avisosLimite) {
+    const agora = performance.now();
+    if (m.avisosLimite !== race.limAnt) { if (race.limAnt != null) race.limAte = agora + 4000; race.limAnt = m.avisosLimite; }
+    if (race.offroad || agora < (race.limAte || 0)) return `LIMITES DA PISTA ${m.avisosLimite}/4`;
+  }
   return "";
 }
 // O engenheiro avisa uma volta antes (no mínimo AVISO_S segundos) que a chuva vai chegar ou parar: a fala no rádio (radio.js, sem o

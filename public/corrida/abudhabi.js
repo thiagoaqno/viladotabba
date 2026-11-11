@@ -1,15 +1,27 @@
-// Abu Dhabi (Yas Marina Circuit) — as peças só desta pista (nada daqui é do kit compartilhado), ligadas por gps/abudhabi.js. Por ora: o chão junto da pista com a base sólida (./kit/abudhabi/chao.js)
-// e o conserto do que o kit de ambiente deixa flutuando (`consertarAmbiente`); o resto do cenário continua sendo o do GP simples (kit/gp-simples.js) até o cenário fino de Abu Dhabi.
+// Abu Dhabi (Yas Marina Circuit) — as peças só desta pista (nada daqui é do kit compartilhado), ligadas por gps/abudhabi.js. Do GP simples (kit/gp-simples.js) fica só a base
+// técnica (asfalto, zebras, brita, grid, o corredor e as garagens dos boxes, a tribuna da reta e os painéis da barreira); o cenário é o de Yas, pelas fotos e pela posição real
+// de cada coisa (passada da latitude e longitude para o mundo do jogo pelo encaixe da linha real, ferramentas/pista-real.js): o hotel W com a casca de LEDs por cima da pista
+// (./kit/abudhabi/hotel.js), a marina com os iates (marina.js), o prédio dos boxes com o terraço de toldos (boxes.js) e o teto vermelho do Ferrari World ao longe (ferrari.js).
+// Mais o chão junto da pista com a base sólida (./kit/abudhabi/chao.js) e o conserto do que o kit de ambiente deixa flutuando (`consertarAmbiente`).
 // Adaptado de catar.js (o mesmo problema: sem cerca, o mastro das bandeiras e as placas ficam no ar). Aqui há mais um: com `muros` o kit põe painéis, bandeiras e placas junto da barreira de cada ponto,
 // a até 290 u da borda, mas na altura da PISTA (`p.h`) e não na do chão, que a essa distância já desceu: o conserto baixa cada peça até o chão do lugar dela.
 import * as THREE from "three";
 import { M } from "./cena.js";
 import { beiradaSolida } from "./kit/abudhabi/chao.js";
+import { hotelW } from "./kit/abudhabi/hotel.js";
+import { marinaYas } from "./kit/abudhabi/marina.js";
+import { predioDosBoxes } from "./kit/abudhabi/boxes.js";
+import { ferrariWorld } from "./kit/abudhabi/ferrari.js";
+import { ligarNoite } from "./kit/bahrein/base.js";
 
 export const BANDEIRA = [0x00732f, 0xef3340]; // verde em cima, vermelho embaixo (as bandeiras do kit/ambiente.js: de cima h + 47, de baixo h + 42,5)
 
 export function cenarioAbuDhabi(tr, ctx) {
   beiradaSolida(tr, ctx.add); // a base sólida da pista e a areia no nível do asfalto, dos dois lados (kit/abudhabi/chao.js)
+  tr.hotelAD = hotelW(tr, ctx.add);
+  marinaYas(tr, ctx.add);
+  predioDosBoxes(tr, ctx.add);
+  ferrariWorld(tr, ctx.add);
 }
 
 /**
@@ -53,4 +65,5 @@ export function consertarAmbiente(tr, add) {
 
 export function depoisAbuDhabi(tr, ctx) {
   consertarAmbiente(tr, ctx.add);
+  ligarNoite(tr); // por último: depois de vidaGP, que define tr.animarPista (os LEDs da casca do hotel acendem e trocam de cor de noite)
 }

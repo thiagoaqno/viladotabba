@@ -79,8 +79,13 @@ async function entrar({ codigo, nome }) {
 }
 
 // ---------- a porta de entrada (dentro do formulário da sede solo) ----------
+// as salas que este navegador já tem (voltar a uma delas) e, embaixo, abrir uma temporada NOVA ou entrar com um código
+function salasGuardadas() {
+  const c = []; try { for (let i = 0; i < localStorage.length; i++) { const m = /^corrida:temporada:grupo:([A-Z0-9]+)$/.exec(localStorage.key(i) || ""); if (m) c.push(m[1]); } } catch { /* sem armazenamento */ }
+  return c.length ? `<div class="g-salas"><label>Suas temporadas</label>${c.map((x) => `<a class="cx-bt g-sala" href="/corrida/temporada/?sala=${h(x)}">Voltar à sala ${h(x)}</a>`).join("")}<label style="margin-top:14px;display:block">Ou comece uma temporada nova</label></div>` : "";
+}
 function formulario() {
-  return `<form id="gnova" autocomplete="off"><label for="gnome">Seu nome</label><input id="gnome" name="nome" maxlength="8" placeholder="até 8 letras" value="${h(ler("corrida:temporada:nome") || "")}">
+  return `${salasGuardadas()}<form id="gnova" autocomplete="off"><label for="gnome">Seu nome</label><input id="gnome" name="nome" maxlength="8" placeholder="até 8 letras" value="${h(ler("corrida:temporada:nome") || "")}">
     <button class="cx-bt" type="submit">Abrir sala com os amigos</button></form>
     <form id="gentra" autocomplete="off" style="margin-top:12px"><label for="gcodigo">Já tenho um código de sala</label><input id="gcodigo" name="codigo" maxlength="5" placeholder="5 letras" style="text-transform:uppercase"><button class="cx-bt" type="submit">Entrar na sala</button></form>`;
 }
@@ -113,8 +118,12 @@ function tabela(linhas, tipo, destaque) {
 function blocoDeSubstituir(terminou) {
   const opcoes = S.mercado.filter((m) => m.dono && !S.equipes[m.dono]).map((m) => `<option value="${h(m.id)}">${h(piloto(m.id).nome)} · ${h(equipe(m.dono).nome)}</option>`).join("");
   const pode = opcoes && !terminou && !S.gpAberto;
+  // ou escolher a EQUIPE (grupo-regras.js, entrarNaEquipe): qualquer uma com menos de dois amigos; numa equipe com um amigo, você fica com o carro do robô
+  const vagas = Object.keys(Pilotos.EQUIPES).map((id) => [id, S.pessoas.filter((p) => p.equipe === id).length]).filter(([, n]) => n < 2)
+    .map(([id, n]) => `<option value="${h(id)}">${h(equipe(id).nome)}${n ? " · com um amigo" : ""}</option>`).join("");
+  const podeEquipe = vagas && !terminou && !S.gpAberto;
   const eu = S.pessoas.find((p) => p.id === S.eu), demitido = eu && eu.demitidoDe && !eu.equipe ? `<p class="boxnota"><b>Você foi demitido da ${h(equipe(eu.demitidoDe).nome)}</b>: terminou longe da meta do contrato. Assuma o carro de um piloto de uma equipe dos robôs para continuar correndo.</p>` : "";
-  return `<section class="bloco"><header><h2>${demitido ? "Procurando equipe" : "Você acompanha"}</h2></header>${demitido}<p class="boxnota">${terminou ? "A temporada acabou: na próxima você pode assumir um carro." : S.gpAberto ? "O GP está aberto: depois do resultado você pode assumir um carro." : "Assuma o lugar de um piloto dos robôs e corra daqui em diante. Você começa com zero pontos; a equipe mantém os pontos e o carro dela."}</p>${pode ? `<div class="row"><select id="g-substituir" aria-label="Piloto a substituir">${opcoes}</select><button class="primary" id="gsubstituir">Assumir o carro</button></div>` : ""}</section>`;
+  return `<section class="bloco"><header><h2>${demitido ? "Procurando equipe" : "Você acompanha"}</h2></header>${demitido}<p class="boxnota">${terminou ? "A temporada acabou: na próxima você pode assumir um carro." : S.gpAberto ? "O GP está aberto: depois do resultado você pode assumir um carro." : "Escolha uma equipe com vaga e corra daqui em diante. Você começa com zero pontos; a equipe mantém os pontos e o carro dela."}</p>${podeEquipe ? `<div class="row"><select id="g-equipe-meio" aria-label="Equipe">${vagas}</select><button class="primary" id="gequipemeio">Entrar na equipe</button></div><p class="boxnota">Ou assuma o lugar de um piloto específico:</p>` : ""}${pode ? `<div class="row"><select id="g-substituir" aria-label="Piloto a substituir">${opcoes}</select><button class="primary" id="gsubstituir">Assumir o carro</button></div>` : ""}</section>`;
 }
 function painelDaEquipe(terminou) {
   const eq = S.minhaEquipe, t = eq && S.equipes[eq]; if (!t) { const aviso = blocoDeSubstituir(terminou); return { carro: aviso, equipe: aviso }; }
@@ -247,6 +256,7 @@ const clicar = async (e) => {
   else if (b.dataset.aba) { window.F1Garagem.definirAba(b.dataset.aba); desenhar(); }
   else if ((b.dataset.ponto || b.hasAttribute("data-ponto-zerar")) && t) { const nova = window.F1Garagem.cliquePonto(b, t.montagem, S.minhaEquipe, t.bonus); if (nova) await pedir("montagem", { montagem: nova, versao: t.versao }); }
   else if (b.id === "gdesenvolver") await pedir("desenvolver");
+  else if (b.id === "gequipemeio") await pedir("equipe", { id: document.getElementById("g-equipe-meio").value });
   else if (b.id === "gsubstituir") await pedir("substituir", { id: document.getElementById("g-substituir").value });
   else if (b.id === "gcontratar") await pedir("piloto", { id: document.getElementById("g-piloto").value });
   else if (b.dataset.engenheiro) await pedir("engenheiro", { area: b.dataset.engenheiro, nivel: document.getElementById("g-" + b.dataset.engenheiro).value });

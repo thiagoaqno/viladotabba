@@ -80,7 +80,7 @@ function passarCargo(sala, de, para) {
   sala.host = para; return sala;
 }
 function escolherEquipe(sala, pid, equipe) {
-  if (sala.fase !== "sala") throw Error("A temporada já começou: as equipes estão fechadas.");
+  if (sala.fase !== "sala") return entrarNaEquipe(sala, pid, equipe); // (no meio da temporada: quem está sem carro entra numa equipe com vaga)
   const p = sala.pessoas[pid]; if (!p) throw Error("Pessoa inválida.");
   if (equipe == null || equipe === "") { p.equipe = null; return sala; }
   if (!Pilotos.EQUIPES[equipe] || !Equipes.EQUIPES[equipe]) throw Error("Equipe inválida.");
@@ -207,6 +207,29 @@ function substituirPiloto(sala, pid, id) {
   for (const x of outros.slice(1)) sala.contratos[x.id] = null; // (a equipe humana tem um carro contratado só)
   sala.equipes[eq] = t; p.equipe = eq; p.carro = 0;
   anotar(sala, pid, t, `assumiu o lugar de ${alvo.nome}`);
+  return sala;
+}
+// No meio da temporada, quem está sem carro (chegou depois, ou foi demitido) escolhe uma EQUIPE com vaga, entre os GPs:
+//  - uma equipe dos robôs: assume o lugar do primeiro piloto contratado dela (o mesmo de substituirPiloto, com o carro e os pontos da equipe);
+//  - uma equipe com UM amigo: fica com o carro do piloto robô dela, que volta para o mercado;
+//  - com dois amigos, a equipe está cheia. A pessoa começa com zero pontos.
+function entrarNaEquipe(sala, pid, equipe) {
+  ativa(sala);
+  const p = sala.pessoas[pid]; if (!p) throw Error("Pessoa inválida.");
+  if (p.equipe) throw Error("Você já tem um carro nesta temporada.");
+  if (!Pilotos.EQUIPES[equipe] || !Equipes.EQUIPES[equipe]) throw Error("Equipe inválida.");
+  const hs = humanosDa(sala, equipe);
+  if (hs.length >= 2) throw Error(`A ${nomeDaEquipe(equipe)} já tem os dois carros ocupados.`);
+  if (!sala.equipes[equipe]) {
+    const alvo = Pilotos.PILOTOS.find((x) => sala.contratos[x.id] === equipe);
+    if (alvo) return substituirPiloto(sala, pid, alvo.id);
+    sala.equipes[equipe] = equipeNova(equipe);
+  }
+  const t = sala.equipes[equipe];
+  let saiu = null;
+  if (hs.length && t.companheiro) { saiu = Pilotos.PILOTOS.find((x) => x.id === t.companheiro); sala.contratos[t.companheiro] = null; t.companheiro = null; }
+  p.equipe = equipe; p.carro = hs.length ? 1 - (sala.pessoas[hs[0]].carro || 0) : 0;
+  anotar(sala, pid, t, saiu ? `entrou na equipe no carro de ${saiu.nome}` : "entrou na equipe");
   return sala;
 }
 function contratarEngenheiro(sala, pid, area, nivel) {

@@ -2,10 +2,10 @@
 import { store } from "./estado.js";
 import * as THREE from "three";
 const CHAVE = "corrida:hud-estilo";
-// os três estilos (Configurações > Geral): "classico" é o da transmissão da F1 (o novo: torre, setores e o mostrador), "telemetria" o
-// mostrador alternativo e "antigo" o HUD de antes do estilo F1 (os painéis do arcade, também nas corridas de F1: hud.js, `f1on`)
+// os estilos (Configurações > Geral): "classico" é o da transmissão da F1 (o novo: torre, setores e o mostrador) e "telemetria" o
+// mostrador alternativo
 // "compacto": o do novo, mas com o painel pequeno do canto (bateria e velocidade: hud-painel.js, #hDentro) em qualquer câmera
-export const ESTILOS_HUD = [["classico", "Novo (F1)"], ["compacto", "Compacto"], ["telemetria", "Telemetria"], ["antigo", "Clássico"]];
+export const ESTILOS_HUD = [["classico", "Novo (F1)"], ["compacto", "Compacto"], ["telemetria", "Telemetria"]]; // (o "antigo", os painéis de antes do estilo F1, saiu: pedido do Thiago, 2026-11-11)
 let estilo = "classico";
 try { const v = store.get(CHAVE); if (ESTILOS_HUD.some(([k]) => k === v)) estilo = v; } catch (_) {}
 export const estiloHud = () => estilo;

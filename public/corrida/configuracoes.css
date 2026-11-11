@@ -73,7 +73,7 @@
 
 /* os avisos da direção de prova: por cima da faixa "F1 RACE" da torre (o #hTorre: left 10, top 10, 236 de largura, hud-f1.css), cobrindo-a
    enquanto há aviso (a torre é redesenhada inteira de vez em quando: o aviso fica fora dela, só no mesmo lugar) */
-#race.f1avisos.f1hud #avisosF1 { left: 10px; top: 10px; width: 236px; transform: none; z-index: 5; } /* (só com a torre: no HUD clássico ficam onde eram) */
+#race.f1avisos.f1hud #avisosF1 { left: 10px; top: 10px; width: 236px; transform: none; z-index: 5; } /* (só com a torre: no arcade ficam onde eram) */
 #avisosF1 .av-item { grid-template-columns: 24px minmax(0, 1fr); min-height: 38px; box-shadow: 0 2px 8px #0008; } /* (a altura da faixa .tt-topo) */
 #avisosF1 .av-bloco svg { width: 14px; height: 14px; }
 #avisosF1 .av-corpo { gap: 1px; padding: 3px 7px 4px; }

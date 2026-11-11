@@ -9,7 +9,6 @@ import { clima } from "./clima.js";
 import { set, montarCentro, atualizarCentro, montarTempo, atualizarTempo, estrategia, minimapaF1, minimapaPertoF1, desenharBanner, montarCrono, desenharCrono } from "./hud-painel.js";
 import { montarMfd, atualizarMfd, acoes } from "./mfd.js";
 import { atualizarMenuBox } from "./box-menu.js";
-import { estiloHud } from "./hud-telemetria.js";
 import { htmlResultado, aposResultado, resultadoMudou, limparResultado } from "./resultado-gp.js";
 
 // o cartão do rádio do engenheiro (como na TV: "SOBRENOME RADIO", o número e a equipe), por cima do velocímetro enquanto ele fala
@@ -60,7 +59,7 @@ export function hud() {
   if (left > 0) { const n = Math.ceil(left); big = !luz && n <= 3 ? String(n) : ""; if (!luz && n <= 3 && race.beeped !== n) { race.beeped = n; Sound.beep(false); } }
   else if (left > -1) { big = luz ? "" : "VAI!"; if (race.beeped !== 0) { race.beeped = 0; Sound.beep(true); radioF1("largada"); objetivoDaCorrida(); } }
   luzesDaLargada(left);
-  const f1on = cfg.regras === "f1" && (E.S.phase === "race" || E.S.phase === "quali") && estiloHud() !== "antigo"; // ("antigo": o HUD de antes, escolhido nas Configurações) // o HUD da F1 (torre, setores, mostrador, MFD e mapinha) na classificação e na corrida; no arcade fica o antigo
+  const f1on = cfg.regras === "f1" && (E.S.phase === "race" || E.S.phase === "quali"); // o HUD da F1 (torre, setores, mostrador, MFD e mapinha) na classificação e na corrida; no arcade fica o antigo
   const f1mfd = cfg.regras === "f1" && E.S.phase === "quali";
   $("race").classList.toggle("f1mfd", f1mfd);
   const f1av = cfg.regras === "f1"; // os avisos no estilo da transmissão valem em toda a pista de F1 (classificação e corrida)

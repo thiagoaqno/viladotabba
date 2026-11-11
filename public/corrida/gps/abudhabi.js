@@ -7,7 +7,7 @@ import { cenarioAbuDhabi, depoisAbuDhabi, BANDEIRA } from "../abudhabi.js";
 
 export const GP_ABUDHABI = gpSimples("abudhabi", {
   bandeira: BANDEIRA, marcas: ["pirelli", "rolex", "aramco", "dhl", "heineken", "f1", "aws", "lenovo", "msc"], margem: "#8a7e6a",
-  beira: { palmeiras: 0.12, vidro: 0.15, longe: { vidro: 0.15 } }, horizonte: false,
+  beira: {}, horizonte: false, // (sem as palmeiras e os prédios de vidro soltos do kit: o que há em volta de Yas está em ../abudhabi.js, no lugar real)
   cenario: (tr, ctx) => cenarioAbuDhabi(tr, ctx), // a areia no nível do asfalto e a base sólida da pista
 });
 // escala real: o cenário do kit no tamanho certo (os mesmos fatores de Interlagos e Spa), e a zebra e a brita automática de gpSimples (fixas em 340/220 e 420)
@@ -17,3 +17,6 @@ Object.assign(GP_ABUDHABI.chao.zebra, { dentro: 622, fora: 402 });
 GP_ABUDHABI.escape = { ...GP_ABUDHABI.escape, britaCurvas: 768 };
 // o que o kit de ambiente deixa no ar (o mastro das bandeiras, as placas de 100 e 50 m e, com a barreira longe, os painéis e as bandeiras na altura da pista): ../abudhabi.js `consertarAmbiente`
 GP_ABUDHABI.depois = (tr, ctx) => depoisAbuDhabi(tr, ctx);
+// o cenário genérico do GP simples sai: o prédio dos boxes do kit (no lugar dele, o de Yas, ../kit/abudhabi/boxes.js, em cima das garagens) e as passarelas
+GP_ABUDHABI.cenario = (tr, ctx) => cenarioAbuDhabi(tr, ctx);
+delete GP_ABUDHABI.passarelas;

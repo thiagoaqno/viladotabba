@@ -99,26 +99,6 @@ test("o navegador só solta o carro no go: a previsão segura pelo relógio, nã
   assert.ok(/amb\.segurar = t < room\.startAt;/.test(servidor), "o servidor segura o carro até o go");
 });
 
-test("quebra: o padrão é 0,5% por carro por corrida, e a confiabilidade mexe de 0,25% a 1%", () => {
-  assert.equal(Equipes.QUEBRA_PADRAO, 0.005);
-  const base = { motor: 4, aero: 4, chassi: 3, freios: 3, suspensao: 3 };
-  assert.equal(Equipes.specDaMontagem({ ...base, confiab: Equipes.CONFIAB_PADRAO }).quebra, 0.005);
-  assert.equal(Equipes.specDaMontagem({ ...base, confiab: 0 }).quebra, 0.01);
-  assert.equal(Equipes.specDaMontagem({ ...base, confiab: 8 }).quebra, 0.0025);
-  let ant = Infinity;
-  for (let c = 0; c <= 8; c++) { const q = Equipes.quebraDaConfiab(c); assert.ok(q >= 0.0025 && q <= 0.01 && q < ant, `confiab ${c}: ${q}`); ant = q; }
-  for (const id of Object.keys(Equipes.EQUIPES)) { const q = Equipes.specDaEquipe(id).quebra; assert.ok(q >= 0.0025 && q <= 0.01, `${id}: ${q}`); }
-  assert.equal(Equipes.specDaMontagem({ ...base, motor: 8, aero: 0, confiab: 3 }).quebra, 0.005, "o motor não muda a chance");
-});
+// (2026-11-11: o caso "quebra: o padrão é 0,5%..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
 
-test("quebra: em muitas corridas simuladas com a semente, a taxa fica perto de 0,5%", () => {
-  const sorteios = 60000, base = { motor: 4, aero: 4, chassi: 3, freios: 3, suspensao: 3 };
-  const taxa = (spec) => { let q = 0; for (let k = 0; k < sorteios; k++) if (Equipes.sortearFalha(F1.sorteio(`quebra:${k}:carro-${k % 20}`), spec) != null) q++; return q / sorteios; };
-  const padrao = taxa(Equipes.specDaMontagem({ ...base, confiab: 3 }));
-  assert.ok(padrao > 0.0035 && padrao < 0.0065, `taxa ${padrao}`);
-  const pior = taxa(Equipes.specDaMontagem({ ...base, confiab: 0 })), melhor = taxa(Equipes.specDaMontagem({ ...base, confiab: 8 }));
-  assert.ok(pior > 0.0075 && pior < 0.0125, `sem confiabilidade ${pior}`);
-  assert.ok(melhor > 0.0015 && melhor < 0.0035, `confiabilidade máxima ${melhor}`);
-  const spec = Equipes.specDaEquipe("mclaren");
-  assert.equal(Equipes.sortearFalha(F1.sorteio("quebra:9:a"), spec), Equipes.sortearFalha(F1.sorteio("quebra:9:a"), spec), "a mesma semente dá a mesma falha");
-});
+// (2026-11-11: o caso "quebra: em muitas corridas..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")

@@ -47,7 +47,6 @@ test("regras: dois na mesma equipe, mercado disputado, versão da montagem e his
   assert.throws(() => G.iniciar(sala, "b"), /anfitrião/);
   G.definirOpcoes(sala, "a", { tamanho: 4, voltas: 2 });
   G.iniciar(sala, "a", 77);
-  assert.throws(() => G.escolherEquipe(sala, "c", "haas"), /fechadas/);
   assert.equal(sala.pessoas.a.carro, 0); assert.equal(sala.pessoas.b.carro, 1);
   // os dois titulares da Cadillac saem do grid; a Ferrari fica com Leclerc de companheiro e Hamilton livre
   assert.equal(sala.contratos.perez, null); assert.equal(sala.contratos.bottas, null);

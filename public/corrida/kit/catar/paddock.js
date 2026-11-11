@@ -101,7 +101,7 @@ export function paddock(tr, add, boxes) {
 // as árvores de copa redonda: o tronco (um cilindro) e a copa (um icosaedro achatado), em dois InstancedMesh, cada copa de um verde
 export function arvores(tr, add, lista, r, nome = "catar-arvores") {
   // (a copa, de raio 15 × s, não chega à pista: na pista antiga, mais larga, a árvore do jardim do VVIP encostava na beira da curva 1)
-  lista = lista.filter((o) => !tr.distAt || tr.distAt(o.x, o.z) > tr.W / 2 + 15 * o.s + 4);
+  lista = lista.filter((o) => !tr.distAt || tr.distAt(o.x, o.z) > tr.W / 2 + 28 * o.s + 6); // (a copa passa da conta do tronco: com 15 × s, a copa de 5 árvores avançava sobre a pista)
   if (!lista.length) return 0;
   const tronco = new THREE.CylinderGeometry(0.7, 1.1, 1, 6), copa = new THREE.IcosahedronGeometry(1, 1); tronco.translate(0, 0.5, 0);
   const im = new THREE.InstancedMesh(tronco, M(0x6b5239), lista.length), ic = new THREE.InstancedMesh(copa, M(0xffffff, { roughness: 0.95, flatShading: true }), lista.length), d = new THREE.Object3D(), c = new THREE.Color();

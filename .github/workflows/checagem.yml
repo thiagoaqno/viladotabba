@@ -1,0 +1,32 @@
+name: Checagem rápida
+# Em 1 a 2 minutos, antes dos testes: todo arquivo da Corrida passa no `node --check` (os de public/corrida são módulos) e o
+# servidor liga e responde a página da Corrida. Pega erro de digitação e import quebrado cedo.
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  checar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: Sintaxe dos arquivos da Corrida
+        run: |
+          erro=0
+          for f in corrida*.js server.js bd.js; do node --check "$f" || erro=1; done
+          for f in $(find public/corrida -name '*.js' -not -path '*/vendor/*'); do
+            if grep -qE '^(import|export) ' "$f"; then node --input-type=module --check < "$f" || { echo "em $f"; erro=1; }
+            else node --check "$f" || erro=1; fi
+          done
+          exit $erro
+      - run: npm ci --omit=dev
+      - name: O servidor liga e responde a Corrida
+        run: |
+          PORT=3999 DB_PATH=:memory: node server.js > servidor.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3999/corrida/ && curl -sf -o /dev/null http://127.0.0.1:3999/api/recordes-corrida && exit 0; sleep 1; done
+          cat servidor.log; exit 1

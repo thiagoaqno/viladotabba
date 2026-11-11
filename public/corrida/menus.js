@@ -192,8 +192,8 @@ function renderGP(m, isHost, f1, c, t) {
   const recPista = window.GpSobre.recordesDa(c.pista, () => { if (E.S && E.S.phase === "lobby") renderLobby(); }) || { top: null, setores: [] };
   trocar($("gpMapa"), `<div class="sn-mapa-corpo">${window.GpSobre.mapaSvg(c.pista, "sn-sobre-svg sn-gp-svg", null, null, true)}<div class="sn-mapa-txt"><small>${h(t.sub)}</small><b>${h(t.name)}</b><div class="sn-chips">${dados}</div>${window.GpSobre.fichaDetalhe(c.pista, undefined, recPista)}<button class="sn-sobre-btn" data-sobre><span>Sobre o GP</span><small>${sobreResumo(c.pista)}</small><i aria-hidden="true">›</i></button>${isHost ? "" : `<p class="sn-so-org">Só o organizador escolhe o GP.</p>`}</div></div>`);
   const fundoGp = window.GpInfo && window.GpInfo.fundoDe(c.pista); $("gpMapa").style.setProperty("--foto", fundoGp ? `url("${fundoGp}")` : "none"); // a foto do GP por trás do mapa
-  const pistas = Object.entries(PISTAS).map(([id, p]) => `<button class="sn-pista ${c.pista === id ? "on" : ""}" data-pista="${id}" ${dis} aria-pressed="${c.pista === id}"><i class="sn-pista-foto" aria-hidden="true" style="--foto:${window.GpInfo?.fundoDe(id) ? `url(&quot;${window.GpInfo.fundoDe(id)}&quot;)` : "none"}"></i><canvas data-prev="${id}" width="160" height="160" aria-hidden="true"></canvas><span><b>${h(p.name)}</b><small>${h(p.sub)}</small></span>${loadBest(id) ? `<em>Recorde ${fmt(loadBest(id).t)}</em>` : ""}</button>`).join("");
-  if (trocar($("gpPistas"), `<h3 class="sn-tit"><span>Pistas</span><em>${Object.keys(PISTAS).length} circuitos</em></h3><div class="sn-pistas">${pistas}</div>`)) $("gpPistas").querySelectorAll("[data-prev]").forEach((cv) => drawPreview(cv, cv.dataset.prev));
+  const pistas = window.Pistas.idsNaEscolha().map((id) => [id, PISTAS[id]]).map(([id, p]) => `<button class="sn-pista ${c.pista === id ? "on" : ""}" data-pista="${id}" ${dis} aria-pressed="${c.pista === id}"><i class="sn-pista-foto" aria-hidden="true" style="--foto:${window.GpInfo?.fundoDe(id) ? `url(&quot;${window.GpInfo.fundoDe(id)}&quot;)` : "none"}"></i><canvas data-prev="${id}" width="160" height="160" aria-hidden="true"></canvas><span><b>${h(p.name)}</b><small>${h(p.sub)}</small></span>${loadBest(id) ? `<em>Recorde ${fmt(loadBest(id).t)}</em>` : ""}</button>`).join("");
+  if (trocar($("gpPistas"), `<h3 class="sn-tit"><span>Pistas</span><em>${window.Pistas.idsNaEscolha().length} circuitos</em></h3><div class="sn-pistas">${pistas}</div>`)) $("gpPistas").querySelectorAll("[data-prev]").forEach((cv) => drawPreview(cv, cv.dataset.prev));
   const seg = (itens, atual, attr, rot, dsb = dis) => `<div class="sn-seg" role="group" aria-label="${rot}">${itens.map(([v, l]) => { const on = String(atual) === String(v); return `<button class="sn-opt ${on ? "on" : ""}" data-${attr}="${v}" aria-pressed="${on}" ${dsb}>${l}</button>`; }).join("")}</div>`;
   const campo = (rot, corpo, nota) => `<div class="sn-grupo"><span class="sn-rot">${rot}</span>${corpo}${nota ? `<small>${nota}</small>` : ""}</div>`;
   const robos = Math.min(c.robos || 0, (f1 ? 22 : 8) - E.S.players.length);
@@ -259,7 +259,7 @@ function fundoSobre(id, animar) { // a foto cobre tudo; ao trocar de GP a nova e
 }
 function renderSobre() {
   const S = E.S; if (!S || !sobreAberto) return;
-  const G = window.GpInfo, id = S.config.pista, m = me(), isHost = !!m && S.host === m.id, ids = Object.keys(PISTAS), i = ids.indexOf(id);
+  const G = window.GpInfo, id = S.config.pista, m = me(), isHost = !!m && S.host === m.id, ids = window.Pistas.idsNaEscolha(), i = ids.indexOf(id);
   const ant = PISTAS[ids[(i - 1 + ids.length) % ids.length]], prox = PISTAS[ids[(i + 1) % ids.length]], pode = isHost && !S.temporada;
   for (const [b, p] of [[$("sobreAnt"), ant], [$("sobreProx"), prox]]) { b.disabled = !pode; b.title = pode ? "" : S.temporada ? "O GP vem do calendário" : "Só o organizador escolhe o GP"; b.querySelector("small").textContent = p.name; }
   const rec = loadBest(id), chave = `${id}|${rec ? rec.t : ""}`;
@@ -300,7 +300,7 @@ function fecharSobre(devolverFoco = true) {
 }
 function mudarPistaSobre(d) {
   const S = E.S, m = me(); if (!S || !m || S.host !== m.id || S.temporada) return;
-  const ids = Object.keys(PISTAS), i = ids.indexOf(S.config.pista);
+  const ids = window.Pistas.idsNaEscolha(), i = ids.indexOf(S.config.pista);
   cfg({ pista: ids[(i + d + ids.length * 2) % ids.length] });
 }
 (function ligarSobre() {

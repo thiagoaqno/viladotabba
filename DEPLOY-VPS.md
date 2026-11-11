@@ -58,7 +58,7 @@ Aba **Secrets**, botão **New repository secret**:
 |---|---|
 | `VPS_HOST` | o IP da VPS (o do passo 1, ou o da página da VPS no hPanel) |
 | `VPS_USER` | o usuário do passo 1 (muitas vezes `root`) |
-| `VPS_SSH_KEY` | o conteúdo inteiro do arquivo `deploy_vps` (a chave **privada**; no PC: `Get-Content $HOME\.ssh\deploy_vps`), incluindo as linhas `-----BEGIN` e `-----END` |
+| `VPS_SSH_KEY` | a chave **privada** do passo 2, inteira, com as linhas `-----BEGIN` e `-----END` |
 | `VPS_PORT` | só se o SSH da VPS não for na porta 22 |
 
 Aba **Variables**, botão **New repository variable** (só se for diferente do padrão):

@@ -6,7 +6,7 @@
 // sem sombras novas (o mapa de sombra do quadro principal é reaproveitado) e sem o pós-processamento (o desenho vai direto na imagem). Desligado na qualidade Baixa.
 import * as THREE from "three";
 import { renderer, scene, cam } from "./cena.js";
-import { qualidade } from "./qualidade.js";
+import { graficos } from "./qualidade.js";
 import { ajusteEspelho } from "./retrovisores-ajuste.js";
 
 const LARG = 160, FOV_H = 34 * Math.PI / 180, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]), PERTO = 120; // PERTO: até onde (unidades) uma câmera de fora ainda refaz o espelho
@@ -56,7 +56,7 @@ function desenhar(it, kart, todos, render = renderer, cena = scene) {
 export function quadroEspelhos(kart, modo) {
   if (!kart || !kart.kt) return;
   let E = kart.espelho;
-  if (qualidade() === "baixa" || !kart.g.visible) { if (E) for (const it of E.itens) it.painel.visible = false; return; }
+  if (!graficos().espelhos || !kart.g.visible) { if (E) for (const it of E.itens) it.painel.visible = false; return; } // (os retrovisores do carro: Configurações > Gráficos, qualidade.js)
   E = E || criar(kart); if (!E) return;
   const dentro = DE_DENTRO.has(modo);
   if (!dentro && modo !== "perto" && modo !== "longe") { for (const it of E.itens) it.painel.visible = it.feito; return; } // aérea e TV: ficam com a última imagem

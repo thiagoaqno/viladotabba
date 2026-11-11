@@ -1,0 +1,72 @@
+/* Corrida da Galera — a tela Configurações (configuracoes.js), o painel compacto da primeira pessoa (hud-painel.js, #hDentro) e a
+   moldura do retrovisor virtual (retrovisor.js, #retroMolde). */
+
+/* os botões que foram para dentro das Configurações saem da barra de cima (continuam na página: os módulos deles seguem donos do estado) */
+.utilbar .cfg-movido { display: none !important; }
+
+.cfg { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: #05070bcc; backdrop-filter: blur(3px);
+  font: 500 15px/1.35 "Titillium Web", "Barlow Condensed", system-ui, sans-serif; color: #fff; }
+.cfg.hidden { display: none; }
+.cfg-caixa { width: min(920px, calc(100vw - 32px)); height: min(640px, calc(100vh - 32px)); display: flex; flex-direction: column; background: #0d1018;
+  border-top: 4px solid #e10600; box-shadow: 0 20px 60px #000c; }
+.cfg-caixa > header { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid #ffffff1c; }
+.cfg-caixa > header b { flex: 1; font-size: 22px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.cfg-x { width: 34px; height: 34px; background: none; border: 1px solid #ffffff33; color: #fff; cursor: pointer; font-size: 16px; }
+.cfg-meio { flex: 1; display: flex; min-height: 0; }
+.cfg-abas { width: 190px; flex: none; display: flex; flex-direction: column; padding: 10px 0; border-right: 1px solid #ffffff1c; }
+.cfg-abas button { text-align: left; padding: 12px 18px; background: none; border: 0; border-left: 3px solid transparent; color: #ffffffb0; font-weight: 700; font-size: 16px; line-height: 1; font-family: inherit;
+  letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.cfg-abas button:hover { color: #fff; background: #ffffff0d; }
+.cfg-abas button[aria-selected="true"] { color: #fff; border-left-color: #e10600; background: #ffffff12; }
+.cfg-corpo { flex: 1; overflow: auto; padding: 6px 22px 22px; }
+.cfg-parte h3 { margin: 18px 0 6px; padding-bottom: 6px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #ff5a4f; border-bottom: 1px solid #ffffff1c; }
+.cfg-linha { display: flex; align-items: center; gap: 16px; padding: 10px 0; border-bottom: 1px solid #ffffff0d; }
+.cfg-rot { flex: 1; min-width: 0; }
+.cfg-rot b { display: block; font-weight: 700; }
+.cfg-rot small { display: block; color: #ffffff8c; font-size: 13px; }
+.cfg-ctl { flex: none; display: flex; align-items: center; gap: 8px; }
+.cfg-seg { display: flex; border: 1px solid #ffffff2e; }
+.cfg-seg button { padding: 7px 12px; background: none; border: 0; border-left: 1px solid #ffffff1c; color: #ffffffb8; font-weight: 600; font-size: 14px; line-height: 1; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.cfg-seg button:first-child { border-left: 0; }
+.cfg-seg button:hover { color: #fff; background: #ffffff12; }
+.cfg-seg button[aria-checked="true"] { background: #e10600; color: #fff; }
+.cfg select { padding: 7px 10px; background: #171b26; color: #fff; border: 1px solid #ffffff2e; font-weight: 600; font-size: 14px; font-family: inherit; }
+.cfg input[type="range"] { width: 200px; accent-color: #e10600; }
+.cfg output { width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+.cfg-bt { padding: 8px 16px; background: #ffffff14; border: 1px solid #ffffff33; color: #fff; font-weight: 700; font-size: 14px; font-family: inherit; cursor: pointer; }
+.cfg-bt:hover { background: #e10600; border-color: #e10600; }
+.cfg-chave { position: relative; width: 46px; height: 24px; border-radius: 12px; background: #ffffff26; border: 0; cursor: pointer; }
+.cfg-chave i { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
+.cfg-chave[aria-checked="true"] { background: #e10600; }
+.cfg-chave[aria-checked="true"] i { left: 25px; }
+.cfg-livre .tk-ffb { border: 0 !important; margin: 0 !important; }
+.cfg-livre .tk-ffb h3 { display: none; }
+.cfg :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@media (max-width: 700px) {
+  .cfg-meio { flex-direction: column; }
+  .cfg-abas { width: auto; flex-direction: row; overflow-x: auto; padding: 0; border-right: 0; border-bottom: 1px solid #ffffff1c; }
+  .cfg-abas button { border-left: 0; border-bottom: 3px solid transparent; padding: 12px 14px; }
+  .cfg-abas button[aria-selected="true"] { border-bottom-color: #e10600; }
+  .cfg-linha { flex-wrap: wrap; }
+  .cfg-ctl { width: 100%; }
+  .cfg-seg { flex-wrap: wrap; }
+}
+
+/* o painel compacto da primeira pessoa: no canto de baixo à direita, no lugar do mostrador grande */
+#hDentro { display: none; }
+#race.f1hud.cam-dentro #hCentro { display: none; }
+#race.f1hud.cam-dentro #hDentro { display: flex; position: absolute; right: 18px; bottom: 58px; z-index: 2; align-items: flex-end; gap: 4px;
+  font-family: var(--f1-fonte, "Titillium Web", system-ui, sans-serif); color: #fff; pointer-events: none; }
+#hDentro .hd-ers { display: flex; flex-direction: column; align-items: stretch; background: #0b0d13d9; }
+#hDentro .hd-modo { padding: 2px 8px; background: #1f6fd1; font-weight: 800; font-size: 11px; line-height: 1.4; font-family: inherit; letter-spacing: .06em; text-align: center; text-transform: uppercase; }
+#hDentro .hd-ers b { padding: 0 10px; font-weight: 800; font-size: 30px; line-height: 1.1; font-family: inherit; text-align: center; font-variant-numeric: tabular-nums; }
+#hDentro .hd-over { padding: 2px 8px; background: #ffffff1f; color: #ffffff8c; font-weight: 800; font-size: 11px; line-height: 1.4; font-family: inherit; letter-spacing: .06em; text-align: center; }
+#hDentro .hd-over.pronto { background: #1c7d3a; color: #fff; }
+#hDentro .hd-over.on { background: #2ee86a; color: #08210f; }
+#hDentro .hd-vel { display: flex; flex-direction: column; align-items: flex-end; padding: 0 10px 2px; background: #0b0d13d9; }
+#hDentro .hd-vel small { font-weight: 800; font-size: 11px; line-height: 1.4; font-family: inherit; letter-spacing: .08em; color: #ffffffb0; }
+#hDentro .hd-vel b { font-weight: 800; font-size: 38px; line-height: 1; font-family: inherit; color: #ff2a1f; font-variant-numeric: tabular-nums; min-width: 2.2em; text-align: right; }
+
+/* a moldura do retrovisor virtual (o desenho em si é do retrovisor.js, por baixo dela) */
+#retroMolde { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(36vw, 520px); aspect-ratio: 512 / 84; z-index: 3;
+  border: 3px solid #0c0e13; border-radius: 8px; box-shadow: 0 3px 10px #0008, inset 0 0 0 1px #ffffff24; pointer-events: none; }

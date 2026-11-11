@@ -19,6 +19,7 @@ import { boxEquipe } from "./kit/box-equipe.js";
 import { portico } from "./kit/torres.js";
 import { Montador, solido } from "./kit/montagem.js";
 import { hangarRAF, torreRAF, torreCorrida, igreja, turbina, telao, bandeiraUK, prismaGeo } from "./kit/silverstone/pecas.js";
+import { theWing as wingNovo } from "./kit/silverstone/wing.js";
 
 const AZUL = "#1d3f8f", VERMELHO = "#c8102e", BRANCO = "#f4f4f4";
 const ry0 = (p, lado) => Math.atan2(-lado * p.nx, -lado * p.ny); // rotation.y de quem está do lado `lado`, com a frente (+z) virada para a pista
@@ -28,71 +29,17 @@ const ponto = (p, lado, d, t = 0) => [p.x + p.nx * lado * d + p.tx * t, p.y + p.
 // ---------------------------------------------------------------------------------------------------------------------
 // 1. The Wing
 // ---------------------------------------------------------------------------------------------------------------------
-const WING = { de: 0.968, ate: 1.026, recuo: 64, lado: 1 };
 const CORES_EQUIPE = ["#e8002d", "#ff8700", "#27f4d2", "#3671c6", "#229971", "#37bedd", "#ff87bc", "#6692ff"];
 
-// o corte do prédio visto de lado: [afastamento a partir da frente, altura]. O prédio acompanha a reta, em fitas por material.
+// o The Wing (kit/silverstone/wing.js, refeito pelas fotos, #655): as garagens do kit viram o térreo, e o prédio (a faixa da DHL, o vidro com
+// "SILVERSTONE", as treliças vermelhas e o teto em asa com os bicos) fica em cima e atrás delas. Atrás do prédio, a torre da direção de prova e o paddock.
 function theWing(tr, { add }) {
-  const { pts, n, W } = tr, { lado } = WING, L0 = W / 2 + WING.recuo;
-  const rec = recortar(tr, Math.floor(WING.de * n), Math.floor(WING.ate * n), [lado * (L0 - 26), lado * (L0 + 90)]);
-  if (!rec) return null;
-  const { i0, i1 } = rec;
-  const garagens = new THREE.MeshStandardMaterial({ roughness: 0.7, side: THREE.DoubleSide, map: canvasTex(64, 768, (x, w, h, rr) => {
-    x.fillStyle = "#e7e7e3"; x.fillRect(0, 0, w, h); x.fillStyle = "#cfd1d1"; for (let b = 0; b <= 6; b++) x.fillRect(0, b * 128 - 2, w, 4); // os pilares entre as baias
-    for (let b = 0; b < 6; b++) {
-      const y0 = b * 128, cor = CORES_EQUIPE[(b * 3 + 1) % CORES_EQUIPE.length];
-      x.fillStyle = "#2a2e35"; x.fillRect(0, y0 + 12, 52, 104);
-      if (b % 2 === 0) { // garagem aberta: o interior claro, o pneu empilhado e o carro
-        x.fillStyle = "#dcdad3"; x.fillRect(2, y0 + 14, 46, 100); x.fillStyle = "#1b1c1f"; x.fillRect(2, y0 + 16, 10, 16); x.fillRect(2, y0 + 96, 10, 16);
-        x.fillStyle = cor; x.fillRect(4, y0 + 40, 16, 48); x.fillStyle = "#15161a"; x.fillRect(8, y0 + 56, 8, 16);
-        x.fillStyle = "#f2c200"; x.fillRect(4, y0 + 36, 4, 56);
-      } else { x.fillStyle = "#4b515a"; for (let k = 3; k < 52; k += 5) x.fillRect(k, y0 + 12, 2, 104); } // porta de enrolar fechada
-      x.fillStyle = cor; x.fillRect(52, y0 + 12, 5, 104); x.fillStyle = "#ffffff"; x.fillRect(57, y0 + 12, 2, 104); // o letreiro da equipe em cima da porta
-      for (let k = 0; k < 12; k++) { x.fillStyle = rr() < 0.5 ? "#0000000c" : "#ffffff10"; x.fillRect(rr() * w, y0 + rr() * 128, 3, 3); }
-    }
-  }) });
-  const vidroM = new THREE.MeshStandardMaterial({ roughness: 0.16, metalness: 0.45, side: THREE.DoubleSide, map: canvasTex(32, 128, (x, w, h) => {
-    const g = x.createLinearGradient(0, 0, w, 0); g.addColorStop(0, "#2c445a"); g.addColorStop(0.5, "#4d7390"); g.addColorStop(1, "#9ec0d6");
-    x.fillStyle = g; x.fillRect(0, 0, w, h); x.fillStyle = "#e8eef2"; x.fillRect(w * 0.5 - 1, 0, 2, h); x.fillRect(0, 0, 2, h); // o piso do 2º andar e o parapeito
-    for (let k = 0; k < h; k += 32) { x.fillStyle = "#e8eef2"; x.fillRect(0, k, w, 2); }
-    x.fillStyle = "#ffffff22"; for (let k = 0; k < h; k += 64) x.fillRect(0, k + 6, w, 10);
-  }) });
-  const concreto = M(0xb5b4ae, { roughness: 0.85, side: THREE.DoubleSide }), branco = M(0xf5f6f7, { roughness: 0.5, side: THREE.DoubleSide }), prata = M(0xbfc5cb, { roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide });
-  const azul = M(0x0b2a5b, { roughness: 0.5, side: THREE.DoubleSide }), parede = M(0xd9dadb, { roughness: 0.85, side: THREE.DoubleSide });
-  const perfil = (dx0, y0, dx1, y1, mat, vLen = 60) => faixa(tr, add, i0, i1, lado * (L0 + dx0), lado * (L0 + dx1), y0, y1, mat, vLen);
-  perfil(0, 0, 0, 46, garagens, 480); // as garagens (a textura tem seis baias)
-  perfil(-9, 46, 0, 46, concreto); perfil(-9, 46, -9, 56, azul); perfil(-9, 56, 0, 56, concreto); // a laje do 1º andar com o frisão azul
-  perfil(0, 56, 12, 118, vidroM, 90); perfil(12, 118, 12, 143.2, vidroM, 90); // o vidro inclinado, o Paddock Club
-  perfil(-26, 128, 12, 143.2, prata, 120); perfil(-26, 128, -26, 142, branco); perfil(-26, 142, 84, 178, branco, 120); // o teto em asa: a borda fina na frente, sobe para trás
-  perfil(84, 0, 84, 178, parede, 80);
-  // os dois fechamentos nas pontas (o corte inteiro do prédio)
-  const corte = [[0, 0], [0, 46], [-9, 46], [-9, 56], [0, 56], [12, 118], [12, 143.2], [-26, 128], [-26, 142], [84, 178], [84, 0]];
-  const tri = THREE.ShapeUtils.triangulateShape(corte.map(([a, b]) => new THREE.Vector2(a, b)), []);
-  for (const i of [i0, i1]) {
-    const p = pts[i % n], vs = [];
-    for (const [dx, y] of corte) vs.push(p.x + p.nx * lado * (L0 + dx), p.h + y, p.y + p.ny * lado * (L0 + dx));
-    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); g.setIndex(tri.flat()); g.computeVertexNormals(); add(new THREE.Mesh(g, parede));
-  }
-  // os painéis: o "SILVERSTONE" no frisão da laje e os patrocinadores na borda do teto, virados para a pista
-  const meio = Math.floor((i0 + i1) / 2), pm = pts[meio % n], g = new THREE.Group(), comp = (i1 - i0) * 6;
+  const w = wingNovo(tr, add); if (!w) return null;
+  const { pts, n } = tr, { lado, L0, i0, i1 } = w, comp = (i1 - i0) * 6, pm = pts[Math.floor((i0 + i1) / 2) % n], g = new THREE.Group();
   g.position.set(pm.x, pm.h, pm.y); g.rotation.y = Math.atan2(pm.nx, pm.ny); add(g); // x do grupo ao longo da pista, z = lado da pista
-  const fx = Math.max(3, Math.floor((comp - 30) / 118)), marcas = ["silverstone", "britgp", "pirelli", "rolex", "skysports", "heineken", "aramco", "dhl", "f1"];
-  for (let k = 0; k < fx; k++) {
-    const x = (k - (fx - 1) / 2) * 118;
-    const a = new THREE.Mesh(new THREE.PlaneGeometry(112, 9.4), new THREE.MeshBasicMaterial({ map: marcaTex("silverstone", 512, 44), side: THREE.DoubleSide }));
-    a.position.set(x, 51, lado * (L0 - 9.6)); a.rotation.y = lado > 0 ? Math.PI : 0; g.add(a);
-    const b = new THREE.Mesh(new THREE.PlaneGeometry(112, 11.6), new THREE.MeshBasicMaterial({ map: marcaTex(marcas[(k + 1) % marcas.length], 512, 52), side: THREE.DoubleSide }));
-    b.position.set(x, 135, lado * (L0 - 26.7)); b.rotation.y = lado > 0 ? Math.PI : 0; g.add(b);
-  }
-  // as aletas de aço entre as garagens (a luz que bate nelas dá o relevo da fachada)
-  const m = new Montador(), S = solido();
-  for (let k = 0; k <= Math.floor(comp / 80); k++) m.caixa(S, [-comp / 2 + k * 80, 23, lado * (L0 - 1.2)], [1.6, 46, 2.4], { cor: "#b9bdc1" });
-  for (let k = 0; k < Math.floor(comp / 60); k++) m.caixa(S, [-comp / 2 + 30 + k * 60, 57.5, lado * (L0 - 4.5)], [1.2, 3, 9], { cor: "#ffffff" }); // as luminárias do terraço
-  g.add(m.montar("wing-detalhes"));
-  // a torre da direção de prova, atrás do prédio, e o paddock
-  const torre = torreCorrida({ andares: 5 }); torre.position.set(0, 0, lado * (L0 + 84 + 40)); torre.rotation.y = lado > 0 ? Math.PI : 0; g.add(torre);
-  paddock(tr, g, lado, L0 + 84, comp);
-  for (let i = i0; i <= i1; i += 4) { const p = pts[i % n]; tr.reservado.push([p.x + p.nx * lado * (L0 + 40), p.y + p.ny * lado * (L0 + 40), 96], [p.x + p.nx * lado * (L0 + 250), p.y + p.ny * lado * (L0 + 250), 170]); }
+  const torre = torreCorrida({ andares: 5 }); torre.position.set(0, 0, lado * (L0 + 40)); torre.rotation.y = lado > 0 ? Math.PI : 0; g.add(torre);
+  paddock(tr, g, lado, L0, comp);
+  for (let i = i0; i <= i1; i += 4) { const p = pts[i % n]; tr.reservado.push([p.x + p.nx * lado * (L0 + 250), p.y + p.ny * lado * (L0 + 250), 170]); }
   return { i0, i1, L0 };
 }
 

@@ -9,6 +9,7 @@
 //   cores: ["#e8002d", …] — a cor de cada garagem (11, uma por equipe); sem isso elas ficam cinzas até o jogo pintar (grp.userData.colorir)
 //   mureta: true | false — a mureta entre a pista e o corredor (padrão: sim, menos onde a pista já tem muro de rua)
 //   garagens: false — só o corredor e os quadrados pintados, sem as garagens (Mônaco)
+//   faixa: "#c8102e", patrocinio: [...] — a cor da faixa da marquise e as marcas nela; faixaMarca: true — a marca nas cores dela (o texto da cor da marca, em vez de branco)
 import * as THREE from "three";
 import { canvasTex } from "../cena.js";
 import { lotes } from "./comum.js";
@@ -25,12 +26,12 @@ const equipeDa = (k) => EQUIPES[k % EQUIPES.length];
 // O desenho sai na hora com o nome e é refeito quando a imagem chega (no Node dos testes não há Image, e fica só o nome).
 // o patrocinador em branco sobre a faixa vermelha da marquise (uma textura por marca, guardada)
 const FAIXAS = new Map();
-function texFaixa(nome, fundo) {
-  const chave = nome + fundo; if (FAIXAS.has(chave)) return FAIXAS.get(chave);
+function texFaixa(nome, fundo, naCor = false) {
+  const chave = nome + fundo + (naCor ? ":cor" : ""); if (FAIXAS.has(chave)) return FAIXAS.get(chave);
   const m = MARCAS[nome] || { texto: String(nome).toUpperCase(), fonte: "900 {s}px Arial, sans-serif" };
   const t = canvasTex(1024, 128, (x, w, hh) => {
     x.fillStyle = fundo; x.fillRect(0, 0, w, hh);
-    x.fillStyle = "#ffffff"; x.textAlign = "center"; x.textBaseline = "middle"; let s = 86; x.font = m.fonte.replace("{s}", s);
+    x.fillStyle = naCor && m.cor ? m.cor : "#ffffff"; x.textAlign = "center"; x.textBaseline = "middle"; let s = 86; x.font = m.fonte.replace("{s}", s);
     while (s > 30 && x.measureText(m.texto).width > w * 0.7) { s -= 4; x.font = m.fonte.replace("{s}", s); }
     x.fillText(m.texto, w / 2, hh / 2 + 4);
   }, false);
@@ -215,7 +216,7 @@ export function boxesGP(tr, add, cfg = {}) {
       caixa(ref, tx, ty, nx, ny, 0, -12.05, alt + 1.2, passo, 0.7, 0.5, "#f4f4f4");
       // o patrocinador na faixa vermelha (um por garagem, alternando), de frente para o corredor
       const nomeFaixa = (cfg.patrocinio || PATROCINIO)[k % (cfg.patrocinio || PATROCINIO).length];
-      const faixaP = new THREE.Mesh(new THREE.PlaneGeometry(passo, 3.6), new THREE.MeshBasicMaterial({ map: texFaixa(nomeFaixa, cfg.faixa || "#c8102e"), side: THREE.DoubleSide }));
+      const faixaP = new THREE.Mesh(new THREE.PlaneGeometry(passo, 3.6), new THREE.MeshBasicMaterial({ map: texFaixa(nomeFaixa, cfg.faixa || "#c8102e", !!cfg.faixaMarca), side: THREE.DoubleSide }));
       const pfx = 12.32; faixaP.position.set(ref.x - nx * pfx, ref.h + alt - 0.6, ref.y - ny * pfx); faixaP.rotation.y = Math.atan2(-nx, -ny);
       grp.add(faixaP);
       // o andar do hospitality: vidro escuro, guarda-corpo branco na frente e a laje do teto

@@ -98,7 +98,7 @@ app.get("/api/corrida/drag/musicas", (req, res) => {
 app.get("/api/recordes-corrida", (req, res) => {
   try {
     const T = require("./public/corrida/pistas.js"), rec = require("./bd.js").recordesCorrida(), set = require("./bd.js").setoresCorrida();
-    res.json({ pistas: Object.entries(T.PISTAS).map(([id, p]) => ({ id, nome: p.name, top: rec[id] || [], setores: set[id] || [null, null, null] })) });
+    res.json({ pistas: T.idsNaEscolha().map((id) => [id, T.PISTAS[id]]).map(([id, p]) => ({ id, nome: p.name, top: rec[id] || [], setores: set[id] || [null, null, null] })) });
   } catch (e) { res.status(500).json({ erro: "O placar não abriu." }); }
 });
 // a tela inicial da Corrida: quem está online, as salas abertas e o desafio da semana

@@ -1475,7 +1475,11 @@ function muroCampeoes(pts) {
   return melhor && melhor.i1 - melhor.i0 >= 8 ? melhor : null;
 }
 
-const api = { murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
+// As pistas INVENTADAS (as do kart, de antes da F1) saem de todas as escolhas: menu, sala e o "Sobre o GP" (pedido do Thiago, 2026-11-11).
+// Continuam no código (uma sala antiga ou um recorde que aponte para elas não quebra), só não aparecem para escolher.
+const PISTAS_ESCONDIDAS = ["tokyo", "losangeles", "rio", "serra", "deserto", "laguna", "luigi", "sorvete", "arcoiris"];
+const idsNaEscolha = () => Object.keys(PISTAS).filter((id) => !PISTAS_ESCONDIDAS.includes(id));
+const api = { PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Pistas = api;
 })(typeof window !== "undefined" ? window : globalThis);

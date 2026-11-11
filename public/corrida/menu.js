@@ -174,7 +174,7 @@ function fecharPainel() {
   (de || focoAntes)?.focus({ preventScroll: true });
 }
 const seg = (itens, atual, attr, rot) => `<div class="mn-campo"><span class="mn-rot">${rot}</span><div class="mn-seg" role="group" aria-label="${rot}">${itens.map(([v, l]) => `<button type="button" class="${String(atual) === String(v) ? "on" : ""}" data-${attr}="${v}" aria-pressed="${String(atual) === String(v)}">${l}</button>`).join("")}</div></div>`;
-const idsPistas = () => Object.keys(PISTAS);
+const idsPistas = () => window.Pistas.idsNaEscolha(); // (sem as pistas inventadas: pistas.js, PISTAS_ESCONDIDAS)
 function carrossel(id, attr, extra = "") {
   const t = PISTAS[id], foto = G()?.fundoDe(id), info = G()?.get(id), traco = window.GpSobre ? window.GpSobre.mapaSvg(id, "mn-traco") : "";
   return `<div class="mn-pista" style="--foto:${foto ? `url('${foto}')` : "none"}"><button type="button" class="mn-pista-nav" data-${attr}-nav="-1" aria-label="Pista anterior">‹</button>

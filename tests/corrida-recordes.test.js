@@ -47,7 +47,7 @@ test("GET /api/recordes-corrida: todas as pistas, com o quadro de cada uma", asy
   try {
     const r = await fetch(srv.url + "/api/recordes-corrida").then((x) => x.json());
     const T = require("../public/corrida/pistas.js");
-    assert.deepStrictEqual(r.pistas.map((p) => p.id), Object.keys(T.PISTAS));
+    assert.deepStrictEqual(r.pistas.map((p) => p.id), T.idsNaEscolha()); // (sem as pistas inventadas: #683)
     assert.ok(r.pistas.every((p) => typeof p.nome === "string" && Array.isArray(p.top)));
   } finally { await srv.parar(); }
 });

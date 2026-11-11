@@ -291,9 +291,10 @@ function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equi
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
 const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0 }; // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
-// quem joga anda bem acima do "ideal" medido pelo perfil (o pneu segura mais do que a conta supõe): por nível, o robô usa esta
-// fração a mais do limite das curvas, por cima do nível que dá o ideal. No difícil ele vai no limite de verdade.
-const EMPURRAO_F1 = { facil: 0.86, medio: 0.96, dificil: 1 }; // (o médio é o difícil de antes; o difícil vai além) (de volta à escala antiga, 2026-11-11)
+// quem joga anda bem acima do "ideal" medido pelo perfil (o pneu segura mais do que a conta supõe, e o ERS/DRS da corrida
+// não entram na medida do ideal): por nível, o robô usa esta fração a mais do limite das curvas, por cima do nível que dá o
+// ideal. No médio ele bate o ideal (o difícil de antes) e no difícil passa dele, como quem joga no limite usando o ERS.
+const EMPURRAO_F1 = { facil: 0.86, medio: 1, dificil: 1.2 }; // (2026-11-11: médio e difícil mais rápidos. O ideal é medido SEM ERS/DRS, mas na corrida o robô usa ERS (~+1,3 s em Monaco); por isso o difícil mira 1,2 (passa do ideal, como quem joga no limite e ainda ativa o ERS nas retas). Acima de ~1,3 o ritmo satura: o limite de curva do pneu não cresce mais)
 function referenciaF1(room) {
   const pista = room.config.pista;
   const pf = perfil(pista, F1Equipes.specDaEquipe("mclaren"));

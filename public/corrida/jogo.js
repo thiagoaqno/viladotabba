@@ -128,7 +128,7 @@ function aquecerPista(tr, ceu) {
     const amostras = new THREE.Group(); amostras.add(amostrasDeEfeitos(), amostraDeFumaca());
     // o compile/compileAsync do three só passa pelo que está visível (traverseVisible): as amostras escondidas não compilavam e a
     // primeira batida montava a fumaça, os cacos e o "POW!" na hora (travada de ~2 s). Ficam visíveis, mas bem abaixo do chão, longe da câmera.
-    amostras.traverse((o) => { o.visible = true; o.frustumCulled = true; }); amostras.position.y = -1e5; scene.add(amostras);
+    amostras.traverse((o) => { o.visible = true; o.frustumCulled = true; }); amostras.position.set(sun.target.position.x, sun.target.position.y - 40, sun.target.position.z); scene.add(amostras); // (logo abaixo do chão, dentro da área da sombra: a versão de SOMBRA dos cacos e da fumaça também compila; em −100.000 ela nascia na primeira batida, ~240 ms, medido 2026-11-11)
     prepararBrilhos(); // o pós não deve trocar os shaders depois de aquecidos
     subirTexturas(scene);
     const alvo = new THREE.WebGLRenderTarget(2, 2);

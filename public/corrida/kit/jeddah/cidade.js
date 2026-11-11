@@ -9,7 +9,7 @@ import { canvasTex } from "../../cena.js";
 import { livre, ocupado, sorteio } from "../comum.js";
 import { Montador, solido } from "../montagem.js";
 
-const CELULA = [115, 173]; // largura e altura (em unidades) de uma repetição da textura: 8 colunas x 12 andares de janelas, o andar de 14,4 u (3 m) e a janela de 14,4 u de largura (era 96 × 128: o andar de 2,2 m)
+const CELULA = [96, 128]; // largura e altura (em unidades) de uma repetição da textura: 4 colunas x 6 andares de janelas
 export function materialJanelas() {
   const acesas = Array.from({ length: 96 }, (_, k) => ((k * 7919 + 13 + ((k * k) % 17)) % 100) < 22 ? 1 : 0), pinta = (aceso) => canvasTex(128, 192, (x, w, h) => {
     x.fillStyle = aceso ? "#000000" : "#cfdae1"; x.fillRect(0, 0, w, h);

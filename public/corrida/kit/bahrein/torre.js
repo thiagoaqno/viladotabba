@@ -25,7 +25,7 @@ export function torreSakhir(tr, add, { x, z, raio = 29, aneis = 9 } = {}) {
   m.cilindro(S, [0, 44.5, 0], [raio * 1.75, 3], { cor: "#f6f3ec", seg: 40 }); // a marquise redonda em volta do saguão
   // os andares: vidro azul e laje (navy e azul médio, de dois em dois), mais larga no meio
   let y = 46;
-  const hAndar = 11, hLaje = 2.4; // o andar inteiro (vidro + laje + guarda-corpo) tem 14,4 u = 3 m; antes 11,4 u = 2,4 m (estimativa minha: não achei a altura publicada)
+  const hAndar = 8, hLaje = 2.4;
   for (let i = 0; i < aneis; i++) {
     const rl = raio * (1.3 - Math.abs(i - (aneis - 1) / 2) * 0.035);
     m.cilindro(janelas, [0, y + hAndar / 2, 0], [raio, hAndar], { seg, aberto: true, uv: [16, 1] });

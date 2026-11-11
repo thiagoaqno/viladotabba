@@ -7,14 +7,13 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { livre, ocupado, sorteio, instancias } from "../comum.js";
 import { ruido } from "./lugar.js";
 import { planoDaAgua, alturaDoTerreno, NIVEL } from "./agua.js";
-import { nivelDoChao } from "./chao.js";
 
 const cor = (c) => new THREE.Color(c);
 const ARBUSTOS = ["#4f7a3a", "#5d8a42", "#456b34", "#6a9348", "#3f6a3a", "#7a9a45"], FLORES = ["#c94b6b", "#e9d36a", "#d9803a"], CANFORAS = ["#3f6a38", "#4a7a3e", "#38603a", "#557f42"], SALGUEIROS = ["#9db862", "#8fb05a", "#a9c06c"], JUNCOS = ["#9a9a58", "#8a9a50", "#a8a460"], BAMBUS = ["#86a54b", "#7a9a44", "#94b055"];
 
 const colorir = (m, lista) => { if (m) { lista.forEach((o, k) => m.setColorAt(k, cor(o.c))); if (m.instanceColor) m.instanceColor.needsUpdate = true; } return m; };
-// a altura do chão onde a árvore pisa: o chão que se vê (a fita de chao.js perto da pista, a malha do terreno longe dela), já com a margem afundada
-const chaoEm = (tr, x, z) => alturaDoTerreno(tr, x, z, nivelDoChao(tr, x, z), 0);
+// a altura do chão onde a árvore pisa: o terreno de pista.js (menos 1,5), já com a margem afundada
+const chaoEm = (tr, x, z) => alturaDoTerreno(tr, x, z, tr.chao(x, z) - 1.5, 0);
 
 // pontos ao longo da pista, dos dois lados, em manchas de ruído (`ruidoMin` deixa de fora o vazio entre as manchas)
 function semear(tr, { passo = 2, dMin = 40, dMax = 380, densidade = 3, semente = 1, ruidoMin = 0, folga = 12, escala = 150 }) {
@@ -58,7 +57,7 @@ export function vegetacaoDoParque(tr, add, { densidade = 1, semente = 4141 } = {
   const arbustos = [], flores = [], troncos = [], copas = [], troncosS = [], copasS = [], juncos = [], bambus = [];
   // os arbustos podados e a vegetação baixa em manchas, por todo o parque
   for (const o of semear(tr, { passo: 2, dMin: 36, dMax: 560, densidade: 3.2 * densidade, semente, ruidoMin: 0.42, folga: 12 })) {
-    const y = chaoEm(tr, o.x, o.z), w = 7 + r() * 8, h = 4.5 + r() * 5; // o arbusto podado de 1,5 a 3,1 m de largura e 0,9 a 2 m de altura (era 2,3 a 5,8 m e 1,5 a 3,1 m)
+    const y = chaoEm(tr, o.x, o.z), w = 11 + r() * 17, h = 7 + r() * 8;
     if (!livre(tr, o.x, o.z, w * 0.7 + 12)) continue; // o arbusto inteiro fora da pista, não só o centro
     arbustos.push({ x: o.x, y: y + h * 0.2, z: o.z, sx: w, sy: h, sz: w * (0.8 + r() * 0.5), r: r() * 6.28, c: ARBUSTOS[(r() * ARBUSTOS.length) | 0] });
     if (r() < 0.12) flores.push({ x: o.x + (r() - 0.5) * w * 0.4, y: y + h * 0.85, z: o.z + (r() - 0.5) * w * 0.4, sx: w * 0.5, sy: h * 0.28, sz: w * 0.5, r: 0, c: FLORES[(r() * 3) | 0] });
@@ -80,7 +79,7 @@ export function vegetacaoDoParque(tr, add, { densidade = 1, semente = 4141 } = {
   // os juncos, na lama e na água rasa da margem, em touceiras
   for (const o of emVoltaDaAgua(tr, { passo: 18, s0: -16, s1: 7, semente: semente + 9, folga: 14 })) {
     if (ruido(o.x / 90, o.z / 90, 8) < 0.45) continue;
-    for (let k = 0; k < 3; k++) { const x = o.x + (r() - 0.5) * 12, z = o.z + (r() - 0.5) * 12, s = plano.campo(x, z); if (s > 9) continue; juncos.push({ x, y: Math.max(chaoEm(tr, x, z), NIVEL - 0.6), z, sx: 1.7, sy: 6 + r() * 8, sz: 1.7, r: r() * 3, c: JUNCOS[(r() * JUNCOS.length) | 0] }); }
+    for (let k = 0; k < 3; k++) { const x = o.x + (r() - 0.5) * 12, z = o.z + (r() - 0.5) * 12, s = plano.campo(x, z); if (s > 9) continue; juncos.push({ x, y: Math.max(chaoEm(tr, x, z), NIVEL - 0.6), z, sx: 1.7, sy: 14 + r() * 18, sz: 1.7, r: r() * 3, c: JUNCOS[(r() * JUNCOS.length) | 0] }); }
   }
   // o bambu: touceiras nos cantos do parque, mais fundo da pista
   for (const o of semear(tr, { passo: 6, dMin: 120, dMax: 620, densidade: 0.5 * densidade, semente: semente + 11, ruidoMin: 0.62, folga: 36, escala: 260 })) {

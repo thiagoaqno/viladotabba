@@ -1,17 +1,16 @@
 // Melbourne — a grama listrada do parque (as faixas claras e escuras do corte, paralelas à pista, como na foto da curva 1).
-// É tinta sobre o chão que se VÊ (a fita de grama de chao.js perto da pista, a malha do terreno longe dela: `nivelDoChao`, 0,15 u acima): uma fita por lado, com a altura do chão em cada vértice,
+// É tinta sobre o terreno: uma fita por lado, com a altura do chão em cada vértice (o terreno desce depois dos 40 m planos),
 // numa malha só e numa chamada de desenho. Pula onde a fita se dobraria (grampos), o lago e o que `evitar` disser.
 import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
-import { nivelDoChao } from "./chao.js";
 
 /**
  * @param {object} tr · @param {Function} add
  * @param {object} o
- * @param {number} [o.lat0=W/2+38] onde a listra começa (depois da zebra e da brita; antes 98, a 38 u da borda dos 120 u de largura de antes) · @param {number} [o.faixa=26] largura de cada listra · @param {number} [o.faixas=8]
+ * @param {number} [o.lat0=98] onde a listra começa (depois da zebra e da brita) · @param {number} [o.faixa=26] largura de cada listra · @param {number} [o.faixas=8]
  * @param {number} [o.forca=1] intensidade do contraste · @param {(x:number,z:number)=>boolean} [o.evitar] onde não pintar (lago, tendas)
  */
-export function gramaListrada(tr, add, { lat0 = tr.W / 2 + 38, faixa = 26, faixas = 8, forca = 1, evitar } = {}) {
+export function gramaListrada(tr, add, { lat0 = 98, faixa = 26, faixas = 8, forca = 1, evitar } = {}) {
   const { pts, n } = tr, PASSO = 3, vs = [], uv = [], idx = [];
   const clara = `rgba(236,255,170,${0.17 * forca})`, escura = `rgba(10,60,10,${0.2 * forca})`;
   const mat = new THREE.MeshStandardMaterial({
@@ -26,7 +25,7 @@ export function gramaListrada(tr, add, { lat0 = tr.W / 2 + 38, faixa = 26, faixa
       for (let b = 0; b < col; b++) {
         const lat = lat0 + b * faixa, x = p.x + p.nx * s * lat, z = p.y + p.ny * s * lat;
         const ok = tr.distAt(x, z) >= lat - 8 && !evitar?.(x, z) && !tr.coberto?.(i % n);
-        if (ok) { vs.push(x, nivelDoChao(tr, x, z) + 0.15, z); uv.push(b * 0.5, 0); l.push(vs.length / 3 - 1); } else l.push(-1);
+        if (ok) { vs.push(x, tr.chao(x, z) - 0.8, z); uv.push(b * 0.5, 0); l.push(vs.length / 3 - 1); } else l.push(-1);
       }
       linhas.push(l);
     }

@@ -2,7 +2,7 @@
 // lagos (Bellagio, Mirage, Treasure Island: a placa de água), as palmeiras (o canteiro central da Strip e as calçadas, em InstancedMesh) e algumas árvores de rua.
 import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
-import { D, K, KR, classes, poligonoDentro, pistaAtual } from "./mundo.js";
+import { D, K, classes, poligonoDentro, pistaAtual } from "./mundo.js";
 import { livre, ocupado, sorteio, instancias } from "../comum.js";
 
 const mistura = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
@@ -22,7 +22,7 @@ export function corDoChao() {
     else if (cl === 5) c = FUNDO;
     else if (ny < 0.95) c = mistura(c, [0.55, 0.48, 0.38], Math.min(1, (0.95 - ny) / 0.2));
     // a calçada de concreto em volta da rua (a Strip, a Koval Lane, a Harmon): uma faixa clara até uns 60 m da borda do asfalto, depois a cor do chão
-    const tr = pistaAtual; if (tr && cl !== 5) { const d = tr.distAprox ? tr.distAprox(x, z) : 1e9, L = tr.W / 2; if (d < L + 150 * KR) c = mistura(c, cl === 2 || cl === 3 ? [0.5, 0.56, 0.42] : [0.6, 0.58, 0.55], Math.max(0, 1 - Math.max(0, d - L - 20) / 130) * (cl === 2 || cl === 3 ? 0.35 : 0.85)); }
+    const tr = pistaAtual; if (tr && cl !== 5) { const d = tr.distAprox ? tr.distAprox(x, z) : 1e9, L = tr.W / 2; if (d < L + 150) c = mistura(c, cl === 2 || cl === 3 ? [0.5, 0.56, 0.42] : [0.6, 0.58, 0.55], Math.max(0, 1 - Math.max(0, d - L - 20) / 130) * (cl === 2 || cl === 3 ? 0.35 : 0.85)); }
     const f = 0.95 + n2 * 0.1; return [c[0] * f, c[1] * f, c[2] * f];
   };
 }
@@ -64,7 +64,7 @@ function arbusto() { const a = new THREE.IcosahedronGeometry(4, 0); a.scale(1.4,
 
 export function arvores(tr, add, { hAt, predioEm }) {
   const r = sorteio(7777), listas = { palmeira: [], rua: [], arbusto: [] }, w = tr.t.world;
-  const cabe = (x, z, raio) => x > -400 * KR && z > -400 * KR && x < w + 400 * KR && z < w + 400 * KR && livre(tr, x, z, 24 + raio) && !ocupado(tr, x, z) && !predioEm(x, z, raio * 0.4) && !D.lagos.some((P) => poligonoDentro(P, x, z));
+  const cabe = (x, z, raio) => x > -400 && z > -400 && x < w + 400 && z < w + 400 && livre(tr, x, z, 24 + raio) && !ocupado(tr, x, z) && !predioEm(x, z, raio * 0.4) && !D.lagos.some((P) => poligonoDentro(P, x, z));
   const poe = (tipo, x, z, s) => { if (!cabe(x, z, 7 * s)) return false; listas[tipo].push({ x, y: hAt(x, z), z, s, r: r() * 6.3, t: 0.88 + r() * 0.24 }); return true; };
   for (const [x, z, p] of D.arvores) poe(p || r() < 0.5 ? "palmeira" : "rua", x + (r() - 0.5) * 2, z + (r() - 0.5) * 2, 0.85 + r() * 0.5);
   // as palmeiras do canteiro central e das calçadas da Strip, da Koval Lane e da Harmon: uma fileira por lado, atrás da barreira (onde o chão está livre)

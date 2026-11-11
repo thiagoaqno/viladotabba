@@ -3,11 +3,6 @@
 // a reta principal (arquibancada longa de aço, complexo dos boxes com as coberturas azul e vermelha e o paddock, kit 2 em
 // kit/melbourne/complexo.js), os pórticos azuis "MELBOURNE / Australia", a faixa magenta da entrada dos boxes, o alambrado alto,
 // a grama listrada e os bosques. O resto (zebras, escape, painéis, bandeiras) é do kit, na configuração de gps/melbourne.js.
-// ESCALA REAL (1 u = 0,2083 m; passada visual, planos/escala-real.md): a pista tem 58 u (12 m) de largura e 5 278 m, e o cenário foi medido em metros. Antes → depois: o lago deixou de ser um círculo de 1 100 u (229 m) de raio e
-// vai até 150 u da pista (a distância entre a barreira do escape e a calçada); veleiros de 3,3 m com mastro de 4,6 m → 5,8 m com mastro de 7,1 m (× 0,8 a 1,4); clube de vela de 7,5 × 6 × 4 m → 11,7 × 23 × 5 m (com a base
-// até o chão); árvores da ilha de 6 a 10 m → 15 a 24 m; pórticos MELBOURNE de 19,7 m de altura → 10,4 m; mureta de 2,1 m e alambrado de 12 m → 1 m e 4,8 m, a 6,5 m da BORDA da pista (kit/melbourne/cerca.js);
-// arquibancada longa e tribunas dos boxes com o degrau de `tr.escala` (0,5 × 0,75 m; kit/melbourne/tribuna.js); Eureka Tower de 398 m → 297 m (kit/melbourne/cidade.js). O chão é a fita de grama de kit/melbourne/chao.js
-// (base sólida e grama no nível do asfalto) e tudo pousa em `nivelDoChao`.
 import * as THREE from "three";
 import { canvasTex, M } from "./cena.js";
 import { livre, sorteio, instancias } from "./kit/comum.js";
@@ -18,8 +13,6 @@ import { gramaListrada } from "./kit/melbourne/grama.js";
 import { cidade } from "./kit/melbourne/cidade.js";
 import { bosques } from "./kit/melbourne/arvores.js";
 import { instalarOcupado, arquibancadaLonga, complexoDosBoxes, paddock } from "./kit/melbourne/complexo.js";
-import { beiradaSolida, nivelDoChao } from "./kit/melbourne/chao.js";
-import { ambienteAustralia, postesDRS } from "./kit/melbourne/ambiente.js";
 
 // dentro da volta? (pontos da linha central como polígono)
 function dentro(pts, x, z) {
@@ -34,7 +27,7 @@ function dentro(pts, x, z) {
 // o miolo da volta: o ponto de dentro mais longe da pista e o contorno do lago a partir dele (raios que param a uma folga
 // da pista), alisado para não ter bico
 function acharLago(tr) {
-  const { pts, W } = tr, folga = W / 2 + 150; // 150 u da borda: a barreira do escape fica a 70 a 110 u e a calçada (26 u) não passa dela
+  const { pts, W } = tr, folga = W / 2 + 130;
   let melhor = null, bx0 = 1e9, bx1 = -1e9, bz0 = 1e9, bz1 = -1e9;
   for (const p of pts) { bx0 = Math.min(bx0, p.x); bx1 = Math.max(bx1, p.x); bz0 = Math.min(bz0, p.y); bz1 = Math.max(bz1, p.y); }
   for (let x = bx0; x < bx1; x += 60) for (let z = bz0; z < bz1; z += 60) {
@@ -43,21 +36,14 @@ function acharLago(tr) {
     if (!melhor || d > melhor.d) melhor = { x, z, d };
   }
   if (!melhor) return null;
-  const N = 96, raios = []; // (96 raios: com o lago de mais de 1 000 u de raio, 28 deixavam a corda entre dois raios cortar a pista nas curvas)
+  const N = 28, raios = [];
   for (let k = 0; k < N; k++) {
     const a = (k / N) * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
     let r = 0;
-    while (r < 2600 && tr.distAt(melhor.x + ca * (r + 12), melhor.z + sa * (r + 12)) > folga) r += 12;
+    while (r < 1100 && tr.distAt(melhor.x + ca * (r + 20), melhor.z + sa * (r + 20)) > folga) r += 20;
     raios.push(r);
   }
-  // alisa sem nunca crescer (a média de vizinhos podia passar do raio que a pista permite) e encolhe onde a corda entre dois raios chega perto da pista
-  let suave = raios.map((r, k) => Math.min(r, (raios[(k + N - 1) % N] + 2 * r + raios[(k + 1) % N]) / 4));
-  const ponto = (k, f) => { const k0 = k % N, k1 = (k + 1) % N, a0 = (k0 / N) * Math.PI * 2, a1 = ((k0 + 1) / N) * Math.PI * 2, x0 = melhor.x + Math.cos(a0) * suave[k0], z0 = melhor.z + Math.sin(a0) * suave[k0], x1 = melhor.x + Math.cos(a1) * suave[k1], z1 = melhor.z + Math.sin(a1) * suave[k1]; return [x0 + (x1 - x0) * f, z0 + (z1 - z0) * f]; };
-  for (let volta = 0; volta < 40; volta++) {
-    let mexeu = false;
-    for (let k = 0; k < N; k++) for (const f of [0.25, 0.5, 0.75]) { const [x, z] = ponto(k, f); if (tr.distAt(x, z) < folga - 20) { suave[k] = Math.max(0, suave[k] - 30); suave[(k + 1) % N] = Math.max(0, suave[(k + 1) % N] - 30); mexeu = true; } }
-    if (!mexeu) break;
-  }
+  const suave = raios.map((r, k) => (raios[(k + N - 1) % N] + 2 * r + raios[(k + 1) % N]) / 4);
   return { x: melhor.x, z: melhor.z, raios: suave, N };
 }
 // o ponto (x, z) está no lago (mais `margem`)? Usa o raio do contorno na direção dele
@@ -68,9 +54,7 @@ const noLago = (l, x, z, margem = 0) => {
 };
 
 // o cenário antes: o lago, a ilha, o clube de remo, a calçada, os veleiros e a cidade ao norte
-export function cenarioMelbourne(tr, { add, hAt, aguaTex }, ambiente) {
-  tr.reservado ||= [];
-  beiradaSolida(tr, add); // a base sólida da pista e a grama no nível do asfalto, dos dois lados (kit/melbourne/chao.js)
+export function cenarioMelbourne(tr, { add, hAt, aguaTex }) {
   tr.camisasGP = ["#ff8700", "#e8002d", "#ffffff", "#1b1b1b", "#ffd23f", "#2f6fd0", "#ff8700", "#f4f4f4"]; // a torcida laranja e vermelha das fotos
   const original = tr.distAt; tr.distAtOriginal = original;
   // as construções da reta (complexo.js) entram aqui: a torcida pulando e o bosque não ficam em cima delas; a torcida que pula
@@ -116,23 +100,22 @@ export function cenarioMelbourne(tr, { add, hAt, aguaTex }, ambiente) {
     const r = sorteio(1996), folha = M(0x2a5e2b, { roughness: 0.95 }), tronco = M(0x5a3e26, { roughness: 0.95 });
     for (let k = 0; k < 8; k++) {
       const a = r() * Math.PI * 2, d = r() * rI * 0.7, x = ix + Math.cos(a) * d, z = iz + Math.sin(a) * d * 0.8;
-      const alt = 70 + r() * 45, larg = alt * 0.42; // (15 a 24 m de altura, copa de 6 a 10 m de raio)
+      const alt = 28 + r() * 18, larg = alt * 0.45;
       const copa = add(new THREE.Mesh(new THREE.IcosahedronGeometry(larg, 0), folha)); copa.position.set(x, nivel + 2 + alt * 0.7, z);
-      const t = add(new THREE.Mesh(new THREE.CylinderGeometry(larg * 0.07, larg * 0.1, alt * 0.5, 5), tronco)); t.position.set(x, nivel + 2 + alt * 0.25, z);
+      const t = add(new THREE.Mesh(new THREE.CylinderGeometry(larg * 0.12, larg * 0.16, alt * 0.5, 5), tronco)); t.position.set(x, nivel + 2 + alt * 0.25, z);
     }
 
     // os veleiros no lago (parados, em regata): casco, mastro e a vela, três InstancedMesh
     {
       const barcos = [], r2 = sorteio(808);
-      for (let k = 0; k < 40; k++) {
+      for (let k = 0; k < 26; k++) {
         const a = r2() * Math.PI * 2, kk = (a / (Math.PI * 2)) * N, d = (0.15 + r2() * 0.6) * raios[Math.floor(kk) % N];
-        const x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d; if (Math.hypot(x - ix, z - iz) < rI + 45) continue;
+        const x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d; if (Math.hypot(x - ix, z - iz) < rI + 30) continue;
         barcos.push({ x, y: nivel + 0.9, z, r: r2() * 6.28, s: 0.8 + r2() * 0.6 });
       }
-      // o casco de 28 × 9 × 4 u (5,8 × 1,9 × 0,8 m, vezes 0,8 a 1,4 de `s`: 4,7 a 8,2 m, de dinghy a barco de quilha) e o mastro de 34 u (7,1 m)
-      const casco = new THREE.BoxGeometry(28, 4, 9); casco.translate(0, 1.2, 0);
-      const mastro = new THREE.CylinderGeometry(0.35, 0.35, 34, 4); mastro.translate(0, 18.5, 0);
-      const vela = new THREE.BufferGeometry(); vela.setAttribute("position", new THREE.Float32BufferAttribute([-2, 3.5, 0, -2, 33, 0, 13, 5, 0], 3)); vela.computeVertexNormals();
+      const casco = new THREE.BoxGeometry(16, 2.6, 5); casco.translate(0, 0.8, 0);
+      const mastro = new THREE.CylinderGeometry(0.25, 0.25, 22, 4); mastro.translate(0, 12, 0);
+      const vela = new THREE.BufferGeometry(); vela.setAttribute("position", new THREE.Float32BufferAttribute([-1, 2, 0, -1, 22, 0, 8, 3, 0], 3)); vela.computeVertexNormals();
       const por = (geo, mat, f) => instancias(add, geo, mat, barcos.map((b) => f(b)), { sombra: false });
       por(casco, M(0xf4f4f0, { roughness: 0.4 }), (b) => ({ ...b, sx: b.s, sy: b.s, sz: b.s }));
       por(mastro, M(0xc8ccd0), (b) => ({ ...b, sx: b.s, sy: b.s, sz: b.s }));
@@ -143,27 +126,20 @@ export function cenarioMelbourne(tr, { add, hAt, aguaTex }, ambiente) {
     let kb = 0; for (let k = 1; k < N; k++) if (raios[k] > raios[kb]) kb = k;
     const ang = (kb / N) * Math.PI * 2, ux = Math.cos(ang), uz = Math.sin(ang), rb = raios[kb];
     const px = cx + ux * (rb - 25), pz = cz + uz * (rb - 25);
-    if (livre(tr, px + ux * 50, pz + uz * 50, 75)) {
+    if (livre(tr, px + ux * 40, pz + uz * 40, 50)) {
       const g = new THREE.Group(); g.position.set(px, nivel, pz); g.rotation.y = Math.atan2(-uz, ux); add(g); // x local = para fora do lago
       const madeira = M(0x73553a, { roughness: 0.9 }), parede = M(0xf0eee6, { roughness: 0.85 }), telhado = M(0x1e5631, { roughness: 0.8 });
       const deque = new THREE.Mesh(new THREE.BoxGeometry(60, 2, 26), madeira); deque.position.set(-14, 0.8, 0); g.add(deque);
       const pilar = new THREE.CylinderGeometry(0.8, 0.8, 8, 6);
       for (let dx = -40; dx <= 10; dx += 16) for (const dz of [-11, 11]) { const m = new THREE.Mesh(pilar, madeira); m.position.set(dx, -2, dz); g.add(m); }
-      // o galpão de 56 × 110 × 24 u (11,7 × 23 × 5 m; antes 7,5 × 6,2 × 4,2 m) sobre uma base que desce até o chão da margem, com o telhado de duas águas (11,7 m de vão, 2,1 m de subida) e as janelas
-      const base = new THREE.Mesh(new THREE.BoxGeometry(60, 9, 114), parede); base.position.set(44, -4.5, 0); g.add(base);
-      const galpao = new THREE.Mesh(new THREE.BoxGeometry(56, 24, 110), parede); galpao.position.set(44, 12, 0); galpao.castShadow = true; g.add(galpao);
-      const ang = Math.atan2(10, 28), meia = Math.hypot(28, 10) + 1;
-      for (const s of [-1, 1]) { const agua = new THREE.Mesh(new THREE.BoxGeometry(meia, 1.2, 114), telhado); agua.position.set(44 + s * 14, 29, 0); agua.rotation.z = -s * ang; agua.castShadow = true; g.add(agua); }
-      const vidro = new THREE.MeshStandardMaterial({ color: 0x2a3a48, roughness: 0.2, metalness: 0.4 });
-      for (let q = -4; q <= 4; q++) { const j = new THREE.Mesh(new THREE.BoxGeometry(0.6, 9, 9), vidro); j.position.set(44 - 28.2, 14, q * 11.5); g.add(j); } // (as janelas viradas para o lago)
-      tr.reservado.push([px + ux * 44, pz + uz * 44, 90]);
+      const galpao = new THREE.Mesh(new THREE.BoxGeometry(36, 20, 30), parede); galpao.position.set(30, 10, 0); galpao.castShadow = true; g.add(galpao);
+      const telha = new THREE.Mesh(new THREE.CylinderGeometry(17, 17, 38, 3), telhado); telha.rotation.set(0, 0, Math.PI / 2); telha.scale.set(0.65, 1, 1); telha.position.set(30, 24, 0); g.add(telha);
+      tr.reservado.push([px + ux * 30, pz + uz * 30, 70]);
     }
   }
   // o skyline da cidade ao norte: depois do parque e do lago, sem a neblina do jogo (ver cidade.js)
   const mundo = tr.t.world;
   cidade(tr, add, { x0: -300, x1: mundo + 500, z0: -150, fundo: 1050, livre: (x, z) => true });
-  // painéis (só o do posto), mastros, placas de frenagem e postos dos fiscais, no chão e atrás do alambrado (kit/melbourne/ambiente.js; antes de `tr.distAt` mudar: ele mede a pista de verdade)
-  ambienteAustralia(tr, add, ambiente);
   // as árvores soltas e pálidas que pista.js espalha longe da pista (o modelo de árvore dela) não combinam com o parque: depois que o
   // corredor dos boxes ficou pronto (tr.boxesInfo) a distância até a pista vale 0 para elas (e para o lago, a cidade e as construções
   // da reta antes disso); `depois` devolve a medida de verdade. Quem precisa dela de verdade (garagens, painéis) roda antes.
@@ -205,22 +181,21 @@ export function depoisMelbourne(tr, { add }) {
     c.textAlign = "right"; c.font = "bold 44px Arial, sans-serif"; c.fillText("▼  Australia", w - 50, h / 2 - 3);
   });
   for (const f of [0.935, 0.962, 0.03]) {
-    const i = Math.floor(f * n) % n, p = pts[i], g = portico({ vao: 2 * (W / 2 + 17), alto: 40, viga: 10, cor: "#0e1f4a", corColuna: "#16264f", textura: letreiro, largura: 4 }); // (8,3 m livres sob a viga de 2,1 m: antes 16,6 e 3,1 m)
+    const i = Math.floor(f * n) % n, p = pts[i], g = portico({ vao: 2 * (W / 2 + 17), alto: 80, viga: 15, cor: "#0e1f4a", corColuna: "#16264f", textura: letreiro, largura: 8 });
     g.position.set(p.x, p.h - 1.5, p.y); g.rotation.y = -Math.atan2(p.ny, p.nx); add(g);
   }
   // a reta principal: a arquibancada longa em frente aos boxes, o complexo dos boxes e o paddock atrás dele (o lado dos boxes é o do corredor)
   const lb = cor ? cor.lado : 1;
-  arquibancadaLonga(tr, add, { de: 0.935, ate: 1.045, lado: -lb, comprimento: 240, degraus: 20, publico: 0.34 }); // (a frente a W / 2 + 39 da borda e 20 degraus de 0,5 × 0,75 m: 10 m de altura e 15 de fundo)
-  complexoDosBoxes(tr, add, { centro: 0, lado: lb, pecas: 4, comprimento: 150 }); // (atrás das garagens: a frente a W / 2 + 90, 37,5 u depois do fundo delas)
-  paddock(tr, add, { centro: 0, lado: lb, fileiras: 4, tendas: 9 }); // (a primeira fileira a W / 2 + 155 mais a profundidade da tenda, depois do complexo)
-  postesDRS(tr); // as placas de DRS de pista.js ganham o poste até o chão
+  arquibancadaLonga(tr, add, { de: 0.935, ate: 1.045, lado: -lb, lat: 99, comprimento: 240, degraus: 12, publico: 0.34 });
+  complexoDosBoxes(tr, add, { centro: 0, lado: lb, lat: 150, pecas: 4, comprimento: 150 });
+  paddock(tr, add, { centro: 0, lado: lb, lat: 215, fileiras: 4, tendas: 9 });
   // o alambrado alto e a mureta de publicidade (menos no corredor dos boxes), a grama listrada do parque
   const pular = cor ? (i, s) => { const rel = (((i - cor.i0) % n) + n) % n; return s === cor.lado && (rel <= cor.len + 10 || rel >= n - 10); } : null;
   alambrado(tr, add, { pular });
   gramaListrada(tr, add, { forca: 1.7, faixas: 7, evitar: (x, z) => noLago(lago, x, z, 30) });
   // as moitas de árvores do parque e a fileira na margem do lago
   const fixas = [];
-  if (lago) { const r = sorteio(31); for (let a = 0; a < Math.PI * 2; a += 0.025) { const k = Math.floor((a / (Math.PI * 2)) * lago.N) % lago.N, d = lago.raios[k] + 34 + r() * 40; fixas.push([lago.x + Math.cos(a) * d, lago.y + Math.sin(a) * d]); } }
+  if (lago) { const r = sorteio(31); for (let a = 0; a < Math.PI * 2; a += 0.045) { const k = Math.floor((a / (Math.PI * 2)) * lago.N) % lago.N, d = lago.raios[k] + 34 + r() * 40; fixas.push([lago.x + Math.cos(a) * d, lago.y + Math.sin(a) * d]); } }
   bosques(tr, add, { moitas: 150, proibido: (x, z) => z < 300 || noLago(lago, x, z, 20), fixas });
   faixaMagenta(tr);
 }

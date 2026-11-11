@@ -6,11 +6,11 @@
 import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
 import { emissivoDaNoite } from "../bahrein/base.js";
-import { D, K, KR, distanciaDaAgua, poligonoDentro } from "./mundo.js";
+import { D, K, distanciaDaAgua, poligonoDentro } from "./mundo.js";
 
 const M_ALTURA = K * 1.0; // unidades de altura por metro de parede
 const JANELA = 1.9 * K, ANDAR = 3.8 * K; // o módulo da fachada: 1,9 m de largura e 3,8 m de altura
-const CELULA = 1600 * KR;
+const CELULA = 1600;
 const PAREDES = [[0.46, 0.64, 0.82], [0.38, 0.64, 0.64], [0.3, 0.37, 0.47], [0.87, 0.87, 0.83], [0.8, 0.74, 0.62], [0.68, 0.72, 0.77], [0.72, 0.68, 0.62], [0.72, 0.82, 0.9]];
 const TERRACO = [0.46, 0.47, 0.49];
 const hash = (n) => { let h = (n * 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; return (h >>> 0) / 4294967296; };
@@ -115,7 +115,7 @@ export function predios(tr, add, lista, { ignorar = (b) => b.esp } = {}) {
     const base = tel.p.length / 3, dtx = b.dt ? b.dt[0] : 0, dtz = b.dt ? b.dt[1] : 0; for (const [x, z] of P) tel.v(x + dtx, y1 + 0.4, z + dtz, 0, 1, 0, 0, 0, b.corTopo || TERRACO);
     for (const t of tris) { const [i, j, k] = t, A = P[i], B = P[j], C = P[k], cruz = (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0]); if (cruz > 0) tel.i.push(base + i, base + k, base + j); else tel.i.push(base + i, base + j, base + k); }
     // a casa de máquinas no terraço dos prédios altos e largos
-    if (b.metros > 40 && Math.abs(area2(P)) / 2 > 500 * KR * KR) {
+    if (b.metros > 40 && Math.abs(area2(P)) / 2 > 500) {
       const w = Math.min(14, Math.sqrt(Math.abs(area2(P)) / 2) * 0.16), hh = 8 + hash(b.id + 9) * 8, bx = b.cx, bz = b.cz, top = y1 + 0.4 + hh, c2 = [0.58, 0.58, 0.6];
       if ([[-1, -1], [1, -1], [1, 1], [-1, 1]].every(([sx, sz]) => poligonoDentro(P, bx + sx * w, bz + sz * w))) {
         for (const [px, pz, qx, qz, nx, nz] of [[bx - w, bz - w, bx + w, bz - w, 0, -1], [bx + w, bz - w, bx + w, bz + w, 1, 0], [bx + w, bz + w, bx - w, bz + w, 0, 1], [bx - w, bz + w, bx - w, bz - w, -1, 0]]) {

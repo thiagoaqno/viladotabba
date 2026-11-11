@@ -6,8 +6,6 @@ import DADOS from "./dados.js";
 export const D = DADOS;
 export const VK = D.projecao.vk; // unidades de altura por metro de altitude
 export const K = D.projecao.k; // unidades do mundo por metro
-// quanto a régua do mundo cresceu desde o desenho (1 u = 0,417 m, k = 2,3953): as distâncias fixas em unidades do cenário (grades, folgas) multiplicam por KR
-export const KR = K / 2.3953;
 export const ALT = 1.35; // o exagero vertical dos prédios (a pista do jogo é mais larga que a rua de verdade)
 export const NIVEL_DO_MAR = -9999; // (não há mar: pista.js `mundoDe` espera o campo)
 export const suave = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
@@ -48,7 +46,7 @@ export function relevoLV(tr) {
   for (let i = 0; i < n; i++) demPista[i] = altitude(pts[i].x, pts[i].y);
   const desvioPista = new Float32Array(n);
   for (let i = 0; i < n; i++) { let s = 0, w = 0; for (let k = -120; k <= 120; k += 6) { const q = (i + k + n) % n, p = 1 - Math.abs(k) / 126; s += (pts[q].h - demPista[q]) * p; w += p; } desvioPista[i] = s / w; }
-  const plano = L + 30, rampa = 260 * KR, longe = 700 * KR, talude = 0.85, folga = 0.5, margem = 18, alcance = 260 * KR, C = 64 * KR, hash = new Map();
+  const plano = L + 30, rampa = 260, longe = 700, talude = 0.85, folga = 0.5, margem = 18, alcance = 260, C = 64, hash = new Map();
   pts.forEach((p, i) => { const k = Math.floor(p.x / C) * 100003 + Math.floor(p.y / C); (hash.get(k) || hash.set(k, []).get(k)).push(i); });
   const teto = (x, z) => {
     const r = Math.ceil((L + alcance) / C), cx = Math.floor(x / C), cz = Math.floor(z / C); let m = Infinity;
@@ -74,7 +72,7 @@ export const CEL_CLASSE = 14;
 let _classes = null;
 export function classes() {
   if (_classes) return _classes;
-  const W = D.projecao.mundo + 2800 * KR, N = Math.ceil(W / CEL_CLASSE), x0 = -1400 * KR, g = new Uint8Array(N * N);
+  const W = D.projecao.mundo + 2800, N = Math.ceil(W / CEL_CLASSE), x0 = -1400, g = new Uint8Array(N * N);
   const idx = (x, z) => { const i = Math.floor((x - x0) / CEL_CLASSE), j = Math.floor((z - x0) / CEL_CLASSE); return i >= 0 && j >= 0 && i < N && j < N ? j * N + i : -1; };
   const pintaPoli = (P, v, peso = 0) => {
     let a0 = 1e9, b0 = 1e9, a1 = -1e9, b1 = -1e9; for (const [x, z] of P) { a0 = Math.min(a0, x); a1 = Math.max(a1, x); b0 = Math.min(b0, z); b1 = Math.max(b1, z); }
@@ -102,5 +100,5 @@ export function marco(chave, lat, lon, tam = [60, 60, 60]) {
   if (m) return m;
   if (lat == null) return null;
   const [cx, cz] = geoParaMundo(lon, lat);
-  return { chave, cx: Math.round(cx), cz: Math.round(cz), ang: 0, w: tam[0] * KR, d: tam[1] * KR, h: tam[2], fallback: true };
+  return { chave, cx: Math.round(cx), cz: Math.round(cz), ang: 0, w: tam[0], d: tam[1], h: tam[2], fallback: true };
 }

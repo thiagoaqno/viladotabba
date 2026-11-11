@@ -11,13 +11,10 @@ const BOXES = window.Pistas.PISTAS.bahrein.boxes; // o corredor dos boxes (pista
 const VERMELHO = "#ce1126", BRANCO = "#f4f4f4";
 
 export const GP_BAHREIN = {
-  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
-  // As peças só desta pista (../bahrein.js e ../kit/bahrein/) leem `tr.escala` e `W` (a pista de 12 m): ver planos/escala-real.md.
-  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#8f8672" }, // o asfalto cinza-areia da faixa de escape junto da zebra
-    zebra: { cores: ["#d62828", BRANCO], dentro: 709, fora: 448 }, // as zebras vermelhas e brancas
+    zebra: { cores: ["#d62828", BRANCO], dentro: 380, fora: 240 }, // as zebras vermelhas e brancas
     amarelas: [[0.248, 0.264], [0.383, 0.396], [0.467, 0.48], [0.727, 0.738]], // zebra alta nas curvas 4, 8, 10 e 14
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 26,
@@ -33,24 +30,23 @@ export const GP_BAHREIN = {
   // as arquibancadas: a principal, de frente para os boxes (do outro lado da pista), e uma por fora de cada curva lenta
   arquibancadas: {
     trechos: [
-      { de: 0.935, ate: 1.055, lado: -1, degraus: 20, cor: VERMELHO, encosto: BRANCO, cobertura: true, torcida: ["#ffffff", VERMELHO, "#ffffff", "#222222"] }, // Main Grandstand
-      { de: 0.085, ate: 0.13, lado: -1, degraus: 16, cor: VERMELHO, encosto: BRANCO, cobertura: true }, // Curva 1
-      { de: 0.238, ate: 0.272, lado: -1, degraus: 12, cor: "#e8e2d2", encosto: VERMELHO, cobertura: true }, // Curva 4
-      { de: 0.37, ate: 0.412, lado: -1, degraus: 14, cor: VERMELHO, encosto: BRANCO, cobertura: true }, // Grampo da 8
-      { de: 0.46, ate: 0.492, lado: 1, degraus: 10, cor: "#e8e2d2", encosto: VERMELHO, cobertura: false }, // Curva 10
-      { de: 0.715, ate: 0.75, lado: -1, degraus: 12, cor: VERMELHO, encosto: BRANCO, cobertura: true }, // Curva 14
-      { de: 0.868, ate: 0.906, lado: -1, degraus: 14, cor: "#e8e2d2", encosto: VERMELHO, cobertura: true }, // Curva 15
+      { de: 0.935, ate: 1.055, lado: -1, degraus: 14, cor: VERMELHO, encosto: BRANCO, cobertura: true, torcida: ["#ffffff", VERMELHO, "#ffffff", "#222222"] }, // Main Grandstand
+      { de: 0.085, ate: 0.13, lado: -1, degraus: 12, cor: VERMELHO, encosto: BRANCO, cobertura: true }, // Curva 1
+      { de: 0.238, ate: 0.272, lado: -1, degraus: 9, cor: "#e8e2d2", encosto: VERMELHO, cobertura: true }, // Curva 4
+      { de: 0.37, ate: 0.412, lado: -1, degraus: 10, cor: VERMELHO, encosto: BRANCO, cobertura: true }, // Grampo da 8
+      { de: 0.46, ate: 0.492, lado: 1, degraus: 8, cor: "#e8e2d2", encosto: VERMELHO, cobertura: false }, // Curva 10
+      { de: 0.715, ate: 0.75, lado: -1, degraus: 9, cor: VERMELHO, encosto: BRANCO, cobertura: true }, // Curva 14
+      { de: 0.868, ate: 0.906, lado: -1, degraus: 10, cor: "#e8e2d2", encosto: VERMELHO, cobertura: true }, // Curva 15
     ],
   },
-  cenario: (tr, ctx) => cenarioBahrein(tr, ctx, GP_BAHREIN.ambienteBahrein), // o chão sólido, o ambiente no chão, o prédio dos boxes, a Torre Al Sakhir, os holofotes, os jardins, as dunas e a refinaria
-  ambiente: { // (movido para `ambienteBahrein` no fim do arquivo: o do kit deixa mastros, painéis e placas de frenagem no ar; o de Sakhir é o de kit/bahrein/ambiente.js, chamado em `cenario`)
+  cenario: (tr, ctx) => cenarioBahrein(tr, ctx), // o prédio dos boxes, a Torre Al Sakhir, os holofotes, os jardins, as dunas e a refinaria
+  ambiente: {
     marcas: ["gulfair", "bahrain", "aramco", "rolex", "pirelli", "dhl", "heineken", "aws", "lenovo", "msc", "qatar"],
     outdoors: ["gulfair", "bahrain", "aramco", "rolex", "pirelli", "dhl", "qatar", "aws"],
     posto: "gulfair", bandeira: [0xce1126, 0xffffff], placas: [150, 100, 50], // a bandeira do Bahrein
   },
   passarelas: { candidatos: [0.9, 0.215, 0.55, 0.83], marcas: ["gulfair", "bahrain", "aramco"], max: 2 },
   montanha: { angulo: Math.PI / 3, afastamento: 4600, altura: 340, largura: 5200, rocha: "#ba9d73", mato: "#cbb48b", longe: "#e5cfb1" }, // o Jebel Dukhan, ao sul
-  sem: { mastros: true }, // os mastros altos de vida-mais.js não: as bandeiras do Bahrein são as de kit/bahrein/ambiente.js, de pé no chão
   horizonte: false, // sem os morros verdes de longe: deserto
   beira: { palmeiras: 0, longe: { palmeiras: 0 } }, // as tamareiras são as de kit/bahrein/praca.js
   depois: (tr, ctx) => depoisBahrein(tr, ctx), // a faixa Gulf Air no pórtico
@@ -58,5 +54,3 @@ export const GP_BAHREIN = {
     som: { campo: () => 0.8, cidade: 0.1 }, // vento do deserto, a cidade lá longe
   },
 };
-// o ambiente do kit (kit/ambiente.js) deixa mastros, painéis e placas de frenagem no ar: Sakhir usa o seu (kit/bahrein/ambiente.js), chamado em `cenario` com a mesma configuração
-GP_BAHREIN.ambienteBahrein = GP_BAHREIN.ambiente; delete GP_BAHREIN.ambiente;

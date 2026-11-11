@@ -10,24 +10,20 @@ import { PISTAS } from "../estado.js";
 import { cenarioJeddah, depoisJeddah } from "../jeddah.js";
 
 const BOXES = PISTAS.jeddah.boxes; // o corredor dos boxes (pistas.js): as linhas SC 1 e SC 2 são a entrada e a saída dele
-const VERDE = "#0a7f45", BRANCO = "#f4f4f4", ALTO_MURO = 6;
+const VERDE = "#0a7f45", BRANCO = "#f4f4f4";
 // a torcida de túnicas brancas e lenços vermelhos e brancos
 const TORCIDA = ["#ffffff", "#f4f1e6", "#e8e4d8", "#ffffff", VERDE, "#c8102e", "#1b1b1b"];
 
 export const GP_JEDDAH = {
-  // escala real do cenário (as mesmas peças do kit de Interlagos e Spa: degrau 0,4 m ÷ 1,25 m e barreira 0,75 m ÷ 1,77 m dão 0,4; a pessoa, 1,75 m ÷ 2,54 m, 0,69).
-  // As peças só desta pista (kit/jeddah/ e jeddah.js) já estão no tamanho real: planos/escala-real.md, seção de Jeddah.
-  escala: 0.4, escalaGente: 0.69,
   asfalto: true,
   chao: {
     margem: { cor: "#4d4f54" }, // a faixa de asfalto escuro junto das zebras
-    zebra: { cores: ["#d62828", BRANCO], dentro: 725, fora: 463 },
+    zebra: { cores: ["#d62828", BRANCO], dentro: 360, fora: 230 },
     amarelas: [[0.147, 0.153], [0.206, 0.226], [0.258, 0.268], [0.482, 0.505], [0.678, 0.69], [0.716, 0.727]], // zebra alta anticorte
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],
     grid: true, remendos: 30,
   },
-  // o muro de rua: 6 u (1,25 m) de altura e painéis de 30 u (6,25 m) a cada um dos 8 da fita (240 u); eram 12 u (2,5 m) e 480 u (60 u por painel), de quando a barreira do kit era maior. A cerca de detritos sobe do topo dele (kit/jeddah/ambiente.js, `alto`).
-  guardrail: { paineis: ["stc", "aramco", null, "pirelli", "saudigp", null, "rolex", "dhl"], cores: [VERDE, BRANCO], alto: ALTO_MURO, vLen: 40 * ALTO_MURO },
+  guardrail: { paineis: ["stc", "aramco", null, "pirelli", "saudigp", null, "rolex", "dhl"], cores: [VERDE, BRANCO] },
   arquibancadas: {
     trechos: [
       { de: 0.925, ate: 1.045, lado: 1, degraus: 14, cor: VERDE, encosto: BRANCO, cobertura: true, torcida: TORCIDA },   // a arquibancada principal, em frente aos boxes
@@ -38,16 +34,16 @@ export const GP_JEDDAH = {
       { de: 0.88, ate: 0.9, lado: 1, degraus: 8, cor: "#4f008c", encosto: BRANCO, cobertura: true, torcida: TORCIDA },     // o grampo final
     ],
   },
-  cenario: (tr, ctx) => cenarioJeddah(tr, ctx, GP_JEDDAH.ambienteJeddah), // o chão sólido, o ambiente (cerca, bandeiras, placas e postos no chão), o mar, a fonte, a mesquita, o prédio dos boxes e a cidade
-  ambiente: { // (movido para `ambienteJeddah` no fim do arquivo: o do kit deixa a cerca, os mastros e as placas na altura da pista; o de Jeddah é o de kit/jeddah/ambiente.js, chamado em `cenario`)
+  cenario: (tr, ctx) => cenarioJeddah(tr, ctx),
+  ambiente: {
+    marcas: ["stc", "aramco", "saudigp", "pirelli", "rolex", "saudia", "dhl", "roshn", "aws", "lenovo", "msc", "visitsaudi", "redsea", "f1"],
     outdoors: ["stc", "aramco", "saudigp", "saudia", "roshn", "pirelli", "rolex", "visitsaudi"],
-    posto: "saudigp", bandeira: [0x006c35, 0xf4f4f4], placas: [150, 100, 50], alto: ALTO_MURO,
+    posto: "saudigp", bandeira: [0x006c35, 0xf4f4f4], placas: [150, 100, 50],
   },
   passarelas: { candidatos: [0.04, 0.3, 0.55, 0.75, 0.96], marcas: ["stc", "saudigp", "aramco"], max: 3 },
   postes: { passo: 44 },
   montanha: { angulo: 0, afastamento: 5200, altura: 420, largura: 6000, rocha: "#b49a78", mato: "#c7b28f", longe: "#e2d1b6" }, // a serra do Hejaz, a leste
   beira: {}, // as palmeiras e os prédios são do cenário próprio
-  sem: { mastros: true }, // os mastros altos de vida-mais.js não: as bandeiras são as de kit/jeddah/ambiente.js, de pé no chão
   horizonte: false,
   depois: (tr, ctx) => depoisJeddah(tr, ctx),
   vida: {
@@ -55,5 +51,3 @@ export const GP_JEDDAH = {
     som: { porto: (tr, x, y) => { const m = tr.marJeddah; return m ? Math.max(0, Math.min(1, 1 - Math.max(0, x - m.xCosta(y)) / 650)) : 0; }, cidade: 0.25, campo: () => 0.2 },
   },
 };
-// o ambiente do kit (kit/ambiente.js) deixa a cerca, os mastros e as placas de frenagem na altura da pista: Jeddah usa o seu (kit/jeddah/ambiente.js), chamado em `cenario` com a mesma configuração
-GP_JEDDAH.ambienteJeddah = GP_JEDDAH.ambiente; delete GP_JEDDAH.ambiente;

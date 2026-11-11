@@ -1,7 +1,5 @@
 // Zandvoort — as construções do circuito (peças só desta pista), todas em `Montador` (kit 2: cor chapada por vértice, uma malha por
-// material, origem no chão, a frente para +z). Medidas conferidas na escala real (1 u = 0,2083 m, `ESC` de dinamica.js; o "1 u ≈ 10 cm" daqui era o do desenho antigo e não vale): o prédio dos boxes tem o térreo de 26 u (5,4 m,
-// portão de 3,5 m) e o andar de cima de 24 u (5 m), 10,4 m no total, com a torre de 72 u (15 m) e a cabine até 19 m (antenas a 26 m); o Paddock Club 20,8 × 8,3 m e 6,2 m de altura; o telão de 14,6 × 7,1 m numa torre de
-// 18 m; a roda-gigante de 25 m de raio no aro (52 m com o cubo e a base). Tudo isso já estava no tamanho real e ficou; a tribuna é a de ./tribuna.js e a tenda, a do kit:
+// material, origem no chão, a frente para +z, 1 unidade ≈ 10 cm):
 // · `predioDosBoxes`: o prédio das garagens da reta de chegada (as fotos do circuito: um prédio comprido e baixo de dois andares, térreo com
 //   as portas das garagens e as faixas de patrocínio, o andar de cima de vidro escuro com a platibanda branca, o teto cheio de mastros de
 //   bandeira) com a torre de controle de prova numa ponta, quadrada e branca, com a cabine de vidro e as antenas;

@@ -6,12 +6,12 @@
 // até a distância da barreira (a Cidade Velha chega a 9 unidades da barreira, como nas fotos).
 import * as THREE from "three";
 import { canvasTex } from "../../cena.js";
-import { D, poligonoDentro, distanciaDoMar, KR } from "./mundo.js";
+import { D, poligonoDentro, distanciaDoMar } from "./mundo.js";
 import { emissivoDaNoite } from "../bahrein/base.js";
 
 const K = D.projecao.k, M_ALTURA = K * 1.35; // unidades de altura por metro de parede (um pouco exagerada: o jogo é mais largo que a rua)
 const JANELA = 3.4 * K, ANDAR = 3.3 * K * 1.2; // o módulo da fachada em unidades do mundo
-const CELULA = 1600 * KR;
+const CELULA = 1600;
 const PEDRAS = [[0.9, 0.7, 0.42], [0.86, 0.66, 0.4], [0.93, 0.77, 0.52], [0.78, 0.67, 0.5], [0.94, 0.82, 0.6], [0.76, 0.6, 0.38], [0.84, 0.74, 0.58], [0.9, 0.68, 0.4]]; // arenito de Absheron: ocre, amarelado e cinza-bege, mais escuro que o creme
 const TERRACOS = [[0.62, 0.6, 0.57], [0.72, 0.69, 0.64], [0.55, 0.54, 0.52], [0.68, 0.45, 0.36]];
 const VIDROS = [[0.22, 0.34, 0.45], [0.28, 0.4, 0.5], [0.18, 0.26, 0.34], [0.34, 0.45, 0.52]];
@@ -102,7 +102,7 @@ export function lerPredios(tr) {
     cx /= P.length; cz /= P.length;
     if (distanciaDoMar(cx, cz) > -6) { descartados++; continue; } // em cima da água (píer, plataforma): fora
     let baixo = Infinity, alto = -Infinity; for (const [x, z] of [...P, [cx, cz]]) { const g = tr.chao(x, z) - 1.5; baixo = Math.min(baixo, g); alto = Math.max(alto, g); }
-    const alturaReal = metros * M_ALTURA, perto = tr.distAt(cx, cz) < 260 * KR, h = esp ? alturaReal : Math.max((perto ? 34 : 18) * KR, alturaReal);
+    const alturaReal = metros * M_ALTURA, perto = tr.distAt(cx, cz) < 260, h = esp ? alturaReal : Math.max(perto ? 34 : 18, alturaReal);
     lista.push({ P, esp, cor: e[1] & 7, metros, h, cx, cz, caixa: [x0, z0, x1, z1], baixo, alto, topo: alto + h, id: lista.length });
   }
   tr.prediosBaku = { empurrados, descartados };

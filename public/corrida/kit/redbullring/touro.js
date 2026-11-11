@@ -6,15 +6,14 @@
 import * as THREE from "three";
 import { Montador, solido, tom } from "../montagem.js";
 
-const ALTURA = 172; // a altura da escultura (17,2 m com o arco) desenhada na unidade de 10 cm; `escala` leva ao tamanho real
-export const ESCALA_REAL = (17.2 * 4.8) / ALTURA; // 0,48
+const ALTURA = 172; // 17,2 m com o arco (a altura da escultura)
 let _ouro = null;
 const ouro = () => (_ouro ||= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.28, metalness: 0.85, emissive: 0x3a2a08, emissiveIntensity: 0.35 }));
 let _corten = null;
 const corten = () => (_corten ||= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78, metalness: 0.25 }));
 
-/** @param {object} o { cor="#8a4526" (o corten), escala=ESCALA_REAL (17,2 m de altura real) } · @returns {THREE.Group} com userData.alto, userData.raio (já na escala) */
-export function touroDeAco({ cor = "#8a4526", escala = ESCALA_REAL } = {}) {
+/** @param {object} o { cor="#8a4526" (o corten) } · @returns {THREE.Group} com userData.alto, userData.raio */
+export function touroDeAco({ cor = "#8a4526" } = {}) {
   const m = new Montador(), C = corten(), O = ouro(), S = solido();
   // a sapata de concreto e o arco de aço em que o touro se apoia
   m.cilindro(S, [0, 2, 0], [92, 4], { cor: "#a8a9a6", seg: 24 });
@@ -59,6 +58,6 @@ export function touroDeAco({ cor = "#8a4526", escala = ESCALA_REAL } = {}) {
     }
     m.geo(O, new THREE.SphereGeometry(1, 8, 6), { x: 34.5 * s, y: 169, z: 66, sx: 1.6, sy: 1.6, sz: 1.6, cor: "#f3cf63" });
   }
-  const g = m.montar("redbullring-touro"); g.scale.setScalar(escala); g.userData = { alto: ALTURA * escala, raio: 92 * escala, escala };
+  const g = m.montar("redbullring-touro"); g.userData = { alto: ALTURA, raio: 92 };
   return g;
 }

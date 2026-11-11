@@ -6,7 +6,6 @@ import { EDITAVEIS, camposDe, ajusteDe, definir, restaurarCamera } from "./camer
 import { ajusteEspelho, definirEspelho, restaurarEspelhos } from "./retrovisores-ajuste.js";
 import { NOMES } from "./cameras.js";
 import { estiloHud, definirEstiloHud, htmlHudTelemetria, atualizarHudTelemetria, posicionarHudNoHalo } from "./hud-telemetria.js";
-import { carrosEscolha, definirCarros } from "./qualidade.js";
 
 let renderer, cena, camera, kart, host, raf = 0, chave = "", modo = "cockpit", controles;
 const $ = (s) => document.querySelector(s);
@@ -42,7 +41,6 @@ function iniciarControles() {
   if (controles) return; controles = true;
   $("#alHud").value = estiloHud();
   $("#alHud").addEventListener("change", e => { definirEstiloHud(e.target.value); if (host) host.dataset.hud = estiloHud(); });
-  if ($("#alCarros")) { $("#alCarros").value = carrosEscolha(); $("#alCarros").addEventListener("change", e => definirCarros(e.target.value)); } // os carros dos adversários: menos detalhe = mais FPS com robôs
   $("#alModo").innerHTML = EDITAVEIS.map(k => `<option value="${k}">${NOMES[k]}</option>`).join("");
   $("#alModo").addEventListener("change", e => { modo = e.target.value; linhas(); });
   $("#alCamCampos").addEventListener("input", e => { const x = e.target; if (!x.dataset.campo) return; definir(modo, x.dataset.campo, x.value); x.parentNode.querySelector("b").textContent = ajusteDe(modo)[x.dataset.campo] + camposDe(modo).find(c => c.id === x.dataset.campo).un; });

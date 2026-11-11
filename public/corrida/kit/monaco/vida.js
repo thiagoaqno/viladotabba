@@ -1,4 +1,4 @@
-// Mônaco — a vida em volta da pista, tudo em InstancedMesh (poucas chamadas de desenho): a galera só nas arquibancadas (nas sacadas, nos terraços e na ponte não fica ninguém),
+// Mônaco — a vida em volta da pista, tudo em InstancedMesh (poucas chamadas de desenho): a galera nas sacadas, nos terraços e nas arquibancadas,
 // os fiscais laranja nos postos, as bandeiras nos prédios, os telões acesos com a faixa de notícias correndo, barcos passeando de verdade pelo
 // porto, os guindastes das câmeras de TV, as tendas brancas, as ambulâncias e os carros de apoio nas áreas de escape, e mais palmeiras.
 // Roda DEPOIS do ambiente e do vidaGP (gps/monaco.js `depois`): precisa dos postos de fiscais (tr.postosGP) e do tr.animarPista. A galera e os fiscais
@@ -37,9 +37,8 @@ export function vidaMonaco(tr, ctx, { lista, predioEm, hAt }) {
     q.ocupada = true; // (a torcida de vida.js não senta de novo aqui)
     for (let i = q.i0; i <= q.i1; i += 3) for (let fila = 0; fila < q.degraus; fila++) {
       if (r() < 0.32) continue;
-      const prof = q.prof ?? 9, alt = q.alt ?? 6, base = q.base ?? 4; // (o degrau da arquibancada do kit, na escala do cenário: a galera senta no meio dele e na altura dele, não 3 m acima)
-      const p = pts[i % n], d = Math.abs(q.l0) + prof / 2 + fila * prof + (r() - 0.5) * prof * 0.3, x = p.x + p.nx * q.lado * d, z = p.y + p.ny * q.lado * d;
-      pessoa(x, p.h + base + (fila + 0.5) * alt, z, Math.atan2(-p.nx * q.lado, -p.ny * q.lado), CAMISA[(r() * CAMISA.length) | 0], r() < 0.5); stats.arquibancadas++;
+      const p = pts[i % n], d = Math.abs(q.l0) + 4.5 + fila * 9 + (r() - 0.5) * 3, x = p.x + p.nx * q.lado * d, z = p.y + p.ny * q.lado * d;
+      pessoa(x, p.h + 4 + (fila + 0.5) * 6, z, Math.atan2(-p.nx * q.lado, -p.ny * q.lado), CAMISA[(r() * CAMISA.length) | 0], r() < 0.5); stats.arquibancadas++;
     }
   }
 
@@ -67,9 +66,11 @@ export function vidaMonaco(tr, ctx, { lista, predioEm, hAt }) {
     if (stats.sacadas < 150 && andares >= 4) {
       const y = b.baixo + andar * 2.2, qtd = Math.min(4, Math.max(2, Math.floor(e.len / 9)));
       lajes.push({ x: e.mx + e.nx * 1.6, y: y - 0.5, z: e.mz + e.nz * 1.6, r: ang, sx: Math.min(e.len * 0.8, 38), sy: 1, sz: 3.6 });
-      for (let k = 0; k < qtd; k++) { r(); r(); r(); stats.sacadas++; } // (a galera das sacadas saiu: torcedor só em arquibancada. Os três sorteios ficam para o resto da vida não mudar de lugar)
+      for (let k = 0; k < qtd; k++) { const o = (k - (qtd - 1) / 2) * 8 + (r() - 0.5) * 2; pessoa(e.mx + e.nx * 2.4 - e.nz * o, y, e.mz + e.nz * 2.4 + e.nx * o, ry, CAMISA[(r() * CAMISA.length) | 0], r() < 0.4); stats.sacadas++; }
     }
-    if (stats.terracos < 110 && b.metros >= 20) { for (let k = 0; k < 3; k++) { r(); r(); r(); stats.terracos++; } } // (a galera dos terraços saiu também)
+    if (stats.terracos < 110 && b.metros >= 20) { // no terraço, junto da borda que olha para a pista
+      for (let k = 0; k < 3; k++) { const o = (k - 1) * 9 + (r() - 0.5) * 3; pessoa(e.mx - e.nx * 3 - e.nz * o, b.topo, e.mz - e.nz * 3 + e.nx * o, ry, CAMISA[(r() * CAMISA.length) | 0], r() < 0.6); stats.terracos++; }
+    }
     // a bandeira no canto do telhado mais perto da pista: Mônaco na maioria, e as da França e da Itália
     if (stats.bandeiras < 90) {
       let v = e.a; if (r() < 0.5) v = e.q;
@@ -178,7 +179,7 @@ export function vidaMonaco(tr, ctx, { lista, predioEm, hAt }) {
   };
   const anterior = tr.animarPista; tr.animarPista = (dt, foco, tt) => { anterior?.(dt, foco, tt); anim(dt, foco, tt); };
 
-  // (a galera em cima da ponte do Portier, kit/monaco/ponte.js, também saiu: não é arquibancada)
+  for (const q of tr.ponteMonaco?.pessoas || []) pessoa(q.x, q.y, q.z, q.ry, CAMISA[(r() * CAMISA.length) | 0], r() < 0.5); // a galera em cima da ponte do Portier (kit/monaco/ponte.js); no fim, para não mudar o sorteio do resto
   tr.torcidasGP = gente; // vida-mais.js monta e anima
   tr.vidaMonaco = stats;
 }

@@ -1,7 +1,7 @@
 // Xangai — as construções da reta dos boxes (peças só desta pista), todas em `Montador` (kit 2: cor chapada por vértice, uma malha por material,
-// origem no chão, a frente para +z, 1 unidade do mundo = 20,8 cm; as medidas abaixo estão em unidades do mundo). Das fotos do circuito:
+// origem no chão, a frente para +z, 1 unidade ≈ 10 cm). Das fotos do circuito:
 // · `predioDosBoxes`: um módulo do prédio das garagens (comprido e baixo: térreo de concreto cinza com as garagens entre nervuras claras, uma
-//   marquise escura, dois andares de vidro verde-acinzentado de 3,3 m, o terraço do teto com a mureta de 1,1 m e a galera de pé de 1,7 m, a faixa de painéis), com a
+//   marquise escura, o andar de cima de vidro verde-acinzentado, o terraço do teto com a mureta e a galera de pé, a faixa de painéis), com a
 //   torre de controle de prova sobre o teto quando pedida;
 // · `torreDeVidro`: as torres das pontas do prédio dos boxes e da tribuna (vidro em faixas horizontais, o capacete branco);
 // · `asa`: o que cruza a pista sobre a reta, ligando a torre dos boxes à da tribuna: a laje em forma de folha (asa), branca por cima, com o
@@ -45,30 +45,26 @@ export function predioDosBoxes({ comprimento: L = 165, fundo: F = 44, torre = nu
   m.caixa(S, [L / 2, 12, 1.2], [1.8, 24, 2.4], { cor: "#e1e4e5" });
   m.caixa(S, [0, 25.2, 4.6], [L + 2, 1.8, 9.6], { cor: "#555b62" }); // a marquise escura sobre as portas (nas fotos, o beiral cinza corrido)
   m.caixa(S, [0, 24.2, 0.4], [L, 0.8, 1], { cor: "#d9dcde" });
-  // o andar de cima: dois andares de 16 u (3,3 m; eram um só de 24 u, 5 m), cada um com a faixa de vidro de 10 u (2,1 m) e os montantes
-  const A0 = 24, ANDAR = 16, R = A0 + 2 * ANDAR + 1.6; // R: o topo da laje do teto (57,6 u = 12 m do chão; era 50,6 u)
-  m.caixa(S, [0, A0 + ANDAR, -F / 2], [L, 2 * ANDAR, F], { cor: "#aeb3b5" });
-  for (let k = 0; k < 2; k++) {
-    const yc = A0 + ANDAR * (k + 0.5);
-    m.caixa(V, [0, yc, 0.4], [L - 6, 10, 0.9], { cor: VIDRO });
-    for (let x = -L / 2 + 3; x <= L / 2 - 2.9; x += 11) m.caixa(S, [x, yc, 1], [0.8, 10.4, 1.2], { cor: "#7d858a" });
-    m.caixa(S, [0, yc - 5.4, 1], [L - 6, 0.9, 1.6], { cor: "#c6cacc" }); m.caixa(S, [0, yc + 5.4, 1], [L - 6, 0.9, 1.6], { cor: "#c6cacc" });
+  // o andar de cima: a faixa de vidro com os montantes
+  m.caixa(S, [0, 37, -F / 2], [L, 24, F], { cor: "#aeb3b5" });
+  m.caixa(V, [0, 37, 0.4], [L - 6, 15, 0.9], { cor: VIDRO });
+  for (let x = -L / 2 + 3; x <= L / 2 - 2.9; x += 11) m.caixa(S, [x, 37, 1], [0.8, 15.4, 1.2], { cor: "#7d858a" });
+  m.caixa(S, [0, 29.4, 1], [L - 6, 0.9, 1.6], { cor: "#c6cacc" }); m.caixa(S, [0, 44.6, 1], [L - 6, 0.9, 1.6], { cor: "#c6cacc" });
+  // o teto: laje cinza, a mureta de vidro com o corrimão, a galera de pé e a fita de painéis na frente
+  m.caixa(S, [0, 49.8, -F / 2], [L + 1.4, 1.6, F + 1.4], { cor: "#8e9498" });
+  m.caixa(V, [0, 53, 3.2], [L, 4.4, 0.5], { cor: "#7eaab0" });
+  m.caixa(S, [0, 55.4, 3.2], [L, 0.5, 0.8], { cor: "#e4e7e8" });
+  for (let x = -L / 2 + 1; x <= L / 2 - 0.9; x += 7) m.caixa(S, [x, 53, 3.2], [0.5, 5, 0.6], { cor: "#cfd3d5" });
+  for (let x = -L / 2 + 2; x < L / 2 - 1.5; x += 2.5) if (r() < 0.82) {
+    const cor = CAMISAS[(r() * CAMISAS.length) | 0], z = 1.4 + r() * 1.2;
+    m.caixa(S, [x + (r() - 0.5) * 0.6, 52.8, z], [1.7, 3, 1.3], { cor }); m.caixa(S, [x, 55, z], [1.2, 1.2, 1.2], { cor: ["#f1c7a5", "#d9a37a", "#b98660"][(r() * 3) | 0] });
   }
-  // o teto: laje cinza, a mureta de vidro de 1,1 m com o corrimão, a galera de pé (1,7 m: pernas, tronco e cabeça, 8,1 u) e a fita de painéis na frente
-  m.caixa(S, [0, R - 0.8, -F / 2], [L + 1.4, 1.6, F + 1.4], { cor: "#8e9498" });
-  m.caixa(V, [0, R + 2.65, 3.2], [L, 5.3, 0.5], { cor: "#7eaab0" });
-  m.caixa(S, [0, R + 5.5, 3.2], [L, 0.5, 0.8], { cor: "#e4e7e8" });
-  for (let x = -L / 2 + 1; x <= L / 2 - 0.9; x += 7) m.caixa(S, [x, R + 2.65, 3.2], [0.5, 5.5, 0.6], { cor: "#cfd3d5" });
-  for (let x = -L / 2 + 2; x < L / 2 - 2; x += 4.2) if (r() < 0.7) {
-    const cor = CAMISAS[(r() * CAMISAS.length) | 0], z = 0.6 + r() * 1.6, px = x + (r() - 0.5) * 0.8;
-    m.caixa(S, [px, R + 1.7, z], [1.6, 3.4, 1.3], { cor: "#2b3340" }); m.caixa(S, [px, R + 5, z], [2.4, 3.2, 1.6], { cor }); m.caixa(S, [px, R + 7.35, z], [1.5, 1.5, 1.5], { cor: ["#f1c7a5", "#d9a37a", "#b98660"][(r() * 3) | 0] });
-  }
-  m.plano(faixaTex(texto, VERMELHO, "#ffffff", Math.max(2, Math.round(L / 80))), [0, R - 3, 1.2], [L - 4, 3.2]); // a faixa de painéis na beira do andar (de frente para os carros)
-  for (const x of [-L * 0.3, L * 0.05, L * 0.34]) m.caixa(S, [x, R + 3, -F * 0.5], [20, 6, 12], { cor: "#cfd3d6" }); // as caixas de ar
-  for (let x = -L / 2 + 14; x <= L / 2 - 12; x += 38) { m.cilindro(S, [x, R + 12, -F + 6], [0.4, 24], { cor: "#e8eaec", seg: 5 }); m.caixa(S, [x + 4, R + 20, -F + 6], [8, 4.8, 0.3], { cor: x % 2 ? VERMELHO : OURO }); } // as bandeiras do teto (mastro de 5 m)
+  m.plano(faixaTex(texto, VERMELHO, "#ffffff", Math.max(2, Math.round(L / 80))), [0, 47.6, 1.2], [L - 4, 3.2]); // a faixa de painéis na beira do andar (de frente para os carros)
+  for (const x of [-L * 0.3, L * 0.05, L * 0.34]) m.caixa(S, [x, 53, -F * 0.5], [20, 6, 12], { cor: "#cfd3d6" }); // as caixas de ar
+  for (let x = -L / 2 + 14; x <= L / 2 - 12; x += 38) { m.cilindro(S, [x, 62, -F + 6], [0.4, 24], { cor: "#e8eaec", seg: 5 }); m.caixa(S, [x + 4, 70, -F + 6], [8, 4.8, 0.3], { cor: x % 2 ? VERMELHO : OURO }); } // as bandeiras do teto
   // a torre de controle de prova: fuste de concreto com as janelas, a cabine de vidro projetada sobre a reta, o capacete e o mastro de antenas
   if (torre !== null) {
-    const tz = -F * 0.38, y0 = R;
+    const tz = -F * 0.38, y0 = 50.6;
     m.caixa(S, [torre, y0 + 36, tz], [22, 72, 22], { cor: "#d9dcdd" });
     for (let y = 10; y < 66; y += 14) m.caixa(V, [torre, y0 + y, tz + 11.2], [16, 6, 0.6], { cor: VIDRO_ESCURO });
     m.caixa(S, [torre, y0 + 74, tz + 4], [46, 2.4, 32], { cor: "#8e9498" }); // a laje da cabine
@@ -80,7 +76,7 @@ export function predioDosBoxes({ comprimento: L = 165, fundo: F = 44, torre = nu
     m.caixa(S, [torre + 10, y0 + 138, tz], [6, 0.8, 0.8], { cor: "#d9d9d9" });
     m.caixa(S, [torre - 14, y0 + 102, tz - 4], [0.6, 8, 6], { cor: "#b6bcc2" }); // a antena parabólica (de perfil)
   }
-  const g = m.montar("xangai-predio-boxes"); g.userData = { comprimento: L, fundo: F, alto: torre !== null ? 167 : 77 };
+  const g = m.montar("xangai-predio-boxes"); g.userData = { comprimento: L, fundo: F, alto: torre !== null ? 160 : 70 };
   return g;
 }
 

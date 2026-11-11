@@ -2,11 +2,8 @@
 // para a pista a uma distância do eixo, conferir se a pegada cabe (fora do asfalto e do que já foi reservado), reservar o lugar, achar um
 // lugar livre no miolo do circuito e o ruído de valor que sempre repete igual.
 import { ocupado, sorteio } from "../comum.js";
-import { nivelDoChao } from "./chao.js";
 
 export const indice = (tr, f) => ((Math.floor(f * tr.n) % tr.n) + tr.n) % tr.n;
-// unidades por metro: o degrau do kit é 6 × a escala de altura e 0,5 m, então 1 m = 12 × `tr.escala` u (0,4: 4,8 u por metro, 1 u = 20,8 cm; a pista tem 58 u = 12 m)
-export const UM = (tr) => 12 * (tr.escala ?? 0.4);
 export const lim = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 export { sorteio };
 const suave = (t) => t * t * (3 - 2 * t);
@@ -21,7 +18,7 @@ export const mundoDe = (x, z, ry, u, v) => [x + Math.cos(ry) * u - Math.sin(ry) 
 // Põe um grupo (origem no meio da frente, frente para +z) a `lat` do eixo, do lado `lado`, em f e `ao` ao longo da pista, de frente para a pista.
 export function pousar(tr, g, f, lado, lat, ao = 0, elev = 0) {
   const p = tr.pts[indice(tr, f)], x = p.x + p.nx * lado * lat + p.tx * ao, z = p.y + p.ny * lado * lat + p.ty * ao, ry = Math.atan2(-lado * p.nx, -lado * p.ny);
-  g.position.set(x, nivelDoChao(tr, x, z) - 0.6 + elev, z); g.rotation.y = ry; // (o chão que se vê, a fita de chao.js perto da pista; a base da peça entra 0,6 u nele)
+  g.position.set(x, tr.chao(x, z) - 1 + elev, z); g.rotation.y = ry;
   return { x, z, ry, p };
 }
 // a pegada w × d (de frente para a pista, com a frente em z = 0) cabe? Nove pontos a mais de `folga` da borda da pista e fora do reservado
@@ -79,7 +76,7 @@ export const somDaTorcida = (tr, f0, f1) => (tr.arquibancadas ||= []).push([indi
 // a menor e a maior altura do chão sob uma pegada retangular (o prédio fica no nível mais alto e a base desce até o mais baixo)
 export function alturaDoChao(tr, cx, cz, rot, a, b) {
   const c = Math.cos(rot), s = Math.sin(rot); let lo = 1e9, hi = -1e9;
-  for (let u = -a; u <= a + 0.1; u += a / 2) for (let v = -b; v <= b + 0.1; v += b / 2) { const h = nivelDoChao(tr, cx + c * u - s * v, cz + s * u + c * v); lo = Math.min(lo, h); hi = Math.max(hi, h); }
+  for (let u = -a; u <= a + 0.1; u += a / 2) for (let v = -b; v <= b + 0.1; v += b / 2) { const h = tr.chao(cx + c * u - s * v, cz + s * u + c * v); lo = Math.min(lo, h); hi = Math.max(hi, h); }
   return { lo, hi };
 }
 // a elipse (centro, semieixos a e b no eixo x) cabe? Todos os pontos do contorno a mais de `folga` da borda da pista

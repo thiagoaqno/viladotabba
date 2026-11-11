@@ -1,6 +1,5 @@
 // Red Bull Ring — as construções do circuito (peças só desta pista), todas em `Montador` (kit 2: cor chapada por vértice, uma malha por
-// material, origem no chão, a frente para +z, 1 unidade = 0,2083 m, 4,8 u por metro: o prédio dos boxes, a asa e a torre de controle já estavam no tamanho real e não mudaram; o andar da casa da Estíria
-// (22 u, 4,6 m) virou 15 u (3,1 m) e o celeiro, a capela, a torre de câmera e as carretas encolheram para a medida real, cada uma com a sua nota abaixo):
+// material, origem no chão, a frente para +z, 1 unidade ≈ 10 cm):
 // · `predioDosBoxes`: o prédio das garagens da reta de chegada (reconstruído em 2010): térreo de garagens, faixa contínua de vidro, brises
 //   brancos e o terraço, com a torre de controle de prova na linha de chegada;
 // · `asaDeAco`: o prédio em forma de asa de carro de corrida que olha a arquibancada principal e a reta de chegada, com o centro de imprensa de
@@ -121,26 +120,26 @@ export function asaDeAco({ comprimento: L = 480, fundo: D = 96, alto: A = 64 } =
 // ---------------------------------------------------------------------------------------------------------------------
 /** A casa: térreo branco, andar de cima com ripas de madeira e sacada corrida, telhado de duas águas de telha escura. Origem no meio da frente. */
 export function casaDaEstiria({ comprimento: L = 110, fundo: F = 56, andares = 2, madeira = "#6b4a32", teto = "#5b3a2a", parede = "#f2eee4", semente = 3 } = {}) {
-  const m = new Montador(), S = solido(), V = vidro(), alt = 15, H = alt * andares; // (andar de 3,1 m; antes 22 u, 4,6 m)
+  const m = new Montador(), S = solido(), V = vidro(), alt = 22, H = alt * andares;
   m.caixa(S, [0, 1.6, -F / 2], [L + 1.4, 3.2, F + 1.4], { cor: "#8a8478" }); // o embasamento de pedra
   m.caixa(S, [0, alt / 2 + 3, -F / 2], [L, alt, F], { cor: parede });
   if (andares > 1) {
     m.caixa(S, [0, alt * 1.5 + 3, -F / 2], [L - 2, alt, F - 2], { cor: tom(madeira, 1.08) }); // o andar de cima, de ripas de madeira
     for (let x = -L / 2 + 4; x < L / 2 - 2; x += 3.6) m.caixa(S, [x, alt * 1.5 + 3, 0.1], [0.5, alt - 1.5, 0.4], { cor: tom(madeira, 0.82) });
     m.caixa(S, [0, alt + 3, 5], [L - 4, 1.2, 8], { cor: madeira }); // a sacada corrida
-    for (let x = -L / 2 + 6; x <= L / 2 - 5.9; x += 5) m.caixa(S, [x, alt + 5.6, 8.6], [0.6, 4.4, 0.6], { cor: tom(madeira, 0.8) }); // o guarda-corpo de 1 m (4,8 u)
-    m.caixa(S, [0, alt + 7.8, 8.6], [L - 8, 0.8, 0.8], { cor: tom(madeira, 0.8) });
+    for (let x = -L / 2 + 6; x <= L / 2 - 5.9; x += 5) m.caixa(S, [x, alt + 6.4, 8.6], [0.6, 6, 0.6], { cor: tom(madeira, 0.8) });
+    m.caixa(S, [0, alt + 9.5, 8.6], [L - 8, 0.8, 0.8], { cor: tom(madeira, 0.8) });
   }
   // as janelas do térreo, com veneziana verde, e a porta no meio
   for (let x = -L / 2 + 10; x < L / 2 - 4; x += 16) {
-    if (Math.abs(x) < 9) { m.caixa(S, [x, 3 + 5.5, 0.6], [9, 11, 1.2], { cor: "#5b4030" }); continue; } // a porta de 2,3 m
-    m.caixa(V, [x, 3 + 8, 0.6], [6, 6.5, 0.8], { cor: "#2c3e4c" }); m.caixa(S, [x - 3.9, 3 + 8, 0.7], [1.6, 7, 0.9], { cor: "#3a6a42" }); m.caixa(S, [x + 3.9, 3 + 8, 0.7], [1.6, 7, 0.9], { cor: "#3a6a42" });
+    if (Math.abs(x) < 9) { m.caixa(S, [x, 11, 0.6], [10, 16, 1.2], { cor: "#5b4030" }); continue; }
+    m.caixa(V, [x, 12, 0.6], [7, 9, 0.8], { cor: "#2c3e4c" }); m.caixa(S, [x - 4.6, 12, 0.7], [1.8, 9.6, 0.9], { cor: "#3a6a42" }); m.caixa(S, [x + 4.6, 12, 0.7], [1.8, 9.6, 0.9], { cor: "#3a6a42" });
   }
   // o telhado de duas águas (cumeeira ao longo da casa), os beirais largos e a chaminé
   telhado(m, S, 0, H + 3, -F / 2, F + 16, F * 0.46, L + 12, teto, Math.PI / 2);
-  m.caixa(S, [L * 0.22, H + 3 + F * 0.32, -F * 0.5], [4, 16, 4], { cor: "#7c6a5a" });
+  m.caixa(S, [L * 0.22, H + 3 + F * 0.32, -F * 0.5], [5, 20, 5], { cor: "#7c6a5a" });
   const rr = (k) => ((Math.sin(semente * 91 + k * 17) * 43758.5453) % 1 + 1) % 1;
-  if (rr(1) > 0.4) { m.caixa(S, [-L / 2 - 16, 11, -F * 0.55], [30, 22, 36], { cor: tom(madeira, 0.9) }); telhado(m, S, -L / 2 - 16, 22, -F * 0.55, 40, 12, 40, teto, Math.PI / 2); } // o galpão (parede de 4,6 m)
+  if (rr(1) > 0.4) { m.caixa(S, [-L / 2 - 16, 15, -F * 0.55], [30, 30, 36], { cor: tom(madeira, 0.9) }); telhado(m, S, -L / 2 - 16, 30, -F * 0.55, 40, 14, 40, teto, Math.PI / 2); } // o galpão
   const g = m.montar("redbullring-casa"); g.userData = { comprimento: L, fundo: F, alto: H + F * 0.46 };
   return g;
 }
@@ -149,17 +148,17 @@ export function casaDaEstiria({ comprimento: L = 110, fundo: F = 56, andares = 2
 export function sitioDaEstiria({ semente = 5 } = {}) {
   const m = new Montador(), S = solido(), g = new THREE.Group(); g.name = "redbullring-sitio";
   g.add(casaDaEstiria({ comprimento: 84, fundo: 46, andares: 2, semente }));
-  m.caixa(S, [-110, 14, -34], [100, 28, 54], { cor: "#7a5a3a" }); // o celeiro: caixa comprida de madeira com telhado de duas águas (parede de 5,8 m, cumeeira a 10 m; antes 8,3 e 14 m)
-  telhado(m, S, -110, 28, -34, 76, 22, 112, "#4d3a30", Math.PI / 2);
-  m.caixa(S, [-110, 11, -6.4], [20, 22, 0.8], { cor: "#4a3626" }); // o portão de 4,2 × 4,6 m
+  m.caixa(S, [-110, 20, -34], [100, 40, 54], { cor: "#7a5a3a" }); // o celeiro: caixa comprida de madeira com telhado de duas águas
+  telhado(m, S, -110, 40, -34, 76, 30, 112, "#4d3a30", Math.PI / 2);
+  m.caixa(S, [-110, 15, -6.4], [28, 30, 0.8], { cor: "#4a3626" }); // o portão
   m.cilindro(S, [-30, 36, -92], [10, 72], { cor: "#b8bec4", seg: 12 }); m.geo(S, new THREE.ConeGeometry(1, 1, 12), { x: -30, y: 80, z: -92, sx: 11, sy: 14, sz: 11, cor: "#8d949b" }); // o silo
-  for (let k = 0; k < 9; k++) m.cilindro(S, [60 + (k % 3) * 8, 3 + Math.floor(k / 6) * 5.6, 40 + Math.floor((k % 6) / 3) * 8], [3, 5.8], { cor: "#d9bf64", rx: Math.PI / 2, seg: 10 }); // os fardos redondos (1,3 m de diâmetro e 1,2 de largura; antes 2,9 e 2,5)
+  for (let k = 0; k < 9; k++) m.cilindro(S, [60 + (k % 3) * 18, 5 + Math.floor(k / 6) * 8, 40 + Math.floor((k % 6) / 3) * 18], [7, 12], { cor: "#d9bf64", rx: Math.PI / 2, seg: 10 }); // os fardos redondos
   g.add(m.montar("redbullring-sitio-celeiro")); g.userData = { raio: 190 };
   return g;
 }
 
 /** A capela de aldeia: a nave de paredes brancas e telhado de duas águas, a torre quadrada com o relógio e a cúpula em cebola verde-cobre. */
-export function capelaDeBulbo({ escala = 0.85 } = {}) { // (a capela inteira tem 23 m de altura; × 0,85 = 20 m, a de uma torre de aldeia)
+export function capelaDeBulbo({ escala = 1 } = {}) {
   const m = new Montador(), S = solido(), V = vidro();
   m.caixa(S, [0, 12, -22], [30, 24, 44], { cor: "#f2eee4" }); telhado(m, S, 0, 24, -22, 36, 15, 46, "#5b3a2a", Math.PI / 2);
   m.caixa(S, [0, 30, 6], [20, 60, 20], { cor: "#f2eee4" }); // a torre
@@ -176,20 +175,19 @@ export function capelaDeBulbo({ escala = 0.85 } = {}) { // (a capela inteira tem
 // O paddock e a torre de câmera
 // ---------------------------------------------------------------------------------------------------------------------
 /** Uma fila de carretas de equipe (caminhão de 18 m, branco com a faixa colorida) de frente para +z; `cores`: a faixa de cada uma. */
-export function carretas({ cores = COR_PORTA, passo = 28 } = {}) {
-  // a carreta de verdade: 2,55 m de largura (12 u), 4 m de altura (19 u) e 14 m de comprimento (a cabine de 2,5 m mais o baú de 11,5 m); antes 7 m de largura e 6,2 de altura
+export function carretas({ cores = COR_PORTA, passo = 52 } = {}) {
   const m = new Montador(), S = solido();
   cores.forEach((cor, k) => {
     const x = (k - (cores.length - 1) / 2) * passo;
-    m.caixa(S, [x, 12.5, -36], [12.5, 19, 58], { cor: "#eceeef" }); m.caixa(S, [x, 12.5, -6.8], [12.7, 8, 0.8], { cor });
-    m.caixa(S, [x, 8, 6], [11.5, 13, 12], { cor }); m.caixa(S, [x, 11, 12.3], [9.5, 5, 0.6], { cor: "#26323d" });
-    for (const dz of [-24, -40, -52]) for (const s of [-1, 1]) m.cilindro(S, [x + s * 5.6, 2.6, dz], [2.6, 2.4], { cor: "#1b1b1f", rz: Math.PI / 2, seg: 8 });
+    m.caixa(S, [x, 17, -34], [34, 30, 66], { cor: "#eceeef" }); m.caixa(S, [x, 17, -1.2], [34.2, 12, 0.8], { cor });
+    m.caixa(S, [x, 10, 6], [30, 18, 12], { cor }); m.caixa(S, [x, 15, 12.3], [24, 8, 0.6], { cor: "#26323d" });
+    for (const dz of [-20, -46, -58]) for (const s of [-1, 1]) m.cilindro(S, [x + s * 16, 5, dz], [5, 4], { cor: "#1b1b1f", rz: Math.PI / 2, seg: 8 });
   });
   return m.montar("redbullring-carretas");
 }
 
-/** A torre de câmera (a TV): mastro de treliça em faixas vermelhas e brancas com a cabine de vidro e as antenas. Altura em unidades (4,8 por metro). */
-export function torreDeCamera({ alto = 90 } = {}) { // (a torre de TV de beira de pista tem uns 19 m; antes 150 u, 31 m)
+/** A torre de câmera (a TV): mastro de treliça em faixas vermelhas e brancas com a cabine de vidro e as antenas. Altura em unidades. */
+export function torreDeCamera({ alto = 150 } = {}) {
   const m = new Montador(), S = solido(), V = vidro(), n = 6;
   for (let k = 0; k < n; k++) m.cilindro(S, [0, ((k + 0.5) * alto * 0.8) / n, 0], [2.2 - k * 0.14, (alto * 0.8) / n], { cor: k % 2 ? "#f4f4f2" : "#c8102e", seg: 8 });
   m.caixa(S, [0, alto * 0.8 + 1, 0], [18, 2, 18], { cor: "#8d949b" }); m.caixa(V, [0, alto * 0.8 + 8, 0], [17, 12, 17], { cor: "#2c4256" }); m.caixa(S, [0, alto * 0.8 + 15, 0], [20, 2, 20], { cor: "#e6e8ea" });

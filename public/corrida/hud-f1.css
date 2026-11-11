@@ -162,6 +162,3 @@
 .tl .troca{position:absolute;left:17px;top:50%;transform:translateY(-50%);font-size:8px;line-height:1;font-weight:900;z-index:1}
 .tl .troca.sobe{color:#12b95c}.tl .troca.desce{color:#e52c36}
 @media (max-width:700px){.tl.trocou .n{padding-right:6px}.tl .troca{left:12px;font-size:7px}}
-
-/* H: sem HUD (controles.js trocarHud): só a cena e as gotas da chuva na tela */
-#race.sem-hud > *:not(#screen):not(#climaGotas){visibility:hidden!important}

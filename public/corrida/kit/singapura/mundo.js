@@ -6,8 +6,6 @@ import DADOS from "./dados.js";
 
 export const D = DADOS;
 export const K = D.projecao.k; // unidades por metro
-// quanto a régua do mundo cresceu desde o desenho (1 u = 0,264 m, k = 3,7834): as distâncias fixas em unidades do cenário (grades, folgas) multiplicam por KR
-export const KR = K / 3.7834;
 export const NIVEL_AGUA = 3; // a altura da água (a calçada da baía fica 1,3 a 6 m acima dela)
 const suave = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 export { suave };
@@ -26,7 +24,7 @@ export function poligonoDentro(P, x, z) {
 }
 
 // o rio Singapura só vem como linha no OpenStreetMap: vira uma faixa de água (de ~27 m de largura, a boca do rio) em volta dela
-const MEIA_LARGURA_RIO = 100 * KR;
+const MEIA_LARGURA_RIO = 100;
 function rioComoAnel(P) {
   const E = [], Dd = [];
   for (let i = 0; i < P.length; i++) {
@@ -39,7 +37,7 @@ export const ANEIS = [...(D.agua || []), ...(D.rios || []).filter((r) => /Singap
 
 // ---------- a água: a distância com sinal até a margem de OpenStreetMap (positivo dentro d'água), numa grade bilinear ----------
 let sdf = null;
-const CEL = 36 * KR, MARGEM = 1600 * KR;
+const CEL = 36, MARGEM = 1600;
 function montarAgua() {
   const aneis = ANEIS, mundo = D.projecao.mundo, x0 = -MARGEM, N = Math.ceil((mundo + MARGEM * 2) / CEL) + 1, g = new Float32Array(N * N).fill(-1e4);
   const segs = [];
@@ -48,7 +46,7 @@ function montarAgua() {
     const x = x0 + i * CEL, z = x0 + j * CEL; let d2 = 1e18, dentro = false;
     for (const { P, caixa } of segs) {
       // longe demais do anel (mais de 360) e fora da caixa dele: não pesa
-      if (x < caixa[0] - 360 * KR || x > caixa[2] + 360 * KR || z < caixa[1] - 360 * KR || z > caixa[3] + 360 * KR) continue;
+      if (x < caixa[0] - 360 || x > caixa[2] + 360 || z < caixa[1] - 360 || z > caixa[3] + 360) continue;
       let dentroDele = false;
       for (let a = 0, n = P.length; a < n; a++) {
         const [x1, z1] = P[a], [x2, z2] = P[(a + 1) % n];
@@ -91,6 +89,6 @@ export function corDoChao(tr) {
     for (const v of verde) { if (x < v.c[0] || x > v.c[2] || z < v.c[1] || z > v.c[3] || !poligonoDentro(v.P, x, z)) continue; return v.tipo === 2 ? MATA : (((x * 0.013) | 0) + ((z * 0.013) | 0)) % 2 ? RELVA : RELVA2; }
     const d = tr.distAt(x, z);
     if (d < tr.W / 2 + 70) return CALCADA;
-    return d < 400 * KR ? CALCADA : CONCRETO;
+    return d < 400 ? CALCADA : CONCRETO;
   };
 }

@@ -5,18 +5,15 @@ import * as THREE from "three";
 import { canvasTex, M } from "../../cena.js";
 import { livre, ocupado } from "../comum.js";
 import { soDeNoite } from "./base.js";
-import { nivelDoChao } from "./chao.js";
 import { registrarLuz, luzDaPista, raioDeCobertura } from "../luz-postes.js";
 
-// O mastro tem 27 m (130 u) e a cabeça 11,7 × 3,3 m com dois painéis de lâmpadas de 5,2 × 2,6 m: já é real, não muda. Cada torre fica a `recuo` da borda do asfalto (13 m) ou, onde a barreira mapeada (`tr.murosEscape`) está mais longe,
-// 2 m atrás dela (nunca dentro da faixa de escape); a base pousa no chão que se vê (chao.js) e a luz mira o eixo da pista (a 6 u do outro lado), com o alcance de `raioDeCobertura` (que lê a largura W).
 export function torresDeLuz(tr, add, { gap = 58, recuo = 62, alto = 130, de = 0, ate = 1 } = {}) {
-  const { pts, n, W } = tr, lista = [], ultimo = { 1: -1e9, "-1": -1e9 };
+  const { pts, n, W } = tr, lat = W / 2 + recuo, lista = [], ultimo = { 1: -1e9, "-1": -1e9 };
   for (let i = Math.floor(de * n) + 6; i < Math.floor(ate * n); i += 6) for (const s of [1, -1]) {
     if (i - ultimo[s] < gap) continue;
-    const p = pts[i % n], mu = tr.latMuro(s, i % n), lat = Math.max(W / 2 + recuo, Number.isFinite(mu) ? mu + 10 : 0), x = p.x + p.nx * s * lat, z = p.y + p.ny * s * lat;
-    if (!livre(tr, x, z, lat - W / 2 - 10) || ocupado(tr, x, z, i % n)) continue;
-    ultimo[s] = i; lista.push({ x, z, y: nivelDoChao(tr, x, z) - 0.5, s, nx: p.nx, ny: p.ny, ph: p.h, lat });
+    const p = pts[i % n], x = p.x + p.nx * s * lat, z = p.y + p.ny * s * lat;
+    if (!livre(tr, x, z, recuo - 10) || ocupado(tr, x, z, i % n)) continue;
+    ultimo[s] = i; lista.push({ x, z, y: tr.chao(x, z) - 1.5, s, nx: p.nx, ny: p.ny, ph: p.h });
     tr.reservado ||= []; tr.reservado.push([x, z, 16]);
   }
   if (!lista.length) return 0;
@@ -36,7 +33,7 @@ export function torresDeLuz(tr, add, { gap = 58, recuo = 62, alto = 130, de = 0,
   const o = new THREE.Object3D(), cab = new THREE.Matrix4(), local = new THREE.Matrix4();
   o.rotation.order = "YXZ";
   lista.forEach((t, j) => {
-    const { x, y, z, s, nx, ny, ph } = t; // (o alvo da luz: antes a `recuo + 70` da torre, a 10 u do eixo de uma pista de 120 u; agora o eixo mais 6 u)
+    const { x, y, z, s, nx, ny, ph } = t;
     o.position.set(x, y, z); o.rotation.set(0, 0, 0); o.scale.set(1, 1, 1); o.updateMatrix(); mastros.setMatrixAt(j, o.matrix);
     o.position.set(x, y + alto + 6, z); o.rotation.set(0.3, Math.atan2(-nx * s, -ny * s), 0); o.updateMatrix(); cab.copy(o.matrix); cabecas.setMatrixAt(j, cab);
     [-1, 1].forEach((d, e) => {
@@ -44,7 +41,7 @@ export function torresDeLuz(tr, add, { gap = 58, recuo = 62, alto = 130, de = 0,
       brilhos.setMatrixAt(j * 2 + e, cab.clone().multiply(local.makeTranslation(d * 13.6, 0, 3.2)));
     });
     // de onde a luz sai (a cabeça) e para onde ela aponta: o asfalto, a uns 45 do eixo da pista (para o lado de dentro)
-    t.cabeca = [x, y + alto + 6, z]; t.alvo = [x - nx * s * (t.lat + 6), ph, z - ny * s * (t.lat + 6)];
+    t.cabeca = [x, y + alto + 6, z]; t.alvo = [x - nx * s * (recuo + 70), ph, z - ny * s * (recuo + 70)];
   });
   mastros.castShadow = cabecas.castShadow = true; mastros.name = `${tr.id}-holofotes`;
   for (const m of [mastros, cabecas, paineis]) add(m);

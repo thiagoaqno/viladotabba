@@ -156,7 +156,7 @@ function pov(x, p) {
   if (!(Math.abs(ahead - c.z) < 30)) ahead = c.z; // (o ponto à frente caiu noutro trecho da pista, como em cima do túnel de Mônaco: não deixa a vista mirar o teto)
   C.lookY = C.lookY == null ? ahead : C.lookY + (ahead - C.lookY) * (1 - Math.exp(-dt * 6));
   C.pitch = (C.pitch || 0) + ((R.pitch || 0) - (C.pitch || 0)) * (1 - Math.exp(-dt * 8));
-  cam.position.set(c.x + fx * fo - fy * lat, c.z + eh + p.lift + Math.sin(C.pitch) * fo * 0.5, c.y + fy * fo + fx * lat); C.pos = null;
+  cam.position.set(c.x + fx * fo - fy * lat, c.z + (R.dyChao || 0) + eh + p.lift + Math.sin(C.pitch) * fo * 0.5, c.y + fy * fo + fx * lat); C.pos = null;
   cam.lookAt(c.x + fx * (fo + 70) - fy * lat, Math.max(C.lookY, c.z + Math.tan(C.pitch) * 70 - 6) + p.eh * p.mira - (p.baixo || 0) * 70 + Math.tan(A.incl * Math.PI / 180) * 70, c.y + fy * (fo + 70) + fx * lat); // (baixo: o olhar inclinado para o volante)
   if (!rm) { // a vibração cresce com a velocidade e o volante inclina um pouco a cabeça
     const trem = (speedK * speedK * 0.35 * tremorDaVelocidade(x.src.v) + (R.offroad ? p.tremOff : 0)) * p.trem * kt;

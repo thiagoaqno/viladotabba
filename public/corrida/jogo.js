@@ -267,9 +267,9 @@ function draw(dt) {
     race.kart.g.visible = !me()?.dnf; // o carro destruído é recolhido da pista
     const slide = Math.max(-1, Math.min(1, (c.slip || 0) / 160)) * Math.sign(c.steer || 1), fr = groundH(tr, c.x, c.y, race.idx);
     const spec = CARS3[me()?.car] || CARS3.equilibrado, inc = inclinacao(tr, c.x, c.y, c.a, race.idx, spec.L * KS, spec.W * KS, c.vz, c.air, c.v);
-    race.pitch = inc.pitch;
+    race.pitch = inc.pitch; race.dyChao = c.air ? 0 : inc.dy; // (o carro desenhado sobe ou desce para as rodas tocarem o asfalto: inclinacao.js; a câmera de dentro vai junto)
     const turbo = race.boostUntil > now || race.sling > 0, rodando = race.spinUntil > now, bala = race.balaUntil > now;
-    poseKart(race.kart, c.x, c.y, c.z, c.a + (race.net ? 0 : slide * 0.25), c.v, c.steer, fr, dt, -c.steer * 0.04 + inc.roll, inc.pitch, fxDe(me(), now, { acerto: ACERTO_CARRO, drs: !!race.drsAtivo, turbo, rodando, bala, pneu: race.pneu ? race.pneu.composto : null, zebra: (race.naZebra = (!tr.zebras || !!tr.zebras[race.idx]) && Math.abs(Math.abs((c.x - tr.pts[race.idx].x) * tr.pts[race.idx].nx + (c.y - tr.pts[race.idx].y) * tr.pts[race.idx].ny) - tr.W / 2) < 9), derrapa: c.slip > 45 ? (c.slip > 110 ? 2 : 1) : 0 }));
+    poseKart(race.kart, c.x, c.y, c.z + (c.air ? 0 : inc.dy), c.a + (race.net ? 0 : slide * 0.25), c.v, c.steer, fr, dt, -c.steer * 0.04 + inc.roll, inc.pitch, fxDe(me(), now, { acerto: ACERTO_CARRO, drs: !!race.drsAtivo, turbo, rodando, bala, pneu: race.pneu ? race.pneu.composto : null, zebra: (race.naZebra = (!tr.zebras || !!tr.zebras[race.idx]) && Math.abs(Math.abs((c.x - tr.pts[race.idx].x) * tr.pts[race.idx].nx + (c.y - tr.pts[race.idx].y) * tr.pts[race.idx].ny) - tr.W / 2) < 9), derrapa: c.slip > 45 ? (c.slip > 110 ? 2 : 1) : 0 }));
     // derrapagem: fumaça branca saindo dos pneus de trás, mais grossa quanto mais o carro escorrega
     if (c.slip > 40 && !c.air) { const forte = Math.min(1, (c.slip - 40) / 120); for (const s of [-1, 1]) if (Math.random() < 0.55 + forte * 0.45) puff(c.x - Math.cos(c.a) * 15 + -Math.sin(c.a) * s * 9, c.z + 3, c.y - Math.sin(c.a) * 15 + Math.cos(c.a) * s * 9, "#eeeeee", 3.2 + forte * 3, 0.8 + forte * 0.6, 1.7, 0.3 + forte * 0.22); }
     if (race.offroad && Math.random() < 0.5) puff(c.x - Math.cos(c.a) * 18, c.z + 2, c.y - Math.sin(c.a) * 18, tr.id === "interlagos" ? "#b39c66" : "#9a9a9a", 2.5);
@@ -293,7 +293,7 @@ function draw(dt) {
     let da = gh.a - (gh.aAnt ?? gh.a); da = Math.atan2(Math.sin(da), Math.cos(da)); gh.aAnt = gh.a;
     const alvoVira = gh.mod ? window.Pose.volanteVisto(gh.r || 0) : Math.max(-1, Math.min(1, da / Math.max(dt, 1e-3) / 2.4));
     gh.vira = (gh.vira || 0) + (alvoVira - (gh.vira || 0)) * Math.min(1, dt * (gh.mod ? 12 : 8));
-    poseKart(gh.kart, gh.x, gh.y, gh.z, gh.a, gh.v || 0, gh.vira, gz, dt, inc.roll, inc.pitch, fxDe(pl, now));
+    poseKart(gh.kart, gh.x, gh.y, gh.z + (inc.dy || 0), gh.a, gh.v || 0, gh.vira, gz, dt, inc.roll, inc.pitch, fxDe(pl, now));
     fantasmaVisual(gh.kart, !!pl.fantasma);
     lodKart(gh.kart, distancia, carrosAdversarios()); // os carros de longe com menos peças (carros.js), pela opção "Carros dos adversários" (qualidade.js)
   }

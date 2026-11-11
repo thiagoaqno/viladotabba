@@ -1,0 +1,54 @@
+# Publica na VPS da Hostinger automaticamente a cada push na branch main (o lugar do antigo deploy do Fly.io).
+# Entra na VPS por SSH e: puxa a main (só avançando, sem apagar nada que esteja lá), instala as dependências e reinicia o jogo no pm2.
+# Só funciona depois de cadastrar os segredos no GitHub (veja DEPLOY-VPS.md); sem eles, o deploy é pulado sem erro.
+name: Deploy na VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy-vps
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verifica os segredos
+        id: segredos
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ] || [ -z "$VPS_SSH_KEY" ]; then
+            echo "VPS_HOST, VPS_USER ou VPS_SSH_KEY não configurado — pulando o deploy (veja DEPLOY-VPS.md)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publica na VPS
+        if: steps.segredos.outputs.ok == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          PASTA: ${{ vars.VPS_PASTA || '~/viladotabba' }}
+          NOME: ${{ vars.VPS_PM2 || 'corrida' }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: PASTA,NOME
+          script_stop: true
+          script: |
+            set -e
+            cd "$(eval echo "$PASTA")"
+            echo "Antes: $(git log --oneline -1)"
+            git fetch --quiet origin main
+            git merge --ff-only origin/main
+            echo "Agora: $(git log --oneline -1)"
+            npm ci --omit=dev --no-audit --no-fund
+            pm2 reload "$NOME" --update-env
+            pm2 save
+            sleep 3
+            pm2 describe "$NOME" | grep -E "status|uptime" | head -2

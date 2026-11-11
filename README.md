@@ -97,4 +97,4 @@ A Corrida mora dentro da **[Vila da Galera](https://viladotabba.com/)**, um site
 ---
 
 <p align="center"><img src="public/corrida/carregamento-hamilton-verstappen.webp" width="600" alt="Hamilton e Verstappen no paddock"></p>
-<p align="center"><sub>Fórmula 1, F1 e os nomes das equipes e dos pilotos pertencem aos seus donos.</sub></p>
+<p align="center"><sub>Um jogo feito entre amigos, sem fins comerciais. Fórmula 1, F1 e os nomes das equipes e dos pilotos pertencem aos seus donos.</sub></p>

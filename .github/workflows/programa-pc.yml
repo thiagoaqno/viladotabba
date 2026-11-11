@@ -10,7 +10,7 @@ on:
       site:
         description: "Endereço do site (para jogar online e mandar os recordes): a raiz, sem o /corrida"
         required: true
-        default: "https://www.viladotabba.com"
+        default: "https://viladotabba.com" # (o www redireciona para cá; um POST redirecionado perderia os recordes)
 
 permissions:
   contents: write

@@ -1,10 +1,13 @@
 # Corrida da Galera — monta o PROGRAMA DE PC (o instalador para Windows) e publica na release "programa-pc" do GitHub.
-# Roda só quando o Thiago manda (Actions > Programa de PC > Run workflow): é o "lançar update". O link para baixar fica sempre o mesmo:
+# Roda quando o Thiago manda (Actions > Programa de PC > Run workflow) ou cria uma tag pc-v…: é o "lançar update". O link para baixar fica sempre o mesmo:
 #   https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe
 # O que vai dentro: o lançador (desktop/Corrida.cs), um node.exe e o jogo (server.js e public/, sem testes nem docs).
 name: Programa de PC
 
 on:
+  # também ao criar uma tag pc-v… (ex.: git tag pc-v1.2 && git push origin pc-v1.2): o lançamento sem abrir o GitHub
+  push:
+    tags: ["pc-v*"]
   workflow_dispatch:
     inputs:
       site:
@@ -38,7 +41,7 @@ jobs:
           $fora = '.git','.github','.claude','dados','tests','docs','planos','dist','saida','desktop','ferramentas-prints','test-results','playwright-report' | ForEach-Object { Join-Path $PWD $_ }
           robocopy . dist/app /E /NFL /NDL /NJH /NJS /XD $fora /XF *.md fly.toml
           if ($LASTEXITCODE -ge 8) { exit 1 } else { $global:LASTEXITCODE = 0 }
-          Set-Content -NoNewline -Encoding ascii dist/site.txt "${{ inputs.site }}"
+          Set-Content -NoNewline -Encoding ascii dist/site.txt "${{ inputs.site || 'https://viladotabba.com' }}"
           # o ícone: um .ico com o PNG de 256 px dentro (public/corrida/icone-256.png; no .ico, largura e altura 0 = 256 px; o formato aceita PNG direto)
           $png = [IO.File]::ReadAllBytes("public/corrida/icone-256.png")
           $ico = New-Object IO.MemoryStream; $w = New-Object IO.BinaryWriter($ico)

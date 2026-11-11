@@ -8,8 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       site:
-        description: "Endereço do site (para jogar online e mandar os recordes), ex.: https://exemplo.com"
+        description: "Endereço do site (para jogar online e mandar os recordes): a raiz, sem o /corrida"
         required: true
+        default: "https://www.viladotabba.com"
 
 permissions:
   contents: write

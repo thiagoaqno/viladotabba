@@ -8,6 +8,8 @@ import { palco } from "./palco.js";
 import { montarAjustes, pararAjustes } from "./ajustes-lobby.js";
 import { iniciarControle } from "./sala-controle.js";
 import { menuNaTela } from "./menu.js";
+import { alternarAcerto } from "./acerto.js";
+import { usarPista } from "./acerto-carro.js";
 const EQUIPES_F1 = window.EQUIPES_F1 || {};
 // o logo da equipe sozinho (sem a sigla por trás, que aparecia pelas transparências do PNG); só sem arquivo, ou se ele não carregar, entra a sigla
 const siglaEquipe = (e) => `<span class="sigla">${h(e.sigla)}</span>`;
@@ -176,6 +178,9 @@ function renderCarro(m, f1, c) {
     if (trocar($("carroLista"), `<h3 class="sn-tit"><span>Seu carro</span><em>${h(k.inspo || "")}</em></h3><div class="sn-cars">${lista}</div><p class="sn-obs">${h(k.desc || "")}</p>`)) $("carroLista").querySelectorAll("[data-carprev]").forEach((cv) => carPreview(cv, m.color, cv.dataset.carprev, m.mods));
   }
   const pint = MODS3.pintura[(m.mods || MODS_PADRAO).pintura] || MODS3.pintura.propria;
+  // o acerto do carro (asa e altura, um por pista: acerto-carro.js) já na sala, para a pista escolhida: o mesmo painel da tecla P na corrida (acerto.js),
+  // com a proposta do engenheiro e a sugestão do estrategista. Só nas regras de F1 (na carreira, a Central tem a aba Acerto)
+  { const b = $("btnAcertoSala"); if (b) { b.hidden = !f1; const pn = PISTAS[E.S.config.pista]; if (f1) $("acertoSalaSub").textContent = `Asa e altura para ${pn ? pn.name : "esta pista"} · engenheiro e estrategista`; } }
   $("garagemSub").textContent = `${f1 && m.equipe ? "Peças do carro · " : "Carro e cor · "}pintura ${pint.name}`;
 }
 
@@ -340,6 +345,7 @@ function renderGaveta() {
   trocar($("pawnPick"), PAWNS.map((pw) => { const taken = E.S.players.some((p) => p.pawn === pw && p.id !== m.id); return `<button class="${pw === m.pawn ? "on" : ""}" data-p="${pw}" ${taken ? "disabled" : ""} aria-pressed="${pw === m.pawn}">${pw}</button>`; }).join(""));
 }
 $("btnGaragem").onclick = abrirGaveta;
+$("btnAcertoSala").onclick = () => { if (!E.S) return; usarPista(E.S.config.pista); alternarAcerto(true); };
 $("gavetaFechar").onclick = fecharGaveta;
 
 // ----- os cliques de toda a sala (um ouvinte só, lendo o estado de agora) -----

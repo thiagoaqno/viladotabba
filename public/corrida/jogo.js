@@ -426,8 +426,9 @@ function draw(dt) {
   quadroRetrovisor(race.kart, mode); // o retrovisor virtual, por cima da tela já desenhada (retrovisor.js; Configurações > Gráficos)
   } finally { scene.matrixWorldAutoUpdate = true; }
   // a câmera de dentro do carro troca o mostrador grande pelo painel compacto do canto (hud-painel.js, #hDentro; Configurações > Geral)
-  // (só no estilo Novo, e se a opção estiver ligada; o estilo Compacto usa o painel do canto em qualquer câmera; telemetria e clássico, nunca)
-  const est = estiloHud(), dentro = est === "compacto" || (est === "classico" && (mode === "cockpit" || mode === "onboard" || mode === "bico") && graficos().painelDentro);
+  // (só no estilo Novo, no cockpit e no bico, e se a opção estiver ligada: na T-cam fica o mostrador grande, pedido do Thiago; o estilo
+  // Compacto usa o painel do canto em qualquer câmera; telemetria e clássico, nunca)
+  const est = estiloHud(), dentro = est === "compacto" || (est === "classico" && (mode === "cockpit" || mode === "bico") && graficos().painelDentro);
   if (race.camDentro !== dentro) { race.camDentro = dentro; $("race").classList.toggle("cam-dentro", dentro); }
   const mapaCima = graficos().mapa === "cima"; // o minimapa em cima à direita (Configurações > Geral; configuracoes.css)
   if (race.mapaCima !== mapaCima) { race.mapaCima = mapaCima; $("race").classList.toggle("mapa-cima", mapaCima); }

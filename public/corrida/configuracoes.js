@@ -54,7 +54,7 @@ function abaGeral() {
   return parte("Interface",
       linha("Estilo do HUD", "Novo: o da transmissão da F1 (torre e mostrador). Compacto: o novo com o painel pequeno no canto. Telemetria: o mostrador alternativo. Clássico: os painéis de antes", `<div class="cfg-seg" role="radiogroup">${ESTILOS_HUD.map(([v, nome]) => `<button type="button" role="radio" aria-checked="${v === estiloHud()}" data-hud="${v}">${nome}</button>`).join("")}</div>`)
       + linha("Minimapa", "Embaixo à esquerda ou em cima à direita, embaixo dos tempos", opcoes("mapa", g.mapa, [["baixo", "Embaixo"], ["cima", "Em cima"]]))
-      + linha("Painel em primeira pessoa", "No estilo Novo, com a câmera de dentro do carro: só a bateria e a velocidade no canto de baixo", opcoes("painelDentro", g.painelDentro, [[true, "Compacto"], [false, "Completo"]]))
+      + linha("Painel em primeira pessoa", "No estilo Novo, no cockpit e na câmera do bico: só a bateria e a velocidade no canto de baixo (na T-cam fica o mostrador grande)", opcoes("painelDentro", g.painelDentro, [[true, "Compacto"], [false, "Completo"]]))
       + (linhaFreio ? linha("Linha de frenagem", "Marcas na pista: verde acelera, amarelo alivia, vermelho freia", chave("data-acao=\"linha\"", linhaFreio.getAttribute("aria-pressed") === "true")) : "")
       + (tema && !tema.classList.contains("hidden") ? linha("Modo escuro na sala", "", chave("data-acao=\"tema\"", tema.getAttribute("aria-pressed") === "true")) : ""))
     + parte("Ajuda", linha("Como jogar", "As teclas, as regras e as dicas", `<button type="button" class="cfg-bt" data-acao="regras">Abrir</button>`));

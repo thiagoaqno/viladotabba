@@ -40,12 +40,13 @@ function medirPerf(room, ms, dt) {
 }
 const ROBOS_F1_MS = 8; // o laço dos robôs nas regras de F1 (o passo da física é pelo tempo real: Robos.tempoDoPasso)
 // A transmissão (e com ela as luzes) espera todos os jogadores conectados carregarem a pista: o navegador manda `carregou` quando a cena já
-// desenhou; com todos prontos, a TV encurta para os TV_*_MS dela a partir dali (o mesmo caminho do pular). Ninguém trava a sala: no máximo CARGA_MAX_MS.
+// desenhou E o aquecimento terminou (shaders compilados e malhas na placa: jogo.js, aquecerPista; antes ia antes do aquecimento, e as luzes
+// acendiam com os navegadores ainda travados compilando); com todos prontos, a TV encurta para os TV_*_MS dela a partir dali (o mesmo caminho do pular). Ninguém trava a sala: no máximo CARGA_MAX_MS.
 const CARGA_MAX_MS = 40000;
 const LUZES_MS = 3500; // regras de F1: o tempo até acender a primeira das cinco luzes (a largada vem 4 s mais a espera sorteada depois)
 // regras de F1: a transmissão de TV (a pista, o clima, o campeonato e o grid) tem tempo próprio ANTES das luzes: 25 s numa
 // temporada (com a tabela do campeonato), 20 s fora dela. `CORRIDA_TV_MS` troca os dois (0 desliga: os testes de rede usam).
-const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 20000;
+const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 8000; // (a avulsa: 20 → 8 s, a pedido do Thiago, 2026-11-11: a largada demorava demais; dá para pular nas duas)
 const MAX_PLAYERS = 8, COUNTDOWN_MS = 4500, AFTER_FIRST_MS = 60000, MAX_RACE_MS = 45 * 60000; // 45 min: dá para as 21 voltas
 const COLORS = ["#e63946", "#1e88e5", "#43a047", "#fdd835", "#8e24aa", "#fb8c00", "#00acc1", "#f06292"];
 const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "🦄", "🐙", "👻", "🤡", "🦁", "🐵", "🐧", "🏎️"];
@@ -84,9 +85,15 @@ module.exports = function attachCorrida(io) {
   const nameOf = (room, id) => (room.players[id] ? room.players[id].name : "?");
   function log(room, text) { room.log.push({ t: Date.now(), text }); if (room.log.length > 80) room.log.splice(0, room.log.length - 80); }
 
+  // quem já carregou a pista (corrida: room.carga; classificação: room.quali.carga), para a tela de carregamento de cada um; null = ninguém mais esperando
+  function cargaPublica(room) {
+    const c = room.phase === "race" ? room.carga : room.phase === "quali" ? room.quali?.carga : null; if (!c) return null;
+    const humanos = room.order.filter((id) => { const q = room.players[id]; return q && !q.bot && q.sockets && q.sockets.size; });
+    return { prontos: humanos.filter((id) => c.prontos.has(id)).length, total: humanos.length };
+  }
   function publicState(room) {
     return {
-      code: room.code, host: room.host, phase: room.phase, config: room.config, startAt: room.startAt || null, endAt: room.endAt || null, ...(room.temporada ? { temporada: true, ...(room.salaTemporada ? { salaTemporada: room.salaTemporada } : {}) } : {}),
+      code: room.code, host: room.host, phase: room.phase, config: room.config, startAt: room.startAt || null, carga: cargaPublica(room), endAt: room.endAt || null, ...(room.temporada ? { temporada: true, ...(room.salaTemporada ? { salaTemporada: room.salaTemporada } : {}) } : {}),
       boxReady: Itens.publicBoxes(room), ...(room.config.regras === "f1" ? { estrategistas: room.estrategistas || null, tvAte: room.tvAte || null, tv: room.tvAte && Date.now() < room.tvAte ? room.tv || null : null, clima: room.clima || null, previsao: F1.previsaoDoGP(sementeDoClima(room), room.config.clima), montagens: room.montagens || {}, bonusMontagem: room.bonusMontagem || {}, pecasEq: room.pecasEq || {}, chefes: chefes(room), semente: room.semente || null, direcao: Direcao.publico(room), luzes: room.luzes || null, quali: Quali.publico(room), resultado: room.resultado || null } : {}),
       players: room.order.map((id) => {
         const p = room.players[id];
@@ -757,8 +764,10 @@ module.exports = function attachCorrida(io) {
           return;
         }
         if (type === "carregou") { // regras de F1: este jogador já carregou a pista; com todos os conectados prontos, a TV encurta para o tempo dela a partir de agora
-          if (!room.carga || room.phase !== "race" || !me) return "ignorado";
-          room.carga.prontos.add(me.id); liberarCarga(room); return;
+          if (!me) return "ignorado";
+          if (room.phase === "quali" && room.quali?.carga) { Quali.carregou(room, me.id, classificacao); return; } // (a classificação: o Q1 abre quando todos chegam)
+          if (!room.carga || room.phase !== "race") return "ignorado";
+          room.carga.prontos.add(me.id); liberarCarga(room); broadcast(room); return;
         }
         if (type === "tvpular") { // regras de F1: pulou a transmissão de TV; quando todos os humanos presentes pulam, as luzes vêm já
           const agora = Date.now();

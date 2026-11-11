@@ -35,6 +35,7 @@ import { quadroTV, pularTV } from "./transmissao.js";
 import { criarLinhaFreio } from "./linha-frenagem.js";
 import { detalheRemoto } from "./detalhe-remoto.js";
 import { criarBoxesDaCorrida } from "./mecanicos.js";
+import { cargaAberta, etapaCarga, esconderCarga } from "./carregando.js";
 const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
 
 // ---------- corrida ----------
@@ -72,7 +73,7 @@ async function subirMalhas(tr, alvo) {
   const filhos = tr.grp.children.slice(), PARTES = 8, pesos = filhos.map(triangulos), total = pesos.reduce((a, b) => a + b, 0) || 1, parte = [];
   let soma = 0; pesos.forEach((p) => { parte.push(Math.min(PARTES - 1, Math.floor((soma / total) * PARTES))); soma += p; });
   for (let k = 0; k < PARTES; k++) {
-    if (!race || race.tr !== tr || sNow() >= race.startAt - 300) return;
+    if (!race || race.tr !== tr || !antesDaLargada()) return;
     const anterior = renderer.getRenderTarget(), visivel = filhos.map((o) => o.visible); // o céu pode ter mudado entre uma parte e outra
     filhos.forEach((o, i) => { o.visible = visivel[i] && parte[i] === k; });
     try { renderer.setRenderTarget(alvo); renderer.render(scene, camara); }
@@ -103,11 +104,16 @@ function prepararDaCorrida(tr) {
   const sc = race.safetyKart.g; sc.visible = true; sc.position.set(0, -1e5, 0);
   if (tr.corredor && race.mecanicos === undefined) race.mecanicos = criarBoxesDaCorrida(tr, scene, KS * CARS3.equilibrado.L / TAM);
   if (!race.mecanicos?.preparar) return Promise.resolve([sc]);
-  const equipes = new Map(); for (const pl of E.S.players || []) if (pl.equipe) equipes.set(pl.equipe, { equipe: pl.equipe, cor: window.EQUIPES_F1?.[pl.equipe]?.cor });
-  return race.mecanicos.preparar([...equipes.values()]).then((gs) => [sc, ...gs], () => [sc]);
+  // UMA equipe basta para compilar (o shader com esqueleto é o mesmo para todas): as 11 eram 242 bonecos montados e desenhados na contagem, e o
+  // aquecimento passava da hora das luzes. A minha equipe (a que eu mais vou ver no box), ou a primeira da sala
+  const eu = me(), pl = (eu && eu.equipe ? eu : (E.S.players || []).find((p) => p.equipe)); if (!pl) return Promise.resolve([sc]);
+  return race.mecanicos.preparar([{ equipe: pl.equipe, cor: window.EQUIPES_F1?.[pl.equipe]?.cor }]).then((gs) => [sc, ...gs], () => [sc]);
 }
+// (devolve uma promessa que se cumpre quando o PRIMEIRO aquecimento termina: aí o navegador avisa o servidor que carregou, startRace)
+// "antes da largada": a corrida antes das luzes, ou a sala ainda esperando todos carregarem (a classificação não tem hora nesse meio tempo)
+const antesDaLargada = () => !!race && (!!E.S?.carga || !!E.S?.quali?.carregando || !race.startAt || sNow() < race.startAt - 300);
 function aquecerPista(tr, ceu) {
-  let fila = Promise.resolve(), ceuChegou = false;
+  let fila = Promise.resolve(), ceuChegou = false, pronto; const terminou = new Promise((ok) => { pronto = ok; });
   ceu.then(() => { ceuChegou = true; }, () => {});
   const aquecer = () => { fila = fila.then(() => {
     if (!race || race.tr !== tr || sNow() >= race.startAt - 300) return;
@@ -118,7 +124,7 @@ function aquecerPista(tr, ceu) {
     prepararBrilhos(); // o pós não deve trocar os shaders depois de aquecidos
     subirTexturas(scene);
     const alvo = new THREE.WebGLRenderTarget(2, 2);
-    const aindaDa = () => race && race.tr === tr && sNow() < race.startAt - 300;
+    const aindaDa = () => race && race.tr === tr && antesDaLargada();
     let esconder = [];
     // 0) o safety car e as equipes do box entram na cena 1) compila tudo 2) exercita a chuva 3) sobe as malhas
     return prepararDaCorrida(tr).then((gs) => { esconder = gs; if (gs.length) subirTexturas(scene); }).then(() => Promise.all([compilarTudo(alvo), compilarPos()])).then(() => { if (aindaDa()) exercitarChuva(tr); }).then(() => subirMalhas(tr, alvo)).catch((e) => console.warn("Corrida: aquecimento incompleto", e)).finally(() => { alvo.dispose(); scene.remove(amostras); for (const g of esconder) g.visible = false; });
@@ -128,11 +134,23 @@ function aquecerPista(tr, ceu) {
   const modelos = Promise.all([f1Pronto, propsPronto]);
   const espera = modelos.then(() => new Promise((ok) => setTimeout(ok, 1500))); // o céu que não chega em 1,5 s não segura a preparação
   Promise.race([Promise.all([modelos, ceu]), espera]).then(() => {
-    aquecer();
+    aquecer(); fila.then(pronto, pronto);
     // o céu chegou depois: a luz da foto muda todos os materiais, que compilariam de novo (de uma vez, travando) no
     // primeiro quadro; aquece de novo, se ainda der tempo antes da largada
     if (!ceuChegou) Promise.all([modelos, ceu]).then(aquecer, () => {});
-  }, () => {});
+  }, () => pronto());
+  setTimeout(pronto, 30000); // (os modelos que não chegam em 30 s não seguram a sala: carregou assim mesmo)
+  return terminou;
+}
+// a tela de carregamento (carregando.js) fica até este navegador terminar o aquecimento e a sala parar de esperar os outros pilotos
+export function atualizarCarga() {
+  if (!cargaAberta()) return;
+  if (!race) return;
+  const S = E.S, c = S?.carga, perto = race.startAt && !S?.quali?.carregando && sNow() > race.startAt - 6000; // (perto das luzes some de qualquer jeito)
+  if (!race.pronto && !perto) return;
+  if (c && c.total > 1 && !perto) { etapaCarga(`Esperando os outros pilotos (${c.prontos} de ${c.total} prontos)`); return; }
+  if (c && !perto) { etapaCarga("Quase lá"); return; }
+  esconderCarga();
 }
 // quem está correndo agora: a corrida, ou uma sessão da classificação em que o meu carro está e que não parou no intervalo
 export function ativo() {
@@ -173,9 +191,15 @@ export function startRace(st) {
   $("results").classList.add("hidden");
   resize(); comecarMedida();
   if (f1 && st.clima?.chove) Sound.prepararChuva(); // o ruído fica pronto antes de o jogo desenhar a corrida
-  aquecerPista(tr, ceu);
+  etapaCarga("Preparando os gráficos");
+  aquecerPista(tr, ceu).then(() => {
+    if (!race || race.tr !== tr) return;
+    race.pronto = true;
+    // só agora o servidor fica sabendo que este navegador está pronto: antes ia antes do aquecimento, e as luzes acendiam com a página travada compilando
+    if (f1 && mine && (E.S?.phase === "race" || E.S?.phase === "quali")) act("carregou");
+    atualizarCarga();
+  });
   if (!raf) raf = requestAnimationFrame(loop);
-  if (f1 && mine && st.phase === "race") requestAnimationFrame(() => requestAnimationFrame(() => act("carregou")));
   // o acerto do carro desta pista (um por pista: acerto-carro.js); na primeira corrida numa pista sem acerto guardado, o painel abre no grid
   // com a proposta do engenheiro e a sugestão do estrategista (acerto.js)
   if (f1 && mine) { const novo = !acertoGuardado(st.config.pista); usarPista(st.config.pista); carregarIdeais(); if (novo && st.phase === "race" && sNow() < st.startAt) alternarAcerto(true); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)

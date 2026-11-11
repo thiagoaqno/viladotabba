@@ -387,11 +387,17 @@ function remover(room) {
 // depois do grid sorteado: cada robô no seu lugar, parado
 function largar(room) {
   const t = T.PISTAS[room.config.pista], bots = room.order.filter((id) => room.players[id].bot);
-  ritmoDosRobos(room);
+  // A conta do ritmo de cada robô (o perfil de velocidade da pista para o carro e o traçado dele) leva de 25 a 40 ms por robô numa pista
+  // ainda não vista: com 21 robôs, o servidor parava uns 640 ms de uma vez na largada (medido em 2026-11-11, Monza, perfil do Node). Com
+  // `room.nivelEmPedacos` (corrida.js), a conta vai um robô por vez em `aquecerNiveis`, durante a tela de carregamento e a transmissão: os
+  // robôs só andam depois das luzes, e se ainda faltar alguém, o passo faz a conta dele na hora (passoF1). Sem a marca (os testes), tudo na hora.
+  const emPedacos = !!room.nivelEmPedacos && room.config.regras === "f1", fila = [];
+  if (!emPedacos) ritmoDosRobos(room);
   for (const id of room.order) {
     const p = room.players[id]; if (!p.bot) continue;
     const tracadoId = bots.indexOf(id), pf = perfil(room.config.pista, p.spec || p.car, tracadoId), g = largada(pf.pts, p.grid, t.width, room.config.regras === "f1");
-    const nivel = nivelDe(room, p, tracadoId, bots.length, pf);
+    const nivel = emPedacos ? null : nivelDe(room, p, tracadoId, bots.length, pf);
+    if (emPedacos) fila.push(id);
     const pil = p.piloto; // regras de F1: o piloto de verdade manda na reação da largada e na regularidade da linha
     p.pos = null; // a posição da corrida passada não vale (o bico seria calculado a partir dela)
     // na largada: sai na própria faixa do grid, com um tempo de reação diferente, e cada um tem o seu jeito de fazer as curvas
@@ -420,6 +426,21 @@ function largar(room) {
       p.pos = { x: car.x, y: car.y, z: car.z, a: car.a, v: 0, prog: car.prog, at: Date.now() };
     } else posicionar(p, pf, 0);
   }
+  if (emPedacos) aquecerNiveis(room, fila, bots.length);
+}
+// o nível de cada robô, um por vez (setImmediate entre eles: o servidor atende os outros eventos no meio). A primeira tarefa é o ritmo da sala.
+function aquecerNiveis(room, fila, nBots) {
+  const vez = room.aquecendo = {}, sem = () => room.phase !== "race" || room.aquecendo !== vez; // (a largada ainda soma o tempo de preparo ao startAt: por isso a marca, não o horário)
+  let i = -1;
+  const um = () => {
+    if (sem()) return; // (a sala mudou: outra largada refaz tudo)
+    if (i < 0) { ritmoDosRobos(room); i = 0; return setImmediate(um); }
+    if (i >= fila.length) return;
+    const p = room.players[fila[i++]], ia = p && p.ia;
+    if (ia && ia.nivel == null) { ia.nivel = nivelDe(room, p, ia.tracadoId, nBots, ia.perfil); perfilF1(ia.perfil, ia.nivel); } // (o perfil do nível dele também fica pronto)
+    setImmediate(um);
+  };
+  setImmediate(um);
 }
 // O jeito de pilotar de um robô (regras de F1): `dentro` (de -1, abre as curvas, a 1, fecha por dentro), `lado` (o quanto
 // anda para um lado da linha), `look` (quantos pontos antes da curva ele começa a frear: 2 freia tarde, 5 cedo) e `erroK`
@@ -881,6 +902,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const maxLatLento = room.config.pista === "monaco" ? Math.min(tr.W / 2 - 9, pf.teto ? pf.teto[i] + ALEM_MONACO : Infinity) : maxLatDisputa + 10;
   const cl = F1.climaEm(room.clima, now); // a água na pista agora (clima: f1-regras.js)
   const pneu = F1.aderencia(car.pneu, cl.agua), dano = F1.efeitoDoDano(p.dano), curva = pf.kf[i] > 1 / 600;
+  if (ia.nivel == null) { if (!room.referenciaF1) ritmoDosRobos(room); ia.nivel = nivelDe(room, p, ia.tracadoId, 0, pf); } // (ainda não aquecido: aquecerNiveis)
   const fis = perfilF1(pf, ia.nivel), topo = topoDe(pf);
   // molhado (ou pneu gasto): o freio segura menos, então o robô olha mais longe para começar a frear a tempo (no seco com o macio: 1)
   // (a conta é a da física: o freio pedido e o que o pneu segura antes de travar, `D.frenagemMaxima`, contra o do pneu de referência)

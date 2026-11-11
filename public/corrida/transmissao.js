@@ -8,6 +8,7 @@
 // temperaturas típicas por circuito e da semente do GP, igual para todos na sala.
 import { E, PISTAS, $, sNow, me, act } from "./estado.js";
 import { transicaoF1 } from "./transicao-f1.js";
+import { cargaAberta } from "./carregando.js";
 import { DESTAQUES, cameraDestaque } from "./destaques-tv.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -306,6 +307,9 @@ function iniciar(race, tr, reduzMov) {
 // Chamado a cada quadro de `draw` (jogo.js), depois da câmera normal. Põe a câmera da TV por cima, ou deixa a normal.
 export function quadroTV(race, tr, cam, reduzMov) {
   ultimo = race;
+  // a transmissão (e o narrador) só começa depois da tela de carregamento e com todo mundo carregado (E.S.carga, corrida.js): antes, o
+  // narrador já falava por cima do carregamento, e a TV montava os blocos num tempo que ainda ia encolher
+  if (race.tv === undefined && (cargaAberta() || E.S?.carga)) return;
   if (race.tv === undefined) {
     race.tv = iniciar(race, tr, reduzMov);
     if (race.tv && reduzMov) { pularTV(); return; } // movimento reduzido: sem voo de câmera; pula (e espera os outros, se houver)

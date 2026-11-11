@@ -256,6 +256,7 @@ module.exports = function attachCorrida(io) {
     if (largaMolhado && !room.temporada) for (const id of ids) { const p = room.players[id]; if (!p.bot && !p.pneuEscolhido) p.pneu = "chuva"; }
     for (const id of ids) { const p = room.players[id]; Object.assign(p, { paradas: [], compostos: [p.pneu || F1.COMPOSTO_PADRAO], pneuAtual: p.pneu || F1.COMPOSTO_PADRAO, acrescimo: 0, box: null, boxFant: 0 }); }
     Itens.start(room);
+    room.nivelEmPedacos = true; // (o ritmo de cada robô é calculado aos pedaços, durante o carregamento: corrida-robos.js, aquecerNiveis)
     Robos.largar(room);
     // A preparação pode demorar em uma pista fria: a contagem só começa depois que o grid está pronto.
     const tempoPreparoGrid = Date.now() - inicioPreparoGrid;

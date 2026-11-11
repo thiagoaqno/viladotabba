@@ -145,6 +145,7 @@ function montar(q) {
   composer.renderTarget1.depthTexture = new THREE.DepthTexture(2, 2); composer.renderTarget2.depthTexture = new THREE.DepthTexture(2, 2);
   const mascara = new THREE.WebGLRenderTarget(2, 2);
   mascara.depthTexture = new THREE.DepthTexture(2, 2);
+  const luzesDe = { n: -1 }; // (quantos filhos a cena tinha quando as luzes foram para a camada 1: pista nova, confere de novo)
   const materialCarro = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, side: THREE.DoubleSide });
   const cena = new RenderPass(scene, cam), desenhaCena = cena.render.bind(cena);
   const foco = new ShaderPass({ ...FOCO, defines: { TAPS: cfg.foco.pontos } });
@@ -154,6 +155,9 @@ function montar(q) {
     foco.uniforms.tDepth.value = leitura.depthTexture;
     foco.uniforms.tCarDepth.value = mascara.depthTexture;
     // Renderiza só os carros numa camada separada; a profundidade preserva oclusões pelo cenário.
+    // as luzes também na camada 1: sem elas, o desenho da máscara (só a camada 1) via ZERO luzes, o Three.js tomava como mudança de iluminação
+    // e, no quadro seguinte, reavaliava o shader de TODOS os materiais da cena (getProgram/getParameters: ~24% do quadro, medido em Monza)
+    if (scene.children.length !== luzesDe.n) { luzesDe.n = scene.children.length; scene.traverse((o) => { if (o.isLight) o.layers.enable(1); }); }
     for (const raiz of scene.children) if (raiz.userData.carroVinheta) raiz.traverse((o) => { if (o.isMesh && !o.userData.recortado) o.layers.enable(1); }); // (o carro que não se vê daqui fica de fora: recorte.js)
     const alvo = rd.getRenderTarget(), fundo = scene.background, anterior = scene.overrideMaterial, camadas = cam.layers.mask;
     const cor = rd.getClearColor(corLimpeza), alfa = rd.getClearAlpha(), sombra = rd.shadowMap.autoUpdate;

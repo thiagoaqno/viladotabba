@@ -50,13 +50,20 @@ function em(H, t, o) {
 }
 
 const specBase = (q) => q.spec || T.CARROS[q.car] || T.CARROS.equilibrado;
-function geometria(q) { const [L, W] = Sim.dimensoes(q.car); return { L, W, massa: Sim.massaDe(specBase(q)) }; }
+function geometria(q) { // (guardada no carro: era refeita para cada par de carros a cada passo, 22 × 21 × 120 vezes por segundo)
+  const de = q.spec || q.car; if (q._geo && q._geoDe === de) return q._geo;
+  const [L, W] = Sim.dimensoes(q.car); q._geoDe = de; return (q._geo = { L, W, massa: Sim.massaDe(specBase(q)) });
+}
+// Só os ROBÔS perto entram na conta da batida (`perto`: o carro que anda agora; quem joga entra sempre). A posição do robô (q.pos, do último passo dele)
+// pode estar até uns 0,3 s atrás; a 400 u/s dos dois lados são 240 u, mais o comprimento dos carros: 320 u de folga.
+const PERTO2 = 320 * 320;
 
 // Os outros carros na hora `t` (para o carro de `p`). Quem recebeu a bandeirada ou está no box é fantasma; quem perdeu o carro, dnf.
-function outrosNaHora(room, p, t) {
+function outrosNaHora(room, p, t, perto) {
   const K = estado(room), out = [];
   for (const id of room.order) {
     const q = room.players[id]; if (!q || q === p) continue;
+    if (perto && q.bot && q.pos && Number.isFinite(q.pos.x) && (q.pos.x - perto.x) ** 2 + (q.pos.y - perto.y) ** 2 > PERTO2) continue; // (longe: não bate neste passo)
     const H = K.hist.get(id), m = { id, x: 0, y: 0, z: 0, a: 0, vx: 0, vy: 0, r: 0, ...geometria(q), dnf: !!q.dnf, fant: q.finish != null || fantasmaDoBox(q, t) };
     if (H && H.n) em(H, t, m);
     else if (q.pos) { m.x = q.pos.x; m.y = q.pos.y; m.z = q.pos.z || 0; m.a = q.pos.a; m.vx = Math.cos(q.pos.a) * (q.pos.v || 0); m.vy = Math.sin(q.pos.a) * (q.pos.v || 0); }
@@ -133,7 +140,7 @@ function depoisDoPasso(room, p, c, tFim, ev, ativo) {
     }
   }
   if (ativo && !c.air && !c.fant && !fantasmaDoBox(p, tFim)) {
-    const outros = outrosNaHora(room, p, tFim), eu = geometria(p), evl = [];
+    const outros = outrosNaHora(room, p, tFim, c), eu = geometria(p), evl = [];
     Sim.contatoPasso(c, eu, outros, evl, null, Sim.PASSO, (o) => { // pode trocar momento? Não, se o outro carro registrou esta batida agora há pouco
       const par = K.pares.get(chave(p.id, o.id));
       return !(par && Math.abs(tFim - par.t) < PAR_MS && par.dono !== p.id);

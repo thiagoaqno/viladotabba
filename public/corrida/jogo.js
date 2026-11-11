@@ -201,9 +201,9 @@ export function startRace(st) {
     atualizarCarga();
   });
   if (!raf) raf = requestAnimationFrame(loop);
-  // o acerto do carro desta pista (um por pista: acerto-carro.js); na primeira corrida numa pista sem acerto guardado, o painel abre no grid
-  // com a proposta do engenheiro e a sugestão do estrategista (acerto.js)
-  if (f1 && mine) { const novo = !acertoGuardado(st.config.pista); usarPista(st.config.pista); carregarIdeais(); if (novo && st.phase === "race" && sNow() < st.startAt) alternarAcerto(true); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
+  // o acerto do carro desta pista (um por pista: acerto-carro.js). O painel NÃO abre mais sozinho no grid (abria por cima da transmissão):
+  // o acerto é só no lobby, antes de largar (pedido do Thiago, 2026-11-11)
+  if (f1 && mine) { usarPista(st.config.pista); carregarIdeais(); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
 export function stopRace() { ForcaVolante.parar(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
@@ -249,11 +249,16 @@ function outrosParaSom() {
 
 let lastT = 0;
 // Sem limite de quadros: desenha um por atualização da tela (o requestAnimationFrame acompanha os Hz do monitor, 144, 240, 360...).
+let quadrosPasse = 0;
 function loop(t) {
   raf = requestAnimationFrame(loop);
   if (!race) { raf && cancelAnimationFrame(raf); raf = 0; return; }
   const real = Math.min(0.25, (t - (lastT || t)) / 1000), dt = Math.min(1 / 30, real); lastT = t;
   pollPad();
+  // os materiais TRANSPARENTES de dois lados (as marcas do grid, a borracha, os decalques) numa passada só: por padrão o Three.js desenha cada um
+  // duas vezes (o verso e a frente) e marca o material como mudado a cada vez, o que refazia o shader dele em todo quadro, na cena e nos espelhos
+  // (94 materiais em Monza, ~12% do quadro). Decalque plano fica igual. Revisto a cada 60 quadros (carros e efeitos entram depois da pista).
+  if (++quadrosPasse % 60 === 1) scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) if (m.transparent && m.side === THREE.DoubleSide) m.forceSinglePass = true; });
   atualizarClima(); // a chuva e a água na pista deste quadro (clima.js: o visual e a física leem)
   // a física anda em passos fixos de 1/120 s (fisica.js): o tempo do quadro só diz quantos passos dar, então 30 ou 144 quadros
   // por segundo dão a mesma corrida
@@ -398,14 +403,19 @@ function draw(dt) {
   if (tr.sky) tr.sky.position.set(cam.position.x, 0, cam.position.z);
   passoClima(dt, race, cam, modoClima, src, c); // o visual do clima: céu, luz, neblina, chuva, asfalto molhado, borrifo, som e HUD (clima-visual.js)
   quadroRecorte(tr, cam, mode !== "cima" && mode !== "tv" && !(race.tvAte && now < race.tvAte), nearest); // o que não dá para ver daqui não vai para a placa de vídeo (recorte.js)
+  race.linhaFreio?.atualizar(race, !(race.tvAte && now < race.tvAte));
+  // as posições de toda a cena calculadas UMA vez por quadro, com tudo já posto: o Three.js refazia as 1.300 malhas a cada desenho (os espelhos,
+  // a máscara do foco e a cena: 3 a 4 vezes por quadro; updateMatrixWorld era ~11% do quadro em Monza)
+  scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false;
+  try {
   quadroEspelhos(race.kart, mode); // os retrovisores do meu carro (só no cockpit e na T-cam, e não na qualidade Baixa), depois de tudo posto e antes de desenhar a cena
   // desfoque de velocidade, pela fração da velocidade final do carro (vale igual para os cinco): começa em 40% (uns 90 km/h
   // no equilibrado), fica inteiro a 90% e o turbo e o estilingue borram ainda mais
   const turbo = src === c && (race.boostUntil > now || race.sling > 0 || (me() && me().boostUntil > now));
   const vref = (src === c ? carOf(me()) : CARROS.equilibrado).vmax;
   // (de cima não tem desfoque: o chão inteiro borrado só atrapalha a ver a pista)
-  race.linhaFreio?.atualizar(race, !(race.tvAte && now < race.tvAte));
   desenhar(mode === "cima" || mode === "tv" ? 0 : Math.min(1, Math.max(0, (Math.abs(src.v || 0) / vref - 0.4) / 0.5)) + (turbo ? 0.4 : 0));
+  } finally { scene.matrixWorldAutoUpdate = true; }
 }
 // Transmissão de TV (transmissao.js): nas corridas de F1, antes das luzes e com tempo próprio (`race.tvAte`, vindo do servidor).
 // Esc pula (o botão e o toque também, no módulo). Nada de TV para quem só assiste.

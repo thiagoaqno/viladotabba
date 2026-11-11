@@ -142,6 +142,9 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   k.folga = alturaParada(ac) - k.afunda;
   const suspY = (alturaParada(ac) - alturaParada(ACERTO_CARRO_PADRAO) - k.afunda) * KS * SUSP_VER;
   k.body.position.y = (fx.rodando && k.tAt < 0.6 ? Math.sin((k.tAt / 0.6) * Math.PI) * 14 : 0) + suspY;
+  // só a carroceria desce: os pivôs das rodas sobem o mesmo tanto e os pneus continuam no chão (como na Central, temporada/acerto3d.js)
+  const rodas = k.kt?.rodas, esc = k.kt?.g.scale.y || 1; // (os pivôs ficam no quadro do modelo, que tem escala própria)
+  if (rodas) for (const r of rodas) { const p = r.esterca || r.gira.parent; if (!p) continue; p.userData.y0 ??= p.position.y; p.position.y = p.userData.y0 - suspY / esc; }
   k.tontura.visible = !!fx.rodando; if (fx.rodando) { k.tontura.rotation.y += dt * 7; k.tontura.position.y = 24 + Math.sin(k.tAt * 9) * 1.2; }
   if (fx.rodando) k.giro += dt * 13;
   else if (k.giro > 0) { const fim = Math.ceil(k.giro / (Math.PI * 2) - 1e-6) * Math.PI * 2; k.giro += dt * 9; if (k.giro >= fim) k.giro = 0; } // termina a volta inteira

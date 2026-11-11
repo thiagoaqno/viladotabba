@@ -90,6 +90,23 @@ function compilarTudo(alvo) {
   renderer.setRenderTarget(alvo); const naImagem = renderer.compileAsync(scene, cam); renderer.setRenderTarget(anterior);
   return Promise.all([renderer.compileAsync(scene, cam), naImagem]);
 }
+// o safety car: montado uma vez por corrida (no aquecimento, para compilar antes da largada)
+function criarSafetyCar() {
+  const k = makeKart("#202733", "equilibrado", false, "SAFETY CAR", { pintura: "ouro" }, undefined, true, { semPintura: true });
+  const farol = new THREE.Mesh(new THREE.BoxGeometry(12, 3, 4), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+  farol.position.set(0, 17, 0); k.body.add(farol); k.farol = farol; k.g.visible = false; return k;
+}
+// o que só aparece no meio da corrida e travava na primeira vez (regras de F1): o safety car e as equipes de mecânicos do box. Ficam visíveis
+// bem abaixo do chão durante o aquecimento (o compile do three só passa pelo que está visível) e depois se escondem. Devolve os grupos.
+function prepararDaCorrida(tr) {
+  if (!race || E.S?.config.regras !== "f1") return Promise.resolve([]);
+  if (!race.safetyKart) race.safetyKart = criarSafetyCar();
+  const sc = race.safetyKart.g; sc.visible = true; sc.position.set(0, -1e5, 0);
+  if (tr.corredor && race.mecanicos === undefined) race.mecanicos = criarBoxesDaCorrida(tr, scene, KS * CARS3.equilibrado.L / TAM);
+  if (!race.mecanicos?.preparar) return Promise.resolve([sc]);
+  const equipes = new Map(); for (const pl of E.S.players || []) if (pl.equipe) equipes.set(pl.equipe, { equipe: pl.equipe, cor: window.EQUIPES_F1?.[pl.equipe]?.cor });
+  return race.mecanicos.preparar([...equipes.values()]).then((gs) => [sc, ...gs], () => [sc]);
+}
 function aquecerPista(tr, ceu) {
   let fila = Promise.resolve(), ceuChegou = false;
   ceu.then(() => { ceuChegou = true; }, () => {});
@@ -103,8 +120,9 @@ function aquecerPista(tr, ceu) {
     subirTexturas(scene);
     const alvo = new THREE.WebGLRenderTarget(2, 2);
     const aindaDa = () => race && race.tr === tr && sNow() < race.startAt - 300;
-    // 1) compila tudo 2) exercita a chuva 3) sobe as malhas
-    return Promise.all([compilarTudo(alvo), compilarPos()]).then(() => { if (aindaDa()) exercitarChuva(tr); }).then(() => subirMalhas(tr, alvo)).catch((e) => console.warn("Corrida: aquecimento incompleto", e)).finally(() => { alvo.dispose(); scene.remove(amostras); });
+    let esconder = [];
+    // 0) o safety car e as equipes do box entram na cena 1) compila tudo 2) exercita a chuva 3) sobe as malhas
+    return prepararDaCorrida(tr).then((gs) => { esconder = gs; if (gs.length) subirTexturas(scene); }).then(() => Promise.all([compilarTudo(alvo), compilarPos()])).then(() => { if (aindaDa()) exercitarChuva(tr); }).then(() => subirMalhas(tr, alvo)).catch((e) => console.warn("Corrida: aquecimento incompleto", e)).finally(() => { alvo.dispose(); scene.remove(amostras); for (const g of esconder) g.visible = false; });
   }); };
   // espera também o carro de F1 e os enfeites do Kenney: quando chegam, os carros e a pista são remontados, e o que
   // nasce depois do aquecimento travaria na primeira vez que aparecesse
@@ -300,15 +318,12 @@ function draw(dt) {
   }
   // Safety car: um carro próprio à frente da fila, calculado pela direção de prova no servidor.
   if (race.safety) {
-    if (!race.safetyKart) {
-      race.safetyKart = makeKart("#202733", "equilibrado", false, "SAFETY CAR", { pintura: "ouro" }, undefined, true, { semPintura: true });
-      const farol = new THREE.Mesh(new THREE.BoxGeometry(12, 3, 4), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
-      farol.position.set(0, 17, 0); race.safetyKart.body.add(farol); race.safetyKart.farol = farol;
-    }
+    if (!race.safetyKart) race.safetyKart = criarSafetyCar();
+    race.safetyKart.g.visible = true;
     const i = ((Math.floor(race.safety.prog * tr.n) % tr.n) + tr.n) % tr.n, p = tr.pts[i];
     race.safetyKart.farol.visible = motionPreference.matches || Math.floor(now / 250) % 2 === 0;
     poseKart(race.safetyKart, p.x, p.y, p.h, Math.atan2(p.ty, p.tx), 160, 0, p.h, dt, 0, 0, { f1: true });
-  } else if (race.safetyKart) { dropKart(race.safetyKart); race.safetyKart = null; }
+  } else if (race.safetyKart) race.safetyKart.g.visible = false; // (fica montado e escondido: remontar a cada entrada travava; clearRace o solta no fim)
   // o próximo checkpoint acende e pulsa; o perdido fica vermelho; os outros, apagadinhos
   for (const pt of tr.portais || []) {
     const prox = (race.sector + 1) % SECTORS, seguinte = (race.sector + 2) % SECTORS, perdido = race.perdeu === pt.k;

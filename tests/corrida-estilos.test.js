@@ -40,7 +40,8 @@ function tentativa(id, amarela = false) {
   const n = 1000, pts = Array.from({ length: n }, (_, i) => ({ x: i * 6, y: 0, h: 0, tx: 1, ty: 0 }));
   const pf = { pts, n, c: { vmax: 300 }, kf: new Float32Array(n), linha: { sinal: new Int8Array(n) } };
   const p = { id: "eu", piloto: { id }, pos: { x: 0, y: 0, z: 0 }, laps: 1 };
-  const outro = { id: "outro", pos: { x: 108, y: 0, z: 0, v: 93, prog: 18 } };
+  // (a diferença de 1,5 u/s fica entre o limite de Verstappen, ~1,2, e o de Bottas, ~1,8: corrida-estilos.js, diferencaMinima = 3 − 2 × ataque)
+  const outro = { id: "outro", pos: { x: 108, y: 0, z: 0, v: 98.5, prog: 18 } };
   const ia = { s: 0, v: 100, lat: 0 };
   const room = { config: { pista: "interlagos", nivel: "medio", voltas: 5 }, order: ["eu", "outro"], players: { eu: p, outro }, direcao: amarela ? { amarelo: {} } : {} };
   Robos.transito(room, p, ia, pf, 0, 0, 40, 100, {});

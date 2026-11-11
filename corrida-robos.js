@@ -472,7 +472,9 @@ const ATAQUE_PERTO_MONACO = L_CARRO * 2.5; // Mônaco: só começa a ultrapassar
 const MARG_PARADO = 28; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 26
 const ARRANQUE_INI_MS = 2000, ARRANQUE_RAMPA_MS = 4000, ARRANQUE_SEM_ULT_MS = 3500; // a largada: a reserva de espaço à frente volta ao normal entre 2 s e 6 s, e sem ultrapassagem nos primeiros 3,5 s
 // (2026-11: mais agressivos depois dos carros parelhos: emparelham mais cedo, mais perto de lado, e o difícil defende mais)
-const TRANSITO_NIVEL = { facil: { margem: 48, antec: 0.95, defende: 0.2 }, medio: { margem: 38, antec: 1.3, defende: 0.55 }, dificil: { margem: 35, antec: 1.5, defende: 0.65 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
+const ESPERA_VAGA_MS = 2500, FECHA_MANOBRA = 20, ERS_ATAQUE = 0.35, ERS_DEFESA = 0.6; // (a defesa só com sobra: defendendo sempre, a bateria de quem ataca e a de quem defende se anulavam e o pelotão virava trem) // FECHA_MANOBRA: u/s acima do alvo que o robô mantém, meio de lado, para emparelhar (~15 km/h)
+const _x = 0; // quanto tempo o robô espera, ainda atrás do alvo, o lado escolhido voltar a caber (transito)
+const TRANSITO_NIVEL = { facil: { margem: 40, antec: 0.95, defende: 0.2 }, medio: { margem: 32, antec: 1.3, defende: 0.55 }, dificil: { margem: 30, antec: 1.5, defende: 0.65 } }; // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
 // a distância (u) até o ponto em que o perfil exige frear a partir da velocidade `v` (0: já freando; Infinity: nada nos próximos 540 u)
 function distanciaDaFreada(fis, n, i, v) { const lim = v * 0.9; for (let k = 0; k <= 90; k++) if (fis[(i + k) % n] < lim) return k * STEP; return Infinity; }
 // o lado de dentro da próxima curva de verdade (+1: lado de lat positivo; -1; 0 sem curva nos próximos ~600 u)
@@ -504,8 +506,9 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
   const niv = TRANSITO_NIVEL[room.config.nivel] || TRANSITO_NIVEL.medio;
   const estilo = Estilos.parametros(room, p, niv);
   // a folga lateral entre carros acompanha a largura da pista: nas de 104 ou mais vale a de sempre; numa mais estreita (Mônaco, 84) a faixa em que o robô anda (maxLat = W/2 - 18) cabe menos, e uma folga de 44 jogava o carro de lado contra o muro
-  const margemNormal = niv.margem * Math.min(1, (T.PISTAS[room.config.pista].width - 36) / 68);
   const monaco = room.config.pista === "monaco";
+  // (Mônaco: os robôs com mais cuidado, a pedido do Thiago, 2026-11-11: a folga lateral de antes, 6 a mais, e mais espaço atrás do carro da frente)
+  const margemNormal = (niv.margem + (monaco ? 6 : 0)) * Math.min(1, (T.PISTAS[room.config.pista].width - 36) / 68);
   const MARG = monaco ? W_CARRO + Math.max(0, margemNormal - W_CARRO) * 0.5 : margemNormal;
   const dFreio = plano.dFreio ?? Infinity, dentro = plano.dentro || 0, meu = ia.sim;
   const tx = ponto.tx, ty = ponto.ty, vlatMeu = meu ? meu.vx * -ty + meu.vy * tx : 0;
@@ -552,19 +555,22 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     // (nas outras pistas vale a menor das duas medidas: numa curva, o lateral medido no meu quadro sozinho poderia soltar o freio com o outro ainda na minha frente)
     const alvoDaManobra = ia.ult?.id === oid;
     const separados = !alvoDaManobra ? perto : monaco ? Math.abs(ia.lat - latOutro) : ia.ult.lento ? perto : Math.min(perto, Math.abs(ia.lat - ondeEsta(o, distancia).lat));
-    const faixaLivre = alvoDaManobra && separados >= W_CARRO + 3;
+    const faixaLivre = alvoDaManobra && separados >= W_CARRO + 1; // (sem sobreposição de lado: já pode emparelhar)
     if (frente > 0 && distancia * STEP > 8 && !faixaLivre && Math.abs(lado) < 34 + Math.min(10, aproxima * 0.1)) { // na minha faixa (quem chega rápido vê a faixa mais larga), à frente
       // reserva espaço para o freio progressivo da física (o pedal leva ~0,2 s para subir) e para o da frente frear mais forte que o previsto
       // (na largada o pelotão sai junto: a reserva de espaço cresce aos poucos, de quase nada no grid, onde os carros estão a 4 u um do outro, até
       // a de sempre; senão a fila de trás esperava cada carro da frente andar, uma fileira de cada vez)
-      const folga = frente - L_CARRO - (12 + Math.min(15, k[i] * 1000) + aproxima * 0.1) * arranque - 1;
+      const folga = frente - L_CARRO - (12 + (monaco ? 8 : 0) + Math.min(15, k[i] * 1000) + aproxima * 0.1) * arranque - 1;
       const desacel = D.frenagemMaxima(c, ia.v, 0, plano.aderenciaFreio) * 0.75;
       let lim = folga <= 0 ? ovPlano * 0.82 : Math.sqrt(Math.max(0, ovPlano * ovPlano + 2 * desacel * folga));
       // Já decidiu ultrapassar este carro mas ainda está na faixa dele: um fio de velocidade (sem encostar) para o volante ter o que virar
-      if (ia.ult && ia.ult.id === oid && frente > L_CARRO + 2) lim = Math.max(lim, V_ARRASTO);
+      // (o loop que o Thiago apontou: o robô chegava embalado, o freio de trânsito o segurava atrás com folga, a diferença de velocidade sumia e ele
+      // desistia da manobra; e tentava de novo.) Meio de lado em relação ao alvo da manobra, ele continua FECHANDO: até FECHA_MANOBRA acima do outro
+      if (alvoDaManobra && !monaco && separados >= W_CARRO * 0.5 && frente > L_CARRO * 1.15) lim = Math.max(lim, ovPlano + FECHA_MANOBRA);
+      else if (ia.ult && ia.ult.id === oid && frente > L_CARRO + 2) lim = Math.max(lim, V_ARRASTO);
       out.freio = Math.min(out.freio, lim);
       out.atras = Math.min(out.atras ?? Infinity, frente);
-      const alcance = ov < 12 ? 240 : Math.max(120, Math.min(320, 100 + Math.max(0, ia.v - ov) * 1.6)); // quem chega rápido é visto de mais longe
+      const alcance = ov < 12 ? 300 : Math.max(200, Math.min(450, 160 + Math.max(0, ia.v - ov) * 2.2)); // quem chega rápido é visto de mais longe
       if (frente < alcance && (!alvo || frente < alvo.frente)) alvo = { o, ov, frente, latOutro, iO, dist: frentePista };
     }
     if (frente < -22 && distancia * STEP < -8 && Math.abs(lado) < 40 && (!tras || -frente < tras.gap)) tras = { o, oid, gap: -frente, ov, lado }; // o carro logo atrás, na minha esteira
@@ -646,12 +652,18 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
         alvoLat = q.lat + ia.ult.lado * mgAgora; if (cabeAo >= W_CARRO + 1) limite = Infinity; linhaDele = plano.linhaEm ? plano.linhaEm(q.i) : baseLat;
       }
       if (!monaco && tem && !ia.ult.parado) { // o alvo andou para o meu lado: aperta até o limite ou, ainda atrás dele, troca de lado (a mesma ideia de Mônaco, sem passar do limite da pista)
-        const latDele = alvoLat - ia.ult.lado * (ia.ult.marg || MARG), minimo = W_CARRO + 3, espaco = (s) => limite - s * latDele;
+        const latDele = alvoLat - ia.ult.lado * (ia.ult.marg || MARG), minimo = W_CARRO + 1, espaco = (s) => limite - s * latDele;
         if (espaco(ia.ult.lado) < minimo && frente > L_CARRO * 0.6 && (ia.ult.trocas || 0) < 2 && espaco(-ia.ult.lado) >= minimo && livre(-ia.ult.lado)) { ia.ult.lado = -ia.ult.lado; ia.ult.trocas = (ia.ult.trocas || 0) + 1; }
         alvoLat = latDele + ia.ult.lado * Math.max(minimo, Math.min(ia.ult.marg || MARG, espaco(ia.ult.lado)));
       }
       // (sem prazo: a disputa pode durar várias curvas; acaba se passou, se ele abriu mais de ~6 carros, se não cabe mais ou se o lado fechou)
-      let acabou = !tem || frente < -L_CARRO * 1.6 || frente > L_CARRO * 6 || Math.abs(alvoLat) > limite || (!livre(ia.ult.lado) && Math.abs(frente) < L_CARRO);
+      // o lado escolhido não cabe agora: ainda atrás do alvo (que atravessa a pista seguindo a linha), o robô ESPERA a vaga encostado no limite
+      // em vez de desistir (medido em Interlagos: 9 de cada 10 manobras acabavam assim, com o alvo de 1 a 6 carros à frente, e logo começava outra);
+      // só desiste sem vaga se já emparelhou ou se a vaga não abre em ESPERA_VAGA_MS
+      let semVaga = Math.abs(alvoLat) > limite;
+      if (semVaga && frente > L_CARRO * 0.6 && !monaco) { ia.ult.semVaga ??= now; if (now - ia.ult.semVaga < ESPERA_VAGA_MS) { alvoLat = Math.sign(alvoLat) * limite; semVaga = false; } }
+      else if (!semVaga) ia.ult.semVaga = null;
+      let acabou = !tem || frente < -L_CARRO * 1.6 || frente > L_CARRO * 6 || semVaga || (!livre(ia.ult.lado) && Math.abs(frente) < L_CARRO);
       // na freada não mergulha: quem ainda está atrás do outro (o bico não chegou ao meio dele) desiste e fica no vácuo; por dentro, já encostado na lateral dele, segue
       if (!acabou && !ia.ult.lento && !ia.ult.curva && dFreio < 30 && frente > L_CARRO * (ia.ult.lado === dentro ? 0.9 : 0.45)) { acabou = true; ia.ultAte = now + estilo.espera; }
       if (acabou) ia.ult = null; else out.desvio = alvoLat - linhaDele;
@@ -985,7 +997,10 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     if (medo > 0.01) ent.steer = (ia.volante || 0) + (ent.steer - (ia.volante || 0)) * (1 - 0.85 * Math.min(1, medo)); // com o carro abalado o volante vai mais devagar
     ia.volante = ent.steer;
     if (ent.brake && car.travada > TRAVA_ABS) ent.brake = novo ? ent.brake * 0.6 : 0; // a roda da frente travou: alivia o freio um instante (o ABS de quem sabe frear)
-    ent.ers = !!ia.ult && !ia.ult.emergencia;
+    // a bateria como na F1: na manobra; para CRIAR a diferença de velocidade, numa reta, perto do carro da frente; e para DEFENDER, numa reta, com
+    // alguém colado atrás. Sempre guardando um pouco (ERS_ATAQUE e ERS_DEFESA: a carga mínima para gastar em cada caso)
+    const cargaErs = car.ers ? car.ers.carga : 0, pertoDaFrente = tf.atras != null && tf.atras < L_CARRO * 3, coladoAtras = !!tf.tras && tf.tras.gap < L_CARRO * 2.5;
+    ent.ers = (!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > ERS_ATAQUE && room.config.pista !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA)));
     ent.pedido = proxima;
     Sim.passo(car, ent, amb, tr, ev);
     // a batida deste passo: a mesma dos humanos (corrida-contato.js), com os outros carros na hora do passo; o robô também troca momento

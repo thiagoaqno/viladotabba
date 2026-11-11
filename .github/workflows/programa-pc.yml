@@ -44,14 +44,14 @@ jobs:
       - name: Compilar o lançador
         shell: pwsh
         run: |
-          & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" -nologo -target:winexe -win32icon:dist/corrida.ico -r:System.Windows.Forms.dll "-out:dist/Corrida da Galera.exe" desktop/Corrida.cs
+          & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" -nologo -target:winexe "-win32icon:dist\corrida.ico" -r:System.Windows.Forms.dll "-out:dist\Corrida da Galera.exe" "desktop\Corrida.cs" # (com \: o csc le o / como opcao)
           if (!(Test-Path "dist/Corrida da Galera.exe")) { exit 1 }
       - name: Montar o instalador
         shell: pwsh
         run: |
           choco install innosetup -y --no-progress
           $env:VERSAO_PC = "1.0.${{ github.run_number }}"
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" desktop/instalador.iss
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "desktop\instalador.iss"
           if (!(Test-Path saida/CorridaDaGalera-Setup.exe)) { exit 1 }
       - name: Publicar na release programa-pc
         shell: pwsh

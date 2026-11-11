@@ -48,7 +48,7 @@ jobs:
             git merge --ff-only origin/main
             echo "Agora: $(git log --oneline -1)"
             npm ci --omit=dev --no-audit --no-fund
-            pm2 reload "$NOME" --update-env
+            pm2 reload "$NOME" # (sem --update-env: o jogo religa com a porta e o banco com que foi ligado, e não com o ambiente da sessão do deploy)
             pm2 save
             sleep 3
             pm2 describe "$NOME" | grep -E "status|uptime" | head -2

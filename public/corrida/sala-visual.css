@@ -51,11 +51,13 @@ body.sv-on .sn-et.on{background:none;color:var(--sv-tx);font-weight:700}
 body.sv-on .sn-et.on::after{height:3px;background:var(--sv-at)}
 @media (hover:hover) and (pointer:fine){body.sv-on .sn-et:hover:not(.on){background:none;color:var(--sv-tx)}}
 body.sv-on .sn-continuar,body.sv-on .sn-largar{align-items:center;justify-content:center;gap:14px;background:var(--sv-at);color:var(--sv-eq-t);clip-path:none;animation:none!important;transition:filter .2s}
-body.sv-on .sn-continuar{min-width:0;height:40px;margin-bottom:8px;padding:0 20px}
+body.sv-on .sn-continuar{min-width:0;height:44px;margin-bottom:8px;padding:0 18px 0 22px;border-radius:6px;gap:10px}
 body.sv-on .sn-cont-t{flex-direction:row;align-items:baseline}
 body.sv-on .sn-continuar small,body.sv-on .sn-largar small{display:none}
 body.sv-on .sn-continuar b,body.sv-on .sn-largar b{color:inherit;font:700 14px/1 var(--sv-f);letter-spacing:0;text-transform:none}
-body.sv-on .sn-continuar .setas,body.sv-on .sn-largar .setas{width:20px;height:12px;align-self:center;transition:transform .2s var(--sv-t)}
+/* a seta no tema da equipe: só a divisa fina na cor do texto do botão (sem o quadrado preto de 54 px do tema antigo, sala.css .setas, que ficava espremido) */
+body.sv-on .sn-continuar .setas,body.sv-on .sn-largar .setas{width:14px;height:14px;align-self:center;background:none;transition:transform .2s var(--sv-t)}
+body.sv-on .sn-continuar .setas::before,body.sv-on .sn-largar .setas::before{width:8px;height:8px;border-top:2.5px solid currentColor;border-right:2.5px solid currentColor;transform:translateX(-2px) rotate(45deg)}
 body.sv-on .sn-continuar:hover:not(:disabled) .setas,body.sv-on .sn-largar:hover:not(:disabled) .setas{transform:translateX(4px)}
 @media (hover:hover) and (pointer:fine){body.sv-on .sn-continuar:hover:not(:disabled),body.sv-on .sn-largar:hover:not(:disabled){filter:brightness(1.08)}}
 body.sv-on .sn-continuar:disabled,body.sv-on .sn-largar:disabled{filter:none;opacity:.4}

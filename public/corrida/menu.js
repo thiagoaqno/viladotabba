@@ -5,6 +5,8 @@
 import { E, socket, PISTAS, $, h, store } from "./estado.js";
 import { loadBest } from "./fantasma.js";
 import { enter } from "./rede.js";
+import { alternarAcerto } from "./acerto.js";
+import { usarPista } from "./acerto-carro.js";
 
 const fmt = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`); // o tempo de volta com os milésimos
 const CHAVE_EQUIPE = "corrida:menu:equipe", CHAVE_RAPIDA = "corrida:menu:rapida", CHAVE_CONTRA = "corrida:menu:contra";
@@ -158,6 +160,7 @@ function desenharSecao(nome) {
       + seg([["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]], rapida.nivel, "rp-nivel", "Robôs · grid de 22")
       + seg([["aleatorio", "Aleatório"], ["seco", "Seco"], ["chuva", "Chuva"], ["variavel", "Variável"]], rapida.clima, "rp-clima", "Clima")
       + seg([["pular", "Direto"], ["completa", "Com classificação"]], rapida.classificacao, "rp-quali", "Fim de semana")
+      + `<button type="button" class="mn-link" id="mnAcerto">Acerto do carro: asa e altura para ${h(PISTAS[rapida.pista]?.name || "a pista")}</button>`
       + `<button type="button" class="mn-acao" id="mnLargar"><span><b>Largar</b><small>${h(equipeNome())} · pneu médio</small></span>${seta}</button><button type="button" class="mn-link" id="mnAjustar">Abrir a sala para ajustar tudo</button>`;
   } else if (nome === "contra") {
     const desafio = resumoMenu?.desafio?.pista === contra.pista, meu = loadBest(contra.pista), rec = recordes?.[contra.pista]?.[0];
@@ -236,6 +239,7 @@ function aoClicar(e) {
   if (d.rpClima) return mudar(rapida, "clima", d.rpClima, "rp-clima", "rapida");
   if (d.rpQuali) return mudar(rapida, "classificacao", d.rpQuali, "rp-quali", "rapida");
   if (d.ctVoltas) return mudar(contra, "voltas", +d.ctVoltas, "ct-voltas", "contra");
+  if (b.id === "mnAcerto") { usarPista(rapida.pista); return alternarAcerto(true); } // o acerto antes de largar (o mesmo painel da tecla P)
   if (b.id === "mnLargar") return largarRapida(true);
   if (b.id === "mnAjustar") return largarRapida(false);
   if (b.id === "mnContraLargar") return largarContra();

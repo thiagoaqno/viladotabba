@@ -124,6 +124,11 @@ function usarAno(ano) {
   const t = tabelasDoAno(ano), P = Pilotos(), E = Equipes(), R = RegrasTemporada();
   trocar(P.EQUIPES, t.equipes); P.PILOTOS.splice(0, P.PILOTOS.length, ...t.pilotos); trocar(E.EQUIPES, t.carros);
   if (R && R.CALENDARIO && t.calendario) { R.CALENDARIO.splice(0, R.CALENDARIO.length, ...t.calendario); if (R.PISTAS_TRABALHADAS) R.PISTAS_TRABALHADAS.splice(0, R.PISTAS_TRABALHADAS.length, ...t.calendario.map(([p]) => p)); }
+  // no navegador, o índice dos logos (window.EQUIPES_F1: a cor, o nome e a sigla que a interface usa no tema, na faixa de equipes, no rádio, na carga) segue o ano;
+  // o arquivo do logo fica (o do ano vem por logoF1)
+  const IDX = typeof window !== "undefined" ? window.EQUIPES_F1 : null;
+  if (IDX) { BASE.indice ||= Object.fromEntries(Object.entries(IDX).map(([k, v]) => [k, { cor: v.cor, nome: v.nome, sigla: v.sigla }]));
+    for (const [k, v] of Object.entries(IDX)) { const e = t.equipes[k], b = BASE.indice[k]; if (!b) continue; Object.assign(v, e ? { cor: e.cor, nome: e.nome, sigla: e.sigla } : b); } }
   ANO = ano;
   return ano;
 }

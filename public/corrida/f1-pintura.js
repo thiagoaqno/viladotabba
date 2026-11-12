@@ -494,7 +494,93 @@ const pinturaVcarb = (nome) => ({ numero: "#1534cc", carbono: 1, numPos: [3.5, 0
   vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); ret(c, -0.15, 0.1, 0.15, 0.45, AZUL); });
   vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); });
 } });
-DESENHOS["racing-bulls@2024"] = pinturaVcarb("Cash App");
+// RB VCARB 01 (2024, pelas fotos do Thiago): azul forte quase inteiro, a tampa e a traseira brancas, "VISA" branco na lateral e o vermelho
+// da HUGO na asa dianteira branca
+DESENHOS["racing-bulls@2024"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.72, 9, 9], pintar(ctx) {
+  const AZUL = "#1e3cd8", BRANCO = "#f4f5f8", VERM = "#e2001a";
+  base(ctx, AZUL);
+  lados(ctx, (c) => {
+    c.beginPath(); c.moveTo(2.8, 1.1); c.lineTo(3.9, 1.1); c.lineTo(3.9, 0.55); c.quadraticCurveTo(3.3, 0.62, 2.95, 0.8); c.closePath(); c.fillStyle = BRANCO; c.fill(); // a tampa branca
+    poli(c, [[1.3, 0.5], [2.6, 0.62], [2.6, 0.64], [1.3, 0.53]], VERM);
+    baixo(c, AZUL); ret(c, 0.05, 0, 0.6, 0.16, BRANCO); patro(c, "HUGO", 0.33, 0.08, 0.06, VERM, { larg: 0.4 }); ret(c, 3.86, 0.3, 4.45, 1.1, BRANCO); patro(c, "ORLEN", 4.15, 1.0, 0.05, VERM, { larg: 0.4 });
+    patro(c, "VISA", 2.4, 0.38, 0.12, BRANCO, { larg: 0.6, peso: 900 }); patro(c, "Cash App", 1.4, 0.6, 0.04, BRANCO, { larg: 0.4 }); ret(c, 1.9, 0.12, 2.3, 0.2, VERM); patro(c, "ORLEN", 2.1, 0.16, 0.04, BRANCO, { larg: 0.3 });
+  });
+  vista(ctx, "T", (c) => { ret(c, 2.8, -0.3, 4.0, 0.3, BRANCO); asasT(c, BRANCO, BRANCO, AZUL); textoTopo(c, "VISA", 1.0, 0, 0.1, BRANCO, { larg: 0.45 }); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); });
+} };
+// Mercedes W15 (2024, pelas fotos): o preto atrás, o prata-grafite na frente e em cima, os filetes turquesa e o vermelho na entrada de ar
+DESENHOS["mercedes@2024"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.7, 9, 9], pintar(ctx) {
+  const PRETO = "#121315", GRAF = "#5b6067", TURQ = "#00d2be", VERM = "#d0021b", BRANCO = "#f4f4f4";
+  base(ctx, PRETO);
+  lados(ctx, (c) => {
+    degrade(c, 0, 0, 3.2, 0, [[0, GRAF], [0.6, "#3a3e44"], [1, PRETO]]); c.beginPath(); c.moveTo(0, 0.2); c.lineTo(1.6, 0.6); c.quadraticCurveTo(2.4, 0.7, 3.2, 0.68); c.lineTo(3.2, 1.1); c.lineTo(0, 1.1); c.closePath(); c.fill();
+    ret(c, 2.05, 0.95, 2.35, 1.1, VERM); poli(c, [[0.3, 0.26], [1.6, 0.6], [1.6, 0.63], [0.3, 0.29]], TURQ); ret(c, 1.3, 0.46, 3.3, 0.49, TURQ);
+    baixo(c, PRETO); ret(c, 3.86, 0.3, 4.45, 1.1, PRETO);
+    patro(c, "PETRONAS", 2.6, 0.36, 0.07, BRANCO, { larg: 0.75 }); patro(c, "AMG", 1.6, 0.56, 0.045, BRANCO, { larg: 0.3 }); patro(c, "PETRONAS", 4.15, 0.72, 0.05, BRANCO, { larg: 0.5 });
+  });
+  vista(ctx, "T", (c) => { degrade(c, 0, 0, 3.2, 0, [[0, GRAF], [1, PRETO]]); c.fillRect(0, -0.4, 3.2, 0.8); ret(c, 0.3, -0.12, 1.8, -0.09, TURQ); ret(c, 0.3, 0.09, 1.8, 0.12, TURQ); asasT(c, PRETO, PRETO, GRAF); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, GRAF); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); });
+} };
+// Ferrari SF-24 (2024, pelas fotos): vermelho com os filetes amarelo e branco na lateral e na tampa, a parte de baixo preta, a Shell
+DESENHOS["ferrari@2024"] = { numero: "#ffffff", carbono: 1, numPos: [3.6, 0.7, 9, 9], pintar(ctx) {
+  const VERM = "#d40000", PRETO = "#141414", AMAR = "#ffd500", BRANCO = "#f4f4f4";
+  base(ctx, VERM);
+  lados(ctx, (c) => {
+    c.beginPath(); c.moveTo(1.2, 0.0); c.lineTo(1.2, 0.18); c.quadraticCurveTo(2.4, 0.3, 3.6, 0.22); c.lineTo(3.6, 0.0); c.closePath(); c.fillStyle = PRETO; c.fill();
+    for (const [dy, cor] of [[0, AMAR], [0.025, BRANCO]]) { c.beginPath(); c.moveTo(1.3, 0.3 + dy); c.quadraticCurveTo(2.6, 0.4 + dy, 3.5, 0.9 + dy); c.lineTo(3.5, 0.915 + dy); c.quadraticCurveTo(2.6, 0.415 + dy, 1.3, 0.315 + dy); c.closePath(); c.fillStyle = cor; c.fill(); }
+    baixo(c, PRETO); ret(c, 3.86, 0.3, 4.45, 1.1, VERM);
+    c.beginPath(); c.arc(2.0, 0.42, 0.1, Math.PI, 0); c.lineTo(2.1, 0.33); c.lineTo(1.9, 0.33); c.closePath(); c.fillStyle = AMAR; c.fill();
+    patro(c, "Santander", 3.05, 0.62, 0.05, BRANCO, { larg: 0.5 }); patro(c, "ferrari", 4.15, 1.0, 0.05, BRANCO, { larg: 0.5 });
+  });
+  vista(ctx, "T", (c) => { asasT(c, VERM, VERM, VERM); ret(c, 2.9, -0.27, 3.9, -0.24, AMAR); ret(c, 2.9, 0.24, 3.9, 0.27, AMAR); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERM); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERM); });
+} };
+// McLaren MCL38 (2024, pelas fotos): papaia em cima e no bico, o carbono na lateral, "VELO" preto no papaia; sem o azul-claro de 2023
+DESENHOS["mclaren@2024"] = { numero: "#0e0f11", carbono: 1, numPos: [3.5, 0.72, 9, 9], pintar(ctx) {
+  const PAP = "#ff8000", CARB = "#16171a", BRANCO = "#f4f4f4";
+  base(ctx, PAP);
+  lados(ctx, (c) => {
+    c.beginPath(); c.moveTo(1.5, 0.28); c.quadraticCurveTo(2.5, 0.62, 3.6, 0.58); c.lineTo(3.6, 0.0); c.lineTo(1.5, 0.0); c.closePath(); c.fillStyle = CARB; c.fill(); // o carbono da lateral
+    c.beginPath(); c.moveTo(1.7, 0.2); c.quadraticCurveTo(2.4, 0.14, 3.0, 0.2); c.lineTo(2.9, 0.42); c.quadraticCurveTo(2.3, 0.46, 1.75, 0.38); c.closePath(); c.fillStyle = PAP; c.fill();
+    baixo(c, CARB); ret(c, 0.05, 0, 0.6, 0.16, PAP); ret(c, 3.86, 0.3, 4.45, 1.1, PAP);
+    patro(c, "VELO", 2.35, 0.31, 0.09, CARB, { larg: 0.55, peso: 900 }); patro(c, "OKX", 3.3, 0.35, 0.06, BRANCO, { larg: 0.3 }); patro(c, "Chrome", 3.15, 0.86, 0.065, BRANCO, { larg: 0.5, estilo: "normal" });
+  });
+  vista(ctx, "T", (c) => { asasT(c, PAP, PAP, PAP); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); });
+} };
+// Williams FW46 (2024, pelas fotos): azul-marinho escuro com o azul mais claro embaixo da lateral e o filete vermelho; "KOMATSU" branco
+DESENHOS["williams@2024"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.7, 9, 9], pintar(ctx) {
+  const MAR = "#0b1736", AZUL = "#1f4fd1", VERM = "#e10600", BRANCO = "#f4f4f4";
+  base(ctx, MAR);
+  lados(ctx, (c) => {
+    degrade(c, 0, 0.1, 0, 0.5, [[0, AZUL], [1, MAR]]); c.fillRect(0.6, 0.1, 3.0, 0.4);
+    ret(c, 0.4, 0.3, 3.3, 0.32, VERM); baixo(c, MAR); ret(c, 3.86, 0.3, 4.45, 1.1, MAR);
+    patro(c, "KOMATSU", 2.75, 0.4, 0.075, BRANCO, { larg: 0.7 }); patro(c, "MYPROTEIN", 2.2, 0.6, 0.045, BRANCO, { larg: 0.5 }); patro(c, "Gulf", 3.45, 0.58, 0.045, "#ff8200", { larg: 0.25 });
+  });
+  vista(ctx, "T", (c) => { asasT(c, MAR, MAR, MAR); textoTopo(c, "WILLIAMS", 4.15, 0, 0.08, BRANCO, { larg: 0.6 }); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); });
+} };
+// Haas VF-24 (2024, pelas fotos): a frente e o halo brancos, a lateral preta com "HAAS" cinza grande, o vermelho na asa dianteira
+// ("MoneyGram") e em cima da tampa
+DESENHOS["haas@2024"] = { numero: "#ffffff", carbono: 1, numPos: [3.6, 0.6, 9, 9], pintar(ctx) {
+  const PRETO = "#101113", BRANCO = "#eef0f2", VERM = "#e10600", CINZA = "#7a7d82";
+  base(ctx, PRETO);
+  lados(ctx, (c) => {
+    c.beginPath(); c.moveTo(0.0, 0.14); c.lineTo(1.5, 0.58); c.quadraticCurveTo(2.3, 0.78, 3.0, 0.8); c.lineTo(3.0, 1.1); c.lineTo(0.0, 1.1); c.closePath(); c.fillStyle = BRANCO; c.fill();
+    ret(c, 2.5, 0.92, 3.2, 1.1, VERM); poli(c, [[0.0, 0.12], [1.5, 0.55], [1.5, 0.58], [0.0, 0.15]], VERM);
+    baixo(c, PRETO); ret(c, 0.05, 0, 0.6, 0.16, VERM); patro(c, "MoneyGram", 0.33, 0.08, 0.05, BRANCO, { larg: 0.5 }); ret(c, 3.86, 0.3, 4.45, 1.1, VERM); patro(c, "HAAS", 4.15, 0.95, 0.07, BRANCO, { larg: 0.5 });
+    patro(c, "HAAS", 2.4, 0.36, 0.13, CINZA, { larg: 0.85, peso: 900 });
+  });
+  vista(ctx, "T", (c) => { ret(c, 0, -0.4, 2.6, 0.4, BRANCO); ret(c, 2.6, -0.2, 3.2, 0.2, VERM); asasT(c, VERM, VERM, BRANCO); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERM); });
+} };
+
 DESENHOS["racing-bulls@2025"] = pinturaVcarb("Racing Bulls");
 // Alfa Romeo C43 (2023): vermelho-escuro em cima, preto (carbono) embaixo, "Alfa Romeo" em branco na tampa e "Stake" no bico e na lateral
 DESENHOS["audi@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.55, 0.7, 9, 9], pintar(ctx) {
@@ -511,7 +597,7 @@ DESENHOS["audi@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.55, 0.7, 9, 
   vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); });
 } };
 // Kick Sauber C44 e C45 (2024 e 2025): preto com o verde neon no bico, no halo e nas asas; "Stake" branco grande na lateral
-DESENHOS["audi@2024"] = { numero: "#52e252", carbono: 1, numPos: [3.55, 0.7, 9, 9], pintar(ctx) {
+DESENHOS["audi@2025"] = { numero: "#52e252", carbono: 1, numPos: [3.55, 0.7, 9, 9], pintar(ctx) {
   const PRETO = "#121314", VERDE = "#52e252", BRANCO = "#f4f4f4";
   base(ctx, PRETO);
   lados(ctx, (c) => {
@@ -523,7 +609,19 @@ DESENHOS["audi@2024"] = { numero: "#52e252", carbono: 1, numPos: [3.55, 0.7, 9, 
   vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.2, 0.1, 0.2, 0.5, VERDE); });
   vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); });
 } };
-DESENHOS["audi@2025"] = DESENHOS["audi@2024"];
+// Kick Sauber C44 (2024, pelas fotos do Thiago): verde neon quase inteiro, o preto na lateral (com "Stake" branco) e embaixo
+DESENHOS["audi@2024"] = { numero: "#121314", carbono: 1, numPos: [3.55, 0.7, 9, 9], pintar(ctx) {
+  const VERDE = "#3fe03f", PRETO = "#121314", BRANCO = "#f4f4f4";
+  base(ctx, VERDE);
+  lados(ctx, (c) => {
+    c.beginPath(); c.moveTo(1.6, 0.12); c.quadraticCurveTo(2.5, 0.08, 3.5, 0.2); c.lineTo(3.5, 0.62); c.quadraticCurveTo(2.6, 0.56, 1.7, 0.44); c.closePath(); c.fillStyle = PRETO; c.fill(); // o preto da lateral
+    baixo(c, PRETO); ret(c, 0.05, 0, 0.6, 0.16, VERDE); ret(c, 3.86, 0.3, 4.45, 1.1, VERDE);
+    patro(c, "Stake", 2.55, 0.34, 0.1, BRANCO, { larg: 0.6, estilo: "italic", peso: 900 }); patro(c, "Stake", 4.15, 0.95, 0.06, PRETO, { larg: 0.45 }); patro(c, "Stake", 0.33, 0.08, 0.04, PRETO, { larg: 0.3 });
+  });
+  vista(ctx, "T", (c) => { asasT(c, VERDE, VERDE, VERDE); textoTopo(c, "Stake", 1.0, 0, 0.09, PRETO, { larg: 0.45 }); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERDE); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERDE); });
+} };
 // Mercedes W14 e W15 (2023 e 2024): carbono preto quase inteiro, prata no bico e o filete turquesa da Petronas
 DESENHOS["mercedes@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.7, 9, 9], pintar(ctx) {
   const PRETO = "#141517", PRATA = "#b9bec4", TURQ = "#00d2be", BRANCO = "#f4f4f4";
@@ -536,7 +634,6 @@ DESENHOS["mercedes@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.7, 
   vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); }); void PRATA;
   vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); });
 } };
-DESENHOS["mercedes@2024"] = DESENHOS["mercedes@2023"];
 // Williams FW45 (2023): azul-marinho com o degradê para o azul-claro na lateral, filete vermelho
 DESENHOS["williams@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.7, 9, 9], pintar(ctx) {
   const MAR = "#14215e", AZUL = "#2148d8", CLARO = "#4fa6ff", VERM = "#e10600", BRANCO = "#f4f4f4";
@@ -641,6 +738,10 @@ DESENHOS["alpine@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.72, 9
   vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); });
   vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ROSA); });
 } };
+
+// Aston Martin AMR24 e Alpine A524 (2024, pelas fotos): parecidas com as de 2023 (verde com o filete limão; carbono, azul em cima e o rosa da BWT)
+DESENHOS["aston-martin@2024"] = DESENHOS["aston-martin@2023"];
+DESENHOS["alpine@2024"] = DESENHOS["alpine@2023"];
 
 export const temDesenho = (equipe) => !!DESENHOS[equipe];
 export const corDoNumero = (equipe) => desenhoDe(equipe)?.numero || "#ffffff";

@@ -232,7 +232,7 @@ canvas.mini.off{display:none}
   .toast{white-space:normal;text-align:center;max-width:100%}
 }
 @media (prefers-reduced-motion:reduce){.dlg,.fade{transition:none}}
-/* Paulista Aberta: um parque de jogos e passeio, com interface leve sobre a cena. */
+/* a interface leve por cima do autódromo */
 :root{--ink:#203a37;--paper:#fff9e9;--line:#3a7c75;--gold:#ffd561;--night:#203a37}
 html,body{background:#80b795;color:var(--ink)}
 .top{align-items:flex-start;padding:max(12px,env(safe-area-inset-top)) 14px 0}
@@ -283,7 +283,7 @@ canvas.mini{width:132px;height:132px;background:#76ac83;border:3px solid #fff9e9
   </div>
 </header>
 
-<div class="hint"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> andar · <kbd>Shift</kbd> correr · <kbd>Espaço</kbd> entrar · clique em uma casinha ou em um amigo</div>
+<div class="hint"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> andar · <kbd>Shift</kbd> correr · <kbd>Espaço</kbd> entrar · clique num prédio, num F1 parado ou num amigo</div>
 
 <div class="dlg" id="dlg" role="status" aria-live="polite"></div>
 
@@ -352,21 +352,7 @@ canvas.mini{width:132px;height:132px;background:#76ac83;border:3px solid #fff9e9
 "use strict";
 const { $, store } = Comum;
 
-// ---------- o mapa: o Autódromo da Galera ----------
-// A Vila é um autódromo visto de cima. O circuito contorna o paddock (a Sede da Carreira, a Casa de Leilão, o Ginásio e a
-// grama alta), com os dez boxes dos ginásios de frente para a reta principal. Fora da pista ficam a Fan Zone (as tendas
-// dos jogos de mesa e as quadras), a arquibancada principal com o Autódromo (a Corrida), o pódio e a torre, e os hangares
-// da velocidade. Passarelas cruzam a pista; na pista só passam os carros de F1.
-const TS = 16, MW = 178, MH = 134; // vila.js repete MW, MH, OX, OY e o SPAWN: precisam bater
-const VW = 172, VH = 128, OX = 3, OY = 3;
-const SPAWN = [OX + 83, OY + 73]; // no paddock, entre a Sede e a Casa de Leilão
-const BAIRROS = [
-  { id: "cartas", nome: "Fan Zone", placa: [4, 12] },
-  { id: "esportes", nome: "Quadras", placa: [16, 21] },
-  { id: "praca", nome: "Paddock", placa: [40, 66] },
-  { id: "ginasios", nome: "Boxes · Desafios", placa: [46, 90] },
-  { id: "autodromo", nome: "Velocidade", placa: [58, 121] },
-];
+// ---------- os jogos (onde fica cada um no mapa: LUGARES, em /vila/gp-mapa.js) ----------
 const GAMES = [
   { id: "leilao", url: "/leilao/", icon: "🔨", sign: "LEILÃO", name: "Casa de Leilão", desc: "Roleta, lances e moedas: monte o seu time (ou hambúrguer, pizza, drink…) e vença no fim.", meta: "Leilão da Galera",
     x: 3, y: 2, w: 7, h: 5, doors: [6], bairro: "cartas", roof: "#27408f", roof2: "#1a2d6b", wall: "#efe6cf", wall2: "#d6c8a4" },
@@ -391,7 +377,7 @@ const GAMES = [
   // autódromo no fim da vila, depois da rua de baixo: concreto e telhado de bandeira quadriculada
   { id: "corrida", url: "/corrida/", icon: "🏁", sign: "CORRIDA", name: "Autódromo", desc: "F1 2026 em 3D nas 24 pistas do calendário: abra uma temporada com os amigos (cada um com a sua equipe, GP por GP), faça a carreira solo ou só uma corrida rápida.", meta: "Corrida da Galera · 1 a 8 pilotos",
     x: 31, y: 30, w: 10, h: 5, doors: [35, 36], bairro: "autodromo", roof: "#f4f4f4", roof2: "#151515", wall: "#9aa0a8", wall2: "#7d838c", race: true },
-  // a garagem do Drag, entre o MASP e a Consolação: galpão escuro com a pista de arrancada pintada no telhado, a árvore
+  // a garagem do Drag: galpão escuro com a pista de arrancada pintada no telhado, a árvore
   // de luzes da largada e o neon rosa em volta
   { id: "drag", url: "/corrida/drag/", icon: "🌙", sign: "DRAG", name: "Garagem do Drag", desc: "Racha à meia-noite: quatro faixas, câmbio na mão, nitro e vácuo. Onze carros, e a oficina para deixar o seu com pintura, neon e chama do seu jeito.", meta: "Drag da Galera · você contra três rivais",
     x: 41, y: 30, w: 5, h: 4, doors: [43], bairro: "autodromo", roof: "#1c1a22", roof2: "#2c2934", wall: "#3a3440", wall2: "#2a2530", drag: true },
@@ -435,777 +421,11 @@ const GAMES = [
   { id: "cozinha", url: "/cozinha/", icon: "🍲", sign: "COZINHA", name: "Cozinha da Galera", desc: "Cozinha cooperativa no jeito do Overcooked: pique, cozinhe, monte o prato e entregue antes de o cliente desistir. E lave a louça!", meta: "Cozinha da Galera · 1 a 4 cozinheiros",
     x: 5, y: 37, w: 11, h: 4, doors: [10], bairro: "praca", roof: "#b5523a", roof2: "#8e3d2a", wall: "#f6efe0", wall2: "#ddd0b4", restaurante: true },
 ];
-// Onde fica cada jogo, em casas da vila: [x, y, largura, altura, estilo do prédio, grupo do menu]. A porta fica sempre na
-// parede de baixo (o capacho na casa logo abaixo).
-const LUGARES = {
-  // a Fan Zone, ao norte da pista: as tendas dos jogos de mesa (fileira de cima) e as quadras abertas (fileira de baixo)
-  banco: [6, 6, 8, 5, "tenda", "cartas"], uno: [17, 6, 7, 5, "tenda", "cartas"], truco: [27, 6, 8, 5, "tenda", "cartas"],
-  sinuca: [38, 6, 7, 5, "tenda", "cartas"], domino: [48, 6, 7, 5, "tenda", "cartas"], rumi: [58, 6, 7, 5, "tenda", "cartas"],
-  proibida: [68, 6, 7, 5, "tenda", "cartas"], bloqueio: [93, 6, 6, 5, "tenda", "cartas"], ludo: [102, 6, 6, 5, "tenda", "cartas"],
-  botao: [111, 6, 6, 5, "tenda", "cartas"], digita: [120, 6, 7, 5, "tenda", "cartas"], naruto: [130, 6, 6, 5, "tenda", "cartas"],
-  cozinha: [139, 6, 11, 5, "tenda", "cartas"],
-  pelada: [20, 15, 10, 5, "quadra", "esportes"], tenis: [34, 15, 10, 5, "quadra", "esportes"],
-  futevolei: [48, 15, 10, 5, "quadra", "esportes"], haxball: [62, 15, 10, 5, "quadra", "esportes"],
-  // o paddock, dentro da pista: os dois pavilhões grandes e o Ginásio, de frente para a grama alta
-  ginasio: [44, 37, 10, 6, "pavilhao", "praca"], carreira: [44, 53, 28, 11, "pavilhao", "praca"], leilao: [94, 53, 28, 11, "pavilhao", "praca"],
-  // ao sul da reta principal: o Autódromo, com a arquibancada coberta; a leste, depois da pista, os hangares
-  corrida: [62, 106, 38, 11, "autodromo", "autodromo"],
-  drag: [156, 38, 10, 6, "hangar", "autodromo"], rocket: [156, 50, 10, 6, "hangar", "autodromo"],
-  batalha: [156, 66, 10, 6, "hangar", "autodromo"], tiro: [156, 78, 10, 6, "hangar", "autodromo"],
-};
-const LOGOS = { carreira: "CARREIRA", leilao: "LEILÃO", ginasio: "GINÁSIO", corrida: "CORRIDA" }; // o nome pintado no telhado
-const portas = (x, w) => (w >= 8 ? [x + (w >> 1) - 1, x + (w >> 1)] : [x + (w >> 1)]);
-for (const g of GAMES) {
-  const L = LUGARES[g.id];
-  if (L) { const [x, y, w, h, estilo, bairro] = L; Object.assign(g, { x, y, w, h, estilo, bairro, doors: portas(x, w), logo: LOGOS[g.id] || g.sign }); }
-}
-// Os dez boxes, um ao lado do outro de frente para o pit lane: os quatro líderes e os seis treinadores, cada um na cor do tipo
-const BOXES = { x: 52, y: 87, w: 6, h: 5 };
-const escurece = (hex, f = 0.72) => "#" + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * f).toString(16).padStart(2, "0")).join("");
-Lideres.GINASIOS.forEach((l, i) => {
-  const x = BOXES.x + i * BOXES.w;
-  GAMES.push({ id: "lider-" + l.id, url: "/ginasio/?lider=" + l.id, icon: "🏅", sign: l.tipo.toUpperCase(), name: "Ginásio " + l.tipo, verbo: "desafiar o líder", textoBotao: "Desafiar",
-    desc: l.nome + ": “" + l.frase + "” Vença no Ginásio em tempo real para ganhar a insígnia.", meta: "Ginásio de " + l.tipo + " · desafio de líder",
-    x, y: BOXES.y, w: BOXES.w, h: BOXES.h, doors: portas(x, BOXES.w), bairro: "ginasios", estilo: "box", numero: i + 1, roof: l.cor, roof2: escurece(l.cor), lider: l });
-});
-Lideres.TREINADORES.forEach((l, i) => {
-  const x = BOXES.x + (Lideres.GINASIOS.length + i) * BOXES.w;
-  GAMES.push({ id: "lider-" + l.id, url: "/ginasio/?lider=" + l.id, icon: "⚔️", sign: l.tipo.toUpperCase(), name: "Ginásio de " + l.nome, verbo: "desafiar", textoBotao: "Desafiar",
-    desc: "“" + l.frase + "” Time de " + l.tipo + ", no Ginásio em tempo real.", meta: "Treinador · " + l.tipo,
-    x, y: BOXES.y, w: BOXES.w, h: BOXES.h, doors: portas(x, BOXES.w), bairro: "ginasios", estilo: "box", numero: Lideres.GINASIOS.length + i + 1, roof: l.cor, roof2: escurece(l.cor), lider: l, treinador: l });
-});
-
-// ---------- a pista: o traçado em casas da vila (sentido horário na tela: a reta principal vai da esquerda para a direita) ----------
-const TRACADO = [[46, 100], [80, 100], [110, 100], [130, 100], [142, 98], [148, 90], [149, 76], [144, 64], [149, 52], [148, 40], [143, 32], [132, 28],
-  [110, 28], [80, 28], [52, 28], [36, 29], [27, 36], [26, 48], [34, 58], [28, 68], [22, 80], [24, 94], [33, 99]];
-const ASFALTO = 2.6, ZEBRA = 0.6, MURO = 4.0, FAIXA_PISTA = 4.2; // meias larguras, em casas: o asfalto, a zebra, o guard-rail e a faixa sólida
-const DS = 0.25; // a pista é amostrada a cada 1/4 de casa
-const LARGADA = 98; // a coluna da linha de chegada, na reta principal
-const PISTA = (() => {
-  const P = TRACADO.map(([x, y]) => [x + OX, y + OY]), n = P.length, bruto = [];
-  for (let i = 0; i < n; i++) { // Catmull-Rom fechada pelos pontos do traçado
-    const p0 = P[(i - 1 + n) % n], p1 = P[i], p2 = P[(i + 1) % n], p3 = P[(i + 2) % n];
-    const passos = Math.max(4, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / 0.1));
-    for (let k = 0; k < passos; k++) {
-      const t = k / passos, t2 = t * t, t3 = t2 * t;
-      const f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
-      bruto.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
-    }
-  }
-  const pts = []; let acum = 0, alvo = 0; // reamostra com o passo fixo DS
-  for (let i = 0; i < bruto.length; i++) {
-    const a = bruto[i], b = bruto[(i + 1) % bruto.length], seg = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    while (alvo < acum + seg) { const q = (alvo - acum) / seg; pts.push([a[0] + (b[0] - a[0]) * q, a[1] + (b[1] - a[1]) * q]); alvo += DS; }
-    acum += seg;
-  }
-  const N = pts.length, total = N * DS, ang = [], curva = [], ritmo = [];
-  for (let i = 0; i < N; i++) { const a = pts[(i - 1 + N) % N], b = pts[(i + 1) % N]; ang.push(Math.atan2(b[1] - a[1], b[0] - a[0])); }
-  const giro = (a, b) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
-  for (let i = 0; i < N; i++) curva.push(Math.abs(giro(ang[(i - 6 + N) % N], ang[(i + 6) % N])) / (12 * DS)); // radianos por casa
-  const lento = curva.map((k) => Math.max(0.42, Math.min(1, 1.15 - k * 5)));
-  for (let i = 0; i < N; i++) { let m = 1; for (let j = 0; j < 48; j++) m = Math.min(m, lento[(i + j) % N] + j * 0.012); ritmo.push(m); } // freia antes da curva
-  // os trechos de curva (zebra e brita): amostras seguidas com curvatura acima de 0,04 rad por casa
-  const curvas = []; let ini = -1;
-  const emCurva = (i) => curva[i % N] > 0.04;
-  let comeco = 0; while (emCurva(comeco) && comeco < N) comeco++; // começa num trecho reto, para não partir uma curva no meio
-  for (let k = 0; k <= N; k++) { const i = comeco + k; if (emCurva(i) && ini < 0) ini = i; else if (!emCurva(i) && ini >= 0) { curvas.push([ini - 4, i + 4]); ini = -1; } }
-  return { pts, N, total, ang, curva, ritmo, curvas };
-})();
-
-// ---------- os enfeites (em casas da vila; deslocados para o mapa mais abaixo) ----------
-const PASSARELAS = [[74, 23, 3, 10], [124, 23, 3, 10], [84, 94, 3, 11], [137, 57, 20, 3]]; // [x, y, w, h]: só as casas de pista viram passarela
-const ARQUIBANCADAS = [{ x: 30, y: 106, w: 30, h: 6 }, { x: 102, y: 106, w: 30, h: 6 }];
-const RODA = { x: 80, y: 4, w: 9, h: 8 }; // a roda-gigante da Fan Zone: a base ocupa o retângulo, a roda gira em drawRoda
-const HELI = { x: 116, y: 36, w: 11, h: 7 }; // o heliponto, com o helicóptero
-const PREDIOS = [ // prédios de enfeite, sem porta
-  { x: 64, y: 36, w: 24, h: 6, logo: "CENTRO DE MÍDIA", estilo: "pavilhao", roof: "#e10600" },
-  { x: 126, y: 64, w: 9, h: 5, logo: "+", estilo: "pavilhao", roof: "#e10600", cruz: true },
-  { x: 80, y: 54, w: 7, h: 9, estilo: "torre", roof: "#e10600" },
-];
-// tendas de enfeite (hospitality e lojinhas): [x, y, w, h, cor]
-const TENDAS = [[78, 15, 5, 4, "#e10600"], [85, 15, 5, 4, "#1e5bc6"], [110, 15, 5, 4, "#ffb000"], [117, 15, 5, 4, "#00a19c"], [130, 15, 5, 4, "#e10600"], [137, 15, 5, 4, "#7a3cff"],
-  [50, 69, 5, 4, "#e10600"], [58, 69, 5, 4, "#1e5bc6"], [104, 69, 5, 4, "#00a19c"], [112, 69, 5, 4, "#ff8000"]];
-const CAMINHOES = [[44, 81, "#1b2f6b"], [56, 81, "#dc0000"], [68, 81, "#ff8000"], [96, 81, "#00a19c"], [108, 81, "#0090ff"], [120, 81, "#e8e8e8"]]; // 8 x 2 casas, atrás dos boxes
-const FOODTRUCKS = [[153, 8, "#e8445a", "HOT DOG"], [157, 8, "#43a047", "TAPIOCA"], [161, 8, "#8e5ad8", "CALDO"], [120, 118, "#ff8a00", "PASTEL"], [125, 118, "#1e88e5", "AÇAÍ"]];
-const TELAO = { x: 73, y: 62, w: 6 }; // o telão da estante da Carreira, ao lado da Sede
-const TORRE = { x: 52, y: 120, w: 2 }; // a torre de cronometragem (os recordes de volta da Corrida)
-const PODIO = { x: 104, y: 115, w: 8, h: 3 }; // o pódio da F1 com os amigos (GET /api/corrida/estante)
-const PAINEL = { x: 96, y: 17, w: 10 }; // o painel de LED da Fan Zone
-const LAMPS = [[40, 64], [76, 64], [90, 64], [136, 64], [40, 80], [136, 80], [64, 104], [96, 104], [30, 123], [140, 123], [15, 12], [151, 12]]; // os postes de refletor
-const LAGO = { x: 10, y: 48, rx: 5.5, ry: 8 };
-// a praça do paddock: o logo pintado no chão (dá para andar em cima), o carro em exposição, os canteiros e os vasos
-const LOGO_CHAO = { x: 83.5, y: 73.5, r: 5.2 }; // centro e raio, em casas
-const EXPOSICAO = { x: 64, y: 73, w: 6, h: 3 };
-const CANTEIROS = [[42, 76, 6], [100, 76, 6], [120, 76, 6], [42, 66, 4], [130, 72, 6], [88, 79, 6], [72, 79, 6]]; // [x, y, largura]: sebes de 1 casa de altura
-const VASOS = [[46, 65], [52, 65], [64, 65], [68, 65], [96, 65], [100, 65], [114, 65], [118, 65], [76, 70], [91, 70], [76, 77], [91, 77]];
-const TERRENOS = []; // lotes vazios para jogos novos (chão "l", tapume e placa "EM BREVE"): jogo novo entra em LUGARES
-const AUTODROMO = GAMES.find((g) => g.id === "corrida");
-// aplica a margem de três casas à vila
-const noMapa = (lista) => lista.splice(0, lista.length, ...lista.map(([x, y, ...r]) => [x + OX, y + OY, ...r]));
-const desloca = (o) => { o.x += OX; o.y += OY; };
-BAIRROS.forEach((b) => { b.placa = [b.placa[0] + OX, b.placa[1] + OY]; });
-GAMES.forEach((g) => { g.x += OX; g.y += OY; g.doors = g.doors.map((d) => d + OX); g.doorY = g.y + g.h - 1; g.mats = g.doors.map((x) => [x, g.doorY + 1]); });
-[...ARQUIBANCADAS, ...PREDIOS, RODA, HELI, TELAO, TORRE, PODIO, PAINEL, LAGO, LOGO_CHAO, EXPOSICAO, ...TERRENOS].forEach(desloca);
-[LAMPS, TENDAS, CAMINHOES, FOODTRUCKS, PASSARELAS, CANTEIROS, VASOS].forEach(noMapa);
-
-// Tipos de chão: g gramado, t árvore, c piso de concreto do paddock, a asfalto das ruas de serviço, q pit lane, W muro do pit,
-// P pista (com a área de escape e o guard-rail; sólida), n passarela sobre a pista, e estacionamento, w lago, f flores,
-// h grama alta, m capacho da porta e l terreno.
-const hash = (x, y, i = 0) => { let n = (x * 374761393 + y * 668265263 + i * 1274126177) | 0; n = (n ^ (n >>> 13)) * 1274126177; return ((n ^ (n >>> 16)) >>> 0); };
-const ground = Array.from({ length: MH }, () => Array(MW).fill("t"));
-const solid = Array.from({ length: MH }, () => Array(MW).fill(true));
-const set = (x, y, t, s) => { if (x >= 0 && y >= 0 && x < MW && y < MH) { ground[y][x] = t; if (s != null) solid[y][x] = s; } };
-const faixa = (x0, x1, y0, y1, t, s) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(x, y, t, s); };
-const vfaixa = (x0, x1, y0, y1, t, s) => faixa(x0 + OX, x1 + OX, y0 + OY, y1 + OY, t, s); // em casas da vila
-const solido = (x, y, w, h) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (xx >= 0 && yy >= 0 && xx < MW && yy < MH) solid[yy][xx] = true; };
-for (let y = 0; y < VH; y++) for (let x = 0; x < VW; x++) { const cerca = x < 2 || y < 2 || x >= VW - 2 || y >= VH - 2; set(x + OX, y + OY, cerca ? "t" : "g", cerca); }
-// a Fan Zone
-vfaixa(3, VW - 4, 11, 13, "c"); vfaixa(3, VW - 4, 20, 23, "c");
-// o paddock
-vfaixa(30, 142, 33, 34, "a");                    // a rua de serviço do norte
-vfaixa(40, 140, 43, 45, "c");                    // o passeio do Ginásio
-vfaixa(72, 93, 50, 63, "c");                     // o pátio entre os pavilhões
-vfaixa(122, 141, 57, 61, "c");                   // a ligação com a passarela leste
-vfaixa(36, 141, 64, 84, "c");                    // a praça do paddock
-vfaixa(36, 141, 85, 86, "a");                    // a rua atrás dos boxes
-vfaixa(36, 51, 87, 91, "c"); vfaixa(112, 141, 87, 91, "c");
-vfaixa(38, 134, 92, 94, "q");                    // o pit lane
-vfaixa(38, 134, 95, 95, "W", true);              // o muro do pit
-// o pátio dos hangares, a leste da pista
-vfaixa(153, 167, 34, 88, "a");
-// ao sul da reta: o calçadão da arquibancada e o estacionamento
-vfaixa(26, 146, 104, 123, "c");
-vfaixa(4, 25, 104, 123, "e");
-for (let y = 0; y < VH; y++) for (let x = 0; x < VW; x++) { const dx = (x + OX + 0.5 - LAGO.x) / LAGO.rx, dy = (y + OY + 0.5 - LAGO.y) / LAGO.ry; if (dx * dx + dy * dy < 1) set(x + OX, y + OY, "w", true); }
-// a pista: toda casa a menos de FAIXA_PISTA casas da linha do meio é sólida
-const distPista = Array.from({ length: MH }, () => new Float32Array(MW).fill(99));
-for (const [px_, py_] of PISTA.pts) for (let ty = Math.floor(py_ - 5); ty <= Math.ceil(py_ + 5); ty++) for (let tx = Math.floor(px_ - 5); tx <= Math.ceil(px_ + 5); tx++) {
-  if (tx < 0 || ty < 0 || tx >= MW || ty >= MH) continue;
-  const d = Math.hypot(tx + 0.5 - px_, ty + 0.5 - py_); if (d < distPista[ty][tx]) distPista[ty][tx] = d;
-}
-for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (distPista[y][x] <= FAIXA_PISTA) set(x, y, "P", true);
-// as passarelas: as casas de pista (e do muro do pit) no retângulo viram caminho; o tabuleiro é desenhado por cima dos carros
-const PONTES = PASSARELAS.map(([x0, y0, w, h]) => {
-  let a = Infinity, b = Infinity, c = -1, d = -1;
-  for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if ("PW".includes(ground[y][x])) { set(x, y, "n", false); a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); d = Math.max(d, y); }
-  return { x: a, y: b, w: c - a + 1, h: d - b + 1, deitada: w > h };
-}).filter((p) => p.w > 0);
-for (const t of TERRENOS) { faixa(t.x, t.x + t.w - 1, t.y, t.y + t.h - 1, "l", true); t.placa = [t.x + (t.w >> 1), t.y + t.h]; }
-for (const g of GAMES) { solido(g.x, g.y, g.w, g.h); for (const [mx, my] of g.mats) set(mx, my, "m", false); }
-// os carros no estacionamento: [x, y, cor], cada um em 1 x 2 casas
-const CORES_CARRO = ["#d8d8dc", "#2b2f37", "#c0392b", "#2c6fd6", "#f2f2ee", "#7a7f88", "#1e7a4c", "#e0a21b"];
-const ESTACIONADOS = [];
-for (const fila of [106, 110, 116, 120]) for (let x = 5; x <= 24; x++) if (hash(x, fila, 31) % 5) ESTACIONADOS.push([x + OX, fila + OY, CORES_CARRO[hash(x, fila, 32) % CORES_CARRO.length]]);
-for (const a of [...ARQUIBANCADAS, ...PREDIOS, RODA, HELI, PODIO, EXPOSICAO]) solido(a.x, a.y, a.w, a.h);
-for (const [x, y, w] of CANTEIROS) solido(x, y, w, 1);
-for (const [x, y] of VASOS) solid[y][x] = true;
-for (const [x, y, w, h] of TENDAS) solido(x, y, w, h);
-for (const [x, y] of CAMINHOES) solido(x, y, 8, 2);
-for (const [x, y] of FOODTRUCKS) solido(x, y, 3, 2);
-for (const [x, y] of ESTACIONADOS) solido(x, y, 1, 2);
-for (const o of [TELAO, TORRE, PAINEL]) solido(o.x, o.y, o.w, 1);
-for (const [x, y] of [...LAMPS, ...BAIRROS.map((b) => b.placa)]) solid[y][x] = true;
-// as árvores: o bosque em volta do autódromo e algumas no gramado (nunca em cima do caminho nem na porta de um prédio)
-const pertoDePredio = (x, y) => GAMES.some((g) => x >= g.x - 1 && x <= g.x + g.w && y >= g.y - 1 && y <= g.y + g.h || g.mats.some(([mx, my]) => Math.abs(mx - x) + Math.abs(my - y) < 3));
-const bosque = (x0, x1, y0, y1, dens) => { for (let y = y0 + OY; y <= y1 + OY; y++) for (let x = x0 + OX; x <= x1 + OX; x++) if (ground[y][x] === "g" && !solid[y][x] && hash(x, y, 77) % 100 < dens && !pertoDePredio(x, y)) set(x, y, "t", true); };
-bosque(2, VW - 3, 2, 4, 85);      // atrás das tendas
-bosque(2, 17, 24, 103, 45);       // a oeste, em volta do lago
-bosque(166, VW - 3, 2, VH - 3, 85); // a leste, depois dos hangares
-bosque(2, VW - 3, 124, VH - 3, 85); // ao sul
-bosque(145, 167, 14, 19, 35);
-bosque(90, 112, 36, 42, 30);
-bosque(28, 39, 35, 95, 22);
-bosque(62, 71, 46, 52, 30);
-bosque(128, 141, 35, 56, 22);
-// a grama alta, em frente ao Ginásio (public/vila/mato.js): h, dá para andar
-vfaixa(MatoAlto.GRAMA.x, MatoAlto.GRAMA.x + MatoAlto.GRAMA.w - 1, MatoAlto.GRAMA.y, MatoAlto.GRAMA.y + MatoAlto.GRAMA.h - 1, "h", false);
-
-// O mapa termina no bosque.
-const matAt = (x, y) => GAMES.find((g) => g.mats.some(([mx, my]) => mx === x && my === y));
-const buildingAt = (x, y) => GAMES.find((g) => x >= g.x && x < g.x + g.w && y >= g.y && y < g.y + g.h);
-const walkable = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH && !solid[y][x];
-
-// ---------- desenho do mapa fixo (em pixels nativos, depois ampliado) ----------
-function px(c, col, x, y, w = 1, h = 1) { c.fillStyle = col; c.fillRect(x, y, w, h); }
-const FONTE_PIXEL = (tam, peso = 700) => `${peso} ${tam}px "Pixelify Sans", monospace`;
-// mistura de duas cores em hex (t = quanto da segunda)
-function mistura(a, b, t) {
-  const A = parseInt(a.slice(1, 7), 16), B = parseInt(b.slice(1, 7), 16), m = (s) => Math.round(((A >> s) & 255) * (1 - t) + ((B >> s) & 255) * t);
-  return "#" + ((1 << 24) | (m(16) << 16) | (m(8) << 8) | m(0)).toString(16).slice(1);
-}
-function acentoDe(g) { // a cor de destaque do prédio: a do jogo, clareada quando é escura
-  const n = parseInt((g.roof || "#e10600").slice(1), 16), lum = ((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11;
-  return mistura(g.roof || "#e10600", "#ffffff", lum < 70 ? 0.55 : lum < 110 ? 0.3 : 0);
-}
-const PELES = ["#f2c39b", "#d9a27a", "#a8704a", "#7a4a2c", "#f6d3b3"];
-const CAMISAS = ["#e10600", "#f4f4f0", "#1e5bc6", "#ffb000", "#1b1f24", "#00a19c", "#ff8000", "#2e9e4f", "#7a3cff", "#ff5fa2"];
-
-// ---------- o chão ----------
-// o gramado cortado em faixas, como nos autódromos
-function drawGrass(c, x, y) {
-  const X = x * TS, Y = y * TS, faixa = (x >> 1) & 1;
-  px(c, faixa ? "#5fa24f" : "#579a48", X, Y, TS, TS);
-  for (let i = 0; i < 3; i++) { const r = hash(x, y, i); px(c, faixa ? "#539545" : "#4d8e40", X + r % 15, Y + (r >> 5) % 14, 1, 2); }
-  if (hash(x, y, 9) % 6 === 0) px(c, "#7dbd66", X + 3 + hash(x, y, 10) % 9, Y + 6, 2, 1);
-}
-// borda onde o piso encontra a grama
-const naGrama = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH && "gfth".includes(ground[y][x]);
-function bordas(c, x, y, cor) {
-  const X = x * TS, Y = y * TS;
-  if (naGrama(x, y - 1)) px(c, cor, X, Y, TS, 1);
-  if (naGrama(x, y + 1)) px(c, cor, X, Y + TS - 1, TS, 1);
-  if (naGrama(x - 1, y)) px(c, cor, X, Y, 1, TS);
-  if (naGrama(x + 1, y)) px(c, cor, X + TS - 1, Y, 1, TS);
-}
-// o piso do paddock: placas de concreto claro com as juntas
-function drawConcrete(c, x, y) {
-  const X = x * TS, Y = y * TS, h = hash(x, y, 9);
-  px(c, "#c6c9ce", X, Y, TS, TS);
-  px(c, "#b2b6bc", X, Y, TS, 1); px(c, "#b2b6bc", X, Y, 1, TS);
-  if (h % 5 === 0) px(c, "#bbbfc5", X + (h >> 4) % 10 + 2, Y + (h >> 8) % 10 + 2, 3, 2);
-  if (h % 11 === 0) px(c, "#d5d8dc", X + 9, Y + 4, 2, 1);
-  bordas(c, x, y, "#8d9299");
-}
-// o asfalto das ruas de serviço e do pátio dos hangares, com o meio-fio claro
-function drawAsfalto(c, x, y) {
-  const X = x * TS, Y = y * TS;
-  px(c, "#5c6067", X, Y, TS, TS);
-  for (let i = 0; i < 4; i++) { const r = hash(x, y, i + 60); px(c, r % 2 ? "#666a71" : "#52565c", X + r % 15, Y + (r >> 5) % 15, 1, 1); }
-  bordas(c, x, y, "#d7dade");
-}
-// o pit lane: a linha branca diante dos boxes e a vaga amarela pintada na frente de cada um
-function drawPitlane(c, x, y) {
-  const X = x * TS, Y = y * TS, lin = y - OY;
-  px(c, "#4a4e55", X, Y, TS, TS);
-  for (let i = 0; i < 3; i++) { const r = hash(x, y, i + 70); px(c, r % 2 ? "#54585f" : "#42464c", X + r % 15, Y + (r >> 5) % 15, 1, 1); }
-  if (lin === 92) px(c, "#f2f2ee", X, Y, TS, 1);
-  if (lin === 94) px(c, "#f2f2ee", X, Y + TS - 1, TS, 1);
-  const rel = x - (BOXES.x + OX), b = rel >= 0 && rel < 10 * BOXES.w ? rel % BOXES.w : -1;
-  if (b >= 1 && b <= BOXES.w - 2 && lin >= 92 && lin <= 94) {
-    if (lin === 92) px(c, "#f4c430", X, Y + 3, TS, 1);
-    if (lin === 94) px(c, "#f4c430", X, Y + TS - 5, TS, 1);
-    if (b === 1) px(c, "#f4c430", X, Y + (lin === 92 ? 3 : 0), 1, lin === 94 ? TS - 4 : TS - (lin === 92 ? 3 : 0));
-    if (b === BOXES.w - 2) px(c, "#f4c430", X + TS - 1, Y + (lin === 92 ? 3 : 0), 1, lin === 94 ? TS - 4 : TS - (lin === 92 ? 3 : 0));
-    if (lin === 93 && (b === 2 || b === 3)) px(c, "#f2f2ee", X + (b === 2 ? 8 : 0), Y + 7, 8, 2); // onde o carro para
-  }
-}
-// o muro do pit, com os painéis vermelhos
-function drawMuroBox(c, x, y) {
-  const X = x * TS, Y = y * TS;
-  px(c, "#4a4e55", X, Y, TS, TS);
-  px(c, "#00000040", X, Y + 11, TS, 3);
-  px(c, "#e9ebee", X, Y + 3, TS, 6); px(c, "#b8bcc2", X, Y + 9, TS, 2);
-  if (x % 3 === 0) { px(c, "#e10600", X + 2, Y + 4, 12, 4); px(c, "#ffffff", X + 4, Y + 5, 8, 1); }
-}
-// o estacionamento: asfalto com as vagas pintadas
-function drawParking(c, x, y) {
-  const X = x * TS, Y = y * TS, lin = y - OY;
-  px(c, "#55595f", X, Y, TS, TS);
-  for (let i = 0; i < 3; i++) { const r = hash(x, y, i + 80); px(c, r % 2 ? "#5f6369" : "#4c5056", X + r % 15, Y + (r >> 5) % 15, 1, 1); }
-  if ([106, 107, 110, 111, 116, 117, 120, 121].includes(lin)) px(c, "#e6e6e2", X, Y, 1, TS);
-  if ([105, 112, 115, 122].includes(lin)) px(c, "#e6e6e2", X, lin === 105 || lin === 115 ? Y + TS - 1 : Y, TS, 1);
-  bordas(c, x, y, "#d7dade");
-}
-// o lago: a água com o reflexo e a margem de areia
-function drawAgua(c, x, y) {
-  const X = x * TS, Y = y * TS, agua = (a, b) => ground[b] && ground[b][a] === "w";
-  px(c, "#3b8cc4", X, Y, TS, TS);
-  if ((x + y * 3) % 5 === 0) { px(c, "#6fb6e3", X + 3, Y + 6, 6, 1); px(c, "#6fb6e3", X + 8, Y + 11, 4, 1); }
-  if (!agua(x, y - 1)) { px(c, "#d9c58f", X, Y, TS, 3); px(c, "#2f78ab", X, Y + 3, TS, 1); }
-  if (!agua(x, y + 1)) px(c, "#d9c58f", X, Y + TS - 2, TS, 2);
-  if (!agua(x - 1, y)) px(c, "#d9c58f", X, Y, 2, TS);
-  if (!agua(x + 1, y)) px(c, "#d9c58f", X + TS - 2, Y, 2, TS);
-}
-function drawFlowers(c, x, y) {
-  drawGrass(c, x, y);
-  const X = x * TS, Y = y * TS, cols = ["#ff5a6a", "#ffd34d", "#ffffff", "#b58cff"];
-  for (let i = 0; i < 4; i++) {
-    const r = hash(x, y, i + 20), fx = X + 2 + ((i % 2) * 7) + (r % 3), fy = Y + 2 + (i >> 1) * 7 + ((r >> 3) % 3), col = cols[(r >> 7) % cols.length];
-    px(c, "#2f7a2a", fx + 1, fy + 3, 1, 2); px(c, col, fx, fy + 1, 3, 1); px(c, col, fx + 1, fy, 1, 3); px(c, "#ffe9a8", fx + 1, fy + 1);
-  }
-}
-// a grama alta: tufos em V, dois tons, com a ponta clara (o jeito da grama dos jogos de Pokémon)
-function drawMatoAlto(c, x, y) {
-  const X = x * TS, Y = y * TS;
-  px(c, "#2f7a2a", X, Y, TS, TS);
-  for (let ty = 0; ty < 2; ty++) for (let tx = 0; tx < 2; tx++) {
-    const bx = X + tx * 8 + ((ty + x) % 2) * 2 - 1, by = Y + ty * 8, cor = (tx + ty + x + y) % 2 ? "#3f9a36" : "#46a83c";
-    for (const [dx, h] of [[0, 5], [2, 7], [4, 6], [6, 4]]) { px(c, "#1f5e1f", bx + dx, by + 8 - h, 2, h); px(c, cor, bx + dx, by + 8 - h, 1, h - 1); px(c, "#8fdc6a", bx + dx, by + 8 - h, 1, 1); }
-  }
-}
-// quem está na grama alta fica com os pés escondidos nela
-function drawMatoPorCima(c, p) {
-  const X = Math.round(p.fx * TS), Y = Math.round(p.fy * TS) + TS - 6, k = Math.round(p.fx * 3 + p.fy);
-  for (let i = 0; i < 8; i++) { const h = 3 + ((i + k) % 3); px(c, "#1f5e1f", X + i * 2, Y + 6 - h, 2, h); px(c, i % 2 ? "#3f9a36" : "#46a83c", X + i * 2, Y + 6 - h, 1, h - 1); px(c, "#8fdc6a", X + i * 2, Y + 6 - h, 1, 1); }
-}
-// as árvores do bosque: copas redondas, com a sombra para baixo e a luz de cima
-function drawTree(c, x, y) {
-  const X = x * TS, Y = y * TS, escuro = hash(x, y) % 3 === 0;
-  px(c, "#1d3a2240", X + 3, Y + 12, 14, 5);
-  c.fillStyle = escuro ? "#23552e" : "#2b6837"; c.beginPath(); c.arc(X + 8, Y + 8, 8.5, 0, 7); c.fill();
-  c.fillStyle = escuro ? "#2e6c3a" : "#3a8245"; c.beginPath(); c.arc(X + 6.5, Y + 6.5, 5.5, 0, 7); c.fill();
-  c.fillStyle = escuro ? "#4a8a4e" : "#58a255"; c.beginPath(); c.arc(X + 5, Y + 5, 2.5, 0, 7); c.fill();
-}
-const CHAO = { h: drawMatoAlto, c: drawConcrete, a: drawAsfalto, q: drawPitlane, W: drawMuroBox, e: drawParking, w: drawAgua };
-// o capacho na porta: o tapete escuro com as faixas amarelas
-function drawMat(c, x, y) {
-  (CHAO[ground[y + 1] && ground[y + 1][x]] || drawConcrete)(c, x, y);
-  const X = x * TS, Y = y * TS;
-  px(c, "#2b2f36", X + 2, Y + 3, 12, 8); px(c, "#3b4049", X + 3, Y + 4, 10, 6);
-  px(c, "#f4c430", X + 2, Y + 3, 12, 1); px(c, "#f4c430", X + 2, Y + 10, 12, 1);
-}
-
-// ---------- a pista ----------
-function caminho(c, i0, i1) { // a linha do meio da pista, da amostra i0 até i1 (dando a volta)
-  const pts = PISTA.pts, n = PISTA.N;
-  c.beginPath();
-  for (let k = i0; k <= i1; k++) { const [x, y] = pts[((k % n) + n) % n]; if (k === i0) c.moveTo(x * TS, y * TS); else c.lineTo(x * TS, y * TS); }
-}
-// a pista inteira, em camadas: o guard-rail, a área de escape (brita nas curvas), a linha branca, a zebra, o asfalto e a borracha
-function drawPista(c, bx0, by0, bx1, by1) {
-  const n = PISTA.N;
-  c.save(); c.lineJoin = "round"; c.lineCap = "round";
-  const volta = (cor, meia) => { caminho(c, 0, n - 1); c.closePath(); c.strokeStyle = cor; c.lineWidth = meia * 2 * TS; c.stroke(); };
-  const curvas = (cor, meia, tracejado) => { for (const [a, b] of PISTA.curvas) { caminho(c, a, b); c.strokeStyle = cor; c.lineWidth = meia * 2 * TS; c.lineCap = "butt"; if (tracejado) c.setLineDash(tracejado); c.stroke(); c.setLineDash([]); } c.lineCap = "round"; };
-  volta("#5d636b", MURO + 0.16);
-  volta("#e9ecef", MURO + 0.05);
-  volta("#5d9c4d", MURO - 0.08);
-  curvas("#d6c08c", MURO - 0.3);
-  volta("#f4f4f0", ASFALTO + 0.18);
-  curvas("#f4f4f0", ASFALTO + ZEBRA); curvas("#d8262c", ASFALTO + ZEBRA, [6, 6]);
-  volta("#3c4047", ASFALTO);
-  volta("#363a41", 1.0); // o trilho de borracha
-  // a textura do asfalto, só nas amostras deste pedaço
-  for (let i = 0; i < n; i += 2) {
-    const [x, y] = PISTA.pts[i], X = x * TS, Y = y * TS;
-    if (X < bx0 || X > bx1 || Y < by0 || Y > by1) continue;
-    const a = PISTA.ang[i], nx = -Math.sin(a), ny = Math.cos(a);
-    for (let k = 0; k < 3; k++) { const r = hash(i, k, 91), d = ((r % 1000) / 1000 * 2 - 1) * (ASFALTO - 0.2) * TS; px(c, r % 3 ? "#454a51" : "#33373d", Math.round(X + nx * d), Math.round(Y + ny * d), 1, 1); }
-  }
-  c.restore();
-  // a linha de chegada quadriculada e o grid de largada
-  const LX = (LARGADA + OX) * TS, cy = (100 + OY) * TS, meia = ASFALTO * TS;
-  if (LX + 16 > bx0 && LX - 16 < bx1 && cy + meia > by0 && cy - meia < by1) {
-    for (let yy = -Math.floor(meia); yy < meia - 1; yy += 4) for (let k = 0; k < 3; k++) px(c, ((yy >> 2) + k) % 2 ? "#f4f4f0" : "#16181c", LX + k * 4, cy + yy, 4, 4);
-  }
-  for (let k = 0; k < 12; k++) { // as vagas do grid, em zigue-zague, atrás da linha
-    const gx = LX - 30 - k * 40, gy = cy + (k % 2 ? 18 : -18);
-    if (gx < bx0 - 20 || gx > bx1 + 20 || gy < by0 - 20 || gy > by1 + 20) continue;
-    px(c, "#f4f4f0", gx, gy - 7, 2, 14); px(c, "#f4f4f0", gx - 10, gy - 7, 10, 2); px(c, "#f4f4f0", gx - 10, gy + 5, 10, 2);
-    c.fillStyle = "#f4f4f0"; c.font = FONTE_PIXEL(7); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(k + 1), gx - 20, gy + 1); c.textAlign = "left";
-  }
-  // as placas de patrocínio atrás do guard-rail nas duas retas
-  c.font = FONTE_PIXEL(5); c.textBaseline = "middle"; c.textAlign = "center";
-  for (const [yb, x0, x1] of [[28 - MURO - 0.42, 40, 132], [100 + MURO + 0.12, 30, 140]]) {
-    const Yb = Math.round((yb + OY) * TS);
-    if (Yb + 6 < by0 || Yb > by1) continue;
-    for (let x = x0, i = 0; x < x1; x += 3, i++) {
-      const X = (x + OX) * TS; if (X + 44 < bx0 || X > bx1) continue;
-      if (PONTES.some((p) => X + 44 > p.x * TS && X < (p.x + p.w) * TS)) continue;
-      const [fundo, letra, txt] = [["#e10600", "#ffffff", "GALERA"], ["#16181c", "#ffffff", "F1 2026"], ["#f4f4f0", "#e10600", "VILA"]][i % 3];
-      px(c, "#00000040", X + 1, Yb + 6, 44, 2); px(c, fundo, X, Yb, 44, 6); c.fillStyle = letra; c.fillText(txt, X + 22, Yb + 3.5);
-    }
-  }
-  c.textAlign = "left";
-}
-
-// ---------- as construções ----------
-function sombra(c, X, Y, W, H) { px(c, "#0f1f1638", X + 4, Y + 5, W, H); }
-// o nome grande pintado no telhado, como os logos dos autódromos
-function letreiro(c, txt, cx, cy, maxW, maxH, cor, borda = "#ffffff") {
-  let tam = Math.max(7, Math.round(maxH));
-  c.font = FONTE_PIXEL(tam);
-  while (tam > 7 && c.measureText(txt).width > maxW) { tam--; c.font = FONTE_PIXEL(tam); }
-  c.textAlign = "center"; c.textBaseline = "middle";
-  c.fillStyle = borda; for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) c.fillText(txt, Math.round(cx) + dx, Math.round(cy) + dy);
-  c.fillStyle = "#00000040"; c.fillText(txt, Math.round(cx) + 2, Math.round(cy) + 2);
-  c.fillStyle = cor; c.fillText(txt, Math.round(cx), Math.round(cy));
-  c.textAlign = "left";
-}
-// a fachada de vidro: os montantes, o reflexo na diagonal e a gente lá dentro
-function vidro(c, X, Y, W, H, seed) {
-  px(c, "#1d3246", X, Y, W, H); px(c, "#2b4a63", X, Y, W, Math.round(H * 0.42));
-  for (let k = 0; k < W / 8; k++) { const r = hash(seed, k, 5), xx = X + 2 + r % Math.max(1, W - 6); if ((r >> 8) % 3) { px(c, PELES[r % PELES.length], xx, Y + H - 12, 2, 2); px(c, CAMISAS[(r >> 4) % CAMISAS.length], xx - 1, Y + H - 10, 4, 5); } }
-  for (let xx = X + 5; xx < X + W; xx += 6) px(c, "#132233", xx, Y, 1, H);
-  px(c, "#132233", X, Y + Math.round(H / 2) - 2, W, 1);
-  for (let k = 0; k < W; k += 41) { const rx = X + ((k + seed * 13) % Math.max(1, W)); for (let j = 0; j < H - 3; j++) if (rx + j < X + W - 2) px(c, "#ffffff1f", rx + j, Y + j, 3, 1); }
-  px(c, "#8e959e", X, Y + H - 2, W, 2);
-}
-// as portas de vidro, com a marquise na cor do jogo
-function portaVidro(c, g, cor) {
-  const Yb = (g.y + g.h) * TS;
-  for (const d of g.doors) { const dx = d * TS; px(c, "#141b24", dx + 1, Yb - 22, 14, 22); px(c, "#8fd6ea", dx + 2, Yb - 21, 12, 20); px(c, "#c9f0fa", dx + 2, Yb - 21, 12, 5); px(c, "#141b24", dx + 7, Yb - 21, 1, 20); px(c, "#ffffff80", dx + 3, Yb - 19, 2, 8); }
-  const dL = g.doors[0] * TS, dR = (g.doors[g.doors.length - 1] + 1) * TS;
-  px(c, "#00000040", dL - 3, Yb - 24, dR - dL + 6, 3); px(c, cor, dL - 4, Yb - 27, dR - dL + 8, 4); px(c, mistura(cor, "#000000", 0.35), dL - 4, Yb - 24, dR - dL + 8, 1);
-}
-// o escudo da Sede, a Pokébola do Ginásio e o martelo do Leilão, ao lado do nome no telhado
-function emblema(c, g, x, y) {
-  if (g.id === "carreira") {
-    const linhas = ["##############", "#gggwwgggwwggg#", "#gggwwgggwwggg#", "#ggwwwwwwwwwgg#", "#gggwwwwwwwggg#", "#ggggwwgwwgggg#", " #gggwgggwggg# ", "  #ggggggggg#  ", "   #ggggggg#   ", "    #ggggg#    ", "     #####     "];
-    const cor = { "#": "#d4af37", g: "#2e8b57", w: "#f4f1e6" };
-    linhas.forEach((l, j) => [...l].forEach((ch, i) => { if (cor[ch]) px(c, cor[ch], x - 7 + i, y - 6 + j, 1, 1); }));
-  } else if (g.id === "ginasio") {
-    c.fillStyle = "#243c3c"; c.beginPath(); c.arc(x, y, 10, 0, 7); c.fill();
-    c.fillStyle = "#ee554c"; c.beginPath(); c.arc(x, y, 8, Math.PI, Math.PI * 2); c.fill();
-    c.fillStyle = "#fff"; c.beginPath(); c.arc(x, y, 8, 0, Math.PI); c.fill();
-    px(c, "#243c3c", x - 8, y - 1, 16, 2); px(c, "#243c3c", x - 3, y - 3, 6, 6); px(c, "#fff", x - 1, y - 1, 2, 2);
-  } else if (g.id === "leilao") {
-    px(c, "#7a4a22", x - 1, y - 2, 3, 14); px(c, "#5b3415", x - 8, y - 8, 16, 7); px(c, "#8a5a2a", x - 7, y - 7, 14, 4); px(c, "#ffd23f", x - 6, y + 10, 13, 3);
-  }
-}
-// pavilhão de hospitality: o telhado branco arredondado com o logo, a faixa na cor do jogo e a fachada de vidro
-function drawPavilhao(c, g) {
-  const X = g.x * TS, Y = g.y * TS, W = g.w * TS, H = g.h * TS, fachH = 2 * TS, roofH = H - fachH, cor = g.roof || "#e10600", grande = g.w >= 20;
-  sombra(c, X, Y, W, H);
-  vidro(c, X + 2, Y + roofH, W - 4, fachH, g.x + g.y);
-  for (let xx = X + 2; xx < X + W - 4; xx += 48) px(c, "#e9ecef", xx, Y + roofH, 3, fachH - 2);
-  px(c, "#e9ecef", X + W - 5, Y + roofH, 3, fachH - 2);
-  const r = Math.min(16, roofH / 3);
-  c.fillStyle = "#e3e6ea"; c.beginPath(); c.moveTo(X - 2, Y + roofH); c.lineTo(X - 2, Y + r); c.quadraticCurveTo(X - 2, Y, X + r, Y); c.lineTo(X + W - r, Y); c.quadraticCurveTo(X + W + 2, Y, X + W + 2, Y + r); c.lineTo(X + W + 2, Y + roofH); c.closePath(); c.fill();
-  if (grande) for (let xx = X + 12; xx < X + W - 8; xx += 12) px(c, "#d2d6db", xx, Y + 3, 1, roofH - 10); // as costelas do telhado curvo
-  else for (let yy = Y + 6; yy < Y + roofH - 8; yy += 5) px(c, "#d2d6db", X + 2, yy, W - 4, 1);
-  px(c, "#f8f9fa", X + r, Y + 1, W - 2 * r, 2);
-  px(c, "#b7bcc3", X - 2, Y + roofH - 7, W + 4, 5); px(c, cor, X - 2, Y + roofH - 7, W + 4, 2); px(c, "#868c94", X - 2, Y + roofH - 2, W + 4, 2);
-  if (g.w >= 12) for (const fx of [0.05, 0.9]) { const ax = X + Math.round(W * fx) - 7, ay = Y + 7; px(c, "#00000026", ax + 2, ay + 2, 14, 10); px(c, "#9aa1aa", ax, ay, 14, 10); px(c, "#c3c8ce", ax + 1, ay + 1, 12, 8); c.fillStyle = "#6b727b"; c.beginPath(); c.arc(ax + 7, ay + 5, 3, 0, 7); c.fill(); }
-  const cy = Y + (roofH - 7) / 2 + 1;
-  if (g.cruz) { px(c, "#ffffff", X + W / 2 - 11, cy - 11, 22, 22); px(c, cor, X + W / 2 - 3, cy - 8, 6, 16); px(c, cor, X + W / 2 - 8, cy - 3, 16, 6); }
-  else {
-    const temEmblema = ["carreira", "ginasio", "leilao"].includes(g.id);
-    const n = parseInt(cor.slice(1, 7), 16), claro = ((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11 > 140; // logo claro no telhado branco não aparece
-    letreiro(c, g.logo || g.sign || "", X + W / 2 - (temEmblema ? 10 : 0), cy, W * (grande ? 0.6 : 0.7) - (temEmblema ? 24 : 0), Math.min(roofH - 18, grande ? 34 : 14), claro ? mistura(cor, "#000000", 0.5) : cor);
-    if (temEmblema) { c.font = FONTE_PIXEL(Math.min(roofH - 18, grande ? 34 : 14)); const tw = Math.min(c.measureText(g.logo).width, W * (grande ? 0.6 : 0.7) - 24); emblema(c, g, Math.round(X + W / 2 - 10 + tw / 2 + 16), Math.round(cy)); }
-  }
-  if (g.doors && g.doors.length) portaVidro(c, g, cor);
-}
-// tenda da Fan Zone: módulos de lona piramidal, a sanefa recortada na cor do jogo e a frente aberta
-function drawTenda(c, g) {
-  const X = g.x * TS, Y = g.y * TS, W = g.w * TS, H = g.h * TS, roofH = (g.h - 2) * TS, cor = g.roof || "#e10600", cor2 = g.roof2 || mistura(cor, "#000000", 0.25);
-  sombra(c, X, Y, W, H);
-  px(c, "#eceef1", X + 1, Y + roofH, W - 2, H - roofH);
-  for (let xx = X + 3; xx < X + W - 1; xx += 5) px(c, "#dadde2", xx, Y + roofH + 7, 1, H - roofH - 7);
-  for (const d of g.doors || []) { const dx = d * TS; px(c, "#2a2622", dx + 1, Y + H - 22, 14, 22); px(c, "#6b5a48", dx + 3, Y + H - 11, 10, 4); px(c, "#ffe9a8", dx + 6, Y + H - 13, 3, 2); }
-  const cores = g.uno || g.ludo ? ["#e0352b", "#f4c20d", "#1f9d55", "#2f6fd6"] : [cor, cor2];
-  for (let xx = X + 1, i = 0; xx < X + W - 1; xx += 6, i++) { const w = Math.min(6, X + W - 1 - xx); px(c, cores[i % cores.length], xx, Y + roofH, w, 5); px(c, cores[i % cores.length], xx + 1, Y + roofH + 5, Math.max(0, w - 2), 2); }
-  const mods = Math.max(1, Math.round(g.w / 3.5)), mw = W / mods;
-  for (let m = 0; m < mods; m++) {
-    const x0 = Math.round(X + m * mw), x1 = Math.round(X + (m + 1) * mw), cx = (x0 + x1) / 2, cy = Y + roofH / 2, y1 = Y + roofH;
-    const tri = (col, a, b) => { c.fillStyle = col; c.beginPath(); c.moveTo(cx, cy); c.lineTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.closePath(); c.fill(); };
-    tri("#ffffff", [x0, Y], [x1, Y]); tri("#eceef1", [x0, Y], [x0, y1]); tri("#d3d7dc", [x1, Y], [x1, y1]); tri("#e1e4e8", [x0, y1], [x1, y1]);
-    c.strokeStyle = "#c3c8ce"; c.lineWidth = 1; c.beginPath(); c.moveTo(x0, Y); c.lineTo(x1, y1); c.moveTo(x1, Y); c.lineTo(x0, y1); c.stroke();
-    px(c, "#c3c8ce", x0, Y, 1, roofH); px(c, cor, Math.round(cx) - 1, Math.round(cy) - 1, 3, 3);
-  }
-  px(c, "#f8f9fa", X, Y, W, 1); px(c, "#b9bec5", X, Y + roofH - 1, W, 1);
-  const fx = X + W - 5; px(c, "#5b6169", fx, Y - 9, 1, 12); px(c, cor, fx + 1, Y - 9, 6, 4); px(c, cor2, fx + 1, Y - 6, 4, 1); // a bandeirinha
-}
-// o chão de cada quadra da Fan Zone
-function superficie(c, g, qx, qy, qw, qh) {
-  const linha = (cor) => { c.strokeStyle = cor; c.lineWidth = 1; c.strokeRect(qx + 0.5, qy + 0.5, qw - 1, qh - 1); px(c, cor, qx + qw / 2, qy, 1, qh); };
-  if (g.id === "pelada") {
-    for (let k = 0; k < qw; k += 8) px(c, (k / 8) % 2 ? "#2a8141" : "#2f8f48", qx + k, qy, Math.min(8, qw - k), qh);
-    linha("#f4f4f0"); c.beginPath(); c.arc(qx + qw / 2 + 0.5, qy + qh / 2, 6, 0, 7); c.stroke();
-    px(c, "#f4f4f0", qx - 2, qy + qh / 2 - 5, 2, 10); px(c, "#f4f4f0", qx + qw, qy + qh / 2 - 5, 2, 10); px(c, "#ffffff", qx + qw * 0.62, qy + qh * 0.4, 3, 3);
-  } else if (g.id === "tenis") {
-    px(c, "#2f6aa8", qx, qy, qw, qh); px(c, "#3a7cc0", qx + 6, qy + 3, qw - 12, qh - 6);
-    c.strokeStyle = "#f4f7fa"; c.lineWidth = 1; c.strokeRect(qx + 6.5, qy + 3.5, qw - 13, qh - 7); c.strokeRect(qx + 6.5, qy + 9.5, qw - 13, qh - 19);
-    px(c, "#1b1b1b", qx + qw / 2 - 1, qy + 1, 2, qh - 2); px(c, "#f4f7fa", qx + qw / 2 - 1, qy + 1, 2, 1);
-    c.fillStyle = "#d7f23c"; c.beginPath(); c.arc(qx + qw * 0.7, qy + qh * 0.35, 2.2, 0, 7); c.fill();
-  } else if (g.id === "futevolei") {
-    px(c, "#ecd6a4", qx, qy, qw, qh); for (let i = 0; i < 70; i++) px(c, i % 2 ? "#d8be88" : "#f6e4bb", qx + ((i * 37) % qw), qy + ((i * 11) % qh), 1, 1);
-    c.strokeStyle = "#1e5bc6"; c.lineWidth = 1; c.strokeRect(qx + 4.5, qy + 3.5, qw - 9, qh - 7);
-    px(c, "#2a2a2a", qx + qw / 2, qy + 1, 1, qh - 2);
-    [["#f5c400", 0], ["#1e5bc6", 1], ["#2e9e4f", 2]].forEach(([col, i]) => { c.fillStyle = col; c.beginPath(); c.arc(qx + qw * 0.3, qy + qh * 0.4, 3 - i, 0, 7); c.fill(); });
-  } else {
-    px(c, "#277449", qx, qy, qw, qh); linha("#eff9e9"); c.beginPath(); c.arc(qx + qw / 2, qy + qh / 2, 6, 0, 7); c.stroke();
-    px(c, "#df6056", qx + qw * 0.25, qy + qh * 0.35, 7, 7); px(c, "#4a8cde", qx + qw * 0.7, qy + qh * 0.5, 7, 7); px(c, "#ffffff", qx + qw / 2 - 2, qy + qh / 2 - 2, 4, 4);
-  }
-}
-// gente sentada na arquibancada, fileira por fileira (as cadeiras vazias aparecem)
-function torcida(c, X, Y, W, H, seed) {
-  for (let yy = Y, fila = 0; yy + 4 <= Y + H; yy += 4, fila++) {
-    px(c, fila % 2 ? "#6c737d" : "#787f89", X, yy, W, 4); px(c, "#4d535c", X, yy + 3, W, 1);
-    for (let xx = X + 1 + (fila % 2); xx < X + W - 2; xx += 3) {
-      const r = hash(xx + seed * 7, yy, 3);
-      if (r % 7 === 0) { px(c, "#c33a3a", xx, yy + 1, 2, 2); continue; }
-      px(c, CAMISAS[r % CAMISAS.length], xx, yy + 1, 2, 2); px(c, PELES[(r >> 4) % PELES.length], xx, yy, 2, 1);
-    }
-  }
-}
-// quadra aberta da Fan Zone: o alambrado, a arquibancadinha no fundo e o portão embaixo
-function drawQuadra(c, g) {
-  const X = g.x * TS, Y = g.y * TS, W = g.w * TS, H = g.h * TS;
-  px(c, "#0f1f1626", X + 3, Y + 4, W, H);
-  px(c, "#b4b8be", X, Y, W, H); px(c, "#c6c9ce", X + 1, Y + 1, W - 2, H - 2);
-  px(c, "#5a616a", X + 2, Y + 2, W - 4, 13); torcida(c, X + 3, Y + 3, W - 6, 12, g.x);
-  superficie(c, g, X + 6, Y + 19, W - 12, H - 25);
-  c.strokeStyle = "#2f4a3a"; c.lineWidth = 1; c.strokeRect(X + 3.5, Y + 16.5, W - 7, H - 19);
-  for (let xx = X + 4; xx < X + W - 3; xx += 8) { px(c, "#2f4a3a", xx, Y + 16, 1, 3); px(c, "#2f4a3a", xx, Y + H - 4, 1, 2); }
-  for (const d of g.doors) { const dx = d * TS; px(c, "#c6c9ce", dx + 1, Y + H - 4, 14, 3); px(c, "#2f4a3a", dx, Y + H - 9, 2, 7); px(c, "#2f4a3a", dx + 14, Y + H - 9, 2, 7); }
-}
-// hangar da velocidade: telhado de chapa ondulada com o painel do nome, a fachada de metal e o portão de enrolar
-function drawHangar(c, g) {
-  const X = g.x * TS, Y = g.y * TS, W = g.w * TS, H = g.h * TS, roofH = (g.h - 2) * TS, cor = acentoDe(g);
-  sombra(c, X, Y, W, H);
-  px(c, "#a2aab4", X, Y, W, roofH);
-  for (let xx = X; xx < X + W; xx += 4) { px(c, "#b8bfc7", xx, Y, 1, roofH); px(c, "#8b939d", xx + 2, Y, 1, roofH); }
-  px(c, "#cdd3d9", X, Y, W, 2); px(c, "#6e767f", X, Y + roofH - 3, W, 3);
-  const pw = Math.min(W - 28, 100), ph = 22, pxx = X + W / 2 - pw / 2 - 8, py = Y + (roofH - 3) / 2 - ph / 2;
-  px(c, "#00000033", pxx + 2, py + 2, pw, ph); px(c, "#15171b", pxx, py, pw, ph); px(c, cor, pxx, py + ph - 2, pw, 2);
-  letreiro(c, g.sign, pxx + pw / 2, py + ph / 2 - 1, pw - 8, 14, "#ffffff", "#15171b");
-  const ex = X + W - 18, ey = Y + roofH / 2 - 2; // o emblema de cada jogo, ao lado do painel
-  if (g.rocket) { c.fillStyle = "#f4f4f4"; c.beginPath(); c.arc(ex, ey, 9, 0, 7); c.fill(); c.fillStyle = "#151515"; for (const [dx, dy] of [[0, 0], [-5, -4], [5, -4], [-4, 5], [4, 5]]) { c.beginPath(); c.arc(ex + dx, ey + dy, 2, 0, 7); c.fill(); } }
-  else if (g.batalha) { px(c, "#ffd84a", ex - 7, ey - 7, 14, 14); px(c, "#c45fff", ex - 5, ey - 5, 10, 10); c.fillStyle = "#ffffff"; c.font = "bold 10px monospace"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("?", ex, ey + 1); c.textAlign = "left"; }
-  else if (g.tiro) ["#f4f1e6", "#c8102e", "#f4f1e6", "#c8102e"].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.arc(ex, ey, 10 - i * 2.5, 0, 7); c.fill(); });
-  else if (g.drag) { px(c, "#2a2833", ex - 3, ey - 9, 6, 19); for (let k = 0; k < 3; k++) px(c, "#ffb21c", ex - 2, ey - 8 + k * 5, 4, 4); px(c, "#3dff7a", ex - 2, ey + 6, 4, 3); }
-  px(c, "#454b54", X, Y + roofH, W, H - roofH); px(c, cor, X, Y + roofH, W, 3);
-  for (let xx = X + 6; xx < X + W - 12; xx += 30) if (xx + 12 < (g.doors[0] - 1) * TS || xx > (g.doors[g.doors.length - 1] + 2) * TS) { px(c, "#1d3246", xx, Y + roofH + 8, 12, 7); px(c, "#ffffff22", xx + 1, Y + roofH + 9, 3, 5); }
-  const dL = (g.doors[0] - 1) * TS + 4, dR = (g.doors[g.doors.length - 1] + 2) * TS - 4;
-  px(c, "#15171b", dL - 2, Y + H - 25, dR - dL + 4, 25);
-  for (let yy = Y + H - 24; yy < Y + H - 13; yy += 2) px(c, "#8d959f", dL, yy, dR - dL, 1);
-  for (let xx = dL; xx < dR; xx += 6) px(c, (xx / 6) % 2 ? "#f4c430" : "#15171b", xx, Y + H - 2, 6, 2); // a faixa de perigo na soleira
-  if (g.drag) { px(c, "#ff2bd6", X, Y + roofH + 3, W, 1); px(c, "#2be8ff", X, Y + H - 4, W, 1); }
-}
-// o carro de F1 de frente, dentro do box
-function carroDeFrente(c, cx, base, cor, cor2) {
-  px(c, "#16161a", cx - 15, base - 9, 6, 9); px(c, "#16161a", cx + 9, base - 9, 6, 9); // os pneus
-  px(c, "#3a3a40", cx - 14, base - 8, 1, 7); px(c, "#3a3a40", cx + 10, base - 8, 1, 7);
-  px(c, cor, cx - 4, base - 14, 8, 10); px(c, mistura(cor, "#000000", 0.3), cx - 4, base - 6, 8, 2);
-  px(c, "#16161a", cx - 2, base - 15, 4, 3); px(c, "#ffd400", cx - 1, base - 15, 2, 2); // o capacete
-  px(c, cor2, cx - 13, base - 3, 26, 3); px(c, "#16161a", cx - 13, base - 1, 26, 1); // a asa da frente
-}
-// os boxes: o prédio comprido de telhado branco, dividido em dez garagens na cor de cada tipo
-function drawBox(c, g) {
-  const X = g.x * TS, Y = g.y * TS, W = g.w * TS, H = g.h * TS, roofH = (g.h - 2) * TS, cor = g.roof, cor2 = g.lider?.cor2 || "#ffffff";
-  px(c, "#0f1f1638", X, Y + 4, W, 3);
-  px(c, "#e6e8eb", X, Y, W, roofH);
-  for (let yy = Y + 6; yy < Y + roofH - 8; yy += 6) px(c, "#d4d7db", X, yy, W, 1);
-  px(c, "#f7f8f9", X, Y, W, 2); px(c, "#c3c7cc", X, Y, 1, roofH);
-  px(c, cor, X, Y + roofH - 9, W, 4); px(c, "#1d3246", X, Y + roofH - 5, W, 5); px(c, "#ffffff22", X + 4, Y + roofH - 5, 10, 4);
-  const bx = Math.round(X + W / 2), by = Y + (roofH - 9) / 2;
-  c.fillStyle = "#1b1b2f"; c.beginPath(); c.arc(bx, by, 9, 0, 7); c.fill();
-  c.fillStyle = cor; c.beginPath(); c.arc(bx, by, 7, 0, 7); c.fill();
-  c.fillStyle = "#ffffff"; c.font = FONTE_PIXEL(9); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(g.numero || ""), bx, by + 1);
-  c.font = FONTE_PIXEL(6); c.fillStyle = "#5b6169"; c.fillText(g.lider.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3).toUpperCase(), bx - 22, by + 1); c.fillText(g.treinador ? "TREIN." : "LÍDER", bx + 24, by + 1); c.textAlign = "left";
-  px(c, mistura(cor, "#1b1f24", 0.45), X, Y + roofH, W, H - roofH); px(c, cor, X, Y + roofH, W, 4);
-  px(c, "#f4f4f0", X, Y + roofH, 2, H - roofH);
-  const gx = X + 10, gw = W - 20, gy = Y + roofH + 7, gh = H - roofH - 7;
-  px(c, "#1f2227", gx - 1, gy - 1, gw + 2, gh + 1); px(c, "#2c3037", gx, gy, gw, gh);
-  for (let yy = gy; yy < gy + 4; yy += 2) px(c, "#8d959f", gx, yy, gw, 1); // o portão enrolado lá em cima
-  for (const tx of [gx + 3, gx + gw - 9]) for (let k = 0; k < 3; k++) { px(c, "#16161a", tx, gy + gh - 4 - k * 4, 7, 4); px(c, cor, tx + 1, gy + gh - 3 - k * 4, 5, 1); } // os pneus empilhados
-  carroDeFrente(c, X + W / 2, Y + H, cor, cor2);
-}
-// o Autódromo (a Corrida): a arquibancada coberta de frente para a reta, o prédio com o telão do nome e a fachada de vidro
-function drawAutodromo(c, g) {
-  const X = g.x * TS, Y = g.y * TS, W = g.w * TS, H = g.h * TS, arqH = 4 * TS, fachH = 2 * TS, roofY = Y + arqH, roofH = H - arqH - fachH;
-  sombra(c, X, Y, W, H);
-  px(c, "#5a616a", X, Y, W, arqH); torcida(c, X + 2, Y + 6, W - 4, arqH - 6, g.x);
-  for (let xx = X + 60; xx < X + W - 30; xx += 96) px(c, "#9aa1aa", xx, Y + 6, 5, arqH - 6); // as escadas
-  px(c, "#e10600", X, Y, W, 6); c.fillStyle = "#ffffff"; c.font = FONTE_PIXEL(5); c.textAlign = "center"; c.textBaseline = "middle";
-  for (let xx = X + 30; xx < X + W; xx += 70) c.fillText("AUTÓDROMO DA GALERA", xx, Y + 3.5);
-  c.textAlign = "left";
-  px(c, "#00000033", X, roofY, W, 5);
-  px(c, "#e9ecef", X - 3, roofY + 2, W + 6, roofH - 2);
-  for (let xx = X + 8; xx < X + W - 4; xx += 16) px(c, "#d3d7dc", xx, roofY + 4, 1, roofH - 8);
-  px(c, "#f8f9fa", X - 3, roofY + 2, W + 6, 2); px(c, "#b7bcc3", X - 3, roofY + roofH - 5, W + 6, 5); px(c, "#e10600", X - 3, roofY + roofH - 5, W + 6, 2);
-  const pw = 220, ph = 44, pxx = X + W / 2 - pw / 2, py = roofY + (roofH - 5) / 2 - ph / 2;
-  px(c, "#00000040", pxx + 3, py + 3, pw, ph); px(c, "#111317", pxx, py, pw, ph);
-  for (let k = 0; k < pw / 4; k++) { px(c, k % 2 ? "#f4f4f4" : "#111317", pxx + k * 4, py + 2, 4, 3); px(c, k % 2 ? "#111317" : "#f4f4f4", pxx + k * 4, py + 5, 4, 3); }
-  letreiro(c, "CORRIDA", pxx + pw / 2, py + ph / 2 + 4, pw - 24, 26, "#e10600", "#ffffff");
-  for (const fx of [0.08, 0.2, 0.8, 0.92]) { const ax = X + Math.round(W * fx) - 9, ay = roofY + 12; px(c, "#00000026", ax + 2, ay + 2, 18, 12); px(c, "#9aa1aa", ax, ay, 18, 12); px(c, "#c3c8ce", ax + 1, ay + 1, 16, 10); c.fillStyle = "#6b727b"; c.beginPath(); c.arc(ax + 9, ay + 6, 4, 0, 7); c.fill(); }
-  vidro(c, X + 2, Y + H - fachH, W - 4, fachH, g.x);
-  for (let xx = X + 2; xx < X + W - 4; xx += 64) px(c, "#e9ecef", xx, Y + H - fachH, 3, fachH - 2);
-  portaVidro(c, g, "#e10600");
-  EQUIPES_F1.slice(0, 8).forEach(([a, b], i) => { const fx = X + 40 + i * ((W - 80) / 7); px(c, "#5b6169", fx, Y + H - fachH - 14, 1, 16); px(c, a, fx + 1, Y + H - fachH - 14, 8, 5); px(c, b, fx + 1, Y + H - fachH - 11, 8, 2); }); // as bandeiras das equipes
-}
-function drawBuilding(c, g) {
-  if (g.npc) { drawChar(c, { fx: g.x, fy: g.y, dir: "down" }, g.npc.look); return; }
-  ({ tenda: drawTenda, quadra: drawQuadra, hangar: drawHangar, box: drawBox, autodromo: drawAutodromo }[g.estilo] || drawPavilhao)(c, g);
-}
-
-// ---------- os enfeites ----------
-// a arquibancada de frente para a pista: a placa vermelha na frente, a torcida, as escadas e a cobertura branca no fundo
-function drawArquibancada(c, a) {
-  const X = a.x * TS, Y = a.y * TS, W = a.w * TS, H = a.h * TS;
-  sombra(c, X, Y, W, H);
-  px(c, "#5a616a", X, Y, W, H);
-  torcida(c, X + 2, Y + 8, W - 4, H - 30, a.x);
-  for (let xx = X + 40; xx < X + W - 20; xx += 80) px(c, "#9aa1aa", xx, Y + 8, 4, H - 30);
-  px(c, "#e10600", X, Y, W, 7); c.fillStyle = "#ffffff"; c.font = FONTE_PIXEL(5); c.textAlign = "center"; c.textBaseline = "middle";
-  for (let xx = X + 24; xx < X + W; xx += 56) c.fillText("VILA DA GALERA", xx, Y + 4);
-  c.textAlign = "left";
-  px(c, "#00000033", X, Y + H - 24, W, 3);
-  px(c, "#e9ecef", X - 2, Y + H - 22, W + 4, 20); for (let xx = X + 6; xx < X + W; xx += 12) px(c, "#d3d7dc", xx, Y + H - 21, 1, 18);
-  px(c, "#f8f9fa", X - 2, Y + H - 22, W + 4, 2); px(c, "#b7bcc3", X - 2, Y + H - 3, W + 4, 3);
-}
-// a tenda de enfeite (hospitality e lojinhas): uma tenda sem porta
-function drawTendaEnfeite(c, [x, y, w, h, cor]) { drawTenda(c, { x, y, w, h, roof: cor, roof2: "#ffffff", doors: [] }); }
-// os prédios de enfeite: o centro de mídia, o centro médico e a torre da direção de prova
-function drawPredio(c, p) {
-  if (p.estilo !== "torre") { drawPavilhao(c, { ...p, doors: [] }); return; }
-  const X = p.x * TS, Y = p.y * TS, W = p.w * TS, H = p.h * TS;
-  sombra(c, X, Y, W, H);
-  px(c, "#e9ecef", X + 4, Y + 30, W - 8, H - 30);
-  for (let yy = Y + 34; yy < Y + H - 10; yy += 9) { px(c, "#2b4a63", X + 7, yy, W - 14, 6); px(c, "#ffffff22", X + 9, yy + 1, 8, 4); }
-  px(c, "#1d3246", X + W / 2 - 8, Y + H - 18, 16, 18); px(c, "#8fd6ea", X + W / 2 - 7, Y + H - 17, 14, 16);
-  px(c, "#00000033", X - 2, Y + 30, W + 4, 3);
-  px(c, "#d9dde1", X - 3, Y + 8, W + 6, 22); px(c, "#1d3246", X - 1, Y + 12, W + 2, 13); px(c, "#ffffff2a", X + 2, Y + 13, 30, 4);
-  px(c, "#e10600", X - 3, Y + 25, W + 6, 3);
-  px(c, "#c3c8ce", X + 6, Y, W - 12, 9); px(c, "#5b6169", X + W / 2, Y - 14, 2, 14); px(c, "#ff3b2f", X + W / 2 - 1, Y - 16, 4, 3);
-  c.fillStyle = "#ffffff"; c.font = FONTE_PIXEL(6); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("DIREÇÃO DE PROVA", X + W / 2, Y + 18.5); c.textAlign = "left";
-}
-// o heliponto e o helicóptero parado (o rotor gira em drawRotor)
-const HELI_POS = () => [(HELI.x + HELI.w) * TS - 40, HELI.y * TS + 22];
-function drawHeli(c) {
-  const X = HELI.x * TS, Y = HELI.y * TS, W = HELI.w * TS, H = HELI.h * TS, [hx, hy] = HELI_POS(), cx = X + W / 2, cy = Y + H / 2;
-  px(c, "#0f1f1630", X + 3, Y + 4, W, H); px(c, "#3a3e45", X, Y, W, H); px(c, "#454950", X + 4, Y + 4, W - 8, H - 8);
-  for (const [lx, ly] of [[X + 3, Y + 3], [X + W - 6, Y + 3], [X + 3, Y + H - 6], [X + W - 6, Y + H - 6], [cx - 1, Y + 2], [cx - 1, Y + H - 5]]) px(c, "#ffd23f", lx, ly, 3, 3);
-  c.strokeStyle = "#f4c430"; c.lineWidth = 3; c.beginPath(); c.arc(cx, cy, Math.min(W, H) / 2 - 10, 0, 7); c.stroke();
-  letreiro(c, "H", cx, cy, 30, 30, "#f4f4f0", "#3a3e45");
-  px(c, "#00000038", hx - 16, hy + 6, 50, 8); // o helicóptero
-  px(c, "#c8102e", hx + 10, hy - 2, 26, 4); px(c, "#f4f4f0", hx + 30, hy - 6, 3, 12); // o rabo
-  c.fillStyle = "#c8102e"; c.beginPath(); c.ellipse(hx, hy, 15, 9, 0, 0, 7); c.fill();
-  c.fillStyle = "#f4f4f0"; c.beginPath(); c.ellipse(hx + 2, hy + 3, 11, 4, 0, 0, 7); c.fill();
-  c.fillStyle = "#24343f"; c.beginPath(); c.ellipse(hx - 8, hy - 1, 6, 6, 0, 0, 7); c.fill(); px(c, "#8fd0f2", hx - 11, hy - 4, 3, 3);
-  px(c, "#5b6169", hx - 12, hy + 9, 26, 1);
-}
-// o caminhão da equipe, estacionado atrás dos boxes
-function drawCaminhao(c, [x, y, cor]) {
-  const X = x * TS, Y = y * TS + 4, W = 8 * TS, H = 24;
-  px(c, "#0f1f1640", X + 3, Y + 4, W, H);
-  px(c, cor, X, Y, W - 26, H); px(c, mistura(cor, "#ffffff", 0.35), X, Y, W - 26, 2); px(c, mistura(cor, "#000000", 0.2), X, Y + H - 3, W - 26, 3);
-  px(c, cor === "#e8e8e8" ? "#e10600" : "#ffffff", X + 4, Y + 10, W - 34, 3);
-  px(c, "#2b2f36", X + W - 26, Y + 6, 3, H - 12);
-  px(c, mistura(cor, "#000000", 0.15), X + W - 23, Y + 2, 22, H - 4); px(c, "#8fd0f2", X + W - 6, Y + 4, 4, H - 8); px(c, "#ffffff40", X + W - 20, Y + 3, 12, 2);
-}
-// o carro estacionado (visto de cima)
-function drawCarroParado(c, [x, y, cor]) {
-  const X = x * TS + 2, Y = y * TS + 3;
-  px(c, "#00000040", X + 2, Y + 3, 12, 26); px(c, cor, X, Y + 1, 12, 24); px(c, cor, X + 1, Y, 10, 26);
-  px(c, "#24343f", X + 2, Y + 6, 8, 5); px(c, mistura(cor, "#ffffff", 0.25), X + 2, Y + 11, 8, 6); px(c, "#24343f", X + 2, Y + 17, 8, 3);
-  px(c, "#fff3c4", X + 1, Y, 3, 1); px(c, "#fff3c4", X + 8, Y, 3, 1); px(c, "#d8262c", X + 1, Y + 25, 3, 1); px(c, "#d8262c", X + 8, Y + 25, 3, 1);
-}
-// o poste de refletor, com as quatro lâmpadas
-function drawLampPost(c, x, y) {
-  const X = x * TS, Y = y * TS;
-  px(c, "#00000030", X + 4, Y + 13, 10, 3);
-  px(c, "#5b6169", X + 7, Y - 12, 2, 26); px(c, "#3e434a", X + 5, Y + 12, 6, 3);
-  px(c, "#2b2f36", X + 2, Y - 21, 12, 10);
-  for (const [dx, dy] of [[3, -20], [8, -20], [3, -16], [8, -16]]) px(c, "#fff3c4", X + dx, Y + dy, 4, 3);
-}
-// o painel de LED da Fan Zone: a moldura (o texto corre em drawVida)
-function drawPainel(c) {
-  const X = PAINEL.x * TS, Y = PAINEL.y * TS - 18, W = PAINEL.w * TS;
-  px(c, "#00000030", X + 2, PAINEL.y * TS + 14, W - 2, 3);
-  px(c, "#3a3d44", X + 10, Y + 22, 3, 12); px(c, "#3a3d44", X + W - 13, Y + 22, 3, 12);
-  px(c, "#22252b", X, Y, W, 24); px(c, "#0a0b10", X + 2, Y + 2, W - 4, 20); px(c, "#e10600", X, Y + 22, W, 2);
-}
-// food truck: a carroceria colorida, o toldo listrado, a janela de atendimento e o nome
-function drawFoodTruck(c, [x, y, cor, nome]) {
-  const X = x * TS, Y = y * TS, W = 3 * TS, H = 2 * TS;
-  px(c, "#00000033", X + 2, Y + H - 2, W, 4);
-  px(c, cor, X, Y + 6, W, H - 12); px(c, mistura(cor, "#000000", 0.25), X, Y + H - 10, W, 4);
-  px(c, "#f4efe4", X + 4, Y + 9, 26, 9); px(c, "#2b2f37", X + 6, Y + 11, 22, 6);
-  for (let i = 0; i < 30; i += 4) px(c, (i / 4) % 2 ? "#ffffff" : mistura(cor, "#000000", 0.2), X + 2 + i, Y + 4, 4, 5);
-  px(c, "#e6e6e6", X + 34, Y + 8, 10, 8); px(c, "#8fd0f2", X + 36, Y + 9, 7, 5);
-  for (const rx of [X + 8, X + 36]) { px(c, "#1d1d22", rx, Y + H - 7, 7, 7); px(c, "#9aa0a8", rx + 2, Y + H - 5, 3, 3); }
-  c.fillStyle = "#ffffff"; c.font = FONTE_PIXEL(6); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(nome, X + 17, Y + 22); c.textAlign = "left";
-}
-// a base da roda-gigante (a roda é desenhada a cada quadro, girando)
-function drawBaseRoda(c) {
-  const X = RODA.x * TS, Y = (RODA.y + RODA.h) * TS, W = RODA.w * TS;
-  px(c, "#0f1f1630", X + 4, Y - 10, W - 4, 12); px(c, "#9aa1aa", X + 8, Y - 14, W - 16, 12); px(c, "#c3c8ce", X + 9, Y - 13, W - 18, 4);
-  px(c, "#e10600", X + W / 2 - 14, Y - 9, 28, 6); c.fillStyle = "#ffffff"; c.font = FONTE_PIXEL(5); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("RODA", X + W / 2, Y - 5.5); c.textAlign = "left";
-}
-// Obras: tapumes e placa de futura ocupação (TERRENOS)
-function drawTerra(c, x, y) {
-  const X = x * TS, Y = y * TS;
-  px(c, "#d9bb86", X, Y, TS, TS); px(c, "#c89f6d", X, Y, TS, 1);
-  for (let i = 0; i < 3; i++) { const r = hash(x, y, i + 40); px(c, "#a87d52", X + r % 14, Y + (r >> 5) % 14, 2, 1); }
-}
-function drawTerreno(c, t) {
-  const X = t.x * TS, Y = t.y * TS, W = t.w * TS, H = t.h * TS;
-  px(c, "#5b6169", X, Y, W, 2); px(c, "#5b6169", X, Y + H - 3, W, 3); px(c, "#5b6169", X, Y, 2, H); px(c, "#5b6169", X + W - 2, Y, 2, H);
-  for (let xx = X + 8; xx < X + W - 4; xx += 10) { px(c, "#f4f4f0", xx, Y + H - 3, 5, 2); px(c, "#e10600", xx + 5, Y + H - 3, 5, 2); }
-  const cx = X + (t.w >> 1) * TS + 8, py = Y + H - 26, w = 40, h = 13, x = cx - w / 2;
-  px(c, "#3a3f46", cx - 7, py + 10, 2, 14); px(c, "#3a3f46", cx + 5, py + 10, 2, 14);
-  px(c, "#0d0f12", x - 1, py - 1, w + 2, h + 2); px(c, "#1b1f24", x, py, w, h); px(c, "#e10600", x, py, w, 3);
-  c.font = FONTE_PIXEL(7); c.fillStyle = "#ffffff"; c.textBaseline = "middle"; c.textAlign = "center"; c.fillText("EM BREVE", cx, py + h / 2 + 1); c.textAlign = "left";
-}
-
-// o logo da Vila pintado no chão da praça: o anel vermelho e branco com a bandeira quadriculada e o nome
-function drawLogoChao(c) {
-  const cx = LOGO_CHAO.x * TS, cy = LOGO_CHAO.y * TS, R = LOGO_CHAO.r * TS;
-  c.fillStyle = "#e10600"; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.fill();
-  c.fillStyle = "#f4f4f0"; c.beginPath(); c.arc(cx, cy, R - 6, 0, 7); c.fill();
-  c.fillStyle = "#2b2f36"; c.beginPath(); c.arc(cx, cy, R - 10, 0, 7); c.fill();
-  for (let k = 0; k < 24; k++) { const a = (k * Math.PI) / 12; px(c, k % 2 ? "#f4f4f0" : "#e10600", Math.round(cx + Math.cos(a) * (R - 3)) - 1, Math.round(cy + Math.sin(a) * (R - 3)) - 1, 3, 3); }
-  for (let j = 0; j < 3; j++) for (let k = 0; k < 8; k++) px(c, (j + k) % 2 ? "#f4f4f0" : "#16181c", cx - 16 + k * 4, cy - 30 + j * 4, 4, 4);
-  letreiro(c, "GALERA", cx, cy + 4, R * 1.5, 22, "#e10600", "#f4f4f0");
-  c.fillStyle = "#c3ccd8"; c.font = FONTE_PIXEL(7); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("AUTÓDROMO DA VILA", cx, cy + 26); c.textAlign = "left";
-}
-// o carro de F1 em exposição, num pedestal com a placa
-function drawExposicao(c) {
-  const X = EXPOSICAO.x * TS, Y = EXPOSICAO.y * TS, W = EXPOSICAO.w * TS, H = EXPOSICAO.h * TS;
-  sombra(c, X, Y, W, H);
-  px(c, "#2b2f36", X, Y + 6, W, H - 6); px(c, "#3a3f46", X + 2, Y + 8, W - 4, H - 14); px(c, "#e10600", X, Y + H - 6, W, 3);
-  c.fillStyle = "#f4f4f0"; c.font = FONTE_PIXEL(5); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("CARRO DA GALERA 2026", X + W / 2, Y + H - 9); c.textAlign = "left";
-  c.save(); c.imageSmoothingEnabled = false; c.translate(X + W / 2, Y + H / 2 - 2); c.scale(2, 2); px(c, "#00000044", -15, -5, 32, 13); c.drawImage(spriteCarro(EQUIPES_F1[1]), -16, -7); c.restore();
-  for (const [dx, dy] of [[4, 8], [W - 8, 8]]) { px(c, "#c3c8ce", X + dx, Y + dy, 4, 4); px(c, "#fff3c4", X + dx + 1, Y + dy + 1, 2, 2); }
-}
-// o canteiro de sebe baixa, com a borda de concreto
-function drawCanteiro(c, [x, y, w]) {
-  const X = x * TS, Y = y * TS, W = w * TS;
-  px(c, "#00000030", X + 2, Y + 12, W, 4); px(c, "#9aa1aa", X, Y + 4, W, 11); px(c, "#b8bec5", X, Y + 4, W, 2);
-  for (let xx = X + 2; xx < X + W - 4; xx += 7) { c.fillStyle = "#2f7a35"; c.beginPath(); c.arc(xx + 4, Y + 7, 5, 0, 7); c.fill(); c.fillStyle = "#4b9e48"; c.beginPath(); c.arc(xx + 3, Y + 5, 3, 0, 7); c.fill(); if (hash(xx, y, 4) % 3 === 0) px(c, "#ff5a6a", xx + 5, Y + 4, 2, 2); }
-}
-// o vaso com a palmeirinha
-function drawVaso(c, [x, y]) {
-  const X = x * TS, Y = y * TS;
-  px(c, "#00000030", X + 4, Y + 13, 10, 3); px(c, "#e9ecef", X + 4, Y + 7, 9, 8); px(c, "#c3c8ce", X + 4, Y + 13, 9, 2);
-  c.fillStyle = "#2f7a35"; for (const [dx, dy] of [[-5, -2], [5, -2], [0, -6], [-3, -5], [3, -5]]) { c.beginPath(); c.ellipse(X + 8.5 + dx, Y + 4 + dy, 4, 2.2, dx * 0.15, 0, 7); c.fill(); }
-  px(c, "#58a255", X + 7, Y - 2, 3, 2);
-}
-// O mapa é grande demais para um desenho só: ele é desenhado em pedaços de 32 x 32 casas, na hora em que aparecem na
-// tela, e os pedaços que ficam muito tempo sem aparecer saem da memória.
-const CH = 32, CHP = CH * TS;
-const pedacos = new Map();
-const toca = (x0, y0, w, h, cx, cy, m = 1) => x0 - m < (cx + 1) * CH && x0 + w + m > cx * CH && y0 - m < (cy + 1) * CH && y0 + h + m > cy * CH;
-function pedaco(cx, cy) {
-  const chave = cx + "," + cy; let cv = pedacos.get(chave);
-  if (cv) { pedacos.delete(chave); pedacos.set(chave, cv); return cv; }
-  cv = document.createElement("canvas"); cv.width = cv.height = CHP;
-  const c = cv.getContext("2d"); c.translate(-cx * CHP, -cy * CHP);
-  const x0 = cx * CH, y0 = cy * CH, x1 = Math.min(MW, x0 + CH), y1 = Math.min(MH, y0 + CH);
-  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
-    const t = ground[y][x];
-    if (CHAO[t]) CHAO[t](c, x, y); else if (t === "l") drawTerra(c, x, y); else if (t === "m") drawMat(c, x, y); else if (t === "f") drawFlowers(c, x, y); else drawGrass(c, x, y);
-  }
-  drawPista(c, x0 * TS - 32, y0 * TS - 32, x1 * TS + 32, y1 * TS + 32);
-  if (toca(LOGO_CHAO.x - LOGO_CHAO.r, LOGO_CHAO.y - LOGO_CHAO.r, LOGO_CHAO.r * 2, LOGO_CHAO.r * 2, cx, cy)) drawLogoChao(c);
-  for (let y = Math.max(0, y0 - 1); y < Math.min(MH, y1 + 1); y++) for (let x = Math.max(0, x0 - 1); x < Math.min(MW, x1 + 1); x++) if (ground[y][x] === "t") drawTree(c, x, y);
-  ESTACIONADOS.forEach((e) => { if (toca(e[0], e[1], 1, 2, cx, cy)) drawCarroParado(c, e); });
-  CANTEIROS.forEach((k) => { if (toca(k[0], k[1], k[2], 1, cx, cy)) drawCanteiro(c, k); });
-  VASOS.forEach((v) => { if (toca(v[0], v[1] - 1, 1, 2, cx, cy)) drawVaso(c, v); });
-  if (toca(EXPOSICAO.x, EXPOSICAO.y, EXPOSICAO.w, EXPOSICAO.h, cx, cy)) drawExposicao(c);
-  CAMINHOES.forEach((k) => { if (toca(k[0], k[1], 8, 2, cx, cy)) drawCaminhao(c, k); });
-  ARQUIBANCADAS.forEach((a) => { if (toca(a.x, a.y, a.w, a.h, cx, cy)) drawArquibancada(c, a); });
-  if (toca(HELI.x, HELI.y, HELI.w, HELI.h, cx, cy)) drawHeli(c);
-  if (toca(RODA.x, RODA.y, RODA.w, RODA.h, cx, cy)) drawBaseRoda(c);
-  // os prédios de cima para baixo, para o de baixo cobrir a beirada do de cima
-  [...PREDIOS.map((p) => [p.y + p.h, () => toca(p.x, p.y - 1, p.w, p.h + 1, cx, cy) && drawPredio(c, p)]),
-    ...TENDAS.map((t) => [t[1] + t[3], () => toca(t[0], t[1] - 1, t[2], t[3] + 1, cx, cy) && drawTendaEnfeite(c, t)]),
-    ...GAMES.map((g) => [g.y + g.h, () => toca(g.x, g.y - 1, g.w, g.h + 1, cx, cy) && drawBuilding(c, g)])]
-    .sort((a, b) => a[0] - b[0]).forEach(([, desenha]) => desenha());
-  TERRENOS.forEach((t) => { if (toca(t.x, t.y, t.w, t.h, cx, cy)) drawTerreno(c, t); });
-  LAMPS.forEach(([x, y]) => { if (toca(x, y - 2, 1, 3, cx, cy)) drawLampPost(c, x, y); });
-  FOODTRUCKS.forEach((ft) => { if (toca(ft[0], ft[1], 3, 2, cx, cy)) drawFoodTruck(c, ft); });
-  if (toca(PAINEL.x, PAINEL.y - 2, PAINEL.w, 3, cx, cy)) drawPainel(c);
-  pedacos.set(chave, cv);
-  if (pedacos.size > 24) pedacos.delete(pedacos.keys().next().value);
-  return cv;
-}
-// a fonte de pixel pode chegar depois do primeiro desenho: quando chegar, os pedaços são refeitos com ela
-if (document.fonts) document.fonts.load(FONTE_PIXEL(10)).then(() => pedacos.clear(), () => {});
-
+</script>
+<script src="/vila/gp-mapa.js"></script>
+<script src="/vila/gp-desenho.js"></script>
+<script>
+"use strict";
 // ---------- o boneco ----------
 const OUTFITS = [
   { cap: "#e0352b", shirt: "#2f6fd6", pants: "#2b3350", hair: "#3b2414" },
@@ -1237,8 +457,9 @@ let outfit = Math.abs(store.get("vila_look") | 0) % OUTFITS.length;
 const spriteCache = {};
 function shade(hex, f) { const n = parseInt(hex.slice(1), 16); const ch = (s) => Math.max(0, Math.min(255, Math.round(((n >> s) & 255) * f))); return `rgb(${ch(16)},${ch(8)},${ch(0)})`; }
 function spritesFor(look) {
-  if (spriteCache[look]) return spriteCache[look];
-  const o = OUTFITS[look] || OUTFITS[0];
+  if (spriteCache[look.k || look]) return spriteCache[look.k || look];
+  const o = typeof look === "object" ? look : OUTFITS[look] || OUTFITS[0]; // a turma do autódromo traz a própria roupa (com a chave k)
+  look = o.k || look;
   const pal = { k: "#1b1b2f", c: o.cap, C: shade(o.cap, 0.7), h: o.hair, s: "#f5c9a0", e: "#1b1b2f", t: o.shirt, T: shade(o.shirt, 0.75), p: o.pants, b: "#3a2a1a" };
   const sprites = (spriteCache[look] = {});
   for (const dir of ["down", "up", "left"]) for (let f = 0; f < 3; f++) {
@@ -1287,6 +508,7 @@ addEventListener("keyup", (e) => {
 addEventListener("blur", () => { held.length = 0; running = false; });
 
 function action() {
+  if (player.car) return sairDoCarro();
   if (player.moving || player.entering || btOpen()) return;
   if (here) return enter(here);
   const [dx, dy] = DIRS[player.dir], o = otherAt(player.x + dx, player.y + dy); // de frente para alguém
@@ -1313,11 +535,13 @@ function bfs(sx, sy, tx, ty, ok = podePassar) {
   return null;
 }
 function tapAt(clientX, clientY) {
-  if (player.entering) return;
+  if (player.entering || player.car) return;
   let tx, ty;
   { const wx = (clientX * dpr) / scale + camX, wy = (clientY * dpr) / scale + camY; tx = Math.floor(wx / TS); ty = Math.floor(wy / TS); }
   const o = otherAt(tx, ty) || otherAt(tx, ty + 1); // o boneco passa um pouco do tile de cima
   if (o) return openPlayer(o);
+  const vaga = VAGAS_F1.find(([vx, vy]) => ty === vy && (tx === vx || tx === vx + 1)); // clicou num F1 parado: vai até ele
+  if (vaga) { const p = bfs(player.x, player.y, tx, ty + 1); if (p) { path = p; pathGoal = null; } return; }
   const b = buildingAt(tx, ty);
   if (b) {
     if (here === b && !player.moving) return enter(b);
@@ -1363,6 +587,7 @@ function arrive() {
   if (ground[player.y][player.x] === "h") pisouNoMato();
 }
 function update(dt) {
+  if (player.car) return; // de F1, quem anda é o carro (passoMeuCarro, em /vila/gp-vida.js)
   if (player.entering) {
     player.t = Math.min(1, player.t + dt / 260);
     return;
@@ -1408,13 +633,13 @@ const naFrenteDoPodio = (x, y) => !!PODIO && PODIO.w > 0 && y === PODIO.y + PODI
 const TERRENO_LUGAR = { tipo: "terreno", icon: "🚧", name: "Terreno", desc: "Reservado para um jogo novo da galera. Em breve tem construção aqui.", verbo: "seguir", botao: "Beleza" };
 const terrenoEm = (x, y) => TERRENOS.find((t) => t.placa[0] === x && t.placa[1] === y);
 function lugarEm(x, y) {
-  return matAt(x, y) || (naFrenteDoTelao(x, y) ? TELAO_LUGAR : null) || (naFrenteDaTorre(x, y) ? TORRE_LUGAR : null) || (naFrenteDoPodio(x, y) ? PODIO_LUGAR : null) || (terrenoEm(x, y) ? TERRENO_LUGAR : null);
+  return matAt(x, y) || vagaEm(x, y) || (naFrenteDoTelao(x, y) ? TELAO_LUGAR : null) || (naFrenteDaTorre(x, y) ? TORRE_LUGAR : null) || (naFrenteDoPodio(x, y) ? PODIO_LUGAR : null) || (terrenoEm(x, y) ? TERRENO_LUGAR : null);
 }
 // O minimapa mostra o mapa todo, uma casa por pixel, com a pista por cima; o ponto amarelo é você.
 let miniOn = false;
 const miniBase = document.createElement("canvas"); miniBase.width = MW; miniBase.height = MH;
 (() => {
-  const c = miniBase.getContext("2d"), COR = { g: "#5c9e4d", t: "#2b6837", f: "#5c9e4d", c: "#c6c9ce", a: "#5c6067", q: "#4a4e55", W: "#e9ebee", P: "#5d9c4d", n: "#c9cdd2", e: "#55595f", w: "#3b8cc4", m: "#f4c430", h: "#3f9a36" };
+  const c = miniBase.getContext("2d"), COR = { g: "#5c9e4d", t: "#2b6837", f: "#5c9e4d", c: "#c6c9ce", a: "#5c6067", q: "#4a4e55", W: "#e9ebee", r: "#3d4048", k: "#4a4e55", P: "#5d9c4d", n: "#c9cdd2", e: "#55595f", w: "#3b8cc4", m: "#f4c430", h: "#3f9a36" };
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { c.fillStyle = COR[ground[y][x]] || "#5c9e4d"; c.fillRect(x, y, 1, 1); }
   c.setTransform(1 / TS, 0, 0, 1 / TS, 0, 0); caminho(c, 0, PISTA.N - 1); c.closePath(); c.lineJoin = "round";
   c.lineWidth = (ASFALTO + 0.6) * 2 * TS; c.strokeStyle = "#e10600"; c.stroke(); c.lineWidth = ASFALTO * 2 * TS; c.strokeStyle = "#2b2f36"; c.stroke(); c.setTransform(1, 0, 0, 1, 0, 0);
@@ -1432,6 +657,7 @@ function drawMini(t) {
 function enter(g) {
   if (player.entering) return;
   if (g.tipo === "terreno") return setHere(null);
+  if (g.tipo === "carro") return entrarNoCarro(g.vaga);
   if (g.tipo === "torre") return enter(AUTODROMO); // a torre leva para dentro do Autódromo
   if (g.tipo === "podio") { // o pódio leva para a Estante da galera, na Corrida
     setHere(null); store.set("vila_spawn", "corrida");
@@ -2020,7 +1246,7 @@ function resize() {
   const w = innerWidth, h = innerHeight;
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   cv.style.width = w + "px"; cv.style.height = h + "px";
-  const sCss = Math.max(2, Math.floor(Math.min(w / 400, h / 270))); // a câmera bem perto, no detalhe do paddock
+  const perto = Math.max(2, Math.floor(Math.min(w / 400, h / 270))), sCss = player.car ? Math.max(1.5, perto - 1) : perto; // de F1 a câmera abre // a câmera bem perto, no detalhe do paddock
   scale = Math.max(1, Math.round(sCss * dpr));
   viewW = cv.width / scale; viewH = cv.height / scale;
 }
@@ -2113,45 +1339,6 @@ function drawTorre(c, t) {
     c.textAlign = "left"; c.fillStyle = CORES_PODIO[i] || "#8fa3c8"; c.fillText(String(i + 1), X + 4, yy);
     c.font = FONTE_PLACA(700, 8); c.fillStyle = i ? "#e3e8ef" : "#ffffff"; c.fillText(String(r.piloto).slice(0, 9), X + 13, yy);
     c.textAlign = "right"; c.fillStyle = i ? "#c3ccd8" : "#ffe066"; c.fillText(tempoVolta(r.tempo, 1), X + W - 3, yy);
-  });
-  c.textAlign = "left";
-}
-// o pódio da F1 com os amigos: o painel com os três primeiros da estante (CAMPEOES_F1), os degraus 2-1-3 na cor da equipe de cada
-// um e um bonequinho de macacão em cada degrau; o primeiro levanta a taça, que brilha.
-function drawPodio(c, t) {
-  if (!PODIO || !PODIO.w) return;
-  const X = PODIO.x * TS, W = PODIO.w * TS, base = (PODIO.y + PODIO.h) * TS - 2, r = CAMPEOES_F1.d?.ranking || [];
-  px(c, "#1b1f2444", X + 2, base + 1, W - 4, 4); // a sombra
-  // o painel de fundo, preso em dois postes
-  const PX = X + 6, PW = W - 12, PY = base - 86, PH = 40;
-  px(c, "#3a3f46", PX + 4, PY + PH, 4, base - PY - PH); px(c, "#3a3f46", PX + PW - 8, PY + PH, 4, base - PY - PH);
-  px(c, "#0d0f12", PX - 1, PY - 1, PW + 2, PH + 2); px(c, "#16191e", PX, PY, PW, PH);
-  px(c, "#e10600", PX, PY, PW, 12);
-  c.textBaseline = "middle"; c.textAlign = "center";
-  c.fillStyle = "#ffffff"; c.font = FONTE_PLACA(800, 8); c.fillText("CAMPEÕES DA F1", PX + PW / 2, PY + 6.5);
-  // as colunas dos degraus: 2º à esquerda, 1º no meio, 3º à direita
-  const larg = 36, xs = [X + W / 2 - larg / 2 - larg, X + W / 2 - larg / 2, X + W / 2 + larg / 2], alt = [15, 22, 10], ordem = [1, 0, 2];
-  ordem.forEach((k, col) => {
-    const quem = r[k], cor = quem?.cor || "#8a93a3", x = xs[col], topo = base - alt[col];
-    c.font = FONTE_PLACA(800, 8); c.fillStyle = CORES_PODIO[k];
-    c.fillText(quem ? String(quem.piloto).slice(0, 8) : "—", x + larg / 2, PY + 21);
-    c.font = FONTE_PLACA(600, 6); c.fillStyle = "#b8c2cf";
-    const feito = quem ? (quem.titulos ? `${quem.titulos} ${quem.titulos === 1 ? "título" : "títulos"}` : quem.vitorias ? `${quem.vitorias} ${quem.vitorias === 1 ? "vitória" : "vitórias"}` : `${quem.podios} ${quem.podios === 1 ? "pódio" : "pódios"}`) : "seu nome";
-    c.fillText(feito, x + larg / 2, PY + 32);
-    // o degrau
-    px(c, "#f4f1ea", x, topo, larg, alt[col]); px(c, cor, x, topo + 4, larg, alt[col] - 4); px(c, "#00000026", x + larg - 3, topo + 4, 3, alt[col] - 4);
-    c.font = FONTE_PLACA(800, 9); c.fillStyle = "#ffffff"; c.fillText(String(k + 1), x + larg / 2, topo + 4 + (alt[col] - 4) / 2 + 0.5);
-    if (!quem) return;
-    // o piloto: capacete, macacão na cor da equipe e, no primeiro, a taça para cima
-    const cx = x + larg / 2, pe = topo, sobe = k === 0 ? Math.round(Math.abs(Math.sin(t / 380)) * 2) : 0;
-    px(c, "#1b1f24", cx - 3, pe - 6, 2, 6); px(c, "#1b1f24", cx + 1, pe - 6, 2, 6); // as pernas
-    px(c, cor, cx - 4, pe - 14 - sobe, 8, 9); px(c, "#ffffff55", cx - 4, pe - 11 - sobe, 8, 1); // o macacão
-    px(c, "#f4f1ea", cx - 3, pe - 20 - sobe, 6, 6); px(c, cor, cx - 3, pe - 20 - sobe, 6, 2); px(c, "#1b1f24", cx - 2, pe - 17 - sobe, 4, 2); // o capacete
-    if (k === 0) {
-      px(c, cor, cx - 6, pe - 22 - sobe, 2, 9); px(c, cor, cx + 4, pe - 22 - sobe, 2, 9); // os braços para cima
-      px(c, "#ffd34d", cx - 3, pe - 30 - sobe, 6, 5); px(c, "#e0a800", cx - 1, pe - 25 - sobe, 2, 3); px(c, "#ffd34d", cx - 2, pe - 22 - sobe, 4, 1); // a taça
-      if (Math.floor(t / 300) % 3 === 0) px(c, "#ffffff", cx + 4, pe - 32 - sobe, 2, 2);
-    } else { px(c, cor, cx - 6, pe - 13, 2, 6); px(c, cor, cx + 4, pe - 13, 2, 6); }
   });
   c.textAlign = "left";
 }
@@ -2264,202 +1451,10 @@ function drawDoorArrows(c, t) {
   }
 }
 
-// ---------- o autódromo vivo (a cada quadro) ----------
-// Os carros de F1 dando volta na pista (freiam nas curvas e trocam de faixa para ultrapassar), a turma do paddock andando,
-// os líderes na porta dos boxes, a roda-gigante, o rotor do helicóptero, as luzes da largada, o painel de LED, a fumaça
-// dos food trucks e as sombras das nuvens. Só enfeite: nada disso vai para o servidor nem bloqueia o caminho.
-const reduzVida = matchMedia("(prefers-reduced-motion: reduce)");
-const rndV = (() => { let s = 12345; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
-// as cores das equipes: [carro, asa]
-const EQUIPES_F1 = [["#1b2f6b", "#e10600"], ["#dc0000", "#ffe600"], ["#ff8000", "#1c1c1c"], ["#c8ced4", "#00d2be"], ["#006f62", "#cedc00"], ["#0090ff", "#ff87bc"],
-  ["#005aff", "#ffffff"], ["#e8e8e8", "#e10600"], ["#6692ff", "#ffffff"], ["#8f9399", "#e3001b"], ["#1a1a1a", "#c9a227"]];
-// o carro de F1 visto de cima, com o bico para a direita (32 x 14)
-function spriteCarro([cor, cor2]) {
-  const cv = document.createElement("canvas"); cv.width = 32; cv.height = 14;
-  const c = cv.getContext("2d");
-  for (const [x, y, w] of [[4, 0, 6], [4, 11, 6], [22, 1, 5], [22, 10, 5]]) { px(c, "#16161a", x, y, w, 3); px(c, "#3a3a40", x + 1, y + 1, w - 2, 1); }
-  px(c, cor2, 0, 2, 3, 10); px(c, "#16161a", 0, 2, 1, 10);
-  px(c, cor, 3, 5, 6, 4); px(c, cor, 8, 3, 11, 8); px(c, mistura(cor, "#000000", 0.28), 8, 10, 11, 1);
-  px(c, cor, 19, 5, 8, 4); px(c, cor, 26, 6, 3, 2);
-  px(c, cor2, 28, 1, 3, 12); px(c, "#16161a", 30, 1, 1, 12);
-  px(c, "#16161a", 13, 5, 5, 4); px(c, "#ffd400", 14, 6, 3, 2); px(c, "#2b2b30", 17, 5, 1, 4);
-  px(c, "#ffffff55", 9, 4, 9, 1);
-  return cv;
-}
-const FAIXAS_CARRO = [-1.25, 0, 1.25];
-const CARROS = EQUIPES_F1.map((cores, i) => ({ spr: spriteCarro(cores), s: (PISTA.total - i * 9 + PISTA.total) % PISTA.total, v: 8, vmax: 14 + rndV() * 3, faixa: FAIXAS_CARRO[i % 3], alvo: FAIXAS_CARRO[i % 3] }));
-const frente = (a, b) => { const d = b.s - a.s; return d < 0 ? d + PISTA.total : d; }; // quanto b está à frente de a
-function passoCarros(s) {
-  for (const car of CARROS) {
-    const i = Math.floor(car.s / DS) % PISTA.N, vAlvo = car.vmax * PISTA.ritmo[i];
-    car.v += Math.max(-14 * s, Math.min(5 * s, vAlvo - car.v));
-    // alguém logo à frente na mesma faixa: passa por outra faixa livre ou espera atrás
-    for (const o of CARROS) {
-      if (o !== car && frente(car, o) < 2.2 && Math.abs(o.faixa - car.faixa) < 0.9) car.v = Math.min(car.v, o.v); // ainda trocando de faixa: não encosta
-      if (o === car || frente(car, o) > 3.4 || Math.abs(o.faixa - car.alvo) > 0.9) continue;
-      const livre = FAIXAS_CARRO.find((f) => Math.abs(f - o.faixa) > 1 && !CARROS.some((q) => q !== car && Math.abs(q.faixa - f) < 0.9 && (frente(car, q) < 3.4 || frente(q, car) < 2.4)));
-      if (livre != null && o.v < car.v + 0.5) car.alvo = livre; else car.v = Math.min(car.v, o.v);
-    }
-    car.faixa += Math.max(-1.6 * s, Math.min(1.6 * s, car.alvo - car.faixa));
-    car.s = ((car.s + car.v * s) % PISTA.total + PISTA.total) % PISTA.total;
-  }
-}
-function drawCarros(c) {
-  for (const car of CARROS) {
-    const f = car.s / DS, i = Math.floor(f) % PISTA.N, j = (i + 1) % PISTA.N, u = f - Math.floor(f), [x0, y0] = PISTA.pts[i], [x1, y1] = PISTA.pts[j];
-    let a = PISTA.ang[i], b = PISTA.ang[j]; if (b - a > Math.PI) b -= 2 * Math.PI; else if (a - b > Math.PI) b += 2 * Math.PI; a += (b - a) * u;
-    const X = (x0 + (x1 - x0) * u - Math.sin(a) * car.faixa) * TS, Y = (y0 + (y1 - y0) * u + Math.cos(a) * car.faixa) * TS;
-    if (X < camX - 40 || X > camX + viewW + 40 || Y < camY - 40 || Y > camY + viewH + 40) continue;
-    c.save(); c.translate(Math.round(X) + 2, Math.round(Y) + 3); c.rotate(a); c.fillStyle = "#00000044"; c.fillRect(-15, -6, 30, 12); c.restore();
-    c.save(); c.translate(Math.round(X), Math.round(Y)); c.rotate(a); c.drawImage(car.spr, -16, -7); c.restore();
-  }
-}
-// por cima dos carros: as passarelas e o pórtico da largada, com as cinco luzes vermelhas que acendem e apagam
-function drawSobrePista(c, t) {
-  for (const p of PONTES) {
-    const X = p.x * TS, Y = p.y * TS, W = p.w * TS, H = p.h * TS;
-    if (X > camX + viewW + 20 || X + W < camX - 20 || Y > camY + viewH + 20 || Y + H < camY - 20) continue;
-    if (p.deitada) {
-      px(c, "#00000038", X, Y + H, W, 6);
-      px(c, "#c9cdd2", X, Y, W, H); for (let xx = X + 3; xx < X + W; xx += 6) px(c, "#b6bbc1", xx, Y + 3, 1, H - 6);
-      px(c, "#7d8590", X, Y, W, 3); px(c, "#7d8590", X, Y + H - 3, W, 3); for (let xx = X; xx < X + W; xx += 12) { px(c, "#5b6169", xx, Y - 3, 2, 6); px(c, "#5b6169", xx, Y + H - 3, 2, 5); }
-      px(c, "#e10600", X + W / 2 - 20, Y + H - 2, 40, 2);
-    } else {
-      px(c, "#00000038", X + W, Y + 4, 7, H);
-      px(c, "#c9cdd2", X, Y, W, H); for (let yy = Y + 3; yy < Y + H; yy += 6) px(c, "#b6bbc1", X + 3, yy, W - 6, 1);
-      px(c, "#7d8590", X, Y, 3, H); px(c, "#7d8590", X + W - 3, Y, 3, H); for (let yy = Y; yy < Y + H; yy += 12) { px(c, "#5b6169", X - 1, yy, 5, 2); px(c, "#5b6169", X + W - 4, yy, 5, 2); }
-      const meio = Y + H / 2 - 6; px(c, "#e10600", X - 1, meio, W + 2, 12); c.fillStyle = "#ffffff"; c.font = FONTE_PIXEL(5); c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("F1", X + W / 2, meio + 6.5); c.textAlign = "left";
-    }
-  }
-  const LX = (LARGADA + OX) * TS + 5, y0 = (100 + OY - MURO) * TS, y1 = (100 + OY + MURO) * TS;
-  if (LX > camX - 30 && LX < camX + viewW + 30 && y1 > camY && y0 < camY + viewH) {
-    px(c, "#00000038", LX + 6, y0 + 4, 6, y1 - y0);
-    px(c, "#3a3f46", LX - 3, y0 - 4, 10, 8); px(c, "#3a3f46", LX - 3, y1 - 4, 10, 8); // as colunas
-    px(c, "#1b1f24", LX, y0, 6, y1 - y0); px(c, "#e10600", LX, y0, 1, y1 - y0);
-    const fase = reduzVida.matches ? 0 : (t / 1000) % 9, acesas = fase < 5 ? Math.floor(fase) + 1 : fase < 6 ? 5 : 0;
-    for (let k = 0; k < 5; k++) { const ly = (y0 + y1) / 2 - 22 + k * 10; px(c, "#0d0f12", LX + 1, ly - 1, 4, 6); px(c, k < acesas ? "#ff2a1a" : "#3a1512", LX + 2, ly, 2, 4); }
-  }
-}
-// a roda-gigante da Fan Zone: as pernas, o aro com os raios girando e as cabines (sempre penduradas para baixo)
-function drawRoda(c, t) {
-  const cx = (RODA.x + RODA.w / 2) * TS, base = (RODA.y + RODA.h) * TS - 10, R = 62, cy = base - R - 8;
-  if (cx + R < camX || cx - R > camX + viewW || base < camY || cy - R - 10 > camY + viewH) return;
-  const giro = reduzVida.matches ? 0 : t / 9000;
-  c.strokeStyle = "#8c949e"; c.lineWidth = 3; c.beginPath(); c.moveTo(cx - 34, base); c.lineTo(cx, cy); c.lineTo(cx + 34, base); c.stroke();
-  c.strokeStyle = "#d6dade"; c.lineWidth = 1;
-  for (let k = 0; k < 12; k++) { const a = giro + (k * Math.PI) / 6; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); c.stroke(); }
-  c.strokeStyle = "#f4f4f0"; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
-  c.strokeStyle = "#e10600"; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, R - 5, 0, 7); c.stroke();
-  for (let k = 0; k < 12; k++) {
-    const a = giro + (k * Math.PI) / 6, gx = Math.round(cx + Math.cos(a) * R), gy = Math.round(cy + Math.sin(a) * R), cor = CAMISAS[k % CAMISAS.length];
-    px(c, "#5b6169", gx, gy, 1, 3); px(c, cor, gx - 4, gy + 3, 9, 7); px(c, mistura(cor, "#000000", 0.3), gx - 4, gy + 8, 9, 2); px(c, "#8fd0f2", gx - 2, gy + 4, 5, 2);
-  }
-  c.fillStyle = "#5b6169"; c.beginPath(); c.arc(cx, cy, 5, 0, 7); c.fill(); px(c, "#e10600", cx - 1, cy - 1, 3, 3);
-}
-function drawRotor(c, t) {
-  const [hx, hy] = HELI_POS(); if (hx < camX - 40 || hx > camX + viewW + 40 || hy < camY - 40 || hy > camY + viewH + 40) return;
-  const a = reduzVida.matches ? 0.5 : t / 160;
-  c.strokeStyle = "#1b1f24aa"; c.lineWidth = 2;
-  for (const d of [0, Math.PI / 2]) { c.beginPath(); c.moveTo(hx - Math.cos(a + d) * 22, hy - 2 - Math.sin(a + d) * 22); c.lineTo(hx + Math.cos(a + d) * 22, hy - 2 + Math.sin(a + d) * 22); c.stroke(); }
-  px(c, "#3a3f46", hx - 2, hy - 4, 4, 4);
-}
-// a turma andando: mecânicos, gente da Fan Zone e do paddock. Cada um anda num trecho livre de uma fileira, de ponta a ponta.
-const FILEIRAS_GENTE = [12, 21, 22, 44, 66, 75, 79, 84, 93, 105, 119, 122];
-const PEDESTRES = [];
-for (let i = 0; i < 70; i++) {
-  const lin = FILEIRAS_GENTE[i % FILEIRAS_GENTE.length] + OY;
-  for (let tenta = 0; tenta < 6; tenta++) {
-    const x = Math.floor(OX + 4 + rndV() * (VW - 8));
-    if (!walkable(x, lin)) continue;
-    let a = x, b = x; while (walkable(a - 1, lin)) a--; while (walkable(b + 1, lin)) b++;
-    if (b - a < 6) continue;
-    PEDESTRES.push({ fx: x, fy: lin - 0.25 + rndV() * 0.3, x0: a + 0.2, x1: b - 0.2, vel: (0.7 + rndV() * 0.9) * (rndV() < 0.5 ? -1 : 1), look: (rndV() * 6) | 0, t: rndV(), steps: 0, moving: true, dir: "left", para: 0 });
-    break;
-  }
-}
-// os líderes e os treinadores, cada um ao lado da porta do próprio box, olhando em volta de vez em quando
-const DONOS = GAMES.filter((g) => g.lider).map((g, i) => ({ fx: g.doors[0] - 1.6, fy: g.doorY + 1.1, look: g.lider.look ?? (i % 6), dir: "down", t: 0, steps: 0, moving: false, fase: i * 1.3 }));
-const NUVENS = Array.from({ length: 10 }, () => ({ x: rndV() * MW * TS, y: rndV() * MH * TS, rx: 70 + rndV() * 90, ry: 30 + rndV() * 30, v: 5 + rndV() * 6 }));
-const LED_TEXTO = "  AUTÓDROMO DA GALERA  ·  HOJE TEM TRUCO NA FAN ZONE  ·  DESAFIE OS 10 BOXES  ·  CORRIDA DE F1 NA ARQUIBANCADA PRINCIPAL  ·  ";
-// a gente anda junto com os outros bonecos (entra na mesma ordem de desenho, por altura)
-function passoVida(dt) {
-  const s = Math.max(0, dt) / 1000, parado = reduzVida.matches; // o primeiro quadro pode vir com o tempo negativo
-  if (!parado) passoCarros(s);
-  for (const p of PEDESTRES) {
-    if (parado) { p.moving = false; continue; }
-    if (p.para > 0) { p.para -= s; p.moving = false; continue; }
-    if (rndV() < s * 0.04) { p.para = 1 + rndV() * 3; continue; } // de vez em quando alguém para para olhar
-    p.moving = true; p.fx += p.vel * s; p.dir = p.vel > 0 ? "right" : "left";
-    p.t += Math.abs(p.vel) * s * 2; if (p.t >= 1) { p.t -= 1; p.steps++; }
-    if (p.fx < p.x0) { p.fx = p.x0; p.vel = Math.abs(p.vel); } else if (p.fx > p.x1) { p.fx = p.x1; p.vel = -Math.abs(p.vel); }
-  }
-  for (const n of NUVENS) { n.x += n.v * s * (parado ? 0 : 1); if (n.x - n.rx > MW * TS) n.x = -n.rx; }
-  if (!parado) for (const d of DONOS) d.dir = ["down", "left", "down", "right"][Math.floor(performance.now() / 2200 + d.fase) % 4];
-}
-function drawVidaChao(c) {
-  // as sombras das nuvens passando por cima de tudo (bem leves)
-  if (!reduzVida.matches) { c.fillStyle = "#1a2a4012"; for (const n of NUVENS) { c.beginPath(); c.ellipse(n.x, n.y, n.rx, n.ry, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(n.x + n.rx * 0.5, n.y - n.ry * 0.3, n.rx * 0.6, n.ry * 0.7, 0, 0, 7); c.fill(); } }
-}
-function drawVida(c, t) {
-  const parado = reduzVida.matches;
-  // a fumaça dos food trucks
-  if (!parado) for (const [x, y] of FOODTRUCKS) for (let k = 0; k < 3; k++) { const f = ((t / 1800 + k / 3 + x * 0.1) % 1), X = x * TS + 34 + Math.sin(f * 6 + k) * 3, Y = y * TS + 2 - f * 18; c.fillStyle = `rgba(240,240,240,${0.45 * (1 - f)})`; c.beginPath(); c.arc(X, Y, 2 + f * 4, 0, 7); c.fill(); }
-  // o letreiro de LED correndo
-  { const X = PAINEL.x * TS + 3, Y = PAINEL.y * TS - 15, W = PAINEL.w * TS - 6; c.save(); c.beginPath(); c.rect(X, Y, W, 18); c.clip();
-    c.font = FONTE_PIXEL(11); c.textBaseline = "middle"; const larg = c.measureText(LED_TEXTO).width, desl = parado ? 0 : (t / 30) % larg;
-    for (const k of [0, 1]) { c.fillStyle = ["#ffd23f", "#ffffff", "#ff3b2f"][Math.floor(t / 2500) % 3]; c.fillText(LED_TEXTO, X - desl + k * larg, Y + 9.5); }
-    c.restore(); }
-}
-
-let last = performance.now();
-function frame(now) {
-  const dt = Math.min(50, now - last), lastRaw = now - last; last = now;
-  update(dt);
-  updateOthers(dt);
-  passoVida(dt);
-  const mw = MW * TS, mh = MH * TS;
-  const tx = player.fx * TS + 8 - viewW / 2;
-  const ty = player.fy * TS + 8 - viewH * (innerWidth <= 560 ? 0.6 : 0.54);
-  camX = mw > viewW ? Math.max(0, Math.min(mw - viewW, tx)) : (mw - viewW) / 2;
-  camY = mh > viewH ? Math.max(0, Math.min(mh - viewH, ty)) : (mh - viewH) / 2;
-  camX = Math.round(camX * scale) / scale; camY = Math.round(camY * scale) / scale;
-  // durante a batalha a vila fica escondida: não desenha nada (poupa bateria e memória do celular)
-  if (btOpen()) { requestAnimationFrame(frame); return; }
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = "#2b6837"; ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.setTransform(scale, 0, 0, scale, -camX * scale, -camY * scale);
-  ctx.imageSmoothingEnabled = false;
-  for (let cy = Math.floor(camY / CHP); cy <= Math.floor((camY + viewH) / CHP); cy++) for (let cx = Math.floor(camX / CHP); cx <= Math.floor((camX + viewW) / CHP); cx++)
-    if (cx >= 0 && cy >= 0 && cx * CH < MW && cy * CH < MH) ctx.drawImage(pedaco(cx, cy), cx * CHP, cy * CHP);
-  drawCarros(ctx);
-  drawSobrePista(ctx, now);
-  drawRoda(ctx, now);
-  drawRotor(ctx, now);
-  drawTelao(ctx, now);
-  drawTorre(ctx, now);
-  drawPodio(ctx, now);
-  if (player.entering) { // a porta abre
-    const g = player.entering;
-    for (const d of g.doors) px(ctx, "#140c06", d * TS + (g.doors.length > 1 ? (d === g.doors[0] ? 2 : 0) : 2), g.doorY * TS + TS - 20, g.doors.length > 1 ? 14 : 12, 19);
-  }
-  drawDoorArrows(ctx, now);
-  player.name = myName;
-  const chars = [...others.values()].filter(naMinhaZona).map((o) => [o, o.look]);
-  chars.push([player, outfit]);
-  for (const p of [...PEDESTRES, ...DONOS]) chars.push([p, p.look]); // a turma do autódromo e os donos dos boxes
-  chars.sort((a, b) => a[0].fy - b[0].fy);
-  chars.forEach(([p, look]) => { drawChar(ctx, p, look); if (ground[Math.round(p.fy)]?.[Math.round(p.fx)] === "h") drawMatoPorCima(ctx, p); });
-  drawVida(ctx, now);
-  drawVidaChao(ctx);
-  GAMES.forEach((g) => drawSign(ctx, g));
-  BAIRROS.forEach((b) => drawPlaca(ctx, b));
-  chars.forEach(([p]) => drawTag(ctx, p, p === player));
-  drawBubble(ctx, now);
-  drawMini(now);
-  requestAnimationFrame(frame);
-}
-
+</script>
+<script src="/vila/gp-vida.js"></script>
+<script>
+"use strict";
 resize();
 $("mini").classList.toggle("off", !miniOn);
 $("bMapa").onclick = () => { miniOn = !miniOn; $("mini").classList.toggle("off", !miniOn); $("bMapa").blur(); };

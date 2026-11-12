@@ -125,7 +125,7 @@ function maosDe(cLuva, cPainel) {
   g = mergeGeometries(partes); MAOS.set(k, g); return g;
 }
 const LUVA = () => (LUVA.m ||= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.65, metalness: 0.05, side: THREE.DoubleSide }));
-const VISEIRA = () => (VISEIRA.m ||= new THREE.MeshStandardMaterial({ color: 0x090b10, roughness: 0.1, metalness: 0.4 }));
+const VISEIRA = (cor) => { const k = cor || "#090b10"; VISEIRA.m ||= new Map(); if (!VISEIRA.m.has(k)) VISEIRA.m.set(k, new THREE.MeshStandardMaterial({ color: k, roughness: 0.1, metalness: k === "#090b10" ? 0.4 : 0.75 })); return VISEIRA.m.get(k); }; // (a cor da viseira: a de quem joga escolhe; f1-capacetes.js VISEIRAS)
 const CARBONO = () => (CARBONO.m ||= new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.4, metalness: 0.1 }));
 const TECIDOS = new Map(), CAPACETES = new Map();
 // o tecido do macacão e das luvas: um material por cor (e por escurecimento), guardado e reaproveitado por todos os carros da equipe
@@ -154,11 +154,14 @@ function corDaFaixa(c1, c2) {
   return lum(c1) > 0.5 || lum(c2) > 0.5 ? "#14161b" : "#ffffff";
 }
 // o desenho do capacete numa folha 512x256 (ver f1-capacetes.js): o do robô é o do piloto dele (`cap`), o dos outros é o genérico nas cores 1 e 2 da equipe
-const materialDoCapacete = (c1, c2, numero, cap) => {
-  const cores = cap ? cap.cores : [c1, c2, corDaFaixa(c1, c2)], desenho = cap ? cap.desenho : "generico", k = [...cores, desenho, numero ?? ""].join("|"); let m = CAPACETES.get(k);
+const materialDoCapacete = (c1, c2, numero, cap, proprio = null) => {
+  if (proprio) cap = proprio; // o capacete de quem joga (mods.capacete): desenho, cores, bandeira e nome
+  const extra = proprio ? { bandeira: proprio.bandeira, nome: proprio.nome } : null;
+  const cores = cap ? cap.cores : [c1, c2, corDaFaixa(c1, c2)], desenho = cap ? cap.desenho : "generico", k = [...cores, desenho, numero ?? "", extra ? extra.bandeira + "/" + extra.nome : ""].join("|"); let m = CAPACETES.get(k);
   if (!m) {
-    const cv = document.createElement("canvas"); cv.width = 512; cv.height = 256; pintarFolha(cv.getContext("2d"), cores, desenho, numero);
-    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    const cv = document.createElement("canvas"); cv.width = 512; cv.height = 256;
+    let t = null; const pintar = () => { pintarFolha(cv.getContext("2d"), cores, desenho, numero, extra, () => { pintar(); if (t) t.needsUpdate = true; }); }; pintar(); // (a bandeira que chega depois repinta)
+    t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.3, metalness: 0.12 }); CAPACETES.set(k, m);
   }
   return m;
@@ -187,8 +190,8 @@ export function criarPiloto(kt, op) {
   // o corpo (some na câmera de cockpit): o pescoço é o pivô da cabeça
   const corpo = new THREE.Group(); corpo.name = "piloto"; kt.carro.add(corpo);
   const cab = new THREE.Group(); cab.position.set(PESCOCO.x, PESCOCO.y, PESCOCO.z); cab.rotation.order = "YXZ"; corpo.add(cab);
-  const capacete = solta(new THREE.Mesh(g.capacete, materialDoCapacete(cor1, cor2, op.numero, op.sigla ? capacetePorSigla(op.sigla) : null))); capacete.name = "capacete"; capacete.position.y = 0.14; cab.add(capacete);
-  const viseira = solta(new THREE.Mesh(g.viseira, VISEIRA())); viseira.name = "viseira"; viseira.position.y = 0.14; cab.add(viseira);
+  const capacete = solta(new THREE.Mesh(g.capacete, materialDoCapacete(cor1, cor2, op.numero, op.sigla ? capacetePorSigla(op.sigla) : null, op.capacete || null))); capacete.name = "capacete"; capacete.position.y = 0.14; cab.add(capacete);
+  const viseira = solta(new THREE.Mesh(g.viseira, VISEIRA(op.capacete?.viseira))); viseira.name = "viseira"; viseira.position.y = 0.14; cab.add(viseira);
   const tronco = solta(new THREE.Mesh(g.tronco, traje(cor1, cor2))); tronco.name = "tronco"; tronco.position.set(0, 0.45, 0.16); tronco.rotation.x = 0.6; corpo.add(tronco); // o piloto deitado: o peito inclinado para trás
   const bracos = [-1, 1].map((l) => { const m = solta(new THREE.Mesh(g.braco, traje(cor1, cor2))); m.name = "braco"; m.position.set(l * OMBRO.x, OMBRO.y, OMBRO.z); corpo.add(m); return m; });
   // os antebraços ficam fora do corpo: aparecem também na primeira pessoa, junto das luvas

@@ -1887,7 +1887,9 @@ const DRS_REAIS = {
   abudhabi: [[0.92, 0.96, 0.04], [0.32, 0.36, 0.41]],
 };
 
-for (const [id, t] of Object.entries(PISTAS_REAIS)) if (PISTAS[id]) PISTAS["gp-" + id] = Object.assign(t, { base: id, real: true });
+// (a largura: 20% acima da real, a pedido do Thiago em 2026-11-12: com 12 m as pistas ficavam apertadas demais para jogar; 58 u → ~70 u; Mônaco não muda)
+const ALARGAR_GP = 1.2;
+for (const [id, t] of Object.entries(PISTAS_REAIS)) if (PISTAS[id]) PISTAS["gp-" + id] = Object.assign(t, { base: id, real: true, width: id === "monaco" ? t.width : Math.round(t.width * ALARGAR_GP) }); // (Mônaco fica na largura real)
 const baseDe = (id) => (PISTAS[id] && PISTAS[id].base) || id;
 
 // O corredor dos boxes das pistas do calendário de F1 (e do Luigi e do Sorvete; o Arco-íris não tem reta onde caiba) (regras de F1, f1-regras.js `corredor`): frações da volta a partir da

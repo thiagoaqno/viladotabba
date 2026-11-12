@@ -15,7 +15,7 @@ const EQUIPES_F1 = window.EQUIPES_F1 || {};
 const siglaEquipe = (e) => `<span class="sigla">${h(e.sigla)}</span>`;
 const marcaEquipe = (id) => {
   const e = EQUIPES_F1[id]; if (!e) return "";
-  return `<span class="equipe-marca" style="--equipe:${e.cor}">${e.arquivo ? `<img data-logo-f1 src="/api/corrida/logo/${id}" alt="" loading="lazy" data-sigla="${h(e.sigla)}">` : siglaEquipe(e)}</span>`;
+  return `<span class="equipe-marca" style="--equipe:${e.cor}">${e.arquivo ? `<img data-logo-f1 src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(id)}" alt="" loading="lazy" data-sigla="${h(e.sigla)}">` : siglaEquipe(e)}</span>`;
 };
 document.addEventListener("error", (ev) => { const i = ev.target.matches?.("img[data-logo-f1]") && ev.target; if (!i) return; const p = i.parentNode; i.remove(); if (p && !p.querySelector(".sigla")) p.insertAdjacentHTML("afterbegin", `<span class="sigla">${i.dataset.sigla || ""}</span>`); }, true);
 let f1Carregou = false;

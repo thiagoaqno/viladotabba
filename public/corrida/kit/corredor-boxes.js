@@ -57,7 +57,7 @@ function placaDaEquipe(id, nome, cor, w, h, comNome) {
   if (typeof Image !== "undefined" && ctx2) {
     const img = new Image(); img.decoding = "async";
     img.onload = () => { pintar(ctx2, img); tex.needsUpdate = true; };
-    img.src = `/api/corrida/logo/${encodeURIComponent(id)}`;
+    img.src = `${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}`;
   }
   return tex;
 }

@@ -130,7 +130,8 @@ app.get("/api/escudo/:id", (req, res) => {
 // Emblemas da F1 baixados para o Git: a tela e o canvas usam o mesmo endereço local.
 const logosF1 = (() => { try { return require("./public/corrida/logos/index.json"); } catch { return {}; } })();
 app.get("/api/corrida/logo/:id", (req, res) => {
-  const id = req.params.id, equipe = Object.hasOwn(logosF1, id) && logosF1[id];
+  const ano = /^20dd$/.test(String(req.query.ano || "")) ? `-${req.query.ano}` : "", porAno = ano && Object.hasOwn(logosF1, req.params.id + ano) ? req.params.id + ano : null; // o logo da equipe naquela temporada (f1-temporadas.js logoF1)
+  const id = req.params.id, equipe = logosF1[porAno] || (Object.hasOwn(logosF1, id) && logosF1[id]);
   if (!/^[a-z0-9-]+$/.test(id) || !equipe?.arquivo) return res.status(404).end();
   res.set("Cache-Control", "public, max-age=604800");
   res.sendFile(path.join(__dirname, "public", "corrida", "logos", equipe.arquivo), (erro) => {

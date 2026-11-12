@@ -25,7 +25,7 @@ function guardar(r) {
   window.F1Temporadas?.usarAno(r.dados?.anoF1); // o ano do save (os de antes são de 2026)
   estado = r; renderizar();
 }
-function marca(id) { return `<img src="/api/corrida/logo/${encodeURIComponent(id)}" alt="" onerror="this.style.display='none'">`; }
+function marca(id) { return `<img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}" alt="" onerror="this.style.display='none'">`; }
 function telaInicial() {
   window.F1Garagem?.fundoDoGP(null); window.F1Temporadas?.usarAno(2026);
   const primeira = Object.keys(Pilotos.EQUIPES)[0], E = window.EntradaCarreira;

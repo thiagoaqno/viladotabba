@@ -215,7 +215,7 @@ async function carregarRecordes() {
 }
 function desenharGaragem() {
   const atual = equipeDoCarro(), E = FP()?.EQUIPES || {}, Eq = window.F1Equipes;
-  const alvo = $("mnEquipes"), html = Object.entries(E).map(([id, e]) => `<button type="button" class="mn-eq ${id === atual ? "on" : ""}" style="--c:${h(e.cor)}" data-equipe-menu="${h(id)}" aria-pressed="${id === atual}" title="${h(e.nome)}"><img src="/api/corrida/logo/${encodeURIComponent(id)}" alt="" loading="eager" onerror="this.style.display='none'"><span>${h(e.sigla)}</span></button>`).join("");
+  const alvo = $("mnEquipes"), html = Object.entries(E).map(([id, e]) => `<button type="button" class="mn-eq ${id === atual ? "on" : ""}" style="--c:${h(e.cor)}" data-equipe-menu="${h(id)}" aria-pressed="${id === atual}" title="${h(e.nome)}"><img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}" alt="" loading="eager" onerror="this.style.display='none'"><span>${h(e.sigla)}</span></button>`).join("");
   if (alvo._h !== html) { alvo._h = html; alvo.innerHTML = html; }
   const e = E[atual], q = Eq?.EQUIPES[atual], pil = (FP()?.PILOTOS || []).filter((p) => p.equipe === atual).map((p) => p.nome);
   const ficha = Eq ? Eq.ficha(Eq.specDaEquipe(atual)) : [];

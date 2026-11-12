@@ -30,7 +30,7 @@ function infoEquipe(p) {
   return e ? { id, nome: e.nome, cor: corOk(e.cor), sigla: e.sigla, pintura: e.pintura, logo: !!(LOGOS()[id] && LOGOS()[id].arquivo) } : { id: null, nome: "", cor: corOk(p && p.color), sigla: "", pintura: null, logo: false };
 }
 const marca = (eq) => eq.id
-  ? `<span class="equipe-marca rg-marca" style="--equipe:${eq.cor}">${eq.logo ? `<img data-logo-f1 src="/api/corrida/logo/${eq.id}" alt="" data-sigla="${h(eq.sigla)}">` : `<span class="sigla">${h(eq.sigla)}</span>`}</span>`
+  ? `<span class="equipe-marca rg-marca" style="--equipe:${eq.cor}">${eq.logo ? `<img data-logo-f1 src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(eq.id)}" alt="" data-sigla="${h(eq.sigla)}">` : `<span class="sigla">${h(eq.sigla)}</span>`}</span>`
   : `<span class="rg-marca rg-sem" aria-hidden="true"></span>`;
 const estiloEq = (cor) => `--eq:${cor};--eq6:${cor}a6;--eq3:${cor}4d;--eq1:${cor}1f`;
 

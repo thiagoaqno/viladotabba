@@ -174,7 +174,7 @@ export function criarGaragem(host, op = {}) {
     recorte.color.copy(cor).lerp(new THREE.Color(0xffffff), 0.12); recorte2.color.set(0xffffff).lerp(cor, 0.5);
     pintarChao(chaoTex._canvas.getContext("2d"), chaoTex._canvas.width, chaoTex._canvas.height, c1); chaoTex.needsUpdate = true;
     const xm = marcaTex._canvas.getContext("2d"), W = marcaTex._canvas.width, H = marcaTex._canvas.height; pintarMarca(xm, W, H, eq.nome || "", c1, c2); marcaTex.needsUpdate = true;
-    const img = new Image(); img.onload = () => { if (equipe !== id || parou) return; const k = Math.min(H * 0.62 / img.height, H * 0.62 / img.width); xm.drawImage(img, H * 0.05, (H - img.height * k) / 2, img.width * k, img.height * k); marcaTex.needsUpdate = true; estado.sujo = true; ligar(); }; img.src = `/api/corrida/logo/${encodeURIComponent(id)}`;
+    const img = new Image(); img.onload = () => { if (equipe !== id || parou) return; const k = Math.min(H * 0.62 / img.height, H * 0.62 / img.width); xm.drawImage(img, H * 0.05, (H - img.height * k) / 2, img.width * k, img.height * k); marcaTex.needsUpdate = true; estado.sujo = true; ligar(); }; img.src = `${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}`;
     return cores;
   }
   async function trocarEquipe(id) {

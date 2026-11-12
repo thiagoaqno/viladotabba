@@ -3,7 +3,7 @@
 (function (root) {
 "use strict";
 const h = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const logo = (id) => `<img src="/api/corrida/logo/${encodeURIComponent(id)}" alt="" onerror="this.style.display='none'">`;
+const logo = (id) => `<img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}" alt="" onerror="this.style.display='none'">`;
 const SETA = '<svg class="cx-seta" viewBox="0 0 24 14" aria-hidden="true"><path d="M1 7h21M15 1l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg>';
 const ABAS = [["nova", "Sozinho"], ["amigos", "Com os amigos"], ["recuperar", "Recuperar"]];
 const temaBotao = () => `<button type="button" class="cxe-tema" data-cx-tema aria-pressed="false"><span>Modo escuro</span><b>Desligado</b></button>`;

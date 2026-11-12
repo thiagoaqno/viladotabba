@@ -13,7 +13,7 @@ const chaveSala = (codigo) => `corrida:temporada:grupo:${codigo}`;
 const equipe = (id) => Pilotos.EQUIPES[id];
 const piloto = (id) => Pilotos.PILOTOS.find((p) => p.id === id);
 const pessoa = (id) => S && S.pessoas.find((p) => p.id === id);
-const marca = (id) => `<img src="/api/corrida/logo/${encodeURIComponent(id)}" alt="" onerror="this.style.display='none'">`;
+const marca = (id) => `<img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}" alt="" onerror="this.style.display='none'">`;
 function falar(msg) { aviso.textContent = msg; aviso.classList.remove("hidden"); clearTimeout(falar.t); falar.t = setTimeout(() => aviso.classList.add("hidden"), 4500); }
 
 // Atualiza apenas os nós que mudaram. O palco WebGL, os controles em uso e os detalhes abertos

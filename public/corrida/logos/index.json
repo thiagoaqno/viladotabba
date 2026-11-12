@@ -75,5 +75,54 @@
     "cor": "#909090",
     "arquivo": "cadillac.png",
     "fonte": "https://r2.thesportsdb.com/images/media/team/badge/2wqnjo1769429652.png"
+  },
+  "racing-bulls-2023": {
+    "nome": "AlphaTauri",
+    "sigla": "AT",
+    "cor": "#14213d",
+    "arquivo": "alphatauri.svg",
+    "fonte": "desenhado no projeto (logotipo em texto, f1-temporadas.js)"
+  },
+  "racing-bulls-2024": {
+    "nome": "RB",
+    "sigla": "RB",
+    "cor": "#1534cc",
+    "arquivo": "rb.svg",
+    "fonte": "desenhado no projeto (logotipo em texto, f1-temporadas.js)"
+  },
+  "audi-2023": {
+    "nome": "Alfa Romeo",
+    "sigla": "ALF",
+    "cor": "#8f0d1c",
+    "arquivo": "alfa-romeo.svg",
+    "fonte": "desenhado no projeto (logotipo em texto, f1-temporadas.js)"
+  },
+  "audi-2024": {
+    "nome": "Kick Sauber",
+    "sigla": "SAU",
+    "cor": "#52e252",
+    "arquivo": "stake.svg",
+    "fonte": "desenhado no projeto (logotipo em texto, f1-temporadas.js)"
+  },
+  "audi-2025": {
+    "nome": "Kick Sauber",
+    "sigla": "SAU",
+    "cor": "#52e252",
+    "arquivo": "stake.svg",
+    "fonte": "desenhado no projeto (logotipo em texto, f1-temporadas.js)"
+  },
+  "williams-2023": {
+    "nome": "Williams",
+    "sigla": "WIL",
+    "cor": "#00205b",
+    "arquivo": "williams-racing.svg",
+    "fonte": "desenhado no projeto (logotipo em texto, f1-temporadas.js)"
+  },
+  "williams-2024": {
+    "nome": "Williams",
+    "sigla": "WIL",
+    "cor": "#00205b",
+    "arquivo": "williams-racing.svg",
+    "fonte": "desenhado no projeto (logotipo em texto, f1-temporadas.js)"
   }
 }

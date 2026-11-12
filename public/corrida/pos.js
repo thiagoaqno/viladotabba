@@ -230,7 +230,7 @@ export function prepararBrilhos() { varrer(performance.now()); varrerLuzPostes(s
 // ---------- a cor pelo clima e pela hora ----------
 let R = 0, W = 0, N = 0, ultCor = 0; // a chuva, a água na pista e a noite, suavizadas (sobem e descem devagar, sem salto)
 const sDir = new THREE.Vector3(), sFrente = new THREE.Vector3(), sPonto = new THREE.Vector3();
-const ehNoite = () => (E.S && E.S.config && E.S.config.hora === "noite") || (scene.fog ? luma(scene.fog.color) < 0.045 : false); // (Tóquio e o arco-íris são noturnos de qualquer jeito)
+const ehNoite = () => scene.userData.anoitecer != null ? scene.userData.anoitecer > 0.6 : (E.S && E.S.config && E.S.config.hora === "noite") || (scene.fog ? luma(scene.fog.color) < 0.045 : false); // (Tóquio e o arco-íris são noturnos de qualquer jeito)
 // ---------- o filtro da estação ----------
 // Cada GP tem a estação da data real da corrida, no hemisfério dele, e cada estação um tom leve na tela (só na Média e na Alta, que
 // têm o pós): verão quente e saturado, outono dourado, inverno frio e desbotado, primavera fresca. A chuva e a noite apagam o filtro

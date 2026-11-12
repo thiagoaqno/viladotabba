@@ -11,7 +11,7 @@ import { graficos } from "./qualidade.js";
 import { estiloHud } from "./hud-telemetria.js";
 import { montarMapaDaTorcida, nivelDaTorcida } from "./torcida-som.js";
 import { atualizarClima } from "./clima.js";
-import { passoClima, limparClima, exercitarChuva } from "./clima-visual.js";
+import { passoClima, limparClima, exercitarChuva, ligarChuvaDeEnsaio } from "./clima-visual.js";
 import { updateGhosts } from "./rede.js";
 import { gridSpot, buildTrack, groundH, useTrack } from "./pista.js";
 import { inclinacao as inclinacaoDoCarro } from "./inclinacao.js";
@@ -35,6 +35,7 @@ import { alternarAcerto } from "./acerto.js";
 import "./mixer.js"; // (o mixer de som: os botões [data-mixer])
 import { animarVida } from "./vida.js";
 import { ceuPronto, luzPendente } from "./ceu.js";
+import { iniciarAnoitecer, passoAnoitecer, pararAnoitecer } from "./anoitecer.js";
 import { desenhar, ajustarTela, medirQuadro, comecarMedida, compilarPos, prepararBrilhos, definirEstacao } from "./pos.js";
 import { quadroTV, pularTV } from "./transmissao.js";
 import { criarLinhaFreio } from "./linha-frenagem.js";
@@ -118,6 +119,24 @@ function prepararDaCorrida(tr) {
   const eu = me(), pl = (eu && eu.equipe ? eu : (E.S.players || []).find((p) => p.equipe)); if (!pl) return Promise.resolve([sc]);
   return race.mecanicos.preparar([{ equipe: pl.equipe, cor: window.EQUIPES_F1?.[pl.equipe]?.cor }]).then((gs) => [sc, ...gs], () => [sc]);
 }
+// O ENSAIO GERAL: compilar e desenhar fora da tela não pegava tudo (a primeira vez de cada coisa NA TELA, pelo pós de verdade, ainda
+// travava: o safety car, a chuva, os efeitos de batida, os retrovisores). Com a tela de carregamento ainda por cima do jogo, dois quadros
+// de verdade (o pós parado e em velocidade, com o desfoque) com tudo isso bem diante da câmera, ao mesmo tempo, e tudo volta ao lugar.
+// Síncrono: o laço do jogo (passoClima) não chega a desfazer a chuva no meio.
+function ensaioGeral(tr, amostras) {
+  if (!cargaAberta() || !race || race.tr !== tr) return;
+  const frente = new THREE.Vector3(); cam.getWorldDirection(frente); frente.y = 0; frente.normalize();
+  const lado = new THREE.Vector3(-frente.z, 0, frente.x), base = cam.position.clone().addScaledVector(frente, 70);
+  const sc = race.safetyKart?.g, mover = [[amostras, -25], [sc, 25]].filter(([g]) => g).map(([g, d]) => ({ g, d, pos: g.position.clone(), vis: g.visible }));
+  let devolverChuva = null;
+  try {
+    for (const m of mover) { m.g.visible = true; m.g.position.set(base.x + lado.x * m.d, groundH(tr, base.x + lado.x * m.d, base.z + lado.z * m.d) ?? base.y - 10, base.z + lado.z * m.d); }
+    devolverChuva = ligarChuvaDeEnsaio(tr, { x: base.x, y: base.z });
+    if (race.kart) quadroEspelhos(race.kart, "cockpit"); // (os retrovisores nascem aqui, e não no primeiro quadro de cockpit)
+    scene.updateMatrixWorld(); desenhar(0); desenhar(1);
+  } catch (e) { console.warn("Corrida: ensaio da largada incompleto", e); }
+  finally { devolverChuva?.(); for (const m of mover) { m.g.position.copy(m.pos); m.g.visible = m.vis; } }
+}
 // (devolve uma promessa que se cumpre quando o PRIMEIRO aquecimento termina: aí o navegador avisa o servidor que carregou, startRace)
 // "antes da largada": a corrida antes das luzes, ou a sala ainda esperando todos carregarem (a classificação não tem hora nesse meio tempo)
 const antesDaLargada = () => !!race && (!!E.S?.carga || !!E.S?.quali?.carregando || !race.startAt || sNow() < race.startAt - 300);
@@ -136,7 +155,7 @@ function aquecerPista(tr, ceu) {
     const aindaDa = () => race && race.tr === tr && antesDaLargada();
     let esconder = [];
     // 0) o safety car e as equipes do box entram na cena 1) compila tudo 2) exercita a chuva 3) sobe as malhas
-    return prepararDaCorrida(tr).then((gs) => { esconder = gs; if (gs.length) subirTexturas(scene); }).then(() => Promise.all([compilarTudo(alvo), compilarPos()])).then(() => { if (aindaDa()) exercitarChuva(tr); }).then(() => subirMalhas(tr, alvo)).catch((e) => console.warn("Corrida: aquecimento incompleto", e)).finally(() => { alvo.dispose(); scene.remove(amostras); for (const g of esconder) g.visible = false; });
+    return prepararDaCorrida(tr).then((gs) => { esconder = gs; if (gs.length) subirTexturas(scene); }).then(() => Promise.all([compilarTudo(alvo), compilarPos()])).then(() => { if (aindaDa()) exercitarChuva(tr); }).then(() => subirMalhas(tr, alvo)).then(() => { if (aindaDa()) ensaioGeral(tr, amostras); }).catch((e) => console.warn("Corrida: aquecimento incompleto", e)).finally(() => { alvo.dispose(); scene.remove(amostras); for (const g of esconder) g.visible = false; });
   }); };
   // espera também o carro de F1 e os enfeites do Kenney: quando chegam, os carros e a pista são remontados, e o que
   // nasce depois do aquecimento travaria na primeira vez que aparecesse
@@ -186,6 +205,7 @@ export function startRace(st) {
   if (race) clearRace();
   // regras de F1: o carro é o da física nova (sim.js), com o pneu, o ERS e o box dentro dele; o servidor é a autoridade (fisica.js)
   const f1 = st.config.regras === "f1", carro = f1 ? window.Sim.novo(tr, { grid: mine ? mine.grid : 0, f1: true, pneu: window.Sim.pneuDaLargada(st.phase, mine && mine.pneu, window.F1Regras.climaEm(st.clima, st.startAt).agua), box: st.phase !== "quali" }) : { x: spot.x, y: spot.y, z: tr.pts[spot.idx].h, vz: 0, air: false, a: spot.a, v: 0, vx: 0, vy: 0, slip: 0, steer: 0 };
+  iniciarAnoitecer(tr, st); // as corridas noturnas largam no fim de tarde e anoitecem até a metade (anoitecer.js)
   definirEstacao(tr.id); // o filtro de cor da estação do GP (pos.js)
   race = { startAt: st.startAt, tr, car: carro, net: f1 && mine ? criarRede() : null, acc: 0, idx: spot.idx, sector: SECTORS - 1, lastSent: 0, wrong: 0, ghosts: new Map(), msg: null, beeped: 0, finished: false, laps: 0, shake: 0,
     kart: mine ? makeKart(mine.color, mine.car, false, "", mine.mods, undefined, false, { numero: mine.numero, volante: true }) : null, cam: { pos: null, a: spot.a }, lapT0: st.startAt, rec: [], recLast: -1e9, best: loadBest(st.config.pista), bestKart: null, bptr: 0, draft: 0, draftT: 0, sling: 0,
@@ -214,7 +234,7 @@ export function startRace(st) {
   if (f1 && mine) { usarPista(st.config.pista); carregarIdeais(); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
-export function stopRace() { ForcaVolante.parar(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
+export function stopRace() { ForcaVolante.parar(); pararAnoitecer(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
 function resize() {
   const w = window.innerWidth, hh = window.innerHeight;
   renderer.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); ajustarTela(w, hh);
@@ -409,6 +429,7 @@ function draw(dt) {
   sun.target.position.set(src.x, src.z || 0, src.y);
   abrirTV(tr, dt, motionPreference.matches);
   if (tr.sky) tr.sky.position.set(cam.position.x, 0, cam.position.z);
+  passoAnoitecer(dt, race); // (antes do clima: a chuva escurece por cima do anoitecer)
   passoClima(dt, race, cam, modoClima, src, c); // o visual do clima: céu, luz, neblina, chuva, asfalto molhado, borrifo, som e HUD (clima-visual.js)
   quadroRecorte(tr, cam, mode !== "cima" && mode !== "tv" && !(race.tvAte && now < race.tvAte), nearest); // o que não dá para ver daqui não vai para a placa de vídeo (recorte.js)
   race.linhaFreio?.atualizar(race, !(race.tvAte && now < race.tvAte));

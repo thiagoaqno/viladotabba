@@ -1,6 +1,7 @@
 // Sede da temporada solo de Fórmula 1. O servidor é dono do save e da passagem entre GPs.
 const bd = require("./bd.js");
 const Regras = require("./public/corrida/temporada/regras.js");
+const Anos = require("./public/corrida/f1-temporadas.js"); // o ano da carreira (`anoF1` do save; os saves de antes são de 2026)
 const { limparNome } = require("./salas.js");
 
 module.exports = function attachTemporadaCorrida(io, corrida) {
@@ -19,9 +20,11 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
   function carregar(socket) {
     const linha = bd.temporadaCorridaPorToken(socket.data.tokenTemporada);
     if (!linha) throw Error("Abra ou recupere a temporada antes de continuar.");
+    Anos.usarAno(linha.dados.anoF1);
     return linha;
   }
   function entrar(socket, linha, token, resposta, recuperacao) {
+    Anos.usarAno(linha.dados.anoF1);
     if (socket.data.idTemporada && socket.data.idTemporada !== linha.id) socket.leave(`temporada:${socket.data.idTemporada}`);
     socket.data.tokenTemporada = token;
     socket.data.idTemporada = linha.id;
@@ -38,11 +41,14 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
     } catch (e) { erro(resposta, e); }
   }
   nsp.on("connection", (socket) => {
+    socket.use((_, next) => { Anos.usarAno(Anos.ANO_PADRAO); next(); }); // cada pedido começa em 2026; carregar() troca para o ano do save
     socket.on("criar", (d = {}, resposta) => {
       try {
         const nome = limparNome(d.nome);
         if (!nome) throw Error("Escreva seu nome.");
+        const anoF1 = Anos.usarAno(d.anoF1); // a temporada escolhida (2023 a 2026): o calendário, as equipes e os pilotos daquele ano
         const dados = Regras.criar(nome, d.equipe, Number(d.tamanho), Number(d.voltas), undefined, d.nivel || "medio");
+        dados.anoF1 = anoF1;
         const nova = bd.criarTemporadaCorrida(nome, dados);
         entrar(socket, { id: nova.id, dados }, nova.token, resposta, nova.recuperacao);
       } catch (e) { erro(resposta, e); }

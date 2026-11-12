@@ -133,6 +133,7 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
   }
 
   nsp.on("connection", (socket) => {
+    socket.use((_, next) => { require("./public/corrida/f1-temporadas.js").usarAno(2026); next(); }); // a temporada com os amigos é a de 2026
     socket.on("criar", (d = {}, cb) => {
       try {
         const nome = limparNome(d.nome);

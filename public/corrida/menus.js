@@ -200,6 +200,7 @@ function renderGP(m, isHost, f1, c, t) {
   const robos = Math.min(c.robos || 0, (f1 ? 22 : 8) - E.S.players.length);
   const OPC_CLIMA = [["aleatorio", "Aleatório"], ["seco", "Seco"], ["chuva", "Chuva"], ["variavel", "Variável"]];
   trocar($("gpOpcoes"), `<h3 class="sn-tit"><span>O GP</span><em>${isHost ? "Você é o organizador" : "Só o organizador muda"}</em></h3><div class="sn-opcoes">`
+    + (f1 ? campo("Temporada", seg(window.F1Temporadas.ANOS.map((a) => [a, String(a)]), window.F1Temporadas.anoValido(c.ano), "ano", "Temporada"), "As equipes, os pilotos e a força dos carros daquele ano.") : "")
     + campo("Regras", seg([["f1", "Fórmula 1"], ["formulagp", "Formula GP"], ["galera", "Corrida da Galera"]], gpReal && f1 ? "formulagp" : c.regras || "galera", "regras", "Regras"), gpReal && f1 ? "A Fórmula 1 com as pistas no tamanho real: traçado, largura de 12 m e relevo de verdade." : f1 ? "Pneus, paradas nos boxes, classificação e robôs com os pilotos de 2026." : "Caixas de itens e a ajuda do pelotão, sem pneus.")
     + campo("Voltas", seg([1, 2, 3, 5, 10, 21].map((v) => [v, v]), c.voltas, "v", "Voltas"))
     + campo("Horário", seg([["dia", "Dia"], ["noite", "Noite"]], c.hora === "noite" ? "noite" : "dia", "hora", "Horário"))
@@ -363,6 +364,7 @@ $("lobby").addEventListener("click", (e) => {
   if ((b = t.closest("[data-pista]"))) return cfg({ pista: b.dataset.pista });
   if ((b = t.closest("[data-v]"))) return cfg({ voltas: +b.dataset.v });
   if ((b = t.closest("[data-hora]"))) return cfg({ hora: b.dataset.hora });
+  if ((b = t.closest("[data-ano]"))) return cfg({ ano: Number(b.dataset.ano) }); // a temporada (f1-temporadas.js)
   if ((b = t.closest("[data-regras]"))) { // Formula GP = as regras de F1 numa pista real ("gp-<pista>"); voltar à F1 ou à Galera traz a pista de sempre
     const r = b.dataset.regras, P = window.Pistas, base = P.baseDe(E.S.config.pista);
     if (r === "formulagp") return cfg({ regras: "f1", pista: PISTAS["gp-" + base] ? "gp-" + base : P.idsReais()[0] });

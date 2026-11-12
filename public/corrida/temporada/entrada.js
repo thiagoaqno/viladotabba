@@ -26,6 +26,7 @@ function inicial({ equipes, primeira, todas, grupo, amigos }) {
       <select id="equipe" name="equipe" class="cxe-oculto" tabindex="-1" aria-hidden="true">${opcoes}</select>
       <div class="cxe-duo"><div><label for="tamanho">Calendário</label><select id="tamanho" name="tamanho"><option value="8">8 GPs</option><option value="4">4 GPs</option><option value="${todas}">${todas} GPs</option></select></div>
       <div><label for="voltas">Voltas por GP</label><select id="voltas" name="voltas"><option value="3">3 voltas</option><option value="2">2 voltas</option><option value="5">5 voltas</option><option value="10">10 voltas</option></select></div></div>
+      <label for="anoF1">Temporada</label><select id="anoF1" name="anoF1">${(root.F1Temporadas ? root.F1Temporadas.ANOS : [2026]).map((a) => `<option value="${a}">${a}</option>`).join("")}</select>
       <label for="nivel">Dificuldade dos robôs</label><select id="nivel" name="nivel"><option value="medio">Médio</option><option value="facil">Fácil</option><option value="dificil">Difícil</option></select>
       <button class="cx-bt" type="submit">Abrir meu box ${SETA}</button></form></div>
     <div class="cxe-corpo" role="tabpanel" id="cxePainel-recuperar" aria-labelledby="cxeAba-recuperar" hidden><p class="cxe-dica">Use o código que apareceu quando você abriu a temporada.</p><form id="recuperar"><label for="codigo">Código de recuperação</label><input id="codigo" name="codigo" maxlength="20" autocomplete="off" placeholder="12 caracteres" required><button class="cx-bt" type="submit">Recuperar temporada ${SETA}</button></form></div>
@@ -35,6 +36,14 @@ function inicial({ equipes, primeira, todas, grupo, amigos }) {
 // Liga as abas, a faixa de equipes e o botão do tema da tela inicial.
 function ligarInicial(primeira, equipes) {
   const C = root.Central; C.entrada(primeira); C.temaNaTela();
+  // a temporada: troca as tabelas para aquele ano (f1-temporadas.js), esconde as equipes que não existiam e põe o nome da época
+  const ano = document.getElementById("anoF1"), sel = document.getElementById("equipe");
+  ano?.addEventListener("change", () => {
+    root.F1Temporadas.usarAno(ano.value); const E = root.F1Pilotos.EQUIPES;
+    document.querySelectorAll("[data-vitrine]").forEach((b) => { const e = E[b.dataset.vitrine]; b.hidden = !e; if (e) { b.style.setProperty("--c", e.cor); b.title = e.nome; b.setAttribute("aria-label", e.nome); } });
+    sel.querySelectorAll("option").forEach((o) => { const e = E[o.value]; o.hidden = o.disabled = !e; if (e) o.textContent = e.nome; });
+    if (!E[sel.value]) document.querySelector("[data-vitrine]:not([hidden])")?.click();
+  });
   document.querySelectorAll("[data-en-aba]").forEach((b) => b.addEventListener("click", () => {
     const id = b.dataset.enAba;
     document.querySelectorAll("[data-en-aba]").forEach((x) => { const on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on); document.getElementById(`cxePainel-${x.dataset.enAba}`).hidden = !on; });

@@ -1,5 +1,14 @@
 [
   {
+    "id": "2026-11-12-temporadas-anos",
+    "data": "2026-11-12",
+    "itens": [
+      "Escolha a temporada: 2023, 2024, 2025 ou 2026, na sala (F1 e Formula GP) e na carreira",
+      "Cada ano com as equipes da época (AlphaTauri, Alfa Romeo, Sauber, RB…), os pilotos titulares e a força de cada carro",
+      "Na carreira, o calendário segue o daquele ano"
+    ]
+  },
+  {
     "id": "2026-11-12-formula-gp",
     "data": "2026-11-12",
     "itens": [

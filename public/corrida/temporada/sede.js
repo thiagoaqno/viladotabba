@@ -22,11 +22,12 @@ function guardar(r) {
   if (!r?.ok) return;
   if (r.token) { token = r.token; localStorage.setItem(chave, token); }
   if (r.recuperacao) codigo = r.recuperacao;
+  window.F1Temporadas?.usarAno(r.dados?.anoF1); // o ano do save (os de antes são de 2026)
   estado = r; renderizar();
 }
 function marca(id) { return `<img src="/api/corrida/logo/${encodeURIComponent(id)}" alt="" onerror="this.style.display='none'">`; }
 function telaInicial() {
-  window.F1Garagem?.fundoDoGP(null);
+  window.F1Garagem?.fundoDoGP(null); window.F1Temporadas?.usarAno(2026);
   const primeira = Object.keys(Pilotos.EQUIPES)[0], E = window.EntradaCarreira;
   document.title = "Carreira F1 · Corrida da Galera";
   app.innerHTML = E.inicial({ equipes: Pilotos.EQUIPES, primeira, todas: Regras.PISTAS_TRABALHADAS.length, grupo: window.SedeGrupo.formulario(), amigos: soAmigos });
@@ -134,7 +135,7 @@ app.addEventListener("click", async (e) => {
   if (b.id === "copiar") { try { await navigator.clipboard.writeText(codigo); falar("Código copiado."); } catch { falar("Selecione e copie o código acima."); } }
   if (b.id === "esconder") { codigo = null; renderizar(); }
 });
-socket.on("estado", (r) => { if (estado) { estado = r; renderizar(); } });
+socket.on("estado", (r) => { if (estado) { window.F1Temporadas?.usarAno(r.dados?.anoF1); estado = r; renderizar(); } });
 const soAmigos = new URLSearchParams(location.search).has("amigos"); // o atalho "Temporada com os amigos" do menu mostra a porta de entrada mesmo com um save solo
 const soEstante = new URLSearchParams(location.search).has("estante"); // o item Estante do menu da Corrida: só a estante da galera, sem abrir carreira
 function telaDaEstante() {

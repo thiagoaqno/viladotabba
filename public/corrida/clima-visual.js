@@ -299,23 +299,30 @@ function preaquecer() {
 // (os programas, os buffers e o caminho do sombreador do asfalto) durante a contagem, e não na primeira chuva da corrida. Devolve tudo
 // como estava. Chamado pelo aquecimento da pista, depois de compilar.
 export function exercitarChuva(tr) {
-  const objs = [domo, gotas, resp, spray], antes = objs.map((o) => o.visible), alvo = new THREE.WebGLRenderTarget(160, 90), mats = [];
-  tr.grp.traverse((o) => { const m = o.material; if (m && !Array.isArray(m) && m.userData.aguaPista && !mats.includes(m)) mats.push(m); });
-  const guardado = mats.map((m) => { const u = m.userData.aguaPista; return { agua: u.uAgua.value, dif: u.uDif.value, carro: u.uCarros.value[0].clone(), A: u.uLuzA.value[0].clone(), B: u.uLuzB.value[0].clone() }; });
-  const anterior = renderer.getRenderTarget(), drawGotas = { ...gotasGeo.drawRange };
+  const alvo = new THREE.WebGLRenderTarget(160, 90), anterior = renderer.getRenderTarget(), p = tr.pts[0], q = tr.pts[Math.min(tr.n - 1, 12)];
+  const devolver = ligarChuvaDeEnsaio(tr, q);
   try {
-    const p = tr.pts[0], q = tr.pts[Math.min(tr.n - 1, 12)], c = new THREE.PerspectiveCamera(70, 16 / 9, 1, 6000);
+    const c = new THREE.PerspectiveCamera(70, 16 / 9, 1, 6000);
     c.position.set(p.x, (p.h || 0) + 14, p.y); c.lookAt(q.x, (q.h || 0) + 4, q.y);
-    for (const o of objs) o.visible = true;
-    gotasGeo.setDrawRange(0, 60);
-    mats.forEach((m) => { const u = m.userData.aguaPista; u.uAgua.value = 1; u.uDif.value = 1; u.uCarros.value[0].set(q.x, q.y, 30, 0); u.uLuzA.value[0].set(1, 0, 60, 0.02); u.uLuzB.value[0].set(1, 0.05, 0.03, 1); });
     renderer.setRenderTarget(alvo); renderer.render(scene, c);
   } catch (e) { console.warn("Corrida: não deu para aquecer a chuva", e); }
-  finally {
-    renderer.setRenderTarget(anterior); alvo.dispose(); gotasGeo.setDrawRange(drawGotas.start, drawGotas.count);
+  finally { renderer.setRenderTarget(anterior); alvo.dispose(); devolver(); }
+}
+// liga a chuva inteira (domo, gotas, respingos, borrifo, asfalto encharcado com o rastro e as luzes de um carro em `q`) para um desenho de
+// ensaio; devolve a função que deixa tudo como estava. Usada aqui e pelo ensaio da largada (jogo.js), que desenha na tela atrás da carga.
+export function ligarChuvaDeEnsaio(tr, q = tr.pts[Math.min(tr.n - 1, 12)]) {
+  const objs = [domo, gotas, resp, spray], antes = objs.map((o) => o.visible), mats = [];
+  tr.grp.traverse((o) => { const m = o.material; if (m && !Array.isArray(m) && m.userData.aguaPista && !mats.includes(m)) mats.push(m); });
+  const guardado = mats.map((m) => { const u = m.userData.aguaPista; return { agua: u.uAgua.value, dif: u.uDif.value, carro: u.uCarros.value[0].clone(), A: u.uLuzA.value[0].clone(), B: u.uLuzB.value[0].clone() }; });
+  const drawGotas = { ...gotasGeo.drawRange };
+  for (const o of objs) o.visible = true;
+  gotasGeo.setDrawRange(0, 60);
+  mats.forEach((m) => { const u = m.userData.aguaPista; u.uAgua.value = 1; u.uDif.value = 1; u.uCarros.value[0].set(q.x, q.y, 30, 0); u.uLuzA.value[0].set(1, 0, 60, 0.02); u.uLuzB.value[0].set(1, 0.05, 0.03, 1); });
+  return () => {
+    gotasGeo.setDrawRange(drawGotas.start, drawGotas.count);
     objs.forEach((o, i) => { o.visible = antes[i]; });
     mats.forEach((m, i) => { const u = m.userData.aguaPista, g = guardado[i]; u.uAgua.value = g.agua; u.uDif.value = g.dif; u.uCarros.value[0].copy(g.carro); u.uLuzA.value[0].copy(g.A); u.uLuzB.value[0].copy(g.B); });
-  }
+  };
 }
 let camPreaquecer = null;
 

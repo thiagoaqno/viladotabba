@@ -10,6 +10,7 @@ import { iniciarControle } from "./sala-controle.js";
 import { menuNaTela } from "./menu.js";
 import { alternarAcerto } from "./acerto.js";
 import { usarPista } from "./acerto-carro.js";
+import { renderCapacete, sincronizarCapacete } from "./capacete-editor.js"; // o capacete de quem joga
 const EQUIPES_F1 = window.EQUIPES_F1 || {};
 // o logo da equipe sozinho (sem a sigla por trás, que aparecia pelas transparências do PNG); só sem arquivo, ou se ele não carregar, entra a sigla
 const siglaEquipe = (e) => `<span class="sigla">${h(e.sigla)}</span>`;
@@ -181,6 +182,7 @@ function renderCarro(m, f1, c) {
   // o acerto do carro (asa e altura, um por pista: acerto-carro.js) já na sala, para a pista escolhida: o mesmo painel da tecla P na corrida (acerto.js),
   // com a proposta do engenheiro e a sugestão do estrategista. Só nas regras de F1 (na carreira, a Central tem a aba Acerto)
   { const b = $("btnAcertoSala"); if (b) { b.hidden = !f1; const pn = PISTAS[E.S.config.pista]; if (f1) $("acertoSalaSub").textContent = `Asa e altura para ${pn ? pn.name : "esta pista"} · engenheiro e estrategista`; } }
+  renderCapacete();
   $("garagemSub").textContent = `${f1 && m.equipe ? "Peças do carro · " : "Carro e cor · "}pintura ${pint.name}`;
 }
 
@@ -421,6 +423,7 @@ iniciarControle({
 
 // ----- o desenho da sala -----
 export function renderLobby() {
+  sincronizarCapacete(); // o capacete guardado vai para esta sala
   const S = E.S; if (!S) return;
   const m = me(), isHost = !!m && S.host === m.id, c = S.config, t = PISTAS[c.pista], f1 = c.regras === "f1";
   const robos = Math.min(c.robos || 0, (f1 ? 22 : 8) - S.players.length), total = S.players.length + robos;

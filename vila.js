@@ -8,9 +8,9 @@
 const G = require("./galeramon.js");
 const ligarMato = require("./vila-mato.js");
 const { rid, limparNome: cleanName } = require("./salas.js");
-const MW = 178, MH = 134, LOOKS = 6, MAX = 80; // o mesmo tamanho do mapa da página (public/index.html)
+const MW = 206, MH = 156, LOOKS = 6, MAX = 80; // o mesmo tamanho do mapa da página (public/index.html)
 const OX = 3, OY = 3; // a margem do bosque em volta do autódromo
-const SPAWN = [OX + 83, OY + 73]; // onde a pessoa aparece: no paddock (o mesmo SPAWN da página)
+const SPAWN = [OX + 102, OY + 72]; // onde a pessoa aparece: na praça do paddock (o mesmo SPAWN de public/vila/gp-mapa.js)
 const ZONAS = [""];
 const zonaDe = (z) => (ZONAS.includes(z) ? z : "");
 const INVITE_MS = 20000, CHOICE_MS = 45000, RECONNECT_MS = +process.env.VILA_RECONNECT_MS || 45000;
@@ -142,8 +142,10 @@ module.exports = function attachVila(io, ginasio) {
       if (!mine() || !allow()) return;
       me.x = clamp(int(d.x, me.x), 0, MW - 1); me.y = clamp(int(d.y, me.y), 0, MH - 1);
       if (DIRS.includes(d.dir)) me.dir = d.dir;
-      me.z = zonaDe(d.z); me.car = false;
-      nsp.except(me.sock).emit("move", { id: me.id, x: me.x, y: me.y, dir: me.dir, run: !!d.run, z: me.z, car: me.car });
+      me.z = zonaDe(d.z); me.car = !!d.car; // de F1 (public/vila/gp-vida.js): a posição fina e o ângulo do carro só são repassados
+      const m = { id: me.id, x: me.x, y: me.y, dir: me.dir, run: !!d.run, z: me.z, car: me.car };
+      if (me.car) { m.cx = clamp(+d.cx || me.x, 0, MW); m.cy = clamp(+d.cy || me.y, 0, MH); m.ca = Number.isFinite(+d.ca) ? +d.ca : 0; }
+      nsp.except(me.sock).emit("move", m);
     });
 
     socket.on("look", (d = {}) => {

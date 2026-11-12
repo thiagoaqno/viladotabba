@@ -9,7 +9,7 @@
   if (typeof module === "object" && module.exports) module.exports = factory(require("../galeramon/pokemon.js"), require("../galeramon/niveis.js"));
   else root.MatoAlto = factory(root.PokeDex, root.Niveis);
 })(typeof self !== "undefined" ? self : this, function (PokeDex, Niveis) {
-  const GRAMA = { x: 44, y: 46, w: 18, h: 6 };
+  const GRAMA = { x: 56, y: 53, w: 13, h: 10 };
   // todo treinador já começa com os três iniciais (a sala do Ginásio com "só capturados" aceita eles sempre)
   const INICIAIS = ["bulbasaur", "charmander", "squirtle"];
   const CHANCE_ENCONTRO = 0.16; // por passo na grama

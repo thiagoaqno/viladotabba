@@ -74,4 +74,23 @@ Object.assign(MARCAS, {
   eni(c, { tinta = "#fff" } = {}) { letra(c, "eni", { x: -0.45, h: 1.1, peso: 800, cor: tinta }); c.fillStyle = "#ffcb05"; c.fillRect(0.3, -0.4, 0.82, 0.8); letra(c, "6", { x: 0.71, h: 0.7, peso: 900, cor: "#111" }); },
   gr(c) { letra(c, "G", { x: -0.46, h: 1.28, peso: 900, ital: true, fam: PESADA, cor: "#101114" }); letra(c, "R", { x: 0.46, h: 1.28, peso: 900, ital: true, fam: PESADA, cor: "#e10a2b" }); },
 });
+// As das temporadas 2023 a 2025 (f1-pintura.js, "equipe@ano")
+Object.assign(MARCAS, {
+  // o círculo vermelho com a seta branca e o nome
+  moneygram(c, { tinta = "#fff" } = {}) { disco(c, -2.25, 0, 0.5, "#da291c"); c.strokeStyle = "#fff"; c.lineWidth = 0.13; c.lineCap = "round"; c.beginPath(); c.arc(-2.25, 0, 0.27, 0.5, 5.2); c.stroke(); c.beginPath(); c.moveTo(-2.25, 0.02); c.lineTo(-1.98, 0.02); c.stroke(); letra(c, "MoneyGram", { x: 0.35, h: 0.9, peso: 800, cor: tinta }); },
+  // a letra cursiva de pincel, com o traço que sai do S e sublinha o nome (o logo que o Thiago mandou)
+  stake(c, { tinta = "#fff" } = {}) { letra(c, "Stake", { h: 1.25, peso: 700, fam: ROTEIRO, cor: tinta }); c.strokeStyle = tinta; c.lineCap = "round"; c.lineWidth = 0.13; c.beginPath(); c.moveTo(-1.35, 0.5); c.quadraticCurveTo(-0.2, 0.8, 1.25, 0.42); c.stroke(); },
+  kick(c, { tinta = "#53fc18" } = {}) { letra(c, "KICK", { h: 1.1, peso: 900, fam: PESADA, cor: tinta, esp: 2 }); },
+  // o bloco vermelho com o nome branco
+  orlen(c) { c.fillStyle = "#e30613"; c.fillRect(-1.75, -0.5, 3.5, 1); letra(c, "ORLEN", { h: 0.72, peso: 900, cor: "#fff", esp: 4 }); },
+  alphatauri(c, { tinta = "#fff" } = {}) { letra(c, "ALPHA", { x: -1.45, h: 1, peso: 300, cor: tinta, esp: 3 }); letra(c, "TAURI", { x: 1.35, h: 1, peso: 900, cor: tinta, esp: 3 }); },
+  alfaromeo(c, { tinta = "#fff" } = {}) { letra(c, "Alfa Romeo", { h: 1, peso: 700, ital: true, fam: SERIFA, cor: tinta }); },
+  // o quadrifoglio: o trevo verde de quatro folhas no triângulo branco
+  trevo(c) { c.beginPath(); c.moveTo(0, -0.5); c.lineTo(0.5, 0.42); c.lineTo(-0.5, 0.42); c.closePath(); c.fillStyle = "#fff"; c.fill(); for (const [x, y] of [[0, -0.02], [0.13, 0.12], [0, 0.26], [-0.13, 0.12]]) disco(c, x, y, 0.1, "#1f8f3a"); },
+  // a chama vermelha e o nome
+  santander(c, { tinta = "#fff" } = {}) { disco(c, -2.15, 0.05, 0.36, "#ec0000"); c.fillStyle = "#fff"; c.fillRect(-2.21, -0.3, 0.12, 0.42); letra(c, "Santander", { x: 0.3, h: 0.9, peso: 700, cor: tinta }); },
+  // o "Chrome" com o círculo de três cores no lugar do o
+  chrome(c, { tinta = "#fff" } = {}) { letra(c, "Chr", { x: -0.95, h: 1, peso: 700, cor: tinta, align: "center" }); for (const [a0, a1, cor] of [[-1.6, 0.5, "#ea4335"], [0.5, 2.6, "#fbbc05"], [2.6, 4.7, "#34a853"]]) { c.beginPath(); c.moveTo(0.05, 0.05); c.arc(0.05, 0.05, 0.36, a0, a1); c.closePath(); c.fillStyle = cor; c.fill(); } disco(c, 0.05, 0.05, 0.16, "#4285f4"); letra(c, "me", { x: 0.85, h: 1, peso: 700, cor: tinta }); },
+  palmangels(c, { tinta = "#fff" } = {}) { letra(c, "Palm Angels", { h: 0.95, peso: 700, fam: SERIFA, cor: tinta }); },
+});
 export function desenharMarca(c, id, op) { MARCAS[id]?.(c, op); }

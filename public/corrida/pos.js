@@ -137,6 +137,9 @@ const FOCO = {
 const tam = new THREE.Vector2(), corLimpeza = new THREE.Color();
 const feitos = {}; // { media: {composer, grade, radial, foco, w, h, pr}, alta: {...} }
 const ok16 = () => renderer.extensions.has("EXT_color_buffer_float") || renderer.extensions.has("EXT_color_buffer_half_float");
+// as peças do carro que entram na máscara do desfoque (o resto do carro fica fora dela)
+const SILHUETA = new Set(["corpo", "flap", "roda", "capacete", "car_body_1", "car_body_2"]);
+let quadroMascara = 0;
 function montar(q) {
   const cfg = AJUSTE[q], composer = new EffectComposer(renderer);
   const amostras = ok16() ? cfg.amostras : 0; // sem alvo de 16 bits com amostras o quadro sairia preto: aí fica sem suavização
@@ -158,7 +161,16 @@ function montar(q) {
     // as luzes também na camada 1: sem elas, o desenho da máscara (só a camada 1) via ZERO luzes, o Three.js tomava como mudança de iluminação
     // e, no quadro seguinte, reavaliava o shader de TODOS os materiais da cena (getProgram/getParameters: ~24% do quadro, medido em Monza)
     if (scene.children.length !== luzesDe.n) { luzesDe.n = scene.children.length; scene.traverse((o) => { if (o.isLight) o.layers.enable(1); }); }
-    for (const raiz of scene.children) if (raiz.userData.carroVinheta) raiz.traverse((o) => { if (o.isMesh && !o.userData.recortado) o.layers.enable(1); }); // (o carro que não se vê daqui fica de fora: recorte.js)
+    // a máscara só precisa da SILHUETA do carro (carroceria, flap, rodas e capacete): eram ~12 peças por carro e 268 chamadas por quadro com 21 robôs
+    // (medido em Monza, RTX 2060). A lista de peças fica guardada no carro (sem percorrer a árvore a cada quadro) e é refeita a cada 2 s; o carro bem
+    // longe (LOD 2 de carros.js) fica de fora: lá ele já está no desfoque. O que não se vê daqui também (recorte.js).
+    quadroMascara++;
+    for (const raiz of scene.children) {
+      const u = raiz.userData; if (!u.carroVinheta) continue;
+      if (!u.mascara || quadroMascara - u.mascaraQ > 120) { u.mascara = []; u.mascaraQ = quadroMascara; raiz.traverse((o) => { if (!o.isMesh) return; if (SILHUETA.has(o.name)) u.mascara.push(o); else o.layers.disable(1); }); }
+      const fora = u.lod === 2;
+      for (const o of u.mascara) { if (!fora && !o.userData.recortado && o.visible) o.layers.enable(1); else o.layers.disable(1); }
+    }
     const alvo = rd.getRenderTarget(), fundo = scene.background, anterior = scene.overrideMaterial, camadas = cam.layers.mask;
     const cor = rd.getClearColor(corLimpeza), alfa = rd.getClearAlpha(), sombra = rd.shadowMap.autoUpdate;
     try {
@@ -276,8 +288,29 @@ let nivel = 0; // o desempenho: 0 = como a qualidade escolhida; 1 = resolução 
 let atual = null; // a qualidade que o pós aplica agora
 const reduz = matchMedia("(prefers-reduced-motion: reduce)");
 const efetivaPos = () => (nivel >= 3 ? "baixa" : qualidade());
+// ---------- a resolução dinâmica (Configurações > Gráficos > Resolução dinâmica) ----------
+// Medido com a RTX 2060 em Monza (21 robôs, 1600 × 900): em meia resolução o quadro caiu de 22,5 para 14,9 ms. Boa parte do quadro é pixel (o pós),
+// então, na corrida, a escala do desenho desce de 10 em 10% (até 60%) quando os quadros passam da META e volta a subir quando ficam na meta.
+// META: 120 qps ou o limite da tela, se ele for menor (`intervaloTela`, medido nos primeiros quadros do menu, que é leve). Cada troca refaz os
+// alvos do pós (uma realocação), por isso as trocas são espaçadas: desce depois de 1,5 s ruins, sobe depois de 5 s bons, e uma subida que
+// não se segurou fica bloqueada por 20 s.
+const ESCALAS = [1, 0.9, 0.8, 0.7, 0.6];
+let escalaI = 0, intervaloTela = 1000 / 60, janela = [], ultQ = 0, ultTroca = 0, bloqueioSubida = 0, subiuEm = 0, bloqueioDescida = 0, antesDaDescida = 0;
+// (descer só vale quando o gargalo é a placa: se a janela depois da descida não ficou 8% melhor, era o processador; volta e não tenta por 30 s)
+{ const v = []; let u = 0; const f = (t) => { if (u) v.push(t - u); u = t; if (v.length < 90) requestAnimationFrame(f); else { v.sort((a, b) => a - b); intervaloTela = Math.max(1000 / 360, v[Math.floor(v.length * 0.3)]); } }; requestAnimationFrame(f); }
+function quadroDinamico(agora) {
+  const dt = ultQ ? agora - ultQ : 0; ultQ = agora; if (!dt || dt > 250) return; // (aba escondida, pausa)
+  if (graficos().dinamica === false) { if (escalaI) { escalaI = 0; aplicarRazao(); } return; }
+  janela.push(dt); if (janela.length < 60) return;
+  const v = janela.sort((a, b) => a - b), p75 = v[Math.floor(v.length * 0.75)]; janela = [];
+  const meta = Math.max(1000 / 120, intervaloTela) * 1.08;
+  if (antesDaDescida) { const ganhou = p75 < antesDaDescida * 0.92; antesDaDescida = 0; if (!ganhou) { escalaI--; ultTroca = agora; bloqueioDescida = agora + 30000; aplicarRazao(); return; } }
+  if (p75 > meta && escalaI < ESCALAS.length - 1 && agora - ultTroca > 1500 && agora > bloqueioDescida) { if (agora - subiuEm < 3000) bloqueioSubida = agora + 20000; antesDaDescida = p75; escalaI++; ultTroca = agora; aplicarRazao(); }
+  else if (p75 <= meta * 0.97 && escalaI > 0 && agora - ultTroca > 5000 && agora > bloqueioSubida) { escalaI--; ultTroca = subiuEm = agora; aplicarRazao(); }
+}
+export const escalaDinamica = () => ESCALAS[escalaI];
 function aplicarRazao() {
-  const r = Math.min(pixelRatioDe(qualidade()), nivel >= 1 ? 0.85 : 99);
+  const r = Math.min(pixelRatioDe(qualidade()), nivel >= 1 ? 0.85 : 99) * ESCALAS[escalaI];
   if (r === renderer.getPixelRatio()) return;
   const s = renderer.getSize(tam); renderer.setPixelRatio(r); renderer.setSize(s.x, s.y, false); // o canvas é dimensionado pelo CSS (updateStyle false, como em jogo.js)
 }
@@ -292,6 +325,7 @@ aoMudar(aplicarQualidade);
 export function ajustarTela() { if (atual && atual !== "baixa" && feitos[atual]) pronto(atual); }
 // forca: 0 (nítido) a 1 (bem borrado); com turbo vai até 1,4
 export function desenhar(forca) {
+  quadroDinamico(performance.now());
   const q = efetivaPos(); if (q !== atual) aplicarQualidade();
   { // o verniz da pintura dos carros (f1-pintura.js): só de dia e só com o pós (Média e Alta); sobe e desce devagar na virada
     const t = performance.now(), alvo = q === "baixa" || ehNoite() ? 0 : 1;

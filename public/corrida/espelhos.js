@@ -30,7 +30,7 @@ function criar(kart) {
     // assim se vê a pista e os carros atrás e, na borda de dentro, só um pedacinho da lateral do próprio carro. O raio do olho refletido pela face
     // apontava para a carroceria)
     const lado = Math.sign(centro.x || 1), refl = new THREE.Vector3(); void eye; void n;
-    const camera = new THREE.PerspectiveCamera(2 * Math.atan(Math.tan(FOV_H / 2) / razao) * 180 / Math.PI, razao, 0.5, 900); // (até 900 u, uns 190 m: mais longe que isso, num retrovisor, é um ponto; era 1.800 e cada espelho desenhava quase a pista toda)
+    const camera = new THREE.PerspectiveCamera(2 * Math.atan(Math.tan(FOV_H / 2) / razao) * 180 / Math.PI, razao, 0.5, 550); // (até 550 u, uns 115 m; eram 900, mas no espelho de 256 px o que passa disso some e só custava desenhos de cenário, medido em Monza: 30 a 50 por quadro: mais longe que isso, num retrovisor, é um ponto; era 1.800 e cada espelho desenhava quase a pista toda)
     return { e, lado, centro: centro.clone().addScaledVector(n, 0.03), refl, rt, mat, painel, cam: camera, feito: false };
   });
   return (kart.espelho = { itens });

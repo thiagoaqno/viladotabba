@@ -54,12 +54,17 @@ function olharDe(R, tr, s, dir) {
   R.olho.position.set(x, p.h + ALTURAS[s % 2], z); R.olho.up.set(0, 1, 0); R.olho.lookAt(x + Math.cos(a), p.h + ALTURAS[s % 2], z + Math.sin(a)); R.olho.updateMatrixWorld(true);
 }
 
-function ler(R, s) {
-  const bruto = R.brutos[s], ve = R.veBrutos[s], b = R.buf;
+function ler(R, s, b = R.buf) {
+  if (!R.brutos) return; // (o mapa já fechou)
+  const bruto = R.brutos[s], ve = R.veBrutos[s];
   for (let k = 0; k < b.length; k += 4) { const id = b[k] | (b[k + 1] << 8); if (id >= BASE_MARCA) ve[id - BASE_MARCA] = 1; else if (id) bruto[id - 1] = 1; }
 }
 // um desenho do mapa
+// A leitura dos pixels é ASSÍNCRONA (readRenderTargetPixelsAsync: um buffer na placa e uma cerca): a síncrona fazia o processador esperar a placa a cada
+// quadro da transmissão de abertura, e eram uns 4 s de quadros de ~100 ms (medido com a RTX 2060 em Monza, 21 robôs). Até quatro leituras ficam no ar (com duas, o mapa só fechava depois da largada).
+const NO_AR = 4;
 function passoDoMapa(R, tr) {
+  if ((R.noAr || 0) >= NO_AR) return; // (espera as leituras que já estão no ar)
   const n = R.feito, s = n >> 2, dir = n & 3, { objs, ids } = R;
   if (!R.rt) {
     R.rt = new THREE.WebGLRenderTarget(LARG, ALT, { samples: 0, colorSpace: THREE.LinearSRGBColorSpace, depthBuffer: true });
@@ -72,16 +77,23 @@ function passoDoMapa(R, tr) {
   renderer.shadowMap.autoUpdate = false; renderer.toneMapping = THREE.NoToneMapping; renderer.setClearColor(0x000000, 1);
   try {
     renderer.setRenderTarget(R.rt); renderer.autoClear = true; R.olho.layers.set(CAMADA_MAPA); renderer.render(tr.grp, R.olho);
-    renderer.readRenderTargetPixels(R.rt, 0, 0, LARG, ALT, R.buf); ler(R, s);
+    lerDepois(R, tr, s);
     // o segundo desenho, sobre a mesma profundidade: as árvores e os marcadores dos trechos
     renderer.autoClear = false; renderer.clear(true, false, false); R.olho.layers.set(CAMADA_LEVE); renderer.render(tr.grp, R.olho);
-    renderer.readRenderTargetPixels(R.rt, 0, 0, LARG, ALT, R.buf); ler(R, s);
+    lerDepois(R, tr, s);
   } finally {
     renderer.autoClear = auto;
     renderer.setRenderTarget(alvo); renderer.shadowMap.autoUpdate = sombra; renderer.toneMapping = tom; renderer.setClearColor(limpa, alfa);
     for (let i = 0; i < objs.length; i++) { objs[i].material = velhos[i]; objs[i].instanceColor = cores[i]; }
   }
-  if (++R.feito >= R.total * 4) fechar(R, tr);
+  ++R.feito;
+}
+// pede a leitura do alvo agora (a placa copia já) e conta quando ela volta; o mapa fecha quando o último desenho foi lido
+function lerDepois(R, tr, s) {
+  const b = (R.livres && R.livres.pop()) || new Uint8Array(LARG * ALT * 4); R.noAr = (R.noAr || 0) + 1; R.pedidos = (R.pedidos || 0) + 1;
+  const volta = () => { R.noAr--; ler(R, s, b); (R.livres ||= []).push(b); if (++R.lidos === R.total * 8 && R.brutos) fechar(R, tr); };
+  R.lidos ||= 0;
+  renderer.readRenderTargetPixelsAsync(R.rt, 0, 0, LARG, ALT, b).then(volta, volta);
 }
 
 // o mapa pronto: cada trecho soma os vizinhos e o que está perto
@@ -101,7 +113,7 @@ function fechar(R, tr) {
   });
   tr.grp.remove(R.marcas); R.marcas.geometry.dispose(); R.marcas.material.dispose(); R.marcas.dispose(); R.marcas = null; R.veBrutos = null;
   R.brutos = null; R.ids.forEach((m) => [].concat(m).forEach((x) => x.dispose())); R.ids = null;
-  R.rt.dispose(); R.rt = null; R.buf = null;
+  R.rt.dispose(); R.rt = null; R.buf = null; R.livres = null;
 }
 
 function aplicar(R, s) {
@@ -114,7 +126,7 @@ function aplicar(R, s) {
 // Uma vez por quadro, com a câmera já posta e antes de desenhar. `valeMapa`: a câmera é de quem está na pista (nem aérea nem TV).
 export function quadroRecorte(tr, cam, valeMapa, nearest) {
   const R = tr.recorte || (tr.recorte = montar(tr));
-  if (!R.setores) { passoDoMapa(R, tr); return; }
+  if (!R.setores) { if (R.feito < R.total * 4) passoDoMapa(R, tr); return; }
   if (!valeMapa) { aplicar(R, -1); return; }
   R.idx = nearest(tr, cam.position.x, cam.position.z, R.idx);
   const p = tr.pts[R.idx], longe = Math.hypot(p.x - cam.position.x, p.y - cam.position.z) > tr.W / 2 + LONGE_LADO || Math.abs(cam.position.y - p.h) > LONGE_ALTURA;
@@ -136,7 +148,7 @@ export function mostrarCarro(kart, visivel) {
 export function soltarRecorte(tr) { const R = tr?.recorte; if (R && R.setores) aplicar(R, -1); }
 // #debug: termina o mapa de uma vez e escolhe o trecho na mão
 export const depurarRecorte = {
-  terminar(tr) { const R = tr.recorte || (tr.recorte = montar(tr)); const t0 = performance.now(), de = R.feito; while (!R.setores) passoDoMapa(R, tr); return { objetos: R.objs.length, trechos: R.total, desenhos: R.total * 4 - de, ms: Math.round(performance.now() - t0) }; },
+  terminar(tr) { const R = tr.recorte || (tr.recorte = montar(tr)); const t0 = performance.now(), de = R.feito; while (R.feito < R.total * 4) { const ar = R.noAr || 0; R.noAr = 0; passoDoMapa(R, tr); R.noAr += ar; } return { objetos: R.objs.length, trechos: R.total, desenhos: R.total * 4 - de, ms: Math.round(performance.now() - t0) }; },
   usar(tr, s) { aplicar(tr.recorte, s); },
   carroVisivel, mostrarCarro,
 };

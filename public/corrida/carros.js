@@ -100,7 +100,7 @@ export function makeKart(color, model, ghost = false, name = "", mods = MODS_PAD
 // com 19 adversários só os carros passavam de 500 chamadas por quadro. De longe as peças pequenas (volante, câmbio, interior, peças de
 // baixo) não aparecem e saem do desenho; bem longe saem também as suspensões e os detalhes das rodas, e ficam o corpo e os pneus.
 // `d`: a distância em unidades do mundo. Só esconde as peças do modelo (pelo nome), sem mexer nos efeitos (luzes, chamas, faíscas).
-const LOD_PERTO = 320, LOD_LONGE = 1000;
+const LOD_PERTO = 200, LOD_LONGE = 1000; // (LOD_PERTO era 320: o piloto, o volante e as miudezas não se veem a 40 m, e com o pelotão junto na largada eram 5 desenhos a mais por carro)
 // (os nomes do carro clássico e, depois, os das peças que f1-2026.js monta)
 const LOD1 = new Set(["gear_switch", "interior_details_1", "interior_details_2", "steering_wheel", "back_suspension_2", "car_body_3", "car_body_4", "volante", "volante-det", "miudezas", "luvas", "luvas-aro", "braco", "antebraco", "tronco"]); // (o piloto: as luvas, os braços e os ombros saem de longe)
 const LOD2 = new Set(["back_suspension_1", "front_suspension", "car_body_2", "McLaren_mp4_5_2", "detalhes", "mecanica", "capacete", "viseira"]); // (e, bem longe, a cabeça)
@@ -109,7 +109,7 @@ export function lodKart(k, d) {
   const fLod = graficos().adversarios === "simples" ? 0.4 : 1; // (Configurações > Gráficos: adversários simples tiram as peças pequenas mais cedo)
   const n = d > LOD_LONGE * fLod ? 2 : d > LOD_PERTO * fLod ? 1 : 0;
   if (k.lod === n && k.lodMats === k.mats) return; // (k.mats muda quando o modelo de F1 chega: aí as peças são outras)
-  k.lod = n; k.lodMats = k.mats;
+  k.lod = n; k.lodMats = k.mats; k.g.userData.lod = n; // (pos.js: o carro bem longe sai da máscara do desfoque)
   if (!k.lodPecas || k.lodPecasDe !== k.mats) { k.lodPecas = []; k.lodPecasDe = k.mats; k.g.traverse((o) => { if (o.isMesh && (LOD1.has(o.name) || LOD2.has(o.name))) k.lodPecas.push(o); }); }
   for (const o of k.lodPecas) o.visible = LOD2.has(o.name) ? n < 2 : n < 1;
 }

@@ -486,7 +486,7 @@ const pinturaVcarb = (nome) => ({ numero: "#1534cc", carbono: 1, numPos: [3.5, 0
   lados(ctx, (c) => {
     c.beginPath(); c.moveTo(3.7, 0.12); c.lineTo(3.3, 0.36); c.quadraticCurveTo(2.0, 0.42, 0.6, 0.18); c.lineTo(0.6, 0.12); c.closePath(); c.fillStyle = AZUL; c.fill(); // a faixa azul por baixo
     baixo(c, AZUL); ret(c, 0.05, 0, 0.6, 0.16, AZUL); ret(c, 3.86, 0.3, 4.45, 1.1, AZUL);
-    touros(c, 2.7, 0.66, 3.5, 0.98); ret(c, 2.55, 0.86, 2.7, 0.98, AMAR);
+    touros(c, 2.7, 0.66, 3.5, 0.98); ret(c, 2.55, 0.86, 2.7, 0.98, AMAR); poli(c, [[0.0, 0.1], [0.7, 0.24], [0.7, 0.34], [0.0, 0.22]], AMAR); // o bico amarelo
     patro(c, "VISA", 2.45, 0.44, 0.11, AZUL, { larg: 0.6, peso: 900 }); patro(c, nome, 1.55, 0.53, 0.04, AZUL, { larg: 0.6 });
     patro(c, "HONDA", 3.45, 0.58, 0.045, VERM, { larg: 0.3 }); patro(c, "HUGO", 4.15, 0.72, 0.05, BRANCO, { larg: 0.4 });
   });
@@ -601,6 +601,7 @@ DESENHOS["audi@2025"] = { numero: "#52e252", carbono: 1, numPos: [3.55, 0.7, 9, 
   const PRETO = "#121314", VERDE = "#52e252", BRANCO = "#f4f4f4";
   base(ctx, PRETO);
   lados(ctx, (c) => {
+    degrade(c, 0, 0, 2.8, 0, [[0, VERDE], [0.55, VERDE], [1, PRETO]]); c.fillRect(0, 0.15, 2.8, 0.95); // (2025, pelas fotos: o verde da frente some no preto de trás)
     c.beginPath(); c.moveTo(0.0, 0.1); c.lineTo(1.55, 0.6); c.lineTo(2.25, 0.86); c.lineTo(2.25, 1.0); c.lineTo(1.4, 0.7); c.lineTo(0.0, 0.3); c.closePath(); c.fillStyle = VERDE; c.fill(); // o verde do bico até o halo
     baixo(c, PRETO); ret(c, 0.05, 0, 0.6, 0.16, VERDE); ret(c, 3.86, 0.3, 4.45, 1.1, PRETO);
     patro(c, "Stake", 2.55, 0.42, 0.1, BRANCO, { larg: 0.6, estilo: "italic", peso: 900 }); patro(c, "KICK", 3.4, 0.68, 0.05, VERDE, { larg: 0.3 });
@@ -742,6 +743,41 @@ DESENHOS["alpine@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.72, 9
 // Aston Martin AMR24 e Alpine A524 (2024, pelas fotos): parecidas com as de 2023 (verde com o filete limão; carbono, azul em cima e o rosa da BWT)
 DESENHOS["aston-martin@2024"] = DESENHOS["aston-martin@2023"];
 DESENHOS["alpine@2024"] = DESENHOS["alpine@2023"];
+
+// 2025 (pelas fotos do Thiago): Williams FW47 azul-royal com "ATLASSIAN", Alpine A525 azul com o rosa no bico, no halo e na BWT, Ferrari SF-25
+// no vermelho mais escuro com o branco na asa; Haas, Aston, Mercedes e McLaren quase iguais às de 2024
+DESENHOS["williams@2025"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.7, 9, 9], pintar(ctx) {
+  const AZUL = "#1f4fe0", MAR = "#0e1a4a", VERM = "#e10600", BRANCO = "#f4f4f4";
+  base(ctx, AZUL);
+  lados(ctx, (c) => { degrade(c, 0, 0.05, 0, 0.4, [[0, MAR], [1, AZUL]]); c.fillRect(0.6, 0.05, 3.0, 0.35); ret(c, 0.4, 0.3, 3.3, 0.32, VERM); baixo(c, MAR); ret(c, 3.86, 0.3, 4.45, 1.1, MAR);
+    patro(c, "ATLASSIAN", 2.75, 0.7, 0.07, BRANCO, { larg: 0.75 }); patro(c, "KOMATSU", 2.85, 0.38, 0.06, BRANCO, { larg: 0.55 }); patro(c, "Gulf", 3.45, 0.55, 0.045, "#ff8200", { larg: 0.25 }); patro(c, "ATLASSIAN", 4.15, 1.0, 0.05, BRANCO, { larg: 0.5 }); });
+  vista(ctx, "T", (c) => { asasT(c, MAR, MAR, AZUL); textoTopo(c, "ATLASSIAN", 3.0, 0, 0.08, BRANCO, { larg: 0.8 }); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); });
+} };
+DESENHOS["alpine@2025"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.72, 9, 9], pintar(ctx) {
+  const AZUL = "#1565d8", ROSA = "#f28cc4", CARB = "#121318", BRANCO = "#f4f4f4";
+  base(ctx, AZUL);
+  lados(ctx, (c) => {
+    poli(c, [[0, 0.05], [1.3, 0.3], [1.3, 1.1], [0, 1.1]], ROSA); ret(c, 1.8, 0.92, 2.3, 1.1, ROSA); // o bico e o halo rosa
+    c.beginPath(); c.moveTo(1.8, 0.12); c.quadraticCurveTo(2.5, 0.08, 3.3, 0.18); c.lineTo(3.1, 0.42); c.quadraticCurveTo(2.4, 0.46, 1.9, 0.36); c.closePath(); c.fillStyle = ROSA; c.fill();
+    baixo(c, CARB); ret(c, 0.05, 0, 0.6, 0.16, ROSA); ret(c, 3.86, 0.3, 4.45, 1.1, ROSA);
+    patro(c, "BWT", 2.55, 0.28, 0.12, AZUL, { larg: 0.5, peso: 900 }); patro(c, "eni", 3.1, 0.8, 0.07, BRANCO, { larg: 0.3 }); });
+  vista(ctx, "T", (c) => { ret(c, 0, -0.4, 1.3, 0.4, ROSA); asasT(c, ROSA, ROSA, ROSA); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ROSA); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ROSA); });
+} };
+DESENHOS["ferrari@2025"] = { numero: "#ffffff", carbono: 1, numPos: [3.6, 0.7, 9, 9], pintar(ctx) {
+  const VERM = "#9e1222", PRETO = "#141414", BRANCO = "#f4f4f4", AMAR = "#ffd500";
+  base(ctx, VERM);
+  lados(ctx, (c) => { baixo(c, PRETO); ret(c, 3.86, 0.3, 4.45, 1.1, BRANCO); patro(c, "HP", 4.15, 0.8, 0.07, "#0096d6", { larg: 0.25 }); ret(c, 2.4, 0.95, 3.6, 0.98, BRANCO);
+    c.beginPath(); c.arc(2.0, 0.42, 0.1, Math.PI, 0); c.lineTo(2.1, 0.33); c.lineTo(1.9, 0.33); c.closePath(); c.fillStyle = AMAR; c.fill();
+    patro(c, "VGW PLAY", 2.75, 0.4, 0.06, BRANCO, { larg: 0.5 }); patro(c, "Santander", 3.1, 0.62, 0.045, BRANCO, { larg: 0.45 }); });
+  vista(ctx, "T", (c) => { asasT(c, BRANCO, BRANCO, VERM); ret(c, 2.4, -0.3, 3.9, -0.27, BRANCO); ret(c, 2.4, 0.27, 3.9, 0.3, BRANCO); });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERM); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); });
+} };
+for (const e of ["haas", "aston-martin", "mercedes", "mclaren"]) DESENHOS[e + "@2025"] = DESENHOS[e + "@2024"];
 
 export const temDesenho = (equipe) => !!DESENHOS[equipe];
 export const corDoNumero = (equipe) => desenhoDe(equipe)?.numero || "#ffffff";

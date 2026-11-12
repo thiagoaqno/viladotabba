@@ -77,6 +77,25 @@ const MAIS = {
   corridaseca: ["Pista seca. Pode confiar na aderência.", "Asfalto seco por enquanto.", "Sem água. Condição boa.", "Pista seca. Ande forte.", "O radar não mostra chuva agora.", "Condição seca. Siga o plano."],
 };
 for (const [q, textos] of Object.entries(MAIS)) { if (!SITUACOES[q]) throw new Error("situação desconhecida: " + q); SITUACOES[q].push(...textos); }
+// As falas de cada TEMPORADA (f1-temporadas.js): "<situação>-<ano>". O rádio (radio.js `escolher`) junta as do ano em uso às de sempre;
+// em SO_DO_ANO, nos anos que têm fala própria, só valem as do ano (o aviso do ERS na largada é regra de 2026: antes dela a largada é livre).
+const POR_ANO = {
+  "boasvindas-2023": ["Temporada dois mil e vinte e três. O efeito solo está no auge.", "Regulamento estável e carro rápido. Vamos buscar pontos grandes.", "Este ano tem um carro dominando o grid. Vamos ver o quanto chegamos perto."],
+  "boasvindas-2024": ["Temporada dois mil e vinte e quatro. O grid está mais apertado do que nunca.", "Este ano muita gente vence corrida. Cada décimo conta.", "Carros muito próximos este ano. A classificação vai decidir muito."],
+  "boasvindas-2025": ["Temporada dois mil e vinte e cinco. Último ano deste regulamento.", "Último ano do efeito solo. Vamos fechar bem.", "Ano de briga pelo título até o fim. Cada ponto pesa."],
+  "erslargada-2023": ["Largada com potência total. Cuidado com a patinada.", "O elétrico está liberado desde a largada. Dose o acelerador."],
+  "erslargada-2024": ["Largada com potência total. Cuidado com a patinada.", "Embreagem no ponto e potência cheia na largada."],
+  "erslargada-2025": ["Largada com potência total. Cuidado com a patinada.", "Último ano com o elétrico cheio na largada. Aproveite a tração."],
+  "voltarapida-2023": ["Volta mais rápida. Terminando entre os dez, vale um ponto extra.", "Melhor volta. Segure ela até o fim para o ponto extra."],
+  "voltarapida-2024": ["Volta mais rápida. Terminando entre os dez, vale um ponto extra.", "Melhor volta. Segure ela até o fim para o ponto extra."],
+  "vitoria-2023": ["Mais uma vitória. Que temporada estamos fazendo.", "Vitória. Num ano de domínio, essa tem gosto especial."],
+  "vitoria-2024": ["Vitória! Num ano em que todo mundo vence, essa vale ouro.", "P1. Com o grid tão apertado, isso é enorme."],
+  "vitoria-2025": ["Vitória! No ano da briga pelo título, isso pesa muito.", "P1. Pontos enormes na disputa do campeonato."],
+  "drs-2025": ["DRS aberto. É o último ano dele, aproveite.", "Menos de um segundo. Asa aberta na reta."],
+};
+for (const [q, textos] of Object.entries(POR_ANO)) SITUACOES[q] = textos;
+const SO_DO_ANO = ["erslargada"];
+
 // situações que passam na frente do intervalo mínimo entre falas
 const URGENTES = ["box", "safety", "spotesq", "spotdir", "spotlivre"];
 const lista = [];
@@ -132,6 +151,6 @@ const semAcento = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, ""
 function pecaDoNome(nome, pilotoId) { const id = pilotoId && NOMES[pilotoId] ? pilotoId : semAcento(nome); return NOMES[id] ? `nome-${id}` : null; }
 const pecasDe = (quando) => PECAS.filter((p) => p.quando === quando);
 
-const api = { SITUACOES, URGENTES, FALAS: lista, porSituacao: (q) => lista.filter((f) => f.quando === q), PECAS, NOMES, pecaDoGap, pecaDoNome, pecasDe };
+const api = { SO_DO_ANO, SITUACOES, URGENTES, FALAS: lista, porSituacao: (q) => lista.filter((f) => f.quando === q), PECAS, NOMES, pecaDoGap, pecaDoNome, pecasDe };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.RadioFalas = api;
 })(typeof self !== "undefined" ? self : this);

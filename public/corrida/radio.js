@@ -13,7 +13,9 @@ const temDOM = typeof document !== "undefined" && typeof window !== "undefined";
 // ---------- a escolha (pura, testável) ----------
 // Uma variação da situação, sem repetir a última dita. `rnd` devolve [0, 1).
 function escolher(situacao, ultimoId, rnd = Math.random) {
-  const todas = F.porSituacao(situacao); if (!todas.length) return null;
+  // as falas da temporada em uso (radio/falas.js POR_ANO): somam às de sempre, ou ficam sozinhas nas de SO_DO_ANO
+  const ano = root.F1Temporadas && root.F1Temporadas.anoAtual ? root.F1Temporadas.anoAtual() : null, doAno = ano ? F.porSituacao(`${situacao}-${ano}`) : [];
+  const todas = doAno.length && (F.SO_DO_ANO || []).includes(situacao) ? doAno : F.porSituacao(situacao).concat(doAno); if (!todas.length) return null;
   const opcoes = todas.length > 1 ? todas.filter((f) => f.id !== ultimoId) : todas;
   return opcoes[Math.min(opcoes.length - 1, Math.floor(rnd() * opcoes.length))];
 }

@@ -28,7 +28,7 @@ const INFO = {
   lasvegas: ["Estados Unidos", "Las Vegas Street Circuit", 17, 0], catar: ["Catar", "Losail International Circuit", 30, 0], abudhabi: ["Emirados Árabes", "Yas Marina Circuit", 28, 0],
   nurburgring: ["Alemanha", "Nürburgring", 15, 2], rio: ["Brasil", "Rio de Janeiro", 28, 1], deserto: ["", "Deserto Dourado", 36, 0], serra: ["", "Serra Verde", 14, 1],
 };
-const infoDe = (id) => INFO[id] || ["", PISTAS[id]?.name || id, 22, 1];
+const infoDe = (id) => INFO[id] || INFO[window.Pistas.baseDe(id)] || ["", PISTAS[id]?.name || id, 22, 1];
 
 // ---------- as contas (puras) ----------
 // extensão em metros (a escala do velocímetro, a mesma da torre), curvas (trechos que viram pelo menos ~29°) e as duas curvas
@@ -326,7 +326,7 @@ export function quadroTV(race, tr, cam, reduzMov) {
     tv.el.querySelectorAll(".tvCarta").forEach((c) => c.classList.toggle("on", c.dataset.b === f.k));
     tv.el.querySelector(".tvRotulo").textContent = TITULO[f.k];
     if (window.Narrador) { // o narrador apresenta a pista junto do voo; no grid ele abaixa; as luzes cortam (narrador.js)
-      if (f.k === "pista") window.Narrador.falarDaPista(E.S.config.pista, E.S.semente, { cortarEm: race.startAt - ((race.luzes?.espera || 0) + 4) * 1000 - sNow() });
+      if (f.k === "pista") window.Narrador.falarDaPista(window.Pistas.baseDe(E.S.config.pista), E.S.semente, { cortarEm: race.startAt - ((race.luzes?.espera || 0) + 4) * 1000 - sNow() });
       else if (f.k === "grid") window.Narrador.abaixar(0.3, 0.6);
     }
   }

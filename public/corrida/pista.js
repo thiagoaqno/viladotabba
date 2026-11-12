@@ -75,10 +75,10 @@ const TRACKS = {};
 const mundoDe = (id) => (id === "monaco" ? { relevo: relevoMonaco, fundo: fundoMonaco, agua: (tr, x, y) => fundoMonaco(tr, x, y) > 0, cor: corDoChaoMonaco, nivelMar: NIVEL_DO_MAR, banda: (tr) => tr.wallLat } : GPS[id]?.mundo || null);
 export function buildTrack(id) {
   if (TRACKS[id]) return TRACKS[id];
-  const t = PISTAS[id], pts = window.Pistas.pontos(t, 6), n = pts.length, W = t.width;
+  const t = PISTAS[id], pts = window.Pistas.pontos(t, 6), n = pts.length, W = t.width, base = t.base || id; // Formula GP: a pista real usa o cenário, o visual e os ajustes da pista de sempre (`base`)
   for (const p of pts) { p.nx = -p.ty; p.ny = p.tx; }
   const mini = document.createElement("canvas"); mini.width = mini.height = 240; drawPreview(mini, id);
-  const tr = { id, t, pts, n, W, look: LOOK[id], theme: THEMES[id], mini, wallLat: t.walls ? W / 2 + t.wall : Infinity, grp: new THREE.Group() };
+  const tr = { id: base, pistaId: id, t, pts, n, W, look: LOOK[base], theme: THEMES[base], mini, wallLat: t.walls ? W / 2 + t.wall : Infinity, grp: new THREE.Group() };
   tr.obstaculos = window.Pistas.obstaculosDaPista(t, pts); // sólidos da física (sim.js e fisica.js usam a mesma conta)
   if (t.superficieEscape) tr.superficiesEscape = window.Pistas.mapaSuperficies(pts, t.superficieEscape);
   if (t.escapeLivre || t.muros) tr.murosEscape = window.Pistas.murosDoEscape(pts, W, tr.superficiesEscape, t);

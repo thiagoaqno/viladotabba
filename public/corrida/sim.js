@@ -35,7 +35,7 @@ function criarPista(t, id) {
       for (let j = i - 4; j <= i + 4; j++) tr.pneus[(j + n) % n] = fora;
     }
   }
-  if (id === "montreal") {
+  if ((t.base || id) === "montreal") { // (a pista real do Formula GP também)
     const m = P.muroCampeoes(pts);
     if (m) for (let i = m.i0; i <= m.i1; i++) tr.pneus[i % n] = m.lado;
   }

@@ -192,14 +192,15 @@ function renderGP(m, isHost, f1, c, t) {
   const recPista = window.GpSobre.recordesDa(c.pista, () => { if (E.S && E.S.phase === "lobby") renderLobby(); }) || { top: null, setores: [] };
   trocar($("gpMapa"), `<div class="sn-mapa-corpo">${window.GpSobre.mapaSvg(c.pista, "sn-sobre-svg sn-gp-svg", null, null, true)}<div class="sn-mapa-txt"><small>${h(t.sub)}</small><b>${h(t.name)}</b><div class="sn-chips">${dados}</div>${window.GpSobre.fichaDetalhe(c.pista, undefined, recPista)}<button class="sn-sobre-btn" data-sobre><span>Sobre o GP</span><small>${sobreResumo(c.pista)}</small><i aria-hidden="true">›</i></button>${isHost ? "" : `<p class="sn-so-org">Só o organizador escolhe o GP.</p>`}</div></div>`);
   const fundoGp = window.GpInfo && window.GpInfo.fundoDe(c.pista); $("gpMapa").style.setProperty("--foto", fundoGp ? `url("${fundoGp}")` : "none"); // a foto do GP por trás do mapa
-  const pistas = window.Pistas.idsNaEscolha().map((id) => [id, PISTAS[id]]).map(([id, p]) => `<button class="sn-pista ${c.pista === id ? "on" : ""}" data-pista="${id}" ${dis} aria-pressed="${c.pista === id}"><i class="sn-pista-foto" aria-hidden="true" style="--foto:${window.GpInfo?.fundoDe(id) ? `url(&quot;${window.GpInfo.fundoDe(id)}&quot;)` : "none"}"></i><canvas data-prev="${id}" width="160" height="160" aria-hidden="true"></canvas><span><b>${h(p.name)}</b><small>${h(p.sub)}</small></span>${loadBest(id) ? `<em>Recorde ${fmt(loadBest(id).t)}</em>` : ""}</button>`).join("");
-  if (trocar($("gpPistas"), `<h3 class="sn-tit"><span>Pistas</span><em>${window.Pistas.idsNaEscolha().length} circuitos</em></h3><div class="sn-pistas">${pistas}</div>`)) $("gpPistas").querySelectorAll("[data-prev]").forEach((cv) => drawPreview(cv, cv.dataset.prev));
+  const gpReal = !!(t && t.real), idsPistas = gpReal ? window.Pistas.idsReais() : window.Pistas.idsNaEscolha(); // Formula GP: só as pistas no tamanho real
+  const pistas = idsPistas.map((id) => [id, PISTAS[id]]).map(([id, p]) => `<button class="sn-pista ${c.pista === id ? "on" : ""}" data-pista="${id}" ${dis} aria-pressed="${c.pista === id}"><i class="sn-pista-foto" aria-hidden="true" style="--foto:${window.GpInfo?.fundoDe(id) ? `url(&quot;${window.GpInfo.fundoDe(id)}&quot;)` : "none"}"></i><canvas data-prev="${id}" width="160" height="160" aria-hidden="true"></canvas><span><b>${h(p.name)}</b><small>${h(p.sub)}</small></span>${loadBest(id) ? `<em>Recorde ${fmt(loadBest(id).t)}</em>` : ""}</button>`).join("");
+  if (trocar($("gpPistas"), `<h3 class="sn-tit"><span>Pistas</span><em>${idsPistas.length} circuitos${gpReal ? " · tamanho real" : ""}</em></h3><div class="sn-pistas">${pistas}</div>`)) $("gpPistas").querySelectorAll("[data-prev]").forEach((cv) => drawPreview(cv, cv.dataset.prev));
   const seg = (itens, atual, attr, rot, dsb = dis) => `<div class="sn-seg" role="group" aria-label="${rot}">${itens.map(([v, l]) => { const on = String(atual) === String(v); return `<button class="sn-opt ${on ? "on" : ""}" data-${attr}="${v}" aria-pressed="${on}" ${dsb}>${l}</button>`; }).join("")}</div>`;
   const campo = (rot, corpo, nota) => `<div class="sn-grupo"><span class="sn-rot">${rot}</span>${corpo}${nota ? `<small>${nota}</small>` : ""}</div>`;
   const robos = Math.min(c.robos || 0, (f1 ? 22 : 8) - E.S.players.length);
   const OPC_CLIMA = [["aleatorio", "Aleatório"], ["seco", "Seco"], ["chuva", "Chuva"], ["variavel", "Variável"]];
   trocar($("gpOpcoes"), `<h3 class="sn-tit"><span>O GP</span><em>${isHost ? "Você é o organizador" : "Só o organizador muda"}</em></h3><div class="sn-opcoes">`
-    + campo("Regras", seg([["f1", "Fórmula 1"], ["galera", "Corrida da Galera"]], c.regras || "galera", "regras", "Regras"), f1 ? "Pneus, paradas nos boxes, classificação e robôs com os pilotos de 2026." : "Caixas de itens e a ajuda do pelotão, sem pneus.")
+    + campo("Regras", seg([["f1", "Fórmula 1"], ["formulagp", "Formula GP"], ["galera", "Corrida da Galera"]], gpReal && f1 ? "formulagp" : c.regras || "galera", "regras", "Regras"), gpReal && f1 ? "A Fórmula 1 com as pistas no tamanho real: traçado, largura de 12 m e relevo de verdade." : f1 ? "Pneus, paradas nos boxes, classificação e robôs com os pilotos de 2026." : "Caixas de itens e a ajuda do pelotão, sem pneus.")
     + campo("Voltas", seg([1, 2, 3, 5, 10, 21].map((v) => [v, v]), c.voltas, "v", "Voltas"))
     + campo("Horário", seg([["dia", "Dia"], ["noite", "Noite"]], c.hora === "noite" ? "noite" : "dia", "hora", "Horário"))
     + (f1 && !temporada ? campo("Clima", seg(OPC_CLIMA, c.clima || "aleatorio", "clima", "Clima"), "Aleatório segue a previsão do GP. Chuva larga molhado; Variável larga seco e a chuva vem no meio.") : "")
@@ -362,7 +363,11 @@ $("lobby").addEventListener("click", (e) => {
   if ((b = t.closest("[data-pista]"))) return cfg({ pista: b.dataset.pista });
   if ((b = t.closest("[data-v]"))) return cfg({ voltas: +b.dataset.v });
   if ((b = t.closest("[data-hora]"))) return cfg({ hora: b.dataset.hora });
-  if ((b = t.closest("[data-regras]"))) return cfg({ regras: b.dataset.regras });
+  if ((b = t.closest("[data-regras]"))) { // Formula GP = as regras de F1 numa pista real ("gp-<pista>"); voltar à F1 ou à Galera traz a pista de sempre
+    const r = b.dataset.regras, P = window.Pistas, base = P.baseDe(E.S.config.pista);
+    if (r === "formulagp") return cfg({ regras: "f1", pista: PISTAS["gp-" + base] ? "gp-" + base : P.idsReais()[0] });
+    return cfg({ regras: r, pista: base });
+  }
   if ((b = t.closest("[data-clima]"))) return cfg({ clima: b.dataset.clima });
   if ((b = t.closest("[data-cambio]"))) return cfg({ cambio: b.dataset.cambio });
   if ((b = t.closest("[data-ers]"))) return cfg({ ers: b.dataset.ers });

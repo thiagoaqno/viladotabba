@@ -438,7 +438,7 @@ function draw(dt) {
 function abrirTV(tr, dt, reduceMotion) { if (race.tvAte) { quadroTV(race, tr, cam, reduceMotion); if (E.S?.config?.contrarrelogio) pularTV(); } } // (no contrarrelógio, direto para o carro)
 // A largada foi antecipada (todos os humanos pularam a TV): só troca a hora, sem remontar a pista nem o carro.
 export function adiantarLargada(st) {
-  if (!race || st.phase !== "race" || !race.tvAte || !st.tvAte || st.tvAte >= race.tvAte || race.tr.id !== st.config.pista || sNow() >= race.startAt) return false;
+  if (!race || st.phase !== "race" || !race.tvAte || !st.tvAte || st.tvAte >= race.tvAte || (race.tr.pistaId || race.tr.id) !== st.config.pista || sNow() >= race.startAt) return false;
   race.startAt = st.startAt; race.tvAte = st.tvAte; race.lapT0 = st.startAt;
   return true;
 }

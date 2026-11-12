@@ -8,6 +8,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { temDesenho, folhaDaEquipe, corDoNumero, numPosDe, carbonoDe, texturaDasLetrasDoPneu, texturaDosDigitos, logosProntos, FAIXAS, aroDaRoda,
   LIV_VERT_DECL, LIV_VERT_MAIN, LIV_FRAG_DECL, LIV_FRAG_MAIN, aplicarVerniz, limitarBrilhoCarro, texturaDoHalo, aplicarHalo, texturaDoCockpit, aplicarCockpit, SOL_FRAG_DECL, SOL_FRAG_MAIN, PNEU_VERT_DECL, PNEU_VERT_MAIN, PNEU_FRAG_DECL, PNEU_FRAG_MAIN } from "./f1-pintura.js";
 import { construir2026 } from "./f1-2026.js";
+import { construir2022 } from "./f1-2022.js";
 
 // combinações de cor das equipes de F1 (ficam em pistas.js: o servidor confere a escolha)
 export const PINTURAS = window.Pistas.MODS.pintura;
@@ -18,10 +19,12 @@ export const TAM = 4.35; // comprimento do modelo, em metros (todo modelo é pos
 // Para a sala escolher o ano: `usarModelo(2026)` antes de montar os carros (o padrão da corrida é o 2026; `?carro=classico` na página força o antigo).
 export const MODELOS = {
   2026: { nome: "Audi R26 (2026)", carro: "/corrida/f1/2026/carro.glb", leve: "/corrida/f1/2026/carro-leve.glb", construir: construir2026 },
+  2022: { nome: "F1 de efeito solo (2022 a 2025)", carro: "/corrida/f1/2022/carro.glb", leve: "/corrida/f1/2022/carro-leve.glb", construir: construir2022 }, // (as temporadas 2023 a 2025: f1-temporadas.js modeloDoAno)
   classico: { nome: "Clássico 88", carro: "/corrida/f1/f1.glb", leve: "/corrida/f1/f1-leve.glb" },
 };
 export const MODELO_PADRAO = 2026;
 let atual = (() => { try { const q = new URLSearchParams(location.search).get("carro"); return q && MODELOS[q] ? q : MODELO_PADRAO; } catch (e) { return MODELO_PADRAO; } })();
+const forcado = (() => { try { return !!new URLSearchParams(location.search).get("carro"); } catch (e) { return false; } })(); // (?carro=... na página manda: a temporada não troca)
 const gl = new GLTFLoader(); gl.setMeshoptDecoder(MeshoptDecoder);
 const CARGAS = new Map(); // "modelo|leve" -> { cena, dados, falhou, espera, pronto }: cada arquivo carrega uma vez, e só quando alguém pede
 function carga(id, leve) {
@@ -34,7 +37,9 @@ function carga(id, leve) {
   CARGAS.set(chave, M); return M;
 }
 export const modeloAtual = () => atual;
-export function usarModelo(id) { if (MODELOS[id]) atual = id; }
+export function usarModelo(id) { if (MODELOS[id] && !forcado) atual = id; return atual; }
+// o modelo em uso pronto (o completo e o leve): a carga da corrida espera por ele (jogo.js). Pedir já começa a baixar.
+export const modeloPronto = () => Promise.all([carga(atual, false).pronto, carga(atual, true).pronto]);
 export const f1Pronto = Promise.all([carga(atual, false).pronto, carga(atual, true).pronto, logosProntos]); // (os logos das equipes entram na pintura: esperam também)
 
 // a pintura: troca a cor que vem da máscara (mapa) pelas duas cores do carro. Com `equipe` (uma das pinturas de equipe de
@@ -117,11 +122,11 @@ function montarCorpoNovo(k) {
   const carbono = () => dupla(new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.62, metalness: 0 })); // (carbono acetinado: com menos que isso ele espelha o céu e o assoalho fica claro)
   const mat = {
     corpo: () => M("corpo", () => pintura(carbono(), k.cores[0], k.cores[1], k.equipe, num, false, true, D.numPos, !k.leve)), // (o carro do jogador e o da garagem levam a folha em 2×; os outros, a de 1×)
-    detalhes: () => M("detalhes", () => { const m = D.mats.sauber_detail.clone(); m.metalness = Math.min(m.metalness, 0.2); m.roughness = Math.max(m.roughness, 0.6); m.color.multiplyScalar(0.3); return m; }), // (o assoalho do arquivo é claro e brilhante: no carro de verdade é carbono escuro)
-    mecanica: () => M("mecanica", () => { const m = D.mats.generics.clone(); m.metalness = Math.min(m.metalness, 0.4); return m; }),
+    detalhes: () => M("detalhes", () => { const m = D.mats[D.nomes?.detalhes || "sauber_detail"].clone(); m.metalness = Math.min(m.metalness, 0.2); m.roughness = Math.max(m.roughness, 0.6); m.color.multiplyScalar(0.3); return m; }), // (o assoalho do arquivo é claro e brilhante: no carro de verdade é carbono escuro)
+    mecanica: () => M("mecanica", () => { const m = D.mats[D.nomes?.mecanica || "generics"].clone(); m.metalness = Math.min(m.metalness, 0.4); return m; }),
     miudezas: () => M("miudezas", () => dupla(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.25 }))),
     luz: () => M("luz", () => { const m = D.mats.rear_light_2.clone(); m.metalness = 0; return m; }),
-    volante: () => M("volante", () => { const m = D.mats.audi_steeringwheel.clone(); m.metalness = 0; return m; }),
+    volante: () => M("volante", () => { const m = D.mats[D.nomes?.volante || "audi_steeringwheel"].clone(); m.metalness = 0; return m; }),
     roda: () => M("roda", () => pneuMat(new THREE.MeshStandardMaterial({ vertexColors: true }), k.composto, "color_fragment")),
   };
   const peca = (nome, geo, material, pai = k.carro) => { const o = new THREE.Mesh(geo, material); o.name = nome; o.castShadow = true; o.receiveShadow = false; pai.add(o); return o; };

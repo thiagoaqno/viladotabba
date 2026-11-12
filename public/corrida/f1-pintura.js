@@ -440,11 +440,46 @@ DESENHOS.cadillac = {
 };
 
 // quais pinturas usam qual equipe: a chave é o `equipe` de MODS.pintura (pistas.js)
+// ---------------------------------------------------------------- as pinturas de outros anos (f1-temporadas.js)
+// "equipe@ano": só onde a equipe mudou de cara; nas outras vale a pintura de sempre. `desenhoDe` escolhe pelo ano em uso.
+const anoEmUso = () => (typeof window !== "undefined" && window.F1Temporadas ? window.F1Temporadas.anoAtual() : 2026);
+const chaveDo = (equipe) => { const v = equipe + "@" + anoEmUso(); return DESENHOS[v] ? v : equipe; };
+const desenhoDe = (equipe) => DESENHOS[chaveDo(equipe)];
+// uma pintura simples de duas cores, no traçado das de 2026: a cor de cima, a faixa da lateral, o nome da equipe na tampa e na asa
+function pinturaSimples({ cima, lado, faixa, asaF, asaT, nome, corNome, numero, numPos = [3.5, 0.7, 9, 9] }) {
+  return { numero, carbono: 1, numPos, pintar(ctx) {
+    base(ctx, cima);
+    lados(ctx, (c) => {
+      c.beginPath(); c.moveTo(3.6, 0.14); c.lineTo(3.2, 0.5); c.quadraticCurveTo(2.1, 0.6, 1.1, 0.46); c.lineTo(0.45, 0.24); c.lineTo(1.0, 0.26); c.quadraticCurveTo(2.0, 0.38, 2.3, 0.14); c.closePath(); c.fillStyle = lado; c.fill();
+      if (faixa) ret(c, 1.2, 0.44, 3.3, 0.48, faixa);
+      baixo(c, cima); ret(c, 3.86, 0.3, 4.45, 1.1, asaT); ret(c, 0.05, 0, 0.6, 0.16, asaF);
+      patro(c, nome, 2.75, 0.74, 0.08, corNome, { larg: 0.9 }); patro(c, nome, 4.15, 0.72, 0.05, corNome, { larg: 0.5 });
+    });
+    vista(ctx, "T", (c) => { ret(c, 1.3, -0.25, 2.2, 0.25, lado); asasT(c, asaF, asaT, cima); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, cima); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, asaT); });
+  } };
+}
+// AlphaTauri AT04 (2023): azul-marinho em cima e branco na lateral
+DESENHOS["racing-bulls@2023"] = pinturaSimples({ cima: "#1b2a4a", lado: "#f2f3f5", faixa: "#c8102e", asaF: "#1b2a4a", asaT: "#1b2a4a", nome: "AlphaTauri", corNome: "#ffffff", numero: "#ffffff" });
+// RB VCARB 01 (2024): branco com o azul forte e o vermelho
+DESENHOS["racing-bulls@2024"] = pinturaSimples({ cima: "#f4f5f8", lado: "#1534cc", faixa: "#e2001a", asaF: "#1534cc", asaT: "#1534cc", nome: "VISA CASH APP RB", corNome: "#1534cc", numero: "#1534cc" });
+// Alfa Romeo C43 (2023): vinho e branco, asas pretas
+DESENHOS["audi@2023"] = pinturaSimples({ cima: "#8f0d1c", lado: "#f2f2f2", faixa: "#111111", asaF: "#111111", asaT: "#111111", nome: "Alfa Romeo", corNome: "#ffffff", numero: "#ffffff" });
+// Sauber C44 e C45 (2024 e 2025): preto com o verde neon
+DESENHOS["audi@2024"] = pinturaSimples({ cima: "#121314", lado: "#52e252", faixa: "#121314", asaF: "#52e252", asaT: "#121314", nome: "stake", corNome: "#52e252", numero: "#52e252" });
+DESENHOS["audi@2025"] = DESENHOS["audi@2024"];
+// Mercedes W14 e W15 (2023 e 2024): preto com a faixa turquesa
+DESENHOS["mercedes@2023"] = pinturaSimples({ cima: "#141517", lado: "#1d1f22", faixa: "#00d2be", asaF: "#141517", asaT: "#141517", nome: "PETRONAS", corNome: "#00d2be", numero: "#ffffff" });
+DESENHOS["mercedes@2024"] = DESENHOS["mercedes@2023"];
+// Williams FW45 (2023): azul-escuro com o azul-claro
+DESENHOS["williams@2023"] = pinturaSimples({ cima: "#00205b", lado: "#00a0de", faixa: "#e10600", asaF: "#00205b", asaT: "#00205b", nome: "Williams", corNome: "#ffffff", numero: "#ffffff" });
+
 export const temDesenho = (equipe) => !!DESENHOS[equipe];
-export const corDoNumero = (equipe) => DESENHOS[equipe]?.numero || "#ffffff";
-export const numPosDe = (equipe) => DESENHOS[equipe]?.numPos || null;
+export const corDoNumero = (equipe) => desenhoDe(equipe)?.numero || "#ffffff";
+export const numPosDe = (equipe) => desenhoDe(equipe)?.numPos || null;
 // 1: as peças de lado da asa dianteira e a suspensão de trás de carbono; 2: só a suspensão (a asa da equipe é colorida)
-export const carbonoDe = (equipe) => DESENHOS[equipe]?.carbono || 0;
+export const carbonoDe = (equipe) => desenhoDe(equipe)?.carbono || 0;
 
 // Marcas nos halos de 2026, inspiradas nas vistas onboard e nas parcerias de cada equipe.
 // O atlas é compartilhado entre os carros da equipe; o shader o projeta só na barra do halo.
@@ -596,6 +631,7 @@ export function aplicarCockpit(sh, textura) {
 const FOLHAS = new Map();
 export function folhaDaEquipe(equipe, alta = false) {
   if (!DESENHOS[equipe]) return null;
+  equipe = chaveDo(equipe); // (a pintura do ano em uso, quando a equipe tem uma: "audi@2023" é a Alfa Romeo)
   const chave = equipe + (alta ? "|2" : "|1");
   if (FOLHAS.has(chave)) return FOLHAS.get(chave);
   ESC = alta ? 2 : 1;

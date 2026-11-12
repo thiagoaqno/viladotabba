@@ -129,8 +129,10 @@ function usarAno(ano) {
 }
 const anoAtual = () => ANO;
 const nomeDoAno = (ano) => `Temporada ${anoValido(ano)}`;
+// o carro daquele ano (os MODELOS de f1.js): 2022 a 2025 são a mesma geração, a do efeito solo
+const modeloDoAno = (ano) => (anoValido(ano) <= 2025 ? 2022 : 2026);
 
-const api = { ANOS, ANO_PADRAO, anoValido, usarAno, anoAtual, nomeDoAno, CALENDARIO_ANO };
+const api = { modeloDoAno, ANOS, ANO_PADRAO, anoValido, usarAno, anoAtual, nomeDoAno, CALENDARIO_ANO };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Temporadas = api;
 })(typeof window !== "undefined" ? window : globalThis);

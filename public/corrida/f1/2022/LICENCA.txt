@@ -1,0 +1,9 @@
+carro.glb e carro-leve.glb: "F1 2022 Generic", modelo 3D de TheoDevF1, licença CC-BY-NC-ND-4.0
+https://creativecommons.org/licenses/by-nc-nd/4.0/
+Fonte: https://sketchfab.com/3d-models/f1-2022-generic-9b2fc584679e468ca3a7cb98a75857d2
+
+Uso não comercial (o jogo é dos amigos, sem cobrança). Usado com o aval do Thiago em 2026-11-12, sabendo que a licença é "sem derivados".
+O que o jogo faz com o arquivo:
+- comprimido com @gltf-transform/cli 4.5.1 (meshopt, texturas em WebP; carro.glb com ~89 mil triângulos e carro-leve.glb com ~32 mil);
+- na carga (public/corrida/f1-2022.js) as malhas são juntadas por material, a escala vira a do carro do jogo, as rodas são separadas
+  para girar e o flap da asa traseira para o DRS; a pintura de cada equipe é desenhada por cima (public/corrida/f1-pintura.js).

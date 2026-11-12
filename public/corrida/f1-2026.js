@@ -36,7 +36,7 @@ export const N_LEDS = 15; // as luzes de troca de marcha em cima do volante (o m
 const RODA = new Set(["tread_medium", "sauber_wheel_hub", "discs"]);
 
 // ---------- triângulos soltos: { pos, nor, uv, idx } em Float32 (o arquivo guarda tudo quantizado) ----------
-function extrair(o) {
+export function extrair(o) {
   const g = o.geometry, P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv, n = P.count, v = new THREE.Vector3();
   const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = U ? new Float32Array(n * 2) : null;
   for (let i = 0; i < n; i++) {
@@ -47,7 +47,7 @@ function extrair(o) {
   const idx = g.index ? Uint32Array.from(g.index.array) : Uint32Array.from({ length: n }, (_, i) => i);
   return { pos, nor, uv, idx };
 }
-function reindexar(f, tris) {
+export function reindexar(f, tris) {
   const mapa = new Map(), pos = [], nor = [], uv = [], idx = [];
   for (const i of tris) {
     let n = mapa.get(i);
@@ -57,7 +57,7 @@ function reindexar(f, tris) {
   return { pos: Float32Array.from(pos), nor: Float32Array.from(nor), uv: f.uv ? Float32Array.from(uv) : null, idx: Uint32Array.from(idx), nome: f.nome, rgb: f.rgb };
 }
 // separa os triângulos pelo centro de cada um: [os que passam no teste, os outros]
-function fatiar(f, teste) {
+export function fatiar(f, teste) {
   const a = [], b = [], c = [0, 0, 0];
   for (let t = 0; t < f.idx.length; t += 3) {
     const i = f.idx[t], j = f.idx[t + 1], k = f.idx[t + 2];
@@ -67,7 +67,7 @@ function fatiar(f, teste) {
   return [reindexar(f, a), reindexar(f, b)];
 }
 // põe as listas numa geometria só; o `rgb` de cada uma vira cor por vértice
-function juntar(lista, { uv = false, cor = false } = {}) {
+export function juntar(lista, { uv = false, cor = false } = {}) {
   let nv = 0, ni = 0; for (const f of lista) { nv += f.pos.length / 3; ni += f.idx.length; }
   const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), idx = new Uint32Array(ni), U = uv ? new Float32Array(nv * 2) : null, C = cor ? new Float32Array(nv * 3) : null;
   let ov = 0, oi = 0;
@@ -84,11 +84,11 @@ function juntar(lista, { uv = false, cor = false } = {}) {
   if (C) g.setAttribute("color", new THREE.BufferAttribute(C, 3));
   g.setIndex(new THREE.BufferAttribute(idx, 1)); return g;
 }
-const caixaDe = (lista) => { const b = new THREE.Box3(), v = new THREE.Vector3(); for (const f of lista) for (let i = 0; i < f.pos.length; i += 3) b.expandByPoint(v.set(f.pos[i], f.pos[i + 1], f.pos[i + 2])); return b; };
-const centrar = (g, c) => { g.translate(-c.x, -c.y, -c.z); g.computeBoundingSphere(); return g; };
+export const caixaDe = (lista) => { const b = new THREE.Box3(), v = new THREE.Vector3(); for (const f of lista) for (let i = 0; i < f.pos.length; i += 3) b.expandByPoint(v.set(f.pos[i], f.pos[i + 1], f.pos[i + 2])); return b; };
+export const centrar = (g, c) => { g.translate(-c.x, -c.y, -c.z); g.computeBoundingSphere(); return g; };
 
 // o quaternion que leva o eixo da roda (o menor autovetor da dispersão dos pontos do pneu, sinal com x > 0) para o X do carro: desfaz a cambagem
-function quaternioDoEixo(lista, centro) {
+export function quaternioDoEixo(lista, centro) {
   const m = new THREE.Vector3(), v = new THREE.Vector3(); let n = 0;
   for (const f of lista) for (let i = 0; i < f.pos.length; i += 3) { m.add(v.set(f.pos[i], f.pos[i + 1], f.pos[i + 2])); n++; }
   m.multiplyScalar(1 / Math.max(1, n)); const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
@@ -99,7 +99,7 @@ function quaternioDoEixo(lista, centro) {
   return new THREE.Quaternion().setFromUnitVectors(e, new THREE.Vector3(1, 0, 0));
 }
 // a face de trás de um espelho (a face grande da carcaça, que olha para o piloto): o centro, a normal (para trás), os eixos e o tamanho dela, no quadro do carro
-function faceDoEspelho(f) {
+export function faceDoEspelho(f) {
   const P = f.pos, I = f.idx, a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), nm = new THREE.Vector3(), tris = [], baldes = new Map();
   for (let t = 0; t < I.length; t += 3) {
     a.fromArray(P, I[t] * 3); b.fromArray(P, I[t + 1] * 3); c.fromArray(P, I[t + 2] * 3);

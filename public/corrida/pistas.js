@@ -49,34 +49,32 @@ const PISTAS = {
   },
 
   interlagos: {
-    name: "Interlagos", sub: "Reta dos boxes no morro, S do Senna, Curva do Sol, Reta Oposta com lombada, Lago, Ferradura, Pinheirinho, Bico de Pato e Mergulho",
-    scale: 2.72, width: 124, minLap: 25, walls: false, flat: 40, fall: 220,
-    // relevo: morro da reta dos boxes, descida até o Lago com a lombada na Reta Oposta (dá para voar!), sobe até o Pinheirinho, o Mergulho e a subida dos boxes
-    hills: [[0, 95], [0.08, 92], [0.14, 70], [0.2, 55], [0.26, 45], [0.3, 30], [0.307, 52], [0.313, 22], [0.36, 10], [0.4, 0], [0.47, 4], [0.53, 22], [0.59, 34], [0.66, 46], [0.73, 42], [0.77, 38], [0.82, 12], [0.86, 15], [0.93, 60], [1, 95]],
+    name: "Interlagos", sub: "O traçado real de 4.309 m, no sentido anti-horário: a reta dos boxes, o S do Senna, a Curva do Sol, a Reta Oposta, a Descida do Lago, a Ferradura, o Pinheirinho, o Bico de Pato, o Mergulho, a Junção e a subida até a chegada",
+    // Autódromo José Carlos Pace - Interlagos: 4298 m. Traçado de bacinger/f1-circuits (br-1940.geojson, licença MIT: ver o cabeçalho dos traçados convertidos)
+    // convertido por ferramentas/circuitos-f1.js: a linha central real em 129 vértices, a linha de chegada no primeiro
+    scale: 2.539, width: 124, minLap: 25, walls: false, flat: 52, fall: 312, largada: 0.513, hillsSuave: true,
+    // adaptado à escala antiga (2,54 em vez de 3,9: a volta fica com o comprimento da Interlagos antiga, ~13.500 u, e a pista com 124 de largura); relevo real reduzido na mesma proporção, sem as barreiras.
+    // relevo e barreiras reais, por ferramentas/pista-real.js (SRTM de 30 m, --raio 4: o desnível de 43 m da volta real, na inclinação da real; a OSM mapeia as barreiras):
+    // `muros` = [f0, f1, lado, recuo, rampa], com a folga real na escala da física (OpenStreetMap, © colaboradores do OpenStreetMap, ODbL); onde a OSM não mapeia barreira, fica sem muro
+    hills: [[0,135],[0.01,133],[0.02,132],[0.03,133],[0.04,135],[0.05,136],[0.06,134],[0.07,130],[0.08,124],[0.09,117],[0.1,108],[0.11,102],[0.12,97],[0.13,94],[0.14,91],[0.15,85],[0.16,81],[0.17,77],[0.18,74],[0.19,67],[0.2,59],[0.21,54],[0.22,54],[0.23,55],[0.24,51],[0.25,42],[0.26,37],[0.27,36],[0.28,36],[0.29,35],[0.3,31],[0.31,25],[0.32,21],[0.33,15],[0.34,7],[0.35,3],[0.36,3],[0.37,4],[0.38,5],[0.39,5],[0.4,6],[0.41,10],[0.42,21],[0.43,32],[0.44,36],[0.45,40],[0.46,50],[0.47,63],[0.48,71],[0.49,76],[0.5,82],[0.51,86],[0.52,85],[0.53,81],[0.54,76],[0.55,68],[0.56,59],[0.57,54],[0.58,55],[0.59,62],[0.6,70],[0.61,79],[0.62,87],[0.63,92],[0.64,89],[0.65,79],[0.66,68],[0.67,57],[0.68,46],[0.69,37],[0.7,31],[0.71,26],[0.72,22],[0.73,23],[0.74,27],[0.75,33],[0.76,39],[0.77,45],[0.78,50],[0.79,58],[0.8,70],[0.81,83],[0.82,95],[0.83,106],[0.84,113],[0.85,117],[0.86,119],[0.87,123],[0.88,128],[0.89,129],[0.9,123],[0.91,116],[0.92,113],[0.93,117],[0.94,121],[0.95,122],[0.96,118],[0.97,117],[0.98,122],[0.99,130],[1,135]],
     points: [
-      [900, 1300, 0], // reta dos boxes (para a esquerda)
-      [380, 1300, 60], // S do Senna
-      [300, 1150, 45],
-      [420, 1040, 45],
-      [350, 900, 70],
-      [300, 640, 160], // Curva do Sol e Reta Oposta
-      [520, 180, 90], // Descida do Lago
-      [700, 120, 60],
-      [860, 230, 55],
-      [1000, 180, 50],
-      [1180, 300, 70],
-      [1120, 480, 50], // Ferradura
-      [960, 520, 45],
-      [900, 640, 40], // Laranjinha
-      [700, 620, 40],
-      [620, 760, 35], // Pinheirinho
-      [760, 880, 35],
-      [900, 800, 30], // Bico de Pato
-      [1040, 900, 50],
-      [1000, 1050, 45], // Mergulho
-      [1220, 1060, 90], // Junção
-      [1350, 1200, 140], // subida dos boxes
-      [1250, 1300, 100],
+      [470, 1082, 0], [550, 1390, 1120], [557, 1407, 140], [570, 1428, 126], [578, 1438, 43], [589, 1445, 44], [597, 1448, 32], [605, 1448, 54],
+      [618, 1447, 58], [627, 1443, 47], [646, 1428, 309], [680, 1393, 96], [690, 1387, 41], [702, 1385, 37], [711, 1385, 41], [721, 1389, 147],
+      [764, 1414, 247], [785, 1422, 191], [803, 1428, 180], [844, 1432, 146], [866, 1430, 240], [888, 1425, 171], [920, 1413, 160], [953, 1390, 191],
+      [978, 1364, 185], [999, 1331, 213], [1015, 1291, 882], [1046, 1185, 0], [1085, 1041, 231], [1119, 896, 0], [1206, 565, 0], [1209, 549, 63],
+      [1209, 537, 53], [1205, 525, 49], [1198, 513, 42], [1183, 502, 77], [1164, 494, 278], [1084, 478, 891], [1049, 474, 154], [1019, 476, 196],
+      [997, 481, 97], [985, 485, 157], [956, 503, 181], [934, 523, 237], [901, 564, 0], [830, 660, 0], [756, 765, 0], [678, 868, 456],
+      [664, 883, 63], [640, 893, 86], [624, 895, 134], [604, 895, 204], [585, 894, 147], [569, 890, 122], [552, 884, 188], [527, 872, 171],
+      [517, 865, 69], [508, 856, 74], [497, 840, 85], [490, 821, 363], [475, 757, 776], [466, 695, 353], [465, 670, 92], [469, 654, 37],
+      [475, 645, 28], [487, 638, 39], [500, 635, 34], [516, 639, 57], [524, 644, 111], [547, 662, 193], [561, 670, 75], [573, 675, 57],
+      [589, 676, 51], [607, 672, 49], [621, 662, 63], [633, 648, 56], [639, 630, 54], [640, 617, 68], [638, 605, 52], [626, 583, 112],
+      [618, 572, 421], [559, 514, 439], [543, 493, 135], [534, 477, 136], [524, 442, 367], [515, 389, 172], [515, 369, 37], [524, 355, 28],
+      [530, 350, 27], [541, 348, 28], [553, 350, 34], [560, 354, 41], [571, 365, 869], [644, 449, 399], [660, 462, 132], [674, 470, 90],
+      [696, 478, 134], [727, 482, 145], [754, 480, 136], [777, 474, 105], [804, 458, 148], [816, 448, 86], [824, 439, 284], [858, 389, 0],
+      [945, 247, 356], [950, 231, 31], [946, 217, 40], [939, 206, 38], [925, 196, 276], [829, 159, 531], [800, 152, 83], [786, 152, 180],
+      [757, 156, 840], [687, 170, 439], [660, 179, 485], [609, 201, 607], [551, 232, 297], [536, 243, 266], [508, 269, 219], [495, 286, 154],
+      [484, 304, 193], [467, 346, 511], [447, 422, 0], [439, 460, 972], [429, 519, 1170], [394, 656, 579], [391, 694, 362], [392, 745, 376],
+      [398, 786, 0],
     ],
   },
   monza: {
@@ -1061,7 +1059,7 @@ const PISTAS = {
 // chegada. `entra` e `sai` são a linha de entrada e a de saída (o corredor corre ao lado da reta, entre elas), `para` é o
 // meio das 10 garagens e `lado` é o lado da reta (1 ou -1; o de dentro da pista).
 const BOXES = {
-  interlagos: { entra: 0.9806, para: 0, sai: 0.0194, lado: 1 },
+  interlagos: { entra: 0.9813, para: 0, sai: 0.0187, lado: -1 }, // o traçado real (anti-horário): o prédio dos boxes fica do lado de dentro
   barcelona: { entra: 0.9818, para: 0, sai: 0.0182, lado: 1 }, // o corredor de 505 em volta da linha de chegada (as 10 garagens centradas nela), como Interlagos e Monza: a entrada vem antes da linha, então a parada na penúltima volta ainda vale
   monaco: { entra: 0.9805, para: 0, sai: 0.0195, lado: 1 }, // sem garagens (gps/monaco.js)
   deserto: { entra: 0.9856, para: 0.005, sai: 0.0244, lado: 1 },

@@ -7,7 +7,7 @@ import lasvegas from "./kit/lasvegas/dados.js";
 const lv = (nome) => { const m = lasvegas.marcos.find((p) => p.chave === nome); return [m.cx, m.cz]; };
 export const DESTAQUES = {
   monaco: [["Cassino de Monte Carlo", monaco.marcos.casino], ["Porto de Mônaco", monaco.marcos.yachtClub], ["Grampo do Fairmont", 0.389]],
-  interlagos: [["S do Senna", 0.10], ["Lago e reta oposta", 0.34], ["Subida dos boxes", 0.92]],
+  interlagos: [["S do Senna", 0.085], ["Lago e reta oposta", 0.325], ["Subida dos boxes", 0.86]],
   monza: [["Parabolica", 0.88], ["Sopraelevata", 0.53], ["Tribunas e boxes", 0.99]],
   barcelona: [["Campsa e as serras", 0.61], ["La Caixa", 0.74], ["Tribuna e torre de controle", 0.99]],
   silverstone: [["Maggotts e Becketts", 0.62], ["O antigo aeródromo", 0.75], ["The Wing", 0.99]],

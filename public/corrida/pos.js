@@ -137,6 +137,9 @@ const FOCO = {
 const tam = new THREE.Vector2(), corLimpeza = new THREE.Color();
 const feitos = {}; // { media: {composer, grade, radial, foco, w, h, pr}, alta: {...} }
 const ok16 = () => renderer.extensions.has("EXT_color_buffer_float") || renderer.extensions.has("EXT_color_buffer_half_float");
+// as peças do carro que entram na máscara do desfoque (o resto do carro fica fora dela)
+const SILHUETA = new Set(["corpo", "flap", "roda", "capacete", "car_body_1", "car_body_2"]);
+let quadroMascara = 0;
 function montar(q) {
   const cfg = AJUSTE[q], composer = new EffectComposer(renderer);
   const amostras = ok16() ? cfg.amostras : 0; // sem alvo de 16 bits com amostras o quadro sairia preto: aí fica sem suavização
@@ -158,7 +161,16 @@ function montar(q) {
     // as luzes também na camada 1: sem elas, o desenho da máscara (só a camada 1) via ZERO luzes, o Three.js tomava como mudança de iluminação
     // e, no quadro seguinte, reavaliava o shader de TODOS os materiais da cena (getProgram/getParameters: ~24% do quadro, medido em Monza)
     if (scene.children.length !== luzesDe.n) { luzesDe.n = scene.children.length; scene.traverse((o) => { if (o.isLight) o.layers.enable(1); }); }
-    for (const raiz of scene.children) if (raiz.userData.carroVinheta) raiz.traverse((o) => { if (o.isMesh && !o.userData.recortado) o.layers.enable(1); }); // (o carro que não se vê daqui fica de fora: recorte.js)
+    // a máscara só precisa da SILHUETA do carro (carroceria, flap, rodas e capacete): eram ~12 peças por carro e 268 chamadas por quadro com 21 robôs
+    // (medido em Monza, RTX 2060). A lista de peças fica guardada no carro (sem percorrer a árvore a cada quadro) e é refeita a cada 2 s; o carro bem
+    // longe (LOD 2 de carros.js) fica de fora: lá ele já está no desfoque. O que não se vê daqui também (recorte.js).
+    quadroMascara++;
+    for (const raiz of scene.children) {
+      const u = raiz.userData; if (!u.carroVinheta) continue;
+      if (!u.mascara || quadroMascara - u.mascaraQ > 120) { u.mascara = []; u.mascaraQ = quadroMascara; raiz.traverse((o) => { if (!o.isMesh) return; if (SILHUETA.has(o.name)) u.mascara.push(o); else o.layers.disable(1); }); }
+      const fora = u.lod === 2;
+      for (const o of u.mascara) { if (!fora && !o.userData.recortado && o.visible) o.layers.enable(1); else o.layers.disable(1); }
+    }
     const alvo = rd.getRenderTarget(), fundo = scene.background, anterior = scene.overrideMaterial, camadas = cam.layers.mask;
     const cor = rd.getClearColor(corLimpeza), alfa = rd.getClearAlpha(), sombra = rd.shadowMap.autoUpdate;
     try {

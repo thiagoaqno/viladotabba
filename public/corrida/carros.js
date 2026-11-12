@@ -109,7 +109,7 @@ export function lodKart(k, d) {
   const fLod = graficos().adversarios === "simples" ? 0.4 : 1; // (Configurações > Gráficos: adversários simples tiram as peças pequenas mais cedo)
   const n = d > LOD_LONGE * fLod ? 2 : d > LOD_PERTO * fLod ? 1 : 0;
   if (k.lod === n && k.lodMats === k.mats) return; // (k.mats muda quando o modelo de F1 chega: aí as peças são outras)
-  k.lod = n; k.lodMats = k.mats;
+  k.lod = n; k.lodMats = k.mats; k.g.userData.lod = n; // (pos.js: o carro bem longe sai da máscara do desfoque)
   if (!k.lodPecas || k.lodPecasDe !== k.mats) { k.lodPecas = []; k.lodPecasDe = k.mats; k.g.traverse((o) => { if (o.isMesh && (LOD1.has(o.name) || LOD2.has(o.name))) k.lodPecas.push(o); }); }
   for (const o of k.lodPecas) o.visible = LOD2.has(o.name) ? n < 2 : n < 1;
 }

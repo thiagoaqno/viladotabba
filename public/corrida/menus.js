@@ -209,7 +209,7 @@ function renderGP(m, isHost, f1, c, t) {
     + (f1 && !temporada ? campo("Clima", seg(OPC_CLIMA, c.clima || "aleatorio", "clima", "Clima"), "Aleatório segue a previsão do GP. Chuva larga molhado; Variável larga seco e a chuva vem no meio.") : "")
     + campo("Robôs", seg((f1 ? [0, 1, 3, 7, 11, 21] : [0, 1, 3, 5, 7]).map((v) => [v, v === 21 && f1 ? "Grid de 22" : v ? v : "Sem"]), c.robos || 0, "robos", "Robôs")
       + (c.robos ? seg([["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]], c.nivel || "medio", "nivel", "Nível dos robôs") : ""),
-      f1 ? "Os robôs são os pilotos reais de ${window.F1Temporadas?.anoAtual?.() || 2026}, com as cores das equipes. \"Grid de 22\" completa o que faltar." : "Pilotos do computador completam o grid (até 8 carros) e usam itens.")
+      f1 ? `Os robôs são os pilotos reais de ${window.F1Temporadas?.anoAtual?.() || 2026}, com as cores das equipes. "Grid de 22" completa o que faltar.` : "Pilotos do computador completam o grid (até 8 carros) e usam itens.")
     + `</div>`);
   trocar($("gpMaisCorpo"), `<div class="sn-opcoes">`
     + campo("Câmbio", seg([["auto", "Automático"], ["manual", "Manual"]], c.cambio || "auto", "cambio", "Câmbio"), "Manual para todo mundo: Shift sobe a marcha, Ctrl direito reduz (no celular, os botões + e −). Os robôs continuam no automático.")

@@ -16,7 +16,7 @@ import { updateGhosts } from "./rede.js";
 import { gridSpot, buildTrack, groundH, useTrack } from "./pista.js";
 import { inclinacao as inclinacaoDoCarro } from "./inclinacao.js";
 import { renderer, scene, cam, sun, V3 } from "./cena.js";
-import { CARS3, KS, makeKart, poseKart, fantasmaVisual, lodKart, ocultarPiloto, dropKart, puff, stepPuffs, amostraDeFumaca } from "./carros.js";
+import { CARS3, KS, usarEscalaCarros, makeKart, poseKart, fantasmaVisual, lodKart, ocultarPiloto, dropKart, puff, stepPuffs, amostraDeFumaca } from "./carros.js";
 import { camMode, pollPad, pad } from "./controles.js";
 import { quadroCamera, somDaCamera, camEstado } from "./cameras.js";
 import { quadroEspelhos } from "./espelhos.js";
@@ -189,6 +189,7 @@ export function ativo() {
 }
 export function startRace(st) {
   const tr = buildTrack(st.config.pista), mine = me();
+  { const real = window.Pistas.usarEscala(st.config.pista); usarEscalaCarros(real); window.Volante?.usarEscala?.(real); } // Formula GP: o carro, a física, o volante e a câmera da escala real (pistas.js usarEscala); a F1 de sempre volta à escala antiga
   // a luz da foto do céu só muda durante a contagem: com o carro andando, ela recompilaria todos os materiais
   const ceu = useTrack(tr, st.config.hora, () => !race || race.tr !== tr || sNow() < race.startAt);
   luzPendente();
@@ -459,7 +460,7 @@ function draw(dt) {
 function abrirTV(tr, dt, reduceMotion) { if (race.tvAte) { quadroTV(race, tr, cam, reduceMotion); if (E.S?.config?.contrarrelogio) pularTV(); } } // (no contrarrelógio, direto para o carro)
 // A largada foi antecipada (todos os humanos pularam a TV): só troca a hora, sem remontar a pista nem o carro.
 export function adiantarLargada(st) {
-  if (!race || st.phase !== "race" || !race.tvAte || !st.tvAte || st.tvAte >= race.tvAte || race.tr.id !== st.config.pista || sNow() >= race.startAt) return false;
+  if (!race || st.phase !== "race" || !race.tvAte || !st.tvAte || st.tvAte >= race.tvAte || (race.tr.pistaId || race.tr.id) !== st.config.pista || sNow() >= race.startAt) return false;
   race.startAt = st.startAt; race.tvAte = st.tvAte; race.lapT0 = st.startAt;
   return true;
 }

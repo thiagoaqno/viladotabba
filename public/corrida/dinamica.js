@@ -16,6 +16,7 @@
 // O `spec` do carro (vmax, acc, brake, grip, kin, turn, scrub, offMax, wall; ver CARROS em pistas.js e f1-equipes.js)
 // continua sendo a descrição do carro: `parametros(spec)` converte nos números físicos.
 (function (root) {
+const escalaReal = () => { const P = root.Pistas || (typeof require === "function" ? require("./pistas.js") : null); return !!(P && P.escalaReal && P.escalaReal()); }; // Formula GP (pistas.js, usarEscala)
   // o ganho do DRS aberto na velocidade final e o do ERS na potência: os mesmos de f1-regras.js (DRS_GANHO, ERS_POTENCIA)
   const DRS_GANHO = 0.40, ERS_POTENCIA = 0.45;
 
@@ -29,11 +30,13 @@ const PASSO = 1 / 120;       // o passo fixo da física, no navegador e no servi
 // (+20% sobre a versão anterior, 1,925 e 0,55: o freio pedido e o que o pneu segura antes de travar crescem juntos, então o pedal cheio com o pneu bom segue sem travar)
 const V_ENGATA_RE = 3; // u/s (~2 km/h): abaixo disto, segurando só o freio, engata a ré (anda para trás até uns 70 u/s)
 const FREIO_G = 2.67, FREIO_AERO = 0.66, FREIO_SOBE = 4.5;
+// Formula GP (escala real, de antes de #665): o freio de um F1 de verdade, 1,95 (a Brembo: 117 m e 2,09 s de 334 a 119 km/h em Monza), e o atrito × 0,73
+const FREIO_G_REAL = 1.95, ATRITO_REAL = [0.526, 1.095];
 // O quanto o pneu aguenta de freio antes de travar (múltiplo da aderência lateral): folgado com o pneu bom (1,25) e justo com o pneu que
 // perdeu aderência (gasto, frio, molhado, depois de uma batida), onde o pedal cheio já trava a roda. Vai de ATRITO_MIN a ATRITO_MAX
 // conforme a aderência `kGrip` sobe de GRIP_TRAVA a GRIP_TRAVA + 0,25.
 const ATRITO_MIN = 0.72, ATRITO_MAX = 1.5, GRIP_TRAVA = 1.04;
-const atritoDeFreio = (kGrip) => { const x = limite((kGrip - GRIP_TRAVA) / 0.25, 0, 1); return ATRITO_MIN + (ATRITO_MAX - ATRITO_MIN) * x * x * (3 - 2 * x); };
+const atritoDeFreio = (kGrip) => { const x = limite((kGrip - GRIP_TRAVA) / 0.25, 0, 1), [a0, a1] = escalaReal() ? ATRITO_REAL : [ATRITO_MIN, ATRITO_MAX]; return a0 + (a1 - a0) * x * x * (3 - 2 * x); };
 const limite = (v, a, b) => (v < a ? a : v > b ? b : v);
 
 // ---------- o câmbio de 8 marchas ----------
@@ -76,9 +79,9 @@ const CACHE = new Map();
 const RAPIDO = new WeakMap();
 function parametros(spec) {
   const r = RAPIDO.get(spec);
-  if (r && r.v === spec.vmax && r.a === spec.acc && r.b === spec.brake && r.g === spec.grip && r.k === spec.kin && r.t === spec.turn && r.s === spec.scrub && r.o === spec.offMax && r.w === spec.wall && r.d === (spec.drs ?? 1) && r.c === (spec.cda ?? 1)) return r.p;
+  if (r && r.re === escalaReal() && r.v === spec.vmax && r.a === spec.acc && r.b === spec.brake && r.g === spec.grip && r.k === spec.kin && r.t === spec.turn && r.s === spec.scrub && r.o === spec.offMax && r.w === spec.wall && r.d === (spec.drs ?? 1) && r.c === (spec.cda ?? 1)) return r.p;
   const p = parametrosLento(spec);
-  RAPIDO.set(spec, { p, v: spec.vmax, a: spec.acc, b: spec.brake, g: spec.grip, k: spec.kin, t: spec.turn, s: spec.scrub, o: spec.offMax, w: spec.wall, d: spec.drs ?? 1, c: spec.cda ?? 1 });
+  RAPIDO.set(spec, { p, re: escalaReal(), v: spec.vmax, a: spec.acc, b: spec.brake, g: spec.grip, k: spec.kin, t: spec.turn, s: spec.scrub, o: spec.offMax, w: spec.wall, d: spec.drs ?? 1, c: spec.cda ?? 1 });
   return p;
 }
 function parametrosLento(spec) {
@@ -104,7 +107,7 @@ function parametrosLento(spec) {
   const kin = limite(spec.kin, 0.5, 0.95);
   const C = Math.PI / (Math.PI - Math.asin(limite(kin * 1.04, 0.5, 0.97))); // a curva cai até ~kin·1,04 do pico quando o pneu escorrega todo
   const B = Math.tan(Math.PI / (2 * C)) / alfaP;
-  const frenagem = FREIO_G * (spec.brake / 470);               // o freio a zero de velocidade, em g (a carga aerodinâmica soma, ver FREIO_AERO)
+  const frenagem = (escalaReal() ? FREIO_G_REAL : FREIO_G) * (spec.brake / 470);               // o freio a zero de velocidade, em g (a carga aerodinâmica soma, ver FREIO_AERO)
   p = { massa, W, L, a, b, h, Iz, ClA, CdA, crr, Ppico, eta, mu, muTr, C, B, alfaP, frenagem, gripU: spec.grip, kinU: limite(spec.kin, 0.3, 1),
     // o balanço aerodinâmico (parte da carga que vai para a frente) e o do freio (parte da força que vai para a frente)
     balAero: 0.34, balFreio: 0.6, balPneu: 1.03,

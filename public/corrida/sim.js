@@ -11,6 +11,7 @@
 const D = root.Dinamica || require("./dinamica.js");
 const P = root.Pistas || require("./pistas.js");
 const F1 = root.F1Regras || require("./f1-regras.js");
+const escalaReal = () => !!(P.escalaReal && P.escalaReal()); // Formula GP (pistas.js, usarEscala)
 
 const { ESC, PASSO } = D;
 const GRAV_Z = 160;          // a gravidade do voo (a vertical continua a do jogo: a lombada dá voo curto)
@@ -35,7 +36,7 @@ function criarPista(t, id) {
       for (let j = i - 4; j <= i + 4; j++) tr.pneus[(j + n) % n] = fora;
     }
   }
-  if (id === "montreal") {
+  if ((t.base || id) === "montreal") { // (a pista real do Formula GP também)
     const m = P.muroCampeoes(pts);
     if (m) for (let i = m.i0; i <= m.i1; i++) tr.pneus[i % n] = m.lado;
   }
@@ -128,17 +129,19 @@ function atualizarDRS(c, zona, autorizada, bloqueado, freando = false) {
 // Logo atrás de outro carro (até ~17 m, na mesma linha e na mesma direção) o ar empurra menos. Devolve 0..1 (1 = colado).
 // outros: [{ x, y, z, a, dnf, fant }]
 const VACUO_ALCANCE = 450;
+// o rastro: [alcance, largura logo atrás, quanto abre por unidade]; no Formula GP o de antes de #665 (60 m, a largura do carro real com folga)
+const vacuoRastro = () => (escalaReal() ? [290, 12, 0.04] : [VACUO_ALCANCE, 24, 0.06]);
 function vacuoAlvo(c, outros) {
   if (c.air || !F1.vacuoPermitido(c.v) || !outros) return 0;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
-  let d = 0;
+  let d = 0; const [ALC, LARG, ABRE] = vacuoRastro();
   for (const o of outros) {
     if (o.dnf || o.fant) continue;
     const dx = o.x - c.x, dy = o.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
     // o rastro do vácuo vai longe (VACUO_ALCANCE u, uns 45 m) e abre com a distância, como o ar mexido atrás de um carro de verdade: quem vem
     // de longe já ganha um pouco e chega com velocidade para emparelhar (antes acabava em 17 m e só servia colado, e ninguém conseguia atacar)
-    if (along < 22 || along > VACUO_ALCANCE || lat > 24 + along * 0.06 || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
-    d = Math.max(d, 1 - (along - 22) / (VACUO_ALCANCE - 22));
+    if (along < 22 || along > ALC || lat > LARG + along * ABRE || Math.abs((o.z || 0) - c.z) > 15 || Math.cos(o.a - c.a) < 0.9) continue;
+    d = Math.max(d, 1 - (along - 22) / (ALC - 22));
   }
   return d;
 }
@@ -150,7 +153,8 @@ function vacuoAlvo(c, outros) {
 const LD_K = 0.6, K_TRASEIRA = 2, K_GUINADA = 0.5;
 // VIRADA_MAX: o teto do volante dos robôs (e do fantasma e do robô que assume um carro), o mesmo que quem joga tem no teclado e no controle
 // (ACERTO_PADRAO.virada em volante.js, acertado pelo Thiago jogando): todos com a mesma dirigibilidade, ninguém faz curva que o outro não faz.
-const VIRADA_MAX = 1; // (de volta à escala antiga, 2026-11-11: a virada padrão de quem joga é 1, então os robôs também; o 0,75 era da escala real)
+const VIRADA_MAX = 1, VIRADA_MAX_REAL = 0.6; // (Formula GP: a virada da escala real, 0,6, a que o Thiago acertou jogando em 10/nov)
+const viradaMax = () => (escalaReal() ? VIRADA_MAX_REAL : VIRADA_MAX); // (de volta à escala antiga, 2026-11-11: a virada padrão de quem joga é 1, então os robôs também; o 0,75 era da escala real)
 // fatorOlhar permite antecipar o ponto de mira em trechos específicos; os demais pilotos conservam a distância padrão.
 function pilotoAutomatico(c, tr, spec, vAlvo, latAlvo, saida = {}, fatorOlhar = 1) {
   const p = D.parametros(spec), n = tr.n, v = Math.max(c.v, 30), Ld = Math.max(22, v * LD_K * fatorOlhar);
@@ -159,7 +163,7 @@ function pilotoAutomatico(c, tr, spec, vAlvo, latAlvo, saida = {}, fatorOlhar = 
   let e = Math.atan2(ty - c.y, tx - c.x) - c.a; e = Math.atan2(Math.sin(e), Math.cos(e));
   if (c.amb && c.amb.pn && c.amb.pn.arcade) saida.steer = D.volanteParaGuinada(p, Math.max(0, c.v), (2 * Math.sin(e) / Ld) * Math.max(0, c.v)); // macio (arcade): o volante dá guinada, não ângulo de roda
   else { const delta = Math.atan2(2 * p.L * Math.sin(e), Ld * ESC) + K_TRASEIRA * (c.alR || 0) + K_GUINADA * (2 * Math.sin(e) / Ld * v - (c.r||0)) * p.L / Math.max(v * ESC,20), dm = D.volanteMaximo(p, Math.max(0, c.v) * ESC); saida.steer = limite(delta / dm, -1, 1); }
-  saida.steer = limite(saida.steer, -VIRADA_MAX, VIRADA_MAX); // (o mesmo teto de volante de quem joga: volante.js, ACERTO_PADRAO.virada)
+  saida.steer = limite(saida.steer, -viradaMax(), viradaMax()); // (o mesmo teto de volante de quem joga: volante.js, ACERTO_PADRAO.virada)
   saida.gas = c.v < vAlvo ? 1 : 0; saida.brake = c.v > vAlvo * 1.04 ? 1 : 0; if (saida.brake) saida.gas = 0;
   saida.ers = 0; saida.respawn = 0; saida.pedido = null; saida.marcha = 0;
   return saida;
@@ -202,7 +206,7 @@ function pilotoLinha(c, tr, spec, vAlvo, latAlvo, saida = {}, op = PILOTO_LINHA)
   const w = op.w, r = v * k - 2 * op.z * w * Math.sin(erroRumo) - (w * w * erroLado) / v;
   if (c.amb && c.amb.pn && c.amb.pn.arcade) saida.steer = D.volanteParaGuinada(p, Math.max(0, c.v), r);
   else { const delta = Math.atan((p.L * r) / (v * ESC)) + K_TRASEIRA * (c.alR || 0) + K_GUINADA * (r - (c.r || 0)) * p.L / Math.max(v * ESC, 20), dm = D.volanteMaximo(p, Math.max(0, c.v) * ESC); saida.steer = limite(delta / dm, -1, 1); }
-  saida.steer = limite(saida.steer, -VIRADA_MAX, VIRADA_MAX); // (o mesmo teto de volante de quem joga: volante.js, ACERTO_PADRAO.virada)
+  saida.steer = limite(saida.steer, -viradaMax(), viradaMax()); // (o mesmo teto de volante de quem joga: volante.js, ACERTO_PADRAO.virada)
   // Acelerador modulado (item 1): full gás quando bem abaixo do alvo, rampa suave
   // até coast (=0) no alvo. O freio continua com a histerese de 4% do pilotoAutomatico.
   saida.brake = c.v > vAlvo * 1.04 ? 1 : 0;
@@ -505,7 +509,9 @@ function culpaEntre(vAx, vAy, vBx, vBy, nx, ny) {
 function circulos(x, y, a, L, W) { const fx = Math.cos(a), fy = Math.sin(a), r = W * 0.45, d = Math.max(0, L / 2 - r); return [-d, 0, d].map((u) => [x + fx * u, y + fy * u, r]); }
 // o tamanho (u) de cada carro, o mesmo de CARS3 em carros.js (metros do modelo × KS = 10)
 const DIMENSOES = { equilibrado: [44, 26], foguete: [48, 25], formiga: [41, 26], drifteiro: [44, 25], tanque: [46, 29] };
-const dimensoes = (car) => DIMENSOES[car] || DIMENSOES.equilibrado;
+// Formula GP: o carro de verdade (5,5 m × 1,9 m, metros × 4,8), o de antes de #665
+const DIMENSOES_REAIS = { equilibrado: [26.4, 9.1], foguete: [28.8, 8.9], formiga: [24.5, 9.1], drifteiro: [26.4, 8.9], tanque: [27.6, 10.1] };
+const dimensoes = (car) => { const D_ = escalaReal() ? DIMENSOES_REAIS : DIMENSOES; return D_[car] || D_.equilibrado; };
 const massaDe = (spec) => (spec ? D.parametros(spec).massa : 800);
 // o par de círculos mais enterrado entre A e B: { pen, nx, ny (de B para A), px, py (o ponto do contato) } ou null
 function maisEnterrado(ax, ay, aa, aL, aW, bx, by, ba, bL, bW) {
@@ -719,7 +725,7 @@ function extraDoAcerto(a, v, o = {}) {
   o.raspa = raspa;
   return o;
 }
-const api = { ACERTO_PADRAO, alturaParada, forcaDaAsa, afundaAero, extraDoAcerto, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+const api = { vacuoRastro, viradaMax, ACERTO_PADRAO, alturaParada, forcaDaAsa, afundaAero, extraDoAcerto, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

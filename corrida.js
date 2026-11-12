@@ -185,7 +185,7 @@ module.exports = function attachCorrida(io) {
       mudou: () => broadcast(room),
     };
     let tique = 0, nSnap = 0;
-    room.humanosTimer = setInterval(() => {
+    room.humanosTimer = setInterval(() => { T.usarEscala(room.config.pista);
       if (room.phase !== "race" && room.phase !== "quali") return;
       Humanos.andar(room, Date.now(), h);
       if (++tique % SNAP_TIQUES) return;
@@ -218,7 +218,7 @@ module.exports = function attachCorrida(io) {
   }
   // ---------- corrida ----------
   // A classificação (regras de F1) já escolheu a semente e os robôs; ela chama `startRace(room, grid)` com os ids na ordem do grid.
-  function startRace(room, grid) {
+  function startRace(room, grid) { T.usarEscala(room.config.pista);
     if (aguardarTracado(room, () => startRace(room, grid))) return;
     const f1 = room.config.regras === "f1", daClassificacao = !!(grid && room.quali);
     clearTimeout(room.endTimer);
@@ -266,7 +266,7 @@ module.exports = function attachCorrida(io) {
     if (room.grupo) for (const id of room.order) { const p = room.players[id]; if (!p.bot && !p.sockets.size) TRobo.assumir(room, p, (s) => log(room, s)); } // temporada em grupo: quem não chegou à largada tem o carro levado por um robô
     if (room.config.regras === "f1") {
       Direcao.iniciar(room);
-      room.f1Timer = setInterval(() => {
+      room.f1Timer = setInterval(() => { T.usarEscala(room.config.pista);
         if (room.phase !== "race") return;
         for (const id of room.order) { const p = room.players[id]; if (p?.bot && p.pos && p.finish == null && !p.dnf) Direcao.registrar(room, p, p.pos, Date.now(), (s) => log(room, s)); }
         const quebrou = verificarFalhas(room), parou = Parados.passo(room, Date.now());
@@ -278,7 +278,7 @@ module.exports = function attachCorrida(io) {
       let tique = 0;
       const emit = (event, data) => nsp.to(room.code).emit(event, data);
       room.relogioRobos = null;
-      room.botTimer = setInterval(() => {
+      room.botTimer = setInterval(() => { T.usarEscala(room.config.pista);
         // nas regras de F1, os robôs andam o tempo real que passou (o timer não bate certinho em 50 ms: Robos.tempoDoPasso)
         const dtRobos = room.config.regras === "f1" ? Robos.tempoDoPasso(room) : 0.05;
         if (dtRobos <= 0) return;
@@ -297,7 +297,7 @@ module.exports = function attachCorrida(io) {
     }
     if (room.config.caixas) {
       let frame = 0;
-      room.itemTimer = setInterval(() => { Itens.tick(room, (event, data) => nsp.to(room.code).emit(event, data));
+      room.itemTimer = setInterval(() => { T.usarEscala(room.config.pista); Itens.tick(room, (event, data) => nsp.to(room.code).emit(event, data));
         if (++frame % 2 === 0) nsp.to(room.code).volatile.emit("item:hazards", Itens.publicHazards(room)); }, 50);
     }
     room.endTimer = setTimeout(() => endRace(room), tvMs + COUNTDOWN_MS + MAX_RACE_MS);
@@ -331,7 +331,7 @@ module.exports = function attachCorrida(io) {
   }
   // a classificação (Q1, Q2 e Q3) antes da corrida das regras de F1; no fim ela chama startRace com o grid
   const classificacao = { log, broadcast, largar: (room, grid) => startRace(room, grid) };
-  function iniciarClassificacao(room) {
+  function iniciarClassificacao(room) { T.usarEscala(room.config.pista);
     if (aguardarTracado(room, () => iniciarClassificacao(room))) return;
     clearTimeout(room.endTimer); clearInterval(room.itemTimer); clearInterval(room.botTimer); clearInterval(room.f1Timer); clearInterval(room.humanosTimer);
     preparar(room);
@@ -360,7 +360,7 @@ module.exports = function attachCorrida(io) {
       room.finishOrder.push(id);
     }
   }
-  function endRace(room) {
+  function endRace(room) { T.usarEscala(room.config.pista);
     if (room.phase !== "race") return;
     clearTimeout(room.endTimer);
     clearInterval(room.itemTimer); clearInterval(room.botTimer); clearInterval(room.f1Timer); clearInterval(room.humanosTimer);
@@ -577,7 +577,7 @@ module.exports = function attachCorrida(io) {
   }
   function salaGP(code) { const r = rooms.get(code); return r?.temporada ? r : null; }
   nsp.on("connection", (socket) => {
-    const ctx = () => contexto(socket, rooms);
+    const ctx = () => { const c = contexto(socket, rooms); if (c.room) T.usarEscala(c.room.config.pista); return c; }; // (Formula GP: a escala da sala vale para tudo que vem a seguir, pistas.js usarEscala)
     const bind = (room, pid) => ligarSocket(socket, rooms, room, pid);
     function addPlayer(room, name, skin) {
       const usedP = new Set(Object.values(room.players).map((p) => p.pawn)), usedC = new Set(Object.values(room.players).map((p) => p.color));

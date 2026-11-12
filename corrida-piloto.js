@@ -15,7 +15,7 @@ const MARGEM_MURO = 4; // quantos u antes do ponto em que o centro do carro enco
 
 // Até onde o centro do carro pode ir para cada lado em cada ponto: a mesma conta da física (sim.js: largura/2 + recuo - muroFolga), lado por
 // lado. O limite simétrico de antes deixava o muro de um lado encolher o outro, e a linha ficava no meio.
-function limitesDaPista(t, pts, margem = MARGEM_MURO) {
+function limitesDaPista(t, pts, margem = t.margemLinha ?? MARGEM_MURO) { // (`margemLinha`: a pista real do Formula GP que pede outra)
   const n = pts.length, lo = new Float64Array(n), hi = new Float64Array(n), W = t.width, beira = W / 2 - margem;
   const m = t.muros || t.escapeLivre ? T.murosDoEscape(pts, W, null, t) : null, folga = t.muroFolga ?? 8;
   for (let i = 0; i < n; i++) {
@@ -172,8 +172,8 @@ const temLinhaPronta = (pista, n) => { const a = arquivoDeLinhas()[pista]; retur
 // O ritmo de um nível `f` sobre o caminho `lat` (índice da pista): o `f` multiplica a velocidade de curva e a frenagem usada.
 // Os dois param no limite do pneu (1): acima dele o robô mirava curva que o pneu não segura, rodava e batia (o difícil 1,2 do
 // #692 dava 58 a 66 s em Mônaco com 4 a 6 batidas por volta, contra 50,1 s do nível 1).
-function perfilDoNivel(pts, lat, spec, ref, f) {
-  const g = geometria(pts, lat, JANELA_RITMO), cap = CAP_LINHA(spec, ref);
+function perfilDoNivel(pts, lat, spec, ref, f, janela = JANELA_RITMO) {
+  const g = geometria(pts, lat, janela), cap = CAP_LINHA(spec, ref);
   return perfilNoCaminho(g.k, g.ds, cap, { latK: Math.min(1, f * f), freioK: Math.min(1, f), soFreio: true }).v;
 }
 // O que os comandos precisam de um perfil, calculado uma vez

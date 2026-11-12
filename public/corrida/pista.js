@@ -12,6 +12,14 @@ import { aplicarCeu } from "./ceu.js";
 import { fundoMonaco, relevoMonaco, corDoChaoMonaco, NIVEL_DO_MAR, afastarMuro } from "./monaco.js";
 // o kit de pista (kit/README.md) e a configuração de cada GP (gps/)
 import { GPS } from "./gps/index.js";
+// Formula GP: os cenários no tamanho real (de antes de #665, em real/) e as peças do kit daquela época que mudaram depois
+import { GPS as GPS_REAL } from "./real/gps/index.js";
+import { arquibancadas as arquibancadasReal } from "./real/kit/arquibancadas.js";
+import { chaoGP as chaoGPReal } from "./real/kit/chao.js";
+import { escapeGP as escapeGPReal } from "./real/kit/escape.js";
+import { ambienteGP as ambienteGPReal } from "./real/kit/ambiente.js";
+import { passarelas as passarelasReal, postes as postesReal, montanha as montanhaReal } from "./real/kit/marcos.js";
+import { boxesGP as boxesGPReal } from "./real/kit/corredor-boxes.js";
 import { arquibancadas } from "./kit/arquibancadas.js";
 import { chaoGP } from "./kit/chao.js";
 import { escapeGP } from "./kit/escape.js";
@@ -72,13 +80,14 @@ export function gridSpot(pts, g, W, f1 = false) {
 const TRACKS = {};
 // os GPs com relevo, mar e cor do terreno de verdade (dados do OpenStreetMap e do SRTM): Mônaco (monaco.js) e os que trazem `mundo` na configuração (Baku: kit/baku/mundo.js).
 // relevo(tr) -> (x, z, f, idx, malha) · fundo(tr, x, z) (positivo na água) · agua(tr, x, z) · cor() -> (x, z, h, ny) · nivelMar · banda(tr): até onde a pista, a calçada e a barreira mandam no chão
-const mundoDe = (id) => (id === "monaco" ? { relevo: relevoMonaco, fundo: fundoMonaco, agua: (tr, x, y) => fundoMonaco(tr, x, y) > 0, cor: corDoChaoMonaco, nivelMar: NIVEL_DO_MAR, banda: (tr) => tr.wallLat } : GPS[id]?.mundo || null);
+const gpDe = (id, real) => (real ? GPS_REAL : GPS)[id]; // (a pista real do Formula GP usa o cenário de real/gps)
+const mundoDe = (id, real) => (id === "monaco" ? { relevo: relevoMonaco, fundo: fundoMonaco, agua: (tr, x, y) => fundoMonaco(tr, x, y) > 0, cor: corDoChaoMonaco, nivelMar: NIVEL_DO_MAR, banda: (tr) => tr.wallLat } : gpDe(id, real)?.mundo || null);
 export function buildTrack(id) {
   if (TRACKS[id]) return TRACKS[id];
-  const t = PISTAS[id], pts = window.Pistas.pontos(t, 6), n = pts.length, W = t.width;
+  const t = PISTAS[id], pts = window.Pistas.pontos(t, 6), n = pts.length, W = t.width, base = t.base || id; // Formula GP: a pista real usa o cenário, o visual e os ajustes da pista de sempre (`base`)
   for (const p of pts) { p.nx = -p.ty; p.ny = p.tx; }
   const mini = document.createElement("canvas"); mini.width = mini.height = 240; drawPreview(mini, id);
-  const tr = { id, t, pts, n, W, look: LOOK[id], theme: THEMES[id], mini, wallLat: t.walls ? W / 2 + t.wall : Infinity, grp: new THREE.Group() };
+  const tr = { id: base, pistaId: id, t, pts, n, W, look: LOOK[base], theme: THEMES[base], mini, wallLat: t.walls ? W / 2 + t.wall : Infinity, grp: new THREE.Group() };
   tr.obstaculos = window.Pistas.obstaculosDaPista(t, pts); // sólidos da física (sim.js e fisica.js usam a mesma conta)
   if (t.superficieEscape) tr.superficiesEscape = window.Pistas.mapaSuperficies(pts, t.superficieEscape);
   if (t.escapeLivre || t.muros) tr.murosEscape = window.Pistas.murosDoEscape(pts, W, tr.superficiesEscape, t);
@@ -108,7 +117,7 @@ export function buildTrack(id) {
   const alcance = W / 2 + t.flat + t.fall + cell;
   tr.chao = (x, y) => (tr.distAprox(x, y) > alcance ? 0 : groundH(tr, x, y, tr.indiceAt(x, y)));
   // GPs com relevo de verdade (Mônaco: o morro do EU-DEM/SRTM em volta da pista): `tr.relevoGP(x, y, f, idx)` manda em groundH e o chão vale em toda parte, não só perto da pista
-  const mundo = mundoDe(id);
+  const mundo = mundoDe(base, t.real);
   if (mundo) {
     // em Mônaco a pista passa por cima de si mesma (Beau Rivage / Mirabeau / grampo, o morro empilhado): o ponto mais perto de verdade, de qualquer trecho, e não o da célula da grade
     const C = 48, hash = new Map(), ch = (a, b) => a * 100003 + b;
@@ -176,8 +185,11 @@ const rioSea = (x, y) => { const K = PISTAS.rio.scale; return x < 230 * K + (y -
 // água que mexe: listras claras numa textura que desliza (vida.js anda com o offset)
 const aguaTex = (cor) => canvasTex(256, 256, (x, w, hh, rr) => { x.fillStyle = cor; x.fillRect(0, 0, w, hh); for (let i = 0; i < 260; i++) { x.fillStyle = rr() < 0.5 ? "#ffffff22" : "#00000018"; x.fillRect(rr() * w, rr() * hh, 10 + rr() * 30, 2); } });
 function buildWorld(tr) {
-  const { pts, n, W, look, id, grp } = tr, t = tr.t, add = (o) => (grp.add(o), o), r = rng(id.length * 977), gp = GPS[id];
-  const mundo = mundoDe(id);
+  const { pts, n, W, look, id, grp } = tr, t = tr.t, add = (o) => (grp.add(o), o), r = rng(id.length * 977), gp = gpDe(id, t.real);
+  const mundo = mundoDe(id, t.real);
+  const KIT = t.real ? { arquibancadas: arquibancadasReal, chaoGP: chaoGPReal, escapeGP: escapeGPReal, ambienteGP: ambienteGPReal, passarelas: passarelasReal, postes: postesReal, montanha: montanhaReal, boxesGP: boxesGPReal } : { arquibancadas, chaoGP, escapeGP, ambienteGP, passarelas, postes, montanha, boxesGP };
+  // a escala do cenário (real/gps/<id>.js: `escala`, e `escalaGente` para a torcida; padrão 1 = o tamanho de sempre, o da F1): multiplica o TAMANHO das peças, nunca a posição
+  const E = (tr.escala = gp?.escala ?? 1); tr.escalaGente = gp?.escalaGente ?? E;
   tr.luzesPista = []; // as luzes dos postes e holofotes (kit/luz-postes.js: registrarLuz); a montagem pode rodar de novo quando os enfeites chegam
   tr.reservado = []; // onde os enfeites soltos não entram (o kit e o cenário de cada GP vão pondo aqui)
   tr.sem = gp?.sem || {}; // o que este GP não tem e vida.js / vida-mais.js não devem pôr (Mônaco: olhos de gato, setas, mastros, roda-gigante...)
@@ -202,7 +214,7 @@ function buildWorld(tr) {
     const x = pos.getX(i) + WORLD / 2, y = pos.getZ(i) + WORLD / 2;
     const longe = !tr.relevoGP && tr.distAprox(x, y) > W / 2 + t.flat + t.fall + WORLD / 96, bi = longe ? 0 : tr.indiceAt(x, y);
     const lat = longe ? 1e9 : Math.abs(trackFrame(tr, x, y, bi).lat), perto = !longe && (mundo ? lat < mundo.banda(tr) + 30 : lat < W / 2 + 26); // embaixo da pista o chão afunda mais (a malha é grossa e furava o asfalto nas rampas)
-    let h = t.espaco ? -700 : (longe ? 0 : mundo ? tr.relevoGP(x, y, trackFrame(tr, x, y, bi), bi, true) : groundH(tr, x, y, bi)) - (mundo ? 1.5 + 7.5 * (1 - Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)) ** 2 * (3 - 2 * Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)))) * (perto ? 1 : 0) : perto ? 9 : 1.5); // no espaço não tem chão: o "chão" fica bem lá embaixo
+    let h = t.espaco ? -700 : (longe ? 0 : mundo ? tr.relevoGP(x, y, trackFrame(tr, x, y, bi), bi, true) : groundH(tr, x, y, bi)) - (mundo ? 1.5 + (gp?.afundarPerto ?? 7.5) * (1 - Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)) ** 2 * (3 - 2 * Math.min(1, Math.max(0, (lat - mundo.banda(tr)) / 30)))) * (perto ? 1 : 0) : perto ? 9 : 1.5); // no espaço não tem chão: o "chão" fica bem lá embaixo
     if (mundo) { const s = mundo.fundo(tr, x, y); if (s > -90) h = s > 0 ? Math.max(-34, mundo.nivelMar - 7 - s * 0.35) : Math.min(h, mundo.nivelMar + 1 + 3.2 * -s); } // a bacia do porto e o mar, o cais em paredão e a falésia do Rochedo (3 de altura por unidade)
     if (id === "rio" && rioSea(x, y)) h = Math.min(h, -14); // o mar de Copacabana
     if (gp?.terreno?.altura) h = gp.terreno.altura(tr, x, y, h, lat); // o GP com água ou relevo próprio (Singapura: a baía e o rio afundam o chão)
@@ -244,7 +256,7 @@ function buildWorld(tr) {
   }
   if (lisos.length) { const m = add(new THREE.Mesh(mergeGeometries(lisos, false), chaoM)); m.position.set(WORLD / 2, 0, WORLD / 2); m.receiveShadow = true; m.name = `${id}-terreno`; lisos.forEach((g) => g.dispose()); } // os pedaços lisos, uma chamada só
   geo.dispose();
-  if (mundo) {
+  if (mundo && !gp?.semFundacao) { // (`semFundacao`: o GP desenha a dele, Mônaco real em real/kit/monaco/base.js)
     // Fecha a lateral do asfalto suspenso até abaixo do terreno, sem mudar a colisão.
     // Deixa livres os pontos em que outra parte da pista passa por perto, como no grampo.
     const vs = [], indices = [], lat = W / 2 + 7;
@@ -287,9 +299,9 @@ function buildWorld(tr) {
   tr.cones = [];
   const kerbT = canvasTex(32, 64, (x, w, hh) => { x.fillStyle = look.kerb[0]; x.fillRect(0, 0, w, hh / 2); x.fillStyle = look.kerb[1]; x.fillRect(0, hh / 2, w, hh / 2); });
   const kerbM = new THREE.MeshStandardMaterial({ map: kerbT, roughness: 0.6, side: THREE.DoubleSide, emissive: id === "tokyo" ? 0x0a3a44 : 0 });
-  if (gp?.chao) chaoGP(tr, add, gp.chao, { gridSpot }); // margem, zebras só nas curvas e as marcas da rua (kit/chao.js)
+  if (gp?.chao) KIT.chaoGP(tr, add, gp.chao, { gridSpot }); // margem, zebras só nas curvas e as marcas da rua (kit/chao.js)
   else { ribbon(W / 2, W / 2 + 7, 0.6, kerbM, 28); ribbon(-W / 2 - 7, -W / 2, 0.6, kerbM, 28); }
-  if (gp?.escape) escapeGP(tr, add, gp.escape); // brita e asfalto de escape listrado só onde o GP diz (kit/escape.js)
+  if (gp?.escape) KIT.escapeGP(tr, add, gp.escape); // brita e asfalto de escape listrado só onde o GP diz (kit/escape.js)
   if ((id === "interlagos" || id === "laguna") && !gp?.escape) { // área de escape de brita
     const brita = new THREE.MeshStandardMaterial({ map: canvasTex(64, 64, (x, w, hh, rr) => { x.fillStyle = "#c9b37a"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 600; i++) { x.fillStyle = rr() < 0.5 ? "#b39c66" : "#ddc893"; x.fillRect(rr() * w, rr() * hh, 2, 2); } }), roughness: 1, side: THREE.DoubleSide });
     ribbon(W / 2 + 7, W / 2 + 30, 0.3, brita, 64, 0.2); ribbon(-W / 2 - 30, -W / 2 - 7, 0.2, brita, 64, 0.3);
@@ -316,7 +328,7 @@ function buildWorld(tr) {
       return d >= 0 && defs[d].agua && aguaDe?.[k] === s ? d + 1000 : d; }; // -1: o estilo de base; 1000+: o do lado da água; 2000+: o de um lado
       const estiloDe = (d) => (d < 0 ? base : d >= 2000 ? { ...base, ...defs[d - 2000], ...defs[d - 2000].porLado[s] } : d >= 1000 ? { ...base, ...defs[d - 1000], ...defs[d - 1000].agua } : { ...base, ...defs[d] }), materiais = new Map();
       const matDe = (d) => { if (!base) return wm; if (!materiais.has(d)) materiais.set(d, new THREE.MeshStandardMaterial({ map: guardRail(s, estiloDe(d)), roughness: 0.55, side: THREE.DoubleSide })); return materiais.get(d); };
-      const vLenDe = (d) => { const g = estiloDe(d); return g?.estilo === "monaco" ? g.sequencia.length * (g.trecho ?? 360) : g?.vLen ?? (base ? 480 : 32); };
+      const vLenDe = (d) => { const g = estiloDe(d); return g?.estilo === "monaco" ? g.sequencia.length * (g.trecho ?? 360) * E : (g?.vLen ?? (base ? 480 : 32)) * (base?.estilo === "monaco" ? E : 1); };
       const trecho = (i0, i1) => {
         const fatias = []; let a = i0;
         for (let i = i0 + 1; i <= i1 + 1; i++) if (i === i1 + 1 || defDe(i) !== defDe(a)) { fatias.push([a, Math.min(i, i1), defDe(a)]); a = i; }
@@ -324,8 +336,11 @@ function buildWorld(tr) {
         for (const [x0, x1, d] of fatias) {
           if (x1 <= x0 || d === -2) continue; const g = estiloDe(d);
           const lat = tr.t.muros ? (i) => s * tr.latMuro(s, i) : s * L; // com `muros` (Mônaco), a barreira fica na distância de cada trecho (colada, estreita, ou recuada no escape)
-          m = ribbon(lat, lat, 0.5, matDe(d), vLenDe(d), g?.alto ?? 12, 1, x0, x1); m.castShadow = true; m.name = `${id}-muro`;
-          if (base?.estilo === "monaco") afastarMuro(tr, m.geometry, x0, tr.t.muros ? (i) => tr.latMuro(s, i) - 1 : L - (tr.t.muroFolga ?? 8) + 13);
+          m = ribbon(lat, lat, 0.5, matDe(d), vLenDe(d), (g?.alto ?? 12) * (base?.estilo === "monaco" ? E : 1), 1, x0, x1); m.castShadow = true; m.name = `${id}-muro`;
+          if (base?.estilo === "monaco") {
+            afastarMuro(tr, m.geometry, x0, tr.t.muros ? (i) => tr.latMuro(s, i) - 1 : L - (tr.t.muroFolga ?? 8) + 13);
+            const A = ((tr.altoMuro ||= { 1: new Float32Array(n), [-1]: new Float32Array(n) })[s]); for (let k = x0; k <= x1; k++) A[((k % n) + n) % n] = (g?.alto ?? 12) * E; // (a altura da barreira em cada ponto: a cerca de real/kit/monaco/ambiente.js sobe dela)
+          }
         }
         return m;
       };
@@ -345,7 +360,7 @@ function buildWorld(tr) {
         const q = vs.length / 3;
         for (const j of [i, prox]) {
           const p = pts[j], l = lado * (W / 2 + mapa[j]), h = p.h * falloff(tr, l);
-          vs.push(p.x + p.nx * l, h + 0.5, p.y + p.ny * l, p.x + p.nx * l, h + 9, p.y + p.ny * l);
+          vs.push(p.x + p.nx * l, h + 0.5, p.y + p.ny * l, p.x + p.nx * l, h + 0.5 + 8.5 * E, p.y + p.ny * l);
           uv.push(j / 8, 0, j / 8, 1);
         }
         indices.push(q, q + 2, q + 1, q + 1, q + 2, q + 3);
@@ -362,7 +377,7 @@ function buildWorld(tr) {
   }
   // linha de chegada quadriculada e o grid
   const a0 = pts[0], chk = canvasTex(128, 16, (x, w, hh) => { for (let i = 0; i < 16; i++) for (let j = 0; j < 2; j++) { x.fillStyle = (i + j) % 2 ? "#111" : "#f4f4f4"; x.fillRect(i * 8, j * 8, 8, 8); } }, false);
-  const line = add(new THREE.Mesh(new THREE.PlaneGeometry(W, 12), new THREE.MeshStandardMaterial({ map: chk, roughness: 0.6 })));
+  const line = add(new THREE.Mesh(new THREE.PlaneGeometry(W, 12 * E), new THREE.MeshStandardMaterial({ map: chk, roughness: 0.6 })));
   line.rotation.x = -Math.PI / 2; line.rotation.z = -Math.atan2(a0.ty, a0.tx) + Math.PI / 2; line.position.set(a0.x, a0.h + 0.55, a0.y);
   // os GPs com o chão do kit têm o grid pintado com os números
   // (as barras das regras de F1 são as 22 vagas do grid; as de hoje, as 8 de sempre: pista.js liga um conjunto de cada vez)
@@ -372,14 +387,14 @@ function buildWorld(tr) {
   // pórtico da largada (`portico.adiante` do GP: quantas unidades à frente da linha de chegada ele fica; Mônaco o põe uns 80 m depois, como na pista de verdade)
   const ap = gp?.portico?.adiante ? pts[Math.round(gp.portico.adiante / 6) % n] : a0;
   { const s = 1, L = W / 2 + 14, mat = M(0x333844), sign = canvasTex(256, 32, (x, w, hh) => { x.fillStyle = "#111"; x.fillRect(0, 0, w, hh); x.fillStyle = "#ffd23f"; x.font = "bold 24px sans-serif"; x.textAlign = "center"; x.fillText("CORRIDA DA GALERA", w / 2, 24); }, false);
-    for (const k of [1, -1]) { const m = add(new THREE.Mesh(new THREE.BoxGeometry(4, 60, 4), mat)); m.position.set(ap.x + ap.nx * k * L, ap.h + 30, ap.y + ap.ny * k * L); m.castShadow = true; }
-    const top = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10, 3), [mat, mat, mat, mat, new THREE.MeshBasicMaterial({ map: sign }), new THREE.MeshBasicMaterial({ map: sign })]));
-    top.position.set(ap.x, ap.h + 62, ap.y); top.rotation.y = -Math.atan2(ap.ny, ap.nx); void s;
+    for (const k of [1, -1]) { const m = add(new THREE.Mesh(new THREE.BoxGeometry(4, 60 * E, 4), mat)); m.position.set(ap.x + ap.nx * k * L, ap.h + 30 * E, ap.y + ap.ny * k * L); m.castShadow = true; }
+    const top = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10 * E, 3), [mat, mat, mat, mat, new THREE.MeshBasicMaterial({ map: sign }), new THREE.MeshBasicMaterial({ map: sign })]));
+    top.position.set(ap.x, ap.h + 62 * E, ap.y); top.rotation.y = -Math.atan2(ap.ny, ap.nx); void s;
     // nas pistas de GP, o pórtico das regras de F1: no lugar da faixa "CORRIDA DA GALERA", cinco caixas com duas luzes vermelhas
     // cada, que acendem uma por segundo e apagam juntas (tr.luzes.set(n), chamado por hud.js). jogo.js liga um pórtico ou o outro.
     if (gp) {
-      const topF1 = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10, 3), mat)); topF1.position.copy(top.position); topF1.rotation.copy(top.rotation); topF1.visible = false;
-      const grupo = add(new THREE.Group()); grupo.position.copy(top.position); grupo.rotation.copy(top.rotation); grupo.visible = false;
+      const topF1 = add(new THREE.Mesh(new THREE.BoxGeometry(2 * L + 4, 10 * E, 3), mat)); topF1.position.copy(top.position); topF1.rotation.copy(top.rotation); topF1.visible = false;
+      const grupo = add(new THREE.Group()); grupo.position.copy(top.position); grupo.rotation.copy(top.rotation); grupo.scale.setScalar(E); grupo.visible = false;
       const caixa = new THREE.BoxGeometry(10, 15, 2), esfera = new THREE.SphereGeometry(2.6, 12, 8), preto = M(0x0b0c10), apagada = 0x2a0505, acesa = 0xff2a1a, lampadas = [];
       for (let k = 0; k < 5; k++) {
         const c = new THREE.Mesh(caixa, preto); c.position.set((k - 2) * 13, 0, 2.2); grupo.add(c);
@@ -454,16 +469,16 @@ function buildWorld(tr) {
   // as peças do kit; os enfeites soltos de depois não caem na água nem em cima delas
   const ctx = { add, r, hAt, size, aguaTex, palms, yachts, jungle, blds };
   if (gp) {
-    if (gp.arquibancadas) arquibancadas(tr, add, gp.arquibancadas); // as arquibancadas do kit (kit/arquibancadas.js)
+    if (gp.arquibancadas) KIT.arquibancadas(tr, add, gp.arquibancadas); // as arquibancadas do kit (kit/arquibancadas.js)
     gp.cenario?.(tr, ctx);
-    if (gp.ambiente) ambienteGP(tr, add, t.escapeLivre ? { ...gp.ambiente, cerca: false } : gp.ambiente); // cerca, painéis, bandeiras, postos e placas
-    if (gp.passarelas) passarelas(tr, add, gp.passarelas);
+    if (gp.ambiente) KIT.ambienteGP(tr, add, t.escapeLivre ? { ...gp.ambiente, cerca: false } : gp.ambiente); // cerca, painéis, bandeiras, postos e placas
+    if (gp.passarelas) KIT.passarelas(tr, add, gp.passarelas);
     gp.marcos?.(tr, ctx); // os marcos próprios (Mônaco: a capela de Sainte Dévote)
-    if (gp.postes) postes(tr, add, gp.postes);
-    if (gp.montanha) montanha(tr, add, gp.montanha);
+    if (gp.postes) KIT.postes(tr, add, gp.postes);
+    if (gp.montanha) KIT.montanha(tr, add, gp.montanha);
     if (gp.vida) vidaGP(tr, add, gp.vida); // helicóptero, gaivotas, fiscais com a bandeira e o som de cada região
   }
-  if (t.boxes && gp?.boxes !== false) boxesGP(tr, add, gp?.boxes || {}); // o corredor dos boxes das regras de F1 (kit/corredor-boxes.js)
+  if (t.boxes && gp?.boxes !== false) KIT.boxesGP(tr, add, gp?.boxes || {}); // o corredor dos boxes das regras de F1 (kit/corredor-boxes.js)
   if (t.drs?.length) {
     const mapa = canvasTex(256, 96, (c, w, h) => { c.fillStyle = '#f2f6f8'; c.fillRect(0, 0, w, h);
       c.fillStyle = '#102d42'; c.font = '900 70px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('DRS', w / 2, h / 2); }, false);
@@ -471,8 +486,8 @@ function buildWorld(tr) {
     tr.drsPlacas = add(new THREE.Group()); tr.drsPlacas.visible = false;
     for (const [deteccao, abre] of t.drs) for (const f of [deteccao, abre]) {
       const p = pts[Math.floor(f * n) % n], lado = W / 2 + 28;
-      const placa = new THREE.Sprite(mat); placa.position.set(p.x + p.nx * lado, p.h + 18, p.y + p.ny * lado);
-      placa.scale.set(33, 13, 1); tr.drsPlacas.add(placa);
+      const placa = new THREE.Sprite(mat); placa.position.set(p.x + p.nx * lado, p.h + 18 * E, p.y + p.ny * lado);
+      placa.scale.set(33 * E, 13 * E, 1); tr.drsPlacas.add(placa);
     }
   }
   const terra = (x, y) => !mundo || (!mundo.agua(tr, x, y) && !tr.reservado.some(([cx, cy, rr]) => (x - cx) ** 2 + (y - cy) ** 2 < rr * rr));

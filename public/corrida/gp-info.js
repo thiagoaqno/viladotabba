@@ -94,10 +94,13 @@ const BANDEIRAS = {
   DE: H3("#111", "#dd0000", "#ffce00"),
 };
 
-const bandeira = (id) => { const i = REAIS[id], b = i && BANDEIRAS[i.pa]; return b ? `<svg class="gp-bandeira" viewBox="0 0 24 16" aria-hidden="true">${b}</svg>` : ""; };
+const bandeira = (id) => { id = baseGP(id); const i = REAIS[id], b = i && BANDEIRAS[i.pa]; return b ? `<svg class="gp-bandeira" viewBox="0 0 24 16" aria-hidden="true">${b}</svg>` : ""; };
 
 // a ficha de uma pista: real: tem GP e curvas; as inventadas só têm o céu
+// Formula GP: a pista real ("gp-<pista>") tem a ficha da pista de sempre
+const baseGP = (id) => (typeof id === "string" && id.startsWith("gp-") ? id.slice(3) : id);
 function get(id, pistas) {
+  id = baseGP(id);
   const r = REAIS[id], p = (pistas || (root.Pistas && root.Pistas.PISTAS) || {})[id], cred = (root.GpFotosCreditos || {})[id];
   if (!r) return { id, real: false, gp: p ? p.name : id, circuito: p ? p.name : id, cidade: "", pais: "", pa: "", km: 0, voltas: 0, curvas: [], foto: null, credito: null, ceu: CEUS.includes(id) ? `/corrida/ceus/${id}.jpg` : null };
   const comFoto = !!cred && !SEM_FOTO.includes(id);
@@ -105,7 +108,7 @@ function get(id, pistas) {
 }
 // a imagem de fundo da tela: a foto livre, o céu de ceus/ ou nada (o degradê da sala)
 const fundoDe = (id) => { const g = get(id); return g.foto || g.ceu || null; };
-const curvasNomeadas = (id) => (REAIS[id] ? REAIS[id].curvas.filter((c) => c.nome).length : 0);
+const curvasNomeadas = (id) => (id = baseGP(id), REAIS[id] ? REAIS[id].curvas.filter((c) => c.nome).length : 0);
 // o texto do crédito de uma foto: "Foto: autor, CC BY-SA 4.0"
 const creditoTxt = (id) => { const c = get(id).credito; return c ? `Foto: ${c.autor}, ${c.licenca}` : ""; };
 

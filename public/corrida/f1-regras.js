@@ -585,7 +585,8 @@ const VACUO_FINAL = 0.20, VACUO_ACEL = 0.2, AR_SUJO = 0.1, AERO_MAX = 0.90, DRS_
 const vacuoPermitido = (v, quali = false) => !quali && v * 0.75 >= 100;
 function vacuoF1(draft, curva) {
   const d = limite(draft || 0, 0, 1);
-  return { final: VACUO_FINAL * d, acel: VACUO_ACEL * d, aderencia: 1 - (curva ? AR_SUJO * d : 0) };
+  const re = (() => { const P = root.Pistas || (typeof require === "function" ? require("./pistas.js") : null); return !!(P && P.escalaReal && P.escalaReal()); })(), vf = re ? 0.06 : VACUO_FINAL, va = re ? 0.06 : VACUO_ACEL; // (Formula GP: o vácuo de antes de #665, 6%)
+  return { final: vf * d, acel: va * d, aderencia: 1 - (curva ? AR_SUJO * d : 0) };
 }
 
 const api = { PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,

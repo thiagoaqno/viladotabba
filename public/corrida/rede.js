@@ -1,5 +1,6 @@
 // Corrida da Galera — rede: entrar/criar sala, o estado que vem do servidor e os fantasmas dos outros pilotos.
 import { E, socket, $, store, relogio, relogioF1, sNow, tempoReal, agoraLocal, toast, act } from "./estado.js";
+import { usarModelo } from "./f1.js";
 import { Sound } from "./sons.js";
 import { show, renderLobby } from "./menus.js";
 import { race, startRace, stopRace, nearest, prepararPista, adiantarLargada, atualizarCarga } from "./jogo.js";
@@ -57,6 +58,7 @@ const preparar = (id, hora) => { const chave = `${id}:${hora}`; if (id && chave 
 socket.on("state", (st) => {
   relogio.doEstado(st.now); relogioF1.palpite(st.now - agoraLocal()); // (o relógio do estado só serve até as respostas do NTP chegarem)
   const old = E.S; E.S = st;
+  if (st && st.config) { window.F1Temporadas?.usarAno(st.config.ano); usarModelo(window.F1Temporadas ? window.F1Temporadas.modeloDoAno(st.config.ano) : 2026); } // a temporada da sala: as equipes, os pilotos e o carro daquele ano
   if (st.phase === "lobby") {
     if (!E.entradaDireta) { show("lobby"); renderLobby(); }
     stopRace(); $("quali").classList.add("hidden");

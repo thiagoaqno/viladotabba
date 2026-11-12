@@ -88,7 +88,7 @@ function soltarStand(s) {
 
 // ---- a festa: baixa os pilotos só agora e monta um por quadro, para a tela não engasgar ----
 const proximoQuadro = () => new Promise((ok) => requestAnimationFrame(ok));
-const logoDe = (s) => (!s.dados.temLogo ? Promise.resolve(null) : new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = `/api/corrida/logo/${s.dados.equipe}`; }));
+const logoDe = (s) => (!s.dados.temLogo ? Promise.resolve(null) : new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = `${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(s.dados.equipe)}`; }));
 async function chamarPilotos() {
   const id = ++festaId;
   try {

@@ -34,7 +34,7 @@ function specDe(equipeId, montagem) { return E().specDaEquipe(equipeId, montagem
 function notaGeral(ficha) { return Math.round(ficha.reduce((s, f) => s + f.nota, 0) / ficha.length * 10); }
 function painelEquipe(equipeId, montagem, extra = "") {
   const eq = FP().EQUIPES[equipeId], spec = specDe(equipeId, montagem), ficha = E().ficha(spec);
-  return `<aside class="pn-equipe" style="--eq:${h(eq.cor)}"><div class="pn-logo"><img src="/api/corrida/logo/${encodeURIComponent(equipeId)}" alt="" onerror="this.style.display='none'"><b>${h(eq.nome)}</b></div>
+  return `<aside class="pn-equipe" style="--eq:${h(eq.cor)}"><div class="pn-logo"><img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(equipeId))}" alt="" onerror="this.style.display='none'"><b>${h(eq.nome)}</b></div>
     <div class="pn-nota"><strong class="num">${notaGeral(ficha)}</strong><small>Nível do carro</small></div>
     <ul class="pn-attr">${ficha.map((f) => `<li title="${h(FICHA[f.id] || f.rotulo)}">${icone(f.id)}<span>${h(f.rotulo)}</span><i class="barra"><u style="width:${f.nota * 10}%"></u></i><b class="num">${f.nota}</b></li>`).join("")}</ul>${extra}</aside>`;
 }
@@ -151,7 +151,7 @@ function trocarVitrine(equipeId) { const box = document.getElementById("vitrine"
 function vitrineHero({ equipe, montagem, etapa, titulo, sub, botao = "", cartoes = [] }) {
   const eq = equipe && FP().EQUIPES[equipe];
   const cartao = (c) => `<div class="vt-cartao"><small>${h(c.rot)}</small><strong>${h(c.valor)}${c.un ? `<i>${h(c.un)}</i>` : ""}</strong></div>`;
-  return `<section class="vt-hero"${eq ? ` style="--eq:${h(eq.cor)}"` : ""}><div class="vt-rastro" aria-hidden="true"></div><div class="vt-topo"><span class="vt-etapa">${etapa}</span>${eq ? `<span class="vt-marca"><img src="/api/corrida/logo/${encodeURIComponent(equipe)}" alt="" onerror="this.style.display='none'">${h(eq.nome)}</span>` : ""}</div>
+  return `<section class="vt-hero"${eq ? ` style="--eq:${h(eq.cor)}"` : ""}><div class="vt-rastro" aria-hidden="true"></div><div class="vt-topo"><span class="vt-etapa">${etapa}</span>${eq ? `<span class="vt-marca"><img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(equipe))}" alt="" onerror="this.style.display='none'">${h(eq.nome)}</span>` : ""}</div>
     <h2 class="vt-titulo">${titulo}</h2><p class="vt-sub">${sub}</p><div class="vt-carro">${eq ? palcoSlot(equipe) : ""}</div>
     <div class="vt-base">${cartoes.map(cartao).join("")}${botao ? `<div class="vt-acao">${botao}</div>` : ""}</div></section>`;
 }

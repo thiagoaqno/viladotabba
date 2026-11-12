@@ -18,7 +18,7 @@ window.addEventListener("radio:fala", (ev) => {
   if (on && m) {
     const eq = (window.EQUIPES_F1 || {})[m.equipe], cor = eq ? eq.cor : m.color || "#e10600", sobrenome = String(m.nomeCompleto || m.name || "").trim().split(/s+/).pop();
     el.style.setProperty("--equipe", cor);
-    el.innerHTML = `<div class="rr-nome"><b>${h(sobrenome.toUpperCase())}</b><span>RÁDIO</span></div><div class="rr-linha"><em>${h(String(m.numero || ""))}</em><i class="rr-onda"><s></s><s></s><s></s><s></s><s></s></i>${eq && eq.arquivo ? `<img src="/api/corrida/logo/${m.equipe}" alt="">` : ""}</div>`;
+    el.innerHTML = `<div class="rr-nome"><b>${h(sobrenome.toUpperCase())}</b><span>RÁDIO</span></div><div class="rr-linha"><em>${h(String(m.numero || ""))}</em><i class="rr-onda"><s></s><s></s><s></s><s></s><s></s></i>${eq && eq.arquivo ? `<img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(m.equipe)}" alt="">` : ""}</div>`;
   }
   el.classList.toggle("on", on && !!m);
 });

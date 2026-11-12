@@ -47,7 +47,7 @@ function ligarFundo(equipe) {
   let host = document.getElementById("cxFundo");
   if (!host) { host = document.createElement("div"); host.id = "cxFundo"; host.setAttribute("aria-hidden", "true"); host.innerHTML = '<i class="cx-relevo"></i>'; document.body.prepend(host); }
   host.dataset.aba = entradaEq ? "central" : aba;
-  const relevo = host.querySelector(".cx-relevo"), url = `url("/api/corrida/logo/${encodeURIComponent(equipe)}")`;
+  const relevo = host.querySelector(".cx-relevo"), url = `url("${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(equipe))}")`;
   if (relevo.dataset.eq !== equipe) { relevo.dataset.eq = equipe; relevo.style.setProperty("--logo", url); }
   if (garagem) { garagem.trocarEquipe(equipe); garagem.vista(vistaAgora()); return; }
   if (criando) return; criando = true;
@@ -72,7 +72,7 @@ function ligarFundo(equipe) {
 addEventListener("resize", () => { if (document.body.classList.contains("cx-on") && garagem) garagem.vista(vistaAgora()); posicionarRotulos(); }, { passive: true });
 
 // ---------- pedacinhos ----------
-const marca = (id, cls = "") => `<img class="cx-logo ${cls}" src="/api/corrida/logo/${encodeURIComponent(id)}" alt="" onerror="this.style.display='none'">`;
+const marca = (id, cls = "") => `<img class="cx-logo ${cls}" src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}" alt="" onerror="this.style.display='none'">`;
 const seta = '<svg class="cx-seta" viewBox="0 0 24 14" aria-hidden="true"><path d="M1 7h21M15 1l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg>';
 const tituloCard = (t, sub = "") => `<header class="cx-tit"><h3>${t}</h3>${sub ? `<small>${sub}</small>` : ""}</header>`;
 const tricolor = () => '<i class="cx-tri" aria-hidden="true"></i>';

@@ -134,5 +134,9 @@ const modeloDoAno = (ano) => (anoValido(ano) <= 2025 ? 2022 : 2026);
 
 const api = { modeloDoAno, ANOS, ANO_PADRAO, anoValido, usarAno, anoAtual, nomeDoAno, CALENDARIO_ANO };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
-else root.F1Temporadas = api;
+else {
+  root.F1Temporadas = api;
+  // o endereço do logo da equipe na temporada em uso (o servidor tem os de outras épocas como "<equipe>-<ano>": AlphaTauri, RB, Alfa Romeo, Sauber, Williams)
+  root.logoF1 = (id) => { const base = "/api/corrida/logo/" + id; let cru = String(id); try { cru = decodeURIComponent(cru); } catch (e) {} return ANO !== ANO_PADRAO && root.EQUIPES_F1 && root.EQUIPES_F1[cru + "-" + ANO] ? base + "?ano=" + ANO : base; };
+}
 })(typeof window !== "undefined" ? window : globalThis);

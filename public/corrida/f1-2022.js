@@ -72,6 +72,13 @@ export function construir2022(raiz, tam, leve) {
     const pos = new THREE.Vector3(0, ys.reduce((a, c) => a + c, 0) / Math.max(1, ys.length), b.min.z);
     D.flap = { geo: centrar(g, pos), pos };
   }
+  // --- a pintura na textura (f1-uv.js): as mesmas peças, separadas por material e com o molde (UV), para o carro usar o material original do modelo
+  // (a pintura brilhante). As do flap ficam centradas na dobradiça, como o flap de cima.
+  { const por = (l) => { const g = {}; for (const x of l) (g[x.nome] ||= []).push(x); return g; }, R = por(restoFontes), Fl = por(flapFontes);
+    const geo = (l, centro) => { if (!l || !l.length) return null; const g = juntar(l, { uv: true }); if (centro) centrar(g, centro); else g.computeBoundingSphere(); return g; };
+    const grupo = (G, centro) => ({ livery: geo(G.Livery, centro), asas: geo(G.Livery_Wings, centro), carbono: geo(G.carbon, centro), preto: geo(G.Black, centro) });
+    D.uv = { id: Math.random().toString(36).slice(2), zNariz, corpo: grupo(R), flap: D.flap ? grupo(Fl, D.flap.pos) : null,
+      fontes: { livery: [...(R.Livery || []), ...(Fl.Livery || [])], asas: [...(R.Livery_Wings || []), ...(Fl.Livery_Wings || [])] } }; }
   const unir = (conj, opc) => { const l = de(conj); return l.length ? juntar(l, opc) : null; };
   D.mecanica = unir(new Set(["generic"]), { uv: true });
   // a lanterna (o arquivo não tem a peça): no meio da traseira, na altura da caixa de câmbio

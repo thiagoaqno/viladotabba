@@ -9,6 +9,8 @@ import { temDesenho, folhaDaEquipe, corDoNumero, numPosDe, carbonoDe, texturaDas
   LIV_VERT_DECL, LIV_VERT_MAIN, LIV_FRAG_DECL, LIV_FRAG_MAIN, aplicarVerniz, limitarBrilhoCarro, texturaDoHalo, aplicarHalo, texturaDoCockpit, aplicarCockpit, SOL_FRAG_DECL, SOL_FRAG_MAIN, PNEU_VERT_DECL, PNEU_VERT_MAIN, PNEU_FRAG_DECL, PNEU_FRAG_MAIN } from "./f1-pintura.js";
 import { construir2026 } from "./f1-2026.js";
 import { construir2022 } from "./f1-2022.js";
+import { texturaUV, temPinturaUV } from "./f1-uv.js";
+import "./f1-uv-equipes.js"; // (as equipes e anos que já têm pintura na textura) // a pintura na textura do carro de 2022 a 2025 (as equipes que já têm)
 
 // combinações de cor das equipes de F1 (ficam em pistas.js: o servidor confere a escolha)
 export const PINTURAS = window.Pistas.MODS.pintura;
@@ -130,7 +132,18 @@ function montarCorpoNovo(k) {
     roda: () => M("roda", () => pneuMat(new THREE.MeshStandardMaterial({ vertexColors: true }), k.composto, "color_fragment")),
   };
   const peca = (nome, geo, material, pai = k.carro) => { const o = new THREE.Mesh(geo, material); o.name = nome; o.castShadow = true; o.receiveShadow = false; pai.add(o); return o; };
-  peca("corpo", D.corpo, mat.corpo());
+  // a pintura na TEXTURA (f1-uv.js): o material original do modelo (a pintura brilhante e o carbono dele) com a textura da equipe desenhada no molde
+  const uv = D.uv && k.equipe && temPinturaUV(k.equipe) ? { livery: texturaUV(D, k.equipe, "livery", num, !k.leve), asas: texturaUV(D, k.equipe, "asas", num, !k.leve) } : null;
+  if (uv) {
+    // (a pintura num material novo, com o acabamento do original: rugosidade quase zero e verniz, o brilho do modelo do Sketchfab; o material do arquivo
+    // com uma textura trocada não aparecia: o corpo sumia. O carbono e o preto ficam com o material original, que funciona)
+    const comMapa = (nome, orig, tex) => M(nome, () => { if (!tex) { const m = D.mats[orig].clone(); m.side = THREE.DoubleSide; return m; }
+      return new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.22, metalness: 0.06, clearcoat: 1, clearcoatRoughness: 0.08, side: THREE.DoubleSide }); });
+    const partes = (G, pai) => { if (!G) return; if (G.livery) peca("corpo", G.livery, comMapa("uv-livery", "Livery", uv.livery), pai); if (G.asas) peca("corpo-asas", G.asas, comMapa("uv-asas", "Livery_Wings", uv.asas), pai);
+      if (G.carbono) peca("corpo-carbono", G.carbono, comMapa("uv-carbono", "carbon", null), pai); if (G.preto) peca("corpo-preto", G.preto, comMapa("uv-preto", "Black", null), pai); };
+    partes(D.uv.corpo, k.carro);
+    if (D.uv.flap) { const piv = new THREE.Group(); piv.position.copy(D.flap.pos); k.carro.add(piv); partes(D.uv.flap, piv); k.flap = piv; k.drsA = 0; k.drsMax = D.drs; }
+  } else peca("corpo", D.corpo, mat.corpo());
   if (D.detalhes) peca("detalhes", D.detalhes, mat.detalhes());
   if (D.mecanica) peca("mecanica", D.mecanica, mat.mecanica());
   if (D.miudezas) peca("miudezas", D.miudezas, mat.miudezas());
@@ -140,7 +153,7 @@ function montarCorpoNovo(k) {
   k.espelhos = D.espelhos || null; // onde ficam os retrovisores (espelhos.js os faz funcionar no carro do jogador)
   if (D.piloto) { k.carro.add(k.piloto); peca("piloto", D.piloto, mat.miudezas(), k.piloto); }
   // o flap da asa traseira: gira na dobradiça com o DRS (a mesma pintura do corpo)
-  if (D.flap) { const piv = new THREE.Group(); piv.position.copy(D.flap.pos); k.carro.add(piv); peca("flap", D.flap.geo, mat.corpo(), piv); k.flap = piv; k.drsA = 0; k.drsMax = D.drs; }
+  if (D.flap && !uv) { const piv = new THREE.Group(); piv.position.copy(D.flap.pos); k.carro.add(piv); peca("flap", D.flap.geo, mat.corpo(), piv); k.flap = piv; k.drsA = 0; k.drsMax = D.drs; }
   // as rodas: cada uma inteira (pneu, aro e disco); "gira" roda pela distância andada e, nas da frente, "esterca" vira com o volante
   for (const r of D.rodas) {
     // o pivô fica no centro do cubo: `esterca` (só as da frente: vira em torno do eixo vertical) > `camber` (a inclinação fixa da roda no carro) > `gira` (rola em torno do eixo X da roda)
@@ -166,7 +179,7 @@ function montarCorpoNovo(k) {
     }
     k.olho = { z: D.volante.centro.z + D.olho.dz, y: D.volante.centro.y + D.olho.dy }; k.olhoBaixo = D.olho.baixo || 0; // atrás do volante, na altura do capacete
   }
-  k.mats = [...mats.values()]; k.pintura = mats.get("corpo"); k.pneu = mats.get("roda") || null;
+  k.mats = [...new Set(mats.values())]; k.pintura = mats.get("corpo") || mats.get("uv-livery"); k.pneu = mats.get("roda") || null; // (sem repetir: o limitador aplicado duas vezes no mesmo material quebrava o shader e a peça sumia)
   k.mats.forEach(limitarBrilhoCarro);
   k.lanternaPos = D.lanterna || null; k.escapamento = D.escapamento; k.disco = D.disco;
   k.aoMontar?.(k);

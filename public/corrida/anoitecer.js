@@ -7,7 +7,7 @@
 // por cima quando chove) e pararAnoitecer ao sair.
 import * as THREE from "three";
 import { renderer, scene, sun, hemi } from "./cena.js";
-import { E } from "./estado.js";
+import { E, PISTAS } from "./estado.js";
 import { LUZ, ambienteDaNoite } from "./kit/luz-postes.js";
 
 const lim = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -26,10 +26,11 @@ function pintar(f) {
   x.fillStyle = g; x.fillRect(0, 0, cv.width, cv.height); tex.needsUpdate = true;
 }
 
-// só nas corridas de F1 marcadas "Noite" (a classificação e as outras regras continuam de noite o tempo todo)
+// só nas corridas de F1 dos GPs noturnos do calendário (Bahrein, Jeddah, Las Vegas e Marina Bay: `horaPadrao` "noite" em pistas.js), marcadas
+// "Noite". A classificação, as outras regras e a noite escolhida à mão em outras pistas continuam de noite o tempo todo
 export function iniciarAnoitecer(tr, st) {
   pararAnoitecer();
-  if (!st || st.config.hora !== "noite" || st.phase !== "race" || st.config.regras !== "f1" || !tr.look) return;
+  if (!st || st.config.hora !== "noite" || st.phase !== "race" || st.config.regras !== "f1" || PISTAS[tr.id]?.horaPadrao !== "noite" || !tr.look) return;
   const L = tr.look, amb = ambienteDaNoite(tr);
   A = {
     tr, f: 0, pintado: -1, fundoAntes: scene.background, brilhoAntes: scene.backgroundIntensity,

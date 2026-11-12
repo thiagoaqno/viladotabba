@@ -26,7 +26,7 @@ import { physics, quadroDeFisica, quadroParado, criarRede, PASSO } from "./fisic
 import { loadBest, recordLap, drawBest, myProg } from "./fantasma.js";
 import { standings, hud, renderResults } from "./hud.js";
 import { estadoDeExemplo } from "./resultado-gp.js";
-import { f1Pronto, atualizarVolante, TAM } from "./f1.js";
+import { f1Pronto, modeloPronto, atualizarVolante, TAM } from "./f1.js";
 import { propsPronto } from "./props.js";
 import { startItems, stopItems, stepItems } from "./itens.js";
 import { passoEfeitos, limparEfeitos, amostrasDeEfeitos } from "./efeitos.js";
@@ -159,7 +159,7 @@ function aquecerPista(tr, ceu) {
   }); };
   // espera também o carro de F1 e os enfeites do Kenney: quando chegam, os carros e a pista são remontados, e o que
   // nasce depois do aquecimento travaria na primeira vez que aparecesse
-  const modelos = Promise.all([f1Pronto, propsPronto]);
+  const modelos = Promise.all([f1Pronto, modeloPronto(), propsPronto]); // (o carro do ano da sala: f1.js usarModelo)
   const espera = modelos.then(() => new Promise((ok) => setTimeout(ok, 1500))); // o céu que não chega em 1,5 s não segura a preparação
   Promise.race([Promise.all([modelos, ceu]), espera]).then(() => {
     aquecer(); fila.then(pronto, pronto);

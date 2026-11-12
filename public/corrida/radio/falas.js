@@ -84,11 +84,13 @@ for (const [quando, textos] of Object.entries(SITUACOES)) textos.forEach((texto,
 
 // ---------- as falas montadas em pedaços (o rádio emenda os mp3: radio.js `frase`) ----------
 // "À sua frente, Verstappen, a um segundo e meio. Os pneus dele estão no fim. Ataque." = abertura + nome + distância + comentário.
-// Cada pedaço vira radio/<id>.mp3 como as falas. Os nomes: os pilotos de 2026 (o id de f1-pilotos-2026.js) e a galera que joga.
+// Cada pedaço vira radio/<id>.mp3 como as falas. Os nomes: os pilotos de 2026 (o id de f1-pilotos-2026.js) e os de 2023 a 2025 (f1-temporadas.js) e a galera que joga.
 const NOMES = {
   norris: "Norris", piastri: "Piastri", leclerc: "Leclerc", hamilton: "Hamilton", russell: "Russell", antonelli: "Antonelli", verstappen: "Verstappen",
   hadjar: "Hadjar", lawson: "Lawson", lindblad: "Lindblad", alonso: "Alonso", stroll: "Stroll", albon: "Albon", sainz: "Sainz", hulkenberg: "Hülkenberg",
   bortoleto: "Bortoleto", gasly: "Gasly", colapinto: "Colapinto", camara: "Câmara", bearman: "Bearman", perez: "Pérez", bottas: "Bottas",
+  // os das temporadas 2023 a 2025 (f1-temporadas.js)
+  ricciardo: "Ricciardo", tsunoda: "Tsunoda", magnussen: "Magnussen", zhou: "Zhou", sargeant: "Sargeant", ocon: "Ocon",
   // a galera (o nome que a pessoa usa na sala, sem acento e em minúsculas, vira o id)
   tabba: "Tabba", kizzy: "Kizzy", "1kizzy": "Kizzy", notizin: "Notizin", sho: "Shô", dollyin: "Dollyin", dolllyin: "Dollyin", atrox: "Átrox", jv: "Jota Vê", verago: "Verago", nikao: "Nikão",
 };

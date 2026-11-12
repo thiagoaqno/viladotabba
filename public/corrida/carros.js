@@ -23,7 +23,12 @@ export const CARS3 = {
   drifteiro: { L: 4.4, W: 2.5 },
   tanque: { L: 4.6, W: 2.9 },
 };
-export const KS = 10; // metros do modelo -> unidades da pista
+export let KS = 10; // metros do modelo -> unidades da pista
+// Formula GP: o carro no tamanho de verdade (um F1 de 2026 tem uns 5,5 m × 1,9 m; KS = 4,8, a escala da física), como antes de #665.
+// jogo.js chama ao montar a corrida; os carros feitos depois saem no tamanho da escala em uso.
+const CARS3_ANTIGO = Object.fromEntries(Object.entries(CARS3).map(([k, v]) => [k, { ...v }]));
+const CARS3_REAL = { equilibrado: { L: 5.5, W: 1.9 }, foguete: { L: 6.0, W: 1.85 }, formiga: { L: 5.1, W: 1.9 }, drifteiro: { L: 5.5, W: 1.85 }, tanque: { L: 5.75, W: 2.1 } };
+export function usarEscalaCarros(real) { KS = real ? 3.6 / 0.75 : 10; for (const [k, v] of Object.entries(real ? CARS3_REAL : CARS3_ANTIGO)) Object.assign(CARS3[k], v); }
 export const MODS3 = window.Pistas.MODS, MODS_PADRAO = window.Pistas.MODS_PADRAO;
 // leve: o modelo com menos triângulos e sem sombra projetada (os carros dos outros; não há mais sombra redonda falsa no chão: era a mancha preta oval sob o carro)
 // op: { sigla (o piloto robô, f1-capacetes.js: o capacete é o dele), volante (o carro do jogador: a tela e as luzes de troca do volante, f1.js), numero (o número do piloto, no carro de equipe), semPintura (a pintura de equipe fica de fora: a máscara de cores) }

@@ -25,9 +25,14 @@ function analogico(x, zona = PADRAO.zona, sens = PADRAO.p) {
 const ACERTO_PADRAO = { virada: 1, sobe: 0.05, volta: 0.05, curva: 1.4 };
 const ACERTO_LIMITES = { virada: [0.25, 1.2], sobe: [0.05, 0.8], volta: [0.05, 0.5], curva: [1, 2.5] };
 const ACERTO = { ...ACERTO_PADRAO };
-try { const v = JSON.parse(localStorage.getItem("corrida:acerto-direcao:antiga") || "null"); if (v) for (const k of Object.keys(ACERTO_PADRAO)) if (Number.isFinite(+v[k])) ACERTO[k] = limite(+v[k], ...ACERTO_LIMITES[k]); } catch (e) {}
-function acertar(campo, valor) { if (!(campo in ACERTO_PADRAO)) return; ACERTO[campo] = Number.isFinite(+valor) ? limite(+valor, ...ACERTO_LIMITES[campo]) : ACERTO_PADRAO[campo]; try { localStorage.setItem("corrida:acerto-direcao:antiga", JSON.stringify(ACERTO)); } catch (e) {} }
-function acertoPadrao() { Object.assign(ACERTO, ACERTO_PADRAO); try { localStorage.removeItem("corrida:acerto-direcao:antiga"); } catch (e) {} }
+// Formula GP (escala real): a direção de antes de #665 (virada 0,6, a que o Thiago acertou jogando em 10/nov), guardada na chave daquela época
+const PADRAO_ANTIGO = { ...ACERTO_PADRAO }, PADRAO_REAL = { virada: 0.6, sobe: 0.15, volta: 0.125, curva: 1.4 };
+let CHAVE = "corrida:acerto-direcao:antiga";
+function carregar() { Object.assign(ACERTO, ACERTO_PADRAO); try { const v = JSON.parse(localStorage.getItem(CHAVE) || "null"); if (v) for (const k of Object.keys(ACERTO_PADRAO)) if (Number.isFinite(+v[k])) ACERTO[k] = limite(+v[k], ...ACERTO_LIMITES[k]); } catch (e) {} }
+carregar();
+function usarEscala(real) { Object.assign(ACERTO_PADRAO, real ? PADRAO_REAL : PADRAO_ANTIGO); CHAVE = real ? "corrida:acerto-direcao" : "corrida:acerto-direcao:antiga"; carregar(); }
+function acertar(campo, valor) { if (!(campo in ACERTO_PADRAO)) return; ACERTO[campo] = Number.isFinite(+valor) ? limite(+valor, ...ACERTO_LIMITES[campo]) : ACERTO_PADRAO[campo]; try { localStorage.setItem(CHAVE, JSON.stringify(ACERTO)); } catch (e) {} }
+function acertoPadrao() { Object.assign(ACERTO, ACERTO_PADRAO); try { localStorage.removeItem(CHAVE); } catch (e) {} }
 const CURVA = ACERTO_PADRAO.curva;
 // O teclado vira em RAMPA até `virada`: sobe em `sobe` segundos de 0 ao batente e volta ao centro em `volta` segundos (velocidades proporcionais à virada).
 function rampa(alvo, atual, dt) {
@@ -40,7 +45,7 @@ const SOBE = ACERTO_PADRAO.virada / ACERTO_PADRAO.sobe, VOLTA = ACERTO_PADRAO.vi
 // O teclado (ou o botão de toque): -1, 0 ou 1 vira o quanto o volante vira (`sens`, de 0,3 a 1,5; acima de 1 só limita em 1).
 const teclado = (dir, sens = PADRAO.k) => limite((dir || 0) * sens, -1, 1) * ACERTO.virada; // (o batente do teclado é a virada do acerto)
 
-const api = { LIMITES, PADRAO, ajustar, analogico, teclado, rampa, CURVA, SOBE, VOLTA, ACERTO, ACERTO_PADRAO, ACERTO_LIMITES, acertar, acertoPadrao };
+const api = { LIMITES, PADRAO, ajustar, analogico, teclado, rampa, CURVA, SOBE, VOLTA, ACERTO, ACERTO_PADRAO, ACERTO_LIMITES, acertar, acertoPadrao, usarEscala };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Volante = api;
 })(typeof self !== "undefined" ? self : this);

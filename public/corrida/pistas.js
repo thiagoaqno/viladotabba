@@ -2318,8 +2318,16 @@ function muroCampeoes(pts) {
 // Continuam no código (uma sala antiga ou um recorde que aponte para elas não quebra), só não aparecem para escolher.
 const PISTAS_ESCONDIDAS = ["tokyo", "losangeles", "rio", "serra", "deserto", "laguna", "luigi", "sorvete", "arcoiris"];
 const idsNaEscolha = () => Object.keys(PISTAS).filter((id) => !PISTAS_ESCONDIDAS.includes(id) && !PISTAS[id].real);
+// A ESCALA da corrida em andamento: a real (Formula GP, pista "gp-") liga os valores de antes de #665 no carro, na física, nos robôs e nas câmeras
+// (dinamica.js, sim.js, f1-regras.js, carros.js, cameras.js, volante.js, corrida-robos.js...). O servidor chama usarEscala(room.config.pista) antes
+// de mexer numa sala (corrida.js) e o navegador ao montar a corrida (jogo.js). Sem pista real, tudo como sempre.
+let ESCALA_REAL = false;
+const AO_TROCAR_ESCALA = []; // quem guarda números da escala em variáveis (corrida-robos.js) se registra aqui
+const aoTrocarEscala = (fn) => { AO_TROCAR_ESCALA.push(fn); fn(ESCALA_REAL); };
+const usarEscala = (id) => { const r = !!(id && PISTAS[id] && PISTAS[id].real); if (r !== ESCALA_REAL) { ESCALA_REAL = r; for (const fn of AO_TROCAR_ESCALA) fn(r); } return r; };
+const escalaReal = () => ESCALA_REAL;
 const idsReais = () => Object.keys(PISTAS).filter((id) => PISTAS[id].real); // as pistas do Formula GP
-const api = { baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
+const api = { usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Pistas = api;
 })(typeof window !== "undefined" ? window : globalThis);

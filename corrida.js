@@ -53,6 +53,15 @@ const COLORS = ["#e63946", "#1e88e5", "#43a047", "#fdd835", "#8e24aa", "#fb8c00"
 const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "🦄", "🐙", "👻", "🤡", "🦁", "🐵", "🐧", "🏎️"];
 const int = (v, d) => { const n = parseInt(v); return Number.isFinite(n) ? n : d; };
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : NaN);
+// o capacete de quem joga (mods.capacete; f1-capacetes.js): só o que o editor oferece, e o nome curto e sem símbolos
+const DESENHOS_CAPACETE = ["faixa", "bandas", "blocos", "cruz", "topo", "asas", "triangulos", "generico"], HEX = /^#[0-9a-f]{6}$/i;
+function limparCapacete(c) {
+  if (!c || typeof c !== "object") return null;
+  const cores = Array.isArray(c.cores) ? c.cores.slice(0, 3) : [];
+  if (!DESENHOS_CAPACETE.includes(c.desenho) || cores.length !== 3 || !cores.every((x) => HEX.test(x)) || !HEX.test(c.viseira || "")) return null;
+  const bandeira = /^[A-Z]{2}$/.test(c.bandeira || "") ? c.bandeira : "", nome = String(c.nome || "").normalize("NFC").replace(/[^p{L}p{N} .-]/gu, "").trim().slice(0, 14);
+  return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome };
+}
 
 module.exports = function attachCorrida(io) {
   const nsp = io.of("/corrida");
@@ -651,7 +660,9 @@ module.exports = function attachCorrida(io) {
           if (!me || room.phase === "race") return "Só dá para mexer no carro fora da corrida.";
           const d = data.mods || {}, n = { ...me.mods };
           for (const k of Object.keys(T.MODS)) if (T.MODS[k][d[k]]) n[k] = d[k];
-          for (const k of Object.keys(n)) if (!T.MODS[k]) delete n[k]; // opções antigas (rodas, aerofólio, faixa) saem
+          if ("capacete" in d) n.capacete = limparCapacete(d.capacete); // o capacete de quem joga (f1-capacetes.js)
+          for (const k of Object.keys(n)) if (!T.MODS[k] && k !== "capacete") delete n[k]; // opções antigas (rodas, aerofólio, faixa) saem
+          if (!n.capacete) delete n.capacete;
           me.mods = n; return;
         }
         if (type === "pneu") { // o composto da largada (regras de F1)

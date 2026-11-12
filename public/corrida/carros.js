@@ -89,7 +89,7 @@ export function makeKart(color, model, ghost = false, name = "", mods = MODS_PAD
     });
     kt.g.traverse((o) => { if (o.isMesh) o.castShadow = !ghost && !leve; });
     // o piloto (f1-piloto.js): capacete e luvas nas cores da equipe (ou da "Sua cor"); só no carro de 2026 e nunca no fantasma do recorde
-    if (!ghost && !k.pil && kt.modelo?.dados && kt.rodas.length) k.pil = criarPiloto(kt, { cor1, cor2, numero: op.numero, nome: name, semente: op.semente, sigla: op.sigla });
+    if (!ghost && !k.pil && kt.modelo?.dados && kt.rodas.length) k.pil = criarPiloto(kt, { cor1, cor2, numero: op.numero, nome: name, semente: op.semente, sigla: op.sigla, capacete: mods?.capacete || null }); // (mods.capacete: o capacete de quem joga)
     if (ghost) for (const m of kt.mats) { m.transparent = true; m.opacity = 0.5; m.depthWrite = false; }
   };
   kt.aoMontar = pronto; pronto();

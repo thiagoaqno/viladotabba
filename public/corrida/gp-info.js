@@ -92,6 +92,14 @@ const BANDEIRAS = {
   QA: R(0, 0, 24, 16, "#8a1538") + '<path d="M0 0h9l3 1.6L9 3.2l3 1.6L9 6.4l3 1.6-3 1.6 3 1.6-3 1.6 3 1.6L9 16H0z" fill="#fff"/>',
   AE: R(0, 0, 24, 16, "#fff") + R(0, 0, 6, 16, "#d8142c") + R(6, 0, 18, 5.4, "#00732f") + R(6, 10.6, 18, 5.4, "#111"),
   DE: H3("#111", "#dd0000", "#ffce00"),
+  // (as de fora do calendário, para o capacete de quem joga: f1-capacetes.js)
+  AR: H3("#74acdf", "#fff", "#74acdf") + '<circle cx="12" cy="8" r="1.8" fill="#f6b40e"/>',
+  PT: R(0, 0, 9.6, 16, "#046a38") + R(9.6, 0, 14.4, 16, "#da291c") + '<circle cx="9.6" cy="8" r="3" fill="#ffe900"/>',
+  FR: V3("#0055a4", "#fff", "#ef4135"),
+  FI: R(0, 0, 24, 16, "#fff") + R(6.5, 0, 3.5, 16, "#003580") + R(0, 6.2, 24, 3.6, "#003580"),
+  DK: R(0, 0, 24, 16, "#c8102e") + R(6.5, 0, 2.6, 16, "#fff") + R(0, 6.7, 24, 2.6, "#fff"),
+  CO: R(0, 0, 24, 8, "#fcd116") + R(0, 8, 24, 4, "#003893") + R(0, 12, 24, 4, "#ce1126"),
+  CH: R(0, 0, 24, 16, "#d52b1e") + R(10.6, 3.5, 2.8, 9, "#fff") + R(7.5, 6.6, 9, 2.8, "#fff"),
 };
 
 const bandeira = (id) => { id = baseGP(id); const i = REAIS[id], b = i && BANDEIRAS[i.pa]; return b ? `<svg class="gp-bandeira" viewBox="0 0 24 16" aria-hidden="true">${b}</svg>` : ""; };

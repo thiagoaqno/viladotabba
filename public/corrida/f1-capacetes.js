@@ -102,12 +102,39 @@ const DESENHOS = {
   },
 };
 
-// pinta a folha inteira: o casco, o desenho e o que todo capacete tem (a faixa do patrocínio acima da viseira, o filete embaixo e o número)
-export function pintarFolha(x, cores, desenho, numero) {
+// ---------- o capacete de quem joga (mods.capacete; editor na Garagem da sala, menus.js) ----------
+// { desenho, cores: [casco, segunda, detalhe], viseira, bandeira (sigla de gp-info.js BANDEIRAS), nome }; o servidor confere com `limparCapacete` (corrida.js, a mesma regra)
+export const DESENHOS_CAPACETE = { faixa: "Faixa", bandas: "Bandas", blocos: "Blocos", cruz: "Cruz", topo: "Topo", asas: "Asas", triangulos: "Triângulos", generico: "Clássico" };
+export const VISEIRAS = { "#090b10": "Escura", "#c9ccd2": "Espelhada", "#d4a017": "Dourada", "#1e6fd9": "Azul", "#d8142c": "Vermelha", "#7a2fd0": "Roxa", "#1fa64a": "Verde", "#f07c1a": "Laranja" };
+export const CAPACETE_PADRAO = { desenho: "faixa", cores: ["#f4f4f4", "#e10600", "#101114"], viseira: "#090b10", bandeira: "BR", nome: "" };
+// as bandeiras (o SVG de gp-info.js) viram imagem uma vez; quem pinta antes de ela chegar é avisado para repintar
+const BAND = new Map();
+export function bandeiraImg(sigla, aoChegar) {
+  const svg = sigla && typeof window !== "undefined" && window.GpInfo?.BANDEIRAS?.[sigla]; if (!svg) return null;
+  let b = BAND.get(sigla);
+  if (!b) { b = { img: new Image(), ok: false, espera: [] }; BAND.set(sigla, b); b.img.onload = () => { b.ok = true; for (const f of b.espera.splice(0)) f(); };
+    b.img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16" width="96" height="64">${svg}</svg>`); }
+  if (!b.ok && aoChegar) b.espera.push(aoChegar);
+  return b.ok ? b.img : null;
+}
+// pinta a folha inteira: o casco, o desenho e o que todo capacete tem (a faixa do patrocínio acima da viseira, o filete embaixo e o número);
+// `extra` (o capacete de quem joga): a bandeira atrás e nos lados e o nome na faixa acima da viseira e na nuca. `aoChegar`: a bandeira chegou depois, repinte
+export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = null) {
   const [c1, c2, c3] = cores;
   x.fillStyle = c1; x.fillRect(0, 0, 512, 256);
   (DESENHOS[desenho] || DESENHOS.generico)(x, cores);
   x.fillStyle = c3; x.fillRect(282, 85, 204, 11); // a faixa estreita do patrocínio / nome logo acima da viseira (só cor)
+  if (extra) {
+    const img = extra.bandeira ? bandeiraImg(extra.bandeira, aoChegar) : null;
+    if (img) for (const [cx, cy, w] of [[128, 104, 84], [256, 120, 54], [0, 120, 54], [512, 120, 54]]) { x.fillStyle = "#0b0c10"; x.fillRect(cx - w / 2 - 2, cy - w / 3 - 2, w + 4, w * 2 / 3 + 4); x.drawImage(img, cx - w / 2, cy - w / 3, w, w * 2 / 3); }
+    const nome = String(extra.nome || "").trim();
+    if (nome) {
+      const claro = (h) => { const n = parseInt(String(h).slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) > 140; };
+      x.fillStyle = c3; x.fillRect(278, 78, 212, 22); x.fillStyle = claro(c3) ? "#101114" : "#ffffff";
+      x.font = "900 17px Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(nome.toUpperCase(), 384, 90, 200); // na faixa acima da viseira
+      x.font = "900 24px Arial, sans-serif"; x.lineWidth = 5; x.strokeStyle = "#0b0c10"; x.strokeText(nome.toUpperCase(), 128, 214, 180); x.fillStyle = "#ffffff"; x.fillText(nome.toUpperCase(), 128, 214, 180); // na nuca
+    }
+  }
   if (numero != null && numero !== "") {
     x.font = "900 54px 'Arial Black', Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineJoin = "round"; x.lineWidth = 7;
     for (const [cx, cy] of [[128, 168], [256, 172], [0, 172], [512, 172]]) { x.strokeStyle = "#0b0c10"; x.strokeText(String(numero), cx, cy); x.fillStyle = "#ffffff"; x.fillText(String(numero), cx, cy); }

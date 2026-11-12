@@ -67,7 +67,7 @@ function parar() {
 // o carro da vitrine: refaz só quando a pintura, a cor, o modelo ou o carregamento mudam; o contraluz segue a cor da equipe
 function mostrar({ cor, modelo, mods, corEquipe, prontoF1 }) {
   if (!renderer) return;
-  const nova = [cor, modelo, JSON.stringify(mods || {}), prontoF1 ? 1 : 0].join("|"), c = new THREE.Color(corEquipe || "#e10600");
+  const nova = [cor, modelo, JSON.stringify(mods || {}), prontoF1 ? 1 : 0, window.F1Temporadas?.anoAtual?.() || 2026].join("|") /* (o ano entra na chave: a pintura e o carro mudam com a temporada) */, c = new THREE.Color(corEquipe || "#e10600");
   rim1.color.copy(c); rim2.color.set(0xffffff).lerp(c, 0.45);
   if (nova !== chave) {
     if (carro) { dropKart(carro); carro = null; }

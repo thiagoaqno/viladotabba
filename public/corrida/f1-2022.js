@@ -33,9 +33,12 @@ export function construir2022(raiz, tam, leve) {
     if (!mats[nome]) mats[nome] = o.material;
   });
   const todos = caixaDe(fontes), c0 = todos.getCenter(new THREE.Vector3()), s = tam / (todos.max.z - todos.min.z), yMin = todos.min.y;
-  const F = (x, y, z) => [-(x - c0.x) * s, (y - yMin) * s, -(z - c0.z) * s];
-  for (const f of fontes) for (let i = 0; i < f.pos.length; i += 3) {
-    f.pos[i] = -(f.pos[i] - c0.x) * s; f.pos[i + 1] = (f.pos[i + 1] - yMin) * s; f.pos[i + 2] = -(f.pos[i + 2] - c0.z) * s; f.nor[i] = -f.nor[i]; f.nor[i + 2] = -f.nor[i + 2];
+  // ESTE ARQUIVO VEM ESPELHADO (o "PIRELLI" do próprio pneu saía ao contrário, e as letras da pintura também): aqui só o z vira (a frente para −z),
+  // o x fica, e isso desfaz o espelho; como virar um eixo só inverte o lado das faces, a ordem de cada triângulo também vira
+  const F = (x, y, z) => [(x - c0.x) * s, (y - yMin) * s, -(z - c0.z) * s];
+  for (const f of fontes) {
+    for (let i = 0; i < f.pos.length; i += 3) { f.pos[i] = (f.pos[i] - c0.x) * s; f.pos[i + 1] = (f.pos[i + 1] - yMin) * s; f.pos[i + 2] = -(f.pos[i + 2] - c0.z) * s; f.nor[i + 2] = -f.nor[i + 2]; }
+    for (let t = 0; t < f.idx.length; t += 3) { const a = f.idx[t + 1]; f.idx[t + 1] = f.idx[t + 2]; f.idx[t + 2] = a; }
   }
   const de = (conj) => fontes.filter((f) => conj.has(f.nome));
   const D = { mats, nomes: { mecanica: "generic", volante: "Steer" }, rodas: [], flap: null, volante: null, volanteDet: null, miudezas: null, detalhes: null, mecanica: null, corpo: null };
@@ -90,7 +93,12 @@ export function construir2022(raiz, tam, leve) {
     const bp = caixaDe(pneuQ[q].length ? pneuQ[q] : lista), centro = bp.getCenter(new THREE.Vector3()), r = (bp.max.y - bp.min.y) / 2;
     const Q = quaternioDoEixo(pneuQ[q].length ? pneuQ[q] : lista, centro);
     const g = centrar(juntar(lista, { cor: true }), centro); g.applyQuaternion(Q); g.computeBoundingSphere();
-    const a = aroDaRoda(g.attributes.position, g.index.array);
+    // a faixa do composto e as letras (f1-pintura.js, pelo raio): só no PNEU. Aqui a roda junta pneu, aro e disco, e o aro de 18" fica dentro do raio
+    // da faixa: sem isto ela vazava amarela pelo aro inteiro. O raio sai só dos triângulos do pneu, e o aro e o freio ficam com raio 0 (nada pintado).
+    const doPneu = []; let ini = 0; for (const f of lista) { const nv = f.pos.length / 3; if (f.nome === "tyres") doPneu.push([ini, ini + nv]); ini += nv; }
+    const ehPneu = (v) => doPneu.some(([x, y]) => v >= x && v < y), idxPneu = Array.from(g.index.array).filter((v) => ehPneu(v));
+    const a = aroDaRoda(g.attributes.position, idxPneu.length ? idxPneu : g.index.array);
+    for (let v = 0; v < a.aro.count; v++) if (!ehPneu(v)) a.aro.setXY(v, 0, 0);
     g.setAttribute("aro", a.aro); g.setAttribute("pneuLat", a.lat);
     D.rodas.push({ geo: g, centro, r, frente: q >= 2, lado: q % 2 ? 1 : -1, camber: Q.clone().invert() });
   });

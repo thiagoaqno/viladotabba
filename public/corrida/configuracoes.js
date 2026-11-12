@@ -28,7 +28,8 @@ function abaGraficos() {
   return parte("Predefinição", linha("Qualidade geral", g.predef === "personalizada" ? "Personalizada: você mudou algum item abaixo" : "Põe todos os itens abaixo de uma vez (tecla G na corrida)",
       opcoes("predef", g.predef, g.predef === "personalizada" ? [...PRE, ["personalizada", "Personalizada"]] : PRE)))
     + parte("Tela", linha("Resolução", "A altura do desenho em pixels. Menor é mais leve; a janela continua do mesmo tamanho",
-      `<select data-g="resolucao">${RESOLUCOES.map(([v, n]) => `<option value="${v}" ${v === g.resolucao ? "selected" : ""}>${n}</option>`).join("")}</select>`))
+      `<select data-g="resolucao">${RESOLUCOES.map(([v, n]) => `<option value="${v}" ${v === g.resolucao ? "selected" : ""}>${n}</option>`).join("")}</select>`)
+      + linha("Resolução dinâmica", "Na corrida, baixa um pouco a resolução quando os quadros passam da meta (120 qps, ou o limite da sua tela) e volta quando sobra", opcoes("dinamica", g.dinamica !== false, [[true, "Ligada"], [false, "Desligada"]])))
     + parte("Qualidade",
       linha("Efeitos", "Baixa: sem efeitos. Média: cor por clima, brilho e vinheta. Alta: tudo, com desfoque de velocidade", opcoes("efeitos", g.efeitos, [["baixa", "Baixa"], ["media", "Média"], ["alta", "Alta"]]))
       + linha("Sombras", "Do sol, em volta do carro", opcoes("sombras", g.sombras, [["desligadas", "Desligadas"], ["baixas", "Baixas"], ["altas", "Altas"]]))

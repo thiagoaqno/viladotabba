@@ -61,8 +61,8 @@ function ler(R, s, b = R.buf) {
 }
 // um desenho do mapa
 // A leitura dos pixels é ASSÍNCRONA (readRenderTargetPixelsAsync: um buffer na placa e uma cerca): a síncrona fazia o processador esperar a placa a cada
-// quadro da transmissão de abertura, e eram uns 4 s de quadros de ~100 ms (medido com a RTX 2060 em Monza, 21 robôs). Até duas leituras ficam no ar.
-const NO_AR = 2;
+// quadro da transmissão de abertura, e eram uns 4 s de quadros de ~100 ms (medido com a RTX 2060 em Monza, 21 robôs). Até quatro leituras ficam no ar (com duas, o mapa só fechava depois da largada).
+const NO_AR = 4;
 function passoDoMapa(R, tr) {
   if ((R.noAr || 0) >= NO_AR) return; // (espera as leituras que já estão no ar)
   const n = R.feito, s = n >> 2, dir = n & 3, { objs, ids } = R;

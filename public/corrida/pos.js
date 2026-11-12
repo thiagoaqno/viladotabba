@@ -288,8 +288,29 @@ let nivel = 0; // o desempenho: 0 = como a qualidade escolhida; 1 = resolução 
 let atual = null; // a qualidade que o pós aplica agora
 const reduz = matchMedia("(prefers-reduced-motion: reduce)");
 const efetivaPos = () => (nivel >= 3 ? "baixa" : qualidade());
+// ---------- a resolução dinâmica (Configurações > Gráficos > Resolução dinâmica) ----------
+// Medido com a RTX 2060 em Monza (21 robôs, 1600 × 900): em meia resolução o quadro caiu de 22,5 para 14,9 ms. Boa parte do quadro é pixel (o pós),
+// então, na corrida, a escala do desenho desce de 10 em 10% (até 60%) quando os quadros passam da META e volta a subir quando ficam na meta.
+// META: 120 qps ou o limite da tela, se ele for menor (`intervaloTela`, medido nos primeiros quadros do menu, que é leve). Cada troca refaz os
+// alvos do pós (uma realocação), por isso as trocas são espaçadas: desce depois de 1,5 s ruins, sobe depois de 5 s bons, e uma subida que
+// não se segurou fica bloqueada por 20 s.
+const ESCALAS = [1, 0.9, 0.8, 0.7, 0.6];
+let escalaI = 0, intervaloTela = 1000 / 60, janela = [], ultQ = 0, ultTroca = 0, bloqueioSubida = 0, subiuEm = 0, bloqueioDescida = 0, antesDaDescida = 0;
+// (descer só vale quando o gargalo é a placa: se a janela depois da descida não ficou 8% melhor, era o processador; volta e não tenta por 30 s)
+{ const v = []; let u = 0; const f = (t) => { if (u) v.push(t - u); u = t; if (v.length < 90) requestAnimationFrame(f); else { v.sort((a, b) => a - b); intervaloTela = Math.max(1000 / 360, v[Math.floor(v.length * 0.3)]); } }; requestAnimationFrame(f); }
+function quadroDinamico(agora) {
+  const dt = ultQ ? agora - ultQ : 0; ultQ = agora; if (!dt || dt > 250) return; // (aba escondida, pausa)
+  if (graficos().dinamica === false) { if (escalaI) { escalaI = 0; aplicarRazao(); } return; }
+  janela.push(dt); if (janela.length < 60) return;
+  const v = janela.sort((a, b) => a - b), p75 = v[Math.floor(v.length * 0.75)]; janela = [];
+  const meta = Math.max(1000 / 120, intervaloTela) * 1.08;
+  if (antesDaDescida) { const ganhou = p75 < antesDaDescida * 0.92; antesDaDescida = 0; if (!ganhou) { escalaI--; ultTroca = agora; bloqueioDescida = agora + 30000; aplicarRazao(); return; } }
+  if (p75 > meta && escalaI < ESCALAS.length - 1 && agora - ultTroca > 1500 && agora > bloqueioDescida) { if (agora - subiuEm < 3000) bloqueioSubida = agora + 20000; antesDaDescida = p75; escalaI++; ultTroca = agora; aplicarRazao(); }
+  else if (p75 <= meta * 0.97 && escalaI > 0 && agora - ultTroca > 5000 && agora > bloqueioSubida) { escalaI--; ultTroca = subiuEm = agora; aplicarRazao(); }
+}
+export const escalaDinamica = () => ESCALAS[escalaI];
 function aplicarRazao() {
-  const r = Math.min(pixelRatioDe(qualidade()), nivel >= 1 ? 0.85 : 99);
+  const r = Math.min(pixelRatioDe(qualidade()), nivel >= 1 ? 0.85 : 99) * ESCALAS[escalaI];
   if (r === renderer.getPixelRatio()) return;
   const s = renderer.getSize(tam); renderer.setPixelRatio(r); renderer.setSize(s.x, s.y, false); // o canvas é dimensionado pelo CSS (updateStyle false, como em jogo.js)
 }
@@ -304,6 +325,7 @@ aoMudar(aplicarQualidade);
 export function ajustarTela() { if (atual && atual !== "baixa" && feitos[atual]) pronto(atual); }
 // forca: 0 (nítido) a 1 (bem borrado); com turbo vai até 1,4
 export function desenhar(forca) {
+  quadroDinamico(performance.now());
   const q = efetivaPos(); if (q !== atual) aplicarQualidade();
   { // o verniz da pintura dos carros (f1-pintura.js): só de dia e só com o pós (Média e Alta); sobe e desce devagar na virada
     const t = performance.now(), alvo = q === "baixa" || ehNoite() ? 0 : 1;

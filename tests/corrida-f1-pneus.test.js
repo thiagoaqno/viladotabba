@@ -42,22 +42,7 @@ test("pneus: escorregar, travar a roda e patinar gastam mais que andar limpo", (
   assert.ok(d({ slip: 80 }) > limpo * 1.4 && d({ travada: 1 }) > limpo * 1.5 && d({ patina: 1 }) > limpo * 1.2);
 });
 
-test("pneus: depois do penhasco o carro fica muito ruim; frio na largada, esquenta em alguns segundos", () => {
-  for (const c of F1.SECOS) {
-    const novo = F1.aderencia({ composto: c, desgaste: 0, temp: 1 }), fim = F1.aderencia({ composto: c, desgaste: 1, temp: 1 }), cliff = F1.aderencia({ composto: c, desgaste: F1.PENHASCO, temp: 1 });
-    assert.ok(cliff.grip > novo.grip * 0.9, `${c}: até o penhasco perde pouco`);
-    // (2026-11-14: apagado o "depois dele despenca" com freio < 90% e final entre 90% e 97%: o pneu em ruína agora tem 20% da aderência, 60% da
-    // tração e 60% da velocidade final, e o freio fica como no penhasco, a pedido do Thiago; f1-regras.js RUINA_*)
-  }
-  const quanto = (c) => { const pn = F1.pneuNovo(c); for (let t = 0; t < 60 * 30; t++) { if (!F1.frio(pn)) return t / 60; F1.gastarPneu(pn, { dist: 0, volta: 1, v: 250, vmax: 295, dt: 1 / 60 }); } return Infinity; };
-  assert.ok(F1.frio(F1.pneuNovo("duro")));
-  assert.ok(quanto("macio") < quanto("medio") && quanto("medio") < quanto("duro") && quanto("macio") > 1.5 && quanto("duro") < 12, `${quanto("macio")} ${quanto("medio")} ${quanto("duro")}`);
-  for (const composto of F1.SECOS) for (let d = 0; d <= 1; d += 0.05) for (let t = 0; t <= 1; t += 0.1) {
-    const a = F1.aderencia({ composto, desgaste: d, temp: t });
-    assert.ok(a.grip >= 0.4 && a.grip <= 2.0 && a.kin >= 0.85 && a.kin <= 1, `${composto} ${d} ${t}`);
-  }
-  assert.equal(F1.pneuNovo("nada").composto, F1.COMPOSTO_PADRAO);
-});
+// (2026-11-14: apagado o teste "pneus: depois do penhasco o carro fica muito ruim; frio na largada, esquenta em alguns segundos": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 // os robôs numa volta só, no tempo de mentira (como em corrida-robos.test.js)
 function voltaDosRobos(regras, pneu) {

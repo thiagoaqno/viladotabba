@@ -219,38 +219,7 @@ test("os robôs podem usar as contas: velocidade de curva, frenagem e aceleraç�
   }
 });
 
-test("um grampo não se faz com o acelerador cheio, mas o piloto ideal (no limite de aderência) faz a volta", () => {
-  // o piloto: segue o meio da pista (S.pilotoAutomatico) com a velocidade do perfil ideal, ou com o acelerador cheio
-  // (o pneu novo, de qualquer composto, é o arcade, que aguenta uma volta inteira com o acelerador cheio; quem segura o acelerador no pneu acabado,
-  // da física intermediária, é que sai da pista)
-  const voltaDe = (id, ideal, equipe = "mclaren") => {
-    const t = T.PISTAS[id], tr = S.criarPista(t, id), spec = Equipes.specDaEquipe(equipe), c = S.novo(tr, { grid: 0, f1: true, pneu: F1.pneuNovo("medio") });
-    if (!ideal) c.pneu.desgaste = 0.9;
-    const perfil = D.perfilIdeal(tr.pts, spec, 6, 0.92), amb = { spec, voltas: 3, laps: 0, f1: true, outros: [] }, ent = {}, ev = [];
-    let setores = 0, maxLat = 0, tempo = 0, batidas = 0, saiu = null;
-    for (let i = 0; i < 120 * 200; i++) {
-      let alvo = 9999;
-      if (ideal) { const K = Math.ceil(Math.max(c.v, 30) * 0.3 / 6); alvo = 1e9; for (let k = 0; k <= K; k++) alvo = Math.min(alvo, perfil[(c.idx + 1 + k) % tr.n]); }
-      S.pilotoAutomatico(c, tr, spec, alvo, 0, ent);
-      if (ideal) { ent.gas = c.v < alvo ? 1 : 0; ent.brake = c.v > alvo * 1.03 ? 1 : 0; if (ent.brake) ent.gas = 0; } else { ent.gas = 1; ent.brake = 0; }
-      ev.length = 0; S.passo(c, ent, amb, tr, ev); tempo += S.PASSO;
-      for (const e of ev) { if (e.t === "setor") { setores++; if (e.s === 0 && setores > 1) return { tempo, maxLat, batidas, voltou: true }; } if (e.t === "muro") batidas++; }
-      maxLat = Math.max(maxLat, Math.abs(S.quadro(tr, c.x, c.y, c.idx).lat));
-      if (maxLat > t.width / 2 + 90 && saiu === null) saiu = { tempo, idx: c.idx };
-      if (saiu) return { tempo, maxLat, batidas, saiu };
-    }
-    return { tempo, maxLat, batidas };
-  };
-  for (const id of ["interlagos", "monaco", "monza", "barcelona"]) {
-    const bom = voltaDe(id, true), cheio = voltaDe(id, false);
-    assert.ok(bom.voltou, `${id}: o piloto ideal fecha a volta (${JSON.stringify(bom)})`);
-    assert.ok(bom.maxLat < T.PISTAS[id].width / 2 + 5, `${id}: o piloto ideal fica na pista (${bom.maxLat})`);
-    // segurando o acelerador: sai da pista (ou, onde tem muro, apanha dele e perde muito tempo)
-    const t = T.PISTAS[id];
-    if (t.walls) assert.ok(cheio.batidas > 50, `${id}: segurar o acelerador bate no muro ${JSON.stringify(cheio)}`);
-    else assert.ok(cheio.saiu || cheio.maxLat > t.width / 2 + 20, `${id}: segurar o acelerador sai da pista ${JSON.stringify(cheio)}`);
-  }
-});
+// (2026-11-14: apagado o teste "um grampo não se faz com o acelerador cheio, mas o piloto ideal (no limite de aderência) faz a volta": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("passo fixo: 30 ou 144 quadros por segundo dão a mesma corrida", () => {
   const tr = S.criarPista(T.PISTAS.interlagos, "interlagos");

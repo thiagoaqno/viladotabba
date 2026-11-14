@@ -30,6 +30,9 @@ const COMPOSTO_PADRAO = "medio";
 // e ganhou uns 5% na garoa sobre o de chuva, para valer a pena na pista úmida)
 // (2026-11: o penhasco ficou 50% menos punitivo: a perda no fim era 0,4 do pico e 8% da final; as vidas eram 1,5 / 3,8 / 7 voltas)
 const PENHASCO = 0.8, PERDA_FIM = 0.215, FINAL_FIM = 0.04;
+// O pneu EM RUÍNA (passou do penhasco), pedido do Thiago em 2026-11-14: continua com a mesma dirigibilidade (a arcade, não a física intermediária de
+// antes), mas com RUINA_GRIP da aderência que tinha no penhasco, RUINA_ACEL da aceleração (a tração e a potência) e RUINA_FINAL da velocidade máxima.
+const RUINA_GRIP = 0.2, RUINA_ACEL = 0.6, RUINA_FINAL = 0.6;
 // Pneu frio (saindo do box ou na largada) segura FRIO do normal e fica bom aos poucos: a temperatura vai de TEMP_SAIDA a
 // TEMP_BOA em alguns segundos (mais rápido no macio, mais devagar no duro).
 const TEMP_SAIDA = 0.6, TEMP_BOA = 0.75, FRIO = 0.72, AQUECE = 0.12;
@@ -87,17 +90,19 @@ function fatorAgua(composto, agua) {
 const PERDA_ESQUENTA = 0.12; // (2026-11-13: era 0,25; o Thiago pediu os de chuva e o intermediário melhores no seco, mas ainda derretendo: `derrete` ficou)
 function aderencia(pneu, agua = 0) {
   const pn = PNEUS[pneu && pneu.composto] || PNEUS[COMPOSTO_PADRAO], d = pneu ? pneu.desgaste : 0, temp = pneu ? pneu.temp : TEMP_BOA;
-  const x = limite((d - PENHASCO) / (1 - PENHASCO), 0, 1); // 0 até o penhasco, 1 com o pneu acabado
-  const perda = d <= PENHASCO ? pn.perdaAntes * d / PENHASCO : pn.perdaAntes + (PERDA_FIM - pn.perdaAntes) * x;
+  const ruina = !!pneu && d > PENHASCO;
+  const perda = d <= PENHASCO ? pn.perdaAntes * d / PENHASCO : pn.perdaAntes; // (em ruína a perda para no penhasco: o que manda é o RUINA_GRIP)
   const quente = FRIO + (1 - FRIO) * limite((temp - TEMP_SAIDA) / (TEMP_BOA - TEMP_SAIDA), 0, 1);
   const esquentou = pn.esquenta ? limite((temp - 1) / pn.esquenta, 0, 1) : 0; // 0 a 1: o pneu de chuva superaquecido
-  const base = limite(pn.pico * (1 - perda) * quente * fatorAgua(pneu ? pneu.composto : COMPOSTO_PADRAO, agua) * (1 - PERDA_ESQUENTA * esquentou), 0.4, 2.0), r = base / PICO_REFERENCIA;
+  const base = limite(pn.pico * (1 - perda) * quente * fatorAgua(pneu ? pneu.composto : COMPOSTO_PADRAO, agua) * (1 - PERDA_ESQUENTA * esquentou), 0.4, 2.0) * (ruina ? RUINA_GRIP : 1), r = base / PICO_REFERENCIA;
   // `arcade`: qualquer composto dentro da vida útil usa a mesma dirigibilidade (dinamica.js, `lateralArcade`): a RESPOSTA da direção é igual nos
   // três e o composto só muda o limite de aderência (`grip`), o desgaste e a temperatura; passou do penhasco, volta à física intermediária
   // e fica prejudicado pelo desgaste. `rel` é a aderência relativa à referência original (o `grip` do carro usa essa base).
-  return { arcade: !!pneu && d <= PENHASCO, rel: r, grip: base, kin: limite(1 - perda * 0.5, 0.85, 1),
-    freio: limite(BASE_FREIO * Math.pow(r, EXPOENTE_FREIO), 0.4, 1.5), tracao: limite(BASE_FREIO * Math.pow(r, EXPOENTE_TRACAO), 0.4, 1.5),
-    final: 1 - FINAL_FIM * x };
+  // (em ruína: `ruina` liga o corte de velocidade e a potência de dinamica.js; a tração e o freio saem da aderência de antes da ruína)
+  const rT = ruina ? r / RUINA_GRIP : r;
+  return { arcade: !!pneu, ruina, rel: r, grip: base, kin: limite(1 - perda * 0.5, 0.85, 1),
+    freio: limite(BASE_FREIO * Math.pow(rT, EXPOENTE_FREIO), 0.4, 1.5), tracao: limite(BASE_FREIO * Math.pow(rT, EXPOENTE_TRACAO), 0.4, 1.5) * (ruina ? RUINA_ACEL : 1),
+    final: ruina ? RUINA_FINAL : 1, potencia: ruina ? RUINA_ACEL : 1 };
 }
 // Em quantas voltas o pneu chega ao penhasco, pilotado como o piloto ideal e com um gasto `fator` do carro
 function vidaEmVoltas(composto, fator = 1, agua = null) {

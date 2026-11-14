@@ -193,7 +193,8 @@ test("pneu, dano, DRS, ERS e vácuo continuam valendo dentro da física nova", (
     for (let i = 0; i < 120; i++) { c.v = 150; D.passo(c, { steer: 1 }, { chao: true, pn, dano }, p); }
     return Math.abs(c.r);
   };
-  assert.ok(limite(novo) > limite(gasto) * 1.05, "pneu novo vira mais");
+  // (2026-11-14: apagado o "pneu novo vira mais": o pneu em ruína agora fica na dirigibilidade arcade, em que a guinada é a do volante; ele escorrega
+  // de lado com 20% da aderência, mas o bico gira igual. f1-regras.js RUINA_*)
   assert.ok(limite(null, F1.efeitoDoDano(30)) < limite(null, F1.efeitoDoDano(0)) * 0.85, "dano tira aderência");
   // grama: a velocidade cai muito e o carro derrapa mais
   const grama = D.novoCarro(); andar(mclaren, grama, { gas: 1 }, 15, { chao: false });
@@ -313,16 +314,13 @@ test("os três compostos novos usam a dirigibilidade arcade (grudada); acabados,
   for (const c of ["macio", "medio", "duro"]) {
     assert.equal(F1.aderencia({ composto: c, desgaste: 0, temp: 0.75 }).arcade, true, c);
     assert.equal(F1.aderencia({ composto: c, desgaste: F1.PENHASCO, temp: 0.75 }).arcade, true, c);
-    assert.equal(F1.aderencia({ composto: c, desgaste: 0.9, temp: 0.75 }).arcade, false, c);
+    // (2026-11-14: apagado o "desgaste 0,9 não é arcade": em ruína o pneu continua na arcade, com RUINA_GRIP, RUINA_ACEL e RUINA_FINAL)
   }
   for (const v of [100, 140]) { // o volante cheio pede menos que o pneu segura: os três respondem exatamente igual
     const macio = lateralEmCurva("macio", 0, v), medio = lateralEmCurva("medio", 0, v), duro = lateralEmCurva("duro", 0, v);
     assert.ok(Math.abs(medio / macio - 1) < 0.01 && Math.abs(duro / macio - 1) < 0.01, `${v}: macio ${macio.toFixed(0)}, médio ${medio.toFixed(0)}, duro ${duro.toFixed(0)}`);
   }
-  for (const v of [100, 180, 280]) {
-    const medio = lateralEmCurva("medio", 0, v), acabado = lateralEmCurva("macio", 0.9, v);
-    assert.ok(acabado < medio, `${v}: macio acabado ${acabado.toFixed(0)} vs médio novo ${medio.toFixed(0)}`);
-  }
+  // (2026-11-14: apagado o "macio acabado faz menos curva que o médio novo", medido pela guinada: na arcade ela é a do volante)
   // em alta o pneu satura: o limite cai de macio para duro, só um pouco (sem degrau)
   const macio = lateralEmCurva("macio", 0, 280), medio = lateralEmCurva("medio", 0, 280), duro = lateralEmCurva("duro", 0, 280);
   assert.ok(macio > duro && medio > macio * 0.9 && duro > macio * 0.85, `280: macio ${macio.toFixed(0)}, médio ${medio.toFixed(0)}, duro ${duro.toFixed(0)}`);

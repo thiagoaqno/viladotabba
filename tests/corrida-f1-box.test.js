@@ -22,14 +22,7 @@ test("box: a saída aponta no sentido da volta e avança o índice nas cinco pis
   }
 });
 
-test("box: uma parada em Interlagos custa entre 5 e 10 s (entrada + limitador + parada + saída)", () => {
-  const c = corredorDe("interlagos"), vmax = T.CARROS.equilibrado.vmax;
-  const curta = F1.tempoNoBox(c, vmax, F1.PARADA_BASE), longa = F1.tempoNoBox(c, vmax, F1.PARADA_BASE + F1.PARADA_ERRO);
-  assert.ok(curta >= 5 && longa <= 10, `${curta.toFixed(1)} a ${longa.toFixed(1)} s`);
-  // o corredor começa antes da linha de chegada, do lado de dentro; pista sem `boxes` não tem corredor
-  assert.ok(c.i0 > T.pontos(T.PISTAS.interlagos, 6).length * 0.9 && c.lado === 1);
-  assert.equal(F1.corredor(T.PISTAS.arcoiris, 2000, 88), null);
-});
+// (2026-11-14: apagado o teste "box: uma parada em Interlagos custa entre 5 e 10 s (entrada + limitador + parada + saída)": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("box: a entrada de Monza vem antes da chegada, para aceitar parada na penúltima volta", () => {
   const n = T.pontos(T.PISTAS.monza, 6).length, c = corredorDe("monza");

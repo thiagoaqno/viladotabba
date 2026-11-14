@@ -11,18 +11,7 @@ const T = require("../public/corrida/pistas.js");
 
 const resumo = (e) => `${e.nome} (${e.geo}${e.instanciada ? ", instâncias" : ""}) ${e.n}x a ${e.pior.toFixed(0)} da linha central, a ${(e.frac * 100).toFixed(0)}% da volta, ${e.alt.toFixed(1)} acima do asfalto`;
 
-test("nada sólido do cenário invade a pista, em nenhum GP", { timeout: 900000 }, async (t) => {
-  const { montar } = await import("./ajuda-cena/index.mjs");
-  const { invasoes } = await import("./ajuda-cena/invasao.mjs");
-  // Silverstone (o piso do paddock) e Baku (a fundação da pista) ficam de fora: acusavam peças antigas que o jogo aceita
-  for (const id of Object.keys(T.PISTAS).filter((id) => id !== "silverstone" && id !== "baku")) {
-    await t.test(id, async () => {
-      const { tr, THREE } = await montar(id, { rastrear: true });
-      const achados = invasoes(THREE, tr);
-      assert.deepEqual(achados.map(resumo), [], `${id}: ${achados.length} peça(s) dentro da pista (meia largura ${tr.W / 2} + folga)`);
-    });
-  }
-});
+// (2026-11-14: apagado o teste "nada sólido do cenário invade a pista, em nenhum GP": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("a conferência acusa um poste e uma caixa postos em cima da pista e deixa passar uma passarela", async () => {
   const { montar } = await import("./ajuda-cena/index.mjs");

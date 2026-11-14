@@ -17,21 +17,7 @@ test("Mônaco: poucas malhas, poucas chamadas de desenho por quadro e poucos mat
   assert.equal(m.luzesNaPista, 0, "a pista não tem luz própria: só o sol e o céu da cena");
 });
 
-test("as pistas do calendário e as antigas montam com um teto de malhas", { timeout: 600000 }, async (t) => {
-  const { montar } = await import("./ajuda-cena/index.mjs");
-  const { contar } = await import("./ajuda-cena/medir.mjs");
-  const T = require("../public/corrida/pistas.js");
-  for (const id of Object.keys(T.PISTAS)) {
-    await t.test(id, async () => {
-      const { tr, THREE } = await montar(id);
-      const c = contar(THREE, tr.grp);
-      assert.ok(c.malhas <= 520, `${id}: ${c.malhas} malhas (teto 520)`);
-      const f = tr.fundido;
-      assert.ok(f && f.malhasDepois - f.instanciadasExtras <= f.malhasAntes,
-        `${id}: a fusão não pode aumentar as malhas fora da divisão por região (${f?.malhasAntes} -> ${f?.malhasDepois}, ${f?.instanciadasExtras} extras)`);
-    });
-  }
-});
+// (2026-11-14: apagado o teste "as pistas do calendário e as antigas montam com um teto de malhas": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("o que se mexe não foi fundido nem congelado: bandeiras, barcos, bandos, gaivotas e checkpoints (e a roda-gigante, numa pista que tem uma: Mônaco não tem)", { timeout: 120000 }, async () => {
   const { montar } = await import("./ajuda-cena/index.mjs");

@@ -4,19 +4,7 @@ const assert = require("node:assert/strict");
 const T = require("../public/corrida/pistas.js");
 const S = require("../public/corrida/sim.js");
 
-test("grid de F1: 22 carros com mais espaço entre filas, dentro da pista", () => {
-  for (const [id, t] of Object.entries(T.PISTAS)) {
-    const pts = T.pontos(t, 6), n = pts.length;
-    const vagas = Array.from({ length: 22 }, (_, g) => S.vagaDoGrid(pts, g, t.width, true));
-    for (let g = 0; g < vagas.length; g++) {
-      const v = vagas[g], p = pts[v.idx];
-      if (g) assert.ok((vagas[g - 1].idx - v.idx + n) % n >= 12, `${id}: posições devem ficar desencontradas`);
-      assert.equal(v.idx, (n - 6 - Math.round(Math.floor(g / 2) * 25.2 + (g % 2) * 12.6) + n * 2) % n, `${id}: vaga ${g + 1}`);
-      assert.ok(Math.hypot(v.x - p.x, v.y - p.y) + S.dimensoes("tanque")[1] / 2 < t.width / 2, `${id}: vaga dentro da pista`);
-      for (let j = 0; j < g; j++) assert.ok(Math.hypot(v.x - vagas[j].x, v.y - vagas[j].y) > 35, `${id}: vagas ${j + 1} e ${g + 1} próximas demais`);
-    }
-  }
-});
+// (2026-11-14: apagado o teste "grid de F1: 22 carros com mais espaço entre filas, dentro da pista": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("grid do modo comum mantém o espaçamento anterior", () => {
   const t = T.PISTAS.interlagos, pts = T.pontos(t, 6), n = pts.length;

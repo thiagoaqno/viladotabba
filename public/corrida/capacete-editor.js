@@ -6,7 +6,9 @@ import { E, $, me, act } from "./estado.js";
 import { montarEditorCapacete, lerCapacete } from "./capacete-editor-ui.js";
 
 let enviarT = 0, enviadoPara = null;
-function enviar(cap) { clearTimeout(enviarT); enviarT = setTimeout(() => { if (me() && E.S && E.S.phase !== "race") act("mods", { mods: { capacete: cap } }); }, 250); }
+// manda para a sala uma vez, 1,2 s depois do último clique (cada envio faz o servidor mandar o estado para todos: a cada clique, a sala
+// de todo mundo era redesenhada)
+function enviar(cap) { clearTimeout(enviarT); enviarT = setTimeout(() => { if (me() && E.S && E.S.phase !== "race") act("mods", { mods: { capacete: cap } }); }, 1200); }
 // ao entrar numa sala (ou quando ela volta para a sala de espera): o capacete guardado vai para lá, uma vez por sala
 export function sincronizarCapacete() {
   const m = me(), salvo = lerCapacete(); if (!m || !salvo || !E.S || E.S.phase === "race") return;

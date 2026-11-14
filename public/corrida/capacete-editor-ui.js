@@ -37,7 +37,7 @@ const gravar = (c) => { try { localStorage.setItem(CHAVE_CAPACETE, JSON.stringif
 export function montarEditorCapacete(el, op = {}) {
   if (el._capacete) { el._capacete.redesenhar(); return el._capacete; }
   let atual = lerCapacete() || { ...CAPACETE_PADRAO, cores: CAPACETE_PADRAO.cores.slice(), variante: 0, acabamento: "brilho", patrocinio: "" };
-  let aba = "desenho", pagina = 0, slot = 0; // slot: a cor que as cores principais trocam (0 casco, 1 segunda, 2 detalhes)
+  let aba = "desenho", pagina = 0, slot = 0, ultimaAssinatura = ""; // slot: a cor que as cores principais trocam (0 casco, 1 segunda, 2 detalhes)
   const desenhos = Object.keys(DESENHOS_CAPACETE), paginas = Math.ceil(desenhos.length / POR_PAGINA);
   el.classList.add("cp2-on");
   el.innerHTML = `<div class="cp2">
@@ -96,9 +96,10 @@ export function montarEditorCapacete(el, op = {}) {
   }
   const tudo = () => { previa(); desenharPainel(); desenharRodape(); };
   // uma mudança: guarda, mostra no 3D e refaz o painel (as miniaturas esperam um instante, para o arrastar da cor livre não travar)
-  const mudar = (refazer = true) => { gravar(atual); previa(); op.aoMudar?.(atual); if (!refazer) return; clearTimeout(tFotos); tFotos = setTimeout(() => { desenharPainel(); desenharRodape(); }, 120); };
+  const mudar = (refazer = true) => { gravar(atual); ultimaAssinatura = JSON.stringify([atual, numero()]); previa(); op.aoMudar?.(atual); if (!refazer) return; clearTimeout(tFotos); tFotos = setTimeout(() => { desenharPainel(); desenharRodape(); }, 120); };
   el.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b || !el.contains(b)) return;
+    e.stopPropagation(); // (os cliques do editor param aqui: a sala e a Central não tratam nem redesenham a página por eles)
     const d = b.dataset;
     if (d.cpAba) { aba = d.cpAba; return desenharPainel(); }
     if (d.cpPag) { pagina = Math.max(0, Math.min(paginas - 1, pagina + Number(d.cpPag))); return desenharPainel(); }
@@ -119,7 +120,14 @@ export function montarEditorCapacete(el, op = {}) {
   const api = {
     atual: () => atual,
     // de novo a partir do que está guardado (outra aba pode ter mudado) e o número de agora
-    redesenhar() { if (el.contains(document.activeElement)) return previa(); const salvo = lerCapacete(); if (salvo) atual = salvo; tudo(); }, // (não refaz o painel de quem está digitando o nome)
+    // de novo só se o capacete guardado (outra aba) ou o número mudou: a sala e a Central chamam isto a cada redesenho delas, e refazer o painel
+    // a cada estado da sala (que chega a cada clique de qualquer um) fazia a página "atualizar" para todos
+    redesenhar() {
+      const salvo = lerCapacete(), assinatura = JSON.stringify([salvo, numero()]);
+      if (assinatura === ultimaAssinatura) return; ultimaAssinatura = assinatura;
+      if (el.contains(document.activeElement)) return previa(); // (não refaz o painel de quem está digitando o nome)
+      if (salvo) atual = salvo; tudo();
+    },
   };
   el._capacete = api; api.redesenhar(); return api;
 }

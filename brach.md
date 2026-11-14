@@ -1,10 +1,10 @@
-# Capacete em 3D, na carreira e no pódio
+# Marcas de pneu reais e gotas em cima do carro
 
-- **Prévia 3D (`capacete-3d.js`):** o editor mostra o capacete da pista (as geometrias e a viseira de `f1-piloto.js`, a pintura de `pintarFolha`) em 3D, com reflexos (`RoomEnvironment`), girando sozinho; arrastar gira na mão. Só desenha com o canvas visível. Sem WebGL, volta a folha aberta de antes.
-- **Editor sem sala (`capacete-editor-ui.js`):** o cartão saiu de `capacete-editor.js` (que agora só liga com a sala: `mods.capacete` e `sincronizarCapacete`) para servir também à carreira. O CSS `.cp-*` foi de `sala-nova.css` para `capacete.css`, carregado pelas duas páginas.
-- **Carreira:** a aba **Capacete** na Central (`temporada/central.js` + o módulo em `temporada/index.html`). É o mesmo capacete guardado (`corrida:capacete`), que vai para a sala do GP pelo `sincronizarCapacete`. O editor é montado uma vez e reaproveitado a cada repintura (um WebGL só).
-- **Corrida rápida:** o capacete vai junto no `create` (ela larga direto, sem passar pela sala).
-- **Pódio (`podio-pilotos.js`, `podio-3d.js`):** quem joga comemora com o próprio capacete (desenho, cores, bandeira, nome) e a cor da viseira dele.
-- **Viseira (`f1-piloto.js`):** `MeshPhysicalMaterial` com metal 0,9, rugosidade 0,05 e verniz (item 2 de `docs/capacetes-guia.md`).
-- **Conserto (`corrida.js`, `limparCapacete`):** a expressão que limpa o nome tinha perdido as barras (`[^p{L}p{N} .-]`) e apagava todas as letras: o nome do capacete chegava vazio para os outros. Agora é `[^\p{L}\p{N} .\-]`, igual à do editor.
-- Os mecânicos do box continuam com o capacete genérico nas cores da equipe. A troca do modelo (o glTF do item 1 do guia) espera o arquivo do Thiago.
+- **Marcas dos pneus (`marcas-pista.js`, novo):** uma textura RG na largura × volta inteira, nas mesmas coordenadas da máscara de água (`aguaUv`), que os carros riscam por onde passam (as duas rodas de trás, a ±8 u):
+  - **R, borracha (seco):** o carro que vai de lado (mais de ~4° entre o rumo e a direção em que anda) ou freia além do que o pneu segura deixa a marca, e ela fica. A água tira a marca nova.
+  - **G, traçado secando (molhado):** cada passagem tira um pouco de água por onde as rodas andam. A linha aparece aos poucos com o tráfego, a chuva forte molha tudo de novo (~1 min) e a pista seca zera a linha.
+  - Tudo calculado no navegador, pelas posições desenhadas de cada carro (o meu e os outros). A textura sobe para a placa no máximo 4 vezes por segundo.
+- **Asfalto (`agua-pista.js`):** lê `uMarcas`: a borracha escurece o asfalto sempre, e o traçado secando tira água no molhado. O rastro seco que andava colado atrás dos carros perto da câmera saiu (`rastro = 0` em `clima-visual.js`). A chave do programa vai para `agua-pista-3`.
+- **Gotas em cima do carro (`gotas-carro.js`, novo):** gotinhas paradas nas superfícies viradas para cima do carro que a câmera segue (saem dos vértices do modelo, uma vez por modelo, sem rodas e sem piloto). Aparecem aos poucos enquanto chove (o nível sobe em ~30 s) e somem devagar quando para (~90 s). O material entra no aquecimento da chuva.
+- **Gotas na tela (`clima-visual.js`):** só na câmera de cockpit (na de trás eram 40%: agora as gotas ficam no carro) e vão juntando aos poucos (~25 s), em vez de aparecerem de uma vez.
+- Os números (o ângulo da derrapagem, a freada, os tempos) são palpites, não medidos: conferir jogando.

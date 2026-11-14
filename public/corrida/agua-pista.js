@@ -10,8 +10,10 @@
 // sem faixas) e a máscara; escurece o asfalto, baixa a rugosidade (película fina e poças espelhadas), torce a normal em marolas esticadas
 // ao longo da pista, soma o reflexo do céu na beira do campo de visão e riscos verticais de luz dos carros mais perto (luz
 // traseira vermelha e faróis): o reflexo de uma luz num chão molhado aparece como um traço que desce dela até quem olha.
-// Cada carro perto também deixa um rastro um pouco mais seco por trás (`uCarros`). Sem água (`uAgua` ≈ 0) o sombreador não faz nada.
+// As marcas dos pneus (`uMarcas`, marcas-pista.js) entram sempre: a borracha das derrapagens no seco e, no molhado, o traçado que seca com os carros
+// passando (o rastro que andava colado atrás de cada carro, `uCarros`, saiu: o laço fica, sem efeito, para não mudar o resto). Sem água o resto não faz nada.
 import * as THREE from "three";
+import { texturaDeMarcas } from "./marcas-pista.js";
 
 export const N_CARROS_AGUA = 4; // os carros mais perto: o rastro seco e as luzes (dois pontos de luz cada). Poucos e com laços de limite fixo: o sombreador é caro de compilar no Windows (ANGLE/D3D)
 const lim = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
@@ -93,7 +95,7 @@ export function aguaUvDaFita(n, i0, i1) {
 const GLSL_COMUM = /* glsl */ `
 #define N_CAR ${N_CARROS_AGUA}
 #define N_LUZ ${N_CARROS_AGUA * 2}
-uniform float uAgua; uniform float uDif; uniform sampler2D uMascara; uniform vec2 uEscala; uniform vec3 uCeu;
+uniform float uAgua; uniform float uDif; uniform sampler2D uMascara; uniform sampler2D uMarcas; uniform vec2 uEscala; uniform vec3 uCeu;
 uniform vec4 uCarros[N_CAR]; uniform vec4 uLuzA[N_LUZ]; uniform vec4 uLuzB[N_LUZ];
 varying vec2 vAguaUv; varying vec3 vAguaMundo;
 float aH(vec2 p) { p = mod(p, 289.0); return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -103,6 +105,8 @@ float aExp(float t) { return 1.0 / (1.0 + t * (1.0 + t * (0.5 + t * 0.1667))); }
 const GLSL_COR = /* glsl */ `
 #include <color_fragment>
 float aguaW = 0.0, aguaPoca = 0.0, aguaRug = 0.5;
+vec2 marca = texture2D(uMarcas, vAguaUv).rg; // as marcas dos pneus (marcas-pista.js): R a borracha da derrapagem, G o traçado secando com o tráfego
+diffuseColor.rgb *= 1.0 - 0.55 * marca.r;
 if (uAgua > 0.004) {
   vec4 mk = texture2D(uMascara, vAguaUv);
   vec2 mm = vAguaMundo.xz, ql = vAguaUv * uEscala;
@@ -113,7 +117,7 @@ if (uAgua > 0.004) {
   }
   float rd = aR(ql * vec2(0.09, 0.03));
   // com pouca água (garoa) a pista inteira fica igualmente úmida: o traçado seco e as poças da beirada só entram conforme a água sobe (uDif, 0 a 1)
-  aguaW = clamp(uAgua - seco * 0.62 * uDif, 0.0, 1.0) * mk.a; // (embaixo do teto, mk.a = 0, fica seco)
+  aguaW = clamp(uAgua - seco * 0.62 * uDif - marca.g * 0.55 * uAgua, 0.0, 1.0) * mk.a; // (a linha dos carros: menos água por onde eles passam) // (embaixo do teto, mk.a = 0, fica seco)
   aguaPoca = smoothstep(0.48, 0.68, mk.r + (rd - 0.5) * 0.5) * smoothstep(0.35, 0.92, uAgua) * uDif * (1.0 - 0.9 * seco) * mk.a;
   aguaRug = clamp(mk.b * 0.65 + aR(ql * vec2(0.5, 0.12)) * 0.35, 0.0, 1.0);
   diffuseColor.rgb *= (1.0 - 0.42 * aguaW - 0.16 * aguaPoca) * mix(vec3(1.0), vec3(0.93, 0.97, 1.05), aguaW);
@@ -166,7 +170,7 @@ if (uAgua > 0.004) {
 export function prepararAguaPista(tr, m) {
   if (m.userData.aguaPista) return;
   const u = {
-    uAgua: { value: 0 }, uDif: { value: 0 }, uMascara: { value: mascaraAgua(tr) }, uEscala: { value: new THREE.Vector2(tr.W, tr.n * 6) }, uCeu: { value: new THREE.Color(0.6, 0.65, 0.7) },
+    uAgua: { value: 0 }, uDif: { value: 0 }, uMascara: { value: mascaraAgua(tr) }, uMarcas: { value: texturaDeMarcas(tr) }, uEscala: { value: new THREE.Vector2(tr.W, tr.n * 6) }, uCeu: { value: new THREE.Color(0.6, 0.65, 0.7) },
     uCarros: { value: Array.from({ length: N_CARROS_AGUA }, () => new THREE.Vector4()) }, uLuzA: { value: Array.from({ length: N_CARROS_AGUA * 2 }, () => new THREE.Vector4()) }, uLuzB: { value: Array.from({ length: N_CARROS_AGUA * 2 }, () => new THREE.Vector4()) },
   };
   m.userData.aguaPista = u;
@@ -182,5 +186,5 @@ export function prepararAguaPista(tr, m) {
       .replace("#include <normal_fragment_maps>", GLSL_NORMAL)
       .replace("#include <emissivemap_fragment>", GLSL_LUZ);
   };
-  m.customProgramCacheKey = () => "agua-pista-2";
+  m.customProgramCacheKey = () => "agua-pista-3";
 }

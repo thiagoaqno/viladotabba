@@ -305,7 +305,7 @@ function atualizarSugestao(ctx, agora) {
   const d = dadosDaSugestao(ctx), r = d ? d.EB.gerirSugestao(sugEst, d.EB.sugerirBox(d.e), { agora, volta: d.e.voltaAtual }) : { est: sugEst, mostrar: false, restante: 0, sug: null };
   sugEst = r.est;
   if (r.mostrar && r.sug) {
-    if (!sugVisivel) { sugVisivel = true; abrir(true); try { if (window.Radio) window.Radio.dizer("box"); } catch (e) {} } // abre sozinho e o engenheiro fala junto
+    if (!sugVisivel) { sugVisivel = true; abrir(true); try { if (window.Radio) window.Radio.dizer("box" + r.sug.composto, { reserva: "box" }); } catch (e) {} } // abre sozinho e o engenheiro fala junto, com o nome do pneu
     sugAtual = r.sug; mexeu(); // enquanto o cartão está na tela o painel não recolhe
     const F = F1U(), tipo = F.PNEUS[r.sug.composto], R = refs.mfd;
     R.sug.hidden = false; set(R.sgLetra, "t", window.HudTorre.LETRA[r.sug.composto] || "M"); set(R.sgLetra, "style", `--c:${tipo.cor}`); set(R.sgNome, "t", tipo.nome.toUpperCase());

@@ -262,6 +262,16 @@ function estrategistaDaChuva(m) {
   window.Radio?.frase?.([mud.tipo === "comeca" ? "chuvavolta" : "secavolta", `volta-${volta}`], "estrategista", { forcar: true });
   toast(mud.tipo === "comeca" ? `🌧️ Estrategista: chuva prevista na volta ${volta}` : `🌤️ Estrategista: a chuva deve parar na volta ${volta}`, 6000);
 }
+// Na penúltima volta o engenheiro diz como a equipe vê a corrida (pedido do Thiago, 2026-11-13): contra a meta do GP na carreira
+// (corrida:objetivoGP, a mesma do `objetivoDaCorrida`) ou, sem meta, contra o grid: pódio é ótimo, terço de cima é bom, o resto é ruim.
+function balancoDaCorrida() {
+  const pos = race.minhaPos, total = race.totalPos || 0; if (!(pos >= 1) || !total) return;
+  let o = null; try { o = JSON.parse(localStorage.getItem("corrida:objetivoGP")); } catch { /* sem armazenamento */ }
+  const meta = o && o.gp >= 1 && Date.now() - o.em <= 3 * 60 * 60 * 1000 ? o.gp : null;
+  const sit = meta ? (pos < meta || pos === 1 ? "penultimaboa" : pos <= meta ? "penultimaok" : "penultimaruim")
+    : pos <= 3 ? "penultimaboa" : pos <= Math.ceil(total / 2) ? "penultimaok" : "penultimaruim";
+  radioF1(sit, { forcar: true });
+}
 // O engenheiro diz o objetivo desta corrida na largada (na carreira: sede.js e grupo.js guardam a meta do GP ao abrir a Central).
 function objetivoDaCorrida() {
   if (race.objetivoDito) return; race.objetivoDito = true;
@@ -305,7 +315,7 @@ function hudF1(m, st, now) {
   // compacta: o líder e os vizinhos (5 linhas); completa: todos que cabem, sem passar do minimapa e do clima embaixo
   const max = compacta ? COMPACTA_N : Math.max(6, Math.min(22, Math.floor((innerHeight - (peq ? 200 : 250)) / (peq ? 22 : 28)))), eu = linhas.findIndex((l) => l.eu);
   set($("hTorre"), "c", "hud" + (compacta ? " compacta" : " completa")); set($("tAlt"), "aria-pressed", String(!compacta));
-  if (E.S.phase === "race" && eu >= 0 && window.Radio && m && m.started && !m.dnf && m.finish == null) { window.Radio.posicao(linhas[eu].pos, String(race.startAt)); race.radioCtx = { cors, m, cron, agoraS }; radioRivais(cors, m, cron, agoraS); }
+  if (E.S.phase === "race" && eu >= 0 && window.Radio && m && m.started && !m.dnf && m.finish == null) { window.Radio.posicao(linhas[eu].pos, String(race.startAt)); race.minhaPos = linhas[eu].pos; race.totalPos = linhas.length; race.radioCtx = { cors, m, cron, agoraS }; radioRivais(cors, m, cron, agoraS); }
   const ver = T.recortar(linhas.length, eu, max), box = $("tLinhas").children;
   // Guarda a posição visual anterior antes de reutilizar as linhas da torre.
   const posAnt = race.torrePos, indicacoes = race.torreIndicacoes || (race.torreIndicacoes = new Map());
@@ -528,7 +538,7 @@ function pneuHud(c, pn, x, y) {
 export function checkMyLap(old) {
   const m = me(), o = old && E.ME && old.players.find((p) => p.id === E.ME.id);
   if (!m || !o || !race) return;
-  if (m.laps > o.laps) { lapDone(m); if (m.finish != null) Sound.finish(); else { Sound.lap(); race.lastLapMsg = sNow(); if (m.laps === E.S.config.voltas - 1 && E.S.config.voltas > 1) radioF1("ultima"); } }
+  if (m.laps > o.laps) { lapDone(m); if (m.finish != null) Sound.finish(); else { Sound.lap(); race.lastLapMsg = sNow(); if (m.laps === E.S.config.voltas - 1 && E.S.config.voltas > 1) radioF1("ultima"); else if (m.laps === E.S.config.voltas - 2 && E.S.config.voltas > 3) balancoDaCorrida(); } }
 }
 // a tela do GP (regras de F1): o pódio, e a tabela com tempo ou diferença, grid, paradas, penalidades e os pontos oficiais
 function resultadoGP(el, m, isHost) {

@@ -95,9 +95,22 @@ const POR_ANO = {
 };
 for (const [q, textos] of Object.entries(POR_ANO)) SITUACOES[q] = textos;
 const SO_DO_ANO = ["erslargada"];
+// (2026-11-13) O box sugerido com o nome do pneu (mfd.js: "box" + composto) e o balanço do engenheiro na penúltima volta (hud.js
+// `balancoDaCorrida`: acima, na meta ou abaixo do esperado). Situações novas: os mp3 saem do gerar-radio.bat, que só gera o que falta.
+const NOVAS = {
+  boxmacio: ["Box, box. Vamos de pneu macio.", "Box nesta volta. Pneu macio pronto.", "Entre nos boxes. Colocamos o macio."],
+  boxmedio: ["Box, box. Vamos de pneu médio.", "Box nesta volta. Pneu médio pronto.", "Entre nos boxes. Colocamos o médio."],
+  boxduro: ["Box, box. Vamos de pneu duro.", "Box nesta volta. Pneu duro pronto.", "Entre nos boxes. Colocamos o duro."],
+  boxintermediario: ["Box, box. Vamos de intermediário.", "Box nesta volta. Intermediário pronto.", "Entre nos boxes. Colocamos o intermediário."],
+  boxchuva: ["Box, box. Vamos de pneu de chuva.", "Box nesta volta. Pneu de chuva pronto.", "Entre nos boxes. Colocamos o pneu de chuva."],
+  penultimaboa: ["Penúltima volta. A equipe está muito feliz com essa corrida.", "Faltam duas. Corrida excelente, a garagem inteira está vibrando.", "Penúltima volta. Resultado acima do que esperávamos. Traga para casa.", "Duas voltas. Trabalho fantástico hoje, estamos muito satisfeitos."],
+  penultimaok: ["Penúltima volta. Estamos dentro do objetivo. Mantenha.", "Faltam duas. Resultado sólido, a equipe está satisfeita.", "Penúltima volta. Corrida consistente. Sem riscos agora.", "Duas voltas. É o resultado que viemos buscar."],
+  penultimaruim: ["Penúltima volta. Não é o que queríamos, mas tudo vale até a bandeirada.", "Faltam duas. Corrida difícil hoje. Vamos buscar o que der.", "Penúltima volta. Abaixo do esperado. Ataque se tiver chance.", "Duas voltas. Vamos aprender com essa. Dê tudo até o fim."],
+};
+for (const [q, textos] of Object.entries(NOVAS)) SITUACOES[q] = textos;
 
 // situações que passam na frente do intervalo mínimo entre falas
-const URGENTES = ["box", "safety", "spotesq", "spotdir", "spotlivre"];
+const URGENTES = ["box", "boxmacio", "boxmedio", "boxduro", "boxintermediario", "boxchuva", "safety", "spotesq", "spotdir", "spotlivre"];
 const lista = [];
 for (const [quando, textos] of Object.entries(SITUACOES)) textos.forEach((texto, i) => lista.push({ id: `${quando}-${i + 1}`, texto, quando }));
 

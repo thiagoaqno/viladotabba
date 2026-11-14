@@ -4,8 +4,10 @@
 (function (root) {
 const U = () => root.CentralUI, h = (v) => U().h(v);
 const Reg = () => root.F1Temporada, Pil = () => root.F1Pilotos, F = () => root.F1Regras;
-let sub = "visao", gpEscolhido = null, comparar = null;
-const SUBS = [["visao", "Visão geral"], ["voltas", "Voltas"], ["estrategia", "Estratégia"], ["telemetria", "Telemetria"]];
+let sub = "momentos", gpEscolhido = null, comparar = null;
+// as quatro primeiras são a análise 3D (analise-salva.js, sobre a miniatura da pista); Momentos é a principal
+const SUBS = [["momentos", "Momentos"], ["posicoes", "Posições"], ["ultrapassagens", "Ultrapassagens"], ["replay", "Replay"], ["visao", "Visão geral"], ["voltas", "Voltas"], ["estrategia", "Estratégia"], ["telemetria", "Telemetria"]];
+const SUBS_3D = new Set(["momentos", "posicoes", "ultrapassagens", "replay"]);
 
 const tempo = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`);
 const tempoLongo = (s) => { if (s == null) return "—"; const m = Math.floor(s / 60), hh = Math.floor(m / 60); return hh ? `${hh}:${String(m % 60).padStart(2, "0")}:${(s % 60).toFixed(3).padStart(6, "0")}` : tempo(s); };
@@ -57,6 +59,7 @@ function graficoRitmo(a, eu, ou, nomeEu, nomeOu) {
     <line class="mira" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" style="display:none"/><circle class="mira-a" r="4" style="display:none"/><circle class="mira-b" r="4" style="display:none"/></svg><div class="cx-dica" hidden></div></div>`;
 }
 function ligarGraficos() {
+  montar3d();
   document.querySelectorAll("[data-cx-graf]").forEach((g) => {
     if (g._ligado) return; g._ligado = true;
     const d = JSON.parse(g.dataset.cxGraf), svg = g.querySelector("svg"), mira = svg.querySelector(".mira"), dica = g.querySelector(".cx-dica"), W = +g.dataset.w, E = +g.dataset.e, D = +g.dataset.d, pts = (l) => l.getAttribute("points")?.split(" ").map((p) => p.split(",").map(Number)) || [];
@@ -166,21 +169,27 @@ function html(c) {
   if (!c.gps.length) return `<div class="cx-cabeca"><div><h2>Análise da corrida</h2></div></div><section class="cx-card cx-an-vazio">${IC.medidor}<h3>Nenhum GP disputado nesta temporada</h3><p>Depois da primeira corrida, os tempos de cada volta, os setores, a estratégia e a sua evolução aparecem aqui.</p><button type="button" class="cx-contorno" data-cx-aba="calendario">Ver o calendário ${UI.seta}</button></section>`;
   const { r, a, rival } = escolhas(c), g = s.calendario[r.gp];
   const opcoes = c.gps.map((x) => `<option value="${x.gp}" ${x.gp === r.gp ? "selected" : ""}>${h(s.calendario[x.gp]?.nome || x.pista)}</option>`).join("");
-  const topo = `<div class="cx-cabeca"><div><h2>Análise da corrida</h2><small class="cx-rot">${h(UI.nomeGP(r.pista, g?.nome))} · Etapa ${UI.dois(r.gp + 1)} / ${UI.dois(s.tamanho)}</small></div><label class="cx-sel">${UI.bandeira(r.pista)}<span class="cx-oculto">Escolher o GP</span><select data-cx-gp>${opcoes}</select></label>${r.analise ? `<button type="button" class="cx-bt cx-an-3d" data-cx-an3d="${r.gp}">Replay e análise 3D</button>` : ""}</div>`;
+  const topo = `<div class="cx-cabeca"><div><h2>Análise da corrida</h2><small class="cx-rot">${h(UI.nomeGP(r.pista, g?.nome))} · Etapa ${UI.dois(r.gp + 1)} / ${UI.dois(s.tamanho)}</small></div><label class="cx-sel">${UI.bandeira(r.pista)}<span class="cx-oculto">Escolher o GP</span><select data-cx-gp>${opcoes}</select></label></div>`;
   if (!a) return `${topo}<section class="cx-card cx-an-vazio">${IC.crono}<h3>Este GP foi corrido antes da análise</h3><p>Só há o resultado final dele. Os próximos GPs já trazem as voltas, os setores e a estratégia.</p></section>`;
   const abas = `<div class="cx-subabas cx-an-abas">${SUBS.map(([id, nome]) => `<button type="button" class="${id === sub ? "on" : ""}" aria-pressed="${id === sub}" data-cx-an="${id}">${nome}</button>`).join("")}</div>`;
-  const corpo = sub === "voltas" ? voltas(c, r, a, rival) : sub === "estrategia" ? estrategia(c, r, a) : sub === "telemetria" ? telemetria(c, r, a, rival) : visao(c, r, a, rival);
+  // a análise 3D entra num bloco "vivo": o redesenho da Central não mexe nele enquanto a marca (o GP, a sub-aba e o tema) for a mesma
+  const tema = document.body.classList.contains("cx-escuro") ? "e" : "c";
+  const corpo = SUBS_3D.has(sub) ? `<div class="ra ra-cx" data-cx-vivo="${r.ano}:${r.gp}:${sub}:${tema}" data-cx-an-gp="${r.gp}"><p class="ra-vazio">Carregando a pista em 3D…</p></div>`
+    : sub === "voltas" ? voltas(c, r, a, rival) : sub === "estrategia" ? estrategia(c, r, a) : sub === "telemetria" ? telemetria(c, r, a, rival) : visao(c, r, a, rival);
   return `${topo}${abas}<div class="cx-an-corpo">${corpo}</div>`;
 }
-// a análise 3D do GP (analise-salva.js): as mesmas abas da tela do resultado, numa tela por cima da Central
-function abrir3d(gp) {
-  const c = ultimoC; if (!c) return;
-  const r = c.gps.find((g) => g.gp === gp) || c.gps.at(-1); if (!r || !r.analise) return;
-  const s = c.s, nomes = { voce: s.nome, ...(s.nomesExtras || {}) }, titulo = U().nomeGP(r.pista, s.calendario[r.gp]?.nome);
+// monta a análise 3D no bloco vivo, uma vez por marca (depois de cada redesenho, por ligarGraficos)
+function montar3d() {
+  const el = document.querySelector(".ra-cx[data-cx-vivo]"), c = ultimoC; if (!el || !c || el.dataset.montado === el.dataset.cxVivo) return;
+  el.dataset.montado = el.dataset.cxVivo;
+  const gp = +el.dataset.cxAnGp, r = c.gps.find((g) => g.gp === gp); if (!r || !r.analise) return;
+  const s = c.s, nomes = { voce: s.nome, ...(s.nomesExtras || {}) }, aba = el.dataset.cxVivo.split(":")[2];
   const pedirReplay = () => (root.SedeGrupo?.ativo ? root.SedeGrupo.replayDoGP(r.ano, r.gp) : root.CarreiraReplay ? root.CarreiraReplay(r.ano, r.gp) : Promise.resolve(null));
-  import("/corrida/analise-salva.js").then((m) => m.abrirAnaliseSalva({ r, titulo, nomes, meu: "voce", pedirReplay })).catch((e) => console.warn("Carreira: análise 3D indisponível", e));
+  const aoAba = (nova) => document.querySelector(`[data-cx-an="${nova}"]`)?.click(); // ("Ver no replay": a Central troca a sub-aba)
+  import("/corrida/analise-salva.js").then((m) => { if (el.isConnected) m.montarNaCentral(el, { r, nomes, meu: "voce", aba, pedirReplay, aoAba }); })
+    .catch((e) => { console.warn("Carreira: análise 3D indisponível", e); el.innerHTML = '<p class="ra-vazio">A análise 3D não carregou.</p>'; });
 }
-function clique(b, render) { if (b.dataset.cxAn3d != null) { abrir3d(+b.dataset.cxAn3d); return true; } if (b.dataset.cxAn) { sub = b.dataset.cxAn; render(); document.querySelector(`[data-cx-an="${sub}"]`)?.focus({ preventScroll: true }); return true; } return false; }
+function clique(b, render) { if (b.dataset.cxAn) { sub = b.dataset.cxAn; render(); document.querySelector(`[data-cx-an="${sub}"]`)?.focus({ preventScroll: true }); return true; } return false; }
 function mudou(e, render) {
   if (e.target.matches?.("[data-cx-gp]")) { gpEscolhido = +e.target.value; comparar = null; render(); return true; }
   if (e.target.matches?.("[data-cx-comparar]")) { comparar = e.target.value; render(); return true; }

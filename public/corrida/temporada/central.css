@@ -243,8 +243,7 @@ body.cx-escuro .cx-relevo{filter:grayscale(1) invert(1);opacity:.05}
 .cx-seu .pessoas li{color:var(--cx-tx)}.cx-seu .pessoas li>:last-child{color:var(--cx-tx2)}
 @media (max-width:1100px){#cxFundo{position:absolute;height:100dvh}}
 
-/* ---------- o pós-corrida na Central: a análise 3D do GP (analise-salva.js) e a vista do carro (vista-carro.js) ---------- */
-.cx .cx-an-3d{margin-left:auto;align-self:center;padding:8px 14px;font-size:13px}
+/* ---------- o pós-corrida na Central: a vista do carro (vista-carro.js); a análise 3D fica em pos-corrida.css (.ra-cx) ---------- */
 .cx-cn-vista{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;border:1px solid currentColor;border-left:3px solid var(--eq-at,#e10600);background:transparent;color:inherit;font:600 12px var(--cx-f,inherit);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s,transform .15s}
 .cx-cn-vista:hover,.cx-cn-vista:focus-visible{background:var(--cx-hover,#ffffff14);transform:translateX(3px);outline:none}
 .cx-cn-carro{display:flex;flex-direction:column;align-items:flex-start}

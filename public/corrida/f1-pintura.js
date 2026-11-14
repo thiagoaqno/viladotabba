@@ -152,13 +152,13 @@ DESENHOS.mclaren = {
 };
 
 // Ferrari SF-26 (as fotos oficiais do lançamento, ver halo-referencias.md): vermelho, os ombros da tampa brancos com o redondo da HP, o branco envolvendo o
-// cockpit; assoalho, parte de baixo das caixas e as duas asas pretos; o bico leva a fileira de patrocinadores, lida por quem vem de frente.
+// cockpit; assoalho, parte de baixo das caixas e as duas asas azul-marinho (os prints do Thiago, 2026-11-13); o bico leva a fileira de patrocinadores, lida por quem vem de frente.
 DESENHOS.ferrari = {
   numero: "#ffffff",
   carbono: 1,
   numPos: [3.42, 0.62, 9, 9], // o número na barbatana, branco sobre o vermelho; a asa traseira não tem número
   pintar(ctx) {
-    const VERM = "#b90d16", ESCURO = "#8e0a12", BRANCO = "#ecebe6", PRETO = "#101113";
+    const VERM = "#b90d16", ESCURO = "#8e0a12", BRANCO = "#ecebe6", PRETO = "#101113", AZUL = "#182035"; // (o azul-marinho das asas e de baixo, nos prints de 2026-11-13)
     base(ctx, VERM);
     lados(ctx, (c) => {
       // o branco dos ombros: sobe em curva até a barbatana, que continua vermelha
@@ -166,10 +166,10 @@ DESENHOS.ferrari = {
       // a sombra pintada na barriga das caixas laterais, que dá volume sem custar nada
       c.fillStyle = degrade(c, 0, 0.5, 0, 0.1, [[0, "rgba(60,0,4,0)"], [1, "rgba(60,0,4,0.42)"]]); c.fillRect(1.1, 0.1, 2.8, 0.4);
       // o preto de baixo: o assoalho e a parte de baixo das caixas, subindo para trás
-      c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 0.09); c.lineTo(2.1, 0.09); c.quadraticCurveTo(2.7, 0.14, 3.15, 0.2); c.quadraticCurveTo(3.55, 0.24, 3.8, 0.34); c.lineTo(4.45, 0.34); c.lineTo(4.45, 0); c.closePath(); c.fillStyle = PRETO; c.fill();
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 0.09); c.lineTo(2.1, 0.09); c.quadraticCurveTo(2.7, 0.14, 3.15, 0.2); c.quadraticCurveTo(3.55, 0.24, 3.8, 0.34); c.lineTo(4.45, 0.34); c.lineTo(4.45, 0); c.closePath(); c.fillStyle = AZUL; c.fill();
       // a asa dianteira preta e a traseira preta
-      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO);
-      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], AZUL);
+      ret(c, 3.82, 0.3, 4.45, 1.1, AZUL);
       // as marcas, cada uma onde está no carro de verdade
       marca(c, "hp", 2.86, 0.61, 0.17);
       marca(c, "ibm", 2.56, 0.56, 0.048, { tinta: PRETO, fundo: BRANCO });
@@ -191,8 +191,8 @@ DESENHOS.ferrari = {
       c.beginPath(); c.moveTo(meio[0][0], meio[0][1]); for (let i = 1; i < meio.length; i++) { const [a0, b0] = meio[i - 1], [a1, b1] = meio[i]; c.quadraticCurveTo(a0, b0, (a0 + a1) / 2, (b0 + b1) / 2); } c.lineTo(3.32, 0.02);
       c.lineTo(3.32, -0.02); for (let i = meio.length - 2; i >= 0; i--) { const [a0, b0] = meio[i + 1], [a1, b1] = meio[i]; c.quadraticCurveTo(a0, -b0, (a0 + a1) / 2, -(b0 + b1) / 2); } c.lineTo(1.34, -0.05); c.closePath(); c.fillStyle = BRANCO; c.fill();
       // as duas asas pretas; o bico vermelho passa por cima da asa dianteira
-      ret(c, 0, -0.82, 0.66, 0.82, PRETO); poli(c, [[0, -0.09], [0.66, -0.14], [0.66, 0.14], [0, 0.09]], VERM);
-      ret(c, 3.82, -0.62, 4.45, 0.62, PRETO);
+      ret(c, 0, -0.82, 0.66, 0.82, AZUL); poli(c, [[0, -0.09], [0.66, -0.14], [0.66, 0.14], [0, 0.09]], VERM);
+      ret(c, 3.82, -0.62, 4.45, 0.62, AZUL);
       // a fileira do bico, lida por quem vem de frente
       const f = { giro: DE_FRENTE, tinta: "#ffffff" };
       marca(c, "unicredit", 0.18, 0, 0.042, f); marca(c, "genesys", 0.3, 0, 0.034, f); marca(c, "pirelli", 0.4, 0, 0.038, f);
@@ -203,11 +203,12 @@ DESENHOS.ferrari = {
       // o redondo grande na tampa e a marca dos ombros
       marca(c, "hp", 2.96, 0, 0.17, { giro: DE_FRENTE });
       for (const l of [-1, 1]) { marca(c, "zyn", 2.12, l * 0.3, 0.035, { giro: DE_FRENTE, tinta: PRETO }); marca(c, "ibm", 2.48, l * 0.25, 0.04, { giro: DE_FRENTE, tinta: PRETO, fundo: BRANCO }); }
-      // a asa traseira: dois redondos da HP
-      for (const l of [-1, 1]) marca(c, "hp", 4.18, l * 0.3, 0.14, { giro: DE_FRENTE });
+      // a asa traseira: o IBM azul no meio, lido por quem vem atrás, e os redondos da HP nas pontas
+      marca(c, "ibm", 4.15, 0, 0.11, { giro: -DE_FRENTE, tinta: "#3a6fd0", fundo: AZUL });
+      for (const l of [-1, 1]) marca(c, "hp", 4.18, l * 0.45, 0.1, { giro: DE_FRENTE });
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ESCURO); ret(c, -0.8, 0, 0.8, 0.24, PRETO); ret(c, -0.16, 0.06, 0.16, 0.5, VERM); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.3, 0.36, 0.3, 0.72, VERM); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ESCURO); ret(c, -0.8, 0, 0.8, 0.24, AZUL); ret(c, -0.16, 0.06, 0.16, 0.5, VERM); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.3, 0.36, 0.3, 0.72, VERM); marca(c, "ibm", 0, 0.88, 0.1, { tinta: "#3a6fd0", fundo: AZUL }); });
   },
 };
 

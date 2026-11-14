@@ -1,18 +1,14 @@
-# Mercedes W17 (2026) pelos prints do Thiago
+# Ferrari SF-26 (2026) pelos prints do Thiago
 
-A pintura da Mercedes de 2026 refeita pelos prints de `Carros F1/2026/Mercedes`: antes era preta com umas lâminas prata; agora é como no carro.
+Ajuste da Ferrari de 2026 pelos prints de `Carros F1/2026/Ferrari`. A pintura já estava perto; o que mudou:
 
-- Corpo prata; a parte de cima preta (do cockpit à asa traseira), com estrelas apagadas e o filete verde-água na borda.
-- Quatro faixas pretas em diagonal na caixa lateral (de lado e de cima) e o PETRONAS embaixo dela.
-- Asa dianteira grafite com os riscos verde-água, TeamViewer e PETRONAS Syntium; asa traseira preta com PETRONAS em cima, CROWDSTRIKE atrás e a gota da Petronas nas placas.
-- Bico prata claro com bordas verde-água, a estrela na ponta e a fileira SAP, AKKODIS, PIRELLI, INEOS, CROWDSTRIKE (o atlas do nariz); PETRONAS Syntium perto do cockpit.
-- As marcas do cockpit (nu, TeamViewer) passaram para branco, porque em volta do cockpit agora é preto.
-- Marcas novas em `f1-marcas.js`: `estrela`, `gota`, `syntium`.
+- As duas asas, o assoalho, a parte de baixo das caixas laterais e a frente/traseira de baixo passaram de preto para **azul-marinho** (`#182035`), como no carro.
+- Asa traseira: o **IBM azul** no meio (lido por quem vem atrás, de cima e na vista de trás) e os redondos da HP nas pontas.
 
-**Peso:** zero a mais. Continua a folha projetada de 2026 (um canvas por equipe, guardado; só desenho no canvas, nenhuma imagem para baixar). Não usa a pintura na textura da Alpine 2023 (`f1-uv.js`), que é a pesada: ela calcula a cor pixel por pixel em JavaScript e faz duas texturas de 2048 px por carro e por número.
+**Depende do #724 (Mercedes):** este branch saiu dele para as duas entradas do `novidades.json` não brigarem. Faça o merge do #724 primeiro.
 
-**Forma:** o carro de 2026 continua o mesmo modelo (Audi R26) para todas as equipes; aqui muda só a pintura.
+**Peso:** zero a mais (a mesma folha projetada de 2026, um canvas por equipe, só desenho).
 
-Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+Conferido só com `node --check` (`f1-pintura.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

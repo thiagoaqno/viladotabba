@@ -1,15 +1,16 @@
-# Audi R26 (2026) pelo modelo 3D + conserta o novidades.json da main
+# Cadillac MAC-26 (2026) pelo modelo 3D
 
-A Audi de 2026 refeita pelo modelo "F1 2026 Audi R26 (Launch version)" do Sketchfab que o Thiago mandou, olhado de lado, de cima, de frente, de trás e por baixo da asa traseira (câmera posta pela API do visualizador, vistas retas).
+A Cadillac de 2026 refeita pelo modelo "2026 Cadillac MAC-26" do Sketchfab que o Thiago mandou, olhado dos dois lados, de cima (bico, asa dianteira e tampa), de frente e de trás.
 
-- **Cores:** titânio (`#c4c8cc`) do bico até logo atrás da entrada de ar (s 2,33), grafite (`#2c3036`) dali para trás; a cunha laranja (`#e8401c`) na caixa lateral, alta no corte e afinando até a ponta em s 3,28, de lado e no alto das caixas; o painel preto embaixo da frente da caixa.
-- **De lado:** Revolut grande em preto no titânio, Castrol, NEXO, ninjaOne (branco no painel preto), World of Hyatt na borda do cockpit, os anéis em vermelho e o bp na tampa grafite, visit QATAR na entrada de ar e grande nas placas da asa dianteira.
-- **De cima:** asas de titânio com o Revolut nos dois lados, o R do Revolut na ponta do bico, as três faixas, os anéis vermelhos na frente do cockpit e ao longo da espinha, a cunha laranja no alto das caixas.
-- **Atrás:** a asa de carbono com o Revolut prateado; a vista de trás com o laranja das caixas. **Embaixo da asa** (`ASA_BAIXO`): carbono com o Revolut prateado grande.
-- O número do piloto em vermelho-laranja, como o 5 no bico do modelo.
-- Marcas novas em `f1-marcas.js`: `castrol`, `hyatt`, `bp`, `revolutr`, `adidas`.
+O carro é **assimétrico**, e a pintura agora segue isso:
+- **Lado esquerdo:** prata-claro, com uma faixa preta larga descendo do cockpit até embaixo atrás, a barriga preta embaixo do bico e da frente da caixa, as duas barras pretas na tampa e o TWG preto.
+- **Lado direito:** o contrário. Preto, com a faixa prata subindo de trás até a frente da caixa, os frisos cromados na tampa e o TWG prata.
+- **Nos dois lados:** o triângulo do TWG AI, o brasão na tampa, Cadillac no bico, Claro, Jim Beam no painel preto, Core Scientific, a barbatana preta, as placas da asa dianteira cromadas e o IFS na placa da asa traseira (preto no prata, prata no preto).
+- **De cima:** a tampa meio a meio (prata à esquerda, preta à direita) com a espinha preta e os frisos; o bico prata com o brasão, TWG, IFS e a bandeirinha da Tommy Hilfiger; o preto antes do cockpit, onde fica o número; a asa dianteira em blocos pretos e brancos.
+- **Atrás e embaixo da asa** (`ASA_BAIXO`): preto com o Cadillac prata.
+- Marcas novas em `f1-marcas.js`: `twgai`, `jimbeam`, `corescientific`, `brasao`, `hilfiger`.
 
-**Conserta o `novidades.json` da `main`:** o merge do #731 com o #732 juntou as duas entradas de cima sem fechar a primeira, e o JSON não abria. Conferido com `JSON.parse`.
+**Saiu do #733 (Audi), que conserta o `novidades.json` da `main`:** faça o merge do #733 primeiro.
 
 **Peso:** zero a mais (a folha projetada de 2026, um canvas por equipe, só desenho).
 

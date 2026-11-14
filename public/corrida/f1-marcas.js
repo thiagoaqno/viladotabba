@@ -80,6 +80,18 @@ Object.assign(MARCAS, {
   // as três faixas inclinadas
   adidas(c, { tinta = "#fff" } = {}) { c.fillStyle = tinta; for (const [x, h] of [[-0.32, 0.4], [0, 0.65], [0.32, 0.9]]) { c.save(); c.translate(x, 0.45 - h / 2); c.rotate(-0.5); c.fillRect(-0.09, -h / 2, 0.18, h); c.restore(); } },
 });
+// As da Cadillac MAC-26 (o modelo do Sketchfab, 2026-11-14)
+Object.assign(MARCAS, {
+  // o triângulo do TWG AI
+  twgai(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.09; c.lineJoin = "round"; c.beginPath(); c.moveTo(-0.5, -0.38); c.lineTo(0.5, -0.38); c.lineTo(0, 0.48); c.closePath(); c.stroke(); letra(c, "AI", { y: -0.08, h: 0.38, peso: 900, cor: tinta }); },
+  jimbeam(c, { tinta = "#fff" } = {}) { letra(c, "JIM BEAM", { h: 0.9, peso: 700, fam: SERIFA, cor: tinta, esp: 3 }); },
+  corescientific(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.12; c.beginPath(); c.arc(-3.3, 0, 0.36, 0.6, Math.PI * 2 - 0.6); c.stroke(); letra(c, "CORE SCIENTIFIC", { x: 0.2, h: 0.8, peso: 700, cor: tinta, esp: 3 }); },
+  // o brasão da Cadillac: o escudo com a grade de quadros
+  brasao(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.06; c.beginPath(); c.moveTo(-0.62, -0.42); c.lineTo(0.62, -0.42); c.lineTo(0.5, 0.2); c.lineTo(0, 0.46); c.lineTo(-0.5, 0.2); c.closePath(); c.stroke();
+    c.fillStyle = tinta; for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) if ((i + j) % 2) c.fillRect(-0.5 + i * 0.25, -0.32 + j * 0.24, 0.22, 0.2); },
+  // a bandeirinha da Tommy Hilfiger
+  hilfiger(c) { c.fillStyle = "#ffffff"; c.fillRect(-0.62, -0.42, 1.24, 0.84); c.fillStyle = "#00205b"; c.fillRect(-0.58, -0.38, 0.58, 0.38); c.fillRect(0, 0, 0.58, 0.38); c.fillStyle = "#c8102e"; c.fillRect(-0.58, 0, 0.58, 0.38); },
+});
 // As que têm um traço a mais
 Object.assign(MARCAS, {
   gemini(c, { tinta = "#fff" } = {}) { c.save(); c.translate(-1.75, 0); c.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; c.lineTo(Math.cos(a) * 0.46, Math.sin(a) * 0.46); c.lineTo(Math.cos(a + Math.PI / 4) * 0.09, Math.sin(a + Math.PI / 4) * 0.09); } c.closePath(); c.fillStyle = "#6fb6ff"; c.fill(); c.restore(); letra(c, "Gemini", { x: 0.35, h: 1, peso: 500, cor: tinta }); },

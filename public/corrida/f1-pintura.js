@@ -504,28 +504,59 @@ DESENHOS.haas = {
   },
 };
 
-// Cadillac: preto de um lado e branco do outro (o carro é assimétrico), com a cunha da cor oposta com TWG e o detalhe verde-claro
+// Cadillac MAC-26 (2026), pelo modelo do Sketchfab que o Thiago mandou ("2026 Cadillac MAC-26", olhado dos dois lados, de cima, de frente e de
+// trás). O carro é ASSIMÉTRICO: o lado esquerdo (B, lado −1) é prata-claro com uma faixa preta larga descendo do cockpit até embaixo atrás, a
+// barriga preta e o TWG preto; o lado direito (A, lado 1) é o contrário, preto com a faixa prata subindo de trás até a frente da caixa e o TWG
+// branco. Em cima: a tampa meio a meio (prata à esquerda, preta à direita) com a espinha preta, o bico prata com o 11 no preto perto do
+// cockpit, a asa dianteira em blocos pretos e brancos. As placas da asa traseira levam o IFS (preto no prata, branco no preto).
+function blocos(c, s0, s1, x0, x1, n, semente, a, b) { // os blocos pretos e brancos da asa dianteira (como um código de barras)
+  const r = mulberry(semente), w = (s1 - s0) / n;
+  for (let i = 0; i < n; i++) { const corte = x0 + (x1 - x0) * (0.25 + r() * 0.6); ret(c, s0 + i * w, x0, s0 + (i + 1) * w, corte, i % 2 ? a : b); ret(c, s0 + i * w, corte, s0 + (i + 1) * w, x1, i % 2 ? b : a); }
+}
 DESENHOS.cadillac = {
   numero: "#ffffff", carbono: 1, numPos: [3.5, 0.68, 9, 9],
   pintar(ctx) {
-    const BRANCO = "#eef0f2", PRETO = "#0e0f12";
+    const PRATA = "#d4d7da", PRATA_ESC = "#9ea3a8", PRETO = "#0e0f12";
     base(ctx, PRETO);
     lados(ctx, (c, lado) => {
-      const preto = lado > 0, fundo = preto ? PRETO : BRANCO, tinta = preto ? BRANCO : PRETO;
-      ret(c, 0.7, 0.1, 3.86, 1.1, fundo);
-      // a cunha, que afina para a frente; a letra vai na cor do fundo
-      c.beginPath(); c.moveTo(3.5, 0.12); c.lineTo(3.3, 0.5); c.quadraticCurveTo(2.4, 0.52, 1.5, 0.36); c.quadraticCurveTo(2.4, 0.3, 2.5, 0.12); c.closePath(); c.fillStyle = tinta; c.fill();
+      const preto = lado > 0, fundo = preto ? PRETO : PRATA, tinta = preto ? PRATA : PRETO;
+      ret(c, 0, 0.1, 3.86, 1.1, fundo);
+      if (preto) {
+        // a faixa prata subindo de trás (embaixo) até a frente da caixa, e os frisos cromados na tampa
+        c.beginPath(); c.moveTo(3.45, 0.13); c.lineTo(3.3, 0.27); c.quadraticCurveTo(2.6, 0.38, 1.85, 0.56); c.lineTo(1.95, 0.44); c.quadraticCurveTo(2.7, 0.24, 3.2, 0.13); c.closePath(); c.fillStyle = PRATA; c.fill();
+        for (let i = 0; i < 3; i++) ret(c, 2.95, 0.56 + i * 0.05, 3.5, 0.575 + i * 0.05, PRATA_ESC);
+      } else {
+        // a faixa preta larga descendo do lado do cockpit até embaixo atrás, a barriga preta embaixo do bico e da frente da caixa
+        c.beginPath(); c.moveTo(1.75, 0.6); c.lineTo(2.05, 0.62); c.quadraticCurveTo(2.9, 0.4, 3.5, 0.13); c.lineTo(3.05, 0.13); c.quadraticCurveTo(2.5, 0.36, 1.75, 0.6); c.closePath(); c.fillStyle = PRETO; c.fill();
+        poli(c, [[0.55, 0.12], [2.1, 0.12], [2.1, 0.38], [0.9, 0.3], [0.55, 0.22]], PRETO);
+        for (const s of [3.08, 3.15]) ret(c, s, 0.58, s + 0.035, 0.76, PRETO); // as duas barras na tampa
+      }
+      ret(c, 2.75, 0.86, 3.75, 1.1, PRETO); // a barbatana
+      poli(c, [[1.4, 0.1], [2.05, 0.1], [2.05, 0.3], [1.4, 0.3]], PRETO); // o painel do Jim Beam
       baixo(c, PRETO);
-      ret(c, 3.86, 0.3, 4.45, 1.1, PRETO);
-      marca(c, "twg", 2.92, 0.31, 0.14, { tinta: fundo }); marca(c, "claro", 1.8, 0.3, 0.05); marca(c, "cadillac", 1.55, 0.52, 0.055, { tinta }); marca(c, "ifs", 4.15, 0.72, 0.075); marca(c, "cadillac", 3.1, 0.72, 0.05, { tinta });
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRATA); // as placas da asa dianteira, cromadas
+      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); ret(c, 3.95, 0.55, 4.45, 0.95, preto ? PRETO : PRATA); // a placa da asa traseira
+      marca(c, "twg", 2.55, 0.33, 0.13, { tinta }); marca(c, "twgai", 2.98, 0.36, 0.08, { tinta });
+      marca(c, "cadillac", 1.15, 0.47, 0.05, { tinta: preto ? PRATA : PRETO }); marca(c, "claro", 1.6, 0.4, 0.04, { tinta: "#ffffff" }); marca(c, "jimbeam", 1.72, 0.2, 0.05);
+      marca(c, "corescientific", 2.35, 0.62, 0.026, { tinta }); marca(c, "brasao", 2.55, 0.86, 0.075, { tinta });
+      marca(c, "ifs", 4.18, 0.76, 0.075, { tinta });
     });
     vista(ctx, "T", (c) => {
-      ret(c, 0.9, -0.8, 3.9, 0, BRANCO); ret(c, 0.9, 0, 3.9, 0.8, PRETO); // meio a meio, como dos lados
-      asasT(c, PRETO, PRETO, PRETO);
-      const f = { giro: DE_FRENTE, tinta: "#fff" }; marca(c, "twg", 0.72, 0, 0.06, f); marca(c, "cadillac", 0.48, 0, 0.04, f); marca(c, "ifs", 4.15, 0, 0.1, f);
+      ret(c, 0.9, -0.8, 3.9, 0, PRATA); ret(c, 0.9, 0, 3.9, 0.8, PRETO); // meio a meio, como dos lados (a esquerda, −x, prata)
+      ret(c, 2.0, -0.07, 3.9, 0.07, PRETO); // a espinha preta
+      for (let i = 0; i < 3; i++) ret(c, 2.9 + i * 0.12, -0.3, 2.95 + i * 0.12, -0.1, PRETO); // os frisos no lado prata
+      for (let i = 0; i < 3; i++) ret(c, 2.9 + i * 0.12, 0.1, 2.95 + i * 0.12, 0.3, PRATA_ESC); // e no lado preto
+      ret(c, 0, -0.82, 0.66, 0.82, PRETO); blocos(c, 0.04, 0.64, 0.14, 0.8, 9, 11, PRETO, PRATA); blocos(c, 0.04, 0.64, -0.8, -0.14, 9, 23, PRATA, PRETO);
+      poli(c, [[0, -0.09], [0.9, -0.13], [0.9, 0.13], [0, 0.09]], PRATA); poli(c, [[0.9, -0.13], [1.3, -0.15], [1.3, 0.15], [0.9, 0.13]], PRETO); // o bico prata e o preto antes do cockpit
+      ret(c, 3.82, -0.62, 4.45, 0.62, PRETO);
+      const f = { giro: DE_FRENTE, tinta: PRETO };
+      marca(c, "brasao", 0.14, 0, 0.05, { giro: DE_FRENTE, tinta: PRETO }); marca(c, "twg", 0.3, 0, 0.035, f); marca(c, "ifs", 0.42, 0, 0.03, f);
+      marca(c, "hilfiger", 0.7, 0, 0.06, { giro: DE_FRENTE });
+      marca(c, "cadillac", 1.2, 0, 0.035, { giro: DE_FRENTE, tinta: PRATA });
+      marca(c, "ifs", 4.12, 0, 0.09, { giro: -DE_FRENTE, tinta: PRATA });
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.8, 0.3, 0, 1.1, PRATA); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.8, 0.3, -0.05, 0.8, PRATA); marca(c, "cadillac", 0, 0.9, 0.08, { tinta: PRATA }); });
   },
 };
 
@@ -1034,6 +1065,7 @@ const ASA_BAIXO = {
   "red-bull": { cor: "#25272b", marcas: (c) => marcaU(c, "oracle", 0, 0.32, 0.11) },
   mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
   audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },
+  cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillac", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
 };
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)

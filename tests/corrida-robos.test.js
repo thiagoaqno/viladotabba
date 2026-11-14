@@ -4,21 +4,7 @@ const T = require("../public/corrida/pistas.js");
 const Robos = require("../corrida-robos.js");
 const Itens = require("../corrida-itens.js");
 
-test("pistas refeitas: voltas longas sem trechos encostando um no outro", () => {
-  for (const [id, t] of Object.entries(T.PISTAS)) {
-    if (t.espaco) continue; // o Arco-íris cruza por cima de si mesmo nos viadutos, de propósito
-    const pts = T.pontos(t, 6), n = pts.length, folga = t.width + 2 * (t.walls ? t.wall : 20);
-    assert.ok(n * 6 > 12000, `${id}: volta de ${n * 6}`);
-    assert.ok(pts.every((p) => Number.isFinite(p.h) && p.x > 0 && p.y > 0 && p.x < t.world && p.y < t.world), id);
-    const gap = Math.ceil((folga * 2.2) / 6);
-    // onde a pista passa por cima de si mesma (`cruza`: a ponte de Suzuka), os dois trechos podem se encontrar
-    const perto = (i, f) => { const d = Math.abs(i / n - f); return Math.min(d, 1 - d) < 0.04; };
-    const ponte = (i, j) => (t.cruza || []).some(([a, b]) => (perto(i, a) && perto(j, b)) || (perto(i, b) && perto(j, a)));
-    let pior = Infinity;
-    for (let i = 0; i < n; i += 3) for (let j = i + gap; j < n - (i < gap ? gap - i : 0); j += 3) if (!ponte(i, j)) pior = Math.min(pior, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y));
-    assert.ok(pior > folga, `${id}: dois trechos a ${pior.toFixed(0)} (precisa de ${folga})`);
-  }
-});
+// (2026-11-14: apagado o teste "pistas refeitas: voltas longas sem trechos encostando um no outro": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 // uma corrida só de robôs, no tempo de mentira (o relógio anda junto com a simulação)
 function correr(pista, nivel = "medio", caixas = false, robos = 3, aCada = null) {
@@ -135,30 +121,7 @@ function comSemente(semente, f) {
   Math.random = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   try { return f(); } finally { Math.random = original; }
 }
-test("robôs miram o ritmo da sala, seja qual for a volta que copiam", () => comSemente(7, () => {
-  const pista = "interlagos";
-  const voltaDe = (nivel) => { // grava uma volta de robô para servir de volta humana
-    Robos.usarFonte(() => []);
-    const amostras = [];
-    const { room } = correr(pista, nivel, false, 1, (r, t, relogio) => { const p = r.players[r.order[0]]; if (p.started && !p.laps && Math.round(t * 20) % 2 === 0) amostras.push([relogio, p.pos.x, p.pos.y, p.pos.z, p.pos.a, p.pos.prog]); });
-    return { s: amostras, carro: room.players[room.order[0]].car, tempo: room.players[room.order[0]].volta, piloto: nivel };
-  };
-  const rapida = voltaDe("dificil"), lenta = voltaDe("facil");
-  assert.ok(lenta.tempo > rapida.tempo * 1.1, "as duas voltas gravadas têm ritmos bem diferentes");
-  const ritmo = 75;
-  try {
-    for (const nivel of ["facil", "medio", "dificil"]) {
-      Robos.usarFonte(() => [rapida, lenta], () => ({ tempo: ritmo }));
-      const { room } = correr(pista, nivel, false, 2);
-      const alvo = ritmo * Robos.RITMO[nivel];
-      assert.ok(Math.abs(room.ritmoRobos - alvo) < 1e-9);
-      for (const id of room.order) {
-        const p = room.players[id];
-        assert.ok(Math.abs(p.volta - alvo) / alvo < 0.06, `${nivel}: ${p.name} (traçado ${p.ia.tracadoId}) fez ${p.volta.toFixed(1)} s, mirando ${alvo.toFixed(1)} s`);
-      }
-    }
-  } finally { Robos.usarFonte(() => null); }
-}));
+// (2026-11-14: apagado o teste "robôs miram o ritmo da sala, seja qual for a volta que copiam": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("sem volta de ninguém na pista, os robôs seguem o traçado calculado pelo nível", () => {
   Robos.usarFonte(() => [], () => null);

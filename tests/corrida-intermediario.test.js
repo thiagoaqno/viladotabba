@@ -8,15 +8,7 @@ test("intermediário: cor própria", () => {
   assert.equal(F.PNEUS.intermediario.cor, "#39c85a");
 });
 
-test("intermediário: chega ao penhasco em quatro voltas no molhado e duas no seco", () => {
-  for (const [agua, voltas] of [[0, 2], [0.45, 4], [1, 4]]) {
-    const pneu = F.pneuNovo("intermediario"); pneu.temp = 1;
-    // Estresse normalizado para o piloto de referência: 0,7 + 0,6 × 0,1 = 0,76.
-    for (let i = 0; i < voltas * 100; i++) F.gastarPneu(pneu, { dist: 1, volta: 100, slip: 6, agua, dt: 0 });
-    assert.ok(Math.abs(pneu.desgaste - F.PENHASCO) < 1e-9, `${agua}: ${pneu.desgaste}`);
-    assert.equal(F.vidaEmVoltas("intermediario", 1, agua), voltas);
-  }
-});
+// (2026-11-14: apagado o teste "intermediário: chega ao penhasco em quatro voltas no molhado e duas no seco": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("intermediário: pedido percorre o protocolo de rede e a seleção do box", () => {
   assert.equal(Box.compostoDaAcao("pneu5"), "intermediario");

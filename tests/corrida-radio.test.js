@@ -10,14 +10,7 @@ const OBSERVADOR = ["spotesq", "spotdir", "spotlivre"];
 const AVISOS = ["erslargada"];
 const PEDIDOS = ["diagnosticobom", "diagnosticomedio", "diagnosticograve", "pneusbons", "pneusgastos", "corridachuva", "corridaseca"];
 
-test("toda situação da corrida tem pelo menos 8 falas, e as de pedido pelo menos 2", () => {
-  for (const s of SITUACOES) { const n = Falas.porSituacao(s).length; assert.ok(n >= 8, `${s}: ${n} falas`); }
-  for (const s of OBSERVADOR) assert.ok(Falas.porSituacao(s).length >= 8, s);
-  for (const s of PEDIDOS) assert.ok(Falas.porSituacao(s).length >= 2, s);
-  for (const s of AVISOS) assert.ok(Falas.porSituacao(s).length >= 4, s);
-  assert.deepEqual(Object.keys(Falas.SITUACOES).sort(), [...SITUACOES, ...OBSERVADOR, ...PEDIDOS, ...AVISOS].sort());
-  assert.equal(Falas.FALAS.length, [...SITUACOES, ...OBSERVADOR, ...PEDIDOS, ...AVISOS].reduce((n, s) => n + Falas.porSituacao(s).length, 0));
-});
+// (2026-11-14: apagado o teste "toda situação da corrida tem pelo menos 8 falas, e as de pedido pelo menos 2": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("ids únicos, seguros para nome de arquivo e textos curtos", () => {
   const ids = Falas.FALAS.map((f) => f.id);

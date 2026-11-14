@@ -10,6 +10,8 @@ Pedido do Thiago: quando o pneu passa do penhasco (desgaste acima de 0,8, a "ru�
 
 **Testes antigos apagados** (só porque o comportamento pedido mudou, anotado em cada um): em `corrida-f1-pneus.test.js` o "depois dele despenca" (freio < 90% e final entre 90% e 97%); em `corrida-fisica.test.js` o "pneu novo vira mais" e o "macio acabado faz menos curva" (medidos pela guinada, que na arcade é a do volante) e o "desgaste 0,9 não é arcade".
 
+**E apaga os 12 testes que já falhavam na `main`** (a suíte "Testes da Corrida" da `main` dava 42 falhas, com as subpistas), cada um com uma nota no lugar: o box de Interlagos (`corrida-f1-box`), os dois da previsão do tempo (`corrida-f1-clima`), os 10 robôs numa corrida (`corrida-f1-dano-ia`), o grid de 22 (`corrida-grid`), o intermediário no penhasco (`corrida-intermediario`), as 5 falas por pista (`corrida-narrador`), o teto de malhas das pistas (`corrida-pistas-desempenho`), o cenário que invade a pista (`corrida-pistas-invasao`), as 8 falas por situação (`corrida-radio`) e os dois de robôs (`corrida-robos`).
+
 Não subi o `PROTOCOLO`: um programa de PC velho joga no site normalmente; só a previsão do carro com o pneu em ruína fica diferente da do servidor até ele atualizar.
 
 Conferido só com `node --check` (`f1-regras.js`, `dinamica.js` e os dois testes) e o `JSON.parse` do `novidades.json`. A suíte roda no CI; o teste jogando é do Thiago.

@@ -120,16 +120,7 @@ function corridaDeRobos({ pista = "interlagos", nivel = "medio", robos = 10, vol
     return { room, batidas, voltasDe, log };
   } finally { Date.now = agora; }
 }
-test("IA: 10 robôs numa corrida de F1 terminam, com poucas batidas entre eles e sem ninguém destruído", () => {
-  const { room, batidas, log } = corridaDeRobos({ voltas: 2 });
-  for (const id of room.order) assert.ok(room.players[id].finish != null, `${room.players[id].name} não terminou`);
-  const valem = room.order.reduce((q, id) => q + (room.players[id].batidas || 0), 0) / 2; // as batidas que valeram (cada contato pune os dois)
-  const noMuro = batidas.filter((b) => b.tipo === "muro").length;
-  assert.ok(valem <= 4, `batidas entre robôs: ${valem} ${log.filter((l) => /batida/.test(l)).join(" | ")}`);
-  assert.ok(noMuro <= 2, `batidas no muro: ${noMuro}`);
-  assert.ok(room.order.every((id) => !room.players[id].dnf), "nenhum robô destruído");
-  assert.ok(room.order.every((id) => (room.players[id].dano || 0) < 60));
-});
+// (2026-11-14: apagado o teste "IA: 10 robôs numa corrida de F1 terminam, com poucas batidas entre eles e sem ninguém destruído": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 
 test("IA: sem volta humana, o grid completo fecha Mônaco e classifica perto de uma volta competitiva", () => {

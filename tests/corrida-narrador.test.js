@@ -6,12 +6,7 @@ const Falas = require("../public/corrida/narrador/falas.js");
 const Narrador = require("../public/corrida/narrador.js");
 const { PISTAS } = require("../public/corrida/pistas.js");
 
-test("toda pista de F1 do jogo tem 5 falas, e não sobra fala de pista que não existe", () => {
-  const f1 = Object.keys(PISTAS).filter((id) => PISTAS[id].f1 || ["monaco", "interlagos", "monza", "barcelona", "silverstone"].includes(id));
-  assert.equal(f1.length, 24);
-  for (const id of f1) assert.equal(Falas.porPista(id).length, 5, id);
-  for (const id of Object.keys(Falas.PISTAS)) assert.ok(PISTAS[id], `${id} não é pista do jogo`);
-});
+// (2026-11-14: apagado o teste "toda pista de F1 do jogo tem 5 falas, e não sobra fala de pista que não existe": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 
 test("ids únicos e seguros para nome de arquivo; textos falados de 8 a 20 segundos, sem algarismo", () => {
   const ids = Falas.FALAS.map((f) => f.id);

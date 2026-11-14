@@ -1,18 +1,10 @@
-# Jeff: o engenheiro que ouve (comando de voz)
+# Gotas no carro com cara de água, não de bolha
 
-- **Como usa:** aperte e solte **Caps Lock** (ação "Falar com o Jeff" na tela Controles, remapeável; no controle, o botão que a pessoa escolher). O rádio apita, você fala, e o Jeff fecha sozinho depois de 3 s sem fala (no máximo 12 s; apertar de novo fecha na hora). Aí ele faz e responde no rádio e por escrito na tela. O reconhecimento é o do navegador (Web Speech API, `pt-BR`): Chrome, Edge e o programa de PC (que abre no Edge). Precisa de internet; o microfone é pedido na primeira vez. No Firefox avisa que não tem.
-- **`voz.js` (novo):** abre o microfone com o apito do rádio (`Radio.bipe`, novo em `radio.js`), mostra o que está ouvindo e fecha depois de 3 s de silêncio; manda a frase ao Jeff.
-- **`jeff-comandos.js` (novo, só a conta):** entende as frases do Thiago e jeitos parecidos de dizer, ignorando o "Jeff" no começo:
-  - "ir para boxes nesta volta" / "box" / "boxes" / "quero ir para os boxes" → pede o box (com o pneu que estava escolhido; "box, macio" escolhe junto)
-  - "colocar pneus macio / médio / duro / intermediário / chuva" → pede o box com esse pneu (o mesmo das teclas 1 a 5)
-  - "atualização completa" → posição, voltas, pneu, dano, carros da frente e de trás e o tempo
-  - "piloto na frente" / "quem tá na (minha) frente" e "piloto atrás" / "quem tá atrás de mim" → o nome, a diferença e o pneu
-  - "status do pneu" / "como tá meu pneu" / "como estão meus pneus" e "condição do veículo" / "como tá meu carro"
-  - "previsão do tempo" → o tempo agora e em que volta a chuva começa ou para (o estrategista fala a volta no rádio)
-  - "diferença para frente" e "diferença para o companheiro de equipe"
-- **`mfd.js` `executarJeff`:** faz o mesmo que o MFD e as teclas (pedido de box, rádio de pneus e carro, rivais) e responde num aviso "🎧 Jeff: …". `hud.js` ganhou `acoes.infoRival` e `acoes.infoCompanheiro` (o nome e a diferença pela cronometragem).
-- **Variações:** cada resposta escrita do Jeff tem três ou quatro jeitos de dizer (sem repetir a última): box, pneus (por faixa de vida), carro (por faixa de dano), frente, trás, companheiro, tempo e radar, e quando não entende. No rádio, `jeffnaoentendi` tem 6 falas, o box de cada pneu tem 6 (3 novas) e o companheiro tem 4 aberturas de cada lado.
-- **Falas novas (`radio/falas.js`):** `jeffnaoentendi` e os pedaços `companheirofrente` / `companheirotras`. **Os mp3 saem do `gerar-radio.bat`** (ele só gera o que falta); até lá essas respostas ficam só por escrito.
-- **Conserto (`novidades.json`):** na `main` o arquivo estava quebrado: na junção dos PRs de 13/nov sumiram o `]` e o `},` entre quatro entradas, e o JSON não abria (a pergunta de atualização do programa de PC lê dele). Agora abre de novo, com as entradas de antes inteiras.
-- **Conserto (`hud.js`):** o cartão do rádio cortava o nome do piloto na letra "s" (`split(/s+/)`, a barra tinha sumido); agora corta nos espaços (`split(/\s+/)`).
-- Sem botão na tela do celular por enquanto (lá não há tecla para segurar).
+O Thiago viu as gotas do #716 parecendo bolhas. Eram pontinhos redondos sempre virados para a câmera, com borda escura e brilho fixo. Agora (`gotas-carro.js`):
+
+- **Deitadas na pintura:** cada gota é uma cúpula bem achatada (meia esfera com 30% da altura), orientada pela normal da superfície onde está. Visto de lado, fica rente ao carro, e não um disco olhando para a câmera.
+- **Material de água:** o miolo é quase transparente e deixa ver a pintura. A borda reflete o céu (Fresnel, na cor da neblina, que a chuva já deixa cinza), e o sol faz um brilho pequeno e forte, na direção e na cor do sol da cena. A beirada escurece um pouco, como a refração de uma lente d'água.
+- **Irregulares:** os raios vão de 2,5 a 11 mm (muitas pequenas, poucas grandes), algumas alongadas (até 1,7×) e cada uma girada de um jeito. São 900 gotas por carro, e as superfícies um pouco inclinadas também recebem (a normal só precisa apontar mais para cima que para o lado).
+- **Acúmulo:** cada gota nasce pequena quando o nível da chuva passa do limiar dela e cresce até o tamanho dela, como água juntando. O nível continua subindo em ~30 s e descendo em ~90 s.
+- Um `InstancedMesh` só no carro que a câmera segue. O material entra no aquecimento da chuva com o mesmo jeito (a amostra também é `InstancedMesh`), para não compilar na hora.
+- Sem entrada no `novidades.json` neste PR: o arquivo está quebrado na `main` e o conserto está no #717. As gotas novas cabem na entrada do #716.

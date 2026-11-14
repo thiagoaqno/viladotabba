@@ -184,4 +184,6 @@ async function principal() {
   console.log(`muros: ${JSON.stringify(saida)},`);
 }
 
-principal().catch((e) => { console.error(String(e.message || e)); process.exit(1); });
+// (ferramentas/mapa-real.js usa a mesma linha real e o mesmo encaixe)
+module.exports = { comCache, baixarLinha, reamostrar, encaixar, lerOpcoes };
+if (require.main === module) principal().catch((e) => { console.error(String(e.message || e)); process.exit(1); });

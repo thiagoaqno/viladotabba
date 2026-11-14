@@ -1,5 +1,15 @@
 [
   {
+    "id": "2026-11-14-mapa-real",
+    "data": "2026-11-14",
+    "itens": [
+      "Mapa real em volta da pista na miniatura 3D (replay, mapa da corrida, eventos e guia do GP): os prédios com a altura, as ruas, a água e as áreas verdes de verdade, do OpenStreetMap",
+      "Análise da carreira: a Visão geral abre primeiro e o Replay vai para o fim; Estratégia e Voltas saíram",
+      "As paradas no box só para consertar o carro (sem trocar o pneu) agora contam nas paradas da análise e aparecem nos Eventos",
+      "Eventos mais limpos (sem o rádio, os avisos de devolver a posição, as bandeiras amarelas comuns e as batidas leves) e a pista 3D sem girar sozinha"
+    ]
+  },
+  {
     "id": "2026-11-14-analise-interface-nova",
     "data": "2026-11-14",
     "itens": [

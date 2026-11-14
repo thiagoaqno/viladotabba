@@ -268,21 +268,23 @@ function tipoDe(x) {
   if (/^🏁/u.test(x)) return "largada"; if (/^🔧/u.test(x)) return /quebrou/.test(x) ? "batida" : "pit"; if (/^💥/u.test(x)) return "batida";
   if (/^(⏱️|🛑|🏴|⚠️|✅)/u.test(x)) return "punicao"; if (/^🏆/u.test(x)) return "destaque"; return "bandeira";
 }
+// o que não entra nos Eventos (2026-11-14, o Thiago: "muito poluída"): os avisos de devolver a posição, as bandeiras amarelas comuns (o safety car
+// fica), a batida leve, o stop-and-go cumprido, a contagem das batidas propositais, o ritmo dos robôs, o "entrou no quadro de recordes", o
+// "venceu o GP" e o "fim de corrida" (a tela já diz quem venceu)
+const RUIDO = [/^🟡/u, /^🟢(?!.*[Ss]afety)/u, /^✅/u, /^⚠️/u, /^🤖/u, /^🏆 .*entrou no quadro/u, /^🏆 .*venceu o GP/u, /^🏆 Fim de corrida/u, /^💥 .*batida leve/u, /^⏱️ Classificação/u];
+const ruido = (x) => RUIDO.some((r) => r.test(String(x)));
 const semEmoji = (x) => String(x).replace(/^\S+\s+/, ""); // (o log da direção começa com um emoji: a interface usa os ícones acima)
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 let voltaFiltro = null;
 function momentos(S, A, L) {
   const porId = new Map(L.map((s) => [s.id, s])), cum = []; let soma = 0; for (const t of (L[0] && L[0].d.v) || []) cum.push((soma += t));
   const voltaEm = (t) => { const i = cum.findIndex((c) => c >= t); return i < 0 ? Math.max(1, cum.length) : i + 1; };
-  const lista = (A.eventos || []).map((e) => ({ t: e.t, v: e.v || voltaEm(e.t), tipo: tipoDe(e.x), txt: semEmoji(e.x), id: e.id, f: e.f, eq: e.id && porId.get(e.id) ? porId.get(e.id).eqId : null }));
+  const lista = (A.eventos || []).filter((e) => !ruido(e.x)).map((e) => ({ t: e.t, v: e.v || voltaEm(e.t), tipo: tipoDe(e.x), txt: semEmoji(e.x), id: e.id, f: e.f, eq: e.id && porId.get(e.id) ? porId.get(e.id).eqId : null }));
   // as ultrapassagens (corrida-gravacao.js) entram como momentos, com o botão de ver no replay
   (A.ultrapassagens || []).forEach((u, k) => { const a = porId.get(u.a), b = porId.get(u.b); if (a && b) lista.push({ t: u.t, v: u.v, tipo: "ultrapassagem", txt: `${a.nome} passa ${b.nome} e vai a ${u.pos}º${u.sob ? " (sob bandeira)" : ""}`, id: u.a, f: u.f, eq: a.eqId, ult: k }); });
   // o rádio: a hora do navegador vira a do servidor (sNow), e só entra o que caiu dentro desta corrida
-  const fim = Math.max(soma, ...lista.map((e) => e.t), 1), desvio = fonte.sNow() - Date.now();
-  if (typeof S.startAt === "number" && window.Radio && window.Radio.historico) for (const r of window.Radio.historico()) {
-    const t = (r.em + desvio - S.startAt) / 1000; if (t < 0 || t > fim + 30) continue;
-    lista.push({ t: Math.round(t * 10) / 10, v: voltaEm(t), tipo: "radio", txt: r.texto, id: null, f: null, eq: null });
-  }
+  const fim = Math.max(soma, ...lista.map((e) => e.t), 1);
+  // (o rádio do engenheiro saiu dos Eventos: enchia a lista sem dizer o que aconteceu na pista)
   lista.sort((a, b) => a.t - b.t); lista.forEach((e, i) => { e.i = i; });
   return { lista, fim: Math.max(fim, ...lista.map((e) => e.t)), cum };
 }

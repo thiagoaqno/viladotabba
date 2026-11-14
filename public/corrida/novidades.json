@@ -1,5 +1,15 @@
 [
   {
+    "id": "2026-11-14-analise-interface-nova",
+    "data": "2026-11-14",
+    "itens": [
+      "Análise da carreira na interface nova: Replay, Visão geral, Desempenho, Pneus, Estratégia, Voltas e Eventos, com a bandeira e a foto da cidade no topo",
+      "Visão geral: o vencedor, a volta mais rápida e o melhor de cada setor; o mapa da corrida em 3D com os carros (o logo de cada equipe) refazendo a última volta; o resultado final; as estratégias; os destaques e as informações da corrida",
+      "Desempenho com os três setores em quadros (os 5 melhores de cada um, em barras); Pneus em tabela com filtro por equipe; Eventos juntando os momentos e as ultrapassagens (cada uma com o botão do replay)",
+      "Animações de entrada nos cartões, nas listas e nas barras; no replay, passar o mouse num piloto da torre acende o carro dele na pista"
+    ]
+  },
+  {
     "id": "2026-11-14-analise-repaginada",
     "data": "2026-11-14",
     "itens": [

@@ -338,3 +338,26 @@ body.cx-on .ra-cx .ra-set-v:hover{background:var(--cx-hover)}body.cx-on .ra-cx .
 body.cx-on .ra-cx .ra-torre li{background:none}
 body.cx-on .ra-cx .ra-ult-par i{color:var(--cx-tx2)}
 body.cx-on .ra-cx .ra-rep:fullscreen{background:var(--cx-bg)}
+
+/* ---------- o Mapa da corrida (a Visão geral): o título, o Traçado/Posições e os carros com o logo da equipe ---------- */
+.ra-mapa-geral{min-height:360px;height:100%}
+.ra-mapa-cab{position:absolute;top:10px;left:12px;right:12px;z-index:3;display:flex;align-items:center;gap:10px;pointer-events:none}
+.ra-mapa-tit{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:#05080cc7;font-size:13px;pointer-events:auto}
+.ra-mapa-tit svg{width:17px;height:17px}
+.ra-seg{margin-left:auto;display:inline-flex;padding:3px;border-radius:999px;background:#05080cc7;pointer-events:auto}
+.ra-seg button{padding:5px 14px;border:0;border-radius:999px;background:none;color:#aab4c0;font:700 12.5px var(--body,system-ui,sans-serif);cursor:pointer;transition:background .15s,color .15s}
+.ra-seg button:hover:not(:disabled){color:#fff}.ra-seg button.on{background:var(--eq);color:#fff}.ra-seg button:disabled{opacity:.45;cursor:not-allowed}
+.ra-mapa-nota{position:absolute;left:14px;bottom:12px;z-index:2;color:#8d97a6;font-size:11px;pointer-events:none}
+.mn3-carro.com-logo{display:flex;align-items:center;gap:3px;padding:2px 3px;border-left:0;border-radius:6px;background:#05080cb3;box-shadow:0 0 0 1.5px var(--c);opacity:.95}
+.mn3-carro.com-logo img{width:18px;height:18px;object-fit:contain}
+.mn3-carro.com-logo b{display:none;font-size:11px;padding-right:3px}
+.mn3-carro.com-logo.on{z-index:3;transform-origin:center}.mn3-carro.com-logo.on b{display:inline}
+/* os Eventos: a ultrapassagem tem o botão do replay no lugar da seta */
+.ra .ra-lista .ra-mom-lista li{grid-template-columns:58px 30px minmax(0,1fr) auto}
+.ra-ver-ult{padding:3px 8px!important;font-size:11px!important}
+/* no tema da Central */
+body.cx-on .ra-cx .ra-mapa-tit,body.cx-on .ra-cx .ra-seg{background:var(--cx-bg2);color:var(--cx-tx);box-shadow:0 4px 14px color-mix(in srgb,var(--cx-tx) 10%,transparent)}
+body.cx-on .ra-cx .ra-seg button{color:var(--cx-tx2)}body.cx-on .ra-cx .ra-seg button:hover:not(:disabled){color:var(--cx-tx)}
+body.cx-on .ra-cx .ra-seg button.on{background:var(--cx-tx);color:var(--cx-bg2)}
+body.cx-on .ra-cx .ra-mapa-nota{color:var(--cx-tx2)}
+body.cx-on .ra-cx .mn3-carro.com-logo{background:var(--cx-bg2)}

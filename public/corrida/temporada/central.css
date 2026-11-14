@@ -255,3 +255,116 @@ body.cx-escuro .cx-relevo{filter:grayscale(1) invert(1);opacity:.05}
 .cx-an-cab .cx-rot{letter-spacing:.22em}
 .cx-leg-logo{display:inline-block;width:18px;height:18px;object-fit:contain;vertical-align:-4px;margin-right:6px}
 .cx-legenda i.eu,.cx-legenda i.ou{width:14px!important}
+
+/* ---------- a Análise na interface nova (central-analise-geral.js): o cabeçalho com a bandeira e a foto, a Visão geral, os quadros por setor e
+   a tabela de pneus. Tudo nos tokens da Central (claro e escuro) e na cor da equipe; os cartões entram em sequência (--i), as linhas (--j)
+   e as barras crescem; "reduzir movimento" desliga. ---------- */
+.cx-an-cab{position:relative;isolation:isolate;padding-left:clamp(0px,1vw,8px)}
+.cx-an-cab.com-foto::after{content:"";position:absolute;z-index:-1;top:calc(-1 * clamp(20px,4vh,48px));right:calc(-1 * clamp(16px,3vw,48px));width:min(58vw,760px);height:calc(100% + clamp(60px,9vh,110px));background:var(--foto) center/cover no-repeat;opacity:.5;filter:grayscale(.25) saturate(.9);-webkit-mask-image:linear-gradient(90deg,transparent,#000 45%),linear-gradient(0deg,transparent,#000 40%);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent,#000 45%),linear-gradient(0deg,transparent,#000 40%);mask-composite:intersect;pointer-events:none}
+body.cx-escuro .cx-an-cab.com-foto::after{opacity:.38;filter:grayscale(.6) brightness(.8)}
+.cx-an-band{display:block;width:clamp(54px,5vw,78px);margin-right:clamp(12px,1.6vw,22px);padding-right:clamp(12px,1.6vw,22px);border-right:3px solid var(--eq-at);align-self:stretch;display:flex;align-items:center}
+.cx-an-band svg{width:100%;height:auto;border-radius:3px;box-shadow:0 4px 14px #0003}
+.cx-an-cab{display:flex;align-items:center}
+.cx-an-cab>.cx-sel{margin-left:auto}
+.cx-an-sub{margin:clamp(18px,3vh,30px) 0 10px;font:700 clamp(18px,1.6vw,24px) var(--cx-f)}
+/* os cartões */
+.cx-ag{display:flex;flex-direction:column;gap:12px}
+.cx-ag-card,.cx-ag-faixa{position:relative;border:1px solid var(--cx-lin);border-radius:12px;background:var(--cx-bg2);box-shadow:0 10px 30px color-mix(in srgb,var(--cx-tx) 7%,transparent);animation:cxAgEntra .5s var(--cx-t) both;animation-delay:calc(var(--i,0) * 70ms);transition:transform .2s var(--cx-t),box-shadow .2s}
+.cx-ag-card:hover{transform:translateY(-2px);box-shadow:0 16px 38px color-mix(in srgb,var(--cx-tx) 12%,transparent)}
+@keyframes cxAgEntra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.cx-ag-card>header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px}
+.cx-ag-card>header svg{width:20px;height:20px;color:var(--cx-tx2);flex:none}
+.cx-ag-card>header h3{margin:0;font:700 15px var(--cx-f);letter-spacing:.02em}
+.cx-ag-card>header small{color:var(--cx-tx2);font-size:12px}
+.cx-ag-logo{display:inline-block;width:22px;height:22px;object-fit:contain;flex:none}
+.cx-ag-logo.g{width:34px;height:34px}.cx-ag-logo.vazio{visibility:hidden}
+.cx-ag-link{margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border:0;background:none;color:var(--cx-tx2);font:600 12.5px var(--cx-f);cursor:pointer;transition:color .15s}
+.cx-ag-link svg{width:14px;height:14px;transition:transform .15s}.cx-ag-link:hover{color:var(--cx-tx)}.cx-ag-link:hover svg{transform:translateX(3px)}
+/* a faixa: o vencedor, a volta mais rápida e o melhor de cada setor */
+.cx-ag-faixa{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.6fr);align-items:center}
+.cx-ag-f-item,.cx-ag-f-setores{display:flex;align-items:center;gap:12px;padding:14px 18px;min-width:0}
+.cx-ag-f-item+.cx-ag-f-item,.cx-ag-f-setores{border-left:1px solid var(--cx-lin)}
+.cx-ag-f-item>svg{width:24px;height:24px;color:var(--cx-tx2);flex:none}
+.cx-ag-f-item .cx-ag-logo{width:30px;height:30px}
+.cx-ag-f-item small,.cx-ag-f-setores>small{display:block;color:var(--cx-tx2);font-size:11.5px;font-weight:600}
+.cx-ag-f-item b{font:800 clamp(16px,1.4vw,21px) var(--cx-f)}
+.cx-ag-f-item strong{margin-left:auto;font:600 clamp(15px,1.3vw,19px) var(--cx-f);font-variant-numeric:tabular-nums}
+.cx-ag-f-item em{font-style:normal;color:var(--cx-tx2);font-size:11.5px}
+.cx-ag-f-setores{flex-direction:column;align-items:stretch;gap:4px}
+.cx-ag-f-setores>div{display:flex;gap:6px}
+.cx-ag-f-setores span{flex:1;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:8px;transition:background .15s}
+.cx-ag-f-setores span:hover{background:var(--cx-hover)}
+.cx-ag-f-setores i{font-style:normal;color:var(--cx-tx2);font-size:11px;font-weight:700}
+.cx-ag-f-setores b{font:700 clamp(14px,1.2vw,18px) var(--cx-f);font-variant-numeric:tabular-nums}
+/* o meio: o mapa da corrida e o resultado final */
+.cx-ag-meio{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);gap:12px}
+.cx-ag-mapa{animation:cxAgEntra .5s var(--cx-t) both;animation-delay:calc(var(--i,0) * 70ms)}
+.cx-ag-mapa .ra-cx{margin:0;height:100%}
+.cx-ag-res-l{list-style:none;margin:0;padding:0 8px 10px}
+.cx-ag-res-l li{display:grid;grid-template-columns:28px 26px minmax(0,1fr) auto 52px;align-items:center;gap:8px;padding:10px 10px;border-radius:8px;font-size:14px;animation:cxAgLinha .4s var(--cx-t) both;animation-delay:calc(200ms + var(--j,0) * 45ms);transition:background .15s,transform .15s}
+.cx-ag-res-l li+li{border-top:1px solid var(--cx-lin)}
+.cx-ag-res-l li:hover{background:var(--cx-hover);transform:translateX(3px)}
+.cx-ag-res-l li.p1{background:color-mix(in srgb,var(--eq-at) 10%,transparent);box-shadow:inset 3px 0 0 var(--eq-at)}
+.cx-ag-res-l li.eu b{color:var(--eq-at)}
+.cx-ag-res-l .p{font-weight:800;text-align:center}.cx-ag-res-l b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cx-ag-res-l .t{font-variant-numeric:tabular-nums;color:var(--cx-tx2)}.cx-ag-res-l li.p1 .t{color:var(--cx-tx);font-weight:700}
+.cx-ag-res-l .pts{text-align:right;font-weight:700}
+@keyframes cxAgLinha{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+/* embaixo: setores, estratégias, destaques e informações */
+.cx-ag-baixo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.cx-ag-set-l{display:grid;grid-template-columns:repeat(3,1fr);padding:4px 10px 16px}
+.cx-ag-set-l>div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;border-radius:8px;transition:background .15s}
+.cx-ag-set-l>div+div{border-left:1px solid var(--cx-lin)}
+.cx-ag-set-l>div:hover{background:var(--cx-hover)}
+.cx-ag-set-l small{color:var(--cx-tx2);font-weight:700;font-size:12px}
+.cx-ag-set-l b{font:800 clamp(18px,1.6vw,24px) var(--cx-f);font-variant-numeric:tabular-nums}
+.cx-ag-set-l span{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--cx-tx2);text-align:center}.cx-ag-set-l span .cx-ag-logo{width:18px;height:18px}
+.cx-ag-estr-l,.cx-ag-dest-l,.cx-ag-info-l{list-style:none;margin:0;padding:0 16px 14px}
+.cx-ag-estr-l li{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(50px,.8fr) 40px;align-items:center;gap:10px;padding:8px 0}
+.cx-ag-estr-l li+li{border-top:1px solid var(--cx-lin)}
+.cx-ag-estr-l b{display:block;font-size:14px}.cx-ag-estr-l small{color:var(--cx-tx2);font-size:11.5px}
+.cx-ag-estr-l strong{text-align:right;font-variant-numeric:tabular-nums}
+.cx-ag-barra{height:6px;border-radius:3px;background:var(--cx-trilho);overflow:hidden}
+.cx-ag-barra u{display:block;height:100%;width:var(--p);border-radius:3px;background:var(--eq-at);animation:cxAgBarra .9s var(--cx-t) both .3s;transform-origin:left}
+@keyframes cxAgBarra{from{transform:scaleX(0)}to{transform:none}}
+.cx-ag-pneus{display:inline-flex;gap:3px}
+.cx-ag-pneus i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:3px solid var(--c);background:var(--cx-bg2);color:var(--cx-tx);font:800 10px var(--cx-f);font-style:normal;transition:transform .15s}
+.cx-ag-pneus i:hover{transform:scale(1.18)}
+.cx-ag-dest-l li{display:flex;align-items:center;gap:10px;padding:7px 0;transition:transform .15s}
+.cx-ag-dest-l li+li{border-top:1px solid var(--cx-lin)}
+.cx-ag-dest-l li:hover{transform:translateX(3px)}
+.cx-ag-dest-l small{display:block;color:var(--cx-tx2);font-size:11.5px}.cx-ag-dest-l b{font-size:14px}.cx-ag-dest-l em{display:block;font-style:normal;color:var(--cx-tx2);font-size:12px}
+.cx-ag-info-l li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 0;font-size:13px}
+.cx-ag-info-l li+li{border-top:1px solid var(--cx-lin)}
+.cx-ag-info-l svg{width:18px;height:18px;color:var(--cx-tx2)}.cx-ag-info-l span{color:var(--cx-tx2)}.cx-ag-info-l b{font-variant-numeric:tabular-nums}
+/* o Desempenho por setor (os três quadros) */
+.cx-ag-quadros{margin-bottom:12px}
+.cx-ag-q3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:0 6px 12px}
+.cx-ag-q{padding:4px 12px 6px}.cx-ag-q+.cx-ag-q{border-left:1px solid var(--cx-lin)}
+.cx-ag-q header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cx-ag-q header i{font-style:normal;font-weight:800;color:var(--cx-tx2)}
+.cx-ag-q header b{display:block;font-size:14px}.cx-ag-q header strong{font:800 20px var(--cx-f);font-variant-numeric:tabular-nums}
+.cx-ag-q ol{list-style:none;margin:0;padding:0}
+.cx-ag-q li{display:grid;grid-template-columns:20px 84px minmax(0,1fr) 58px;align-items:center;gap:8px;padding:4px 4px;border-radius:6px;font-size:12.5px;animation:cxAgLinha .4s var(--cx-t) both;animation-delay:calc(250ms + var(--j,0) * 50ms);transition:background .15s}
+.cx-ag-q li:hover{background:var(--cx-hover)}
+.cx-ag-q li .cx-ag-logo{width:18px;height:18px}
+.cx-ag-q li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cx-ag-q li u{display:block;height:6px;width:var(--p);border-radius:3px;background:var(--c);animation:cxAgBarra .8s var(--cx-t) both;animation-delay:calc(350ms + var(--j,0) * 50ms);transform-origin:left}
+.cx-ag-q li b{text-align:right;font-variant-numeric:tabular-nums}
+.cx-ag-q li.eu span{color:var(--eq-at);font-weight:800}
+/* os Pneus */
+.cx-ag-abas{display:flex;gap:2px;overflow-x:auto;padding:0 12px;border-bottom:1px solid var(--cx-lin);scrollbar-width:none}
+.cx-ag-abas button{flex:none;display:inline-flex;align-items:center;gap:6px;padding:8px 12px 10px;border:0;border-bottom:2px solid transparent;background:none;color:var(--cx-tx2);font:600 13px var(--cx-f);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:color .15s,border-color .15s}
+.cx-ag-abas button .cx-ag-logo{width:18px;height:18px}
+.cx-ag-abas button:hover{color:var(--cx-tx)}.cx-ag-abas button.on{color:var(--cx-tx);font-weight:800;border-bottom-color:var(--eq-at)}
+.cx-ag-pneus-t table{width:100%;border-collapse:collapse;font-size:13.5px}
+.cx-ag-pneus-t th{padding:10px 12px;color:var(--cx-tx2);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:left}
+.cx-ag-pneus-t td{padding:9px 12px;border-top:1px solid var(--cx-lin)}
+.cx-ag-pneus-t tr{animation:cxAgLinha .35s var(--cx-t) both;animation-delay:calc(var(--j,0) * 30ms);transition:background .15s}
+.cx-ag-pneus-t tbody tr:hover{background:var(--cx-hover)}
+.cx-ag-pneus-t tr.eu td.n b{color:var(--eq-at)}
+.cx-ag-pneus-t td.p{width:44px;font-weight:800}.cx-ag-pneus-t td.n{display:flex;align-items:center;gap:8px}
+.cx-ag-pneus-t td.pit,.cx-ag-pneus-t td.v,.cx-ag-pneus-t td.tp{font-variant-numeric:tabular-nums}
+@media (max-width:1100px){.cx-ag-baixo{grid-template-columns:repeat(2,minmax(0,1fr))}.cx-ag-faixa{grid-template-columns:1fr 1fr}.cx-ag-f-setores{grid-column:1/-1;border-left:0;border-top:1px solid var(--cx-lin)}}
+@media (max-width:760px){.cx-ag-meio,.cx-ag-baixo,.cx-ag-faixa,.cx-ag-q3{grid-template-columns:1fr}.cx-ag-f-item+.cx-ag-f-item{border-left:0;border-top:1px solid var(--cx-lin)}.cx-ag-q+.cx-ag-q{border-left:0;border-top:1px solid var(--cx-lin)}.cx-an-band{display:none}}
+@media (prefers-reduced-motion:reduce){.cx-ag-card,.cx-ag-faixa,.cx-ag-mapa,.cx-ag-res-l li,.cx-ag-q li,.cx-ag-q li u,.cx-ag-barra u,.cx-ag-pneus-t tr{animation:none}.cx-ag-card:hover{transform:none}}

@@ -133,7 +133,10 @@ export function criarMiniatura(caixa, pista, op = {}) {
     carros.clear();
     for (const k of lista || []) {
       const m = new THREE.Mesh(geoCarro, new THREE.MeshBasicMaterial({ color: new THREE.Color(k.cor || "#ffffff") })); m.userData.carro = k.id; m.visible = false; grupoCarros.add(m);
-      const el = document.createElement("span"); el.className = "mn3-carro"; el.textContent = k.rotulo || ""; el.style.setProperty("--c", k.cor || "#fff"); el.dataset.carro = k.id; camadaRot.appendChild(el);
+      // o rótulo: o logo da equipe (`logo`, quando tem) e a sigla; com logo, a sigla só aparece no carro realçado (CSS)
+      const el = document.createElement("span"); el.className = "mn3-carro";
+      if (k.logo) { const im = document.createElement("img"); im.src = k.logo; im.alt = ""; im.onerror = () => im.remove(); el.appendChild(im); el.classList.add("com-logo"); }
+      if (k.rotulo) { const b = document.createElement("b"); b.textContent = k.rotulo; el.appendChild(b); } el.style.setProperty("--c", k.cor || "#fff"); el.dataset.carro = k.id; camadaRot.appendChild(el);
       carros.set(k.id, { m, el, f: null, on: false });
     }
     carro.visible = rastro.visible = false; // no replay, o carrinho de luz sai de cena

@@ -1,6 +1,6 @@
 // Corrida da Galera — a "vista" do carro de F1 de 2026 da equipe (como o modo de olhar o carro dos jogos de corrida): o carro girando num palco escuro,
 // que se gira com o mouse e se aproxima com a roda, com pontos clicáveis em cada parte (asa dianteira, pneus, halo, laterais, ERS, motor, assoalho
-// e asa traseira). Clicar num ponto leva a câmera até a peça e abre o cartão dela; ◀ ▶ (ou as setas) passam para a próxima; Esc fecha.
+// e asa traseira). Clicar num ponto leva a câmera até a peça e abre o cartão dela; os botões de anterior e próxima (ou as setas) passam de peça; Esc fecha.
 // O carro é o mesmo do jogo (f1.js, montarF1, com as cores da equipe). Onde fica cada ponto sai da caixa do modelo (a frente é −z), não de
 // coordenadas soltas. O texto é o regulamento de 2026; o que é "no jogo" sai das próprias regras do jogo (f1-regras.js).
 import * as THREE from "three";
@@ -32,6 +32,8 @@ const PONTOS = [
     txt: () => "Sem DRS em 2026: o flap de trás abre junto com o da frente em toda reta liberada, não só para quem ataca. No jogo, as zonas de DRS de cada pista continuam valendo." },
 ];
 
+const ico = (d) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICO_X = ico('<path d="m6 6 12 12M18 6 6 18"/>'), ICO_ANT = ico('<path d="m15 5-7 7 7 7"/>'), ICO_PROX = ico('<path d="m9 5 7 7-7 7"/>'); // (ícones em SVG: nada de emoji)
 let aberta = null;
 export function fecharVista() { if (aberta) aberta(); }
 
@@ -42,9 +44,9 @@ export function abrirVista(equipe, aoFechar) {
   const raiz = document.createElement("div"); raiz.className = "vc"; raiz.setAttribute("role", "dialog"); raiz.setAttribute("aria-modal", "true"); raiz.setAttribute("aria-label", `O carro de 2026 da ${eq.nome || "equipe"}`);
   raiz.style.setProperty("--vc", c1);
   raiz.innerHTML = `<div class="vc-palco"></div><div class="vc-pontos"></div>
-    <header class="vc-topo"><div><small>Vista do carro · 2026</small><h2>${h(eq.nome || "Seu carro")}</h2></div><button type="button" class="vc-x" aria-label="Fechar (Esc)">✕</button></header>
+    <header class="vc-topo"><div><small>Vista do carro · 2026</small><h2>${h(eq.nome || "Seu carro")}</h2></div><button type="button" class="vc-x" aria-label="Fechar (Esc)">${ICO_X}</button></header>
     <aside class="vc-cartao" hidden aria-live="polite"><div class="vc-c-topo"><small data-vc-n></small><h3 data-vc-t></h3></div><p data-vc-txt></p>
-      <div class="vc-c-nav"><button type="button" data-vc-ant aria-label="Peça anterior">◀</button><button type="button" data-vc-geral>Visão geral</button><button type="button" data-vc-prox aria-label="Próxima peça">▶</button></div></aside>
+      <div class="vc-c-nav"><button type="button" data-vc-ant aria-label="Peça anterior">${ICO_ANT}</button><button type="button" data-vc-geral>Visão geral</button><button type="button" data-vc-prox aria-label="Próxima peça">${ICO_PROX}</button></div></aside>
     <p class="vc-ajuda">Arraste para girar · roda para aproximar · clique nos pontos</p><p class="vc-carga">Carregando o carro…</p>`;
   document.body.appendChild(raiz); document.body.classList.add("vc-on");
   const palco = raiz.querySelector(".vc-palco"), camada = raiz.querySelector(".vc-pontos"), cartao = raiz.querySelector(".vc-cartao");

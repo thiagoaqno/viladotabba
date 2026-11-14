@@ -1,5 +1,14 @@
 [
   {
+    "id": "2026-11-14-analise-repaginada",
+    "data": "2026-11-14",
+    "itens": [
+      "Análise da corrida repaginada: o Replay abre primeiro; Momentos com o mapa 3D (zoom e centralizar), a lista com ícones e filtros, e os setores de cada volta (roxo, verde e amarelo; clique numa volta para filtrar)",
+      "O logo da equipe no lugar das faixas de cor (momentos, torre, telemetria, pneus, ultrapassagens e legendas), e a escolha do piloto e de com quem comparar",
+      "Replay: botão de tela cheia, \"Seguir\" desligado ao abrir e \"Ver no replay\" agora começa antes da ultrapassagem, e não depois"
+    ]
+  },
+  {
     "id": "2026-11-14-replay-so-carros",
     "data": "2026-11-14",
     "itens": [

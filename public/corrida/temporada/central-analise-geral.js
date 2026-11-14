@@ -33,6 +33,8 @@ const IC = {
   chuva: svg('<path d="M7 15a4 4 0 0 1 0-8 5.5 5.5 0 0 1 10.5 1.5A3.5 3.5 0 0 1 17 15z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/>'),
   seta: svg('<path d="m9 5 7 7-7 7"/>'),
 };
+// todas as idas ao box de um piloto, na ordem: as de troca de pneu (`b`) e as só de conserto (`k`, desde 2026-11-14)
+const paradasDe = (d) => [...(d?.b || []).map((x) => ({ ...x, conserto: false })), ...(d?.k || []).map((x) => ({ ...x, conserto: true }))].sort((x, y) => x.v - y.v);
 const card = (cls, ic, titulo, corpo, extra = "", i = 0) => `<section class="cx-ag-card ${cls}" style="--i:${i}"><header>${ic}<h3>${titulo}</h3>${extra}</header>${corpo}</section>`;
 
 // os números do GP, contados uma vez: quem venceu, a volta mais rápida, o melhor de cada setor, os tempos finais
@@ -69,7 +71,7 @@ function visaoGeral(c, r, a, mapa, verTodos) {
   const setor = card("cx-ag-set", IC.setor, "Desempenho por setor", `<div class="cx-ag-set-l">${D.setores.map((x, k) => `<div><small>S${k + 1}</small><b>${x ? x.t.toFixed(3) : "—"}</b><span>${x ? logo(x.eq) : ""}${h(x?.curto || "")}</span></div>`).join("")}</div>`, "", 3);
   // as estratégias: quantas paradas fez quem terminou, a parte do grid em cada uma e o melhor colocado delas
   const fins = D.linhas.filter((l) => !l.dnf && !l.nc && D.P[l.piloto]), grupos = {};
-  for (const l of fins) { const n = (D.P[l.piloto].b || []).length; (grupos[n] ||= []).push(l); }
+  for (const l of fins) { const n = paradasDe(D.P[l.piloto]).length; (grupos[n] ||= []).push(l); }
   const estr = Object.entries(grupos).sort((x, y) => y[1].length - x[1].length).slice(0, 3).map(([n, ls]) => { const pct = Math.round((ls.length / Math.max(1, fins.length)) * 100), m = ls[0], eq = Pil().EQUIPES[m.equipe];
     const comp = [(D.P[m.piloto].c0), ...(D.P[m.piloto].b || []).map((b) => b.c)].filter(Boolean);
     return `<li><span class="cx-ag-pneus">${comp.map((cp) => `<i style="--c:${h(corPneu(cp))}" title="${h(nomePneu(cp))}">${LETRA[cp] || "?"}</i>`).join("")}</span><div><b>${n === "0" ? "Sem parada" : `${n} parada${n > 1 ? "s" : ""}`}</b><small>${h(curto(nomeDe(m.piloto, D.s)))}${eq ? ` (${h(eq.sigla)})` : ""} · ${m.pos}º</small></div><span class="cx-ag-barra"><u style="--p:${pct}%"></u></span><strong>${pct}%</strong></li>`; }).join("");
@@ -87,7 +89,7 @@ function visaoGeral(c, r, a, mapa, verTodos) {
       ${queda && queda.d < 0 ? item(queda.l.equipe, "Maior queda de posições", curto(nomeDe(queda.l.piloto, D.s)), `${queda.d} posiç${queda.d < -1 ? "ões" : "ão"} (${D.P[queda.l.piloto].g}º → ${queda.l.pos}º)`) : ""}
       ${item(rei ? D.quem(rei[0]).eq : undefined, "Ultrapassagens", `${ult.length}`, rei ? `${h(D.quem(rei[0]).curto)} fez ${rei[1]}` : ult.length ? "" : "nenhuma gravada nesta corrida")}</ul>`, "", 5);
   // as informações da corrida (só o que o jogo mede)
-  const paradas = Object.values(D.P).reduce((m, d) => m + (d.b || []).length, 0);
+  const paradas = Object.values(D.P).reduce((m, d) => m + paradasDe(d).length, 0);
   const info = (ic, rot, val) => `<li>${ic}<span>${rot}</span><b>${val}</b></li>`;
   const infos = card("cx-ag-info", IC.info, "Informações da corrida", `<ul class="cx-ag-info-l">
       ${info(IC.crono, "Tempo de corrida", tempoLongo(D.tV))}${info(IC.voltas, "Voltas", a.voltas)}${info(IC.parada, "Paradas nos boxes", paradas)}${info(IC.ultra, "Ultrapassagens", ult.length)}
@@ -114,14 +116,14 @@ function pneusTabela(c, r, a, filtroEq) {
   const abas = `<div class="cx-ag-abas" role="tablist"><button type="button" role="tab" data-cx-ag-eq="" class="${!filtroEq ? "on" : ""}" aria-selected="${!filtroEq}">Todos</button>${eqs.map((e) => `<button type="button" role="tab" data-cx-ag-eq="${h(e)}" class="${filtroEq === e ? "on" : ""}" aria-selected="${filtroEq === e}">${logo(e)}${h(Pil().EQUIPES[e]?.nome || e)}</button>`).join("")}</div>`;
   const linhas = D.linhas.filter((l) => !filtroEq || l.equipe === filtroEq).map((l, i) => {
     const d = D.P[l.piloto]; if (!d) return "";
-    const fim = (d.v || []).length || a.voltas, st = []; let de = 1, cp = d.c0;
+    const pp = paradasDe(d), fim = (d.v || []).length || a.voltas, st = []; let de = 1, cp = d.c0;
     for (const b of d.b || []) { st.push({ c: cp, de, ate: Math.max(de, b.v) }); de = b.v + 1; cp = b.c; }
     st.push({ c: cp, de, ate: fim });
     return `<tr class="${l.piloto === "voce" ? "eu" : ""}" style="--j:${i}"><td class="p">${l.dnf || l.nc ? "—" : l.pos}</td><td class="n">${logo(l.equipe)}<b>${h(curto(nomeDe(l.piloto, D.s)))}</b></td>
       <td class="pn"><span class="cx-ag-pneus">${st.map((x) => `<i style="--c:${h(corPneu(x.c))}" title="${h(nomePneu(x.c))} · voltas ${x.de} a ${x.ate} (${x.ate - x.de + 1})">${LETRA[x.c] || "?"}</i>`).join("")}</span></td>
-      <td class="pit">${(d.b || []).length}</td><td class="v">${(d.b || []).length ? d.b.map((b) => b.v).join(" / ") : "—"}</td><td class="tp">${(d.b || []).length ? d.b.map((b) => (b.t != null ? `${b.t} s` : "—")).join(" / ") : ""}</td></tr>`;
+      <td class="pit">${pp.length}</td><td class="v">${pp.length ? pp.map((b) => `<span class="${b.conserto ? "cx-ag-cons" : ""}" title="${b.conserto ? "Só conserto: sem trocar o pneu" : "Troca de pneu"}">${b.v}${b.conserto ? "*" : ""}</span>`).join(" / ") : "—"}</td><td class="tp">${pp.length ? pp.map((b) => (b.t != null ? `${b.t} s` : "—")).join(" / ") : ""}</td></tr>`;
   }).join("");
-  return `<section class="cx-ag-card cx-ag-pneus-t" style="--i:0"><header>${IC.estrategia}<h3>Estratégia de pneus</h3><small>Passe o mouse nos pneus: o composto e as voltas de cada jogo</small></header>${abas}
+  return `<section class="cx-ag-card cx-ag-pneus-t" style="--i:0"><header>${IC.estrategia}<h3>Estratégia de pneus</h3><small>Passe o mouse nos pneus: o composto e as voltas de cada jogo · * só conserto, sem trocar o pneu</small></header>${abas}
     <div class="cx-t-rolo"><table><thead><tr><th>Pos.</th><th>Piloto</th><th>Pneus</th><th>Paradas</th><th>Volta(s)</th><th>Tempo no box</th></tr></thead><tbody>${linhas}</tbody></table></div></section>`;
 }
 

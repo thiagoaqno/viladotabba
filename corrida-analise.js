@@ -43,7 +43,7 @@ function resumo(room, chave) {
     pilotos[chave(p)] = {
       g: (p.grid ?? -1) + 1, v: h.v, p: h.p, // largada, tempo e posição em cada volta
       s: melhorV >= 0 ? h.s[melhorV] : null, sv: h.s, mv: melhorV + 1, // setores da melhor volta, setores de cada volta e o número da melhor volta
-      c0: (p.compostos && p.compostos[0]) || p.pneu || null, b: (p.paradas || []).map((x) => ({ v: x.volta, c: x.composto, t: x.tempo })),
+      c0: (p.compostos && p.compostos[0]) || p.pneu || null, b: (p.paradas || []).map((x) => ({ v: x.volta, c: x.composto, t: x.tempo })), k: (p.consertos || []).map((x) => ({ v: x.volta, t: x.tempo })), // k: as paradas só de conserto
       t: p.finish != null ? ms(p.finish + (p.acrescimo || 0)) : null, a: ms(p.acrescimo || 0), e: !!p.estimado,
     };
   }

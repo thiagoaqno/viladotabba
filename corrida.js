@@ -270,7 +270,7 @@ module.exports = function attachCorrida(io) {
     // quem não escolheu o pneu (fora da carreira) e larga com a pista molhada vai de pneu de chuva, em vez do médio padrão
     const largaMolhado = f1 && F1.climaEm(room.clima, room.startAt).agua >= F1.AGUA_MOLHADA;
     if (largaMolhado && !room.temporada) for (const id of ids) { const p = room.players[id]; if (!p.bot && !p.pneuEscolhido) p.pneu = "chuva"; }
-    for (const id of ids) { const p = room.players[id]; Object.assign(p, { paradas: [], compostos: [p.pneu || F1.COMPOSTO_PADRAO], pneuAtual: p.pneu || F1.COMPOSTO_PADRAO, acrescimo: 0, box: null, boxFant: 0 }); }
+    for (const id of ids) { const p = room.players[id]; Object.assign(p, { paradas: [], consertos: [], compostos: [p.pneu || F1.COMPOSTO_PADRAO], pneuAtual: p.pneu || F1.COMPOSTO_PADRAO, acrescimo: 0, box: null, boxFant: 0 }); }
     Itens.start(room);
     room.nivelEmPedacos = true; // (o ritmo de cada robô é calculado aos pedaços, durante o carregamento: corrida-robos.js, aquecerNiveis)
     Robos.largar(room);
@@ -391,7 +391,7 @@ module.exports = function attachCorrida(io) {
     // regras de F1: o resultado do GP, com os pontos oficiais (quem fez menos de 90% das voltas é NC e não pontua)
     if (room.config.regras === "f1") {
       room.resultado = F1.classificacaoFinal(room.order.map((id) => { const p = room.players[id]; const bonus = bonusDoBox(room, p); return { id, laps: p.laps, finish: p.finish, dnf: !!p.dnf, acrescimo: (p.acrescimo || 0) - bonus, prog: p.pos ? p.pos.prog : 0, best: p.best, dsq: !!p.dsq }; }), room.config.voltas)
-        .map((r) => { const p = room.players[r.id]; return { ...r, voltas: p.laps, grid: p.grid, paradas: (p.paradas || []).length, compostos: p.compostos || [], estimado: !!p.estimado, penal: p.penal || 0, sg: p.sgFeitos || 0, dano: p.dano || 0, batidas: p.batidas || 0, melhor: p.best }; });
+        .map((r) => { const p = room.players[r.id]; return { ...r, voltas: p.laps, grid: p.grid, paradas: (p.paradas || []).length + (p.consertos || []).length, compostos: p.compostos || [], estimado: !!p.estimado, penal: p.penal || 0, sg: p.sgFeitos || 0, dano: p.dano || 0, batidas: p.batidas || 0, melhor: p.best }; });
       const v = room.resultado[0]; if (v) log(room, `🏆 ${nameOf(room, v.id)} venceu o GP e leva ${v.pontos} pontos.`);
       // a análise do GP (posição, tempo e setores de cada volta, pits e safety car: corrida-analise.js) para a tela do resultado de qualquer sala;
       // vai só quando o navegador pede (`analise`), e não no estado, que sai várias vezes por segundo. Um erro nela nunca pode perder o resultado.
@@ -423,7 +423,11 @@ module.exports = function attachCorrida(io) {
     if (!p || ((!d.stopGo || d.troca) && !F1.PNEUS[d.composto])) return;
     // O serviço dos boxes recupera 90% do dano existente, também na visita de stop-and-go.
     p.dano = Math.max(0, (p.dano || 0) * 0.1);
-    if (d.manter && !d.stopGo) return; // "não trocar" (menu do box): parou sem trocar o pneu, não gasta jogo de composto
+    if (d.manter && !d.stopGo) { // "não trocar" (menu do box, ou o robô avariado com o pneu bom): parou só para consertar o carro; não gasta jogo de
+      // composto (não entra em `paradas`, que é a regra dos pneus), mas fica anotado à parte para a análise contar todas as idas ao box
+      const tempo = Math.round((d.tempo || 0) * 10) / 10; (p.consertos ||= []).push({ volta: d.volta, tempo });
+      log(room, `🔧 ${p.name} parou nos boxes só para consertar o carro (${tempo} s).`); return;
+    }
     if (p && d.stopGo) { // a visita incluiu o stop-and-go: cumprido; se o pneu foi trocado na mesma parada, o resto é uma parada normal (sem os segundos do stop-and-go)
       Direcao.cumprirStopGo(room, p, (s) => log(room, s));
       if (!d.troca) return;

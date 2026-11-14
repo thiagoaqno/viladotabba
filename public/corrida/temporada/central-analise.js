@@ -4,10 +4,11 @@
 (function (root) {
 const U = () => root.CentralUI, h = (v) => U().h(v);
 const Reg = () => root.F1Temporada, Pil = () => root.F1Pilotos, F = () => root.F1Regras;
-let sub = "replay", gpEscolhido = null, comparar = null, verTodos = false, filtroEq = "";
-// as sub-abas (a interface nova do Thiago, 2026-11-14): o Replay abre primeiro. As que têm pista em 3D usam o módulo da tela do resultado
+let sub = "visao", gpEscolhido = null, comparar = null, verTodos = false, filtroEq = "";
+// as sub-abas (a interface nova do Thiago, 2026-11-14): a Visão geral é a principal (abre primeiro); Estratégia e Voltas saíram (a tabela de
+// pneus e o Desempenho cobrem o que elas mostravam). As que têm pista em 3D usam o módulo da tela do resultado
 // (analise-salva.js) numa aba dele: o Replay, o mapa da Visão geral, as posições do Desempenho e os Eventos (momentos e ultrapassagens)
-const SUBS = [["replay", "Replay"], ["visao", "Visão geral"], ["desempenho", "Desempenho"], ["pneus", "Pneus"], ["estrategia", "Estratégia"], ["voltas", "Voltas"], ["eventos", "Eventos"]];
+const SUBS = [["visao", "Visão geral"], ["desempenho", "Desempenho"], ["pneus", "Pneus"], ["eventos", "Eventos"], ["replay", "Replay"]]; // (o Replay por último: o Thiago, 2026-11-14)
 const ABA_3D = { replay: "replay", visao: "mapa", desempenho: "posicoes", eventos: "momentos" };
 
 const tempo = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`);
@@ -120,25 +121,6 @@ function seletor(a, rival, r, s) {
   return `<label class="cx-sel cx-sel-mini"><span class="cx-oculto">Comparar com</span><select data-cx-comparar>${ops}</select></label>`;
 }
 
-// ---------- Voltas ----------
-function voltas(c, r, a, rival) {
-  const eu = a.pilotos.voce, ou = a.pilotos[rival], s = c.s, UI = U(), melhor = Math.min(...eu.v), melhorS = [0, 1, 2].map((k) => Math.min(...(eu.sv || []).filter(Boolean).map((x) => x[k]), Infinity));
-  const est = stints(eu, a.voltas), pneuDa = (v) => est.find((x) => v >= x.de && v <= x.ate)?.c;
-  const linhas = eu.v.map((t, i) => { const v = i + 1, sv = eu.sv?.[i], d = ou?.v?.[i] != null ? t - ou.v[i] : null, c0 = pneuDa(v), marcas = [(a.sc || []).includes(v) ? '<em class="sc">SC</em>' : "", (eu.b || []).some((b) => b.v === v) ? '<em class="bx">Box</em>' : ""].join(""); return `<tr class="${t === melhor ? "melhor" : ""}"><td class="n">${v}</td><td class="t">${tempo(t)}${marcas}</td>${[0, 1, 2].map((k) => `<td class="${sv && sv[k] === melhorS[k] ? "cx-roxo" : ""}">${sv ? sv[k].toFixed(3) : "—"}</td>`).join("")}<td>${eu.p?.[i] ? `${eu.p[i]}º` : "—"}</td><td><span class="cx-bola" style="--c:${h(corPneu(c0))}" title="${h(nomePneu(c0))}">${LETRA[c0] || "?"}</span></td><td class="${d == null ? "" : d < 0 ? "cx-verde" : "cx-verm"}">${d == null ? "—" : sinal(d)}</td></tr>`; }).join("");
-  return `<section class="cx-card cx-an-voltas">${UI.tituloCard("Volta a volta", `Comparando com ${h(sobrenome(nomeDe(rival, s)))}`)}<div class="cx-an-filtro">${seletor(a, rival, r, s)}</div><div class="cx-t-rolo"><table><thead><tr><th>Volta</th><th>Tempo</th><th>S1</th><th>S2</th><th>S3</th><th>Pos</th><th>Pneu</th><th>Dif.</th></tr></thead><tbody>${linhas || '<tr><td colspan="8">Nenhuma volta completa.</td></tr>'}</tbody></table></div></section>`;
-}
-
-// ---------- Estratégia ----------
-function estrategia(c, r, a) {
-  const s = c.s, UI = U(), linhas = r.linhas.slice().sort((x, y) => x.pos - y.pos).map((l) => {
-    const d = a.pilotos[l.piloto]; if (!d) return "";
-    const est = stints(d, a.voltas), tot = est.reduce((m, x) => m + x.n, 0) || 1, eq = Pil().EQUIPES[l.equipe];
-    return `<li class="${l.piloto === "voce" ? "eu" : ""}"><span class="p">${l.dnf ? "DNF" : l.nc ? "NC" : `${l.pos}º`}</span>${U().marca(l.equipe, "cx-leg-logo")}<b>${h(sobrenome(nomeDe(l.piloto, s)))}</b><div class="cx-stints mini">${est.map((x) => `<div class="cx-stint" style="flex:${x.n / tot};--c:${h(corPneu(x.c))}" title="${h(nomePneu(x.c))}: voltas ${x.de} a ${x.ate}"><span>${x.n}</span></div>`).join("")}</div><em>${(d.b || []).length} ${(d.b || []).length === 1 ? "parada" : "paradas"}</em></li>`;
-  }).join("");
-  const legenda = [...new Set(Object.values(a.pilotos).flatMap((d) => [d.c0, ...(d.b || []).map((b) => b.c)]).filter(Boolean))].map((k) => `<span><i class="cx-bola" style="--c:${h(corPneu(k))}">${LETRA[k] || "?"}</i>${h(nomePneu(k))}</span>`).join("");
-  return `<section class="cx-card cx-an-estr">${UI.tituloCard("Estratégia do grid", "Voltas em cada jogo de pneus")}<div class="cx-legenda pneus">${legenda}</div><ol>${linhas}</ol></section>`;
-}
-
 // ---------- Telemetria: distância para o líder, volta ideal e constância ----------
 function telemetria(c, r, a, rival) {
   const s = c.s, UI = U(), eu = a.pilotos.voce, ou = a.pilotos[rival], nomeEu = sobrenome(s.nome), nomeOu = sobrenome(nomeDe(rival, s));
@@ -183,7 +165,7 @@ function html(c) {
   const corpo = sub === "visao" ? G.visaoGeral(c, r, a, vivo("mapa"), verTodos)
     : sub === "desempenho" ? `${G.quadrosSetor(c, r, a)}${vivo("posicoes")}<h3 class="cx-an-sub">O seu desempenho</h3>${visao(c, r, a, rival)}${telemetria(c, r, a, rival)}`
     : sub === "pneus" ? G.pneusTabela(c, r, a, filtroEq)
-    : sub === "voltas" ? voltas(c, r, a, rival) : sub === "estrategia" ? estrategia(c, r, a) : vivo(ABA_3D[sub] || "replay");
+    : vivo(ABA_3D[sub] || "replay");
   return `${topo}${abas}<div class="cx-an-corpo">${corpo}</div>`;
 }
 // monta a análise 3D no bloco vivo, uma vez por marca (depois de cada redesenho, por ligarGraficos)

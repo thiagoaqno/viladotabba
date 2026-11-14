@@ -19,7 +19,7 @@ function tracado(t) {
   const relevo = (h1 - h0) * s, alto = relevo > 0.05 ? Math.min(12, Math.max(2.5, relevo * 3)) : 0, ex = relevo > 0.05 ? alto / relevo : 0;
   const base = 1.2; // a pista mais baixa fica um pouco acima da base, para a parede aparecer em toda a volta
   const v = pts.map((p) => new THREE.Vector3((p.x - cx) * s, base + (p.h - h0) * s * ex, (p.y - cy) * s));
-  return { v, n, larg: (x1 - x0) * s, prof: (y1 - y0) * s, temRelevo: alto > 0 };
+  return { v, n, larg: (x1 - x0) * s, prof: (y1 - y0) * s, temRelevo: alto > 0, s, cx, cy };
 }
 const lado = (v, i, n) => { const a = v[(i - 1 + n) % n], b = v[(i + 1) % n], dx = b.x - a.x, dz = b.z - a.z, l = Math.hypot(dx, dz) || 1; return new THREE.Vector3(-dz / l, 0, dx / l); };
 const setorDe = (i, n) => Math.min(2, Math.floor((i / n) * 3));
@@ -61,7 +61,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
   const cam = new THREE.PerspectiveCamera(34, 1, 0.5, 900);
   const ctl = new OrbitControls(cam, cv);
   ctl.enableDamping = true; ctl.dampingFactor = 0.08; ctl.enablePan = false; ctl.minDistance = 35; ctl.maxDistance = 230; ctl.maxPolarAngle = 1.38; ctl.rotateSpeed = 0.7;
-  ctl.autoRotate = !reduz(); ctl.autoRotateSpeed = 0.55;
+  ctl.autoRotate = false; // (sem giro sozinho: o Thiago, 2026-11-14; a câmera só se mexe com o mouse, os botões e os voos)
   const dist0 = 70 + Math.max(T.larg, T.prof) * 0.55;
   cam.position.set(0, dist0 * 0.62, dist0 * 0.82); ctl.target.set(0, 2, 0); ctl.update();
 
@@ -75,6 +75,11 @@ export function criarMiniatura(caixa, pista, op = {}) {
   const grade = new THREE.GridHelper(raio * 2, 24, P.g1, P.g2); grade.position.y = 0.02; grade.material.transparent = true; grade.material.opacity = 0.6; cena.add(grade);
   const borda = new THREE.Mesh(new THREE.RingGeometry(raio - 0.4, raio, 96), new THREE.MeshBasicMaterial({ color: corEq, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
   borda.rotation.x = -Math.PI / 2; borda.position.y = 0.04; cena.add(borda);
+  // o mapa real em volta (gp-mapa-real.js: os prédios, as ruas, a água e o verde do OpenStreetMap), quando a pista tem; chega depois, sem travar
+  const grupoMapa = new THREE.Group(); cena.add(grupoMapa);
+  if (op.mapa !== false) import("/corrida/gp-mapa-real.js").then((m) => m.montarMapaReal(grupoMapa, { pista, s: T.s, cx: T.cx, cy: T.cy, raio: raio - 0.6, tema: op.tema, v: T.v, larg: 1.25 }))
+    .then((r) => { if (r && vivo) { const cr = document.createElement("small"); cr.className = "mn3-credito"; cr.textContent = "© colaboradores do OpenStreetMap"; caixa.appendChild(cr); creditos.push(cr); } }).catch(() => {});
+  const creditos = [];
 
   // a pista: o asfalto, a parede do relevo (com a sombra no chão) e a linha dos setores por cima
   const asfalto = new THREE.Mesh(faixa(v, n, 1.25, 0, null), new THREE.MeshBasicMaterial({ color: P.asfalto, side: THREE.DoubleSide }));
@@ -210,7 +215,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
   const ajustar = () => { const w = Math.max(1, caixa.clientWidth), h = Math.max(1, caixa.clientHeight); renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
   const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(ajustar) : null; if (ro) ro.observe(caixa); ajustar();
 
-  // o laço: só desenha com a caixa na página; sozinho, o giro volta 6 s depois do último toque
+  // o laço: só desenha com a caixa na página
   let vivo = true, raf = 0, ant = performance.now(), volta = 0;
   const tmp = new THREE.Vector3();
   function quadro(agora) {
@@ -218,7 +223,6 @@ export function criarMiniatura(caixa, pista, op = {}) {
     if (!caixa.isConnected) { soltar(); return; }
     raf = requestAnimationFrame(quadro);
     const dt = Math.min(0.1, (agora - ant) / 1000); ant = agora;
-    if (!baixo && !voo && !ctl.autoRotate && !reduz() && agora - parouEm > 6000 && realce == null) ctl.autoRotate = true;
     if (voo) { const u = Math.min(1, (agora - voo.t0) / voo.dur), e = u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2; ctl.target.lerpVectors(voo.de, voo.para, e); cam.position.lerpVectors(voo.cde, voo.cpara, e); if (u >= 1) { voo = null; parouEm = agora; } }
     if (seguindo && !voo) { const d = seguindo.clone().sub(ctl.target).multiplyScalar(Math.min(1, dt * 4)); ctl.target.add(d); cam.position.add(d); }
     ctl.update();
@@ -261,7 +265,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
     if (ro) ro.disconnect(); ctl.dispose();
     cena.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
     xadrez.dispose(); renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) { /* já foi */ }
-    cv.remove(); camadaRot.remove(); caixa.classList.remove("mn3");
+    cv.remove(); camadaRot.remove(); creditos.forEach((c) => c.remove()); caixa.classList.remove("mn3");
   }
   return { marcadores, destacar, focar, aproximar, curvas, soltar, definirCarros, posicionar, seguir, pintar, temRelevo: T.temRelevo, get vivo() { return vivo; } };
 }

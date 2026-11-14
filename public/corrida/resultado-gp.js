@@ -6,7 +6,7 @@
 import { E, PISTAS, h, fmt } from "./estado.js";
 import { MODS3, MODS_PADRAO } from "./carros.js";
 import { podio3d } from "./podio-3d.js";
-import { htmlAnalise, montarAnalise } from "./resultado-analise.js";
+import { htmlAnalise, montarAnalise, soltarAnalise } from "./resultado-analise.js";
 
 const reduz = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
 const EQUIPES = () => (window.F1Pilotos && window.F1Pilotos.EQUIPES) || {};
@@ -134,7 +134,7 @@ export function aposResultado(el, S, m) {
   }
 }
 // sai da tela do resultado: solta os carros, a cena e o renderizador (o pódio 3D é só desta tela: nada a ver com o palco da sala)
-export function limparResultado() { podio3d.soltar(); }
+export function limparResultado() { podio3d.soltar(); soltarAnalise(); }
 
 // a tela só é refeita quando o resultado muda (o servidor manda o estado várias vezes por segundo; refazer reiniciaria a animação e o carro)
 let ultima = "";

@@ -5,7 +5,9 @@
     "itens": [
       "Análise da corrida no resultado de todo GP, não só na carreira: o gráfico das posições volta a volta de todos os pilotos, com o mouse mostrando a posição e o tempo de cada um",
       "Ritmo: o tempo de cada volta seu contra o de outro piloto, com a diferença volta a volta, a melhor volta, a média sem pit e sem safety car e os setores",
-      "Pneus: os stints de cada piloto na cor do composto; clique num piloto (no gráfico, nos pneus ou na tabela) para comparar com ele"
+      "Pneus: os stints de cada piloto na cor do composto; clique num piloto (no gráfico, nos pneus ou na tabela) para comparar com ele",
+      "Momentos da corrida sobre uma miniatura 3D da pista: pits, batidas, punições, bandeiras, safety car e o rádio do engenheiro, cada um no lugar em que aconteceu; gire com o mouse, clique num momento e a câmera vai até lá, ou aperte ▶ para refazer a corrida",
+      "Guia do GP na ficha \"Sobre o GP\": o circuito em 3D com o relevo, os setores e os números das curvas, a história da pista e as curvas famosas (clique numa e a câmera vai até ela)"
     ]
   },
   {

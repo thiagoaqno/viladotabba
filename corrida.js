@@ -95,7 +95,10 @@ module.exports = function attachCorrida(io) {
   // parcial (os testes, a carreira) continua recebendo os padrões de `cleanConfig` e sem equipe.
   const CONFIG_SALA_NOVA = { pista: "monaco", regras: "f1", voltas: 5, nivel: "medio", robos: Robos.GRID_F1 - 1, clima: "variavel", classificacao: "pular" };
   const nameOf = (room, id) => (room.players[id] ? room.players[id].name : "?");
-  function log(room, text) { room.log.push({ t: Date.now(), text }); if (room.log.length > 80) room.log.splice(0, room.log.length - 80); }
+  function log(room, text) {
+    room.log.push({ t: Date.now(), text }); if (room.log.length > 80) room.log.splice(0, room.log.length - 80);
+    if (room.config.regras === "f1") { try { Analise.evento(room, text, (p) => pontoDoCarro(room, p)); } catch (e) { /* a linha do tempo é um extra */ } }
+  }
 
   // quem já carregou a pista (corrida: room.carga; classificação: room.quali.carga), para a tela de carregamento de cada um; null = ninguém mais esperando
   function cargaPublica(room) {

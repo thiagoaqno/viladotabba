@@ -127,6 +127,7 @@ function proximo() {
   const agora = Date.now(), f = fila[0], urgente = F.URGENTES.includes(f.quando);
   if (!urgente && agora - ultimaFala < INTERVALO) { timerFila = espera(proximo, INTERVALO - (agora - ultimaFala) + 20); return; }
   fila.shift(); ultimaFala = agora; ultimoId = f.id; porSituacao[f.quando] = agora;
+  anotar(f, agora);
   if (mudo || !temDOM) { timerFila = espera(proximo, 50); return; }
   tocando = true;
   const livre = () => { tocando = false; ultimaFala = Date.now(); timerFila = espera(proximo, 80); }; // a fila não sobrepõe: a próxima só começa quando esta acaba
@@ -134,6 +135,16 @@ function proximo() {
   (f.partes ? emendar(f.partes) : carregar(f)).then((buf) => buf || reserva()).then((buf) => { if (!buf || !tocar(buf, livre)) livre(); }).catch(livre);
 }
 
+// o que o engenheiro falou (a linha do tempo da tela do resultado, resultado-analise.js): a hora e o texto, sem o observador (carro ao lado), que encheria a lista
+const historico = [], SEM_HISTORICO = /^spot/;
+const textoDe = (id) => { const x = (F.FALAS || []).find((y) => y.id === id) || (F.PECAS || []).find((y) => y.id === id); return x && x.texto ? x.texto : ""; };
+function anotar(f, em) {
+  try {
+    if (!f || SEM_HISTORICO.test(f.quando || "")) return;
+    const texto = f.texto || (f.partes ? f.partes.map(textoDe).filter(Boolean).join(" ") : textoDe(f.id)); if (!texto) return;
+    historico.push({ em, quando: f.quando || "", texto }); if (historico.length > 200) historico.splice(0, historico.length - 200);
+  } catch { /* o histórico é um extra */ }
+}
 // as falas montadas em pedaços (RadioFalas.PECAS): carrega cada mp3 e junta num buffer só, com uma pausa curta entre eles, para o rádio
 // abrir e fechar uma vez. O pedaço que falta (o nome de quem não tem mp3) fica de fora; com menos de dois, não fala nada.
 function emendar(ids) {
@@ -199,6 +210,6 @@ function classificacao(pos, total) { dizer(pos <= Math.ceil(total / 3) ? "classb
 
 // o apito de abrir o rádio sozinho (o Jeff começando a ouvir: voz.js); respeita o botão do fone (mudo) e o volume geral
 function bipe() { try { if (mudo || !temDOM) return; const x = contexto(); if (!x || x.c.state === "suspended") return; abertura(x.c, x.destino, x.c.currentTime + 0.02); } catch { /* sem áudio */ } }
-const api = { bipe, escolher, dizer, frase, pedaco, usarSaida, posicao, uma, avisoF1, fim, classificacao, silenciar, desenharBotoes, get mudo() { return mudo; }, get tocando() { return tocando; }, INTERVALO };
+const api = { bipe, escolher, dizer, frase, pedaco, usarSaida, posicao, uma, avisoF1, fim, classificacao, silenciar, desenharBotoes, get mudo() { return mudo; }, get tocando() { return tocando; }, INTERVALO, historico: () => historico.slice() };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Radio = api;
 })(typeof self !== "undefined" ? self : this);

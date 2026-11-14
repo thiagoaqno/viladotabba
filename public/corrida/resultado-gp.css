@@ -184,3 +184,41 @@
 .ra-p-barra em{font:800 9.5px var(--display,"Barlow Condensed",sans-serif);font-style:normal;color:var(--pc);pointer-events:none}
 @media (max-width:640px){.ra-pneus li{grid-template-columns:22px 38px minmax(0,1fr)}.ra-pneus small{display:none}.ra-cartao dl{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.ra *{transition:none!important}}
+
+/* ---------- Momentos: a miniatura 3D da pista (gp-miniatura.js), a lista e a linha do tempo ---------- */
+.ra-mom{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-areas:"palco lado" "tempo tempo";gap:10px}
+.ra-mom-palco{grid-area:palco;position:relative;min-height:320px;border:1px solid #ffffff1c;background:radial-gradient(80% 70% at 50% 40%,var(--eq1),#05080c 75%);overflow:hidden}
+.ra-mini{position:absolute;inset:0}
+.ra-mini.sem3d{display:grid;place-items:center;padding:14px}.ra-mini.sem3d svg{width:100%;height:100%}
+.mn3{position:absolute;inset:0}.mn3-canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}.mn3-canvas:active{cursor:grabbing}
+.mn3-rotulos{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.mn3-curva{position:absolute;left:0;top:0;min-width:18px;height:18px;padding:0 4px;display:grid;place-items:center;border-radius:9px;background:#0b1118e0;border:1px solid #ffffff55;color:#fff;font:800 10.5px var(--display,"Barlow Condensed",sans-serif);pointer-events:auto;cursor:default;transition:background .12s,border-color .12s,scale .12s;will-change:transform}
+.mn3-curva:hover,.mn3-curva.hi{background:var(--eq,#e10600);border-color:#fff;scale:1.25;z-index:2}
+.ra-mom-dica{z-index:4}
+.ra-mom-barra{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:10px;pointer-events:none}
+.ra-mom-barra small{color:#8d97a6;font-size:11px;text-shadow:0 1px 2px #000}
+.ra-play{pointer-events:auto;width:38px;height:38px;border-radius:50%;border:2px solid var(--eq);background:#0a0e14d9;color:#fff;font-size:14px;cursor:pointer;transition:background .15s,transform .15s}
+.ra-play:hover{background:var(--eq);transform:scale(1.08)}
+.ra-mom-lado{grid-area:lado;display:flex;flex-direction:column;gap:6px;min-width:0}
+.ra-filtros{display:flex;flex-wrap:wrap;gap:4px}
+.ra-filtros button{padding:3px 8px;border:1px solid #ffffff26;border-bottom:2px solid var(--c);background:#ffffff08;color:#cfd6df;font:700 12px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:background .12s}
+.ra-filtros button small{color:#8d97a6}
+.ra-filtros button:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.ra-filtros button.on{background:color-mix(in srgb,var(--c) 34%,transparent);color:#fff}
+.ra-mom-lista{list-style:none;margin:0;padding:0;max-height:290px;overflow:auto;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin}
+.ra-mom-lista li{display:grid;grid-template-columns:44px 20px minmax(0,1fr) auto;align-items:center;gap:6px;padding:4px 6px 4px 4px;border-left:3px solid var(--c);background:linear-gradient(90deg,color-mix(in srgb,var(--p) 26%,transparent),transparent 40%);font-size:12px;cursor:pointer;transition:background .12s,opacity .12s}
+.ra-mom-lista li:hover,.ra-mom-lista li.hi,.ra-mom-lista li:focus-visible{background:color-mix(in srgb,var(--c) 22%,transparent);outline:none}
+.ra-mom-lista li.sel{box-shadow:inset 0 0 0 1px var(--c)}
+.ra-mom-lista li.fora{display:none}
+.ra-mom-lista li.vazio{border:0;color:#8d97a6;cursor:default}
+.ra-mom-v{font:800 12px var(--display,"Barlow Condensed",sans-serif);line-height:1.05}.ra-mom-v small{display:block;color:#8d97a6;font:600 10px var(--body,system-ui,sans-serif)}
+.ra-mom-lista i{font-style:normal;text-align:center}
+.ra-mom-txt{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ra-mom-pin{color:var(--c);font-size:10px}
+.ra-tempo{grid-area:tempo}
+.ra-tempo svg{cursor:pointer}
+.ra-ponto{fill:#0a0e14;stroke:var(--c);stroke-width:2.2;transition:r .12s}
+.ra-ponto:hover,.ra-ponto.hi{fill:var(--c);r:7.5}
+.ra-ponto.fora{opacity:.15}
+.ra-cabeca{stroke:var(--eq);stroke-width:2;pointer-events:none}
+@media (max-width:760px){.ra-mom{grid-template-columns:1fr;grid-template-areas:"palco" "tempo" "lado"}.ra-mom-palco{min-height:260px}.ra-mom-barra small{display:none}}

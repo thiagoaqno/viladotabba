@@ -5,10 +5,11 @@
 //  - Ritmo: o tempo de cada volta de dois pilotos (A = você, ou o vencedor para quem assiste; B = o escolhido), com a diferença volta a volta;
 //  - Pneus: os stints de cada um, na ordem de chegada, na cor do composto.
 // Clicar num piloto (no gráfico, nos pneus ou na tabela do resultado) faz dele o B. As cores são as das equipes.
-import { socket, h } from "./estado.js";
+import { socket, h, sNow } from "./estado.js";
+import { criarMiniatura } from "./gp-miniatura.js";
 
 const cache = { chave: null, dados: null, pedindo: null };
-let aba = "posicoes", escolhidoB = null;
+let aba = "posicoes", escolhidoB = null, mini = null, filtro = "tudo", tocar = null;
 
 const tempo = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`);
 const sinal = (d) => `${d > 0 ? "+" : d < 0 ? "−" : ""}${Math.abs(d).toFixed(3)}`;
@@ -139,9 +140,9 @@ function pneus(L, idA, idB) {
 // ---------- montar ----------
 function html(S, A, L, idA, idB) {
   const a = L.find((s) => s.id === idA), bb = L.find((s) => s.id === idB) || null;
-  const abas = [["posicoes", "Posições"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
+  const abas = [["posicoes", "Posições"], ["momentos", "Momentos"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
   const corpo = aba === "ritmo" ? `<div class="ra-par">${cartao(A, a, "a")}${bb ? cartao(A, bb, "b") : ""}</div>${graficoRitmo(A, a, bb)}<p class="ra-legenda">Escolha outro piloto clicando no gráfico das posições, nos pneus ou na tabela acima.</p>`
-    : aba === "pneus" ? pneus(L, idA, idB) : graficoPosicoes(L, A, idA, idB);
+    : aba === "pneus" ? pneus(L, idA, idB) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A) : graficoPosicoes(L, A, idA, idB);
   const resumo = [A.safeties ? `${A.safeties} safety car${A.safeties > 1 ? "s" : ""}` : "", A.amarelas ? `${A.amarelas} bandeira${A.amarelas > 1 ? "s" : ""} amarela${A.amarelas > 1 ? "s" : ""}` : "", A.chuva ? "chuva" : ""].filter(Boolean).join(" · ");
   return `<header class="ra-cab"><div><h3>Análise da corrida</h3><small>${A.voltas} volta${A.voltas > 1 ? "s" : ""}${resumo ? ` · ${resumo}` : ""}</small></div>
     <div class="ra-abas" role="tablist">${abas.map(([k, r]) => `<button type="button" role="tab" data-ra-aba="${k}" class="${aba === k ? "on" : ""}" aria-selected="${aba === k}">${r}</button>`).join("")}</div></header>
@@ -149,6 +150,7 @@ function html(S, A, L, idA, idB) {
     <div class="ra-corpo">${corpo}</div>`;
 }
 function desenhar(box, S, m, A) {
+  pararMomentos();
   const L = pilotos(S, A).filter((s) => s.d.v.length); if (!L.length) { box.hidden = true; return; }
   const idA = (m && L.some((s) => s.id === m.id) && m.id) || L[0].id;
   // o B padrão: o carro que chegou logo à frente de A (ou logo atrás, se A ganhou)
@@ -156,6 +158,7 @@ function desenhar(box, S, m, A) {
   box.innerHTML = html(S, A, L, idA, escolhidoB); box.hidden = false;
   const escolher = (id) => { if (id && id !== idA) { escolhidoB = id; if (aba === "posicoes") aba = "ritmo"; desenhar(box, S, m, A); } };
   box.querySelectorAll("[data-ra-aba]").forEach((bt) => { bt.onclick = () => { aba = bt.dataset.raAba; desenhar(box, S, m, A); }; });
+  if (aba === "momentos") ligarMomentos(box, S, m, A, L, idA, escolher);
   const g = box.querySelector(".ra-graf");
   if (g && g.dataset.graf === "posicoes") ligarPosicoes(g, L, A, escolher);
   if (g && g.dataset.graf === "ritmo") ligarRitmo(g, A, L.find((s) => s.id === idA), L.find((s) => s.id === escolhidoB) || null);
@@ -190,4 +193,112 @@ export function montarAnalise(el, S, m) {
     cache.chave = chave; cache.dados = A;
     const atual = document.getElementById("rgAnalise"); if (atual && atual.isConnected) desenhar(atual, S, m, A);
   });
+}
+
+// sai da tela do resultado: solta a miniatura 3D e o replay dos momentos
+export function soltarAnalise() { pararMomentos(); }
+function pararMomentos() { if (tocar) { cancelAnimationFrame(tocar.raf); tocar = null; } if (mini) { mini.soltar(); mini = null; } }
+
+// ---------- Momentos: a linha do tempo da corrida sobre a miniatura 3D da pista ----------
+// Cada linha da direção de prova (corrida-analise.js `evento`) e cada fala do engenheiro (radio.js `historico`, só de quem pilotou) vira um momento;
+// os que têm um piloto ganham um pino no lugar da pista onde ele estava. Passar o mouse acende, clicar leva a câmera até lá, ▶ refaz a corrida.
+const TIPOS = {
+  largada: { rot: "Largada", cor: "#ffffff" }, pit: { rot: "Pits", cor: "#2aa8ff" }, batida: { rot: "Batidas", cor: "#ff5a36" },
+  punicao: { rot: "Punições", cor: "#c77dff" }, bandeira: { rot: "Bandeiras", cor: "#ffc21a" }, destaque: { rot: "Recordes", cor: "#5ee08a" }, radio: { rot: "Rádio", cor: "#9fb3c8" },
+};
+function tipoDe(x) {
+  if (/^🏁/u.test(x)) return "largada"; if (/^🔧/u.test(x)) return /quebrou/.test(x) ? "batida" : "pit"; if (/^💥/u.test(x)) return "batida";
+  if (/^(⏱️|🛑|🏴|⚠️|✅)/u.test(x)) return "punicao"; if (/^🏆/u.test(x)) return "destaque"; return "bandeira";
+}
+const emojiDe = (x) => { const m = String(x).match(/^(\S+)\s/); return m ? m[1] : "•"; };
+const semEmoji = (x) => String(x).replace(/^\S+\s+/, "");
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+function momentos(S, A, L) {
+  const porId = new Map(L.map((s) => [s.id, s])), cum = []; let soma = 0; for (const t of (L[0] && L[0].d.v) || []) cum.push((soma += t));
+  const voltaEm = (t) => { const i = cum.findIndex((c) => c >= t); return i < 0 ? Math.max(1, cum.length) : i + 1; };
+  const lista = (A.eventos || []).map((e) => ({ t: e.t, v: e.v || voltaEm(e.t), tipo: tipoDe(e.x), ico: emojiDe(e.x), txt: semEmoji(e.x), id: e.id, f: e.f, cor: e.id && porId.get(e.id) ? porId.get(e.id).cor : null }));
+  // o rádio: a hora do navegador vira a do servidor (sNow), e só entra o que caiu dentro desta corrida
+  const fim = Math.max(soma, ...lista.map((e) => e.t), 1), desvio = sNow() - Date.now();
+  if (S.startAt && window.Radio && window.Radio.historico) for (const r of window.Radio.historico()) {
+    const t = (r.em + desvio - S.startAt) / 1000; if (t < 0 || t > fim + 30) continue;
+    lista.push({ t: Math.round(t * 10) / 10, v: voltaEm(t), tipo: "radio", ico: "📻", txt: r.texto, id: null, f: null, cor: null });
+  }
+  lista.sort((a, b) => a.t - b.t); lista.forEach((e, i) => { e.i = i; });
+  return { lista, fim: Math.max(fim, ...lista.map((e) => e.t)), cum };
+}
+const fora = (e) => filtro !== "tudo" && filtro !== e.tipo;
+function momentosHTML(M, A) {
+  const { lista, fim, cum } = M, W = 760, H = 46, x = (t) => 12 + (t / fim) * (W - 24);
+  const conta = {}; for (const e of lista) conta[e.tipo] = (conta[e.tipo] || 0) + 1;
+  const filtros = [["tudo", "Tudo", lista.length], ...Object.keys(TIPOS).filter((k) => conta[k]).map((k) => [k, TIPOS[k].rot, conta[k]])];
+  const sc = faixasSC(A.sc).map(([p, q]) => { const a = p > 1 ? cum[p - 2] || 0 : 0, b = cum[q - 1] || fim; return `<rect class="ra-sc" x="${x(a).toFixed(1)}" y="6" width="${Math.max(2, x(b) - x(a)).toFixed(1)}" height="${H - 18}"/>`; }).join("");
+  const cada = Math.max(1, Math.ceil(cum.length / 12));
+  const voltas = cum.map((c, i) => ((i + 1) % cada === 0 || i === cum.length - 1 ? `<line class="ra-grade" x1="${x(c).toFixed(1)}" x2="${x(c).toFixed(1)}" y1="6" y2="${H - 12}"/><text class="ra-eixo" x="${x(c).toFixed(1)}" y="${H - 1}" text-anchor="middle">V${i + 1}</text>` : "")).join("");
+  const itens = lista.length ? lista.map((e) => `<li data-ev="${e.i}" tabindex="0" style="--c:${TIPOS[e.tipo].cor};--p:${e.cor || "transparent"}" class="${fora(e) ? "fora" : ""}"><span class="ra-mom-v">V${e.v}<small>${mmss(e.t)}</small></span><i>${h(e.ico)}</i><span class="ra-mom-txt">${h(e.txt)}</span>${e.f != null ? `<b class="ra-mom-pin" title="Tem lugar na pista">●</b>` : ""}</li>`).join("") : `<li class="vazio">Nada anotado nesta corrida.</li>`;
+  return `<div class="ra-mom">
+    <div class="ra-mom-palco"><div class="ra-mini"></div><div class="ra-dica ra-mom-dica" hidden></div>
+      <div class="ra-mom-barra"><button type="button" class="ra-play" aria-label="Refazer a corrida">▶</button><small>Arraste para girar · roda para aproximar · clique num pino</small></div></div>
+    <div class="ra-mom-lado"><div class="ra-filtros" role="group" aria-label="Filtrar os momentos">${filtros.map(([k, r, n]) => `<button type="button" data-filtro="${k}" class="${filtro === k ? "on" : ""}" style="--c:${(TIPOS[k] || {}).cor || "#ffffff"}">${r} <small>${n}</small></button>`).join("")}</div>
+      <ol class="ra-mom-lista">${itens}</ol><small class="ra-legenda">Dois cliques num momento de outro piloto: compara o ritmo com ele.</small></div>
+    <div class="ra-graf ra-tempo"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Linha do tempo da corrida">${sc}${voltas}<line class="ra-grade" x1="12" x2="${W - 12}" y1="22" y2="22"/>
+      ${lista.map((e) => `<circle class="ra-ponto ${fora(e) ? "fora" : ""}" data-ev="${e.i}" cx="${x(e.t).toFixed(1)}" cy="22" r="5" style="--c:${TIPOS[e.tipo].cor}"><title>V${e.v} · ${h(e.txt)}</title></circle>`).join("")}
+      <line class="ra-cabeca" x1="12" x2="12" y1="4" y2="${H - 12}" style="display:none"/></svg></div></div>`;
+}
+function ligarMomentos(box, S, m, A, L, idA, escolher) {
+  const M = momentos(S, A, L), { lista, fim } = M, pista = A.pista || S.config.pista;
+  const palco = box.querySelector(".ra-mini"), dica = box.querySelector(".ra-mom-dica"), ol = box.querySelector(".ra-mom-lista"), svg = box.querySelector(".ra-tempo svg");
+  const W = 760, xT = (t) => 12 + (t / fim) * (W - 24), cabeca = svg.querySelector(".ra-cabeca"), meu = L.find((s) => s.id === idA);
+  const visiveis = (ate = Infinity) => lista.filter((e) => e.f != null && e.t <= ate && !fora(e)).map((e) => ({ id: e.i, f: e.f, cor: TIPOS[e.tipo].cor, alto: e.tipo === "batida" ? 5 : 3.6 }));
+  const G = window.GpInfo, curvas = G && G.get ? G.get(pista).curvas || [] : [];
+  const curvaPerto = (f) => { let c = null, d = 0.035; for (const k of curvas) { const dd = Math.min(Math.abs(k.f - f), 1 - Math.abs(k.f - f)); if (dd < d) { d = dd; c = k; } } return c; };
+  const mostrar = (txt, xy, de) => { if (!txt || !xy) { dica.hidden = true; return; } dica.dataset.de = de || ""; dica.innerHTML = txt; dica.hidden = false; dica.style.left = Math.max(4, Math.min(xy.x + 14, palco.clientWidth - dica.offsetWidth - 4)) + "px"; dica.style.top = Math.max(4, xy.y - dica.offsetHeight - 12) + "px"; };
+  let escolhido = null;
+  const acender = (i) => {
+    box.querySelectorAll(".ra-mom-lista li.hi, .ra-ponto.hi").forEach((x) => x.classList.remove("hi"));
+    if (i == null) { if (mini) mini.destacar(null); return; }
+    box.querySelectorAll(`[data-ev="${i}"]`).forEach((x) => x.classList.add("hi"));
+    const li = ol.querySelector(`li[data-ev="${i}"]`);
+    if (li) { const topo = li.offsetTop - ol.offsetTop; if (topo < ol.scrollTop || topo > ol.scrollTop + ol.clientHeight - li.offsetHeight) ol.scrollTop = topo - ol.clientHeight / 2; }
+    if (mini) mini.destacar(i);
+  };
+  const texto = (e) => { const c = e.f != null ? curvaPerto(e.f) : null; return `<small>Volta ${e.v} · ${mmss(e.t)}</small><br>${h(e.ico)} ${h(e.txt)}${c ? `<br><span class="ra-tag">perto da curva ${c.n}${c.nome ? ` · ${h(c.nome)}` : ""}</span>` : ""}`; };
+  const escolherEv = (i) => {
+    const e = lista[i]; if (!e) return; escolhido = i; acender(i);
+    box.querySelectorAll(".ra-mom-lista li.sel").forEach((x) => x.classList.remove("sel")); const li = ol.querySelector(`li[data-ev="${i}"]`); if (li) li.classList.add("sel");
+    if (mini) mini.focar(e.f != null ? e.f : null);
+    cabeca.style.display = ""; cabeca.setAttribute("x1", xT(e.t)); cabeca.setAttribute("x2", xT(e.t));
+  };
+  mini = criarMiniatura(palco, pista, {
+    cor: meu ? meu.cor : null,
+    aoMarcador: (id, como, xy) => { if (id == null) { acender(escolhido); mostrar(null); return; } acender(id); mostrar(texto(lista[id]), xy, "pino"); if (como === "clique") escolherEv(id); },
+    aoPassar: (p) => { if (!p) { if (dica.dataset.de === "pista") mostrar(null); return; } const c = curvaPerto(p.f); mostrar(`<small>${Math.round(p.f * 100)}% da volta</small>${c ? `<br>Curva ${c.n}${c.nome ? ` · ${h(c.nome)}` : ""}` : ""}`, p, "pista"); },
+  });
+  if (!mini) { palco.classList.add("sem3d"); palco.innerHTML = window.GpSobre ? window.GpSobre.mapaSvg(pista, "sn-sobre-svg ra-mapa2d") : ""; }
+  else { mini.marcadores(visiveis()); if (curvas.length) mini.curvas(curvas); }
+  // a lista e a linha do tempo acendem e escolhem os momentos
+  const deEv = (ev) => { const a = ev.target.closest && ev.target.closest("[data-ev]"); return a ? +a.dataset.ev : null; };
+  for (const alvo of [ol, svg]) {
+    alvo.addEventListener("pointerover", (ev) => { const i = deEv(ev); if (i != null) acender(i); });
+    alvo.addEventListener("pointerleave", () => acender(escolhido));
+    alvo.addEventListener("click", (ev) => { const i = deEv(ev); if (i != null) escolherEv(i); });
+  }
+  ol.addEventListener("keydown", (ev) => { if (ev.key !== "Enter" && ev.key !== " ") return; const i = deEv(ev); if (i != null) { ev.preventDefault(); escolherEv(i); } });
+  ol.addEventListener("dblclick", (ev) => { const i = deEv(ev), e = i != null ? lista[i] : null; if (e && e.id && e.id !== idA) escolher(e.id); });
+  box.querySelectorAll("[data-filtro]").forEach((bt) => { bt.onclick = () => { filtro = bt.dataset.filtro; desenhar(box, S, m, A); }; });
+  // ▶: a corrida em 14 s — os pinos aparecem na hora em que aconteceram, a cabeça anda na linha do tempo e o último momento acende
+  const play = box.querySelector(".ra-play");
+  play.onclick = () => {
+    if (tocar) { cancelAnimationFrame(tocar.raf); tocar = null; play.textContent = "▶"; if (mini) mini.marcadores(visiveis()); return; }
+    play.textContent = "❚❚"; if (mini) { mini.marcadores([]); mini.focar(null); }
+    const DUR = 14000, t0 = performance.now(); let mostrados = -1;
+    const passo = (agora) => {
+      if (!box.isConnected || !tocar) return;
+      const u = Math.min(1, (agora - t0) / DUR), tt = u * fim, vis = visiveis(tt);
+      cabeca.style.display = ""; cabeca.setAttribute("x1", xT(tt)); cabeca.setAttribute("x2", xT(tt));
+      if (vis.length !== mostrados) { mostrados = vis.length; if (mini) mini.marcadores(vis); const ult = lista.filter((e) => e.t <= tt && !fora(e)).at(-1); if (ult) acender(ult.i); }
+      if (u >= 1) { tocar = null; play.textContent = "▶"; return; }
+      tocar.raf = requestAnimationFrame(passo);
+    };
+    tocar = { raf: requestAnimationFrame(passo) };
+  };
 }

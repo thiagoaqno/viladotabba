@@ -6,7 +6,7 @@
 // ARQUIVO já girado (y para cima, frente +z), medidos nas caixas de cada malha.
 import * as THREE from "three";
 import { aroDaRoda } from "./f1-pintura.js";
-import { extrair, fatiar, juntar, caixaDe, centrar, quaternioDoEixo, faceDoEspelho } from "./f1-2026.js";
+import { extrair, fatiar, juntar, caixaDe, centrar, quaternioDoEixo, faceDoEspelho, camadas } from "./f1-2026.js";
 
 export const CFG_2022 = {
   eixoTras: -0.41,                     // o meio entre o eixo da frente (z ≈ 1,9) e o de trás (z ≈ −2,7)
@@ -58,12 +58,13 @@ export function construir2022(raiz, tam, leve) {
       const y = p.getY(i), ny = n.getY(i), sv = p.getZ(i) - zNariz;
       P[i * 3] = p.getX(i); P[i * 3 + 1] = y; P[i * 3 + 2] = sv; NN[i * 3] = n.getX(i); NN[i * 3 + 1] = ny; NN[i * 3 + 2] = n.getZ(i);
       let m = Math.min(1, Math.max(0, (ny + 0.45) / 0.3)); // a barriga é de carbono
+      if (sv > 3.8 && y > 0.5 && ny < 0) m = 1;             // menos embaixo da asa traseira (a vista dela na folha, f1-pintura.js)
       if (y < 0.1 && sv > 1.15 && sv < 4.05) m = 0;         // o assoalho, entre os eixos
       if (tinta) m *= tinta.getX(i);
       M[i] = m;
     }
     if (tinta) g.deleteAttribute("color");
-    g.setAttribute("pcar", new THREE.BufferAttribute(P, 3)); g.setAttribute("ncar", new THREE.BufferAttribute(NN, 3)); g.setAttribute("mcar", new THREE.BufferAttribute(M, 1)); return g;
+    g.setAttribute("pcar", new THREE.BufferAttribute(P, 3)); g.setAttribute("ncar", new THREE.BufferAttribute(NN, 3)); g.setAttribute("mcar", new THREE.BufferAttribute(M, 1)); g.setAttribute("fcar", new THREE.BufferAttribute(camadas(P, NN, N), 1)); return g;
   };
   D.corpo = comPintura(juntar(restoFontes, { cor: true }));
   if (flapFontes.length) {

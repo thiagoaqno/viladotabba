@@ -1,10 +1,17 @@
-# Marcas de pneu reais e gotas em cima do carro
+# Jeff: o engenheiro que ouve (comando de voz)
 
-- **Marcas dos pneus (`marcas-pista.js`, novo):** uma textura RG na largura × volta inteira, nas mesmas coordenadas da máscara de água (`aguaUv`), que os carros riscam por onde passam (as duas rodas de trás, a ±8 u):
-  - **R, borracha (seco):** o carro que vai de lado (mais de ~4° entre o rumo e a direção em que anda) ou freia além do que o pneu segura deixa a marca, e ela fica. A água tira a marca nova.
-  - **G, traçado secando (molhado):** cada passagem tira um pouco de água por onde as rodas andam. A linha aparece aos poucos com o tráfego, a chuva forte molha tudo de novo (~1 min) e a pista seca zera a linha.
-  - Tudo calculado no navegador, pelas posições desenhadas de cada carro (o meu e os outros). A textura sobe para a placa no máximo 4 vezes por segundo.
-- **Asfalto (`agua-pista.js`):** lê `uMarcas`: a borracha escurece o asfalto sempre, e o traçado secando tira água no molhado. O rastro seco que andava colado atrás dos carros perto da câmera saiu (`rastro = 0` em `clima-visual.js`). A chave do programa vai para `agua-pista-3`.
-- **Gotas em cima do carro (`gotas-carro.js`, novo):** gotinhas paradas nas superfícies viradas para cima do carro que a câmera segue (saem dos vértices do modelo, uma vez por modelo, sem rodas e sem piloto). Aparecem aos poucos enquanto chove (o nível sobe em ~30 s) e somem devagar quando para (~90 s). O material entra no aquecimento da chuva.
-- **Gotas na tela (`clima-visual.js`):** só na câmera de cockpit (na de trás eram 40%: agora as gotas ficam no carro) e vão juntando aos poucos (~25 s), em vez de aparecerem de uma vez.
-- Os números (o ângulo da derrapagem, a freada, os tempos) são palpites, não medidos: conferir jogando.
+- **Como usa:** segure **G** (ação "Falar com o Jeff" na tela Controles, remapeável; no controle, o botão que a pessoa escolher) e fale; ao soltar, o Jeff faz e responde no rádio e por escrito na tela. O reconhecimento é o do navegador (Web Speech API, `pt-BR`): Chrome, Edge e o programa de PC (que abre no Edge). Precisa de internet; o microfone é pedido na primeira vez. No Firefox avisa que não tem.
+- **`voz.js` (novo):** segura o microfone enquanto a tecla está apertada e mostra o que está ouvindo; ao soltar, manda a frase ao Jeff.
+- **`jeff-comandos.js` (novo, só a conta):** entende as frases do Thiago e jeitos parecidos de dizer, ignorando o "Jeff" no começo:
+  - "ir para boxes nesta volta" / "box" / "boxes" / "quero ir para os boxes" → pede o box (com o pneu que estava escolhido; "box, macio" escolhe junto)
+  - "colocar pneus macio / médio / duro / intermediário / chuva" → pede o box com esse pneu (o mesmo das teclas 1 a 5)
+  - "atualização completa" → posição, voltas, pneu, dano, carros da frente e de trás e o tempo
+  - "piloto na frente" / "quem tá na (minha) frente" e "piloto atrás" / "quem tá atrás de mim" → o nome, a diferença e o pneu
+  - "status do pneu" / "como tá meu pneu" / "como estão meus pneus" e "condição do veículo" / "como tá meu carro"
+  - "previsão do tempo" → o tempo agora e em que volta a chuva começa ou para (o estrategista fala a volta no rádio)
+  - "diferença para frente" e "diferença para o companheiro de equipe"
+- **`mfd.js` `executarJeff`:** faz o mesmo que o MFD e as teclas (pedido de box, rádio de pneus e carro, rivais) e responde num aviso "🎧 Jeff: …". `hud.js` ganhou `acoes.infoRival` e `acoes.infoCompanheiro` (o nome e a diferença pela cronometragem).
+- **Falas novas (`radio/falas.js`):** `jeffnaoentendi` e os pedaços `companheirofrente` / `companheirotras`. **Os mp3 saem do `gerar-radio.bat`** (ele só gera o que falta); até lá essas respostas ficam só por escrito.
+- **Conserto (`novidades.json`):** na `main` o arquivo estava quebrado: na junção dos PRs de 13/nov sumiram o `]` e o `},` entre quatro entradas, e o JSON não abria (a pergunta de atualização do programa de PC lê dele). Agora abre de novo, com as entradas de antes inteiras.
+- **Conserto (`hud.js`):** o cartão do rádio cortava o nome do piloto na letra "s" (`split(/s+/)`, a barra tinha sumido); agora corta nos espaços (`split(/\s+/)`).
+- Sem botão na tela do celular por enquanto (lá não há tecla para segurar).

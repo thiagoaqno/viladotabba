@@ -8,6 +8,12 @@ const F1 = require("./public/corrida/f1-regras.js");
 const Robos = require("./corrida-robos.js");
 
 const CONTAGEM_MS = 4000, INTERVALO_MS = 9000, GRACA_MS = 30000, SO_ROBOS_MS = 8000;
+// entre as sessões (Q1 → Q2 → Q3) a próxima só abre quando todos os humanos que passaram apertam "Largar" na tela de ajustes (o Thiago, 2026-11-14:
+// "não pode começar sozinha"); se alguém sumir, ela abre sozinha depois de PAUSA_MAX_MS, para a sala com os amigos nunca ficar presa
+const PAUSA_MAX_MS = 180000;
+const conectado = (p) => p && !p.bot && p.sockets && p.sockets.size;
+// quem precisa confirmar a pausa agora: antes da corrida, todos os conectados; entre as sessões, só os conectados que seguem na próxima
+const aguardadosDe = (room) => { const q = room.quali; if (!q) return []; const ids = q.grid ? room.order : (q.fechadas.at(-1)?.passam || []).map((x) => x.id); return ids.filter((id) => conectado(room.players[id])); };
 // o Q1 espera os humanos conectados carregarem a pista (o navegador manda `carregou` depois do aquecimento: jogo.js), no máximo CARGA_MAX_MS:
 // sem isso a sessão abria com os navegadores ainda montando a pista e compilando, e cada um começava num momento
 const CARGA_MAX_MS = 40000;
@@ -28,7 +34,7 @@ function publico(room) {
   const q = room.quali; if (!q) return null;
   const nomeDe = (i) => `Q${i + 1}`;
   return { nome: q.nome, i: q.i, total: q.sessoes.length, startAt: q.startAt, fimAt: q.fimAt, pausa: !!q.pausaAte, carregando: !!q.carga, pausaAte: q.pausaAte, ativos: q.ativos, confirmados: [...q.confirmados],
-    aguardados: room.order.filter((id) => { const p = room.players[id]; return p && !p.bot && p.sockets.size; }),
+    aguardados: aguardadosDe(room),
     pronto: q.ativos.filter((id) => room.players[id] && room.players[id].qPronto), grid: q.grid,
     tabela: tabela(room).filter((x) => x.tempo != null).map((x) => ({ id: x.id, tempo: x.tempo })),
     fechadas: q.fechadas.map((f, i) => ({ nome: nomeDe(i), ordem: f.ordem.map((x) => ({ id: x.id, tempo: x.tempo })), eliminados: f.eliminados.map((x) => x.id) })) };
@@ -97,8 +103,9 @@ function fechar(room, deps) {
   clearTimeout(q.fim); clearTimeout(q.corte); clearInterval(q.tique);
   const ultima = q.i >= q.sessoes.length - 1, nome = (id) => (room.players[id] ? room.players[id].name : "?");
   const f = F1.fecharSessao(tabela(room, Infinity), ultima ? q.ativos.length : q.sessoes[q.i + 1]);
-  q.fechadas.push(f);
-  q.pausaAte = Date.now() + INTERVALO_MS;
+  q.fechadas.push(f); q.confirmados = new Set();
+  const comHumanos = room.order.some((id) => conectado(room.players[id]));
+  q.pausaAte = Date.now() + (comHumanos ? PAUSA_MAX_MS : INTERVALO_MS);
   const tempo = (x) => (x.tempo == null ? "sem tempo" : `${Math.floor(x.tempo / 60)}:${(x.tempo % 60).toFixed(3).padStart(6, "0")}`);
   if (!ultima) deps.log(room, `🔴 ${q.nome} acabou. Eliminados: ${f.eliminados.map((x) => nome(x.id)).join(", ")}.`);
   else {
@@ -106,28 +113,24 @@ function fechar(room, deps) {
     deps.log(room, `🏁 ${q.nome} acabou. Pole: ${nome(f.ordem[0].id)} (${tempo(f.ordem[0])}).`);
   }
   deps.broadcast(room);
-  if (!ultima || !room.order.some((id) => { const p = room.players[id]; return p && !p.bot && p.sockets.size; })) {
-    q.proxima = setTimeout(() => {
-      if (room.quali !== q) return;
-      if (ultima) {
-        if (!room.order.some((id) => { const p = room.players[id]; return p && !p.bot && p.sockets.size; })) deps.largar(room, q.grid);
-      }
-      else { q.i++; abrirSessao(room, deps); }
-    }, INTERVALO_MS);
-  }
+  // sem humanos, segue sozinho como antes; com humanos, entre as sessões espera o "Largar" de todos (ou o fim da pausa)
+  if (!comHumanos) q.proxima = setTimeout(() => { if (room.quali !== q) return; if (ultima) deps.largar(room, q.grid); else { q.i++; abrirSessao(room, deps); } }, INTERVALO_MS);
+  else if (!ultima) q.proxima = setTimeout(() => { if (room.quali === q && q.pausaAte) { q.i++; abrirSessao(room, deps); } }, PAUSA_MAX_MS);
 }
+// o "Largar" da tela de ajustes: antes da corrida (com o grid) e, agora, também entre as sessões
 function confirmarLargada(room, p, deps) {
   const q = room.quali;
-  if (!q || !q.grid || p.bot || q.confirmados.has(p.id)) return;
+  if (!q || !q.pausaAte || q.carga || p.bot || q.confirmados.has(p.id)) return;
   q.confirmados.add(p.id);
   verificarLargada(room, deps);
 }
 function verificarLargada(room, deps) {
   const q = room.quali;
-  if (!q || !q.grid) return;
-  const humanos = room.order.map((id) => room.players[id]).filter((p) => p && !p.bot && p.sockets.size);
-  if (!humanos.length || humanos.every((p) => q.confirmados.has(p.id))) deps.largar(room, q.grid);
-  else deps.broadcast(room);
+  if (!q || !q.pausaAte || q.carga) return;
+  const esperados = aguardadosDe(room);
+  if (esperados.length && !esperados.every((id) => q.confirmados.has(id))) return deps.broadcast(room);
+  if (q.grid) return deps.largar(room, q.grid);
+  if (q.fechadas.length === q.i + 1) { clearTimeout(q.proxima); q.i++; abrirSessao(room, deps); } // todos prontos: a próxima sessão abre já
 }
 // Um setor novo de quem está na pista (o mesmo caminho da corrida: só vale o próximo, na ordem). Passando pela linha de
 // chegada: a primeira vez abre a volta lançada; a seguinte fecha e vale o melhor tempo. Volta rápida demais é atalho.
@@ -148,4 +151,4 @@ function aoSetor(room, p, s, quando) { // (`quando`: a hora do passo da física 
 }
 const pronto = (room, p) => { if (room.quali && room.quali.ativos.includes(p.id)) p.qPronto = true; };
 
-module.exports = { iniciar, carregou, publico, tabela, aoSetor, verificarFim, verificarLargada, pronto, confirmarLargada, cancelar, fechar, CONTAGEM_MS, INTERVALO_MS };
+module.exports = { iniciar, carregou, publico, tabela, aoSetor, verificarFim, verificarLargada, pronto, confirmarLargada, cancelar, fechar, CONTAGEM_MS, INTERVALO_MS, PAUSA_MAX_MS };

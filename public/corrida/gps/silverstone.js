@@ -7,6 +7,7 @@
 // Maggotts, Becketts e Chapel 0,58-0,67 · Hangar Straight 0,7-0,8 · Stowe 0,82-0,85 · Vale 0,915-0,93 · Club 0,94-0,97.
 // Campo aberto e plano: sem muro colado, sem serra no horizonte, com a brita de Stowe e de Copse e as sebes inglesas de volta.
 import { cenarioSilverstone, depoisSilverstone } from "../silverstone.js";
+import { cidadeReal } from "../cidade-real.js";
 
 const AZUL = "#1d3f8f", VERMELHO = "#c8102e", BRANCO = "#f4f4f4";
 
@@ -43,7 +44,7 @@ export const GP_SILVERSTONE = {
     { de: 0.815, ate: 0.865, lado: -1, degraus: 8, cor: VERMELHO, encosto: AZUL }, // Stowe
     { de: 0.90, ate: 0.932, lado: -1, degraus: 5, cor: BRANCO, encosto: VERMELHO }, // Vale
   ] },
-  cenario: (tr, ctx) => cenarioSilverstone(tr, ctx), // The Wing, tribunas, aeródromo, pórticos, telões, placas das curvas, campos, aldeias e camping
+  cenario: (tr, ctx) => { cenarioSilverstone(tr, ctx); cidadeReal(tr, ctx, "silverstone"); }, // (+ a cidade real ao fundo, do OpenStreetMap: ../cidade-real.js) // The Wing, tribunas, aeródromo, pórticos, telões, placas das curvas, campos, aldeias e camping
   ambiente: {
     bandeira: [0x012169, 0xc8102e], // a Union Jack: azul e vermelho
     marcas: ["pirelli", "rolex", "britgp", "heineken", "dhl", "aramco", "skysports", "silverstone", "tag", "lenovo"],

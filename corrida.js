@@ -56,7 +56,7 @@ const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "
 const int = (v, d) => { const n = parseInt(v); return Number.isFinite(n) ? n : d; };
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : NaN);
 // o capacete de quem joga (mods.capacete; f1-capacetes.js): só o que o editor oferece, e o nome curto e sem símbolos
-const DESENHOS_CAPACETE = ["faixa", "bandas", "blocos", "cruz", "topo", "asas", "triangulos", "generico"], HEX = /^#[0-9a-f]{6}$/i;
+const DESENHOS_CAPACETE = ["faixa", "bandas", "blocos", "cruz", "topo", "asas", "triangulos", "generico", "chamas", "onda", "degrade", "raio", "xadrez", "estrelas", "listras", "geometrico"], HEX = /^#[0-9a-f]{6}$/i;
 function limparCapacete(c) {
   if (!c || typeof c !== "object") return null;
   const cores = Array.isArray(c.cores) ? c.cores.slice(0, 3) : [];
@@ -656,7 +656,7 @@ module.exports = function attachCorrida(io) {
       const { room, me } = ctx();
       if (!room) return fail(cb, "Você não está numa sala.");
       const type = data.type, isHost = me && room.host === me.id;
-      if (room.temporada && !["qpronto", "confirmarLargada", "montagemGrid", "box", "batida", "sector", "pneu", "tvpular", "carregou"].includes(type)) return fail(cb, "Este GP é controlado pela sede da temporada.");
+      if (room.temporada && !["qpronto", "confirmarLargada", "montagemGrid", "box", "batida", "sector", "pneu", "tvpular", "carregou", "mods"].includes(type)) return fail(cb, "Este GP é controlado pela sede da temporada.");
       const err = (() => {
         if (type === "color") {
           if (!me || room.phase === "race") return "Só dá para trocar fora da corrida.";
@@ -673,7 +673,7 @@ module.exports = function attachCorrida(io) {
         if (type === "mods") { // a pintura do carro
           if (!me || room.phase === "race") return "Só dá para mexer no carro fora da corrida.";
           const d = data.mods || {}, n = { ...me.mods };
-          for (const k of Object.keys(T.MODS)) if (T.MODS[k][d[k]]) n[k] = d[k];
+          if (!room.temporada) for (const k of Object.keys(T.MODS)) if (T.MODS[k][d[k]]) n[k] = d[k]; // (na carreira, a pintura é a da equipe: só o capacete muda)
           if ("capacete" in d) n.capacete = limparCapacete(d.capacete); // o capacete de quem joga (f1-capacetes.js)
           for (const k of Object.keys(n)) if (!T.MODS[k] && k !== "capacete") delete n[k]; // opções antigas (rodas, aerofólio, faixa) saem
           if (!n.capacete) delete n.capacete;
@@ -753,11 +753,11 @@ module.exports = function attachCorrida(io) {
           Quali.pronto(room, me); Quali.verificarFim(room, classificacao); return;
         }
         if (type === "confirmarLargada") {
-          if (room.phase !== "quali" || !room.quali || !room.quali.grid) return "ignorado";
+          if (room.phase !== "quali" || !room.quali || !room.quali.pausaAte) return "ignorado"; // (o grid final e, agora, as pausas entre as sessões)
           Quali.confirmarLargada(room, me, classificacao); return;
         }
         if (type === "montagemGrid") {
-          if (!room.temporada || room.phase !== "quali" || !room.quali?.pausaAte || !(room.quali.grid || room.quali.nome === "Q2")) return "A montagem só pode mudar após o Q2 ou no grid final da carreira.";
+          if (!room.temporada || room.phase !== "quali" || !room.quali?.pausaAte || room.quali.carga) return "A montagem só muda nas pausas da classificação (a tela de ajustes).";
           if (room.quali.confirmados.has(me.id)) return "Você já confirmou a largada.";
           if (!me.equipe || !room.montagens?.[me.equipe]) return "Equipe inválida.";
           const v = Equipes.validar(me.equipe, data.montagem, room.bonusMontagem?.[me.equipe] || 0);

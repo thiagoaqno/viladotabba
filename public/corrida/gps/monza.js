@@ -6,6 +6,7 @@
 // Lesmo 1 e 2 0,39-0,47 · Serraglio 0,50-0,57 (o anel da Sopraelevata passa por cima, em 0,53) · Variante Ascari 0,64-0,69 · reta de trás
 // 0,69-0,845 · Parabolica (Curva Alboreto) 0,845-0,92. O sol é o de fim de tarde de setembro (cena.js).
 import { cenarioMonza, depoisMonza, TIFOSI } from "../monza.js";
+import { cidadeReal } from "../cidade-real.js";
 
 const VERMELHO = "#c8102e", BRANCO = "#f4f4f2";
 const tribuna = (de, ate, lado, degraus, o = {}) => ({ de, ate, lado, degraus, cor: VERMELHO, encosto: BRANCO, torcida: TIFOSI, ...o });
@@ -39,7 +40,7 @@ export const GP_MONZA = {
     tribuna(0.636, 0.668, 1, 7), // a Variante Ascari
     tribuna(0.72, 0.77, -1, 6, { cobertura: false }), // a reta de trás
   ] },
-  cenario: (tr, ctx) => cenarioMonza(tr, ctx), // a reta dos boxes, a Sopraelevata, a Parabolica e as placas das curvas
+  cenario: (tr, ctx) => { cenarioMonza(tr, ctx); cidadeReal(tr, ctx, "monza"); }, // (+ a cidade real ao fundo, do OpenStreetMap: ../cidade-real.js) // a reta dos boxes, a Sopraelevata, a Parabolica e as placas das curvas
   ambiente: {
     marcas: ["ferrari", "pirelli", "heineken", "rolex", "aramco", "dhl", "iveco", "peroni", "gpit", "aws", "lenovo", "tag", "msc", "qatar"],
     outdoors: ["ferrari", "pirelli", "peroni", "iveco", "heineken", "gpit", "rolex", "aramco"],

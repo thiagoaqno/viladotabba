@@ -1,5 +1,16 @@
 [
   {
+    "id": "2026-11-14-telas-sessoes-capacetes",
+    "data": "2026-11-14",
+    "itens": [
+      "Tela pós-corrida nova: o pódio, a classificação (com o logo e os pontos de cada um; passe o mouse para ver o grid, as paradas e a melhor volta) e a análise da corrida lado a lado, e a faixa com o seu resultado",
+      "Tela pós-classificação nova: os 3 primeiros em cartões com a foto e a tabela com os tempos do Q1, do Q2 e do Q3",
+      "Entre o Q1, o Q2 e o Q3 a sessão não começa sozinha: o botão \"Ajustes do carro\" leva ao acerto, aos pontos do carro e (antes da corrida) ao pneu, e o botão \"Largar\" abre a próxima sessão quando todos estiverem prontos",
+      "Carreira: o capacete escolhido na Central agora vai para o carro; 8 desenhos novos de capacete (Chamas, Onda, Degradê, Raio, Xadrez, Estrelas, Listras e Geométrico)",
+      "Monza e Silverstone com a cidade real ao fundo do cenário (os prédios de verdade, do OpenStreetMap)"
+    ]
+  },
+  {
     "id": "2026-11-14-satelite",
     "data": "2026-11-14",
     "itens": [

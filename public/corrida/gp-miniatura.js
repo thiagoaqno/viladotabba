@@ -47,7 +47,7 @@ function parede(v, n, cor) {
   return new THREE.Mesh(g, m);
 }
 
-// `op`: { cor (a da equipe, para o carrinho e o realce), aoPassar({ f, x, y } | null), aoMarcador(id, "passa" | "clique" | null, { x, y }), aoCarro(id), corredor (true) }
+// `op`: { tema ("claro" | "escuro": a base nas cores da Central da carreira), cor (a da equipe, para o carrinho e o realce), aoPassar({ f, x, y } | null), aoMarcador(id, "passa" | "clique" | null, { x, y }), aoCarro(id), corredor (true) }
 export function criarMiniatura(caixa, pista, op = {}) {
   const t = window.Pistas && window.Pistas.PISTAS[pista]; if (!t || !caixa) return null;
   let renderer;
@@ -67,18 +67,21 @@ export function criarMiniatura(caixa, pista, op = {}) {
 
   // a base: um disco escuro com a grade fininha
   const raio = Math.hypot(T.larg, T.prof) / 2 + 12;
-  const disco = new THREE.Mesh(new THREE.CircleGeometry(raio, 72), new THREE.MeshBasicMaterial({ color: 0x0b1118, transparent: true, opacity: 0.92 }));
+  // as cores da base: a escura de sempre (a tela do resultado, a ficha da sala) ou as da Central da carreira (`op.tema`: "claro" ou "escuro")
+  const TEMAS = { padrao: { disco: 0x0b1118, g1: 0x1d2a38, g2: 0x141e29, asfalto: 0x313c4a, parede: "#7fe3ff" }, claro: { disco: 0xe4dfd8, g1: 0xc9c2b8, g2: 0xd6d0c7, asfalto: 0x3a4250, parede: "#1f86b0" }, escuro: { disco: 0x1b1c20, g1: 0x2c2e33, g2: 0x232529, asfalto: 0x454c58, parede: "#7fe3ff" } };
+  const P = TEMAS[op.tema] || TEMAS.padrao;
+  const disco = new THREE.Mesh(new THREE.CircleGeometry(raio, 72), new THREE.MeshBasicMaterial({ color: P.disco, transparent: true, opacity: 0.92 }));
   disco.rotation.x = -Math.PI / 2; cena.add(disco);
-  const grade = new THREE.GridHelper(raio * 2, 24, 0x1d2a38, 0x141e29); grade.position.y = 0.02; grade.material.transparent = true; grade.material.opacity = 0.6; cena.add(grade);
+  const grade = new THREE.GridHelper(raio * 2, 24, P.g1, P.g2); grade.position.y = 0.02; grade.material.transparent = true; grade.material.opacity = 0.6; cena.add(grade);
   const borda = new THREE.Mesh(new THREE.RingGeometry(raio - 0.4, raio, 96), new THREE.MeshBasicMaterial({ color: corEq, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
   borda.rotation.x = -Math.PI / 2; borda.position.y = 0.04; cena.add(borda);
 
   // a pista: o asfalto, a parede do relevo (com a sombra no chão) e a linha dos setores por cima
-  const asfalto = new THREE.Mesh(faixa(v, n, 1.25, 0, null), new THREE.MeshBasicMaterial({ color: 0x313c4a, side: THREE.DoubleSide }));
+  const asfalto = new THREE.Mesh(faixa(v, n, 1.25, 0, null), new THREE.MeshBasicMaterial({ color: P.asfalto, side: THREE.DoubleSide }));
   cena.add(asfalto);
   const sombra = new THREE.Mesh(faixa(v.map((p) => new THREE.Vector3(p.x, 0.06, p.z)), n, 1.6, 0, null), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45, depthWrite: false }));
   cena.add(sombra);
-  if (T.temRelevo) cena.add(parede(v, n, "#7fe3ff"));
+  if (T.temRelevo) cena.add(parede(v, n, P.parede));
   const setores = new THREE.Mesh(faixa(v, n, 0.32, 0.05, (i) => COR_SETOR[setorDe(i, n)]), new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
   cena.add(setores);
   // a largada: uma barra quadriculada atravessando a pista

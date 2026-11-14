@@ -256,6 +256,9 @@ function pintar(alvo, html) {
   const molde = document.createElement("template"); molde.innerHTML = html;
   if (!alvo.querySelector(":scope > .cx")) { alvo.replaceChildren(molde.content); alvo._cxHtml = html; return; }
   const juntar = (a, b) => {
+    // um bloco "vivo" (data-cx-vivo: a análise 3D, com o canvas e o que o módulo dela desenhou) fica como está enquanto a marca for a mesma;
+    // marca nova (outro GP, outra sub-aba, outro tema) troca o bloco inteiro, e o módulo monta de novo (central-analise.js, montar3d)
+    if (a.nodeType === 1 && b.nodeType === 1 && (a.dataset.cxVivo || b.dataset.cxVivo)) { if (a.dataset.cxVivo !== b.dataset.cxVivo) a.replaceWith(b.cloneNode(true)); return; }
     if (a.nodeType !== b.nodeType || (a.nodeType === 1 && a.tagName !== b.tagName) || (a.nodeType === 1 && a.dataset.cxGraf !== b.dataset.cxGraf)) { a.replaceWith(b.cloneNode(true)); return; }
     if (a.nodeType !== 1) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
     for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);

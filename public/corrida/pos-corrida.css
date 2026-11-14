@@ -24,6 +24,8 @@
 .ra-mira{stroke:#ffffff70;stroke-width:1;stroke-dasharray:3 3;pointer-events:none}
 .ra-serie polyline{fill:none;stroke:var(--c);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;opacity:.75;transition:opacity .12s,stroke-width .12s}
 .ra-serie polyline.tr{stroke-dasharray:6 4}
+.ra-serie polyline.est,.ra-serie.a polyline.est,.ra-serie.b polyline.est{stroke-dasharray:1.5 4;stroke-width:1.8;opacity:.6}.ra-graf.foco .ra-serie.on polyline.est{opacity:.85;stroke-width:2.4}
+.ra-dnf{fill:var(--c);font:800 12px var(--display,"Barlow Condensed",sans-serif)}
 .ra-serie text{fill:var(--c);font:800 10.5px var(--display,"Barlow Condensed",sans-serif);opacity:.85}
 .ra-serie .ra-pit{fill:#0a0e14;stroke:var(--c);stroke-width:1.6}
 .ra-serie.a polyline,.ra-serie.b polyline{stroke-width:3;opacity:1}
@@ -195,12 +197,49 @@ body.vc-on{overflow:hidden}
 @media (max-width:640px){.vc-cartao{left:12px;right:12px;width:auto;bottom:44px}.vc-ponto span{display:none}.vc-ajuda{white-space:normal;text-align:center;width:90%}}
 @media (prefers-reduced-motion:reduce){.vc,.vc-cartao,.vc-ponto i{animation:none}}
 
-/* ---------- a análise de um GP guardado na carreira (analise-salva.js): a mesma caixa da tela do resultado, por cima da Central ---------- */
-body.as-on{overflow:hidden}
-.as{position:fixed;inset:0;z-index:8000;display:grid;place-items:start center;overflow:auto;padding:clamp(8px,3vh,32px) clamp(8px,2vw,24px);background:#02040acc;backdrop-filter:blur(6px);animation:vcEntra .25s ease both}
-.as-caixa{width:min(1100px,100%);color:#e8edf4}
-.as-topo{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:-6px}
-.as-topo small{color:#aab4c0;font:700 11px var(--body,system-ui,sans-serif);letter-spacing:.16em;text-transform:uppercase}
-.as-topo h2{margin:2px 0 0;font:900 italic clamp(24px,3.6vw,40px)/1 var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;border-left:5px solid var(--eq);padding-left:10px}
-.as-x{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid #ffffff40;background:#05080cb3;color:#fff;font-size:17px;cursor:pointer;transition:background .15s,transform .15s}
-.as-x:hover,.as-x:focus-visible{background:var(--eq);transform:rotate(90deg);outline:none}
+/* ---------- a análise 3D dentro da Central da carreira (.ra-cx: central-analise.js + analise-salva.js) no tema dela ----------
+   Tudo sai dos tokens da Central (--cx-*: claro ou escuro pela engrenagem do topo) e da cor da equipe (--eq, --eq-txt, --eq-at). */
+body.cx-on .ra-cx{--eq:var(--eq-at);--eq6:color-mix(in srgb,var(--eq-at) 65%,transparent);--eq3:color-mix(in srgb,var(--eq-at) 30%,transparent);--eq1:color-mix(in srgb,var(--eq-at) 12%,transparent);margin:clamp(14px,2vh,22px) 0 0;padding:0;border:0;background:none;color:var(--cx-tx)}
+body.cx-on .ra-cx,body.cx-on .ra-cx *{font-family:var(--cx-f)!important}
+body.cx-on .ra-cx .ra-vazio,body.cx-on .ra-cx .ra-legenda,body.cx-on .ra-cx .ra-mom-barra small,body.cx-on .ra-cx .ra-ult-par i{color:var(--cx-tx2);text-shadow:none}
+body.cx-on .ra-cx .ra-vs{font-weight:800;font-size:14px}
+body.cx-on .ra-cx .ra-vs span{background:color-mix(in srgb,var(--c) 14%,transparent)}
+body.cx-on .ra-cx .ra-vs small{color:var(--cx-tx2)}
+/* o palco da miniatura e os gráficos */
+body.cx-on .ra-cx .ra-mom-palco{background:var(--cx-bg2);border:1px solid var(--cx-lin);box-shadow:var(--cx-sombra)}
+body.cx-on .ra-cx .ra-eixo{fill:var(--cx-tx2);font-weight:600}
+body.cx-on .ra-cx .ra-grade{stroke:var(--cx-lin)}
+body.cx-on .ra-cx .ra-mira{stroke:var(--cx-tx2)}
+body.cx-on .ra-cx .ra-sc{fill:color-mix(in srgb,var(--cx-amb) 18%,transparent)}
+body.cx-on .ra-cx .ra-serie .ra-pit,body.cx-on .ra-cx .ra-ponto{fill:var(--cx-bg2)}
+body.cx-on .ra-cx .ra-serie text{font-weight:800}
+body.cx-on .ra-cx .ra-cabeca{stroke:var(--eq-at)}
+body.cx-on .ra-cx .ra-dif.ganha{color:var(--cx-verde)}body.cx-on .ra-cx .ra-dif.perde{color:var(--cx-verm)}
+/* as dicas, os rótulos da pista e o painel da telemetria */
+body.cx-on .ra-cx .ra-dica{background:var(--cx-bg2);color:var(--cx-tx);border:1px solid var(--cx-lin);border-left:3px solid var(--eq-at);box-shadow:var(--cx-sombra)}
+body.cx-on .ra-cx .ra-dica small{color:var(--cx-tx2)}
+body.cx-on .ra-cx .ra-tag{background:var(--cx-hover);color:var(--cx-tx)}
+body.cx-on .ra-cx .mn3-curva{background:var(--cx-bg2);color:var(--cx-tx);border-color:var(--cx-lin)}
+body.cx-on .ra-cx .mn3-curva:hover,body.cx-on .ra-cx .mn3-curva.hi{background:var(--eq);color:var(--eq-txt);border-color:var(--eq)}
+body.cx-on .ra-cx .mn3-carro{background:var(--cx-bg2);color:var(--cx-tx)}
+body.cx-on .ra-cx .mn3-carro.on{background:color-mix(in srgb,var(--c) 30%,var(--cx-bg2))}
+body.cx-on .ra-cx .ra-rep-relogio{text-shadow:none;color:var(--cx-tx)}body.cx-on .ra-cx .ra-rep-relogio small{color:var(--cx-tx2)}
+body.cx-on .ra-cx .ra-tele-l{background:var(--cx-bg2);color:var(--cx-tx);box-shadow:var(--cx-sombra)}
+body.cx-on .ra-cx .ra-tele-v small,body.cx-on .ra-cx .ra-tele-m small,body.cx-on .ra-cx .ra-tele-fora{color:var(--cx-tx2)}
+body.cx-on .ra-cx .ra-tele-pedal i{background:var(--cx-trilho)}
+body.cx-on .ra-cx .ra-tele-pedal i::after{background:var(--cx-verde)}body.cx-on .ra-cx .ra-tele-pedal i.freio::after{background:var(--cx-verm)}
+/* as listas: os momentos, as ultrapassagens e a torre */
+body.cx-on .ra-cx .ra-mom-lista li,body.cx-on .ra-cx .ra-torre li{color:var(--cx-tx);background:linear-gradient(90deg,color-mix(in srgb,var(--p,transparent) 14%,transparent),transparent 40%);border-bottom:1px solid var(--cx-lin)}
+body.cx-on .ra-cx .ra-mom-lista li:hover,body.cx-on .ra-cx .ra-mom-lista li.hi,body.cx-on .ra-cx .ra-mom-lista li:focus-visible,body.cx-on .ra-cx .ra-torre li:hover{background:var(--cx-hover)}
+body.cx-on .ra-cx .ra-mom-lista li.sel,body.cx-on .ra-cx .ra-torre li.b{box-shadow:inset 0 0 0 1px var(--c)}
+body.cx-on .ra-cx .ra-torre li.a{background:color-mix(in srgb,var(--c) 18%,transparent)}
+body.cx-on .ra-cx .ra-mom-v small,body.cx-on .ra-cx .ra-torre span{color:var(--cx-tx2)}
+/* os botões, no jeito da Central: filete, texto em caixa alta, a cor da equipe quando ligado */
+body.cx-on .ra-cx .ra-filtros button,body.cx-on .ra-cx .ra-chip,body.cx-on .ra-cx .ra-rep-vel button{padding:6px 11px;border:1px solid var(--cx-lin);border-radius:0;background:transparent;color:var(--cx-tx2);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transition:background .15s,color .15s,border-color .15s}
+body.cx-on .ra-cx .ra-filtros button{border-bottom:2px solid var(--c)}
+body.cx-on .ra-cx .ra-filtros button small{color:inherit;opacity:.7}
+body.cx-on .ra-cx .ra-filtros button:hover,body.cx-on .ra-cx .ra-chip:hover,body.cx-on .ra-cx .ra-rep-vel button:hover{background:var(--cx-hover);color:var(--cx-tx)}
+body.cx-on .ra-cx .ra-filtros button.on,body.cx-on .ra-cx .ra-chip.on,body.cx-on .ra-cx .ra-rep-vel button.on{background:var(--eq);border-color:var(--eq);color:var(--eq-txt)}
+body.cx-on .ra-cx .ra-play{border:0;border-radius:0;background:var(--eq);color:var(--eq-txt);box-shadow:var(--cx-sombra)}
+body.cx-on .ra-cx .ra-play:hover{background:var(--eq);filter:brightness(1.1);transform:scale(1.06)}
+body.cx-on .ra-cx .ra-rep-tempo input[type=range]{accent-color:var(--eq-at)}

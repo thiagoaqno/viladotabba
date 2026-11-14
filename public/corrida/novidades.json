@@ -1,5 +1,14 @@
 [
   {
+    "id": "2026-11-14-carreira-analise-abas",
+    "data": "2026-11-14",
+    "itens": [
+      "Carreira: a análise 3D agora fica dentro da aba Análise da Central, com Momentos como a análise principal e as abas Posições, Ultrapassagens e Replay ao lado de Visão geral, Voltas, Estratégia e Telemetria",
+      "A análise da carreira nas cores e nos botões da Central, no tema claro ou escuro",
+      "Gráfico das posições: quem tomou volta tem a linha estimada (pontilhada) até a última volta, na posição final; quem abandonou ganha um ✕"
+    ]
+  },
+  {
     "id": "2026-11-14-carreira-pos-corrida",
     "data": "2026-11-14",
     "itens": [

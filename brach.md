@@ -1,27 +1,25 @@
-# O pós-corrida interativo na carreira solo e com os amigos
+# Carreira: a análise 3D dentro da aba Análise, no tema da Central, e as linhas estimadas nas posições
 
-O Thiago pediu que tudo do pós-corrida (#742, #743 e #744) também ficasse na carreira, solo e com os amigos. Na tela do resultado do GP de carreira a análise já aparecia, porque é a mesma sala da Corrida. O que faltava era guardar o GP e mostrar tudo na Central depois: as posições, os momentos, as ultrapassagens, o replay com a telemetria, o ritmo e os pneus, além do guia do GP e da vista do carro.
+Pedido do Thiago depois do #745:
+- o "Replay e análise 3D" deve ficar nas abas da própria aba Análise da Central, com Momentos como a análise principal;
+- tudo no tema da carreira, botões incluídos;
+- no gráfico das posições, as linhas de quem tomou volta devem ir até o fim, estimadas.
 
-## Servidor
+## O que mudou
 
-- **Replay guardado** (migração `054-corrida-replays.sql`, `bd.js`): tabela `corrida_replays` por dono (`solo:<id>` ou `grupo:<código>`), ano e GP.
-  - `meta` guarda as colunas, o passo e o número de amostras; `dados` guarda as amostras de `corrida-gravacao.js` com gzip.
-  - Cada dono fica com os 30 GPs mais recentes, e os replays somem junto quando a carreira é excluída ou a sala do grupo é apagada.
-- `corrida-gravacao.js` ganhou `paraSave(room, chave)`, que troca os ids da sala pelos do save (`voce`, `h:<pessoa>` ou o piloto real) nas ultrapassagens e nas colunas do replay. `corrida-analise.js` faz o mesmo nos momentos.
-- `corrida-temporada.js` e `corrida-temporada-grupo.js` guardam, no fim do GP, as ultrapassagens dentro de `resultado.analise` e o replay na tabela nova. Tudo fica em `try`, como a análise: nunca segura o resultado.
-- Evento novo `replay` ({ ano, gp }) no canal da carreira solo e no da temporada em grupo, só para quem já abriu a carreira ou está na sala.
+- **Sub-abas da Análise** (`temporada/central-analise.js`): Momentos (a padrão), Posições, Ultrapassagens e Replay entram antes de Visão geral, Voltas, Estratégia e Telemetria. O botão "Replay e análise 3D" e a tela por cima da Central saíram.
+- **Bloco vivo** (`temporada/central.js`, `pintar`): a Central redesenha mexendo só no que mudou, e isso apagaria o canvas 3D. Agora um elemento com `data-cx-vivo` fica intacto enquanto a marca for a mesma. A marca junta o GP, a sub-aba e o tema; com marca nova, o bloco é trocado inteiro, e `montar3d` (chamado por `ligarGraficos` depois de cada redesenho) monta de novo.
+- **`analise-salva.js`**: `montarNaCentral` monta a análise no bloco, com o resumo do save, os nomes da carreira e o replay pedido pelo socket da carreira.
+- **`resultado-analise.js`** ganhou o modo da Central:
+  - sem o cabeçalho e as abas próprias (as da Central mandam);
+  - clicar num piloto nas Posições só escolhe com quem comparar, sem pular para o Ritmo;
+  - "Ver no replay" pede à Central para trocar a sub-aba. A janela da ultrapassagem fica guardada no módulo e o Replay abre nela.
+- **Tema da carreira** (`pos-corrida.css`, `.ra-cx`): fundos, textos, filetes, sombras, dicas, rótulos da pista, painel de telemetria, listas e torre saem dos tokens da Central (`--cx-*`, claros ou escuros pela engrenagem) e da cor da equipe (`--eq`, `--eq-txt`, `--eq-at`).
+  - Os botões (filtros, velocidades, Seguir, Mapa de calor, ▶) ficam no jeito da Central: filete, caixa alta e a cor da equipe quando ligados.
+  - A fonte é a Manrope da Central.
+  - A miniatura (`gp-miniatura.js`, `op.tema`) ganhou a base clara ou escura da carreira; a tela do resultado continua com a escura.
+- **Posições estimadas:** quem terminou com voltas a menos (tomou volta) tem a linha pontilhada até a última volta, na posição final da classificação, e a dica diz "estimado: tomou volta". Quem abandonou ganha um ✕ onde parou. Vale também na tela do resultado.
 
-## Navegador
-
-- `resultado-analise.js` não importa mais o `estado.js`, que abre a conexão da sala da Corrida: quem chama passa a `fonte` dos dados. A tela do resultado passa o socket da sala. A carreira usa `montarAnaliseSalva`, com o resumo que já veio no save.
-- `analise-salva.js` (novo): a análise 3D de um GP guardado, numa tela por cima da Central. A Central se redesenha sozinha e levaria o canvas junto, por isso a tela fica fora dela. Tem as mesmas abas: Posições, Momentos, Ultrapassagens, Replay, Ritmo e Pneus. O replay vem do servidor só quando a aba pede.
-- Aba Análise da Central (`central-analise.js`): o botão "Replay e análise 3D" no topo, para o GP escolhido. Serve à carreira solo e à em grupo, que usa a mesma Central; na do grupo, os seus carros viram `voce` também nos momentos, nas ultrapassagens e no replay (`grupo.js`).
-- Ficha do circuito da Central (calendário): monta o guia do GP (`gp-guia.js`, agora sem o `estado.js`), com a miniatura 3D, a história e as curvas famosas, na cor da equipe.
-- "Ver o carro de perto" ao lado de "Seu carro" na Central abre a vista do carro (`vista-carro.js`).
-- `pos-corrida.css` (novo): os estilos da análise, da miniatura, do guia e da vista saíram de `resultado-gp.css`, `sala-nova.css` e `menu.css` (só os blocos que esses PRs tinham posto) e vão para as duas páginas.
-
-Os momentos do rádio do engenheiro continuam só na tela do resultado, porque o rádio toca no navegador e não vai para o save.
-
-Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`; o caminho do replay (guardar e ler de volta) foi rodado uma vez à mão com o banco em memória, sem teste novo. O teste jogando fica com o Thiago.
+Entrada no topo de `novidades.json`. Conferido só com `node --check` e `JSON.parse`. O teste jogando fica com o Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

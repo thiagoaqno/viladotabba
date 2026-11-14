@@ -4,7 +4,8 @@
 // forma, a mesma pintura de f1-capacetes.js e a mesma viseira), preso no osso da cabeça: segue a cabeça em toda pose e comemoração.
 // A posição e o tamanho saem do capacete original do boneco, medido no repouso: o novo ocupa o mesmo lugar, com a mesma altura.
 import * as THREE from "three";
-import { geometriasDoCapacete, materialDaViseira, materialDoCapacete } from "./f1-piloto.js";
+import * as Piloto from "./f1-piloto.js";
+const { geometriasDoCapacete, materialDaViseira, materialDoCapacete } = Piloto;
 
 const m4 = new THREE.Matrix4(), m5 = new THREE.Matrix4(), caixa = new THREE.Box3(), centro = new THREE.Vector3(), tam = new THREE.Vector3(), q = new THREE.Quaternion();
 // g: o boneco clonado, ainda no repouso (antes de qualquer pose). cap: { c1, c2, numero, robo (o capacete do piloto robô: capacetePorSigla), proprio
@@ -24,7 +25,9 @@ export function vestirCapacete(g, cap = {}) {
   const grupo = new THREE.Group(); grupo.name = "capacete-pista";
   const mat = materialDoCapacete(cap.c1 || "#e10600", cap.c2 || "#ffffff", cap.numero ?? null, cap.robo || null, cap.proprio || null);
   const casca = new THREE.Mesh(G.capacete, mat), vis = new THREE.Mesh(G.viseira, materialDaViseira(cap.proprio && cap.proprio.viseira));
-  for (const m of [casca, vis]) { m.castShadow = false; m.receiveShadow = false; m.position.copy(gc).negate(); grupo.add(m); }
+  const pecas = [casca, vis];
+  if (G.moldura && Piloto.materialDaMoldura) pecas.push(new THREE.Mesh(G.moldura, Piloto.materialDaMoldura())); // a borda e as dobradiças da viseira (quando o f1-piloto.js já tem)
+  for (const m of pecas) { m.castShadow = false; m.receiveShadow = false; m.position.copy(gc).negate(); grupo.add(m); }
   // a pose do grupo no espaço do boneco e, dali, no espaço do osso da cabeça (que é quem carrega o capacete daqui em diante)
   const noBoneco = new THREE.Matrix4().compose(centro, q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI), new THREE.Vector3(s, s, s));
   const cabecaNoBoneco = new THREE.Matrix4().multiplyMatrices(inv, cabeca.matrixWorld);

@@ -917,8 +917,13 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const fis = perfilF1(pf, ia.nivel), topo = topoDe(pf);
   // molhado (ou pneu gasto): o freio segura menos, então o robô olha mais longe para começar a frear a tempo (no seco com o macio: 1)
   // (a conta é a da física: o freio pedido e o que o pneu segura antes de travar, `D.frenagemMaxima`, contra o do pneu de referência)
+  // A cautela do pneu na água (2026-11-13, o Thiago viu robôs derrapando na chuva): o quanto a água tira deste composto agora
+  // (F1.fatorAgua: o seco na pista molhada perde muito, o de chuva e o intermediário quase nada). Quanto mais perde, mais cedo freia e
+  // mais devagar contorna, além do que a aderência já tira; com o pneu certo para a condição sobra só uma margem pequena.
+  const perdaAgua = cl.agua > 0 ? Math.max(0, Math.min(0.7, 1 - F1.fatorAgua(car.pneu && car.pneu.composto, cl.agua))) : 0;
+  const cautelaPneu = 1 - 0.04 * cl.agua - 0.25 * perdaAgua;
   const velFreio = Math.max(car.v, 60), ref = aderRef();
-  const alongaFreio = Math.max(1, Math.min(2.2, D.frenagemMaxima(spec, velFreio, 0, { freio: ref.freio, grip: ref.grip }) / Math.max(1, D.frenagemMaxima(spec, velFreio, 0, { freio: pneu.freio * dano.freio, grip: pneu.grip * dano.grip }))));
+  const alongaFreio = Math.max(1, Math.min(2.2, D.frenagemMaxima(spec, velFreio, 0, { freio: ref.freio, grip: ref.grip }) / Math.max(1, D.frenagemMaxima(spec, velFreio, 0, { freio: pneu.freio * dano.freio, grip: pneu.grip * dano.grip })))) * (1 + 0.3 * perdaAgua);
   const perfilPiloto = Estilos.dePiloto(p.piloto && p.piloto.id);
   const ajusteFreada = 1 + Math.max(0, 0.8 - perfilPiloto.frenagem) * (T.baseDe(room.config.pista) === "monaco" ? 0.06 : 0.14);
   const olhar = Math.max(3, Math.ceil(Math.max(car.v, 30) * (T.baseDe(room.config.pista) === "monaco" ? 0.20 : tr.W <= LARGURA_ESTREITA ? 0.27 : 0.20) * alongaFreio * ajusteFreada / STEP)); // o perfil já antecipa a frenagem; circuitos estreitos pedem mais folga
@@ -945,8 +950,8 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const latAdiante = novo && !ia.ult ? latLivre : (j) => { const margemExtra = T.baseDe(room.config.pista) === "monaco" ? (ia.ult ? ALEM_MONACO : 8) : 0; const limite = Math.min(margemExtra ? tr.W / 2 - 9 : limiteAtual, pf.teto ? pf.teto[j] + margemExtra : Infinity); return entre(linhaEm(j, car.prog + (j - i + n) % n) * saidaGrid + ia.lat0 * (1 - saidaGrid) + ia.desvio, limite); };
   const vac = F1.vacuoF1(F1.vacuoPermitido(car.v, room.phase === "quali") ? tf.draft : 0, curva);
   const reta = alvo >= topo * 0.97;
-  const escalaCurva = Math.sqrt((novo ? pneu.rel : pneu.grip) * dano.grip * vac.aderencia) * (1 - 0.05 * cl.agua) * cautela;
-  if (!reta) alvo *= escalaCurva; // só as curvas dependem da aderência (no molhado, mais 5% de cautela)
+  const escalaCurva = Math.sqrt((novo ? pneu.rel : pneu.grip) * dano.grip * vac.aderencia) * cautelaPneu * cautela;
+  if (!reta) alvo *= escalaCurva; // só as curvas dependem da aderência (no molhado, mais a cautela do pneu na água: cautelaPneu)
   const drs = !!car.drsAtivo && !room.direcao?.safety && !room.direcao?.amarelo;
   const ganhoReta = (1 + (drs ? F1.DRS_GANHO * (spec.drs ?? 1) : 0)) * (1 + vac.final);
   if (reta) alvo *= ganhoReta;

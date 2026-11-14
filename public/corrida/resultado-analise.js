@@ -138,11 +138,12 @@ function pneus(L, idA, idB) {
 }
 
 // ---------- montar ----------
+let replayAgora = null; // o replay já lido (ou false: não há), posto por `desenhar` antes de montar o HTML
 function html(S, A, L, idA, idB) {
   const a = L.find((s) => s.id === idA), bb = L.find((s) => s.id === idB) || null;
-  const abas = [["posicoes", "Posições"], ["momentos", "Momentos"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
+  const abas = [["posicoes", "Posições"], ["momentos", "Momentos"], ["ultrapassagens", "Ultrapassagens"], ["replay", "Replay"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
   const corpo = aba === "ritmo" ? `<div class="ra-par">${cartao(A, a, "a")}${bb ? cartao(A, bb, "b") : ""}</div>${graficoRitmo(A, a, bb)}<p class="ra-legenda">Escolha outro piloto clicando no gráfico das posições, nos pneus ou na tabela acima.</p>`
-    : aba === "pneus" ? pneus(L, idA, idB) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A) : graficoPosicoes(L, A, idA, idB);
+    : aba === "pneus" ? pneus(L, idA, idB) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A) : aba === "ultrapassagens" ? ultrapassagensHTML(A, L) : aba === "replay" ? replayHTML(replayAgora, L) : graficoPosicoes(L, A, idA, idB);
   const resumo = [A.safeties ? `${A.safeties} safety car${A.safeties > 1 ? "s" : ""}` : "", A.amarelas ? `${A.amarelas} bandeira${A.amarelas > 1 ? "s" : ""} amarela${A.amarelas > 1 ? "s" : ""}` : "", A.chuva ? "chuva" : ""].filter(Boolean).join(" · ");
   return `<header class="ra-cab"><div><h3>Análise da corrida</h3><small>${A.voltas} volta${A.voltas > 1 ? "s" : ""}${resumo ? ` · ${resumo}` : ""}</small></div>
     <div class="ra-abas" role="tablist">${abas.map(([k, r]) => `<button type="button" role="tab" data-ra-aba="${k}" class="${aba === k ? "on" : ""}" aria-selected="${aba === k}">${r}</button>`).join("")}</div></header>
@@ -155,10 +156,13 @@ function desenhar(box, S, m, A) {
   const idA = (m && L.some((s) => s.id === m.id) && m.id) || L[0].id;
   // o B padrão: o carro que chegou logo à frente de A (ou logo atrás, se A ganhou)
   if (!escolhidoB || !L.some((s) => s.id === escolhidoB) || escolhidoB === idA) { const i = L.findIndex((s) => s.id === idA); escolhidoB = (L[i - 1] || L[i + 1] || {}).id || null; }
+  if (aba === "replay") replayAgora = pedirReplay(S, () => { if (aba === "replay" && box.isConnected) desenhar(box, S, m, A); });
   box.innerHTML = html(S, A, L, idA, escolhidoB); box.hidden = false;
   const escolher = (id) => { if (id && id !== idA) { escolhidoB = id; if (aba === "posicoes") aba = "ritmo"; desenhar(box, S, m, A); } };
   box.querySelectorAll("[data-ra-aba]").forEach((bt) => { bt.onclick = () => { aba = bt.dataset.raAba; desenhar(box, S, m, A); }; });
   if (aba === "momentos") ligarMomentos(box, S, m, A, L, idA, escolher);
+  if (aba === "ultrapassagens") ligarUltrapassagens(box, S, m, A, L);
+  if (aba === "replay" && replayAgora) ligarReplay(box, S, m, A, L, idA);
   const g = box.querySelector(".ra-graf");
   if (g && g.dataset.graf === "posicoes") ligarPosicoes(g, L, A, escolher);
   if (g && g.dataset.graf === "ritmo") ligarRitmo(g, A, L.find((s) => s.id === idA), L.find((s) => s.id === escolhidoB) || null);
@@ -301,4 +305,175 @@ function ligarMomentos(box, S, m, A, L, idA, escolher) {
     };
     tocar = { raf: requestAnimationFrame(passo) };
   };
+}
+
+// ---------- Replay e Ultrapassagens: a corrida gravada (corrida-gravacao.js) andando na miniatura 3D ----------
+// O servidor grava, a cada 250 ms, a fração da volta, a velocidade (na escala do velocímetro), o acelerador, o freio e a marcha de cada carro.
+// Replay: os carros andam na miniatura; a torre ao vivo, a telemetria do carro escolhido e a de um segundo para comparar, o mapa de calor
+// da velocidade na melhor volta do escolhido. Ultrapassagens: cada troca de posição na pista, com o pino no lugar; "Ver no replay" leva até ela.
+const cacheRep = { chave: null, dados: null, pedindo: null };
+const rep = { j: 0, vel: 4, tocando: false, sel: null, cmp: null, seguir: true, calor: false, janela: null };
+function lerReplay(R) {
+  const bin = atob(R.dados), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  const nc = R.ids.length, C = R.campos, FORA = 65535, prog = R.ids.map(() => new Float32Array(R.n));
+  // o progresso de cada carro (voltas + fração), desenrolando a volta quando a fração cai de perto de 1 para perto de 0
+  R.ids.forEach((_, k) => {
+    let voltas = 0, ant = null;
+    for (let j = 0; j < R.n; j++) {
+      const o = (j * nc + k) * C, f16 = u8[o] | (u8[o + 1] << 8);
+      if (f16 === FORA) { prog[k][j] = NaN; continue; }
+      const f = f16 / (FORA - 1);
+      if (ant == null) voltas = f > 0.5 ? -1 : 0; else if (ant - f > 0.5) voltas++; else if (f - ant > 0.5) voltas--;
+      ant = f; prog[k][j] = voltas + f;
+    }
+  });
+  const em = (j, k) => {
+    const o = (j * nc + k) * C, f16 = u8[o] | (u8[o + 1] << 8);
+    return f16 === FORA ? null : { f: f16 / (FORA - 1), kmh: u8[o + 2] * 2, gas: u8[o + 3] / 255, freio: u8[o + 4] / 255, marcha: u8[o + 5] & 127, box: !!(u8[o + 5] & 128), prog: prog[k][j] };
+  };
+  return { ...R, u8, prog, em, col: new Map(R.ids.map((id, k) => [id, k])), dur: (R.n * R.passo) / 1000 };
+}
+function pedirReplay(S, aoChegar) {
+  const chave = String(S.startAt || "") + ":" + S.config.pista;
+  if (cacheRep.chave === chave) return cacheRep.dados; // (false: esta corrida não tem replay)
+  if (cacheRep.pedindo === chave) return null;
+  cacheRep.pedindo = chave; setTimeout(() => { if (cacheRep.pedindo === chave) cacheRep.pedindo = null; }, 15000);
+  socket.emit("replay", (R) => {
+    if (cacheRep.pedindo === chave) cacheRep.pedindo = null;
+    if (!R || !R.dados) { cacheRep.chave = chave; cacheRep.dados = false; aoChegar(); return; }
+    try { cacheRep.dados = lerReplay(R); cacheRep.chave = chave; if (!rep.janela) rep.j = 0; } catch (e) { cacheRep.dados = false; cacheRep.chave = chave; console.warn("Corrida: replay", e); }
+    aoChegar();
+  });
+  return null;
+}
+const kmhTxt = (v) => `${Math.round(v)}`;
+
+// as cores do mapa de calor (lento = azul, rápido = vermelho, como a transmissão)
+const CALOR = ["#3b4cff", "#14b8ff", "#22e0a0", "#b8f03a", "#ffd21a", "#ff7a1a", "#ff2a2a"];
+function corCalor(u) { const x = Math.max(0, Math.min(1, u)) * (CALOR.length - 1), i = Math.floor(x), a = CALOR[i], b = CALOR[Math.min(CALOR.length - 1, i + 1)], t = x - i; const p = (c, s) => parseInt(c.slice(s, s + 2), 16); return `rgb(${Math.round(p(a, 1) + (p(b, 1) - p(a, 1)) * t)},${Math.round(p(a, 3) + (p(b, 3) - p(a, 3)) * t)},${Math.round(p(a, 5) + (p(b, 5) - p(a, 5)) * t)})`; }
+// a velocidade do carro `k` ao longo da sua melhor volta, em 200 faixas da volta
+function velocidadeNaVolta(D, k, volta) {
+  const N = 200, soma = new Float32Array(N), qt = new Uint16Array(N);
+  for (let j = 0; j < D.n; j++) { const e = D.em(j, k); if (!e || e.box || Math.floor(e.prog) !== volta - 1) continue; const b = Math.min(N - 1, Math.floor(e.f * N)); soma[b] += e.kmh; qt[b]++; }
+  const out = new Float32Array(N); let ult = null;
+  for (let b = 0; b < N; b++) { if (qt[b]) ult = soma[b] / qt[b]; out[b] = ult == null ? NaN : ult; }
+  for (let b = 0; b < N && isNaN(out[b]); b++) out[b] = ult ?? 0; // o começo sem amostra: o último valor da volta
+  return out;
+}
+
+function replayHTML(D, L) {
+  if (D === false) return `<p class="ra-vazio">O replay desta corrida não foi gravado (corrida de antes da gravação, ou sem regras de F1).</p>`;
+  if (!D) return `<p class="ra-vazio">Carregando o replay…</p>`;
+  const vel = [1, 4, 16].map((v) => `<button type="button" data-rep-vel="${v}" class="${rep.vel === v ? "on" : ""}">${v}×</button>`).join("");
+  return `<div class="ra-rep">
+    <div class="ra-mom-palco ra-rep-palco"><div class="ra-mini"></div><div class="ra-dica ra-mom-dica" hidden></div>
+      <div class="ra-rep-relogio"><b data-rep-volta>—</b><small data-rep-hora>0:00</small></div>
+      <div class="ra-tele" data-rep-tele></div>
+      <div class="ra-mom-barra"><button type="button" class="ra-play" data-rep-play aria-label="Tocar o replay">▶</button><span class="ra-rep-vel" role="group" aria-label="Velocidade do replay">${vel}</span>
+        <button type="button" class="ra-chip ${rep.seguir ? "on" : ""}" data-rep-seguir>Seguir</button><button type="button" class="ra-chip ${rep.calor ? "on" : ""}" data-rep-calor title="A velocidade na melhor volta do piloto escolhido">Mapa de calor</button></div></div>
+    <div class="ra-mom-lado"><small class="ra-legenda">Clique num carro (na pista ou na torre) para ver a telemetria dele; o anterior fica para comparar.</small><ol class="ra-torre" data-rep-torre></ol></div>
+    <div class="ra-rep-tempo"><input type="range" min="0" max="${D.n - 1}" value="${rep.j}" step="1" data-rep-tempo aria-label="Momento do replay"><div class="ra-graf ra-rep-graf" data-rep-graf></div></div></div>`;
+}
+function ligarReplay(box, S, m, A, L, idA) {
+  const D = cacheRep.dados; if (!D) return;
+  const palco = box.querySelector(".ra-mini"), porId = new Map(L.map((s) => [s.id, s])), info = (id) => porId.get(id) || { id, cor: "#9aa1ad", sigla: "?", nome: "?" };
+  const torre = box.querySelector("[data-rep-torre]"), tele = box.querySelector("[data-rep-tele]"), grafico = box.querySelector("[data-rep-graf]"), barra = box.querySelector("[data-rep-tempo]");
+  const relV = box.querySelector("[data-rep-volta]"), relH = box.querySelector("[data-rep-hora]"), play = box.querySelector("[data-rep-play]");
+  if (!rep.sel || !D.col.has(rep.sel)) rep.sel = D.col.has(idA) ? idA : D.ids[0];
+  if (rep.cmp && !D.col.has(rep.cmp)) rep.cmp = null;
+  mini = criarMiniatura(palco, A.pista || S.config.pista, { cor: info(rep.sel).cor, corredor: false, aoCarro: (id) => escolherCarro(id) });
+  if (!mini) { palco.classList.add("sem3d"); palco.innerHTML = `<p class="ra-vazio">O replay precisa de WebGL.</p>`; return; }
+  mini.definirCarros(D.ids.map((id) => ({ id, cor: info(id).cor, rotulo: info(id).sigla })));
+  const pins = (A.ultrapassagens || []).map((u, i) => ({ id: i, f: u.f, cor: info(u.a).cor, alto: 3 })); mini.marcadores(pins);
+  const calor = () => {
+    if (!rep.calor) { mini.pintar(null); return; }
+    const s = porId.get(rep.sel), volta = s && s.d.mv ? s.d.mv : 0; if (!volta) { mini.pintar(null); return; }
+    const vel = velocidadeNaVolta(D, D.col.get(rep.sel), volta), ok = [...vel].filter((x) => !isNaN(x)), lo = Math.min(...ok), hi = Math.max(...ok), cores = {};
+    mini.pintar((f) => { const b = Math.min(vel.length - 1, Math.floor(f * vel.length)), u = (vel[b] - lo) / Math.max(1, hi - lo), k = Math.round(u * 40); return (cores[k] ||= corCalor(k / 40)); });
+  };
+  const escolherCarro = (id) => { if (!id || id === rep.sel) return; rep.cmp = rep.sel; rep.sel = id; calor(); desenharTudo(true); };
+  // a torre ao vivo (a ordem pelo progresso na pista; quem saiu fica no fim)
+  const ordemEm = (j) => D.ids.map((id, k) => ({ id, k, pr: D.prog[k][Math.min(j, D.n - 1)] })).sort((a, b) => (isNaN(b.pr) ? -1e9 : b.pr) - (isNaN(a.pr) ? -1e9 : a.pr));
+  const tempo = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  // a telemetria: os números do escolhido e do comparado agora, e o gráfico dos últimos 12 s (velocidade, acelerador e freio)
+  const painelTele = (j) => {
+    const linha = (id, papel) => { if (!id) return ""; const e = D.em(j, D.col.get(id)), s = info(id); if (!e) return `<div class="ra-tele-l ${papel}" style="--c:${s.cor}"><b>${h(s.sigla)}</b><span class="ra-tele-fora">fora</span></div>`;
+      return `<div class="ra-tele-l ${papel}" style="--c:${s.cor}"><b>${h(s.sigla)}</b><span class="ra-tele-v"><strong>${kmhTxt(e.kmh)}</strong><small>km/h</small></span><span class="ra-tele-m"><small>marcha</small><strong>${e.box ? "BOX" : e.marcha || "N"}</strong></span>
+        <span class="ra-tele-pedal"><i class="gas" style="--u:${e.gas.toFixed(2)}"></i><i class="freio" style="--u:${e.freio.toFixed(2)}"></i></span></div>`; };
+    tele.innerHTML = linha(rep.sel, "a") + linha(rep.cmp, "b");
+  };
+  const W = 760, H = 120, JAN = Math.round(12000 / D.passo);
+  const graf = (j) => {
+    const j0 = rep.janela ? rep.janela[0] : Math.max(0, j - JAN), j1 = rep.janela ? rep.janela[1] : Math.max(j0 + JAN, j), x = (jj) => 34 + ((jj - j0) / Math.max(1, j1 - j0)) * (W - 44);
+    let vmax = 1; const series = [rep.cmp, rep.sel].filter(Boolean).map((id) => { const k = D.col.get(id), pts = []; for (let jj = j0; jj <= Math.min(j1, D.n - 1, rep.janela ? j1 : j); jj++) { const e = D.em(jj, k); pts.push(e ? [jj, e] : null); if (e) vmax = Math.max(vmax, e.kmh); } return { id, pts }; });
+    const yv = (kmh) => 8 + (1 - kmh / vmax) * 66, pedal = (u, base) => base - u * 14;
+    const caminho = (pts, fy) => pts.map((p, i) => (p ? `${!pts[i - 1] ? "M" : "L"}${x(p[0]).toFixed(1)} ${fy(p[1]).toFixed(1)}` : "")).join("");
+    const ult = (A.ultrapassagens || []).filter((u) => { const jj = Math.round((u.t * 1000) / D.passo); return jj >= j0 && jj <= j1; });
+    grafico.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Telemetria: velocidade, acelerador e freio">
+      <text class="ra-eixo" x="30" y="12" text-anchor="end">${Math.round(vmax)}</text><text class="ra-eixo" x="30" y="78" text-anchor="end">0</text><text class="ra-eixo" x="30" y="94" text-anchor="end">acel</text><text class="ra-eixo" x="30" y="114" text-anchor="end">freio</text>
+      <line class="ra-grade" x1="34" x2="${W - 10}" y1="74" y2="74"/>${ult.map((u) => `<line class="ra-ult-mark" x1="${x(Math.round((u.t * 1000) / D.passo)).toFixed(1)}" x2="${x(Math.round((u.t * 1000) / D.passo)).toFixed(1)}" y1="4" y2="${H - 2}"/>`).join("")}
+      ${series.map((s) => { const c = info(s.id).cor, papel = s.id === rep.sel ? "a" : "b"; return `<g class="ra-tl ${papel}" style="--c:${c}"><path class="v" d="${caminho(s.pts, (e) => yv(e.kmh))}"/><path class="p" d="${caminho(s.pts, (e) => pedal(e.gas, 98))}"/><path class="p f" d="${caminho(s.pts, (e) => pedal(e.freio, 118))}"/></g>`; }).join("")}
+      ${rep.janela ? `<line class="ra-cabeca" x1="${x(j).toFixed(1)}" x2="${x(j).toFixed(1)}" y1="4" y2="${H - 2}"/>` : ""}</svg>`;
+  };
+  let ultimoDesenho = 0;
+  function desenharTudo(forcar) {
+    const j = Math.max(0, Math.min(D.n - 1, Math.round(rep.j))), ordem = ordemEm(j);
+    for (const id of D.ids) { const e = D.em(j, D.col.get(id)); mini.posicionar(id, e ? e.f : null, id === rep.sel || id === rep.cmp); }
+    const eSel = D.em(j, D.col.get(rep.sel)); if (rep.seguir && eSel) mini.seguir(eSel.f); else mini.seguir(null);
+    const agora = performance.now(); if (!forcar && agora - ultimoDesenho < 110) return; ultimoDesenho = agora;
+    const lider = ordem[0] && !isNaN(ordem[0].pr) ? Math.max(1, Math.floor(ordem[0].pr) + 1) : 1;
+    relV.textContent = `Volta ${Math.min(lider, A.voltas || lider)}/${A.voltas || "?"}`; relH.textContent = tempo((j * D.passo) / 1000);
+    torre.innerHTML = ordem.map((o, i) => { const s = info(o.id), e = D.em(j, o.k); return `<li data-carro="${h(o.id)}" class="${o.id === rep.sel ? "a" : ""} ${o.id === rep.cmp ? "b" : ""} ${e ? "" : "fora"}" style="--c:${s.cor}"><span>${e ? i + 1 : "—"}</span><b>${h(s.sigla)}</b>${e && e.box ? `<em>BOX</em>` : ""}</li>`; }).join("");
+    if (document.activeElement !== barra) barra.value = String(j);
+    painelTele(j); graf(j);
+  }
+  // o laço do replay
+  const passo = (agora) => {
+    if (!box.isConnected || !tocar) return;
+    const dt = Math.min(0.1, (agora - (tocar.ant || agora)) / 1000); tocar.ant = agora;
+    if (rep.tocando) {
+      rep.j += (dt * 1000 * rep.vel) / D.passo;
+      const fim = rep.janela ? rep.janela[1] : D.n - 1;
+      if (rep.j >= fim) { rep.j = fim; rep.tocando = false; play.textContent = "▶"; }
+    }
+    desenharTudo(false);
+    tocar.raf = requestAnimationFrame(passo);
+  };
+  tocar = { raf: requestAnimationFrame(passo), ant: 0 };
+  play.textContent = rep.tocando ? "❚❚" : "▶";
+  play.onclick = () => { rep.tocando = !rep.tocando; if (rep.tocando && rep.j >= (rep.janela ? rep.janela[1] : D.n - 1)) rep.j = rep.janela ? rep.janela[0] : 0; play.textContent = rep.tocando ? "❚❚" : "▶"; };
+  box.querySelectorAll("[data-rep-vel]").forEach((b) => { b.onclick = () => { rep.vel = +b.dataset.repVel; box.querySelectorAll("[data-rep-vel]").forEach((x) => x.classList.toggle("on", x === b)); }; });
+  box.querySelector("[data-rep-seguir]").onclick = (ev) => { rep.seguir = !rep.seguir; ev.currentTarget.classList.toggle("on", rep.seguir); if (!rep.seguir) mini.focar(null); };
+  box.querySelector("[data-rep-calor]").onclick = (ev) => { rep.calor = !rep.calor; ev.currentTarget.classList.toggle("on", rep.calor); calor(); };
+  barra.oninput = () => { rep.j = +barra.value; rep.janela = null; desenharTudo(true); };
+  torre.onclick = (ev) => { const li = ev.target.closest("[data-carro]"); if (li) escolherCarro(li.dataset.carro); };
+  calor(); desenharTudo(true);
+}
+
+// ---------- Ultrapassagens: a lista, os pinos na miniatura e o atalho para o replay ----------
+function ultrapassagensHTML(A, L) {
+  const U = A.ultrapassagens || [], porId = new Map(L.map((s) => [s.id, s])), info = (id) => porId.get(id) || { cor: "#9aa1ad", sigla: "?", nome: "?" };
+  const G = window.GpInfo, curvas = G && G.get ? G.get(A.pista).curvas || [] : [];
+  const curvaPerto = (f) => { let c = null, d = 0.04; for (const k of curvas) { const dd = Math.min(Math.abs(k.f - f), 1 - Math.abs(k.f - f)); if (dd < d) { d = dd; c = k; } } return c; };
+  const conta = {}; for (const u of U) conta[u.a] = (conta[u.a] || 0) + 1;
+  const rei = Object.entries(conta).sort((a, b) => b[1] - a[1])[0];
+  const itens = U.map((u, i) => { const a = info(u.a), b = info(u.b), c = curvaPerto(u.f); return `<li data-ev="${i}" tabindex="0" style="--c:${a.cor};--p:${b.cor}"><span class="ra-mom-v">V${u.v}<small>${Math.floor(u.t / 60)}:${String(Math.floor(u.t % 60)).padStart(2, "0")}</small></span>
+    <span class="ra-ult-par"><b style="--c:${a.cor}">${h(a.sigla)}</b><i>passa</i><b style="--c:${b.cor}">${h(b.sigla)}</b></span><span class="ra-mom-txt">${u.pos}º${c ? ` · curva ${c.n}${c.nome ? ` (${h(c.nome)})` : ""}` : ""}${u.sob ? ` · <em class="ra-tag sc">sob bandeira</em>` : ""}</span><button type="button" class="ra-chip" data-ver="${i}">Ver no replay</button></li>`; }).join("");
+  return `<div class="ra-mom ra-ult">
+    <div class="ra-mom-palco"><div class="ra-mini"></div><div class="ra-dica ra-mom-dica" hidden></div><div class="ra-mom-barra"><small>${U.length} ultrapassage${U.length === 1 ? "m" : "ns"} na pista${rei ? ` · quem mais passou: ${h(info(rei[0]).sigla)} (${rei[1]})` : ""}</small></div></div>
+    <div class="ra-mom-lado"><ol class="ra-mom-lista">${itens || `<li class="vazio">Nenhuma ultrapassagem gravada nesta corrida.</li>`}</ol><small class="ra-legenda">Trocas de posição na pista que duraram mais de 1,5 s; as dos boxes não contam.</small></div></div>`;
+}
+function ligarUltrapassagens(box, S, m, A, L) {
+  const U = A.ultrapassagens || [], palco = box.querySelector(".ra-mini"), dica = box.querySelector(".ra-mom-dica"), ol = box.querySelector(".ra-mom-lista");
+  const porId = new Map(L.map((s) => [s.id, s])), info = (id) => porId.get(id) || { cor: "#9aa1ad", sigla: "?", nome: "?" };
+  const acender = (i) => { box.querySelectorAll(".ra-mom-lista li.hi").forEach((x) => x.classList.remove("hi")); if (mini) mini.destacar(i); if (i == null) return; const li = ol.querySelector(`li[data-ev="${i}"]`); if (li) li.classList.add("hi"); };
+  const verNoReplay = (i) => { const u = U[i]; if (!u) return; const passo = 250, jj = Math.round((u.t * 1000) / passo); rep.sel = u.a; rep.cmp = u.b; rep.janela = [Math.max(0, jj - Math.round(8000 / passo)), jj + Math.round(4000 / passo)]; rep.j = rep.janela[0]; rep.tocando = true; rep.vel = 1; rep.seguir = true; aba = "replay"; desenhar(box, S, m, A); };
+  mini = criarMiniatura(palco, A.pista || S.config.pista, {
+    corredor: false,
+    aoMarcador: (id, como, xy) => { if (id == null) { acender(null); dica.hidden = true; return; } acender(id); const u = U[id]; dica.innerHTML = `<small>Volta ${u.v}</small><br><b style="--c:${info(u.a).cor}">${h(info(u.a).sigla)}</b> passa <b style="--c:${info(u.b).cor}">${h(info(u.b).sigla)}</b> · ${u.pos}º`; dica.hidden = false; dica.style.left = Math.min(xy.x + 14, palco.clientWidth - dica.offsetWidth - 4) + "px"; dica.style.top = Math.max(4, xy.y - dica.offsetHeight - 12) + "px"; if (como === "clique") verNoReplay(id); },
+  });
+  if (mini) { mini.marcadores(U.map((u, i) => ({ id: i, f: u.f, cor: info(u.a).cor, alto: 3.4 }))); const G = window.GpInfo; if (G && G.get) mini.curvas(G.get(A.pista || S.config.pista).curvas || []); }
+  ol.addEventListener("pointerover", (ev) => { const li = ev.target.closest("[data-ev]"); if (li) acender(+li.dataset.ev); });
+  ol.addEventListener("pointerleave", () => acender(null));
+  ol.addEventListener("click", (ev) => { const v = ev.target.closest("[data-ver]"); if (v) return verNoReplay(+v.dataset.ver); const li = ev.target.closest("[data-ev]"); if (li && mini) mini.focar(U[+li.dataset.ev].f); });
 }

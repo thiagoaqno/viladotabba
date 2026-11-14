@@ -262,6 +262,11 @@ function aoClicar(e) {
   if (b.id === "mnC2" && d.painel) { e.preventDefault(); return abrirPainel("rapida"); }
   if (b.id === "mnC3") { if (d.pista) contra.pista = d.pista; return abrirPainel("contra"); }
   if (b.id === "mnPainelX") return fecharPainel();
+  if (b.id === "mnVista") { // a vista do carro (vista-carro.js): a garagem 3D para enquanto ela está aberta, para não desenhar duas cenas
+    desligarGaragem();
+    import("/corrida/vista-carro.js").then((m) => m.abrirVista(equipeDoCarro(), () => { if (naTela && painel === "garagem") ligarGaragem(); })).catch((err) => { console.warn("vista do carro indisponível", err); if (naTela && painel === "garagem") ligarGaragem(); });
+    return;
+  }
   if (b.id === "mnPerfil") { abrirPainel("garagem", $("hName")); return; }
   if (b.id === "mnAjustes") return alternarAjustes();
   if (d.entrar) { $("hCode").value = d.entrar; return $("btnJoin").click(); }

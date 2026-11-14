@@ -16,7 +16,7 @@ window.addEventListener("radio:fala", (ev) => {
   const el = $("hRadioEng"); if (!el) return;
   const on = !!(ev.detail && ev.detail.on), m = me();
   if (on && m) {
-    const eq = (window.EQUIPES_F1 || {})[m.equipe], cor = eq ? eq.cor : m.color || "#e10600", sobrenome = String(m.nomeCompleto || m.name || "").trim().split(/s+/).pop();
+    const eq = (window.EQUIPES_F1 || {})[m.equipe], cor = eq ? eq.cor : m.color || "#e10600", sobrenome = String(m.nomeCompleto || m.name || "").trim().split(/\s+/).pop();
     el.style.setProperty("--equipe", cor);
     el.innerHTML = `<div class="rr-nome"><b>${h(sobrenome.toUpperCase())}</b><span>RÁDIO</span></div><div class="rr-linha"><em>${h(String(m.numero || ""))}</em><i class="rr-onda"><s></s><s></s><s></s><s></s><s></s></i>${eq && eq.arquivo ? `<img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(m.equipe)}" alt="">` : ""}</div>`;
   }
@@ -148,6 +148,19 @@ const LOGO_F1 = '<svg class="f1logo" viewBox="0 0 64 26" aria-label="F1"><path d
 const COMPACTA_N = 5;
 const torreCompacta = () => (race.torreCompacta == null ? (race.torreCompacta = store.get("corrida:torre") !== "completa") : race.torreCompacta);
 function alternarTorre() { race.torreCompacta = !torreCompacta(); try { store.set("corrida:torre", race.torreCompacta ? "compacta" : "completa"); } catch (e) {} race.hudF1T = 0; }
+// o Jeff (voz.js, mfd.js `executarJeff`): o nome e a diferença do carro da frente, do de trás e do companheiro de equipe, para o texto da resposta
+acoes.infoRival = (lado) => {
+  const x = race && race.radioCtx, HM = window.HudMfd; if (!x || !HM) return null;
+  const iv = HM.intervalos(x.cors, x.m.id, race.hudEsc, 22, x.cron, x.agoraS), r = iv[lado], c = r && x.cors.find((q) => q.id === r.id);
+  return c ? { nome: c.nomeRadio || c.nome, seg: r.seg, pneu: c.pneu, desg: c.desg } : null;
+};
+acoes.infoCompanheiro = () => {
+  const x = race && race.radioCtx, m = x && x.m; if (!m || !m.equipe) return null;
+  const p = E.S.players.find((q) => q.id !== m.id && q.equipe === m.equipe && !q.dnf), eu = x.cors.find((q) => q.id === m.id), ele = p && x.cors.find((q) => q.id === p.id);
+  if (!eu || !ele || !x.cron) return null;
+  const frente = ele.prog > eu.prog, seg = frente ? x.cron.atraso(ele.id, eu.prog, x.agoraS) : x.cron.atraso(eu.id, ele.prog, x.agoraS);
+  return { nome: ele.nomeRadio || ele.nome, seg: Number.isFinite(seg) ? seg : null, frente };
+};
 acoes.radioRival = (lado) => { const x = race && race.radioCtx; return x ? radioRivais(x.cors, x.m, x.cron, x.agoraS, lado) : null; }; // (o pedido do MFD: frente ou trás)
 acoes.torreCompacta = () => (race ? torreCompacta() : true); acoes.torreAlternar = () => { if (race) alternarTorre(); };
 // o minimapa da corrida de F1: a pista inteira (padrão) ou perto, girando com o carro no meio (o mesmo da classificação). Muda no MFD

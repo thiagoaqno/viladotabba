@@ -8,6 +8,9 @@
 (function (root) {
 
 const MAX_NIVEL = 8;
+// O desenvolvimento da carreira (temporada/regras.js): cada equipe soma até BONUS_POR_TEMPORADA pontos de orçamento por temporada, que ficam de
+// uma temporada para a outra, até BONUS_MAX (2026-11-13: era +4 para sempre, e da 2ª temporada em diante ninguém evoluía mais)
+const BONUS_POR_TEMPORADA = 4, BONUS_MAX = 24;
 const EMERGENCIA = 0.35; // carro quebrado: anda no modo de emergência, com essa fração da velocidade final (e metade da aceleração)
 const ORDEM = ["motor", "aero", "chassi", "freios", "suspensao", "confiab"];
 // o que cada peça faz (os textos da tela de montagem); `bom` e `custa` são as contas resumidas
@@ -68,7 +71,7 @@ function validar(equipeId, m, bonus = 0) {
     if (typeof v !== "number" || !Number.isInteger(v) || v < 0 || v > MAX_NIVEL) return { ok: false, erro: `Nível inválido em ${PECAS[k].nome} (de 0 a ${MAX_NIVEL}).` };
     limpa[k] = v;
   }
-  const limite = eq.orcamento + Math.max(0, Math.min(4, Number(bonus) || 0));
+  const limite = eq.orcamento + Math.max(0, Math.min(BONUS_MAX, Number(bonus) || 0));
   if (soma(limpa) > limite) return { ok: false, erro: `A montagem passa do orçamento (${soma(limpa)} de ${limite} pontos).` };
   return { ok: true, montagem: limpa };
 }
@@ -135,7 +138,7 @@ function ficha(s) {
 // Os números que o servidor compara na hora de dizer "melhor em tudo": todos no sentido "maior é melhor"
 const eixos = (s) => [s.vmax, s.acc, s.grip, s.turn, s.brake, s.kin, -s.scrub, s.offMax, s.wall, -s.desgaste, s.drs, -s.quebra];
 
-const api = { MAX_NIVEL, VMAX_F1, CDA_F1, EMERGENCIA, QUEBRA_PADRAO, CONFIAB_PADRAO, quebraDaConfiab, sortearFalha, ORDEM, PECAS, LIMITES, EQUIPES, ESTILOS, custoDaMontagem, validar, montagemPadrao, sobra, estilo, specDaMontagem, specDaEquipe, ficha, eixos };
+const api = { BONUS_POR_TEMPORADA, BONUS_MAX, MAX_NIVEL, VMAX_F1, CDA_F1, EMERGENCIA, QUEBRA_PADRAO, CONFIAB_PADRAO, quebraDaConfiab, sortearFalha, ORDEM, PECAS, LIMITES, EQUIPES, ESTILOS, custoDaMontagem, validar, montagemPadrao, sobra, estilo, specDaMontagem, specDaEquipe, ficha, eixos };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Equipes = api;
 })(typeof window !== "undefined" ? window : globalThis);

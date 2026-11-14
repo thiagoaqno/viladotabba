@@ -148,9 +148,10 @@ const ORDEM_IGUAL = (a, b) => Equipes.ORDEM.every((k) => a[k] === b[k]);
 function desenvolver(sala, pid) {
   ativa(sala);
   const eq = equipeDa(sala, pid), t = sala.equipes[eq];
-  if (t.bonus >= 4) throw Error("O carro atingiu o limite de desenvolvimento.");
-  const custo = 12 + t.bonus * 6; gastar(t, custo); t.bonus++;
-  anotar(sala, pid, t, `desenvolveu o carro (+1 ponto, ${t.bonus}/4)`, custo);
+  const limite = Solo.limiteDoAno(sala.ano); // (até 4 pontos por temporada, que se acumulam: temporada/regras.js)
+  if (t.bonus >= limite) throw Error(t.bonus >= Equipes.BONUS_MAX ? "O carro atingiu o limite de desenvolvimento." : "O carro já evoluiu tudo o que dava nesta temporada.");
+  const custo = Solo.custoDoDesenvolvimento(t.bonus, sala.ano); gastar(t, custo); t.bonus++;
+  anotar(sala, pid, t, `desenvolveu o carro (+1 ponto, ${t.bonus}/${limite})`, custo);
   return sala;
 }
 // o piloto real é de uma equipe só: quem já corre por outra equipe humana não sai; os das equipes de robô e os livres podem ser contratados

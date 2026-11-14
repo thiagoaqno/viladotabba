@@ -81,7 +81,7 @@ function validarPecas(equipeId, pecas, bonus = 0) {
     if (!p || p.cat !== c.id) return { ok: false, erro: `Escolha uma peça válida em ${c.nome}.` };
     limpa[c.id] = p.id;
   }
-  const custo = custoDePecas(limpa), limite = eq.orcamento + Math.max(0, Math.min(4, Number(bonus) || 0));
+  const custo = custoDePecas(limpa), limite = eq.orcamento + Math.max(0, Math.min(Equipes.BONUS_MAX, Number(bonus) || 0));
   if (custo > limite) return { ok: false, erro: `As peças passam do orçamento (${custo} de ${limite} pontos).` };
   return { ok: true, pecas: limpa, montagem: montagemDePecas(limpa), custo };
 }
@@ -121,7 +121,7 @@ function migrarMontagem(montagem, limite = 99) {
 function pecasDe(equipeId, montagem, pecas, bonus = 0) {
   if (pecas) { const v = validarPecas(equipeId, pecas, bonus); if (v.ok) return v.pecas; }
   const eq = Equipes.EQUIPES[equipeId];
-  return migrarMontagem(montagem || Equipes.montagemPadrao(equipeId), (eq ? eq.orcamento : 20) + Math.max(0, Math.min(4, Number(bonus) || 0)));
+  return migrarMontagem(montagem || Equipes.montagemPadrao(equipeId), (eq ? eq.orcamento : 20) + Math.max(0, Math.min(Equipes.BONUS_MAX, Number(bonus) || 0)));
 }
 
 const api = { NIVEIS, ROTULO, CATEGORIAS, POR_ID, pecasPadrao, montagemDePecas, custoDePecas, validarPecas, resolver, migrarMontagem, pecasDe };

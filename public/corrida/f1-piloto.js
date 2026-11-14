@@ -14,7 +14,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-import { pintarFolha, capacetePorSigla } from "./f1-capacetes.js";
+import { pintarFolha, capacetePorSigla, acabamentoDoCasco } from "./f1-capacetes.js";
 
 const menosMovimento = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 const lim = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -77,12 +77,35 @@ function molduraDaViseira(V) {
     d.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), nrm)); d.translate(p.x + nrm.x * 0.003, p.y + nrm.y * 0.003, p.z + nrm.z * 0.003);
     partes.push(d.toNonIndexed());
   }
+  partes.push(...detalhesDoCasco(V));
   return mergeGeometries([borda.toNonIndexed(), ...partes.slice(1)]);
+}
+// (2026-11-14, pela referência do Thiago: o capacete de corrida de verdade) as peças escuras em volta do casco, todas seguindo a forma dele:
+// a borracha do pescoço (o casco agora é aberto embaixo), a aba aerodinâmica atrás (o spoiler), o lábio em cima da viseira, as duas entradas
+// de ar da testa e a grade do queixo. Vão na mesma malha da moldura (uma malha escura por piloto).
+const TH_CASCO = 2.62; // onde o casco acaba embaixo (a abertura do pescoço)
+function faixaDaCasca(phi0, phi, th0, th, base, meio, seg = 24) { return estufar(casco(new THREE.SphereGeometry(1, seg, 3, phi0, phi, th0, th), 1), base, meio).toNonIndexed(); }
+function detalhesDoCasco(V) {
+  const F = 1.5 * Math.PI, T = 0.5 * Math.PI; // (a frente é phi = 1,5π; a nuca, 0,5π)
+  return [
+    faixaDaCasca(0, Math.PI * 2, TH_CASCO, Math.PI - TH_CASCO, 0.0, 0.0, 48), // a borracha do pescoço (fecha a casca por baixo)
+    faixaDaCasca(0, Math.PI * 2, TH_CASCO - 0.05, 0.07, 0.004, 0.0, 48), // o friso de borracha na borda de baixo
+    faixaDaCasca(T - 0.62, 1.24, 1.08, 0.2, 0.004, 0.026, 28), // a aba aerodinâmica atrás, levantada no meio
+    faixaDaCasca(V.phi0 - 0.02, V.phi + 0.04, V.theta0 - 0.05, 0.04, 0.006, 0.004, 40), // o lábio em cima da viseira
+    faixaDaCasca(F - 0.42, 0.24, 0.6, 0.13, 0.003, 0.012, 8), faixaDaCasca(F + 0.18, 0.24, 0.6, 0.13, 0.003, 0.012, 8), // as entradas de ar da testa
+    faixaDaCasca(F - 0.24, 0.48, 1.98, 0.12, 0.004, 0.006, 16), // a grade do queixo
+  ];
+}
+// a casca pintada, aberta embaixo; o UV continua o da esfera inteira (a folha de f1-capacetes.js é pintada para ela)
+function cascaAberta() {
+  const g = casco(new THREE.SphereGeometry(1, 56, 34, 0, Math.PI * 2, 0, TH_CASCO), 1), U = g.attributes.uv;
+  for (let i = 0; i < U.count; i++) U.setY(i, 1 - (1 - U.getY(i)) * (TH_CASCO / Math.PI));
+  U.needsUpdate = true; return g;
 }
 let G = null;
 function geometrias() {
   if (G) return G;
-  const capacete = casco(new THREE.SphereGeometry(1, 40, 24), 1);
+  const capacete = cascaAberta();
   // a viseira (2026-11-13, pela imagem do Thiago: "a viseira fica melhor assim ao invés de reta"): uma peça à parte, curva, que dá a volta pela
   // frente (~150°) seguindo a forma da cabeça, mais alta que antes (da altura dos olhos até perto do queixo) e SALTADA: fica 2 mm para fora do
   // casco e estufa mais no meio (até +3,5 mm), como a lente de verdade. Em volta, a `moldura` (a borracha escura da borda e as duas dobradiças).
@@ -191,13 +214,14 @@ function corDaFaixa(c1, c2) {
 // (exportado: os mecânicos e os pilotos do pódio usam o mesmo capacete da pista, capacete-boneco.js)
 export const materialDoCapacete = (c1, c2, numero, cap, proprio = null) => {
   if (proprio) cap = proprio; // o capacete de quem joga (mods.capacete): desenho, cores, bandeira e nome
-  const extra = proprio ? { bandeira: proprio.bandeira, nome: proprio.nome } : null;
-  const cores = cap ? cap.cores : [c1, c2, corDaFaixa(c1, c2)], desenho = cap ? cap.desenho : "generico", k = [...cores, desenho, numero ?? "", extra ? extra.bandeira + "/" + extra.nome : ""].join("|"); let m = CAPACETES.get(k);
+  const extra = proprio ? { bandeira: proprio.bandeira, nome: proprio.nome, variante: proprio.variante | 0, patrocinio: proprio.patrocinio || "" } : null;
+  const cores = cap ? cap.cores : [c1, c2, corDaFaixa(c1, c2)], desenho = cap ? cap.desenho : "generico", k = [...cores, desenho, numero ?? "", extra ? [extra.bandeira, extra.nome, extra.variante, extra.patrocinio, proprio.acabamento].join("/") : ""].join("|"); let m = CAPACETES.get(k);
   if (!m) {
     const cv = document.createElement("canvas"); cv.width = 512; cv.height = 256;
     let t = null; const pintar = () => { pintarFolha(cv.getContext("2d"), cores, desenho, numero, extra, () => { pintar(); if (t) t.needsUpdate = true; }); }; pintar(); // (a bandeira que chega depois repinta)
     t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-    m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.3, metalness: 0.12 }); CAPACETES.set(k, m);
+    const ac = acabamentoDoCasco(proprio && proprio.acabamento); // (o acabamento de quem joga: brilhante, fosco, metálico ou cromado)
+    m = new THREE.MeshStandardMaterial({ map: t, roughness: proprio ? Math.max(0.2, ac.roughness) : 0.3, metalness: proprio ? ac.metalness : 0.12 }); CAPACETES.set(k, m);
   }
   return m;
 };

@@ -161,12 +161,62 @@ const DESENHOS = {
     for (let i = 0; i < 18; i++) { const a = r() * 512, b = 60 + r() * 196; poli(x, [[a, b], [a + 40 + r() * 70, b - 30 - r() * 50], [a + 20 + r() * 90, b + 20 + r() * 40]], i % 3 ? c2 : c3); }
     calota(x, c2, 48, c3);
   },
+  // lâminas: cunhas compridas e afiadas de cor 2 e cor 3 saindo da frente para trás, como os capacetes da TV
+  laminas(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-120), 150], [X(150), 40], [X(160), 70], [X(-90), 178]], c2);
+      poli(x, [[X(-110), 196], [X(170), 110], [X(170), 132], [X(-80), 214]], c3);
+      poli(x, [[X(-60), 236], [X(150), 168], [X(150), 182], [X(-30), 246]], c2);
+    }
+    calota(x, c2, 34, c3);
+  },
+  // garras: três rasgos curvos de cor 2 em cada lado, com o contorno de cor 3
+  garras(x, [c1, c2, c3]) {
+    calota(x, c3, 30);
+    for (const cx of LADOS) for (let k = 0; k < 3; k++) {
+      const y = 96 + k * 44, d = cx === 256 ? -1 : 1;
+      x.strokeStyle = c3; x.lineWidth = 22; x.lineCap = "round"; x.beginPath(); x.moveTo(cx - d * 110, y + 60); x.quadraticCurveTo(cx, y - 10, cx + d * 120, y - 40); x.stroke();
+      x.strokeStyle = c2; x.lineWidth = 12; x.beginPath(); x.moveTo(cx - d * 110, y + 60); x.quadraticCurveTo(cx, y - 10, cx + d * 120, y - 40); x.stroke();
+    }
+  },
+  // corte: o casco dividido na diagonal (a parte de baixo na cor 2) por uma faixa larga de cor 3
+  corte(x, [c1, c2, c3]) {
+    for (const cx of LADOS) { const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v; poli(x, [[X(-140), 256], [X(-140), 190], [X(150), 60], [X(150), 256]], c2); poli(x, [[X(-140), 176], [X(150), 46], [X(150), 66], [X(-140), 196]], c3); }
+    calota(x, c2, 28);
+  },
+  // velocidade: linhas finas que afinam da frente para trás, em cor 2 e cor 3, sobre a faixa do meio
+  velocidade(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1;
+      for (let k = 0; k < 7; k++) { const y = 90 + k * 20, larg = 10 - k; poli(x, [[cx - d * 130, y], [cx + d * (90 + k * 8), y - 6], [cx + d * (90 + k * 8), y - 6 + larg * 0.4], [cx - d * 130, y + larg]], k % 2 ? c3 : c2); }
+    }
+    calota(x, c2, 40, c3);
+  },
 };
 
 // ---------- o capacete de quem joga (mods.capacete; editor na Garagem da sala, menus.js) ----------
 // { desenho, cores: [casco, segunda, detalhe], viseira, bandeira (sigla de gp-info.js BANDEIRAS), nome }; o servidor confere com `limparCapacete` (corrida.js, a mesma regra)
 export const DESENHOS_CAPACETE = { faixa: "Faixa", bandas: "Bandas", blocos: "Blocos", cruz: "Cruz", topo: "Topo", asas: "Asas", triangulos: "Triângulos", generico: "Clássico",
-  chamas: "Chamas", onda: "Onda", degrade: "Degradê", raio: "Raio", xadrez: "Xadrez", estrelas: "Estrelas", listras: "Listras", geometrico: "Geométrico" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
+  chamas: "Chamas", onda: "Onda", degrade: "Degradê", raio: "Raio", xadrez: "Xadrez", estrelas: "Estrelas", listras: "Listras", geometrico: "Geométrico",
+  laminas: "Lâminas", garras: "Garras", corte: "Corte", velocidade: "Velocidade" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
+// o "Padrão" (as 4 variações de cada desenho), o acabamento do casco e os patrocínios (selos inventados, sem marca de verdade); a lista do servidor
+// é a mesma (corrida.js, limparCapacete)
+export const VARIANTES = ["Original", "Detalhe trocado", "Cores trocadas", "Espelhado"];
+export const ACABAMENTOS = { brilho: "Brilhante", fosco: "Fosco", metal: "Metálico", cromo: "Cromado" };
+export const PATROCINIOS = { "": "Nenhum", vila: "Vila do Tabba", galera: "Galera Racing", energia: "Tabba Energy", pneus: "Turbo Pneus" };
+// as propriedades do material do casco em cada acabamento (o verniz por cima, como o capacete de verdade)
+export function acabamentoDoCasco(a) {
+  return { fosco: { roughness: 0.72, metalness: 0.02, clearcoat: 0, clearcoatRoughness: 0.6 }, metal: { roughness: 0.32, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.08 },
+    cromo: { roughness: 0.12, metalness: 0.92, clearcoat: 1, clearcoatRoughness: 0.03 } }[a] || { roughness: 0.28, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.08 };
+}
+// um selo de patrocínio: o texto em caixa alta num retângulo arredondado (as cores e o desenho mudam de um para outro)
+const SELOS = { vila: ["VILA DO TABBA", "#101114", "#ffd23f"], galera: ["GALERA RACING", "#e10600", "#ffffff"], energia: ["TABBA ENERGY", "#18c46b", "#08100b"], pneus: ["TURBO PNEUS", "#ffffff", "#101114"] };
+function selo(x, id, cx, cy, w, h) {
+  const s = SELOS[id]; if (!s) return;
+  x.fillStyle = s[1]; x.beginPath(); x.roundRect ? x.roundRect(cx - w / 2, cy - h / 2, w, h, h / 3) : x.rect(cx - w / 2, cy - h / 2, w, h); x.fill();
+  x.fillStyle = s[2]; x.font = `900 ${Math.round(h * 0.62)}px Arial, sans-serif`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(s[0], cx, cy + 1, w - 8);
+}
 export const VISEIRAS = { "#090b10": "Escura", "#c9ccd2": "Espelhada", "#d4a017": "Dourada", "#1e6fd9": "Azul", "#d8142c": "Vermelha", "#7a2fd0": "Roxa", "#1fa64a": "Verde", "#f07c1a": "Laranja" };
 export const CAPACETE_PADRAO = { desenho: "faixa", cores: ["#f4f4f4", "#e10600", "#101114"], viseira: "#090b10", bandeira: "BR", nome: "" };
 // as bandeiras (o SVG de gp-info.js) viram imagem uma vez; quem pinta antes de ela chegar é avisado para repintar
@@ -182,13 +232,17 @@ export function bandeiraImg(sigla, aoChegar) {
 // pinta a folha inteira: o casco, o desenho e o que todo capacete tem (a faixa do patrocínio acima da viseira, o filete embaixo e o número);
 // `extra` (o capacete de quem joga): a bandeira atrás e nos lados e o nome na faixa acima da viseira e na nuca. `aoChegar`: a bandeira chegou depois, repinte
 export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = null) {
-  const [c1, c2, c3] = cores;
+  const v = extra && extra.variante | 0, base = v === 1 ? [cores[0], cores[2], cores[1]] : v === 2 ? [cores[1], cores[0], cores[2]] : cores; // (o "Padrão": as cores trocadas)
+  const [c1, c2, c3] = base;
   x.fillStyle = c1; x.fillRect(0, 0, 512, 256);
-  (DESENHOS[desenho] || DESENHOS.generico)(x, cores);
+  x.save(); if (v === 3) { x.translate(512, 0); x.scale(-1, 1); } // (o "Padrão" espelhado: o desenho vira de lado)
+  (DESENHOS[desenho] || DESENHOS.generico)(x, base);
+  x.restore();
   x.fillStyle = c3; x.fillRect(282, 85, 204, 11); // a faixa estreita do patrocínio / nome logo acima da viseira (só cor)
   // as duas entradas de ar do queixo, logo abaixo da viseira (2026-11-13, pela imagem do Thiago): fendas escuras inclinadas para fora
   x.fillStyle = "#0b0c10";
   for (const l of [-1, 1]) { x.save(); x.translate(384 + l * 34, 150); x.rotate(l * 0.18); x.beginPath(); x.roundRect ? x.roundRect(-17, -4, 34, 8, 4) : x.rect(-17, -4, 34, 8); x.fill(); x.restore(); }
+  if (extra && extra.patrocinio && SELOS[extra.patrocinio]) { selo(x, extra.patrocinio, 128, 60, 150, 22); for (const cx of [0, 256, 512]) selo(x, extra.patrocinio, cx, 196, 110, 18); } // (na nuca e nos dois lados)
   if (extra) {
     const img = extra.bandeira ? bandeiraImg(extra.bandeira, aoChegar) : null;
     if (img) for (const [cx, cy, w] of [[128, 104, 84], [256, 120, 54], [0, 120, 54], [512, 120, 54]]) { x.fillStyle = "#0b0c10"; x.fillRect(cx - w / 2 - 2, cy - w / 3 - 2, w + 4, w * 2 / 3 + 4); x.drawImage(img, cx - w / 2, cy - w / 3, w, w * 2 / 3); }

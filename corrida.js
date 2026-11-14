@@ -56,13 +56,16 @@ const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "
 const int = (v, d) => { const n = parseInt(v); return Number.isFinite(n) ? n : d; };
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : NaN);
 // o capacete de quem joga (mods.capacete; f1-capacetes.js): só o que o editor oferece, e o nome curto e sem símbolos
-const DESENHOS_CAPACETE = ["faixa", "bandas", "blocos", "cruz", "topo", "asas", "triangulos", "generico", "chamas", "onda", "degrade", "raio", "xadrez", "estrelas", "listras", "geometrico"], HEX = /^#[0-9a-f]{6}$/i;
+const DESENHOS_CAPACETE = ["faixa", "bandas", "blocos", "cruz", "topo", "asas", "triangulos", "generico", "chamas", "onda", "degrade", "raio", "xadrez", "estrelas", "listras", "geometrico", "laminas", "garras", "corte", "velocidade"], HEX = /^#[0-9a-f]{6}$/i;
 function limparCapacete(c) {
   if (!c || typeof c !== "object") return null;
   const cores = Array.isArray(c.cores) ? c.cores.slice(0, 3) : [];
   if (!DESENHOS_CAPACETE.includes(c.desenho) || cores.length !== 3 || !cores.every((x) => HEX.test(x)) || !HEX.test(c.viseira || "")) return null;
   const bandeira = /^[A-Z]{2}$/.test(c.bandeira || "") ? c.bandeira : "", nome = String(c.nome || "").normalize("NFC").replace(/[^\p{L}\p{N} .\-]/gu, "").trim().slice(0, 14);
-  return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome };
+  // (2026-11-14) o "Padrão" (0 a 3), o acabamento do casco e o patrocínio: os mesmos de f1-capacetes.js (VARIANTES, ACABAMENTOS, PATROCINIOS)
+  const variante = [0, 1, 2, 3].includes(c.variante) ? c.variante : 0, acabamento = ["brilho", "fosco", "metal", "cromo"].includes(c.acabamento) ? c.acabamento : "brilho";
+  const patrocinio = ["vila", "galera", "energia", "pneus"].includes(c.patrocinio) ? c.patrocinio : "";
+  return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome, variante, acabamento, patrocinio };
 }
 
 module.exports = function attachCorrida(io) {

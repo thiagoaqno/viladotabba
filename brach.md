@@ -1,42 +1,44 @@
-# Telas pós-corrida e pós-classificação novas, ajustes entre Q1/Q2/Q3, capacete da carreira no carro e a cidade real em Monza e Silverstone
+# Capacete: o editor novo no estilo da referência, o modelo 3D mais real e as opções novas; e o satélite sai
 
-O Thiago pediu os cinco juntos, num PR só.
+O Thiago mandou a tela de inspiração do capacete, com as opções novas de personalização, e pediu o modelo 3D o mais perto possível de um capacete de verdade. No meio, pediu para desfazer a imagem de satélite do #752, porque a resolução ficou baixa.
 
-## 1. A tela pós-corrida (`resultado-gp.js`, `pos-corrida.css`)
+## O editor (`capacete-editor-ui.js`, `capacete.css`)
 
-No estilo do "Race result" da referência:
-- **Três colunas:** o pódio (o mesmo pódio 3D, com os pilotos e as logos nos degraus), a classificação e a análise da corrida.
-- **Classificação:** cada linha tem a posição no bloco da cor da equipe, o sobrenome, a logo e o nome da equipe, o tempo e "+pts". O hover (ou o foco) abre o grid de largada com ▲/▼, as paradas com os pneus, a melhor volta, o dano e as punições. Clicar escolhe o piloto para comparar na análise.
-- **Análise:** só as abas Replay, Ritmo, Posições e Pneus, com o replay em uma coluna (`montarAnalise` aceita `abas`).
-- **A faixa de baixo:** o seu resultado (Vitória, Pódio, "7º lugar", Abandono, Desclassificado), o seu nome e a equipe, e os botões, sem emoji.
+O mesmo `montarEditorCapacete` e o mesmo capacete guardado (`corrida:capacete`), na etapa Carro da sala e na aba Capacete da Central:
+- **Menu à esquerda:** Desenho, Cores, Detalhes, Patrocínios, Visor e Acabamento, com ícones em SVG e a barra na cor da equipe na opção ativa.
+- **Desenho:** a grade de miniaturas **em 3D, com as suas cores**, fotografadas pela própria prévia (`capacete-3d.js`, `fotografar`), 12 por página, com "1 / 2" e o selo na escolhida.
+- **Cores:** casco, segunda cor e detalhes, cada uma com 12 cores prontas e o "+" para escolher outra.
+- **Detalhes:** a bandeira e o nome.
+- **Patrocínios:** selos inventados (Vila do Tabba, Galera Racing, Tabba Energy, Turbo Pneus), sem marca de verdade, na nuca e nos lados.
+- **Visor:** as cores de antes.
+- **Acabamento:** brilhante, fosco, metálico ou cromado.
+- **À direita, o capacete grande:** arrastar gira, e ele não gira sozinho. Embaixo ficam as **cores principais** e o **Padrão**, com as 4 variações do desenho em miniatura (original, detalhe trocado, cores trocadas e espelhado).
+- As cores saem do tema de onde o editor está: os tokens da Central (claro ou escuro) ou o escuro da sala. Ele empilha nas telas estreitas.
 
-## 2. A tela pós-classificação e 3. os ajustes entre as sessões
+## O modelo 3D (`f1-piloto.js`, o mesmo da pista)
 
-- **Servidor** (`corrida-f1-classificacao.js`): com humanos na sala, a sessão seguinte só abre quando todos os humanos que passaram apertam "Largar" (`confirmarLargada`, que agora vale em toda pausa).
-  - Se alguém sumir, ela abre sozinha depois de `PAUSA_MAX_MS` (3 minutos), para a sala com os amigos nunca ficar presa.
-  - Antes da corrida, a largada espera todos, como já era. Sem humanos, segue automático como antes.
-  - A montagem do carro (`montagemGrid`) muda em qualquer pausa.
-- **Tela** (`pos-quali.js`, novo; o `hud.js` só chama):
-  - **Resultado:** depois do Q1 e do Q2, a tabela de quem passou e de quem caiu. No fim, os 3 primeiros em cartões inclinados na cor da equipe, com a foto do piloto (`fotos-noticias.js`, agora carregado também na página da corrida; o humano fica com a logo grande), e a tabela com os tempos do Q1, do Q2 e do Q3, o melhor de cada sessão em roxo.
-  - **Ajustes do carro** (botão no rodapé): o acerto (asa e altura; `acerto.js` agora abre nas pausas da classificação, e o acerto vai junto com as entradas e vale já na sessão seguinte), os pontos do carro na carreira e, antes da corrida, o pneu da largada e a previsão do tempo. Na classificação o pneu é decidido pela pista (`Sim.pneuDaLargada`), e a tela explica isso.
-  - **Rodapé:** quantos estão prontos, o relógio da pausa e o botão "Largar para o Q2" / "Ir para a largada".
+- O casco ficou mais liso (56 × 34) e **aberto embaixo**, como um capacete de verdade; o UV continua o da esfera inteira, e a pintura não muda de lugar.
+- Peças escuras novas, todas seguindo a forma do casco, na mesma malha da moldura que o carro já tinha (uns 2200 triângulos por piloto, medido no Node):
+  - a borracha do pescoço e o friso da borda de baixo;
+  - a **aba aerodinâmica** atrás, levantada no meio;
+  - o **lábio** em cima da viseira;
+  - as duas **entradas de ar** da testa;
+  - a **grade do queixo**.
+- O acabamento vale também no capacete do carro (`acabamentoDoCasco`).
 
-## 4. O capacete da carreira no carro, e mais capacetes
+## A pintura e o servidor
 
-- **Por que não chegava:** na sala de um GP da carreira, o servidor recusava a ação `mods` (só aceita a lista dos GPs controlados pela sede), e a sala da carreira pula a tela de sala, que era onde o capacete guardado era mandado.
-  - Agora `mods` é aceito na carreira, só para o capacete (a pintura continua a da equipe).
-  - O navegador manda o capacete guardado também durante a classificação (`rede.js`, `sincronizarCapacete`).
-- **8 desenhos novos** (`f1-capacetes.js`, e a lista do servidor em `corrida.js`): Chamas, Onda, Degradê, Raio, Xadrez, Estrelas, Listras e Geométrico.
+- **`f1-capacetes.js`:**
+  - 4 desenhos novos, angulosos como os da referência: Lâminas, Garras, Corte e Velocidade (20 ao todo);
+  - a variante: as cores trocadas ou o desenho espelhado;
+  - os selos de patrocínio;
+  - as propriedades de cada acabamento.
+- **`corrida.js`** (`limparCapacete`): aceita os desenhos novos, a `variante` (0 a 3), o `acabamento` e o `patrocinio`.
 
-## 5. A cidade real no cenário de Monza e Silverstone
+## O satélite sai
 
-- **`cidade-real.js` (novo):** os prédios do mapa real (`mapas/<pista>.json`, OpenStreetMap), já nas unidades do traçado.
-  - Fica de fora um corredor de 180 m em volta da pista, onde estão as arquibancadas, os boxes e o parque do cenário próprio, e tudo fora do chão do mundo.
-  - Cada prédio afunda a base abaixo do terreno mais baixo sob ele, para nada flutuar, e tem a altura real.
-  - É uma malha só, sem sombra.
-- **Ligado pelo próprio cenário de cada GP** (`gps/monza.js`, `gps/silverstone.js`), sem mexer no `pista.js` nem no kit.
-  - Medido com os pontos da pista: Monza fica com 1754 prédios (93 no corredor e 110 fora do chão saem). Silverstone, que é campo, fica com 61.
+`gp-satelite.js` foi apagado. A miniatura 3D volta a usar direto o mapa desenhado do OpenStreetMap, com o crédito. Os mapas continuam com o `geo`, que não pesa e fica para outro uso.
 
-Entrada no topo de `novidades.json`. Conferido só com `node --check` e `JSON.parse`. Se algum teste antigo do CI contava com a sessão abrindo sozinha depois de 9 s com humanos na sala, ele quebra porque a regra mudou. O teste jogando fica com o Thiago.
+Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`; as geometrias novas do capacete foram montadas uma vez no Node, sem teste novo. Não vi o capacete na tela. O teste jogando fica com o Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

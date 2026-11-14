@@ -77,13 +77,9 @@ export function criarMiniatura(caixa, pista, op = {}) {
   borda.rotation.x = -Math.PI / 2; borda.position.y = 0.04; cena.add(borda);
   // o mapa real em volta (gp-mapa-real.js: os prédios, as ruas, a água e o verde do OpenStreetMap), quando a pista tem; chega depois, sem travar
   const grupoMapa = new THREE.Group(); cena.add(grupoMapa);
-  // primeiro a imagem de satélite (gp-satelite.js, da internet); sem ela, o mapa desenhado do OpenStreetMap. Cada um com o seu crédito.
+  // o mapa desenhado do OpenStreetMap em volta (gp-mapa-real.js), com o crédito (o satélite do #752 saiu: o Thiago achou a resolução baixa demais)
   const creditos = [], creditar = (txt) => { if (!vivo) return; const cr = document.createElement("small"); cr.className = "mn3-credito"; cr.textContent = txt; caixa.appendChild(cr); creditos.push(cr); };
-  const desenhado = () => import("/corrida/gp-mapa-real.js").then((m) => m.montarMapaReal(grupoMapa, { pista, s: T.s, cx: T.cx, cy: T.cy, raio: raio - 0.6, tema: op.tema, v: T.v, larg: 1.25 })).then((r) => { if (r) creditar("© colaboradores do OpenStreetMap"); });
-  if (op.mapa !== false) import("/corrida/gp-satelite.js").then((m) => m.montarSatelite(grupoMapa, { pista, s: T.s, cx: T.cx, cy: T.cy, raio: raio - 0.6, tema: op.tema }).then((r) => {
-    if (!r) return desenhado();
-    grade.visible = false; creditar(m.CREDITO);
-  })).catch(() => desenhado().catch(() => {}));
+  if (op.mapa !== false) import("/corrida/gp-mapa-real.js").then((m) => m.montarMapaReal(grupoMapa, { pista, s: T.s, cx: T.cx, cy: T.cy, raio: raio - 0.6, tema: op.tema, v: T.v, larg: 1.25 })).then((r) => { if (r) creditar("© colaboradores do OpenStreetMap"); }).catch(() => {});
 
   // a pista: o asfalto, a parede do relevo (com a sombra no chão) e a linha dos setores por cima
   const asfalto = new THREE.Mesh(faixa(v, n, 1.25, 0, null), new THREE.MeshBasicMaterial({ color: P.asfalto, side: THREE.DoubleSide }));

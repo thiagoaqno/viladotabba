@@ -23,7 +23,7 @@
 .cp2-pag{display:flex;align-items:center;gap:8px;font-weight:800;font-variant-numeric:tabular-nums}
 .cp2-pag button{display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:none;color:var(--cp-tx);cursor:pointer}.cp2-pag button:hover:not(:disabled){background:var(--cp-hover)}.cp2-pag button:disabled{opacity:.3;cursor:default}
 .cp2-grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.cp2-mini{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 6px;border:2px solid transparent;border-radius:8px;background:var(--cp-bg);color:var(--cp-tx2);cursor:pointer;transition:transform .15s,border-color .15s,background .15s;animation:cp2Entra .3s ease both}
+.cp2-mini{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 6px;border:2px solid transparent;border-radius:8px;background:var(--cp-bg);color:var(--cp-tx2);cursor:pointer;transition:transform .15s,border-color .15s,background .15s;animation:cp2Entra .3s ease}
 @keyframes cp2Entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .cp2-mini img{display:block;width:100%;aspect-ratio:180/128;object-fit:contain}
 .cp2-mini small{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}

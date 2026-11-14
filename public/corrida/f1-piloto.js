@@ -23,7 +23,7 @@ const suave = (s) => s * s * (3 - 2 * s);
 // onde as coisas ficam, no quadro do carro (metros do modelo; a frente é −z, o chão é y = 0): o pescoço, o centro do volante e as empunhaduras
 // O piloto fica deitado fundo no cockpit, como no carro de verdade: só a metade de cima do capacete (da viseira para cima) passa da borda do cockpit (~0,69 m do chão
 // ao lado da cabeça), o topo fica na altura da barra do halo (~0,776 m; medido no modelo) e o queixo e o pescoço ficam escondidos atrás das laterais.
-const RC = { x: 0.073, y: 0.081, z: 0.095 }; // os raios do capacete (m)
+const RC = { x: 0.077, y: 0.087, z: 0.095 }; // os raios do capacete (m) (2026-11-14: 7% mais alto, a cúpula do capacete de verdade)
 const PESCOCO = { x: 0, y: 0.543, z: 0.0 }; // o capacete é uma bola de ~0,26 m 0,14 m acima: o centro dele fica a ~0,683 m, a viseira na altura da borda do cockpit (~0,69) e o topo a ~0,764 m (um pouco abaixo da barra do halo, ~0,776)
 const VOLANTE = { x: 0, y: 0.524, z: -0.32 }; // o centro do volante do Audi R26 (f1-2026.js); com o volante do modelo, usa o dele
 const MAO = { x: 0.118, y: 0, z: 0.035 }; // o punho fechado de cada luva em relação ao centro do volante (antes de girar com ele): na pegada lateral do aro
@@ -41,15 +41,24 @@ const sinal = (v) => (v < 0 ? -1 : 1), passo = (a, b, v) => { const t = Math.max
 // o formato do capacete de F1: um elipsoide "quadrado" (calota achatada em cima, lados quase retos), mais comprido que alto, que desce reto atrás com uma aba (o spoiler) e tem o queixo saliente na frente.
 // Deforma uma esfera unitária (a frente é −z, o topo +y) mantendo as coordenadas de textura; `esc` engorda a casca (a viseira fica 1,2% por fora).
 function casco(g, esc) {
+  // (2026-11-14, o formato refeito pela referência do Thiago: o capacete de F1 de verdade) a cúpula redonda em cima (sem achatar), os lados
+  // mais retos na altura da viseira, a barra do queixo saliente (para a frente e para baixo, mais estreita), a nuca que desce e se projeta
+  // para trás (onde fica a aba) e a borda de baixo abrindo um pouco para fora
   const P = g.attributes.position, N = g.attributes.normal;
   for (let i = 0; i < P.count; i++) {
     const sx = P.getX(i), sy = P.getY(i), sz = P.getZ(i);
-    let x = sinal(sx) * Math.abs(sx) ** 0.8, y = sinal(sy) * Math.abs(sy) ** (sy > 0 ? 0.58 : 0.85), z = sinal(sz) * Math.abs(sz) ** 0.8; // (a coroa chata: expoente menor que 1 em cima)
+    let x = sinal(sx) * Math.abs(sx) ** 0.86, y = sinal(sy) * Math.abs(sy) ** (sy > 0 ? 0.82 : 0.9), z = sinal(sz) * Math.abs(sz) ** 0.88;
     x *= RC.x * esc; y *= RC.y * esc; z *= RC.z * esc;
-    const frente = passo(0.2, 0.9, -sz), baixo = passo(-0.05, -0.55, sy), costas = passo(0.35, 0.95, sz);
-    const queixo = frente * baixo; x *= 1 - 0.16 * queixo; z -= 0.022 * queixo; y -= 0.008 * queixo; // o queixo: sai para a frente e afina
-    const aba = costas * Math.max(0, 1 - ((sy - 0.2) / 0.3) ** 2) * (1 - passo(0.5, 0.9, Math.abs(sx))); z += 0.018 * aba; // a aba atrás: um degrau na altura da nuca
-    z += 0.01 * costas * (1 - passo(-0.4, 0.2, sy)); // e as costas descem retas (um pouco para trás embaixo)
+    const frente = passo(0.15, 0.85, -sz), costas = passo(0.25, 0.95, sz), baixo = passo(0.0, -0.75, sy), meio = 1 - passo(0.15, 0.6, Math.abs(sy));
+    // a barra do queixo: sai para a frente e desce, e afina nos lados (o "bico" do capacete de corrida)
+    const queixo = frente * baixo; z -= 0.042 * queixo * esc; y -= 0.02 * queixo * esc; x *= 1 - 0.09 * queixo;
+    // os lados mais retos na altura dos olhos (a janela da viseira) e a frente um pouco achatada ali
+    x *= 1 + 0.05 * meio * (1 - frente); z += 0.006 * frente * meio * esc;
+    // a nuca: desce e vai para trás embaixo (o volume atrás do capacete moderno), com o degrau da aba na altura da nuca
+    z += (0.016 * costas * baixo + 0.006 * costas) * esc;
+    const aba = costas * Math.max(0, 1 - ((sy - 0.15) / 0.28) ** 2) * (1 - passo(0.5, 0.9, Math.abs(sx))); z += 0.012 * aba * esc;
+    // a borda de baixo abre um pouco para fora (o friso do pescoço)
+    const borda = passo(-0.7, -0.98, sy); x *= 1 + 0.06 * borda; z *= 1 + 0.03 * borda;
     P.setXYZ(i, x, y, z);
     const nx = sx / (RC.x * esc), ny = sy / (RC.y * esc), nz = sz / (RC.z * esc), l = Math.hypot(nx, ny, nz) || 1; N.setXYZ(i, nx / l, ny / l, nz / l);
   }
@@ -73,7 +82,7 @@ function molduraDaViseira(V) {
     const th = V.theta0 + V.theta * 0.45, dir = new THREE.Vector3(-Math.cos(phi) * Math.sin(th), Math.cos(th), Math.sin(phi) * Math.sin(th));
     const ponto = casco(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute([dir.x, dir.y, dir.z], 3)).setAttribute("normal", new THREE.Float32BufferAttribute([0, 1, 0], 3)), 1);
     const p = new THREE.Vector3().fromBufferAttribute(ponto.attributes.position, 0), nrm = dir.clone().normalize();
-    const d = new THREE.CylinderGeometry(0.014, 0.016, 0.006, 20); // (a dobradiça: um disco baixo, deitado na lateral)
+    const d = new THREE.CylinderGeometry(0.009, 0.011, 0.005, 20); // (a dobradiça: um disco baixo, deitado na lateral)
     d.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), nrm)); d.translate(p.x + nrm.x * 0.003, p.y + nrm.y * 0.003, p.z + nrm.z * 0.003);
     partes.push(d.toNonIndexed());
   }
@@ -83,7 +92,7 @@ function molduraDaViseira(V) {
 // (2026-11-14, pela referência do Thiago: o capacete de corrida de verdade) as peças escuras em volta do casco, todas seguindo a forma dele:
 // a borracha do pescoço (o casco agora é aberto embaixo), a aba aerodinâmica atrás (o spoiler), o lábio em cima da viseira, as duas entradas
 // de ar da testa e a grade do queixo. Vão na mesma malha da moldura (uma malha escura por piloto).
-const TH_CASCO = 2.62; // onde o casco acaba embaixo (a abertura do pescoço)
+const TH_CASCO = 2.74; // onde o casco acaba embaixo (a abertura do pescoço)
 function faixaDaCasca(phi0, phi, th0, th, base, meio, seg = 24) { return estufar(casco(new THREE.SphereGeometry(1, seg, 3, phi0, phi, th0, th), 1), base, meio).toNonIndexed(); }
 function detalhesDoCasco(V) {
   const F = 1.5 * Math.PI, T = 0.5 * Math.PI; // (a frente é phi = 1,5π; a nuca, 0,5π)
@@ -92,15 +101,14 @@ function detalhesDoCasco(V) {
     faixaDaCasca(0, Math.PI * 2, TH_CASCO - 0.05, 0.07, 0.004, 0.0, 48), // o friso de borracha na borda de baixo
     faixaDaCasca(T - 0.62, 1.24, 1.08, 0.2, 0.004, 0.026, 28), // a aba aerodinâmica atrás, levantada no meio
     faixaDaCasca(V.phi0 - 0.02, V.phi + 0.04, V.theta0 - 0.05, 0.04, 0.006, 0.004, 40), // o lábio em cima da viseira
-    faixaDaCasca(F - 0.42, 0.24, 0.6, 0.13, 0.003, 0.012, 8), faixaDaCasca(F + 0.18, 0.24, 0.6, 0.13, 0.003, 0.012, 8), // as entradas de ar da testa
-    faixaDaCasca(F - 0.24, 0.48, 1.98, 0.12, 0.004, 0.006, 16), // a grade do queixo
+    faixaDaCasca(F - 0.16, 0.13, 1.93, 0.035, 0.002, 0.0015, 6), faixaDaCasca(F + 0.03, 0.13, 1.93, 0.035, 0.002, 0.0015, 6), // as duas fendas do queixo (rasas: na prévia, mais fundas viravam um bloco preto)
   ];
 }
 // a casca pintada, aberta embaixo; o UV continua o da esfera inteira (a folha de f1-capacetes.js é pintada para ela)
 function cascaAberta() {
   const g = casco(new THREE.SphereGeometry(1, 56, 34, 0, Math.PI * 2, 0, TH_CASCO), 1), U = g.attributes.uv;
   for (let i = 0; i < U.count; i++) U.setY(i, 1 - (1 - U.getY(i)) * (TH_CASCO / Math.PI));
-  U.needsUpdate = true; return g;
+  U.needsUpdate = true; g.computeVertexNormals(); return g; // (a normal de verdade do casco deformado: a da elipse sombreava errado o queixo e a nuca)
 }
 let G = null;
 function geometrias() {
@@ -109,7 +117,7 @@ function geometrias() {
   // a viseira (2026-11-13, pela imagem do Thiago: "a viseira fica melhor assim ao invés de reta"): uma peça à parte, curva, que dá a volta pela
   // frente (~150°) seguindo a forma da cabeça, mais alta que antes (da altura dos olhos até perto do queixo) e SALTADA: fica 2 mm para fora do
   // casco e estufa mais no meio (até +3,5 mm), como a lente de verdade. Em volta, a `moldura` (a borracha escura da borda e as duas dobradiças).
-  const V = { phi0: 1.5 * Math.PI - 1.3, phi: 2.6, theta0: 1.2, theta: 0.44 };
+  const V = { phi0: 1.5 * Math.PI - 1.25, phi: 2.5, theta0: 1.24, theta: 0.36 }; // (2026-11-14: um pouco mais estreita na altura, como a da referência)
   const viseira = estufar(casco(new THREE.SphereGeometry(1, 56, 8, V.phi0, V.phi, V.theta0, V.theta), 1), 0.002, 0.0035);
   const moldura = molduraDaViseira(V);
   // o braço (manga) afina do ombro ao cotovelo e o antebraço do cotovelo ao pulso; o ombro e o cotovelo são bolinhas (a junta arredondada). As bolas levam a escala inversa do comprimento do osso, que estica o cilindro a cada quadro.

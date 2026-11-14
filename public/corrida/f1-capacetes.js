@@ -238,7 +238,7 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   x.save(); if (v === 3) { x.translate(512, 0); x.scale(-1, 1); } // (o "Padrão" espelhado: o desenho vira de lado)
   (DESENHOS[desenho] || DESENHOS.generico)(x, base);
   x.restore();
-  x.fillStyle = c3; x.fillRect(282, 85, 204, 11); // a faixa estreita do patrocínio / nome logo acima da viseira (só cor)
+  x.fillStyle = c3; x.fillRect(282, 74, 204, 11); // a faixa estreita do patrocínio / nome acima da viseira (só cor; um pouco acima do lábio da viseira)
   // as duas entradas de ar do queixo, logo abaixo da viseira (2026-11-13, pela imagem do Thiago): fendas escuras inclinadas para fora
   x.fillStyle = "#0b0c10";
   for (const l of [-1, 1]) { x.save(); x.translate(384 + l * 34, 150); x.rotate(l * 0.18); x.beginPath(); x.roundRect ? x.roundRect(-17, -4, 34, 8, 4) : x.rect(-17, -4, 34, 8); x.fill(); x.restore(); }
@@ -249,8 +249,8 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
     const nome = String(extra.nome || "").trim();
     if (nome) {
       const claro = (h) => { const n = parseInt(String(h).slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) > 140; };
-      x.fillStyle = c3; x.fillRect(278, 78, 212, 22); x.fillStyle = claro(c3) ? "#101114" : "#ffffff";
-      x.font = "900 17px Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(nome.toUpperCase(), 384, 90, 200); // na faixa acima da viseira
+      x.fillStyle = c3; x.fillRect(278, 66, 212, 22); x.fillStyle = claro(c3) ? "#101114" : "#ffffff";
+      x.font = "900 17px Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(nome.toUpperCase(), 384, 78, 170); // na faixa acima da viseira (acima do lábio dela)
       x.font = "900 24px Arial, sans-serif"; x.lineWidth = 5; x.strokeStyle = "#0b0c10"; x.strokeText(nome.toUpperCase(), 128, 214, 180); x.fillStyle = "#ffffff"; x.fillText(nome.toUpperCase(), 128, 214, 180); // na nuca
     }
   }

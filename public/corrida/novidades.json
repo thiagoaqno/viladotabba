@@ -1,5 +1,13 @@
 [
   {
+    "id": "2026-11-14-capacete-formato",
+    "data": "2026-11-14",
+    "itens": [
+      "Capacete com o formato de um capacete de F1 de verdade: a cúpula redonda, a viseira em faixa, a barra do queixo saliente e a nuca para trás (também no carro)",
+      "O editor de capacete não faz mais a sala inteira se redesenhar a cada clique: o capacete vai para a sala uma vez, logo depois do último clique"
+    ]
+  },
+  {
     "id": "2026-11-14-capacete-novo",
     "data": "2026-11-14",
     "itens": [

@@ -125,7 +125,11 @@ function maosDe(cLuva, cPainel) {
   g = mergeGeometries(partes); MAOS.set(k, g); return g;
 }
 const LUVA = () => (LUVA.m ||= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.65, metalness: 0.05, side: THREE.DoubleSide }));
-const VISEIRA = (cor) => { const k = cor || "#090b10"; VISEIRA.m ||= new Map(); if (!VISEIRA.m.has(k)) VISEIRA.m.set(k, new THREE.MeshStandardMaterial({ color: k, roughness: 0.1, metalness: k === "#090b10" ? 0.4 : 0.75 })); return VISEIRA.m.get(k); }; // (a cor da viseira: a de quem joga escolhe; f1-capacetes.js VISEIRAS)
+// a viseira (docs/capacetes-guia.md, item 2): metal ~0,9 e rugosidade ~0,05, com verniz por cima, na cor escolhida; a escura reflete menos
+const VISEIRA = (cor) => { const k = cor || "#090b10"; VISEIRA.m ||= new Map(); if (!VISEIRA.m.has(k)) VISEIRA.m.set(k, new THREE.MeshPhysicalMaterial({ color: k, roughness: 0.05, metalness: k === "#090b10" ? 0.6 : 0.9, clearcoat: 1, clearcoatRoughness: 0.03 })); return VISEIRA.m.get(k); };
+export const materialDaViseira = VISEIRA;
+// as geometrias do capacete e da viseira (as mesmas da pista), para a prévia 3D do editor (capacete-3d.js)
+export const geometriasDoCapacete = () => { const g = geometrias(); return { capacete: g.capacete, viseira: g.viseira }; }; // (a cor da viseira: a de quem joga escolhe; f1-capacetes.js VISEIRAS)
 const CARBONO = () => (CARBONO.m ||= new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.4, metalness: 0.1 }));
 const TECIDOS = new Map(), CAPACETES = new Map();
 // o tecido do macacão e das luvas: um material por cor (e por escurecimento), guardado e reaproveitado por todos os carros da equipe

@@ -258,7 +258,7 @@ function passo(c, ent, amb, tr, ev) {
   // A LARGADA (regulamento técnico de 2026, art. 5.2.12): na largada parada, o MGU-K só pode entregar depois que o carro passa de 50 km/h;
   // no grid ele só recarrega (art. 5.2.19). Até lá a arrancada é só do motor a combustão. Na classificação não há largada parada: livre.
   if (!c.ersLiberado && (amb.quali || Math.abs(c.v) * 0.75 >= F1.ERS_LARGADA_KMH)) c.ersLiberado = true;
-  const usarErs = !!(c.ersLiberado && ent.gas && !amb.safety && (amb.ersAuto !== false ? F1.usarErsAuto(c.ers.carga, c.v, spec.vmax, (tr.pts[c.idx].k || 0) < 1 / 1500, c.draft > 0.25) || (ent.ers && c.ers.carga > F1.ERS_PISO_OVERTAKE) : ent.ers));
+  const usarErs = !!(c.ersLiberado && ent.gas && !amb.safety && !F1.ersBloqueadoNaChuva(amb.agua) && (amb.ersAuto !== false ? F1.usarErsAuto(c.ers.carga, c.v, spec.vmax, (tr.pts[c.idx].k || 0) < 1 / 1500, c.draft > 0.25) || (ent.ers && c.ers.carga > F1.ERS_PISO_OVERTAKE) : ent.ers));
   const ersAtivo = F1.gastarErs(c.ers, dt, usarErs, amb.ersAuto === false || c.draft > 0.25 || !!ent.ers); // (overtake: colado no da frente, ou o botão no modo manual; senão o gasto suave da reta)
   c.drsAtivo = drs; c.ersAtivo = ersAtivo;
   // o relevo: a gravidade puxa para baixo da pista

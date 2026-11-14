@@ -7,6 +7,28 @@
       "Na chuva, a linha dos carros vai secando aos poucos por onde todos passam",
       "Gotas de água em cima do carro, juntando aos poucos enquanto chove",
       "Na câmera de trás as gotas ficam no carro, não na tela; no cockpit elas juntam aos poucos"
+    "id": "2026-11-13-capacete-3d-carreira",
+    "data": "2026-11-13",
+    "itens": [
+      "Capacete em 3D no editor: gira sozinho e dá para girar arrastando",
+      "Aba Capacete na Central da carreira: o que você escolher vai para a pista",
+      "Seu capacete também no pódio, com bandeira, nome e a cor da viseira",
+      "Viseira com reflexo de metal",
+      "Conserto: o nome no capacete aparecia vazio para os outros"
+    "id": "2026-11-13-noite-box",
+    "data": "2026-11-13",
+    "itens": [
+      "Corridas noturnas largam no pôr do sol e viram noite em 2 voltas",
+      "Sem travada na primeira vez que cada equipe vai para o box"
+    "id": "2026-11-13-chuva-pneus-ers",
+    "data": "2026-11-13",
+    "itens": [
+      "ERS desligado com a pista molhada: na chuva a bateria só recarrega",
+      "Macio e médio com um pouco mais de aderência; intermediário e pneu de chuva melhores no seco, mas ainda gastam rápido",
+      "Intermediário dura mais e vale a pena na garoa, que agora dura bem mais",
+      "A previsão não mente: de 50% para cima chove mesmo, e a largada com chuva começa chovendo",
+      "Robôs mais cuidadosos na chuva conforme o pneu: menos derrapagem",
+      "O engenheiro diz o pneu da sugestão de box e comenta a corrida na penúltima volta"
     ]
   },
   {

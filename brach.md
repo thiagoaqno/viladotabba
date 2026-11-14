@@ -1,14 +1,18 @@
-# Ferrari SF-26 (2026) pelos prints do Thiago
+# McLaren MCL40 (2026) pelos prints do Thiago
 
-Ajuste da Ferrari de 2026 pelos prints de `Carros F1/2026/Ferrari`. A pintura já estava perto; o que mudou:
+A pintura da McLaren de 2026 refeita pelos prints de `Carros F1/2026/Mclaren`:
 
-- As duas asas, o assoalho, a parte de baixo das caixas laterais e a frente/traseira de baixo passaram de preto para **azul-marinho** (`#182035`), como no carro.
-- Asa traseira: o **IBM azul** no meio (lido por quem vem atrás, de cima e na vista de trás) e os redondos da HP nas pontas.
+- Papaia com a tampa do motor preta, descendo em diagonal até a asa traseira, e a entrada de ar azul-petróleo com o allwyn.
+- Faixa preta em diagonal na frente da caixa lateral (VELO e OKX), Mastercard e DELL no papaia, Gemini grande na tampa, DP WORLD no bico.
+- Asa dianteira preta com a faixa papaia do ONEflight na borda e os círculos do Mastercard.
+- Bico: a ponta preta com a estrela do Gemini e a fileira PIRELLI, DEWALT, rubrik, CISCO, Deloitte, DELL (o atlas do nariz), o Hilton perto do cockpit.
+- Asa traseira papaia em cima com o ETIHAD; atrás, ETIHAD no preto; Dropbox nas placas e groq embaixo.
+- Marcas novas em `f1-marcas.js`: `etihad`, `groq`, `hilton`, `oneflight`.
 
-**Depende do #724 (Mercedes):** este branch saiu dele para as duas entradas do `novidades.json` não brigarem. Faça o merge do #724 primeiro.
+Saiu direto da `main`. Se o #726 (Red Bull) entrar antes, o topo do `novidades.json` pode dar conflito: eu acerto.
 
-**Peso:** zero a mais (a mesma folha projetada de 2026, um canvas por equipe, só desenho).
+**Peso:** zero a mais (a folha projetada de 2026, um canvas por equipe, só desenho).
 
-Conferido só com `node --check` (`f1-pintura.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

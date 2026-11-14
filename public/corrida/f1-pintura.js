@@ -123,31 +123,48 @@ function touros(c, a0, b0, a1, b1) {
   const [x0, y0] = pt(c, a0, b0), [x1, y1] = pt(c, a1, b1), w = Math.abs(x1 - x0), h = Math.abs(y1 - y0);
   c.save(); c.setTransform(1, 0, 0, 1, Math.min(x0, x1), Math.min(y0, y1)); c.drawImage(L, L.naturalWidth * 0.5, L.naturalHeight * 0.3, L.naturalWidth * 0.5, L.naturalHeight * 0.2, 0, 0, w, h); c.restore();
 }
-// McLaren MCL40: papaia; a tampa e a barriga das caixas pretas, com o papaia em cunha no meio, e a asa traseira papaia e preta
+// McLaren MCL40, pelos prints do Thiago (2026-11-13): papaia; a tampa do motor preta descendo em diagonal até a asa, a entrada de ar azul-petróleo
+// com o allwyn, a faixa preta em diagonal na caixa lateral (VELO e OKX), a asa dianteira preta com a faixa papaia do ONEflight e o Mastercard,
+// o bico com a ponta preta e a estrela do Gemini, a asa traseira papaia em cima com o ETIHAD atrás e o Dropbox nas placas.
+function estrelaGemini(c, a, b, h) {
+  const [x, y] = pt(c, a, b), e = h * PX() / 2; c.save(); c.setTransform(1, 0, 0, 1, x, y); c.beginPath();
+  for (let i = 0; i < 4; i++) { const g = i * Math.PI / 2; c.lineTo(Math.cos(g) * e, Math.sin(g) * e); c.lineTo(Math.cos(g + Math.PI / 4) * e * 0.2, Math.sin(g + Math.PI / 4) * e * 0.2); }
+  c.closePath(); c.fillStyle = "#7cc4ff"; c.fill(); c.restore();
+}
 DESENHOS.mclaren = {
   numero: "#ffffff", carbono: 1, numPos: [3.46, 0.7, 9, 9],
   pintar(ctx) {
-    const PAP = "#f47600", PRETO = "#121316";
+    const PAP = "#ff8000", PRETO = "#141518", PETROLEO = "#1d4048", AZUL_DP = "#1d2a5c";
     base(ctx, PAP);
     lados(ctx, (c) => {
-      // a tampa preta, que desce em diagonal até a asa
-      c.beginPath(); c.moveTo(2.14, 1.1); c.lineTo(3.88, 1.1); c.lineTo(3.88, 0.42); c.quadraticCurveTo(3.1, 0.68, 2.62, 0.66); c.lineTo(2.14, 0.58); c.closePath(); c.fillStyle = PRETO; c.fill();
-      // a barriga preta da entrada de ar até trás
-      c.beginPath(); c.moveTo(1.05, 0); c.lineTo(1.05, 0.25); c.quadraticCurveTo(2.0, 0.4, 2.55, 0.38); c.quadraticCurveTo(3.1, 0.36, 3.88, 0.42); c.lineTo(3.88, 0); c.closePath(); c.fill();
+      // a tampa preta, que desce em diagonal até a asa, e a entrada de ar azul-petróleo
+      c.beginPath(); c.moveTo(2.0, 1.1); c.lineTo(3.88, 1.1); c.lineTo(3.88, 0.42); c.quadraticCurveTo(3.2, 0.7, 2.6, 0.66); c.lineTo(2.0, 0.6); c.closePath(); c.fillStyle = PRETO; c.fill();
+      ret(c, 2.02, 0.8, 2.58, 1.1, PETROLEO);
+      // a faixa preta em diagonal na frente da caixa lateral, descendo para trás
+      poli(c, [[1.55, 0.2], [1.55, 0.56], [2.45, 0.56], [3.05, 0.18], [2.3, 0.12]], PRETO);
       baixo(c, PRETO);
-      poli(c, [[0, 0], [0.62, 0], [0.62, 0.11], [0, 0.11]], PRETO);
-      ret(c, 3.86, 0.3, 4.45, 0.62, PRETO);
-      marca(c, "gemini", 3.0, 0.76, 0.085); marca(c, "okx", 2.72, 0.27, 0.065); marca(c, "velo", 2.3, 0.53, 0.07, { tinta: PRETO }); marca(c, "dell", 3.08, 0.51, 0.05, { tinta: PRETO });
-      marca(c, "mastercard", 3.05, 0.27, 0.075); marca(c, "dropbox", 4.15, 0.72, 0.05, { tinta: PRETO }); marca(c, "dpworld", 1.72, 0.48, 0.035, { tinta: PRETO }); marca(c, "allwyn", 2.3, 0.86, 0.04);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO); // a asa dianteira
+      ret(c, 3.86, 0.3, 4.45, 0.55, PRETO); // a parte de baixo da asa traseira (as placas papaia, com o Dropbox)
+      ret(c, 1.05, 0.39, 1.48, 0.47, AZUL_DP); marca(c, "dpworld", 1.26, 0.43, 0.03);
+      marca(c, "gemini", 3.0, 0.78, 0.085); marca(c, "allwyn", 2.3, 0.94, 0.045); marca(c, "velo", 2.02, 0.44, 0.06); marca(c, "okx", 2.55, 0.32, 0.06);
+      marca(c, "mastercard", 2.95, 0.3, 0.065); marca(c, "dell", 3.2, 0.52, 0.045, { tinta: PRETO });
+      marca(c, "dropbox", 4.15, 0.74, 0.05, { tinta: PRETO }); marca(c, "groq", 4.15, 0.42, 0.035);
     });
     vista(ctx, "T", (c) => {
-      ret(c, 1.8, -0.3, 3.9, 0.3, PRETO); poli(c, [[1.8, 0.3], [1.8, -0.3], [1.5, -0.1], [1.5, 0.1]], PRETO);
-      asasT(c, PAP, PAP, PAP); ret(c, 4.3, -0.62, 4.45, 0.62, PRETO);
-      const f = { giro: DE_FRENTE, tinta: PRETO };
-      marca(c, "dhl", 4.12, 0, 0.1, { giro: DE_FRENTE }); marca(c, "dell", 0.72, 0, 0.05, f); marca(c, "dhl", 0.42, 0, 0.05, { giro: DE_FRENTE }); marca(c, "gemini", 2.9, 0, 0.09, { giro: DE_FRENTE }); marca(c, "okx", 1.2, 0, 0.05, f);
+      ret(c, 2.0, -0.26, 3.9, 0.26, PRETO); ret(c, 2.0, -0.15, 2.5, 0.15, PETROLEO); // a tampa e a entrada de ar
+      asasT(c, PRETO, PAP, PAP);
+      poli(c, [[0, -0.09], [0.26, -0.11], [0.26, 0.11], [0, 0.09]], PRETO); estrelaGemini(c, 0.14, 0, 0.08); // a ponta do bico
+      const f = { giro: DE_FRENTE };
+      for (const l of [-1, 1]) {
+        poli(c, [[0.02, l * 0.18], [0.13, l * 0.18], [0.13, l * 0.78], [0.02, l * 0.78]], PAP); marca(c, "oneflight", 0.075, l * 0.48, 0.07, { giro: DE_FRENTE, tinta: PRETO });
+        marca(c, "mastercard", 0.32, l * 0.42, 0.075, f);
+      }
+      marca(c, "hilton", 1.22, 0, 0.04, { giro: DE_FRENTE, tinta: PRETO }); // (de 0,25 a 1,15 o bico leva o atlas do nariz: texturaDoCockpit)
+      marca(c, "allwyn", 2.25, 0, 0.05, f); marca(c, "gemini", 3.0, 0, 0.08, f);
+      marca(c, "etihad", 4.12, 0, 0.08, { giro: DE_FRENTE, tinta: PRETO });
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.55, 0, 0.55, 0.15, PRETO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.5, 0.3, 0.5, 0.62, PRETO); marca(c, "dhl", 0, 0.8, 0.12); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.55, 0, 0.55, 0.15, PRETO); ret(c, -0.16, 0.8, 0.16, 1.1, PETROLEO); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.8, 0.78, 0.8, 1.1, PRETO); marca(c, "etihad", 0, 0.9, 0.09); });
   },
 };
 
@@ -938,7 +955,7 @@ export function texturaDoCockpit(equipe) {
     // Atlas separado para manter as marcas do bico legíveis sem afetar outras equipes.
     const nariz = document.createElement("canvas"); nariz.width = nariz.height = 1024;
     const nc = nariz.getContext("2d"); nc.fillStyle = "#151515"; nc.textAlign = "center"; nc.textBaseline = "middle";
-    const marcas = t.userData.mclaren ? [["DELL", 0.84, 62], ["Deloitte", 0.73, 45], ["webex", 0.62, 49], ["DEWALT", 0.51, 48], ["PIRELLI", 0.40, 45]] : [["SAP", 0.3, 44], ["AKKODIS", 0.4, 40], ["PIRELLI", 0.5, 40], ["INEOS", 0.6, 42], ["CROWDSTRIKE", 0.7, 34]];
+    const marcas = t.userData.mclaren ? [["DELL", 0.86, 58], ["Deloitte.", 0.76, 42], ["CISCO", 0.67, 44], ["rubrik", 0.59, 42], ["DEWALT", 0.5, 46], ["PIRELLI", 0.41, 42]] : [["SAP", 0.3, 44], ["AKKODIS", 0.4, 40], ["PIRELLI", 0.5, 40], ["INEOS", 0.6, 42], ["CROWDSTRIKE", 0.7, 34]];
     for (const [marca, s, tamanho] of marcas) {
       nc.font = `800 ${tamanho}px Arial, sans-serif`; nc.fillText(marca, 512, (s - 0.25) / 0.90 * 1024, 360);
     }

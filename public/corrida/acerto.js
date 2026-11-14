@@ -10,7 +10,8 @@ import { E, me, sNow, toast } from "./estado.js";
 const LOCAL = typeof location !== "undefined" && /^(localhost|127.0.0.1|[::1])$/.test(location.hostname) && !window.CORRIDA_PC?.pc; // (o programa de PC também roda em 127.0.0.1, mas é jogo de verdade)
 // No contrarrelógio (e no treino livre da carreira, que é um contrarrelógio: menu.js, ?treino=) não há parque fechado: o acerto muda com o carro andando.
 // (desde 2026-11-11 vale a sessão inteira, não só depois das luzes: o acerto é só no lobby, nem na transmissão nem no grid)
-const valendo = () => { const S = E.S; return !!S && !S.config?.contrarrelogio && (S.phase === "race" || S.phase === "quali"); };
+// (nas pausas da classificação, a tela de ajustes entre Q1, Q2 e Q3 e a do grid, o acerto também muda: o Thiago, 2026-11-14)
+const valendo = () => { const S = E.S; return !!S && !S.config?.contrarrelogio && (S.phase === "race" || (S.phase === "quali" && !(S.quali && S.quali.pausa && !S.quali.carregando))); };
 import { ACERTO_CARRO, acertarCarro, acertoCarroPadrao, usarAcerto, alturaParada, forcaDaAsa, pistaDoAcerto, carregarIdeais, sugestaoDoEstrategista, propostaDoEngenheiro, frase } from "./acerto-carro.js";
 const CAMPOS = [
   { id: "virada", nome: "Virada máxima", dica: "o quanto o volante vira com a tecla no fim (1 = o batente da física)", passo: 0.01, fmt: (v) => v.toFixed(2) },
@@ -90,7 +91,7 @@ function montar() {
   });
 }
 export function alternarAcerto(abrir) {
-  if (abrir !== false && valendo() && !LOCAL && (!painel || painel.style.display === "none")) { toast("O acerto do carro só muda no lobby, antes da corrida."); return; }
+  if (abrir !== false && valendo() && !LOCAL && (!painel || painel.style.display === "none")) { toast("O acerto do carro só muda no lobby ou nas pausas da classificação."); return; }
   if (!painel) montar();
   const ver = abrir ?? painel.style.display === "none";
   painel.style.display = ver ? "" : "none";

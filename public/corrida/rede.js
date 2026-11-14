@@ -8,6 +8,7 @@ import { mostrarCarga, esconderCarga } from "./carregando.js";
 import { PISTAS } from "./estado.js";
 import { checkMyLap, renderResults, renderQuali } from "./hud.js";
 import { voltaDaClassificacao } from "./fantasma.js";
+import { sincronizarCapacete } from "./capacete-editor.js";
 import { onBox, onUse, onHit, onBoom, setHazards } from "./itens.js";
 import { reconciliar, reenviarEntradas } from "./fisica.js";
 
@@ -58,6 +59,7 @@ const preparar = (id, hora) => { const chave = `${id}:${hora}`; if (id && chave 
 socket.on("state", (st) => {
   relogio.doEstado(st.now); relogioF1.palpite(st.now - agoraLocal()); // (o relógio do estado só serve até as respostas do NTP chegarem)
   const old = E.S; E.S = st;
+  if (st.phase === "quali" || st.phase === "lobby") try { sincronizarCapacete(); } catch (e) { /* o capacete é um extra */ } // (a sala da carreira pula a tela da sala: o capacete guardado vai na classificação)
   if (st && st.config) { window.F1Temporadas?.usarAno(st.config.ano); usarModelo(window.F1Temporadas ? window.F1Temporadas.modeloDoAno(st.config.ano) : 2026); } // a temporada da sala: as equipes, os pilotos e o carro daquele ano
   if (st.phase === "lobby") {
     if (!E.entradaDireta) { show("lobby"); renderLobby(); }

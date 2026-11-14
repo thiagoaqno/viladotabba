@@ -100,11 +100,73 @@ const DESENHOS = {
     for (const cx of LADOS) { const d = cx === 256 ? -1 : 1; poli(x, [[cx - d * 110, 220], [cx + d * 10, 120], [cx + d * 40, 226]], c2); poli(x, [[cx - d * 40, 232], [cx + d * 90, 150], [cx + d * 120, 236]], c3); }
     x.fillStyle = c2; x.fillRect(0, 232, 512, 24);
   },
+  // ---------- os desenhos novos (2026-11-14: "mais visuais de capacetes e mais bonitos") ----------
+  // chamas de cor 2 subindo do queixo pelos lados, com a ponta de cor 3, e o topo limpo
+  chamas(x, [c1, c2, c3]) {
+    calota(x, c2, 40, c3);
+    for (const cx of LADOS) for (let k = 0; k < 5; k++) {
+      const b = cx - 120 + k * 52, alto = 92 + ((k * 37) % 50);
+      x.fillStyle = c2; x.beginPath(); x.moveTo(b - 26, 256); x.bezierCurveTo(b - 30, 200, b - 4, alto + 50, b + 8, alto); x.bezierCurveTo(b + 14, alto + 40, b + 34, 200, b + 30, 256); x.closePath(); x.fill();
+      x.fillStyle = c3; x.beginPath(); x.moveTo(b - 10, 256); x.bezierCurveTo(b - 10, 220, b + 4, alto + 80, b + 8, alto + 44); x.bezierCurveTo(b + 12, alto + 80, b + 22, 220, b + 18, 256); x.closePath(); x.fill();
+    }
+  },
+  // duas ondas largas em volta da cabeça, uma de cor 2 e outra de cor 3 por cima
+  onda(x, [c1, c2, c3]) {
+    const onda = (y0, amp, cor, fase) => { x.fillStyle = cor; x.beginPath(); x.moveTo(0, 256); for (let px = 0; px <= 512; px += 8) x.lineTo(px, y0 + Math.sin((px / 512) * Math.PI * 4 + fase) * amp); x.lineTo(512, 256); x.closePath(); x.fill(); };
+    onda(150, 22, c2, 0); onda(196, 14, c3, 1.4);
+    calota(x, c2, 36);
+  },
+  // o casco em degradê da cor 1 para a cor 2 de cima para baixo, com uma linha fina de cor 3 em volta
+  degrade(x, [c1, c2, c3]) {
+    const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, c1); g.addColorStop(0.45, c1); g.addColorStop(1, c2);
+    x.fillStyle = g; x.fillRect(0, 0, 512, 256);
+    x.fillStyle = c3; x.fillRect(0, 186, 512, 6); x.fillRect(0, 198, 512, 3);
+    calota(x, c2, 26);
+  },
+  // um raio de cor 2 contornado de cor 3 em cada lado, do topo ao queixo
+  raio(x, [c1, c2, c3]) {
+    calota(x, c2, 44);
+    for (const cx of LADOS) {
+      const pts = [[cx - 30, 44], [cx + 34, 44], [cx + 6, 122], [cx + 46, 122], [cx - 34, 252], [cx - 8, 152], [cx - 46, 152]];
+      x.strokeStyle = c3; x.lineWidth = 10; x.lineJoin = "round"; x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); x.stroke();
+      poli(x, pts, c2);
+    }
+  },
+  // uma faixa quadriculada (a bandeirada) em volta da cabeça, entre dois filetes de cor 3, e o topo de cor 2
+  xadrez(x, [c1, c2, c3]) {
+    calota(x, c2, 54, c3);
+    const y0 = 168, q = 16;
+    for (let i = 0; i < 512 / q; i++) for (let j = 0; j < 3; j++) { x.fillStyle = (i + j) % 2 ? "#101114" : "#f4f4f4"; x.fillRect(i * q, y0 + j * q, q, q); }
+    x.fillStyle = c3; x.fillRect(0, y0 - 6, 512, 6); x.fillRect(0, y0 + 3 * q, 512, 6);
+    x.fillStyle = c2; x.fillRect(0, y0 + 3 * q + 6, 512, 256);
+  },
+  // estrelas de cor 3 espalhadas sobre o topo de cor 2 (que desce em arco pelos lados)
+  estrelas(x, [c1, c2, c3]) {
+    x.fillStyle = c2; x.beginPath(); x.moveTo(0, 0); x.lineTo(512, 0); x.lineTo(512, 90); for (let px = 512; px >= 0; px -= 16) x.lineTo(px, 90 + Math.cos((px / 512) * Math.PI * 4) * 26); x.closePath(); x.fill();
+    const estrela = (cx, cy, r) => { x.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, q = i % 2 ? r * 0.42 : r; x.lineTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q); } x.closePath(); x.fill(); };
+    x.fillStyle = c3; let s = 7; for (let i = 0; i < 26; i++) { s = (s * 16807) % 2147483647; const px = (s % 512), py = 8 + ((s >> 9) % 70); estrela(px, py, 5 + ((s >> 4) % 6)); }
+    x.fillStyle = c2; x.fillRect(0, 230, 512, 26);
+  },
+  // listras finas na diagonal (cor 2 e cor 3) cobrindo a parte de baixo, e o topo limpo
+  listras(x, [c1, c2, c3]) {
+    x.save(); x.beginPath(); x.rect(0, 120, 512, 136); x.clip();
+    for (let k = -8; k < 40; k++) { x.fillStyle = k % 2 ? c2 : c3; x.beginPath(); x.moveTo(k * 22, 256); x.lineTo(k * 22 + 14, 256); x.lineTo(k * 22 + 14 + 136, 120); x.lineTo(k * 22 + 136, 120); x.closePath(); x.fill(); }
+    x.restore();
+    x.fillStyle = c2; x.fillRect(0, 114, 512, 6);
+    calota(x, c3, 30);
+  },
+  // facetas geométricas (triângulos grandes de cor 2 e cor 3) nos lados, como um casco lapidado
+  geometrico(x, [c1, c2, c3]) {
+    let s = 11; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 18; i++) { const a = r() * 512, b = 60 + r() * 196; poli(x, [[a, b], [a + 40 + r() * 70, b - 30 - r() * 50], [a + 20 + r() * 90, b + 20 + r() * 40]], i % 3 ? c2 : c3); }
+    calota(x, c2, 48, c3);
+  },
 };
 
 // ---------- o capacete de quem joga (mods.capacete; editor na Garagem da sala, menus.js) ----------
 // { desenho, cores: [casco, segunda, detalhe], viseira, bandeira (sigla de gp-info.js BANDEIRAS), nome }; o servidor confere com `limparCapacete` (corrida.js, a mesma regra)
-export const DESENHOS_CAPACETE = { faixa: "Faixa", bandas: "Bandas", blocos: "Blocos", cruz: "Cruz", topo: "Topo", asas: "Asas", triangulos: "Triângulos", generico: "Clássico" };
+export const DESENHOS_CAPACETE = { faixa: "Faixa", bandas: "Bandas", blocos: "Blocos", cruz: "Cruz", topo: "Topo", asas: "Asas", triangulos: "Triângulos", generico: "Clássico",
+  chamas: "Chamas", onda: "Onda", degrade: "Degradê", raio: "Raio", xadrez: "Xadrez", estrelas: "Estrelas", listras: "Listras", geometrico: "Geométrico" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
 export const VISEIRAS = { "#090b10": "Escura", "#c9ccd2": "Espelhada", "#d4a017": "Dourada", "#1e6fd9": "Azul", "#d8142c": "Vermelha", "#7a2fd0": "Roxa", "#1fa64a": "Verde", "#f07c1a": "Laranja" };
 export const CAPACETE_PADRAO = { desenho: "faixa", cores: ["#f4f4f4", "#e10600", "#101114"], viseira: "#090b10", bandeira: "BR", nome: "" };
 // as bandeiras (o SVG de gp-info.js) viram imagem uma vez; quem pinta antes de ela chegar é avisado para repintar

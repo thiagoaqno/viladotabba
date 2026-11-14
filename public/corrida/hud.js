@@ -425,35 +425,8 @@ function hudClassificacao(m, now) {
   if (E.S.config.regras === "f1") estadoF1(msg); else $("hMsg").textContent = msg;
   const bp = $("bPronto"); if (bp) { bp.classList.toggle("hidden", !dentro || q.pausa); bp.disabled = q.pronto.includes(m && m.id); }
 }
-// a tela entre as sessões: quem passou, quem caiu (em vermelho) e, no fim, o grid da largada
-export function renderQuali() {
-  const el = $("quali"), S = E.S, q = S && S.phase === "quali" && S.quali;
-  if (!q || !q.pausa || !q.fechadas.length) { el.classList.add("hidden"); return; }
-  const f = q.fechadas[q.fechadas.length - 1], ultima = !!q.grid, m = me();
-  if (ultima && m && window.Radio) { const i = q.grid.indexOf(m.id); if (i >= 0) window.Radio.uma("quali:" + S.startAt, () => window.Radio.classificacao(i + 1, q.grid.length)); }
-  const tempos = {}; for (const s of q.fechadas) for (const x of s.ordem) tempos[x.id] = x.tempo;
-  const linhas = ultima ? q.grid.map((id) => ({ id, fora: false })) : f.ordem.map((x) => ({ id: x.id, fora: f.eliminados.includes(x.id) }));
-  const pole = tempos[linhas[0].id], naUltima = new Set(f.ordem.map((x) => x.id)); // no grid final, só quem correu a última sessão tem diferença que se compara
-  el.classList.remove("hidden");
-  const confirmado = ultima && m && q.confirmados.includes(m.id);
-  const prontos = ultima ? q.aguardados.filter((id) => q.confirmados.includes(id)).length : 0;
-  const montagem = (ultima || q.nome === "Q2") && m && S.temporada && S.montagens && S.montagens[m.equipe];
-  el.innerHTML = `<div class="placa gp"><div class="chk"></div><div class="in"><h2 style="font-size:26px;margin-bottom:6px">${ultima ? `🏁 Grid de largada · ${h(PISTAS[S.config.pista].name)}` : `⏱️ ${f.nome} encerrado`}</h2>
-    <p class="muted" style="margin:0 0 8px">${ultima ? m ? confirmado ? `Largada confirmada. Aguardando os outros pilotos (${prontos}/${q.aguardados.length}).` : S.temporada ? "Ajuste os pontos do carro, escolha o pneu e confirme a largada." : "Escolha o pneu para começar a corrida e confirme a largada." : `Aguardando os pilotos confirmarem a largada (${prontos}/${q.aguardados.length}).` : `Os ${f.eliminados.length} mais lentos ficam por aqui e largam do fim do grid. Próxima sessão em instantes.${montagem ? " Você pode ajustar os pontos do carro abaixo." : ""}`}</p>
-    ${ultima && S.previsao && window.PrevisaoUI ? `<div class="prev-bloco" style="margin:0 0 10px">${window.PrevisaoUI.html(S.previsao, { voltas: S.config.voltas })}</div>` : ""}
-    ${ultima && m ? `<div class="pneus-largada" role="group" aria-label="Pneu da largada">${Object.entries(window.F1Regras.PNEUS).map(([id, pneu]) => `<button type="button" data-pneu-largada="${id}" class="${(m.pneu || "medio") === id ? "on" : ""}" ${confirmado ? "disabled" : ""}><i class="bola-pneu" style="--c:${pneu.cor}"></i>${pneu.nome}</button>`).join("")}</div>` : ""}
-    ${montagem ? `<details class="acerto-grid" ${!confirmado ? "open" : ""}><summary>Acerto do carro · ${window.F1Equipes.custoDaMontagem(montagem)} pontos usados</summary>${window.F1Garagem.pontosHTML({ equipe: m.equipe, montagem, bonus: S.bonusMontagem[m.equipe] || 0, pode: !confirmado, motivo: "Largada já confirmada." })}</details>` : ""}
-    ${ultima && m ? `<button type="button" id="confirmarLargada" class="confirmar-largada" ${confirmado ? "disabled" : ""}>${confirmado ? "✓ Largada confirmada" : "Confirmar largada"}</button>` : ""}
-    <table class="qtab">${linhas.map((r, i) => { const p = P(r.id), t = tempos[r.id]; return `<tr class="${r.fora ? "fora" : ""} ${m && r.id === m.id ? "eu" : ""}"><td>${i + 1}</td><td>${logoEquipe(p, "q-marca")}<b>${h(pilotoNome(p))}</b>${p ? ` <small class="muted">${h(window.HudTorre.siglaDe(p))}</small>` : ""}</td><td class="num">${t == null ? "sem tempo" : tempo3(t)}</td><td class="num muted">${t != null && i > 0 && pole != null && (!ultima || naUltima.has(r.id)) ? "+" + (t - pole).toFixed(3) : ""}</td></tr>`; }).join("")}</table></div></div>`;
-  if (montagem && !confirmado) el.querySelectorAll("[data-ponto], [data-ponto-zerar]").forEach((botao) => { botao.onclick = () => {
-      const nova = window.F1Garagem.cliquePonto(botao, montagem, m.equipe, S.bonusMontagem[m.equipe] || 0);
-      if (nova) act("montagemGrid", { montagem: nova });
-    }; });
-  if (ultima && m && !confirmado) {
-    el.querySelectorAll("[data-pneu-largada]").forEach((botao) => { botao.onclick = () => act("pneu", { pneu: botao.dataset.pneuLargada }); });
-    el.querySelector("#confirmarLargada").onclick = () => act("confirmarLargada");
-  }
-}
+// a tela das pausas da classificação (o resultado de cada Q e os ajustes do carro): pos-quali.js
+export { renderQuali } from "./pos-quali.js";
 // minimapa redondo que gira com o carro (a frente é para cima): a pista em cinza e o caminho à frente em azul-claro
 function minimapa(st, m) {
   $("mini")?.classList.toggle("perto", !!(race.hudF1 && mapaPerto));

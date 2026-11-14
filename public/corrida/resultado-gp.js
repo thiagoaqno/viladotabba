@@ -60,26 +60,6 @@ function punicaoDe(S, p, r) {
 
 const pneusHTML = (r, F) => (r.paradas ? `${r.paradas}P ` : "0P ") + (r.compostos || []).map((c) => `<u class="pn" style="--c:${F.PNEUS[c] ? F.PNEUS[c].cor : "#999"}"></u>`).join("");
 
-function linhaHTML(r, i, ctx) {
-  const { S, m, F, vencedor } = ctx, p = S.players.find((x) => x.id === r.id), eq = infoEquipe(p), eu = !!(m && r.id === m.id);
-  const fora = r.nc || r.dnf, g = r.grid + 1, d = g - r.pos, pun = punicaoDe(S, p, r), danoPct = Math.round(r.dano || 0);
-  const final = r.dsq ? "DSQ" : r.dnf ? "DNF" : r.nc ? "NC" : r.tempo == null ? `+${Math.max(1, S.config.voltas - r.voltas)} volta${S.config.voltas - r.voltas > 1 ? "s" : ""}` : r === vencedor ? fmt(r.tempo) : `+${(r.tempo - vencedor.tempo).toFixed(3)} s`;
-  const alerta = pun.secs > 0 ? `<span class="rg-alerta" tabindex="0" role="img" aria-label="${h(pun.titulo)}" title="${h(pun.titulo)}" data-dica="${h(pun.titulo)}">${ICONE.alerta}</span>` : "";
-  const chips = [
-    pun.secs > 0 ? `<span class="rg-chip pen" title="${h(pun.titulo)}">+${pun.secs} s</span>` : "",
-    r.sg ? `<span class="rg-chip sg" title="Stop-and-go cumprido">${ICONE.parada}SG</span>` : "",
-    r.dsq ? `<span class="rg-chip preta" title="Desclassificado: bandeira preta">${ICONE.preta}Preta</span>` : "",
-    danoPct >= 1 ? `<span class="rg-chip dano ${danoPct >= 66 ? "alto" : danoPct >= 33 ? "medio" : "baixo"}" title="Dano no carro: ${danoPct}%">${ICONE.dano}${danoPct}%</span>` : "",
-  ].join("");
-  const est = r.estimado ? `<abbr class="rg-est" title="Tempo estimado: o robô ainda estava na pista quando o GP acabou">est.</abbr>` : "";
-  return `<li data-id="${h(r.id)}" class="rg-linha ${eu ? "eu" : ""} ${fora ? "nc" : ""} ${r.pos <= 3 && !fora ? "p" + r.pos : ""}" style="${estiloEq(eq.cor)};--i:${Math.min(i, 14)}">
-    <span class="rg-pos">${fora ? "—" : r.pos}</span>
-    <span class="rg-piloto">${marca(eq)}<span class="rg-nomes"><span class="rg-l1"><b>${h(nomeDe(p))}</b>${alerta}${r.voltaRapida ? `<i class="rg-vr" title="Volta mais rápida: +1 ponto">${ICONE.rapida}</i>` : ""}${eu ? `<em class="rg-voce">você</em>` : ""}</span><small>${p ? `<span class="rg-sigla">${h(siglaDe(p))}</span>` : ""}${eq.nome ? ` · ${h(eq.nome)}` : ""}</small></span></span>
-    <span class="rg-tempo"><span class="rg-t1"><b>${final}</b>${est}</span>${chips ? `<span class="rg-chips">${chips}</span>` : ""}</span>
-    <span class="rg-extra"><span class="rg-grid" data-r="Grid">${g}º ${d ? `<small class="${d > 0 ? "sobe" : "desce"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</small>` : ""}</span><span class="rg-paradas" data-r="Paradas">${pneusHTML(r, F)}</span><span class="rg-melhor" data-r="Melhor">${r.melhor != null ? fmt(r.melhor) : ""}</span></span>
-    <span class="rg-pts">${r.pontos ? `+${r.pontos}` : ""}</span></li>`;
-}
-
 // quem aparece no pódio: os 3 primeiros que terminaram
 const noPodio = (S) => S.resultado.slice(0, 3).filter((r) => !r.dnf && !r.nc && !r.dsq && r.tempo != null);
 
@@ -93,21 +73,50 @@ function degrauHTML(r, vencedor, ctx) {
     <div class="rg-deg-info">${v ? `<span class="rg-copa">${ICONE.copa}</span>` : ""}${marca(eq)}<b class="rg-deg-nome">${h(nomeDe(p))}</b><small class="rg-deg-eq"><span class="rg-sigla">${h(siglaDe(p))}</span>${eq.nome ? ` · ${h(eq.nome)}` : ""}</small><span class="rg-deg-tempo">${tempo}</span>${r.pontos ? `<span class="rg-deg-pts">+${r.pontos} pts</span>` : ""}</div></div>`;
 }
 
+// a linha da classificação no estilo da transmissão: a posição no bloco da cor da equipe, o sobrenome, o logo e o nome da equipe, o tempo e os
+// pontos; com o mouse (ou o foco), abre o grid de largada, as paradas com os pneus, a melhor volta e as punições
+function linhaV2(r, i, ctx) {
+  const { S, m, F, vencedor } = ctx, p = S.players.find((x) => x.id === r.id), eq = infoEquipe(p), eu = !!(m && r.id === m.id), fora = r.nc || r.dnf || r.dsq;
+  const g = r.grid + 1, d = g - r.pos, pun = punicaoDe(S, p, r), danoPct = Math.round(r.dano || 0);
+  const final = r.dsq ? "DSQ" : r.dnf ? "DNF" : r.nc ? "NC" : r.tempo == null ? `+${Math.max(1, S.config.voltas - r.voltas)} volta${S.config.voltas - r.voltas > 1 ? "s" : ""}` : r === vencedor ? fmt(r.tempo) : `+${(r.tempo - vencedor.tempo).toFixed(3)}`;
+  const sob = String(nomeDe(p)).trim().split(/\s+/), sobrenome = sob.length > 1 ? sob.slice(1).join(" ") : sob[0];
+  return `<li class="rg2-l ${eu ? "eu" : ""} ${fora ? "nc" : ""} ${r.pos <= 3 && !fora ? "p" + r.pos : ""}" tabindex="0" data-id="${h(r.id)}" style="${estiloEq(eq.cor)};--i:${Math.min(i, 21)}">
+    <span class="rg2-pos">${fora ? "—" : r.pos}</span>
+    <span class="rg2-nome"><b>${h(sobrenome.toUpperCase())}</b>${pun.secs > 0 ? `<span class="rg-alerta" title="${h(pun.titulo)}">${ICONE.alerta}</span>` : ""}${r.voltaRapida ? `<i class="rg-vr" title="Volta mais rápida: +1 ponto">${ICONE.rapida}</i>` : ""}${eu ? `<em class="rg-voce">você</em>` : ""}</span>
+    <span class="rg2-eq">${marca(eq)}<span>${h(eq.nome || "")}</span></span>
+    <span class="rg2-t">${final}${r.estimado ? ` <abbr class="rg-est" title="Tempo estimado: o robô ainda estava na pista quando o GP acabou">est.</abbr>` : ""}</span>
+    <span class="rg2-pts">${r.pontos ? `+${r.pontos}` : "—"}</span>
+    <span class="rg2-extra"><span>Largou ${g}º ${d ? `<small class="${d > 0 ? "sobe" : "desce"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</small>` : ""}</span><span>Paradas ${pneusHTML(r, F)}</span><span>Melhor ${r.melhor != null ? fmt(r.melhor) : "—"}</span>${danoPct >= 1 ? `<span>Dano ${danoPct}%</span>` : ""}${pun.titulo ? `<span class="rg2-pun">${h(pun.titulo)}</span>` : ""}</span></li>`;
+}
+const SVG = (d) => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const IB = { voltar: SVG('<path d="m15 5-7 7 7 7"/>'), bandeira: SVG('<path d="M5 21V4"/><path d="M5 4h13l-2 4 2 4H5"/>'), mapa: SVG('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'), casa: SVG('<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>') };
+
+// a tela inteira (2026-11-14, no estilo do "Race result" da transmissão): o pódio, a classificação e a análise da corrida lado a lado, e a faixa
+// de baixo com o seu resultado (vitória, pódio, posição ou abandono)
 export function htmlResultado(S, m, isHost, aviso) {
-  const R = S.resultado, F = window.F1Regras, vencedor = R[0], ctx = { S, m, F, vencedor }, podio = noPodio(S);
-  let alto = "";
+  const R = S.resultado, F = window.F1Regras, vencedor = R[0], ctx = { S, m, F, vencedor }, podio = noPodio(S), pista = PISTAS[S.config.pista];
+  let alto = `<p class="rg2-vazio">Sem pódio nesta corrida.</p>`;
   if (podio.length && podio[0] === vencedor) {
     const euVenci = !!(m && vencedor.id === m.id), ordem = [podio[1], podio[0], podio[2]].filter(Boolean);
     alto = `<div class="rg-podio ${euVenci ? "vitoria" : ""}" style="${estiloEq(infoEquipe(S.players.find((x) => x.id === vencedor.id)).cor)}">
-      ${euVenci ? `<div class="rg-vitoria" role="status"><b>VITÓRIA</b><small>${h(PISTAS[S.config.pista].name)}</small></div>` : ""}
       <div class="rg-degraus" role="list" aria-label="Pódio">${ordem.map((r) => degrauHTML(r, vencedor, ctx)).join("")}</div></div>`;
   }
-  return `<div class="placa gp rg-placa"><div class="chk"></div><div class="in"><div class="av-item av-fixo" style="--fundo:#f2f2f5;--txt:#0a0c12;--bloco:#0a0c12">${aviso}</div>
-    <h2 class="rg-titulo">${ICONE.copa}<span>GP · ${h(PISTAS[S.config.pista].name)}</span></h2>${alto}
-    <div class="rg-cab" aria-hidden="true"><span></span><span>Piloto</span><span>Tempo</span><span class="rg-extra"><span>Grid</span><span>Paradas</span><span>Melhor</span></span><span>Pts</span></div>
-    <ol class="rg-tab">${R.map((r, i) => linhaHTML(r, i, ctx)).join("")}</ol>
-    <div class="rg-ana-tema" style="${estiloEq(infoEquipe(m || S.players.find((x) => x.id === vencedor.id)).cor)}">${htmlAnalise(S)}</div>
-    <div class="row rg-botoes">${S.temporada ? `<button class="primary" id="rSede">← Voltar à sede</button>` : isHost ? `<button class="primary" id="rAgain">🏁 Novo GP</button><button id="rLobby">Trocar pista</button>` : `<span class="muted">Esperando o organizador…</span>`}${S.temporada ? "" : `<button class="ghost" onclick="location.href='/'">🏠 Vila</button>`}</div></div></div>`;
+  const meu = m && R.find((r) => r.id === m.id), eqM = infoEquipe(m || S.players.find((x) => x.id === vencedor.id));
+  const selo = !meu ? "" : meu.dsq ? "Desclassificado" : meu.dnf ? "Abandono" : meu.nc ? "Não classificado" : meu.pos === 1 ? "Vitória" : meu.pos <= 3 ? "Pódio" : `${meu.pos}º lugar`;
+  const bandeira = window.GpInfo?.bandeira ? window.GpInfo.bandeira(S.config.pista) : "";
+  const botoes = S.temporada ? `<button class="primary" id="rSede">${IB.voltar}Voltar à sede</button>` : isHost ? `<button class="primary" id="rAgain">${IB.bandeira}Novo GP</button><button id="rLobby">${IB.mapa}Trocar pista</button>` : `<span class="muted">Esperando o organizador…</span>`;
+  return `<div class="placa gp rg-placa rg2" style="${estiloEq(eqM.cor)}"><div class="in">
+    <header class="rg2-topo"><span class="rg2-tit">${ICONE.copa}<b>Resultado da corrida</b></span><span class="rg2-gp">GP · ${h(pista.name)}${bandeira ? `<span class="rg2-band">${bandeira}</span>` : ""}</span></header>
+    <div class="av-item av-fixo rg2-aviso" style="--fundo:#f2f2f5;--txt:#0a0c12;--bloco:#0a0c12">${aviso}</div>
+    <div class="rg2-grade">
+      <section class="rg2-col rg2-podio"><h3>Pódio</h3>${alto}</section>
+      <section class="rg2-col rg2-class"><h3>Classificação</h3>
+        <div class="rg2-cab" aria-hidden="true"><span>Pos</span><span>Piloto</span><span>Equipe</span><span>Tempo</span><span>Pts</span></div>
+        <ol class="rg2-tab">${R.map((r, i) => linhaV2(r, i, ctx)).join("")}</ol></section>
+      <section class="rg2-col rg2-ana"><h3>Análise da corrida</h3><div class="rg-ana-tema" style="${estiloEq(eqM.cor)}">${htmlAnalise(S)}</div></section>
+    </div>
+    <footer class="rg2-pe">${selo ? `<span class="rg2-selo ${meu && meu.pos === 1 && !meu.dnf && !meu.dsq ? "ouro" : ""}">${ICONE.copa}<b>${h(selo)}</b></span><span class="rg2-quem"><b>${h(nomeDe(m))}</b><small>${h(eqM.nome || "")}</small></span>` : `<span class="rg2-quem"><b>Vencedor: ${h(nomeDe(S.players.find((x) => x.id === vencedor.id)))}</b></span>`}
+      <span class="rg2-botoes">${botoes}${S.temporada ? "" : `<button class="ghost" onclick="location.href='/'">${IB.casa}Vila</button>`}</span></footer></div></div>`;
 }
 
 // ---- depois de desenhar: os 3 carros do pódio (ou os logos grandes), o confete de quem ganhou ----
@@ -127,7 +136,7 @@ function carrosNoPodio(el, S, m) {
 export function aposResultado(el, S, m) {
   carrosNoPodio(el, S, m);
   const fonte = { analise: () => new Promise((ok) => socket.emit("analise", ok)), replay: () => new Promise((ok) => socket.emit("replay", ok)), sNow }; // (a sala da Corrida: o servidor responde pelo socket)
-  try { montarAnalise(el, S, m, fonte); } catch (e) { console.warn("Corrida: análise do GP", e); } // um extra: um erro nela não pode tirar o resultado da tela
+  try { montarAnalise(el, S, m, fonte, { abas: [["replay", "Replay"], ["ritmo", "Ritmo"], ["posicoes", "Posições"], ["pneus", "Pneus"]], compacto: true }); } catch (e) { console.warn("Corrida: análise do GP", e); } // um extra: um erro nela não pode tirar o resultado da tela
   if (el.querySelector(".rg-podio.vitoria") && !reduz() && window.Comum) {
     const eq = infoEquipe(m), cores = [eq.cor, "#ffffff", "#ffd23f", "#e10600", eq.cor];
     window.Comum.confetti(cores, { onde: el, dur: [2.4, 2.4], fica: 6500 });

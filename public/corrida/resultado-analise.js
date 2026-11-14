@@ -156,7 +156,7 @@ const seletor = (papel, s, L) => `<label class="ra-sel ${papel}">${s ? logoDe(s.
   <select data-ra-sel="${papel}">${papel === "b" && !s ? `<option value="">Comparar com…</option>` : ""}${L.map((x) => `<option value="${h(x.id)}" ${s && x.id === s.id ? "selected" : ""}>${h(x.nome)}${x.r.dnf ? " (abandonou)" : ` · ${x.r.pos}º`}</option>`).join("")}</select></label>`;
 function html(S, A, L, idA, idB) {
   const a = L.find((s) => s.id === idA), bb = L.find((s) => s.id === idB) || null;
-  const abas = [["replay", "Replay"], ["momentos", "Momentos"], ["posicoes", "Posições"], ["ultrapassagens", "Ultrapassagens"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
+  const abas = modo.abas || [["replay", "Replay"], ["momentos", "Momentos"], ["posicoes", "Posições"], ["ultrapassagens", "Ultrapassagens"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
   const corpo = aba === "ritmo" ? `<div class="ra-par">${cartao(A, a, "a")}${bb ? cartao(A, bb, "b") : ""}</div>${graficoRitmo(A, a, bb)}<p class="ra-legenda">Escolha outro piloto clicando no gráfico das posições, nos pneus ou na tabela acima.</p>`
     : aba === "pneus" ? pneus(L, idA, idB) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A, L, a) : aba === "ultrapassagens" ? ultrapassagensHTML(A, L) : aba === "replay" ? replayHTML(replayAgora, L) : aba === "mapa" ? mapaHTML(replayAgora || null) : graficoPosicoes(L, A, idA, idB);
   const resumo = [A.safeties ? `${A.safeties} safety car${A.safeties > 1 ? "s" : ""}` : "", A.amarelas ? `${A.amarelas} bandeira${A.amarelas > 1 ? "s" : ""} amarela${A.amarelas > 1 ? "s" : ""}` : "", A.chuva ? "chuva" : ""].filter(Boolean).join(" · ");
@@ -199,11 +199,12 @@ function desenhar(box, S, m, A) {
 // o lugar da análise na tela do resultado (fica vazio até o servidor responder; sem regras de F1 ou sem dados, some)
 export const htmlAnalise = (S) => (S && S.config && S.config.regras === "f1" ? `<section class="ra" id="rgAnalise" hidden aria-label="Análise da corrida"></section>` : "");
 
-export function montarAnalise(el, S, m, f) {
-  if (f) fonte = f; modo = {};
+export function montarAnalise(el, S, m, f, op) {
+  if (f) fonte = f; modo = op || {}; // (op.abas: as abas desta tela; op.compacto: a coluna estreita da tela do resultado)
+  if (modo.abas && !modo.abas.some(([k]) => k === aba)) aba = modo.abas[0][0];
   const box = el.querySelector("#rgAnalise"); if (!box) return;
   // a tabela do resultado também escolhe o B: clicar numa linha
-  el.querySelectorAll(".rg-linha[data-id]").forEach((li) => { li.addEventListener("click", () => { if (!cache.dados || li.dataset.id === (m && m.id)) return; escolhidoB = li.dataset.id; if (aba === "posicoes") aba = "ritmo"; desenhar(box, S, m, cache.dados); box.scrollIntoView({ behavior: "smooth", block: "nearest" }); }); });
+  el.querySelectorAll(".rg-linha[data-id], .rg2-l[data-id]").forEach((li) => { li.addEventListener("click", () => { if (!cache.dados || li.dataset.id === (m && m.id)) return; escolhidoB = li.dataset.id; if (aba === "posicoes") aba = "ritmo"; desenhar(box, S, m, cache.dados); box.scrollIntoView({ behavior: "smooth", block: "nearest" }); }); });
   const chave = String(S.startAt || "") + ":" + S.config.pista;
   if (cache.chave === chave && cache.dados) { desenhar(box, S, m, cache.dados); return; }
   if (cache.pedindo === chave) return;

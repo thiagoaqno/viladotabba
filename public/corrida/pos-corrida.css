@@ -365,3 +365,114 @@ body.cx-on .ra-cx .mn3-carro.com-logo{background:var(--cx-bg2)}
 /* o crédito do mapa real (gp-mapa-real.js: OpenStreetMap, ODbL) */
 .mn3-credito{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);z-index:2;color:#8d97a6;font-size:10px;opacity:.75;pointer-events:none;white-space:nowrap}
 body.cx-on .ra-cx .mn3-credito{color:var(--cx-tx2)}
+
+/* ---------- a tela das pausas da classificação (pos-quali.js): o resultado de cada Q e os ajustes do carro ---------- */
+.pq{width:min(1260px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:clamp(14px,2.4vw,28px);border-radius:14px;background:linear-gradient(160deg,#141a23f5,#070a0ff7);color:#eef2f6;box-shadow:0 30px 80px #000b;animation:pqEntra .35s ease both}
+@keyframes pqEntra{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.pq-topo{display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:1px solid #ffffff1f}
+.pq-marca svg{width:26px;height:26px;color:#e10600}
+.pq-topo h2{margin:0;font:800 clamp(18px,2.2vw,28px) var(--display,"Barlow Condensed",sans-serif);letter-spacing:.24em;text-transform:uppercase}
+.pq-gp{margin-left:auto;color:#aab4c0;font:700 clamp(12px,1.2vw,15px) var(--display,"Barlow Condensed",sans-serif);letter-spacing:.2em;text-transform:uppercase}
+.pq-meio{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.pq-meio.final{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.pq-aviso{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-left:4px solid #e10600;background:#ffffff08;border-radius:0 8px 8px 0}
+.pq-aviso span{color:#aab4c0;font-size:13px}
+/* os 3 primeiros em cartões inclinados, na cor da equipe */
+.pq-podio{display:grid;grid-template-columns:1fr 1.18fr 1fr;align-items:end;gap:10px;min-height:360px}
+.pq-card{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:300px;padding:14px;overflow:hidden;border-radius:10px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 85%,#000) 0,color-mix(in srgb,var(--c) 40%,#05070b) 70%);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);animation:pqCard .5s ease both;animation-delay:calc(var(--i) * 90ms);transition:transform .2s}
+.pq-card.p1{min-height:360px}.pq-card:hover{transform:translateY(-4px)}
+@keyframes pqCard{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.pq-foto{position:absolute;inset:0 0 34% 0;background:var(--foto) center 22%/cover no-repeat;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.pq-foto.sem{display:grid;place-items:center}
+.pq-logo-g{width:46%;max-width:120px;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 8px 20px #0008)}
+.pq-pos{position:absolute;top:8px;left:18px;font:900 italic clamp(40px,5vw,72px)/1 var(--display,"Barlow Condensed",sans-serif);color:#fff;text-shadow:0 4px 18px #0009}
+.pq-nome{position:relative;display:flex;flex-direction:column;margin-bottom:8px}
+.pq-nome small{font:700 13px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;letter-spacing:.06em}
+.pq-nome b{font:900 italic clamp(20px,2.4vw,30px)/1 var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase}
+.pq-nome em{font-style:normal;color:#ffffffc0;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.pq-tempo{position:relative;padding:8px;margin:0 -14px -14px;background:#00000066;text-align:center;font:900 italic clamp(18px,2vw,26px) var(--display,"Barlow Condensed",sans-serif);font-variant-numeric:tabular-nums}
+.pq-cred{position:absolute;top:8px;right:16px;color:#ffffffa0;font-size:9px}
+/* a tabela com o Q1, o Q2 e o Q3 */
+.pq-classif h3{margin:0 0 8px;font:800 15px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.18em;text-transform:uppercase}
+.pq-tab{width:100%;border-collapse:collapse;font-size:13.5px}
+.pq-tab th{padding:6px 8px;color:#8d97a6;font-size:11px;letter-spacing:.12em;text-align:right}.pq-tab th:nth-child(3){text-align:left}
+.pq-tab td{padding:5px 8px;border-top:1px solid #ffffff12}
+.pq-tab tr{animation:pqLinha .35s ease both;animation-delay:calc(var(--j,0) * 22ms);transition:background .15s}
+@keyframes pqLinha{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.pq-tab tbody tr:hover{background:#ffffff0d}
+.pq-tab tr.eu{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.pq-tab tr.fora td{color:#ff8a8a}
+.pq-tab tr.corte td{border-bottom:2px solid #ffffff40}
+.pq-tab td.p{width:30px;font-weight:800;text-align:right}.pq-tab td.l{width:28px}
+.pq-logo{display:block;width:22px;height:22px;object-fit:contain}
+.pq-tab td.n b{font:800 14px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.04em}.pq-tab td.n small{margin-left:6px;color:#8d97a6;font-size:11px}
+.pq-tab td.t{text-align:right;font-variant-numeric:tabular-nums;color:#cfd6df}.pq-tab td.t.melhor{color:#c58cff;font-weight:800}
+/* os ajustes do carro */
+.pq-ajustes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.pq-aj{padding:14px 16px;border:1px solid #ffffff1c;border-radius:10px;background:#ffffff06}
+.pq-aj h4{margin:0 0 8px;font:800 14px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.14em;text-transform:uppercase;color:#fff}
+.pq-nota{margin:0 0 10px;color:#aab4c0;font-size:13px;line-height:1.45}
+.pq-aj-pontos{grid-column:1/-1}
+/* o rodapé: o circuito, quantos estão prontos, o relógio da pausa e os botões */
+.pq-pe{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:12px;border-top:1px solid #ffffff1f}
+.pq-pe-gp{display:flex;flex-direction:column}.pq-pe-gp small{color:#8d97a6;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.pq-pe-gp b{font:800 18px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase}
+.pq-pe-estado{color:#cfd6df;font:700 13px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.18em;text-transform:uppercase}.pq-pe-estado em{font-style:normal;color:#5ee08a}.pq-pe-estado small{color:#8d97a6;letter-spacing:.06em;text-transform:none}
+.pq-bt{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid #ffffff2e;border-radius:8px;background:#ffffff0d;color:#fff;font:800 14px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s,transform .15s,border-color .15s}
+.pq-bt:hover:not(:disabled){background:#ffffff1f;transform:translateY(-1px)}.pq-bt:disabled{opacity:.6;cursor:default}
+.pq-pe .pq-bt.ghost{margin-left:auto}
+.pq-bt.primario{background:#e10600;border-color:#e10600}.pq-bt.primario:hover:not(:disabled){background:#ff1a12}
+.pq-espera{margin-left:auto;color:#aab4c0;font-size:13px}
+@media (max-width:900px){.pq-meio.final{grid-template-columns:1fr}.pq-podio{min-height:0}.pq-card{min-height:230px}.pq-card.p1{min-height:260px}}
+@media (prefers-reduced-motion:reduce){.pq,.pq-card,.pq-tab tr{animation:none}}
+
+/* ---------- a tela pós-corrida (resultado-gp.js, .rg2): o pódio, a classificação e a análise lado a lado, e a faixa do seu resultado ---------- */
+.results .placa.gp.rg-placa.rg2{width:min(1500px,100%)}
+.rg2 .in{display:flex;flex-direction:column;gap:12px}
+.rg2-topo{display:flex;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid #ffffff1f}
+.rg2-tit{display:flex;align-items:center;gap:10px}.rg2-tit svg{width:24px;height:24px;color:#ffd23f}
+.rg2-tit b{font:800 clamp(18px,2.2vw,28px) var(--display,"Barlow Condensed",sans-serif);letter-spacing:.24em;text-transform:uppercase}
+.rg2-gp{margin-left:auto;display:flex;align-items:center;gap:10px;font:800 clamp(13px,1.3vw,17px) var(--display,"Barlow Condensed",sans-serif);letter-spacing:.2em;text-transform:uppercase}
+.rg2-band svg{display:block;width:34px;height:auto;border-radius:2px}
+.rg2-aviso{max-width:100%}
+.rg2-grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.15fr);gap:12px;align-items:stretch}
+.rg2-col{min-width:0;padding:14px;border:1px solid #ffffff17;border-radius:12px;background:#0b1016d9}
+.rg2-col>h3{margin:0 0 10px;padding-bottom:8px;font:800 15px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.2em;text-transform:uppercase;position:relative}
+.rg2-col>h3::after{content:"";position:absolute;left:0;bottom:0;width:44px;height:3px;background:var(--eq)}
+.rg2-podio .rg-podio{margin:0;border:0;background:none}
+.rg2-vazio{color:#8d97a6}
+/* a classificação */
+.rg2-cab,.rg2-l{display:grid;grid-template-columns:34px minmax(0,1.1fr) minmax(0,1.1fr) minmax(64px,auto) 38px;align-items:center;column-gap:8px}
+.rg2-cab{padding:0 6px 6px;color:#8d97a6;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+.rg2-tab{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rg2-l{position:relative;min-height:30px;padding:2px 6px 2px 0;border-radius:6px;background:linear-gradient(90deg,var(--eq3),transparent 55%);font-size:13px;cursor:pointer;animation:rg-entra .4s ease both;animation-delay:calc(.6s + var(--i,0) * 35ms);transition:background .15s,transform .15s}
+.rg2-l:hover,.rg2-l:focus-visible{background:linear-gradient(90deg,var(--eq6),#ffffff0a 70%);outline:none;transform:translateX(2px)}
+.rg2-l.eu{box-shadow:inset 0 0 0 1px var(--eq)}
+.rg2-l.nc{opacity:.65}
+.rg2-pos{display:grid;place-items:center;align-self:stretch;border-radius:6px 0 0 6px;background:var(--eq);color:#fff;font:900 italic 15px var(--display,"Barlow Condensed",sans-serif);text-shadow:0 1px 2px #0008}
+.rg2-nome{display:flex;align-items:center;gap:5px;min-width:0}.rg2-nome b{font:800 14px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rg2-nome .rg-alerta svg,.rg2-nome .rg-vr svg{width:14px;height:14px}
+.rg2-eq{display:flex;align-items:center;gap:6px;min-width:0;color:#cfd6df;font-size:12px}.rg2-eq span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rg2-eq .rg-marca{width:20px;height:20px}
+.rg2-t{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.rg2-pts{text-align:right;font-weight:800;color:#5ee08a}
+.rg2-extra{grid-column:1/-1;display:none;flex-wrap:wrap;gap:4px 14px;padding:4px 6px 6px 42px;color:#aab4c0;font-size:12px}
+.rg2-l:hover .rg2-extra,.rg2-l:focus-visible .rg2-extra{display:flex}
+.rg2-extra .pn{width:10px;height:10px;border-radius:50%;border:2.5px solid var(--c);display:inline-block;vertical-align:-1px;text-decoration:none}
+.rg2-extra .sobe{color:#5ee08a}.rg2-extra .desce{color:#ff7a7a}.rg2-pun{color:#ffd23f}
+/* a análise na coluna estreita: o replay vira uma coluna só */
+.rg2-ana .ra{margin:0;padding:0;border:0;background:none}
+.rg2-ana .ra-cab{margin-bottom:6px}.rg2-ana .ra-cab>div:first-child{display:none}
+.rg2-ana .ra-abas{flex-wrap:wrap}
+.rg2-ana .ra-rep{grid-template-columns:1fr;grid-template-areas:"palco" "tempo" "lado"}
+.rg2-ana .ra-rep .ra-mom-palco{min-height:280px}
+.rg2-ana .ra-torre{flex-direction:row;flex-wrap:wrap;max-height:none}.rg2-ana .ra-torre li{grid-template-columns:auto auto}.rg2-ana .ra-torre li span{display:none}
+.rg2-ana .ra-tele-l{grid-template-columns:30px 50px 38px 24px}
+/* a faixa de baixo */
+.rg2-pe{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:12px 16px;border-radius:12px;background:linear-gradient(90deg,#0b1016,#0b1016e0 60%,var(--eq3))}
+.rg2-selo{display:flex;align-items:center;gap:12px}.rg2-selo svg{width:34px;height:34px;color:#cfd6df}.rg2-selo.ouro svg{color:#ffd23f}
+.rg2-selo b{font:900 italic clamp(26px,3.4vw,44px)/1 var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase}
+.rg2-quem{display:flex;flex-direction:column;padding-left:16px;border-left:2px solid #ffffff30}.rg2-quem b{font:800 18px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase}.rg2-quem small{color:#aab4c0;letter-spacing:.14em;text-transform:uppercase;font-size:11px}
+.rg2-botoes{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px}
+.rg2-botoes button{display:inline-flex;align-items:center;gap:6px}.rg2-botoes button svg{flex:none}
+@media (max-width:1150px){.rg2-grade{grid-template-columns:1fr 1fr}.rg2-ana{grid-column:1/-1}}
+@media (max-width:760px){.rg2-grade{grid-template-columns:1fr}.rg2-cab,.rg2-l{grid-template-columns:30px minmax(0,1fr) minmax(56px,auto) 34px}.rg2-eq{display:none}.rg2-cab span:nth-child(3){display:none}}

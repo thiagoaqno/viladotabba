@@ -1,17 +1,16 @@
-# Williams (2026) pelo modelo 3D do FW47
+# Haas de 2024 e 2025 pelo modelo 3D do VF-24
 
-A Williams refeita pelo modelo "F1 2025 Williams Racing FW47" do Sketchfab (o Thiago não achou o de 2026), olhado de lado, de cima (bico e asa dianteira), de trás e por baixo da asa traseira. A FW48 de antes era inventada.
+O modelo que o Thiago mandou para a Haas é o VF-24, a Haas **preta de 2024**. A Haas de 2026 do jogo já é a branca da Toyota (TGR Haas, a de 2026 de verdade) e ficou como está; o modelo foi usado para a pintura das temporadas 2024 e 2025 (`haas@2024` e `haas@2025`, no carro de 2022 a 2025), que estava inventada (branco em cima, HAAS cinza).
 
-- **Cores:** azul-royal vivo (`#1d3fc4`), escurecendo para trás; a barriga azul-marinho subindo para trás, com dois frisos azul-claro; as placas da asa dianteira e a asa dianteira azul-marinho.
-- **De lado:** Stephens no bico, MYPROTEIN com o triângulo vermelho, Kraken, ATLASSIAN no alto da caixa, KOMATSU grande, o redondo da Gulf, KEEPER embaixo, DURACELL na entrada de ar, o "bw SCORES" na placa da asa dianteira, KOMATSU e twilio na placa traseira.
-- **De cima:** ATLASSIAN e MYPROTEIN na asa dianteira, ATLASSIAN ao longo do alto das caixas, e no bico a fileira com o W da Williams, Pirelli, VAST, twilio, bw, KOMATSU, a Gulf, o A do Atlassian e o Santander.
-- **Embaixo da asa traseira** (`ASA_BAIXO`) e na vista de trás: a faixa roxa do Kraken com o logo branco, no azul-marinho.
-- Marcas novas em `f1-marcas.js`: `stephens`, `myprotein`, `kraken`, `twilio`, `vast`, `bwscores`, `williamsw`, `atlassiana`.
+Pelo modelo, olhado de lado, de cima e de trás:
+- preta, com o HAAS branco grande na caixa lateral e no alto das caixas (de cima);
+- o filete branco no alto da caixa, a faixa branca no alto da tampa, o redondo vermelho da MoneyGram na tampa e no bico;
+- o bico e a volta do cockpit brancos, os dois losangos vermelhos atrás da entrada de ar;
+- a asa dianteira branca com o vermelho nas pontas e na placa, a asa traseira vermelha em cima; Palm Angels embaixo da frente da caixa;
+- embaixo da asa traseira (`ASA_BAIXO`): o carbono do modelo, com o HAAS branco.
 
-**Saiu do #735 (Aston), que saiu do #734 (Cadillac) e do #733 (Audi, que conserta o `novidades.json`):** merge na ordem #733, #734, #735, este.
+**Saiu do #736 (Williams)**, na fila #733 → #734 → #735 → #736 → este.
 
-**Peso:** zero a mais (a folha projetada de 2026, um canvas por equipe, só desenho).
-
-Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+Conferido só com `node --check` (`f1-pintura.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

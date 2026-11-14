@@ -646,18 +646,32 @@ DESENHOS["haas@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.6, 0.6, 9, 9
   vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); });
   vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.5, 0.85, 0.5, 1.0, VERM); });
 } };
-// ---- Haas VF-24 e VF-25 (fotos): branco em cima e na frente, a lateral preta com "HAAS" cinza grande, o vermelho na asa dianteira e na tampa
-const pinturaHaas24 = { numero: "#ffffff", carbono: 1, numPos: [3.6, 0.6, 9, 9], pintar(ctx) {
-  const PRETO = "#101113", BRANCO = "#eef0f2", VERM = "#e10600", CINZA = "#7a7d82";
+// ---- Haas VF-24 (2024; vale também para 2025), pelo modelo do Sketchfab que o Thiago mandou ("F1 Haas VF-24 2024", olhado de lado, de cima e de
+// trás): preto, o HAAS branco grande na caixa lateral (e no alto dela, de cima), o filete branco no alto da caixa, a faixa branca no alto da
+// tampa, o redondo vermelho da MoneyGram na tampa e no bico, o bico e a volta do cockpit brancos, os dois losangos vermelhos atrás da entrada de
+// ar, a asa dianteira branca com o vermelho e a asa traseira vermelha em cima. Medidas do carro de 2022 a 2025 (f1-2022.js).
+const pinturaHaas24 = { numero: "#ffffff", carbono: 1, numPos: [3.45, 0.58, 9, 9], pintar(ctx) {
+  const PRETO = "#101113", BRANCO = "#eef0f2", VERM = "#e10600";
   base(ctx, PRETO);
   lados(ctx, (c) => {
-    espinha(c, BRANCO, 3.1, 0.5); filete(c, VERM, 0.12, 0.03, 3.1); ret(c, 2.55, 0.86, 3.25, 1.1, VERM);
-    baixo(c, PRETO); ret(c, 0.05, 0, 0.6, 0.16, VERM); ret(c, 3.95, 0.3, 4.45, 1.1, VERM);
-    M(c, "haas", 2.6, 0.3, 0.14, { tinta: CINZA }); M(c, "moneygram", 0.32, 0.09, 0.045, { tinta: BRANCO }); M(c, "haas", 4.17, 0.75, 0.07, { tinta: BRANCO });
+    c.beginPath(); c.moveTo(1.7, 0.47); c.quadraticCurveTo(2.6, 0.5, 3.5, 0.5); c.lineWidth = 0.014; c.strokeStyle = BRANCO; c.stroke(); // o filete no alto da caixa
+    ret(c, 2.4, 0.7, 3.5, 0.76, BRANCO); // a faixa no alto da tampa
+    ret(c, 1.7, 0.56, 2.35, 0.6, BRANCO); ret(c, 2.05, 0.53, 2.3, 0.555, VERM); // a volta do cockpit e o detalhe vermelho
+    baixo(c, PRETO);
+    ret(c, 0.05, 0, 0.6, 0.16, BRANCO); ret(c, 0.05, 0.1, 0.6, 0.125, VERM); // a placa da asa dianteira
+    ret(c, 3.95, 0.3, 4.45, 1.1, PRETO); ret(c, 3.95, 0.95, 4.45, 1.1, VERM); // a placa da asa traseira, vermelha em cima
+    M(c, "haas", 2.65, 0.3, 0.15, { tinta: BRANCO }); M(c, "moneygram", 2.95, 0.63, 0.05, { tinta: BRANCO });
+    M(c, "palmangels", 1.55, 0.12, 0.03, { tinta: BRANCO }); M(c, "haas", 4.17, 0.75, 0.06, { tinta: BRANCO });
   });
-  vista(ctx, "T", (c) => { ret(c, 0, -0.3, 2.6, 0.3, BRANCO); caixasCima(c, PRETO, 1.9, 3.6); ret(c, 2.6, -0.2, 3.2, 0.2, VERM); asasT(c, VERM, VERM, BRANCO); M(c, "moneygram", 0.3, 0, 0.06, frente); });
-  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); });
-  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERM); });
+  vista(ctx, "T", (c) => {
+    asasT(c, BRANCO, VERM, BRANCO);
+    poli(c, [[0, -0.09], [1.65, -0.13], [1.65, 0.13], [0, 0.09]], BRANCO); ret(c, 1.65, -0.3, 2.4, 0.3, BRANCO); // o bico e a volta do cockpit
+    for (const l of [-1, 1]) { poli(c, [[2.55, l * 0.03], [2.65, l * 0.08], [2.75, l * 0.03], [2.65, l * 0.005]], VERM); M(c, "haas", 2.75, l * 0.47, 0.1, { giro: l > 0 ? Math.PI : 0, tinta: BRANCO }); }
+    for (const l of [-1, 1]) ret(c, 0.08, l * 0.62, 0.5, l * 0.66, VERM); // o vermelho nas pontas da asa dianteira
+    M(c, "moneygram", 0.45, 0, 0.06, frente); M(c, "haas", 4.17, 0, 0.08, { giro: -DE_FRENTE, tinta: BRANCO });
+  });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.15, 0.3, 0.15, 0.55, BRANCO); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.8, 0.95, 0.8, 1.1, VERM); });
 } };
 DESENHOS["haas@2024"] = DESENHOS["haas@2025"] = pinturaHaas24;
 
@@ -1102,6 +1116,8 @@ const ASA_BAIXO = {
   cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillac", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
   "aston-martin": { cor: "#0a1210", marcas: (c) => marcaU(c, "valvoline", 0, 0.32, 0.11) },
   williams: { cor: "#0b1140", marcas: (c) => { ret(c, -0.45, 0.2, 0.45, 0.44, "#5741d9"); marcaU(c, "kraken", 0, 0.32, 0.12); } },
+  "haas@2024": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
+  "haas@2025": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
 };
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)

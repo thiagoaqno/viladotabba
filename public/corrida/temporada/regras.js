@@ -92,26 +92,53 @@ function contratarEngenheiro(s, area, nivel) {
   gastar(s, lista[nivel].custo - lista[s.engenheiros[area]].custo);
   s.engenheiros[area] = nivel; return s;
 }
+// O desenvolvimento do carro: até BONUS_POR_TEMPORADA pontos por temporada, que se acumulam de um ano para o outro (até BONUS_MAX). O preço
+// sobe dentro da temporada (12, 18, 24, 30) e recomeça na seguinte.
+const limiteDoAno = (ano) => Math.min(Equipes.BONUS_MAX, Equipes.BONUS_POR_TEMPORADA * Math.max(1, ano || 1));
+const custoDoDesenvolvimento = (bonus, ano) => 12 + Math.max(0, bonus - (limiteDoAno(ano) - Equipes.BONUS_POR_TEMPORADA)) * 6;
 function desenvolver(s) {
-  if (s.bonus >= 4) throw Error("O carro atingiu o limite de desenvolvimento.");
-  gastar(s, 12 + s.bonus * 6); s.bonus++; return s;
+  if (s.bonus >= limiteDoAno(s.ano)) throw Error(s.bonus >= Equipes.BONUS_MAX ? "O carro atingiu o limite de desenvolvimento." : "O carro já evoluiu tudo o que dava nesta temporada.");
+  gastar(s, custoDoDesenvolvimento(s.bonus, s.ano)); s.bonus++; return s;
 }
 // Equipes controladas pelo jogo desenvolvem o carro durante a temporada. A semente original e o GP
 // determinam os pontos: saves antigos funcionam e reabrir o mesmo GP nunca muda a montagem.
-function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipesHumanas = []) {
-  const humanos = new Set(equipesHumanas), montagens = {}, bonus = {};
+// As equipes da máquina evoluem como quem joga (2026-11-13, o Thiago: "só os humanos estão conseguindo upar os carros"):
+//  · os mesmos BONUS_POR_TEMPORADA pontos por temporada, que se acumulam de um ano para o outro (até BONUS_MAX), cada equipe no seu ritmo;
+//    o ponto que cairia numa peça já no máximo vai para a seguinte (antes ele se perdia);
+//  · com `pista`, o carro é ajustado para ela, como quem joga monta: o acerto ideal medido de cada pista (acerto-ideal.json, `asa`: 0 pede
+//    pouca asa, 1 pede muita) puxa até 2 pontos do motor para a asa nas pistas de curva, ou da asa para o motor nas de reta;
+//  · os engenheiros (`engenheiros[id]` = { mecanico, estrategista }): a equipe grande começa com um mecânico, e todas ganham um nível por
+//    temporada, até o máximo de quem joga (o bônus de box é a mesma conta da sede: mecânico × 0,5 + estrategista × 0,25 s por parada).
+function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipesHumanas = [], pista = null) {
+  const humanos = new Set(equipesHumanas), montagens = {}, bonus = {}, engenheiros = {}, bonusBox = {};
   const base = Number(semente) - (ano - 1) * 937;
-  const rodadas = Math.max(0, (ano - 1) * tamanho + gp);
+  const rodadas = Math.max(0, (ano - 1) * tamanho + gp), ideal = pista ? asaIdeal(pista) : null;
   for (const [id, equipe] of Object.entries(Equipes.EQUIPES)) {
     if (humanos.has(id)) continue;
     const r = gerador(`desenvolvimento:${base}:${id}`), atraso = Math.floor(r() * tamanho);
-    const pontos = Math.min(4, Math.floor((rodadas * 4 + atraso) / tamanho));
+    const pontos = Math.min(Equipes.BONUS_MAX, Math.floor((rodadas * Equipes.BONUS_POR_TEMPORADA + atraso) / tamanho));
     const ordem = embaralhar(["motor", "aero", "chassi", "freios", "suspensao"], r);
     const m = { ...equipe.padrao };
-    for (let i = 0; i < pontos; i++) { const k = ordem[i % ordem.length]; if (m[k] < Equipes.MAX_NIVEL) m[k]++; }
+    for (let i = 0, k = 0; i < pontos && k < pontos + ordem.length * Equipes.MAX_NIVEL; k++) { const p = ordem[k % ordem.length]; if (m[p] < Equipes.MAX_NIVEL) { m[p]++; i++; } }
+    if (ideal != null) ajustarParaPista(m, ideal);
     montagens[id] = m; bonus[id] = pontos;
+    const faixa = faixaDe(id), nivel = Math.min(2, (faixa === 0 ? 1 : 0) + Math.floor((rodadas + atraso) / tamanho));
+    engenheiros[id] = { mecanico: nivel, estrategista: Math.max(0, nivel - (faixa === 2 ? 1 : 0)) };
+    bonusBox[id] = engenheiros[id].mecanico * 0.5 + engenheiros[id].estrategista * 0.25;
   }
-  return { montagens, bonus };
+  return { montagens, bonus, engenheiros, bonusBox };
+}
+// o acerto ideal de asa da pista (0 a 1), medido por ferramentas/acerto-ideal.js; null se a pista não tem medição
+let IDEAIS = null;
+function asaIdeal(pista) {
+  if (IDEAIS == null) { try { IDEAIS = root.AcertoIdeal || (typeof require === "function" ? require("../acerto-ideal.json") : {}); } catch { IDEAIS = {}; } }
+  const v = IDEAIS && IDEAIS[pista] && IDEAIS[pista].asa; return Number.isFinite(v) ? v : null;
+}
+// passa até 2 pontos entre o motor e a asa (a soma não muda): pista de curva (asa ideal ≥ 0,75) pede asa; de reta (≤ 0,25), motor
+function ajustarParaPista(m, asa) {
+  const de = asa >= 0.75 ? "motor" : asa <= 0.25 ? "aero" : null, para = de === "motor" ? "aero" : "motor"; if (!de) return m;
+  for (let i = 0; i < 2 && m[de] > 1 && m[para] < Equipes.MAX_NIVEL; i++) { m[de]--; m[para]++; }
+  return m;
 }
 function pilotosNoGrid(s) {
   const titulares = Pilotos.PILOTOS.filter((p) => p.equipe === s.equipe);
@@ -292,7 +319,7 @@ function proximaTemporada(s) {
   const sorteado = sortearCalendario(s.tamanho, s.semente, s.calendario.map((g) => g.pista));
   s.calendario = sorteado.calendario; s.calendarioSemente = sorteado.semente; return s;
 }
-const api = { CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
+const api = { limiteDoAno, custoDoDesenvolvimento, ajustarParaPista, CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Temporada = api;
 })(typeof window !== "undefined" ? window : globalThis);

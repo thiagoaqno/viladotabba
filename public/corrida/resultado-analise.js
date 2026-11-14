@@ -407,7 +407,7 @@ function ligarReplay(box, S, m, A, L, idA) {
   mini = criarMiniatura(palco, A.pista || S.config.pista, { ...temaMini(), cor: info(rep.sel).cor, corredor: false, aoCarro: (id) => escolherCarro(id) });
   if (!mini) { palco.classList.add("sem3d"); palco.innerHTML = `<p class="ra-vazio">O replay precisa de WebGL.</p>`; return; }
   mini.definirCarros(D.ids.map((id) => ({ id, cor: info(id).cor, rotulo: info(id).sigla })));
-  const pins = (A.ultrapassagens || []).map((u, i) => ({ id: i, f: u.f, cor: info(u.a).cor, alto: 3 })); mini.marcadores(pins);
+  // (no replay, só os carros: os pinos das ultrapassagens ficam na aba delas)
   const calor = () => {
     if (!rep.calor) { mini.pintar(null); return; }
     const s = porId.get(rep.sel), volta = s && s.d.mv ? s.d.mv : 0; if (!volta) { mini.pintar(null); return; }

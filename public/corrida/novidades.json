@@ -1,5 +1,16 @@
 [
   {
+    "id": "2026-11-14-replay-ultrapassagens-vista",
+    "data": "2026-11-14",
+    "itens": [
+      "Replay da corrida na miniatura 3D da pista: todos os carros andando, a torre ao vivo, 1×/4×/16× e a barra do tempo para ir a qualquer momento",
+      "Telemetria no replay: velocidade, marcha, acelerador e freio do piloto escolhido e de outro para comparar, com o gráfico dos últimos 12 s",
+      "Mapa de calor: a pista pintada pela velocidade na melhor volta do piloto escolhido, do azul (lento) ao vermelho (rápido)",
+      "Ultrapassagens: cada troca de posição na pista, com o pino no lugar; \"Ver no replay\" mostra a manobra e a telemetria dos dois naquele trecho",
+      "Vista do carro de 2026 (Garagem > Ver o carro de perto): gire o carro com o mouse e clique nas peças (asa, halo, pneus, laterais, ERS, motor, assoalho e asa traseira)"
+    ]
+  },
+  {
     "id": "2026-11-14-analise-corrida",
     "data": "2026-11-14",
     "itens": [

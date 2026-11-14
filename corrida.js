@@ -15,6 +15,7 @@ const Sim = require("./public/corrida/sim.js");
 const Parados = require("./corrida-parados.js"); // o carro parado na pista vira fantasma e é recolocado (sem engavetamento)
 const Quali = require("./corrida-f1-classificacao.js"); // a classificação (Q1, Q2, Q3) que define o grid das regras de F1
 const Robos = require("./corrida-robos.js"); // os robôs (rodam aqui no servidor)
+const Gravacao = require("./corrida-gravacao.js"); // o replay da tela do resultado: a fração da volta e a telemetria de cada carro a cada 250 ms, e as ultrapassagens
 const Analise = require("./corrida-analise.js"); // as voltas, os setores e as posições que a aba Análise da carreira mostra
 const Setores = require("./corrida-setores.js"); // a conta dos setores sem travar a volta por um aviso perdido
 const Humanos = require("./corrida-humanos.js"); // os humanos nas regras de F1: o servidor anda o carro com as entradas do piloto (autoridade)
@@ -239,7 +240,7 @@ module.exports = function attachCorrida(io) {
     clearTimeout(room.endTimer);
     clearInterval(room.itemTimer); clearInterval(room.botTimer); clearInterval(room.f1Timer); clearInterval(room.humanosTimer);
     Quali.cancelar(room);
-    Analise.limpar(room);
+    Analise.limpar(room); Gravacao.limpar(room);
     room.phase = "race";
     for (const id of room.order) delete room.players[id].sim; // cada largada começa com o carro no grid
     require("./corrida-contato.js").limpar(room);
@@ -283,6 +284,7 @@ module.exports = function attachCorrida(io) {
       Direcao.iniciar(room);
       room.f1Timer = setInterval(() => { T.usarEscala(room.config.pista); Anos.usarAno(room.config.ano);
         if (room.phase !== "race") return;
+        try { Gravacao.passo(room, Date.now(), (p) => pontoDoCarro(room, p)); } catch (e) { /* o replay é um extra: nunca para a corrida */ }
         for (const id of room.order) { const p = room.players[id]; if (p?.bot && p.pos && p.finish == null && !p.dnf) Direcao.registrar(room, p, p.pos, Date.now(), (s) => log(room, s)); }
         const quebrou = verificarFalhas(room), parou = Parados.passo(room, Date.now());
         if (Direcao.passo(room, Date.now(), (s) => log(room, s)) || quebrou || parou) broadcast(room);
@@ -393,7 +395,7 @@ module.exports = function attachCorrida(io) {
       const v = room.resultado[0]; if (v) log(room, `🏆 ${nameOf(room, v.id)} venceu o GP e leva ${v.pontos} pontos.`);
       // a análise do GP (posição, tempo e setores de cada volta, pits e safety car: corrida-analise.js) para a tela do resultado de qualquer sala;
       // vai só quando o navegador pede (`analise`), e não no estado, que sai várias vezes por segundo. Um erro nela nunca pode perder o resultado.
-      try { room.analiseGP = Analise.resumo(room, (p) => p.id); } catch (e) { room.analiseGP = null; console.warn("Corrida: análise do GP:", e.message); }
+      try { room.analiseGP = { ...Analise.resumo(room, (p) => p.id), ultrapassagens: Gravacao.listaUltrapassagens(room) }; } catch (e) { room.analiseGP = null; console.warn("Corrida: análise do GP:", e.message); }
     }
     if (room.finishOrder.length) noite.vitoria("corrida", room.code, nomesDe(room, room.finishOrder.slice(0, 1)), nomesDe(room, room.order.filter((id) => id !== room.finishOrder[0])));
     log(room, "🏆 Fim de corrida!");
@@ -826,6 +828,14 @@ module.exports = function attachCorrida(io) {
       if (typeof cb !== "function") return;
       const { room } = ctx();
       cb(room && room.phase === "results" && room.analiseGP ? { startAt: room.startAt || null, ...room.analiseGP } : null);
+    });
+
+    // o replay do GP que acabou (corrida-gravacao.js): só quando a aba Replay ou Ultrapassagens pede
+    socket.on("replay", (cb) => {
+      if (typeof cb !== "function") return;
+      const { room } = ctx();
+      let r = null; try { r = room && room.phase === "results" ? Gravacao.replay(room) : null; } catch (e) { r = null; }
+      cb(r ? { startAt: room.startAt || null, ...r } : null);
     });
 
     // Voltas de corrida e classificação (amostras a cada 0,1 s) ensinam até cinco traçados.

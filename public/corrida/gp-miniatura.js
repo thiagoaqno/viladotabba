@@ -47,7 +47,7 @@ function parede(v, n, cor) {
   return new THREE.Mesh(g, m);
 }
 
-// `op`: { cor (a da equipe, para o carrinho e o realce), aoPassar({ f, x, y } | null), aoMarcador(id, "passa" | "clique" | null, { x, y }), corredor (true) }
+// `op`: { cor (a da equipe, para o carrinho e o realce), aoPassar({ f, x, y } | null), aoMarcador(id, "passa" | "clique" | null, { x, y }), aoCarro(id), corredor (true) }
 export function criarMiniatura(caixa, pista, op = {}) {
   const t = window.Pistas && window.Pistas.PISTAS[pista]; if (!t || !caixa) return null;
   let renderer;
@@ -122,6 +122,38 @@ export function criarMiniatura(caixa, pista, op = {}) {
     });
   }
 
+  // os carros do replay: { id, cor, rotulo } — uma bolinha na cor da equipe e a sigla por cima (HTML), posta a cada quadro por `posicionar`
+  const carros = new Map(), grupoCarros = new THREE.Group(); cena.add(grupoCarros);
+  const geoCarro = new THREE.SphereGeometry(0.95, 14, 10);
+  function definirCarros(lista) {
+    for (const c of carros.values()) { grupoCarros.remove(c.m); c.m.material.dispose(); c.el.remove(); }
+    carros.clear();
+    for (const k of lista || []) {
+      const m = new THREE.Mesh(geoCarro, new THREE.MeshBasicMaterial({ color: new THREE.Color(k.cor || "#ffffff") })); m.userData.carro = k.id; m.visible = false; grupoCarros.add(m);
+      const el = document.createElement("span"); el.className = "mn3-carro"; el.textContent = k.rotulo || ""; el.style.setProperty("--c", k.cor || "#fff"); el.dataset.carro = k.id; camadaRot.appendChild(el);
+      carros.set(k.id, { m, el, f: null, on: false });
+    }
+    carro.visible = rastro.visible = false; // no replay, o carrinho de luz sai de cena
+  }
+  // `f` = fração da volta (null: fora da pista); `on`: realçado (cresce, rótulo sempre visível)
+  function posicionar(id, f, on) {
+    const c = carros.get(id); if (!c) return;
+    c.f = f; c.on = !!on; c.m.visible = f != null;
+    if (f == null) return;
+    const x = (((f % 1) + 1) % 1) * n, i = Math.floor(x), a = v[i % n], b = v[(i + 1) % n];
+    c.m.position.lerpVectors(a, b, x - i); c.m.position.y += 1.1; c.m.scale.setScalar(on ? 1.7 : 1);
+  }
+  // a câmera acompanha um ponto (o carro escolhido no replay): o alvo anda junto, sem tirar o giro do mouse
+  let seguindo = null;
+  function seguir(f) { seguindo = f == null ? null : pontoDe(f).clone(); if (seguindo) ctl.autoRotate = false; }
+  // pinta a linha dos setores por outra cor (o mapa de calor da velocidade): `cor(fração)` devolve uma cor (THREE.Color ou texto CSS) ou null (a cor do setor)
+  function pintar(cor) {
+    const at = setores.geometry.getAttribute("color");
+    const cache = new Map(), deCss = (x) => { if (!cache.has(x)) cache.set(x, new THREE.Color(x)); return cache.get(x); }; // (a cor pode vir em texto CSS)
+    for (let i = 0; i < n; i++) { const r0 = cor && cor(i / n), c = r0 ? (r0.isColor ? r0 : deCss(r0)) : COR_SETOR[setorDe(i, n)]; at.setXYZ(i * 2, c.r, c.g, c.b); at.setXYZ(i * 2 + 1, c.r, c.g, c.b); }
+    at.needsUpdate = true;
+  }
+
   // a câmera voa até um ponto da volta (ou volta à vista inteira com `null`)
   let voo = null;
   function focar(f) {
@@ -138,6 +170,8 @@ export function criarMiniatura(caixa, pista, op = {}) {
     const xy = lerMouse(ev); ray.setFromCamera(mouse, cam);
     const cabecas = [...pinos.values()].map((p) => p.cabeca), hp = cabecas.length ? ray.intersectObjects(cabecas, false)[0] : null;
     if (hp) return { pino: hp.object.userData.pino, xy };
+    const visiveis = [...carros.values()].filter((c) => c.m.visible).map((c) => c.m), hc = visiveis.length ? ray.intersectObjects(visiveis, false)[0] : null;
+    if (hc) return { carro: hc.object.userData.carro, xy };
     const ha = ray.intersectObject(asfalto, false)[0];
     if (ha && ha.face) { const i = Math.floor(Math.min(ha.face.a, ha.face.b, ha.face.c) / 2); return { f: i / n, xy }; }
     return { xy };
@@ -147,6 +181,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
     const r = tocar(ev);
     if (r.pino != null) { cv.style.cursor = "pointer"; if (ultimoPassa !== r.pino) { ultimoPassa = r.pino; destacar(r.pino); } op.aoMarcador && op.aoMarcador(r.pino, "passa", r.xy); op.aoPassar && op.aoPassar(null); return; }
     if (ultimoPassa != null) { ultimoPassa = null; destacar(null); op.aoMarcador && op.aoMarcador(null, null, r.xy); }
+    if (r.carro != null) { cv.style.cursor = "pointer"; op.aoPassar && op.aoPassar(null); return; }
     cv.style.cursor = r.f != null ? "crosshair" : "grab";
     op.aoPassar && op.aoPassar(r.f != null ? { f: r.f, ...r.xy } : null);
   };
@@ -154,6 +189,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
   const aoSubir = (ev) => {
     const b = baixo; baixo = null; parouEm = performance.now(); if (!b || Math.hypot(ev.clientX - b.x, ev.clientY - b.y) > 5) return;
     const r = tocar(ev); if (r.pino != null) op.aoMarcador && op.aoMarcador(r.pino, "clique", r.xy);
+    else if (r.carro != null) op.aoCarro && op.aoCarro(r.carro);
   };
   const aoSair = () => { if (ultimoPassa != null) { ultimoPassa = null; destacar(null); op.aoMarcador && op.aoMarcador(null, null, null); } op.aoPassar && op.aoPassar(null); };
   cv.addEventListener("pointermove", aoMover); cv.addEventListener("pointerdown", aoDescer); window.addEventListener("pointerup", aoSubir); cv.addEventListener("pointerleave", aoSair);
@@ -172,6 +208,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
     const dt = Math.min(0.1, (agora - ant) / 1000); ant = agora;
     if (!baixo && !voo && !ctl.autoRotate && !reduz() && agora - parouEm > 6000 && realce == null) ctl.autoRotate = true;
     if (voo) { const u = Math.min(1, (agora - voo.t0) / voo.dur), e = u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2; ctl.target.lerpVectors(voo.de, voo.para, e); cam.position.lerpVectors(voo.cde, voo.cpara, e); if (u >= 1) { voo = null; parouEm = agora; } }
+    if (seguindo && !voo) { const d = seguindo.clone().sub(ctl.target).multiplyScalar(Math.min(1, dt * 4)); ctl.target.add(d); cam.position.add(d); }
     ctl.update();
     // o carrinho: uma volta a cada 14 s, interpolado entre os pontos
     if (carro.visible && !reduz()) {
@@ -193,6 +230,15 @@ export function criarMiniatura(caixa, pista, op = {}) {
       const w = caixa.clientWidth, h = caixa.clientHeight;
       for (const r of rotulos) { tmp.copy(r.p).project(cam); const fora = tmp.z > 1; r.el.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px) translate(-50%, -50%)`; r.el.style.visibility = fora ? "hidden" : ""; }
     }
+    if (carros.size) {
+      const w = caixa.clientWidth, h = caixa.clientHeight;
+      for (const c of carros.values()) {
+        if (!c.m.visible) { c.el.style.visibility = "hidden"; continue; }
+        tmp.copy(c.m.position); tmp.y += 1.8; tmp.project(cam);
+        c.el.style.visibility = tmp.z > 1 ? "hidden" : ""; c.el.classList.toggle("on", c.on);
+        c.el.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px) translate(-50%, -100%)`;
+      }
+    }
     renderer.render(cena, cam);
   }
   raf = requestAnimationFrame(quadro);
@@ -205,7 +251,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
     xadrez.dispose(); renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) { /* já foi */ }
     cv.remove(); camadaRot.remove(); caixa.classList.remove("mn3");
   }
-  return { marcadores, destacar, focar, curvas, soltar, temRelevo: T.temRelevo, get vivo() { return vivo; } };
+  return { marcadores, destacar, focar, curvas, soltar, definirCarros, posicionar, seguir, pintar, temRelevo: T.temRelevo, get vivo() { return vivo; } };
 }
 
 // o brilho redondo do carrinho (uma textura só, feita uma vez)

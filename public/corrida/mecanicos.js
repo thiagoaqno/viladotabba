@@ -8,6 +8,7 @@ import { clone as clonarEsqueleto } from "three/addons/utils/SkeletonUtils.js";
 import { carregarPilotos, basePodio, materialDoCasco } from "./podio-pilotos.js";
 import { uniformeDe, pintarTraje, pintarLuvas, TAM_FOLHA } from "./f1-uniformes.js";
 import { pintarFolha } from "./f1-capacetes.js";
+import { renderer } from "./cena.js";
 
 const R = Math.PI / 180;
 // a altura do quadril sai sozinha (o pé ou o joelho mais baixo apoia no chão)
@@ -116,9 +117,10 @@ function pneu(composto) {
 }
 // a equipe inteira: { g (o grupo no quadro do carro, em metros), atualizar(estado), soltar() }
 // estado: { fase: "espera" (o carro vem chegando) | "troca" (t de 0 a 1) | "fim" (a troca acabou; o carro sai), composto }
-export function criarEquipeBox(equipe, cor) {
+// `fabrica` (opcional): de onde sai cada boneco; a corrida passa uma que usa os bonecos já montados aos poucos (criarBoxesDaCorrida, `adiantar`)
+export function criarEquipeBox(equipe, cor, fabrica = criarMecanico) {
   const g = new THREE.Group(), gente = [];
-  const por = (papel, x, z, olhaX, olhaZ, extra = {}) => { const m = criarMecanico(equipe, cor); m.g.scale.setScalar(ESCALA_GENTE); m.papel = papel; m.x = x; m.z = z; m.g.position.set(x, 0, z); m.g.rotation.y = Math.atan2(olhaX - x, olhaZ - z) - m.guinada; Object.assign(m, extra); g.add(m.g); gente.push(m); return m; };
+  const por = (papel, x, z, olhaX, olhaZ, extra = {}) => { const m = fabrica(equipe, cor); m.g.scale.setScalar(ESCALA_GENTE); m.papel = papel; m.x = x; m.z = z; m.g.position.set(x, 0, z); m.g.rotation.y = Math.atan2(olhaX - x, olhaZ - z) - m.guinada; Object.assign(m, extra); g.add(m.g); gente.push(m); return m; };
   for (const [wx, wz] of RODAS) {
     const lado = Math.sign(wx), fora = wz < 0 ? -1 : 1; // (para fora do carro: o lado e, na frente ou atrás, a ponta)
     por("pistola", wx + lado * 0.62, wz, wx, wz);
@@ -158,11 +160,12 @@ export function criarEquipeBox(equipe, cor) {
 // ---------- na corrida ----------
 // As equipes do box na pista (regras de F1): a equipe aparece na frente da sua garagem quando um carro dela entra no corredor e some
 // quando os dois saíram. Só as MAX_EQUIPES mais perto da câmera, e só a menos de LONGE u dela (cada equipe são 16 bonecos com esqueleto).
+const BONECOS = 16, ORCAMENTO_MS = 4; // (os bonecos de uma equipe; o tempo por quadro para montar os das outras)
 const MAX_EQUIPES = 2, LONGE = 900, PECAS_FORA = ["hans", "metal", "vedacao"]; // (de longe essas peças não aparecem: menos chamadas de desenho)
 export function criarBoxesDaCorrida(tr, cena, escala) {
   const cor = tr.corredor, F1 = window.F1Regras; if (!cor || !F1) return null;
   let pronto = false, falhou = false; carregarMecanicos().then(() => { pronto = true; }).catch(() => { falhou = true; });
-  const equipes = new Map(), visto = new Map(); // equipe → { eq, ... }; id do carro → { dur, trocou }
+  const equipes = new Map(), visto = new Map(), fila = []; // equipe → { eq, ... }; id do carro → { dur, trocou }; as equipes a montar aos poucos
   const ancora = (garagem) => {
     const u = garagem, i = cor.i0 + Math.floor(u), f = u - Math.floor(u), a = tr.pts[i % tr.n], b = tr.pts[(i + 1) % tr.n], lat = cor.garagemLat;
     const x = a.x + (b.x - a.x) * f, y = a.y + (b.y - a.y) * f, h = a.h + (b.h - a.h) * f;
@@ -187,6 +190,7 @@ export function criarBoxesDaCorrida(tr, cena, escala) {
         .filter((a) => a.d < LONGE).sort((a, b) => a.d - b.d).slice(0, MAX_EQUIPES);
       const usadas = new Set(lista.map((a) => a.c.equipe));
       for (const [k, e] of equipes) if (!usadas.has(k)) e.eq.g.visible = false;
+      if (!lista.length) adiantar(); // (ninguém no box perto da câmera: hora de montar, aos poucos, os bonecos das outras equipes)
       for (const a of lista) {
         let e = equipes.get(a.c.equipe);
         if (!e) { e = { eq: nova(a.c.equipe, a.c.cor) }; equipes.set(a.c.equipe, e); }
@@ -197,16 +201,38 @@ export function criarBoxesDaCorrida(tr, cena, escala) {
     // as equipes [{ equipe, cor }] montadas ANTES da largada, bem abaixo do chão e visíveis, para o aquecimento da pista (jogo.js) compilar os
     // shaders delas (as malhas com esqueleto) e subir as texturas: montadas na primeira vez que um carro entrava no box, travavam o jogo.
     // Devolve os grupos (o aquecimento os esconde depois; `atualizar` mostra cada um quando a equipe estiver no box).
+    // Só a PRIMEIRA da lista é montada inteira (o shader com esqueleto é o mesmo para todas). Das outras, as roupas são pintadas e as texturas
+    // sobem para a placa já aqui, e os bonecos entram numa fila que `adiantar` monta aos poucos durante a corrida, enquanto ninguém está no box
+    // perto da câmera: antes a equipe inteira (16 bonecos, a folha de 1024 do macacão pintada e enviada) nascia na primeira parada de cada uma e
+    // travava o jogo (o Thiago, 2026-11-13: "travadas quando alguém vai para o box pela primeira vez").
     preparar(lista) {
-      return carregarMecanicos().then(() => { pronto = true; return lista.filter((x) => x.equipe).map(({ equipe, cor }) => {
-        let e = equipes.get(equipe); if (!e) { e = { eq: nova(equipe, cor) }; equipes.set(equipe, e); }
-        e.eq.g.visible = true; e.eq.g.position.set(0, -1e5, 0); e.eq.atualizar({ fase: "troca", t: 0.5 }); return e.eq.g;
-      }); }, () => []);
+      return carregarMecanicos().then(() => { pronto = true; const validas = lista.filter((x) => x.equipe), grupos = [];
+        validas.forEach(({ equipe, cor }, k) => {
+          const m = materiaisDe(equipe, cor || "#888888");
+          for (const mat of [m.traje, m.luvas, m.casco]) if (mat && mat.map) try { renderer.initTexture(mat.map); } catch { /* sem placa: sobe no primeiro desenho */ }
+          if (k > 0) { if (!equipes.has(equipe) && !fila.some((f) => f.equipe === equipe)) fila.push({ equipe, cor: cor || "#888888", bonecos: [] }); return; }
+          let e = equipes.get(equipe); if (!e) { e = { eq: nova(equipe, cor) }; equipes.set(equipe, e); }
+          e.eq.g.visible = true; e.eq.g.position.set(0, -1e5, 0); e.eq.atualizar({ fase: "troca", t: 0.5 }); grupos.push(e.eq.g);
+        });
+        for (const c of ["macio", "medio", "duro", "chuva", "intermediario"]) pneu(c); // (os materiais de cada cor de pneu, de uma vez)
+        return grupos;
+      }, () => []);
     },
     soltar() { for (const e of equipes.values()) e.eq.soltar(); equipes.clear(); },
   };
-  function nova(equipe, cor) {
-    const eq = criarEquipeBox(equipe, cor || "#888888"); eq.g.scale.setScalar(escala);
+  // a fila das equipes a montar aos poucos: no máximo ORCAMENTO_MS por quadro, um boneco de cada vez; com os 16 prontos, a equipe vira um
+  // grupo escondido, pronto para a primeira parada
+  function adiantar() {
+    if (!fila.length) return;
+    const t0 = performance.now(), f = fila[0];
+    while (f.bonecos.length < BONECOS && performance.now() - t0 < ORCAMENTO_MS) f.bonecos.push(criarMecanico(f.equipe, f.cor));
+    if (f.bonecos.length < BONECOS) return;
+    fila.shift(); if (equipes.has(f.equipe)) return;
+    const eq = nova(f.equipe, f.cor, f.bonecos); eq.g.visible = false; equipes.set(f.equipe, { eq });
+  }
+  function nova(equipe, cor, prontos = null) {
+    const fabrica = prontos ? (e, c) => prontos.shift() || criarMecanico(e, c) : criarMecanico;
+    const eq = criarEquipeBox(equipe, cor || "#888888", fabrica); eq.g.scale.setScalar(escala);
     eq.g.traverse((o) => { if (o.isSkinnedMesh && PECAS_FORA.includes(o.name)) o.visible = false; });
     cena.add(eq.g); return eq;
   }

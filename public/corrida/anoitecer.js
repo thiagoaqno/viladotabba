@@ -1,5 +1,6 @@
 // Corrida da Galera — o ANOITECER das corridas noturnas (Bahrein, Jeddah, Singapura, Las Vegas e qualquer corrida marcada "Noite"):
-// a corrida larga no fim de tarde e vira noite fechada até a metade (pela volta do líder). A pista é montada já no modo noite
+// a corrida larga no pôr do sol e vira noite fechada em 2 voltas do líder (pedido do Thiago, 2026-11-13: antes largava de tarde e só
+// escurecia até a metade da corrida). A pista é montada já no modo noite
 // (useTrack: os postes e o sombreador deles entram em todos os materiais e o aquecimento da largada compila tudo assim), e aqui só
 // mexem valores que NÃO recompilam nada: a cor e a força do sol e do céu, a neblina, a força da luz dos postes (um uniforme) e o
 // fundo, um degradê pintado num canvas pequeno que é repintado aos poucos. A luz da foto (scene.environment) não troca: trocar
@@ -13,7 +14,8 @@ import { LUZ, ambienteDaNoite } from "./kit/luz-postes.js";
 const lim = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const suave = (a, b, x) => { const t = lim((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 // o céu: [altura no canvas (0 = topo), cor do fim de tarde, cor da noite]
-const FAIXAS = [[0, "#3a5f9a", "#050912"], [0.3, "#6f86b4", "#0b1424"], [0.44, "#e0a27a", "#263140"], [0.5, "#ffb36b", "#55483e"], [0.54, "#9a7a6a", "#26303a"], [1, "#3b3a40", "#080e19"]];
+// (as cores do "dia" são as do pôr do sol: azul fundo no alto, lilás, laranja forte no horizonte)
+const FAIXAS = [[0, "#24396a", "#050912"], [0.3, "#7a6c9e", "#0b1424"], [0.44, "#ee8656", "#263140"], [0.5, "#ff8a3c", "#55483e"], [0.54, "#a0644e", "#26303a"], [1, "#35303a", "#080e19"]];
 const ca = new THREE.Color(), cb = new THREE.Color();
 const mistura = (a, b, f) => "#" + ca.set(a).lerp(cb.set(b), f).getHexString();
 
@@ -34,17 +36,23 @@ export function iniciarAnoitecer(tr, st) {
   const L = tr.look, amb = ambienteDaNoite(tr);
   A = {
     tr, f: 0, pintado: -1, fundoAntes: scene.background, brilhoAntes: scene.backgroundIntensity,
-    dia: { fog: new THREE.Color(L.fog).lerp(new THREE.Color(0xe89a6a), 0.45), near: L.fogN, far: L.fogF, hemiC: new THREE.Color(L.hemi[0]).lerp(new THREE.Color(0xffc89a), 0.35), hemiG: new THREE.Color(L.hemi[1]), hemi: L.hemi[2] * 0.7, solC: new THREE.Color(0xffa060), sol: L.sun[1] * 0.75, ceu: 0.9 },
+    dia: { fog: new THREE.Color(L.fog).lerp(new THREE.Color(0xe0805a), 0.6), near: L.fogN, far: L.fogF, hemiC: new THREE.Color(L.hemi[0]).lerp(new THREE.Color(0xffb080), 0.5), hemiG: new THREE.Color(L.hemi[1]).lerp(new THREE.Color(0x41445a), 0.3), hemi: L.hemi[2] * 0.55, solC: new THREE.Color(0xff7a38), sol: L.sun[1] * 0.5, ceu: 0.7 },
     noite: { fog: new THREE.Color(0x101b33), near: Math.min(L.fogN, 650), far: Math.min(L.fogF, 3400), hemiC: new THREE.Color(0x9eb9ee), hemiG: new THREE.Color(0x41445a), hemi: amb.hemi, solC: new THREE.Color(0xc9dcff), sol: amb.lua, ceu: 0.32 * amb.ceu },
   };
   scene.userData.anoitecer = 0;
   aplicar(0);
 }
-// o quanto já é noite (0 fim de tarde, 1 noite), pela volta do líder: escurece entre 10% e 50% da corrida
+// o quanto já é noite (0 pôr do sol, 1 noite), pela volta do líder: escurece ao longo das 2 primeiras voltas. Entre uma volta e outra a
+// fração anda pelo tempo (a duração da última volta do líder, ou VOLTA_REF_S na primeira), para escurecer sem degrau.
+const VOLTAS_NOITE = 2, VOLTA_REF_S = 90;
 function alvo() {
-  const S = E.S, total = S?.config?.voltas || 1; let v = 0;
+  const S = E.S, agora = performance.now(); let v = 0;
   for (const p of S?.players || []) if (p.started) v = Math.max(v, p.laps || 0);
-  return suave(0.1, 0.5, v / total);
+  if (!S?.players?.some((p) => p.started)) return 0;
+  if (A.voltas == null) { A.voltas = v; A.voltaEm = agora; A.dur = VOLTA_REF_S * 1000; }
+  if (v > A.voltas) { A.dur = Math.max(20000, agora - A.voltaEm); A.voltas = v; A.voltaEm = agora; }
+  const frac = Math.min(0.99, (agora - A.voltaEm) / A.dur);
+  return suave(0, VOLTAS_NOITE, v + frac);
 }
 function aplicar(f) {
   const d = A.dia, n = A.noite, fog = scene.fog;

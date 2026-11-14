@@ -116,8 +116,10 @@ function prepararDaCorrida(tr) {
   if (!race.mecanicos?.preparar) return Promise.resolve([sc]);
   // UMA equipe basta para compilar (o shader com esqueleto é o mesmo para todas): as 11 eram 242 bonecos montados e desenhados na contagem, e o
   // aquecimento passava da hora das luzes. A minha equipe (a que eu mais vou ver no box), ou a primeira da sala
+  // (as outras equipes da sala vêm depois na lista: delas só as texturas sobem agora, e os bonecos são montados aos poucos na corrida, mecanicos.js)
   const eu = me(), pl = (eu && eu.equipe ? eu : (E.S.players || []).find((p) => p.equipe)); if (!pl) return Promise.resolve([sc]);
-  return race.mecanicos.preparar([{ equipe: pl.equipe, cor: window.EQUIPES_F1?.[pl.equipe]?.cor }]).then((gs) => [sc, ...gs], () => [sc]);
+  const lista = [pl.equipe, ...new Set((E.S.players || []).map((p) => p.equipe).filter((q) => q && q !== pl.equipe))].map((equipe) => ({ equipe, cor: window.EQUIPES_F1?.[equipe]?.cor }));
+  return race.mecanicos.preparar(lista).then((gs) => [sc, ...gs], () => [sc]);
 }
 // O ENSAIO GERAL: compilar e desenhar fora da tela não pegava tudo (a primeira vez de cada coisa NA TELA, pelo pós de verdade, ainda
 // travava: o safety car, a chuva, os efeitos de batida, os retrovisores). Com a tela de carregamento ainda por cima do jogo, dois quadros

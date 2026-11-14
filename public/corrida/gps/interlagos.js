@@ -1,5 +1,5 @@
 // Interlagos (Autódromo José Carlos Pace): o que o GP usa do kit (kit/README.md explica cada peça) e o que só ele tem, em
-// ../interlagos.js (o lago, a caixa-d'água, o prédio dos boxes, São Paulo em volta). A pista é a real (4.309 m, anti-horária) e as frações (0 a 1) são da volta, a partir da chegada:
+// ../interlagos.js (o lago, a caixa-d'água, o prédio dos boxes, São Paulo em volta, e de kit/interlagos/ as placas das curvas e a mata). A pista é a real (4.309 m, anti-horária) e as frações (0 a 1) são da volta, a partir da chegada:
 // S do Senna 0,066-0,104 · Curva do Sol 0,11-0,18 · Reta Oposta 0,18-0,31 · Descida do Lago 0,31-0,37 · Ferradura 0,46-0,50 ·
 // Laranjinha 0,49-0,50 · Pinheirinho 0,55-0,58 · Bico de Pato 0,625-0,645 · Mergulho 0,66-0,70 · Junção 0,74-0,76 · Café 0,78 · subida dos boxes até a chegada.
 import { cenarioInterlagos, depoisInterlagos } from "../interlagos.js";
@@ -39,5 +39,5 @@ export const GP_INTERLAGOS = {
   vida: {
     som: { campo: () => 0.7, cidade: 0.25 }, // vento e passarinhos do autódromo, a cidade lá longe
   },
-  depois: (tr, ctx) => depoisInterlagos(tr, ctx),
+  depois: (tr, ctx) => depoisInterlagos(tr, ctx, GP_INTERLAGOS.arquibancadas.trechos), // o prédio dos boxes, as placas das curvas e a mata (sem entrar atrás das arquibancadas)
 };

@@ -1,15 +1,17 @@
-# Carros pelos modelos 3D: Cadillac, Aston Martin, Williams, Haas, RB e a asa da Ferrari (junta #734 a #739)
+# Interlagos: a mata do autódromo e as placas das curvas
 
-Os PRs #734 a #739 saíram um do outro e entraram em conflito depois que o #733 (Audi) entrou na `main` com squash. Este PR junta todos, em cima da `main` atual, com o mesmo conteúdo:
+O Thiago mandou a coleção "F1 Tracks" do Sketchfab (10 pistas cartoon do rccdesign) e escolheu refazer só Interlagos. Os modelos não entram no jogo: são pagos (US$ 25 cada, nenhum com download grátis) e têm de 0,5 a 1,5 milhão de faces cada. Serviram só de referência, e o cenário continua desenhado em código. Interlagos era a pista com menos cenário próprio: só o lago, a caixa-d'água e o prédio dos boxes, sem `kit/interlagos/`.
 
-- **Cadillac MAC-26 (2026):** o carro assimétrico (esquerda prata com a faixa preta, direita preta com a faixa prata), TWG e o triângulo do AI, o brasão, Jim Beam, Claro, Core Scientific, IFS e a asa dianteira em blocos.
-- **Aston Martin AMR26 (2026):** o verde-petróleo do modelo, a barriga preta com o filete limão, os pontinhos limão no alto das caixas, as asas cinza-prata com o aramco, a fileira do bico e o Valvoline embaixo da asa traseira.
-- **Williams (2026), pelo FW47:** azul-royal, a barriga marinho com os frisos, KOMATSU, Gulf, ATLASSIAN e a faixa roxa do Kraken embaixo da asa.
-- **Haas:** a de 2024 e 2025 (VF-24) e, a pedido do Thiago, a de 2026 iguais ao modelo: preta com o HAAS branco, a MoneyGram, o bico branco e a asa traseira vermelha.
-- **RB / Racing Bulls:** a de 2024 (VCARB 01) e, a pedido do Thiago, a de 2026 iguais ao modelo: azul-royal, o branco do cockpit e do bico, o VISA, o touro e o Cash App embaixo da asa.
-- **Ferrari:** a asa traseira, de trás e por baixo, azul vivo com o IBM prateado.
-- Marcas novas em `f1-marcas.js` (desenhadas no canvas, sem imagem nova). As novidades de cada equipe no topo do `novidades.json`, conferido com `JSON.parse`.
+## O que mudou
+- `public/corrida/kit/interlagos/placas.js` (novo): as placas com o nome de cada curva (S do Senna, Curva do Sol, Descida do Lago, Ferradura, Laranjinha, Pinheirinho, Bico de Pato, Mergulho, Junção e Café), nas frações de `gps/interlagos.js`, com a faixa verde e amarela em cima. Ficam atrás da barreira e de frente para quem vem, como as do Red Bull Ring. Uma malha de placas (atlas no canvas) e uma de postes.
+- `public/corrida/kit/interlagos/mata.js` (novo): a mata da beira, dos dois lados, em manchas de ruído (o gramado fica aberto entre elas). Tem copas largas de mata atlântica e eucaliptos altos de tronco claro. Fica fora da pista, atrás das barreiras, fora do que está reservado (boxes, caixa-d'água, placas), fora do lago e atrás das arquibancadas de `gps/interlagos.js`. São três InstancedMesh, sem sombra. Os troncos ficam 1,5 u abaixo do chão, para não flutuar.
+- `public/corrida/interlagos.js`: `depoisInterlagos` agora monta o prédio dos boxes (o código de antes, que virou `predioDosBoxes`), depois as placas e depois a mata. As contagens ficam em `tr.placasInterlagos` e `tr.mataInterlagos`.
+- `public/corrida/gps/interlagos.js`: o `depois` passa os trechos das arquibancadas para a mata.
+- `public/corrida/novidades.json`: entrada nova no topo.
 
-Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`). O teste jogando é do Thiago.
+Não mexi em `kit/*.js` nem em `pista.js`. O traçado, o relevo e a física continuam iguais.
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+## Conferido
+- `node --input-type=module --check` em `interlagos.js`, `gps/interlagos.js`, `kit/interlagos/placas.js` e `kit/interlagos/mata.js`: tudo ok.
+- `novidades.json` com `JSON.parse`: ok.
+- Nada foi testado no jogo nem no navegador, sem prints: o Thiago testa jogando.

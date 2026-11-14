@@ -1,10 +1,18 @@
-# Viseira curva e saltada, com borda e dobradiças (pela imagem do Thiago)
+# Mercedes W17 (2026) pelos prints do Thiago
 
-Antes, a viseira era uma faixa da própria casca, só 1,2% maior: parecia pintada e reta. Agora (`f1-piloto.js`, `geometrias`):
+A pintura da Mercedes de 2026 refeita pelos prints de `Carros F1/2026/Mercedes`: antes era preta com umas lâminas prata; agora é como no carro.
 
-- **Curva e saltada:** é uma peça à parte que dá a volta pela frente (~150°, antes ~130°) seguindo a forma da cabeça. Fica 2 mm para fora do casco e estufa no meio (até +3,5 mm), como uma lente de verdade (`estufar`).
-- **Mais alta:** vai da altura dos olhos até perto do queixo (0,44 rad de altura na esfera, antes 0,36). A faixa do nome, acima dela, continua livre.
-- **Moldura (`molduraDaViseira`):** a borracha escura da borda (um pedaço da casca um pouco maior, rente ao casco, que aparece em volta da viseira) e as duas dobradiças redondas nas pontas. É uma malha à parte, com um material escuro acetinado (`materialDaMoldura`) dividido por todos os pilotos. Ela não entra em `k.mats` (o piloto não está lá).
-- **Entradas de ar no queixo (`f1-capacetes.js`, `pintarFolha`):** duas fendas escuras inclinadas logo abaixo da viseira, em todo capacete.
-- **Onde aparece:** no piloto da pista e na prévia 3D do editor (`capacete-3d.js`). Nos mecânicos e no pódio, entra pelo #720, que já usa a moldura quando ela existe. A prévia 2D (sem WebGL) desenha a viseira no tamanho novo.
-- Conferido só com `node --check`: a forma precisa ser vista (a prévia do editor mostra de perto).
+- Corpo prata; a parte de cima preta (do cockpit à asa traseira), com estrelas apagadas e o filete verde-água na borda.
+- Quatro faixas pretas em diagonal na caixa lateral (de lado e de cima) e o PETRONAS embaixo dela.
+- Asa dianteira grafite com os riscos verde-água, TeamViewer e PETRONAS Syntium; asa traseira preta com PETRONAS em cima, CROWDSTRIKE atrás e a gota da Petronas nas placas.
+- Bico prata claro com bordas verde-água, a estrela na ponta e a fileira SAP, AKKODIS, PIRELLI, INEOS, CROWDSTRIKE (o atlas do nariz); PETRONAS Syntium perto do cockpit.
+- As marcas do cockpit (nu, TeamViewer) passaram para branco, porque em volta do cockpit agora é preto.
+- Marcas novas em `f1-marcas.js`: `estrela`, `gota`, `syntium`.
+
+**Peso:** zero a mais. Continua a folha projetada de 2026 (um canvas por equipe, guardado; só desenho no canvas, nenhuma imagem para baixar). Não usa a pintura na textura da Alpine 2023 (`f1-uv.js`), que é a pesada: ela calcula a cor pixel por pixel em JavaScript e faz duas texturas de 2048 px por carro e por número.
+
+**Forma:** o carro de 2026 continua o mesmo modelo (Audi R26) para todas as equipes; aqui muda só a pintura.
+
+Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

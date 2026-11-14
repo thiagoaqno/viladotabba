@@ -211,29 +211,61 @@ DESENHOS.ferrari = {
   },
 };
 
-// Mercedes W17: preto, as lâminas prateadas na caixa lateral, o filete verde-água e as marcas em branco
+// Mercedes W17, pelos prints do Thiago (2026-11-13): o corpo prata, a parte de cima preta (do cockpit à asa traseira) com as estrelas
+// apagadas, o filete verde-água separando o preto do prata, as faixas pretas em diagonal na caixa lateral, as asas grafite com os riscos
+// verde-água, o bico prata com a estrela na ponta e o CROWDSTRIKE atrás. Tudo desenhado no canvas (nenhuma imagem a baixar).
+function estrelas(c, s0, s1, y0, y1, n, cor, semente) {
+  const r = mulberry(semente); c.fillStyle = cor;
+  for (let i = 0; i < n; i++) {
+    const s = s0 + r() * (s1 - s0), y = y0 + r() * (y1 - y0), e = 0.012 + r() * 0.02;
+    c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? e * 0.42 : e; c.lineTo(s + Math.cos(a) * q, y + Math.sin(a) * q); } c.closePath(); c.fill();
+  }
+}
 DESENHOS.mercedes = {
   numero: "#00d7b6", carbono: 1, numPos: [3.42, 0.68, 9, 9],
   pintar(ctx) {
-    const PRETO = "#0b0c0f", PRATA = "#c8cdd3", VERDE = "#00bda9", BRANCO = "#eceef0";
-    base(ctx, PRETO);
+    const PRATA = "#c5cacf", PRATA_CL = "#e2e5e8", PRETO = "#0c0d0f", GRAFITE = "#26292d", VERDE = "#00d2be", ESTRELA = "#22262b";
+    base(ctx, PRATA);
     lados(ctx, (c) => {
-      // as lâminas: um feixe em diagonal saindo do meio da caixa
-      for (let i = 0; i < 5; i++) { const s = 2.36 + i * 0.2, t = 0.2 - i * 0.012; poli(c, [[s, 0.42], [s + t, 0.42], [s + t + 0.14, 0.58], [s + 0.14, 0.58]], i < 2 ? BRANCO : PRATA); }
-      poli(c, [[2.05, 0.4], [3.35, 0.4], [3.35, 0.415], [2.05, 0.415]], VERDE);
-      poli(c, [[0, 0.25], [1.05, 0.25], [0.95, 0.4], [0, 0.4]], PRATA); poli(c, [[0, 0.4], [0.95, 0.4], [0.95, 0.415], [0, 0.415]], VERDE);
-      marca(c, "petronas", 2.72, 0.32, 0.09); marca(c, "microsoft", 2.82, 0.84, 0.05); marca(c, "solera", 3.18, 0.71, 0.036); marca(c, "teamviewer", 2.7, 0.64, 0.036); marca(c, "amg", 1.55, 0.5, 0.05, { tinta: PRATA });
-      marca(c, "signify", 1.95, 0.2, 0.04); marca(c, "iwc", 0.42, 0.21, 0.05); marca(c, "snapdragon", 4.15, 0.73, 0.036); marca(c, "crowdstrike", 4.15, 0.64, 0.03); marca(c, "ineos", 1.3, 0.42, 0.036);
+      // o preto de cima: do cockpit até a asa, descendo para trás; o filete verde-água na borda
+      const borda = (c) => { c.moveTo(1.5, 0.64); c.lineTo(1.95, 0.58); c.quadraticCurveTo(2.5, 0.52, 3.0, 0.46); c.quadraticCurveTo(3.5, 0.4, 3.85, 0.36); };
+      c.beginPath(); borda(c); c.lineTo(4.45, 0.36); c.lineTo(4.45, 1.1); c.lineTo(1.5, 1.1); c.closePath(); c.fillStyle = PRETO; c.fill();
+      estrelas(c, 2.0, 3.8, 0.5, 0.95, 70, ESTRELA, 63);
+      c.beginPath(); borda(c); c.lineWidth = 0.014; c.strokeStyle = VERDE; c.stroke();
+      // as faixas pretas em diagonal na frente da caixa lateral
+      for (let i = 0; i < 4; i++) { const s = 2.18 + i * 0.11; poli(c, [[s, 0.16], [s + 0.05, 0.16], [s + 0.17, 0.5], [s + 0.12, 0.5]], PRETO); }
+      // o filete verde-água embaixo do bico e da caixa
+      poli(c, [[0.25, 0.2], [2.1, 0.2], [2.1, 0.214], [0.25, 0.214]], VERDE);
+      baixo(c, PRETO);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], GRAFITE); // a asa dianteira
+      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); // a asa traseira
+      marca(c, "petronas", 2.9, 0.27, 0.08, { tinta: PRETO });
+      marca(c, "microsoft", 2.78, 0.8, 0.05); marca(c, "teamviewer", 2.6, 0.67, 0.034); marca(c, "solera", 3.15, 0.66, 0.03);
+      marca(c, "amg", 1.2, 0.32, 0.045, { tinta: PRETO }); marca(c, "signify", 1.72, 0.27, 0.032, { tinta: PRETO }); marca(c, "ineos", 1.62, 0.5, 0.03, { tinta: PRETO });
+      marca(c, "iwc", 0.36, 0.11, 0.04);
+      marca(c, "snapdragon", 4.15, 0.8, 0.034); marca(c, "crowdstrike", 4.15, 0.7, 0.03); marca(c, "gota", 4.18, 0.5, 0.13);
     });
     vista(ctx, "T", (c) => {
-      ret(c, 0.1, -0.19, 1.18, 0.19, VERDE); ret(c, 0.1, -0.16, 1.18, 0.16, "#d9dde2"); ret(c, 1.3, -0.28, 2.08, 0.28, PRATA); ret(c, 2.3, -0.3, 4, 0.3, "#121418");
-      asasT(c, PRETO, "#181a1f", "#d9dde2");
-      const f = { giro: DE_FRENTE, tinta: PRETO };
-      marca(c, "petronas", 4.12, 0, 0.09, { giro: DE_FRENTE }); marca(c, "petronas", 0.84, 0, 0.04, f); marca(c, "ineos", 0.56, 0, 0.04, f);
-      for (const l of [-1, 1]) marca(c, "teamviewer", 0.24, l * 0.47, 0.045, { giro: DE_FRENTE });
+      // as faixas pretas no alto das caixas laterais, em diagonal para fora e para trás
+      for (const l of [-1, 1]) for (let i = 0; i < 4; i++) { const s = 2.2 + i * 0.13; poli(c, [[s, l * 0.3], [s + 0.06, l * 0.3], [s + 0.24, l * 0.64], [s + 0.18, l * 0.64]], PRETO); }
+      // o preto em volta do cockpit e na tampa, com o filete verde-água
+      const meio = [[1.3, 0.1], [1.6, 0.27], [2.2, 0.31], [2.9, 0.25], [3.5, 0.17], [4.0, 0.13]];
+      const contorno = (c) => { c.moveTo(meio[0][0], meio[0][1]); for (const [a, b] of meio.slice(1)) c.lineTo(a, b); c.lineTo(4.45, 0.13); c.lineTo(4.45, -0.13); for (const [a, b] of meio.slice().reverse()) c.lineTo(a, -b); c.closePath(); };
+      c.beginPath(); contorno(c); c.fillStyle = PRETO; c.fill(); c.lineWidth = 0.014; c.strokeStyle = VERDE; c.stroke();
+      estrelas(c, 1.9, 3.9, -0.22, 0.22, 90, ESTRELA, 17);
+      for (const l of [-1, 1]) poli(c, [[1.48, l * 0.2], [1.62, l * 0.27], [1.75, l * 0.36], [1.6, l * 0.33]], VERDE); // os riscos verde-água na frente do cockpit
+      // as asas grafite (a traseira preta) e o bico prata claro, com as bordas verde-água
+      asasT(c, GRAFITE, PRETO, PRATA_CL);
+      poli(c, [[0.66, 0.14], [1.3, 0.12], [1.3, 0.135], [0.66, 0.155]], VERDE); poli(c, [[0.66, -0.14], [1.3, -0.12], [1.3, -0.135], [0.66, -0.155]], VERDE);
+      for (const l of [-1, 1]) for (const x of [0.3, 0.62]) poli(c, [[0.12, l * x], [0.15, l * x], [0.5, l * (x + 0.03)], [0.47, l * (x + 0.03)]], VERDE);
+      const f = { giro: DE_FRENTE };
+      marca(c, "estrela", 0.12, 0, 0.075, { giro: DE_FRENTE, tinta: PRETO }); // a ponta do bico (o resto do bico é o atlas do nariz, f1-pintura texturaDoCockpit)
+      marca(c, "syntium", 1.2, 0, 0.05, { giro: DE_FRENTE, tinta: PRETO });
+      for (const l of [-1, 1]) { marca(c, "teamviewer", 0.2, l * 0.47, 0.045, f); marca(c, "syntium", 0.4, l * 0.45, 0.04, f); }
+      marca(c, "petronas", 4.12, 0, 0.09, f);
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.18, 0.2, 0.18, 0.45, PRATA); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, "#16181c"); marca(c, "petronas", 0, 0.78, 0.09); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.2, 0.15, 0.2, 0.5, PRATA); ret(c, -0.2, 0.15, 0.2, 0.17, VERDE); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); marca(c, "crowdstrike", 0, 0.85, 0.08); });
   },
 };
 
@@ -874,7 +906,7 @@ const COCKPIT_MARCAS = {
   "red-bull": { lado: ["Mobil 1", "Mobil 1"], cor: "#ffffff" },
   "aston-martin": { centro: ["CoreWeave", "CoreWeave"], lado: ["JCB", "JCB"], cor: "#ffffff" },
   "racing-bulls": { centro: ["Red", "Bull"], lado: ["TUDOR", "TUDOR"], cor: "#1c2231", corCentro: "#e21c40" },
-  mercedes: { asa: ["nu", "nu"], lado: ["TeamViewer", "TeamViewer"], cor: "#25272b" },
+  mercedes: { asa: ["nu", "nu"], lado: ["TeamViewer", "TeamViewer"], cor: "#f2f4f5" }, // (em branco: em volta do cockpit agora é preto)
   alpine: { centro: ["BWT", "BWT"], lado: ["ALPINE", "ALPINE"], cor: "#183865", corLado: "#ffffff" },
   mclaren: { lado: ["allwyn", "allwyn"], asa: ["FxPro", "FxPro"], anguloAsa: 0, posAsa: 1.84, tamanhoAsa: 24, cor: "#ffffff" },
   ferrari: { lado: ["ambipar", "ambipar"], asa: ["CEVA", "CEVA"], cor: "#111111" },
@@ -905,7 +937,7 @@ export function texturaDoCockpit(equipe) {
     // Atlas separado para manter as marcas do bico legíveis sem afetar outras equipes.
     const nariz = document.createElement("canvas"); nariz.width = nariz.height = 1024;
     const nc = nariz.getContext("2d"); nc.fillStyle = "#151515"; nc.textAlign = "center"; nc.textBaseline = "middle";
-    const marcas = t.userData.mclaren ? [["DELL", 0.84, 62], ["Deloitte", 0.73, 45], ["webex", 0.62, 49], ["DEWALT", 0.51, 48], ["PIRELLI", 0.40, 45]] : [["PETRONAS", 0.87, 45], ["Syntium", 0.78, 42], ["INEOS", 0.57, 42], ["SAP", 0.45, 42]];
+    const marcas = t.userData.mclaren ? [["DELL", 0.84, 62], ["Deloitte", 0.73, 45], ["webex", 0.62, 49], ["DEWALT", 0.51, 48], ["PIRELLI", 0.40, 45]] : [["SAP", 0.3, 44], ["AKKODIS", 0.4, 40], ["PIRELLI", 0.5, 40], ["INEOS", 0.6, 42], ["CROWDSTRIKE", 0.7, 34]];
     for (const [marca, s, tamanho] of marcas) {
       nc.font = `800 ${tamanho}px Arial, sans-serif`; nc.fillText(marca, 512, (s - 0.25) / 0.90 * 1024, 360);
     }

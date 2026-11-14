@@ -1,10 +1,18 @@
-# Carreiras guardadas por 3 dias sem ninguém entrar; salas rápidas vazias somem
+# Mercedes W17 (2026) pelos prints do Thiago
 
-**Carreiras (3 dias sem entrar):**
-- **GP da carreira (`corrida.js`):** a sala do GP da carreira (solo e em grupo) sumia depois de 12 horas parada. Agora fica 3 dias (`HORAS_CARREIRA = 72`, pelo `horasDe` novo de `limparSalasParadas` em `salas.js`); as outras salas seguem com 12 horas.
-- **O GP que sumiu não trava mais a carreira:** quando a sala do GP já não existia, a carreira solo (`corrida-temporada.js`) e a em grupo (`corrida-temporada-grupo.js`) continuavam achando o GP aberto e mandavam para uma sala inexistente ("Sala não encontrada"). Agora, sem a sala, ela abre o GP de novo.
-- **Temporada em grupo:** já guardava 72 h, mas contava da última MUDANÇA na sala: quem só entrava para olhar não segurava nada. Agora entrar conta (`ligar` → `guardar`, também no banco, para valer depois de um reinício), e com alguém conectado o relógio não anda (`cadaVolta`). A carreira solo fica no banco sem prazo (não mudou).
+A pintura da Mercedes de 2026 refeita pelos prints de `Carros F1/2026/Mercedes`: antes era preta com umas lâminas prata; agora é como no carro.
 
-**Salas rápidas sem humanos (`corrida.js`):** antes, quando todos saíam, os robôs seguiam correndo sozinhos (física, IA, rede) por até 12 horas. Agora a sala fora da carreira sem nenhuma conexão (de quem joga ou de quem assiste) some depois de 2 min (`SALA_VAZIA_MS`, ajustável por `CORRIDA_SALA_VAZIA_MS`); a espera cobre quem só recarregou a página. Os relógios dela param no mesmo `apagarSala` da limpeza de sempre.
+- Corpo prata; a parte de cima preta (do cockpit à asa traseira), com estrelas apagadas e o filete verde-água na borda.
+- Quatro faixas pretas em diagonal na caixa lateral (de lado e de cima) e o PETRONAS embaixo dela.
+- Asa dianteira grafite com os riscos verde-água, TeamViewer e PETRONAS Syntium; asa traseira preta com PETRONAS em cima, CROWDSTRIKE atrás e a gota da Petronas nas placas.
+- Bico prata claro com bordas verde-água, a estrela na ponta e a fileira SAP, AKKODIS, PIRELLI, INEOS, CROWDSTRIKE (o atlas do nariz); PETRONAS Syntium perto do cockpit.
+- As marcas do cockpit (nu, TeamViewer) passaram para branco, porque em volta do cockpit agora é preto.
+- Marcas novas em `f1-marcas.js`: `estrela`, `gota`, `syntium`.
 
-Conferido com `node --check`. Sem entrada no `novidades.json` (está quebrado na `main`; o conserto está no #717).
+**Peso:** zero a mais. Continua a folha projetada de 2026 (um canvas por equipe, guardado; só desenho no canvas, nenhuma imagem para baixar). Não usa a pintura na textura da Alpine 2023 (`f1-uv.js`), que é a pesada: ela calcula a cor pixel por pixel em JavaScript e faz duas texturas de 2048 px por carro e por número.
+
+**Forma:** o carro de 2026 continua o mesmo modelo (Audi R26) para todas as equipes; aqui muda só a pintura.
+
+Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

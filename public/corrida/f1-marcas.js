@@ -93,4 +93,12 @@ Object.assign(MARCAS, {
   chrome(c, { tinta = "#fff" } = {}) { letra(c, "Chr", { x: -0.95, h: 1, peso: 700, cor: tinta, align: "center" }); for (const [a0, a1, cor] of [[-1.6, 0.5, "#ea4335"], [0.5, 2.6, "#fbbc05"], [2.6, 4.7, "#34a853"]]) { c.beginPath(); c.moveTo(0.05, 0.05); c.arc(0.05, 0.05, 0.36, a0, a1); c.closePath(); c.fillStyle = cor; c.fill(); } disco(c, 0.05, 0.05, 0.16, "#4285f4"); letra(c, "me", { x: 0.85, h: 1, peso: 700, cor: tinta }); },
   palmangels(c, { tinta = "#fff" } = {}) { letra(c, "Palm Angels", { h: 0.95, peso: 700, fam: SERIFA, cor: tinta }); },
 });
+// As da Mercedes W17 (os prints de 2026-11-13)
+Object.assign(MARCAS, {
+  // a estrela de três pontas no anel
+  estrela(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.07; c.beginPath(); c.arc(0, 0, 0.46, 0, Math.PI * 2); c.stroke(); c.fillStyle = tinta; c.beginPath(); for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + k * Math.PI / 3, q = k % 2 ? 0.08 : 0.43; c.lineTo(Math.cos(a) * q, Math.sin(a) * q); } c.closePath(); c.fill(); },
+  // a gota verde-água da PETRONAS
+  gota(c) { c.fillStyle = "#00d2be"; c.beginPath(); c.moveTo(0, -0.5); c.quadraticCurveTo(0.42, 0, 0.36, 0.2); c.arc(0, 0.2, 0.36, 0, Math.PI); c.quadraticCurveTo(-0.42, 0, 0, -0.5); c.fill(); c.fillStyle = "#fff"; c.beginPath(); c.ellipse(0, 0.16, 0.13, 0.2, 0, 0, Math.PI * 2); c.fill(); },
+  syntium(c, { tinta = "#fff" } = {}) { letra(c, "PETRONAS", { y: -0.3, h: 0.36, peso: 800, cor: tinta, esp: 4 }); letra(c, "Syntium", { y: 0.2, h: 0.72, peso: 700, ital: true, cor: tinta }); },
+});
 export function desenharMarca(c, id, op) { MARCAS[id]?.(c, op); }

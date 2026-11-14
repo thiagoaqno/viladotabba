@@ -59,7 +59,7 @@ function limparCapacete(c) {
   if (!c || typeof c !== "object") return null;
   const cores = Array.isArray(c.cores) ? c.cores.slice(0, 3) : [];
   if (!DESENHOS_CAPACETE.includes(c.desenho) || cores.length !== 3 || !cores.every((x) => HEX.test(x)) || !HEX.test(c.viseira || "")) return null;
-  const bandeira = /^[A-Z]{2}$/.test(c.bandeira || "") ? c.bandeira : "", nome = String(c.nome || "").normalize("NFC").replace(/[^p{L}p{N} .-]/gu, "").trim().slice(0, 14);
+  const bandeira = /^[A-Z]{2}$/.test(c.bandeira || "") ? c.bandeira : "", nome = String(c.nome || "").normalize("NFC").replace(/[^\p{L}\p{N} .\-]/gu, "").trim().slice(0, 14);
   return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome };
 }
 
@@ -604,6 +604,7 @@ module.exports = function attachCorrida(io) {
       const room = { code: novoCodigo(rooms), host: null, phase: "lobby", config: cleanConfig(data.config || CONFIG_SALA_NOVA), players: {}, order: [], finishOrder: [], log: [], t: Date.now(), ...(data.config ? {} : { salaNova: true }) };
       rooms.set(room.code, room);
       const p = addPlayer(room, name, data.skin);
+      { const cap = limparCapacete(data.capacete); if (cap) p.mods = { ...p.mods, capacete: cap }; } // o capacete de quem joga já na criação: a corrida rápida larga direto, sem passar pela sala
       // `inicio` vem da tela inicial (Corrida rápida e Contrarrelógio): a equipe da garagem, o pneu e, com `largar`, a corrida já começa
       const inicio = data.inicio && typeof data.inicio === "object" ? data.inicio : null, f1 = room.config.regras === "f1";
       if (f1 && (room.salaNova || inicio)) entrarNaEquipe(room, p, inicio?.equipe);

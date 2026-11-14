@@ -6,7 +6,7 @@
 const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const Pilotos = () => root.F1Pilotos, Eq = () => root.F1Equipes, Reg = () => root.F1Temporada, Gi = () => root.GpInfo, Gar = () => root.F1Garagem;
 const dois = (n) => String(n).padStart(2, "0");
-const ABAS = [["central", "Central"], ["calendario", "Calendário"], ["classif", "Classificação"], ["analise", "Análise"], ["desenvolvimento", "Desenvolvimento"], ["acerto", "Acerto"], ["contratos", "Contratos"]];
+const ABAS = [["central", "Central"], ["calendario", "Calendário"], ["classif", "Classificação"], ["analise", "Análise"], ["desenvolvimento", "Desenvolvimento"], ["acerto", "Acerto"], ["capacete", "Capacete"], ["contratos", "Contratos"]];
 const ATTR = [["aero", "Aerodinâmica", "Asa dianteira"], ["chassi", "Chassi", "Assoalho"], ["motor", "Unidade de potência", "Motor"], ["freios", "Freios", "Freio dianteiro"], ["suspensao", "Suspensão", "Suspensão"], ["confiab", "Confiabilidade", "Câmbio"]];
 // onde cada peça fica no carro (metros, sistema do modelo; o bico aponta para -z) e para onde o rótulo vai, em px da tela
 const PONTOS = { aero: { p: [0.25, 0.12, -2.05], dx: -150, dy: 80 }, chassi: { p: [-0.55, 0.14, 0.2], dx: -190, dy: 110 }, motor: { p: [0, 0.82, 0.6], dx: -120, dy: -110 }, freios: { p: [0.72, 0.3, -1.42], dx: 130, dy: 96 }, suspensao: { p: [-0.72, 0.42, 1.35], dx: -170, dy: -40 }, confiab: { p: [0, 0.5, 1.85], dx: -30, dy: -130 } };
@@ -226,7 +226,8 @@ function brilho(e) {
 function html(c) {
   ctxAtual = c; const { s, eq, codigoHTML } = c;
   const rotulo = (id, nome) => (c.grupo && id === "contratos" ? "Equipe" : nome);
-  const corpo = aba === "calendario" ? calendario(c) : aba === "classif" ? classificacao(c) : aba === "desenvolvimento" ? desenvolvimento(c) : aba === "contratos" ? root.CentralContrato.html(c) : aba === "acerto" && root.CentralAcerto ? root.CentralAcerto.html(c) : aba === "analise" ? root.CentralAnalise.html(c) : central(c);
+  // (a aba Capacete: um lugar marcado que `depois` troca pelo editor, capacete-editor-ui.js, montado uma vez só e reaproveitado)
+  const corpo = aba === "capacete" ? `<div data-cx-capacete class="cx-card cx-capacete">Carregando o capacete…</div>` : aba === "calendario" ? calendario(c) : aba === "classif" ? classificacao(c) : aba === "desenvolvimento" ? desenvolvimento(c) : aba === "contratos" ? root.CentralContrato.html(c) : aba === "acerto" && root.CentralAcerto ? root.CentralAcerto.html(c) : aba === "analise" ? root.CentralAnalise.html(c) : central(c);
   // a dificuldade dos robôs, mudável no meio da carreira (vale a partir do próximo GP); na temporada com os amigos, só o anfitrião muda
   const NIV = [["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]];
   const nivelHTML = c.mudarNivel ? `<label class="cx-tema" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>Dificuldade dos robôs</span><select data-cx-nivel aria-label="Dificuldade dos robôs">${NIV.map(([v, n]) => `<option value="${v}" ${(s.nivel || "medio") === v ? "selected" : ""}>${n}</option>`).join("")}</select></label>` : "";
@@ -240,7 +241,12 @@ function html(c) {
     ${codigoHTML}<main class="cx-corpo" role="tabpanel">${corpo}</main>
     <footer class="cx-pe"><div class="cx-dicas"><span class="gp"><kbd class="r">A</kbd> Selecionar</span><span class="gp"><kbd class="r">B</kbd> Voltar</span><span class="gp"><kbd>LB</kbd><kbd>RB</kbd> Trocar aba</span><span class="kb"><kbd>Q</kbd><kbd>E</kbd> Trocar aba</span><span class="kb"><kbd>Esc</kbd> Voltar</span><button type="button" class="cx-msg" data-cx-msg><kbd class="r gp">Y</kbd><kbd class="kb">M</kbd> Mensagens · ${c.nMensagens}</button></div><div class="cx-salvo"><svg class="cx-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4.600 4.600L19 7"/></svg>Salvo</div></footer></div>`;
 }
-function depois(c) { entradaEq = null; document.body.classList.remove("cx-entrada"); tema(c.s.equipe); ligarFundo(c.s.equipe); requestAnimationFrame(posicionarRotulos); root.Radio?.desenharBotoes?.(); root.CentralAnalise?.ligarGraficos(); }
+function depois(c) { entradaEq = null; document.body.classList.remove("cx-entrada"); tema(c.s.equipe); ligarFundo(c.s.equipe); requestAnimationFrame(posicionarRotulos); root.Radio?.desenharBotoes?.(); root.CentralAnalise?.ligarGraficos(); capaceteNaAba(); }
+// a aba Capacete: o editor (o módulo de temporada/index.html) entra no lugar marcado; se o módulo ainda não chegou, entra quando chegar
+function capaceteNaAba() {
+  const lugar = document.querySelector("[data-cx-capacete]"); if (!lugar) return;
+  if (root.CapaceteCarreira) root.CapaceteCarreira.montar(lugar); else root.addEventListener("capacete:pronto", capaceteNaAba, { once: true });
+}
 // Põe o HTML novo na tela mexendo só no que mudou: quem está olhando não vê a tela piscar quando outro jogador age, e o que não mudou segue no lugar.
 function pintar(alvo, html) {
   if (alvo._cxHtml === html && alvo.querySelector(":scope > .cx")) return;

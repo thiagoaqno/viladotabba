@@ -68,9 +68,14 @@ export function criarPilotoPodio(it, parado) {
   const cT = document.createElement("canvas"); cT.width = cT.height = TAM_FOLHA; pintarTraje(cT, u, base.folhas, { numero: it.numero, logo: it.logo });
   const cL = document.createElement("canvas"); cL.width = 256; cL.height = 128; pintarLuvas(cL, u, base.folhas);
   const cC = document.createElement("canvas"); cC.width = 512; cC.height = 256;
-  const capDoRobo = it.sigla ? capacetePorSigla(it.sigla) : null;
-  pintarFolha(cC.getContext("2d"), capDoRobo ? capDoRobo.cores : [u.base, u.faixa, u.lado || "#ffffff"], capDoRobo ? capDoRobo.desenho : "generico", it.numero);
-  const tC = tex(cC, true); tC.minFilter = THREE.LinearFilter; tC.generateMipmaps = false; // (sem mipmap: o atan do shader deixaria uma costura)
+  // o capacete de quem joga (mods.capacete: o do editor, com a bandeira, o nome e a cor da viseira) é o mesmo da pista; o robô usa o do piloto dele
+  const proprio = it.capacete && it.capacete.desenho && Array.isArray(it.capacete.cores) ? it.capacete : null, capDoRobo = proprio || (it.sigla ? capacetePorSigla(it.sigla) : null);
+  let tC = null;
+  const pintarCapacete = () => { pintarFolha(cC.getContext("2d"), capDoRobo ? capDoRobo.cores : [u.base, u.faixa, u.lado || "#ffffff"], capDoRobo ? capDoRobo.desenho : "generico", it.numero, proprio ? { bandeira: proprio.bandeira, nome: proprio.nome } : null, () => { pintarCapacete(); if (tC) tC.needsUpdate = true; }); };
+  pintarCapacete(); // (a bandeira que chega depois repinta)
+  tC = tex(cC, true); tC.minFilter = THREE.LinearFilter; tC.generateMipmaps = false; // (sem mipmap: o atan do shader deixaria uma costura)
+  const viseiraM = proprio && proprio.viseira ? new THREE.MeshPhysicalMaterial({ color: proprio.viseira, roughness: 0.05, metalness: proprio.viseira === "#090b10" ? 0.6 : 0.9, clearcoat: 1, clearcoatRoughness: 0.03 }) : null;
+  if (viseiraM) mats.push(viseiraM);
   const trajeM = new THREE.MeshStandardMaterial({ map: tex(cT, false), roughness: 0.62 }), luvasM = new THREE.MeshStandardMaterial({ map: tex(cL, false), roughness: 0.6 });
   mats.push(trajeM, luvasM);
   const ossos = {};
@@ -83,6 +88,7 @@ export function criarPilotoPodio(it, parado) {
     if (o.name === "traje") o.material = trajeM;
     else if (o.name === "luvas") o.material = luvasM;
     else if (o.name === "casco" || o.name === "vedacao") o.material = cascoM;
+    else if (o.name === "viseira" && viseiraM) o.material = viseiraM;
     else if (base.fixos[o.name]) o.material = base.fixos[o.name];
   });
   const mixer = new THREE.AnimationMixer(g), seq = SEQUENCIAS[it.pos] || SEQUENCIAS[3];

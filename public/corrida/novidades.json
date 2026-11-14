@@ -1,5 +1,13 @@
 [
   {
+    "id": "2026-11-13-capacete-3d-carreira",
+    "data": "2026-11-13",
+    "itens": [
+      "Capacete em 3D no editor: gira sozinho e dá para girar arrastando",
+      "Aba Capacete na Central da carreira: o que você escolher vai para a pista",
+      "Seu capacete também no pódio, com bandeira, nome e a cor da viseira",
+      "Viseira com reflexo de metal",
+      "Conserto: o nome no capacete aparecia vazio para os outros"
     "id": "2026-11-13-noite-box",
     "data": "2026-11-13",
     "itens": [

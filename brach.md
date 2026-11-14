@@ -1,5 +1,10 @@
-# Noite no pôr do sol e sem travada na primeira parada
+# Capacete em 3D, na carreira e no pódio
 
-- **Anoitecer (`anoitecer.js`):** as corridas noturnas (Bahrein, Jeddah, Singapura, Las Vegas) largam no pôr do sol: o céu, a neblina, o sol e a luz do céu começam mais alaranjados e mais escuros. Elas viram noite fechada em **2 voltas do líder** (antes: de 10% a 50% da corrida). Entre uma volta e outra, a fração anda pelo tempo, pela duração da última volta do líder (90 s na primeira), para escurecer sem degrau.
-- **Travada do box (`mecanicos.js`, `jogo.js`):** cada equipe de mecânicos (16 bonecos com esqueleto, mais a folha de 1024 do macacão pintada e enviada para a placa) nascia na primeira parada de cada equipe e travava o jogo. Agora o aquecimento da largada pinta e sobe as texturas de **todas** as equipes da sala (`renderer.initTexture`) e os materiais dos 5 pneus. Os bonecos das outras equipes são montados aos poucos durante a corrida (`adiantar`: no máximo 4 ms por quadro, um boneco por vez), enquanto ninguém está no box perto da câmera. A minha equipe continua montada inteira antes da largada, como antes.
-- Sem medição nova da travada: conferir jogando (a primeira parada dos robôs com a câmera da TV perto do box).
+- **Prévia 3D (`capacete-3d.js`):** o editor mostra o capacete da pista (as geometrias e a viseira de `f1-piloto.js`, a pintura de `pintarFolha`) em 3D, com reflexos (`RoomEnvironment`), girando sozinho; arrastar gira na mão. Só desenha com o canvas visível. Sem WebGL, volta a folha aberta de antes.
+- **Editor sem sala (`capacete-editor-ui.js`):** o cartão saiu de `capacete-editor.js` (que agora só liga com a sala: `mods.capacete` e `sincronizarCapacete`) para servir também à carreira. O CSS `.cp-*` foi de `sala-nova.css` para `capacete.css`, carregado pelas duas páginas.
+- **Carreira:** a aba **Capacete** na Central (`temporada/central.js` + o módulo em `temporada/index.html`). É o mesmo capacete guardado (`corrida:capacete`), que vai para a sala do GP pelo `sincronizarCapacete`. O editor é montado uma vez e reaproveitado a cada repintura (um WebGL só).
+- **Corrida rápida:** o capacete vai junto no `create` (ela larga direto, sem passar pela sala).
+- **Pódio (`podio-pilotos.js`, `podio-3d.js`):** quem joga comemora com o próprio capacete (desenho, cores, bandeira, nome) e a cor da viseira dele.
+- **Viseira (`f1-piloto.js`):** `MeshPhysicalMaterial` com metal 0,9, rugosidade 0,05 e verniz (item 2 de `docs/capacetes-guia.md`).
+- **Conserto (`corrida.js`, `limparCapacete`):** a expressão que limpa o nome tinha perdido as barras (`[^p{L}p{N} .-]`) e apagava todas as letras: o nome do capacete chegava vazio para os outros. Agora é `[^\p{L}\p{N} .\-]`, igual à do editor.
+- Os mecânicos do box continuam com o capacete genérico nas cores da equipe. A troca do modelo (o glTF do item 1 do guia) espera o arquivo do Thiago.

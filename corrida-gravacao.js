@@ -20,9 +20,10 @@ function progresso(p, f, agora) {
 
 function passo(room, agora, onde) {
   if (room.phase !== "race" || !room.startAt || agora < room.startAt) return;
-  const g = (room.grav ||= { t0: room.startAt, ids: room.order.slice(), amostras: [], ult: 0, ordem: new Map(), cand: new Map(), ultrapassagens: [] });
-  if (agora - g.ult < PASSO_MS || g.amostras.length >= MAX_AMOSTRAS) return;
-  g.ult = agora;
+  const g = (room.grav ||= { t0: room.startAt, ids: room.order.slice(), amostras: [], ordem: new Map(), cand: new Map(), ultrapassagens: [] });
+  // a próxima amostra é marcada no relógio (t0 + k × 250 ms), não 250 ms depois da última: o laço é de 100 ms, e "250 ms depois" virava 300 ms,
+  // o que atrasava o replay em relação ao tempo da corrida (o "Ver no replay" caía segundos depois da ultrapassagem)
+  if (g.amostras.length >= MAX_AMOSTRAS || agora < g.t0 + g.amostras.length * PASSO_MS) return;
   const b = Buffer.alloc(g.ids.length * CAMPOS), prog = new Map();
   g.ids.forEach((id, k) => {
     const p = room.players[id], o = k * CAMPOS;
@@ -53,7 +54,7 @@ function ultrapassagens(room, g, prog, agora) {
     if (antes == null || antes === agoraSinal) continue;
     const [a, b, pa] = agoraSinal > 0 ? [x, y, px] : [y, x, py], chave = a + ">" + b;
     g.cand.delete(b + ">" + a);
-    if (!g.cand.has(chave)) g.cand.set(chave, { a, b, em: agora, f: pa.f, sob: sobBandeira });
+    if (!g.cand.has(chave)) g.cand.set(chave, { a, b, em: agora, j: g.amostras.length - 1, f: pa.f, sob: sobBandeira }); // j: a amostra em que trocaram
   }
   // confirma o que continua trocado depois de 1,5 s; desiste do que voltou
   for (const [chave, c] of g.cand) {
@@ -64,7 +65,7 @@ function ultrapassagens(room, g, prog, agora) {
     if (g.ultrapassagens.length >= 400) continue;
     const pos = 1 + [...prog.values()].filter((x) => x.pr > pa.pr).length + room.order.filter((id) => { const p = room.players[id]; return p && p.finish != null; }).length;
     const pA = room.players[c.a];
-    g.ultrapassagens.push({ t: Math.round((c.em - g.t0) / 100) / 10, v: (pA ? pA.laps || 0 : 0) + 1, a: c.a, b: c.b, f: Math.round(c.f * 1000) / 1000, pos, sob: c.sob || undefined });
+    g.ultrapassagens.push({ t: Math.round((c.em - g.t0) / 100) / 10, j: c.j, v: (pA ? pA.laps || 0 : 0) + 1, a: c.a, b: c.b, f: Math.round(c.f * 1000) / 1000, pos, sob: c.sob || undefined });
   }
 }
 

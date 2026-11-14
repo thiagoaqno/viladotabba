@@ -157,6 +157,12 @@ export function criarMiniatura(caixa, pista, op = {}) {
     at.needsUpdate = true;
   }
 
+  // os botões + e −: a câmera chega mais perto (k < 1) ou se afasta (k > 1) do alvo, dentro dos limites do mouse
+  function aproximar(k) {
+    const dir = cam.position.clone().sub(ctl.target), d = Math.min(ctl.maxDistance, Math.max(ctl.minDistance, dir.length() * k));
+    voo = { de: ctl.target.clone(), para: ctl.target.clone(), cde: cam.position.clone(), cpara: ctl.target.clone().add(dir.setLength(d)), t0: performance.now(), dur: reduz() ? 1 : 350 };
+    ctl.autoRotate = false;
+  }
   // a câmera voa até um ponto da volta (ou volta à vista inteira com `null`)
   let voo = null;
   function focar(f) {
@@ -254,7 +260,7 @@ export function criarMiniatura(caixa, pista, op = {}) {
     xadrez.dispose(); renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) { /* já foi */ }
     cv.remove(); camadaRot.remove(); caixa.classList.remove("mn3");
   }
-  return { marcadores, destacar, focar, curvas, soltar, definirCarros, posicionar, seguir, pintar, temRelevo: T.temRelevo, get vivo() { return vivo; } };
+  return { marcadores, destacar, focar, aproximar, curvas, soltar, definirCarros, posicionar, seguir, pintar, temRelevo: T.temRelevo, get vivo() { return vivo; } };
 }
 
 // o brilho redondo do carrinho (uma textura só, feita uma vez)

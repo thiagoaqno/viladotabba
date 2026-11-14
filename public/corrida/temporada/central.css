@@ -247,3 +247,11 @@ body.cx-escuro .cx-relevo{filter:grayscale(1) invert(1);opacity:.05}
 .cx-cn-vista{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;border:1px solid currentColor;border-left:3px solid var(--eq-at,#e10600);background:transparent;color:inherit;font:600 12px var(--cx-f,inherit);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s,transform .15s}
 .cx-cn-vista:hover,.cx-cn-vista:focus-visible{background:var(--cx-hover,#ffffff14);transform:translateX(3px);outline:none}
 .cx-cn-carro{display:flex;flex-direction:column;align-items:flex-start}
+
+/* ---------- o cabeçalho da Análise (central-analise.js): o rótulo, o nome do GP grande e a etapa com o circuito; o logo nas legendas ---------- */
+.cx .cx-an-cab h2{margin:2px 0 4px;font-size:clamp(28px,3.4vw,50px);font-weight:700;letter-spacing:.01em;text-transform:uppercase;line-height:1}
+.cx-an-olho{display:block;color:var(--cx-tx2);font:700 12px var(--cx-f);letter-spacing:.22em;text-transform:uppercase}
+.cx-an-olho::before{content:"/";margin-right:8px;color:var(--eq-at);font-weight:800}
+.cx-an-cab .cx-rot{letter-spacing:.22em}
+.cx-leg-logo{display:inline-block;width:18px;height:18px;object-fit:contain;vertical-align:-4px;margin-right:6px}
+.cx-legenda i.eu,.cx-legenda i.ou{width:14px!important}

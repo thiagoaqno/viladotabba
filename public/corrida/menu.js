@@ -7,6 +7,7 @@ import { loadBest } from "./fantasma.js";
 import { enter } from "./rede.js";
 import { alternarAcerto } from "./acerto.js";
 import { usarPista } from "./acerto-carro.js";
+import { preCarregarPistas, pararPreCarga } from "./pre-carga.js"; // os arquivos pesados de todas as pistas, baixados aos poucos no menu
 
 const fmt = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`); // o tempo de volta com os milésimos
 const CHAVE_EQUIPE = "corrida:menu:equipe", CHAVE_RAPIDA = "corrida:menu:rapida", CHAVE_CONTRA = "corrida:menu:contra";
@@ -48,7 +49,7 @@ const nomePiloto = () => ($("hName")?.value || store.get("galera:name") || "").t
 // ---------- a entrada e a saída da tela ----------
 export function menuNaTela(sim) {
   if (sim === naTela) return; naTela = sim;
-  if (!sim) { fecharAjustes(); clearInterval(timerResumo); clearInterval(timerPad); desligarGaragem(); return; } // a corrida precisa da GPU inteira
+  if (!sim) { fecharAjustes(); clearInterval(timerResumo); clearInterval(timerPad); desligarGaragem(); pararPreCarga(); return; } // a corrida precisa da GPU inteira
   if (pcLocal && !soloPedido && !treinoPedido) { location.replace("/corrida/"); return; } // (o programa de PC: o menu é sempre o do site)
   ligarUmaVez();
   $("mnNomeTopo").textContent = nomePiloto() || "Piloto";
@@ -56,6 +57,7 @@ export function menuNaTela(sim) {
   window.preparoPronto?.(); // (a tela inicial é a capa, uma imagem: a garagem 3D só abre no painel Garagem)
   carregarCarreira(); carregarGrupos(); pedirResumo(); desenharCartoes(); resumoDaEstante();
   timerResumo = setInterval(pedirResumo, 15000); timerPad = setInterval(lerControle, 90);
+  setTimeout(() => { if (naTela) preCarregarPistas(); }, 5000); // (depois que o menu assentou: pre-carga.js)
   if (soloPedido) { const s = soloPedido; soloPedido = null; return criar(s.config, s.inicio); } // (o programa de PC: a sala sozinho, no PC)
   if (treinoPedido) { const t = treinoPedido; treinoPedido = null; return largarTreino(t); }
   if (!painel) requestAnimationFrame(() => { if (!document.activeElement || document.activeElement === document.body) itensDoMenu()[0]?.focus({ preventScroll: true }); });

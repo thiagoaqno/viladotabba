@@ -101,6 +101,22 @@ app.get("/api/recordes-corrida", (req, res) => {
     res.json({ pistas: T.idsNaEscolha().map((id) => [id, T.PISTAS[id]]).map(([id, p]) => ({ id, nome: p.name, top: rec[id] || [], setores: set[id] || [null, null, null] })) });
   } catch (e) { res.status(500).json({ erro: "O placar não abriu." }); }
 });
+// a pré-carga da Corrida (public/corrida/pre-carga.js): a lista dos arquivos pesados de todas as pistas (céus, fotos do GP e da tela de
+// carregamento, modelos dos carros e dos enfeites), que o navegador baixa aos poucos no menu e guarda no cache do service worker (sw.js)
+let listaPreCarga = null;
+app.get("/api/corrida/pre-carga", (req, res) => {
+  try {
+    if (!listaPreCarga) {
+      const fs = require("fs"), raiz = path.join(__dirname, "public", "corrida"), PESADO = /\.(glb|gltf|bin|jpg|jpeg|png|webp|avif)$/i, lista = [];
+      const varrer = (rel) => { let itens = []; try { itens = fs.readdirSync(path.join(raiz, rel), { withFileTypes: true }); } catch { return; }
+        for (const d of itens) { const r = rel ? rel + "/" + d.name : d.name; if (d.isDirectory()) varrer(r); else if (PESADO.test(d.name)) lista.push({ f: "/corrida/" + r, t: fs.statSync(path.join(raiz, r)).size }); } };
+      for (const pasta of ["ceus", "gp-fotos", "f1", "natureza", "kenney"]) varrer(pasta);
+      for (const d of fs.readdirSync(raiz)) if (/^(carregamento-|capa-|fundo-).*\.(jpg|webp|png)$/i.test(d)) lista.push({ f: "/corrida/" + d, t: fs.statSync(path.join(raiz, d)).size });
+      listaPreCarga = lista;
+    }
+    res.set("Cache-Control", "public, max-age=600").json(listaPreCarga);
+  } catch (e) { res.status(500).json({ erro: "A lista da pré-carga não abriu." }); }
+});
 // a tela inicial da Corrida: quem está online, as salas abertas e o desafio da semana
 app.get("/api/corrida/menu", (req, res) => {
   try { res.json(require("./corrida-menu.js").resumo(io, require("./bd.js"))); } catch (e) { res.status(500).json({ erro: "O menu não abriu." }); }

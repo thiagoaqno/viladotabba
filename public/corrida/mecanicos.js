@@ -8,6 +8,7 @@ import { clone as clonarEsqueleto } from "three/addons/utils/SkeletonUtils.js";
 import { carregarPilotos, basePodio, materialDoCasco } from "./podio-pilotos.js";
 import { uniformeDe, pintarTraje, pintarLuvas, TAM_FOLHA } from "./f1-uniformes.js";
 import { pintarFolha } from "./f1-capacetes.js";
+import { vestirCapacete } from "./capacete-boneco.js";
 import { renderer } from "./cena.js";
 
 const R = Math.PI / 180;
@@ -49,6 +50,7 @@ export function criarMecanico(equipe, cor) {
     if (o.name === "traje") o.material = m.traje; else if (o.name === "luvas") o.material = m.luvas;
     else if (o.name === "casco" || o.name === "vedacao") o.material = m.casco; else if (base.fixos[o.name]) o.material = base.fixos[o.name];
   });
+  { const u = uniformeDe(equipe, cor); vestirCapacete(g, { c1: u.base, c2: u.faixa }); } // o capacete da pista, nas cores da equipe (capacete-boneco.js)
   const inv = new THREE.Matrix4(), v = new THREE.Vector3(), w1 = new THREE.Vector3(), w2 = new THREE.Vector3();
   // os eixos do corpo, medidos no repouso: a frente é do tornozelo para a ponta do pé; o lateral sai da frente × cima. Cada osso guarda
   // esses eixos no espaço dele (no repouso), e o giro da pose é feito em volta deles: o mesmo sentido em todos os ossos

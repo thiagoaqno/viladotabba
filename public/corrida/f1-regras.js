@@ -15,17 +15,19 @@
 // metade e o de chuva com 90%. O de chuva no seco tem o `pico` do duro, mas `derrete` (o desgaste vai a ×2,8) e `esquenta` (a
 // temperatura passa de 1, até +0,4, e a aderência cai até 25%) quando a pista está seca: dura 2 a 3 voltas.
 const PNEUS = {
-  macio: { nome: "Macio", cor: "#e8202a", pico: 1.38, vida: 2.8, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
-  medio: { nome: "Médio", cor: "#ffd100", pico: 1.35, vida: 3.8, aquece: 1.1, perdaAntes: 0.03, molhado: 0.5 },
+  macio: { nome: "Macio", cor: "#e8202a", pico: 1.40, vida: 2.8, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
+  medio: { nome: "Médio", cor: "#ffd100", pico: 1.36, vida: 3.8, aquece: 1.1, perdaAntes: 0.03, molhado: 0.5 },
   duro: { nome: "Duro", cor: "#f4f4f4", pico: 1.32, vida: 4.8, aquece: 0.85, perdaAntes: 0.02, molhado: 0.5 },
   chuva: { nome: "Chuva", cor: "#1e7fd6", pico: 1.126, vida: 7, aquece: 0.5, perdaAntes: 0.02, molhado: 0.9, derrete: 2.8, esquenta: 0.4 },
-  intermediario: { nome: "Intermediário", cor: "#39c85a", pico: 1.126, vida: 4, aquece: 0.5, perdaAntes: 0.02, molhado: 1, derrete: 2, esquenta: 0.4 },
+  intermediario: { nome: "Intermediário", cor: "#39c85a", pico: 1.126, vida: 5.5, aquece: 0.5, perdaAntes: 0.02, molhado: 1, derrete: 2, esquenta: 0.4 },
 };
 const SECOS = ["macio", "medio", "duro"]; // os compostos de pista seca (a estratégia e a tabela de ritmo só conhecem estes)
 const COMPOSTO_PADRAO = "medio";
 // O desgaste vai de 0 (novo) a 1 (acabado); PENHASCO é o fim da vida. Passou dele o pneu despenca até PERDA_FIM do pico,
 // no resto do caminho até 1 (um quarto da vida do composto), e o carro fica muito ruim: sem aderência, sem tração, sem freio
 // e com um pouco menos de velocidade final.
+// (2026-11-13: macio 1,38 → 1,40 e médio 1,35 → 1,36, um pouco mais de aderência a pedido do Thiago; o intermediário dura 5,5 voltas (eram 4)
+// e ganhou uns 5% na garoa sobre o de chuva, para valer a pena na pista úmida)
 // (2026-11: o penhasco ficou 50% menos punitivo: a perda no fim era 0,4 do pico e 8% da final; as vidas eram 1,5 / 3,8 / 7 voltas)
 const PENHASCO = 0.8, PERDA_FIM = 0.215, FINAL_FIM = 0.04;
 // Pneu frio (saindo do box ou na largada) segura FRIO do normal e fica bom aos poucos: a temperatura vai de TEMP_SAIDA a
@@ -74,7 +76,7 @@ const CURVA_AGUA = {
   chuva: [[0, 1], [0.15, 0.97], [0.45, 1.0], [1, 1.12]],
   // o intermediário é o pneu da pista úmida: passa os secos por volta de 20% de água, é o melhor em toda a garoa (até ~0,45) e perde para o de chuva na chuva de verdade; nunca chega perto
   // de um seco em pista seca (lá ele ainda superaquece, `esquenta`)
-  intermediario: [[0, 0.97], [0.15, 1.0], [0.35, 1.03], [0.6, 1.0], [1, 0.75]],
+  intermediario: [[0, 1.03], [0.15, 1.05], [0.35, 1.08], [0.6, 1.03], [1, 0.75]],
 };
 function fatorAgua(composto, agua) {
   const c = CURVA_AGUA[composto] || CURVA_AGUA[COMPOSTO_PADRAO], a = limite(agua || 0, 0, 1);
@@ -82,7 +84,7 @@ function fatorAgua(composto, agua) {
   return c[c.length - 1][1];
 }
 // A temperatura passa de 1 só no pneu de chuva em pista seca; com +0,4 acima de 1 perde PERDA_ESQUENTA (25%) da aderência.
-const PERDA_ESQUENTA = 0.25;
+const PERDA_ESQUENTA = 0.12; // (2026-11-13: era 0,25; o Thiago pediu os de chuva e o intermediário melhores no seco, mas ainda derretendo: `derrete` ficou)
 function aderencia(pneu, agua = 0) {
   const pn = PNEUS[pneu && pneu.composto] || PNEUS[COMPOSTO_PADRAO], d = pneu ? pneu.desgaste : 0, temp = pneu ? pneu.temp : TEMP_BOA;
   const x = limite((d - PENHASCO) / (1 - PENHASCO), 0, 1); // 0 até o penhasco, 1 com o pneu acabado
@@ -370,6 +372,7 @@ function descreverPrevisao(prev, voltas = 0) {
   const titulo = seco ? "Pista seca" : p >= 1 ? "Chuva garantida" : p >= 0.75 ? "Chuva muito provável" : p >= 0.5 ? "Chuva provável" : p >= 0.25 ? "Possibilidade de chuva" : "Chance baixa de chuva";
   if (seco) return { p, pct, nivel: 0, seco, titulo, quando: "", forca: "", dica: "", voltas: null };
   let quando = ROTULO_QUANDO[prev.quando] || "", lap = null;
+  if (prev.quando === "largada" && chanceReal(p) >= 1) quando = "Largada com chuva"; // (de 50% para cima ela chove mesmo: chanceReal)
   if (prev.opcao === "chuva") quando = "Chove a corrida inteira";
   else if (prev.opcao === "variavel") quando = "Seco na largada, chuva a partir de 1/4 da corrida";
   if (voltas >= 3 && prev.quando !== "largada" && prev.janela) {
@@ -390,20 +393,26 @@ function roteiroDeChuva(r, dur, plano = {}) {
   const xIni = r(), xPara = r(), xFim = r(), xMeio = r(), xAgua = r();
   const ini = larga ? 0 : Math.max(20, Math.min(Math.round(dur - 40), Math.round(dur * (q.de + (q.ate - q.de) * xIni))));
   const agua0 = larga ? Math.round((forca === CHUVA_FORTE ? 0.6 + 0.3 * xAgua : 0.2 + 0.2 * xAgua) * 100) / 100 : 0;
-  const folga = dur - 30 - ini - CHUVA_MIN_S; // quanto cabe de chuva além do mínimo antes dos últimos 30 s
-  const para = !plano.sempre && xPara < 0.5 && folga >= 15;
-  const fim = para ? Math.round(ini + CHUVA_MIN_S + folga * xFim) : Math.round(dur * 4); // (sem parar: chove até depois da bandeirada)
+  // a garoa (a pista úmida, a do intermediário) dura o dobro e para menos: antes ela secava antes de o intermediário valer a pena
+  const garoa = forca === GAROA && !vira, minimo = garoa ? CHUVA_MIN_S * 2 : CHUVA_MIN_S;
+  const folga = dur - 30 - ini - minimo; // quanto cabe de chuva além do mínimo antes dos últimos 30 s
+  const para = !plano.sempre && xPara < (garoa ? 0.25 : 0.5) && folga >= 15;
+  const fim = para ? Math.round(ini + minimo + folga * (garoa ? 0.5 + 0.5 * xFim : xFim)) : Math.round(dur * 4); // (sem parar: chove até depois da bandeirada)
   const total = Math.min(fim, dur) - ini;
   let trechos = [[ini, fim, forca]];
   if (vira && total >= 90) { const meio = Math.round(ini + total * (0.35 + 0.3 * xMeio)); trechos = [[ini, meio, GAROA], [meio, fim, CHUVA_FORTE]]; }
   return { chove: true, t0: 0, dur: Math.round(dur), agua0, trechos };
 }
+// A chance que vale de verdade: a previsão não mente. De 50% para cima ("Chuva provável", "muito provável", "garantida") chove sempre; abaixo
+// de 25% ("Chance baixa") nunca chove; no meio ("Possibilidade de chuva") vale a chance anunciada. (2026-11-13: antes "Chuva provável"
+// podia ficar seco, e a previsão parecia errada.)
+const chanceReal = (p) => (p >= 0.5 ? 1 : p < 0.25 ? 0 : p);
 // O sorteio do GP: `duracoes` { corrida, quali } em segundos (a corrida inteira e o fim de semana de classificação) e `opcao` (a
 // opção de clima da sala: aleatorio, seco, chuva ou variavel). Devolve { chuva (o GP tem chuva), previsao, quali, corrida } (os dois
 // roteiros; `t0` o servidor põe quando a sessão abre). Chove com a chance da previsão (p = 1 nas opções Chuva e Variável).
 function sortearClima(semente, duracoes = {}, opcao = "aleatorio") {
   const dc = duracoes.corrida || 300, dq = duracoes.quali || 360, previsao = previsaoDoGP(semente, opcao);
-  if (!(previsao.p >= 1 || sorteio(`clima:${semente}:chuva`)() < previsao.p)) return { chuva: false, previsao, quali: seco(dq), corrida: seco(dc) };
+  if (!(chanceReal(previsao.p) >= 1 || sorteio(`clima:${semente}:chuva`)() < chanceReal(previsao.p))) return { chuva: false, previsao, quali: seco(dq), corrida: seco(dc) };
   const plano = { quando: previsao.quando, forca: previsao.forca, sempre: previsao.opcao === "chuva" };
   return { chuva: true, previsao, quali: roteiroDeChuva(sorteio(`clima:${semente}:quali`), dq, plano), corrida: roteiroDeChuva(sorteio(`clima:${semente}:corrida`), dc, plano) };
 }
@@ -580,6 +589,8 @@ function efeitoDoDano(dano) {
 // DRS e vácuo podem ser combinados; o teto também inclui uma pequena contribuição do ERS.
 // o ERS na largada parada: o MGU-K só entrega depois de 50 km/h (regulamento técnico de 2026, art. 5.2.12; até 2025 eram 100 km/h)
 const ERS_LARGADA_KMH = 50;
+// Na chuva o ERS não entrega (pedido do Thiago, 2026-11-13): com a pista molhada (água a partir de AGUA_MOLHADA) a bateria só recarrega.
+const ersBloqueadoNaChuva = (agua) => (agua || 0) >= AGUA_MOLHADA;
 const VACUO_FINAL = 0.20, VACUO_ACEL = 0.2, AR_SUJO = 0.1, AERO_MAX = 0.90, DRS_GANHO = 0.40, ERS_POTENCIA = 0.45, TETO_VELOCIDADE = 1.09; // (o teto: bateria, DRS e vácuo aceleram mais, mas ninguém passa de 9% acima da final do carro, ~360 km/h)
 // A velocidade da física é convertida para km/h pelo velocímetro (0,75 × u/s).
 const vacuoPermitido = (v, quali = false) => !quali && v * 0.75 >= 100;
@@ -590,7 +601,7 @@ function vacuoF1(draft, curva) {
 }
 
 const api = { PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,
-  zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
+  zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersBloqueadoNaChuva, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
   LIMITADOR, PARADA_BASE, PARADA_ERRO, UM_COMPOSTO, RAPIDO, RAMPA, GARAGENS, EQUIPES_GARAGEM, indiceDaGaragem, sorteio, tempoDeParada, PARADAS, classeDaParada, textoDaParada, BATIDA_MIN, BATIDA_MEDIA, BATIDA_FORTE, BATIDA_MAX, BATIDA_INTERVALO, batida, COLISAO_LEVE, COLISAO_MEDIA, COLISAO_GRAVE, PUNICAO_LEVE_S, PUNICAO_MEDIA_S, STOPGO_S, STOPGO_VOLTAS, STOPGO_CONVERSAO_S, gravidadeDaBatida, nivelDaPunicao, batidaProposital, DSQ_PROPOSITAIS, AVISO_PROPOSITAIS, stopGoCabe, efeitoDoDano, corredor, garagemDe, saidaDoCorredor, tempoNoBox, registrarParada, usouDoisCompostos, JOGOS_POR_COMPOSTO, jogosUsados, jogosRestantes, podeUsar, compostoParaParada, recomendarParada, ESCOLHA_BOX_S, penalidadeUmComposto, acrescimoDeFinal, estrategia, melhoresPlanos,
   CHANCE_CHUVA, GAROA, CHUVA_FORTE, AGUA_SOBE_S, AGUA_SECA_S, RAMPA_S, CHUVA_MIN_S, AVISO_S, AGUA_MOLHADA, AGUA_ENCHARCADA, AGUA_QUALI_CHUVA, OPCOES_DE_CLIMA, ROTULO_CLIMA, previsaoDoGP, descreverPrevisao, sortearClima, chuvaEm, aguaEm, proximaMudanca, climaEm, fatorAgua, compostoDaClassificacao, tempoMolhado, compostoPorAgua };
 if (typeof module !== "undefined" && module.exports) module.exports = api;

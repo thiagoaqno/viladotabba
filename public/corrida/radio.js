@@ -130,7 +130,8 @@ function proximo() {
   if (mudo || !temDOM) { timerFila = espera(proximo, 50); return; }
   tocando = true;
   const livre = () => { tocando = false; ultimaFala = Date.now(); timerFila = espera(proximo, 80); }; // a fila não sobrepõe: a próxima só começa quando esta acaba
-  (f.partes ? emendar(f.partes) : carregar(f)).then((buf) => { if (!buf || !tocar(buf, livre)) livre(); }).catch(livre);
+  const reserva = () => { const r = f.reserva && escolher(f.reserva, null); return r ? carregar(r) : null; }; // (a fala nova ainda sem mp3: a de reserva, `op.reserva` em dizer)
+  (f.partes ? emendar(f.partes) : carregar(f)).then((buf) => buf || reserva()).then((buf) => { if (!buf || !tocar(buf, livre)) livre(); }).catch(livre);
 }
 
 // as falas montadas em pedaços (RadioFalas.PECAS): carrega cada mp3 e junta num buffer só, com uma pausa curta entre eles, para o rádio
@@ -163,14 +164,14 @@ function pedaco(quando) {
   ultimoPedaco[quando] = p.id; return p.id;
 }
 
-// pede a fala de uma situação; devolve a escolhida (ou null se ficou de fora)
+// pede a fala de uma situação; devolve a escolhida (ou null se ficou de fora). `op.reserva`: outra situação que toca se esta ainda não tem mp3
 function dizer(situacao, op = {}) {
   try {
     if (!F.SITUACOES[situacao]) return null;
     const agora = Date.now(), urgente = F.URGENTES.includes(situacao);
     if (!op.forcar && agora - (porSituacao[situacao] || -Infinity) < (ESPERA_SIT[situacao] || ESPERA)) return null;
     if (!urgente && fila.length && !op.forcar) return null; // não acumula fala velha; pedidos do piloto são explícitos
-    const f = escolher(situacao, ultimoId); if (!f) return null;
+    const e = escolher(situacao, ultimoId); if (!e) return null; const f = op.reserva ? { ...e, reserva: op.reserva } : e;
     ultimoId = f.id; porSituacao[situacao] = agora;
     if (urgente || op.forcar) fila.unshift(f); else fila.push(f);
     proximo(); return f;

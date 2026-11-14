@@ -124,6 +124,9 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   x.fillStyle = c1; x.fillRect(0, 0, 512, 256);
   (DESENHOS[desenho] || DESENHOS.generico)(x, cores);
   x.fillStyle = c3; x.fillRect(282, 85, 204, 11); // a faixa estreita do patrocínio / nome logo acima da viseira (só cor)
+  // as duas entradas de ar do queixo, logo abaixo da viseira (2026-11-13, pela imagem do Thiago): fendas escuras inclinadas para fora
+  x.fillStyle = "#0b0c10";
+  for (const l of [-1, 1]) { x.save(); x.translate(384 + l * 34, 150); x.rotate(l * 0.18); x.beginPath(); x.roundRect ? x.roundRect(-17, -4, 34, 8, 4) : x.rect(-17, -4, 34, 8); x.fill(); x.restore(); }
   if (extra) {
     const img = extra.bandeira ? bandeiraImg(extra.bandeira, aoChegar) : null;
     if (img) for (const [cx, cy, w] of [[128, 104, 84], [256, 120, 54], [0, 120, 54], [512, 120, 54]]) { x.fillStyle = "#0b0c10"; x.fillRect(cx - w / 2 - 2, cy - w / 3 - 2, w + 4, w * 2 / 3 + 4); x.drawImage(img, cx - w / 2, cy - w / 3, w, w * 2 / 3); }

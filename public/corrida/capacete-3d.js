@@ -3,7 +3,7 @@
 // para a prévia, que só desenha enquanto o canvas está na página e visível (nada de quadro gasto com a aba escondida).
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { geometriasDoCapacete, materialDaViseira } from "./f1-piloto.js";
+import { geometriasDoCapacete, materialDaViseira, materialDaMoldura } from "./f1-piloto.js";
 import { pintarFolha } from "./f1-capacetes.js";
 
 // cv: o canvas; devolve { mostrar(cap, numero), soltar() } (ou null sem WebGL: o editor volta para a folha aberta)
@@ -22,6 +22,7 @@ export function previaDoCapacete(cv) {
   const tex = new THREE.CanvasTexture(folha); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   const casco = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.28, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.08 });
   const G = geometriasDoCapacete(), pivo = new THREE.Group(), cab = new THREE.Mesh(G.capacete, casco), vis = new THREE.Mesh(G.viseira, materialDaViseira());
+  if (G.moldura) pivo.add(new THREE.Mesh(G.moldura, materialDaMoldura())); // a borracha da borda e as dobradiças da viseira
   pivo.add(cab, vis); cena.add(pivo); pivo.rotation.y = -0.6; // (começa de três-quartos: a frente do capacete é −z, virada para a câmera, e a lateral aparece)
 
   let ang = pivo.rotation.y, arrasto = null, parado = 0, vivo = true, raf = 0;

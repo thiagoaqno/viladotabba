@@ -2,9 +2,9 @@
 // com o relevo, os setores e os números das curvas, que se gira com o mouse; e, embaixo, a história do circuito e as curvas famosas
 // (gp-curiosidades.js). Clicar numa curva (na lista da ficha, num card ou no número dela em 3D) leva a câmera até lá. O botão "Mapa"
 // volta ao desenho 2D de sempre (a escolha fica guardada neste navegador). Sem WebGL, fica o mapa 2D.
-import { criarMiniatura } from "./gp-miniatura.js";
-import { CURIOSIDADES } from "./gp-curiosidades.js";
-import { h } from "./estado.js";
+import { criarMiniatura } from "/corrida/gp-miniatura.js";
+import { CURIOSIDADES } from "/corrida/gp-curiosidades.js";
+const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); // (sem estado.js: a Central da carreira também usa)
 
 const CHAVE = "corrida:guia3d";
 let mini = null, raizAtual = null;
@@ -50,7 +50,7 @@ export function montarGuia(raiz, id) {
   fig.insertAdjacentHTML("beforeend", `<div class="gg-modo" role="group" aria-label="Ver o circuito"><button type="button" data-gg-modo="3d" class="${em3d ? "on" : ""}" aria-pressed="${em3d}">3D</button><button type="button" data-gg-modo="2d" class="${em3d ? "" : "on"}" aria-pressed="${!em3d}">Mapa</button></div>`);
   if (!em3d) { svg.style.visibility = ""; fig.classList.remove("em3d"); return; }
   const caixa = document.createElement("div"); caixa.className = "gg-mini"; fig.appendChild(caixa);
-  const cor = getComputedStyle(document.body).getPropertyValue("--sv-eq").trim() || null; // a cor da equipe (menus.js, temaDaSala)
+  const cor = getComputedStyle(raiz).getPropertyValue("--sv-eq").trim() || null; // a cor da equipe (na sala, menus.js temaDaSala; na Central, a ficha do GP)
   mini = criarMiniatura(caixa, id, { cor: /^#[0-9a-f]{6}$/i.test(cor || "") ? cor : null });
   if (!mini) { caixa.remove(); fig.querySelector(".gg-modo").remove(); svg.style.visibility = ""; return; } // sem WebGL: o mapa 2D
   mini.curvas(g.curvas);

@@ -111,8 +111,12 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
           return { piloto: p.pessoa ? G.idDoHumano(p.pessoa) : p.piloto.id, equipe: p.equipe, pos: r.pos, pontos: r.pontos, dnf: r.dnf, nc: r.nc, voltaRapida: !!r.voltaRapida };
         });
         let analise = null; // a análise é um extra: um erro nela nunca pode perder o resultado do GP
-        try { analise = require("./corrida-analise.js").resumo(room, (p) => (p.pessoa ? G.idDoHumano(p.pessoa) : p.piloto.id)); } catch (e) { console.warn("temporada em grupo: análise do GP não salva:", e.message); }
+        const chave = (p) => (p.pessoa ? G.idDoHumano(p.pessoa) : p.piloto.id);
+        let gravado = null; // as ultrapassagens e o replay (corrida-gravacao.js): extras, como a análise
+        try { gravado = require("./corrida-gravacao.js").paraSave(room, chave); } catch (e) { console.warn("temporada em grupo: replay do GP não salvo:", e.message); }
+        try { analise = require("./corrida-analise.js").resumo(room, chave); if (gravado) analise.ultrapassagens = gravado.ultrapassagens; } catch (e) { console.warn("temporada em grupo: análise do GP não salva:", e.message); }
         const resultado = G.registrarResultado(atual, linhas, analise);
+        if (gravado && gravado.replay) { try { bd.guardarReplayCorrida("grupo:" + atual.codigo, ano, indice, gravado.replay); } catch (e) { console.warn("temporada em grupo: replay do GP não salvo:", e.message); } }
         try { bd.guardarEstanteCorrida(G.conquistasDoGP(atual, resultado)); } catch (e) { console.warn("temporada em grupo: a estante não guardou o GP:", e.message); } // a estante nunca segura o GP
         ativos.delete(atual.codigo); guardar(atual); avisar(atual);
       } catch (e) { console.warn("temporada em grupo: GP não registrado:", e.message); }
@@ -196,6 +200,11 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
       } catch (e) { falha(cb, e.message || String(e)); }
     });
 
+    // o replay de um GP já corrido da sala (a análise 3D da Central: analise-salva.js)
+    socket.on("replay", (d = {}, cb) => {
+      const { sala, pid } = contexto(socket); if (!sala || !pid) return falha(cb, "Você não está numa sala.");
+      try { ok(cb, { replay: bd.replayCorrida("grupo:" + sala.codigo, Number(d.ano), Number(d.gp)) }); } catch (e) { falha(cb, e.message); }
+    });
     socket.on("equipe", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.escolherEquipe(sala, pid, d.id)));
     socket.on("opcoes", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.definirOpcoes(sala, pid, d)));
     socket.on("passarCargo", (d = {}, cb) => agir(socket, cb, (sala, pid) => G.passarCargo(sala, pid, d.id), { duranteGP: true }));

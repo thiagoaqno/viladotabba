@@ -1,5 +1,14 @@
 [
   {
+    "id": "2026-11-14-carreira-pos-corrida",
+    "data": "2026-11-14",
+    "itens": [
+      "Carreira solo e com os amigos: na aba Análise da Central, \"Replay e análise 3D\" abre qualquer GP já corrido com as posições, os momentos, as ultrapassagens, o replay com a telemetria, o ritmo e os pneus",
+      "O replay e as ultrapassagens de cada GP da carreira ficam guardados (os 30 GPs mais recentes de cada carreira ou sala)",
+      "Na Central, o calendário abre o guia do GP com o circuito em 3D, a história e as curvas famosas, e \"Ver o carro de perto\" abre a vista do carro de 2026 da sua equipe"
+    ]
+  },
+  {
     "id": "2026-11-14-replay-ultrapassagens-vista",
     "data": "2026-11-14",
     "itens": [

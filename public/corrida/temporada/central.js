@@ -102,7 +102,7 @@ function central(c) {
     ? `<aside class="cx-cn-prox"><small class="cx-rot">${ativo ? "GP em andamento" : "Próxima etapa"}</small><div class="cx-cn-gp"><div><h2>${h(prox.nome)}</h2><p>Etapa ${dois(s.gp + 1)} de ${dois(s.tamanho)}</p></div><span class="cx-cn-traco">${traco}</span></div>${previsaoHTML(prev)}${acao}</aside>`
     : `<aside class="cx-cn-prox"><small class="cx-rot">Bandeirada final</small><div class="cx-cn-gp"><div><h2>Temporada ${dois(s.ano)}</h2><p>Campeão: ${h(t.pilotos[0].nome)}</p></div></div>${acao}</aside>`;
   const lideranca = !gps.length ? "Ainda sem corridas" : eu === 0 ? `${meus} pontos · líder` : `${meus} pontos · ${dif} para o líder`;
-  return `<div class="cx-g-central"><div class="cx-cn-ola"><small class="cx-rot">${c.grupo ? `Sala ${h(c.grupo)}` : "Carreira"} · Temporada ${dois(s.ano)}</small><h2>${terminou ? "Temporada encerrada." : "A próxima vitória começa aqui."}</h2><p>${h(eq.nome)} · Piloto titular ${tricolor()}</p></div>${direita} <div class="cx-cn-carro"><small class="cx-rot">Seu carro</small><b>${h(eq.nome)} · nota ${notaDe(s.equipe, s.montagem)}</b></div> <div class="cx-numeros"><button type="button" data-cx-aba="classif"><small class="cx-rot">Campeonato</small><strong>${gps.length ? `${eu + 1}º` : "—"} ${tendencia(c, eu)}</strong><span>${lideranca}</span></button> <button type="button" data-cx-aba="desenvolvimento"><small class="cx-rot">Desenvolvimento</small><strong>${limite - usado} <em>${limite - usado === 1 ? "ponto livre" : "pontos livres"}</em></strong><i class="cx-prog"><u style="width:${usado / Math.max(1, limite) * 100}%"></u></i><span>${usado} de ${limite} pontos usados</span></button> <button type="button" data-cx-aba="contratos"><small class="cx-rot">Objetivo da temporada</small><strong class="menor">Terminar no top ${o.alvo}</strong><span><i class="cx-ponto ${pontoCor(o.estado)}"></i>${ROT_OBJ[o.estado] || ""}${gps.length ? ` · atual: ${o.atual}º` : ""}</span></button></div></div>`;
+  return `<div class="cx-g-central"><div class="cx-cn-ola"><small class="cx-rot">${c.grupo ? `Sala ${h(c.grupo)}` : "Carreira"} · Temporada ${dois(s.ano)}</small><h2>${terminou ? "Temporada encerrada." : "A próxima vitória começa aqui."}</h2><p>${h(eq.nome)} · Piloto titular ${tricolor()}</p></div>${direita} <div class="cx-cn-carro"><small class="cx-rot">Seu carro</small><b>${h(eq.nome)} · nota ${notaDe(s.equipe, s.montagem)}</b><button type="button" class="cx-cn-vista" data-cx-vista>Ver o carro de perto</button></div> <div class="cx-numeros"><button type="button" data-cx-aba="classif"><small class="cx-rot">Campeonato</small><strong>${gps.length ? `${eu + 1}º` : "—"} ${tendencia(c, eu)}</strong><span>${lideranca}</span></button> <button type="button" data-cx-aba="desenvolvimento"><small class="cx-rot">Desenvolvimento</small><strong>${limite - usado} <em>${limite - usado === 1 ? "ponto livre" : "pontos livres"}</em></strong><i class="cx-prog"><u style="width:${usado / Math.max(1, limite) * 100}%"></u></i><span>${usado} de ${limite} pontos usados</span></button> <button type="button" data-cx-aba="contratos"><small class="cx-rot">Objetivo da temporada</small><strong class="menor">Terminar no top ${o.alvo}</strong><span><i class="cx-ponto ${pontoCor(o.estado)}"></i>${ROT_OBJ[o.estado] || ""}${gps.length ? ` · atual: ${o.atual}º` : ""}</span></button></div></div>`;
 }
 
 // ---------- o Calendário ----------
@@ -127,6 +127,9 @@ function abrirGP(i) {
   const d = dialogo("cxSobreDlg", "cx-sobre"), foto = Gi()?.fundoDe(e.pista), credito = Gi()?.creditoTxt(e.pista);
   d.innerHTML = `<form method="dialog"><button class="cx-dlg-x" aria-label="Fechar">✕</button></form><div class="circuito-corpo"><div class="circuito-fundo" ${foto ? `style="background-image:linear-gradient(90deg,#05060af2,#05060aab 60%,#05060a99),url('${h(foto)}')"` : ""}>${root.GpSobre.corpo(e.pista, null, "")}${credito ? `<small class="circuito-credito">${h(credito)}</small>` : ""}</div></div>`;
   d.showModal();
+  // o guia do GP (gp-guia.js): o circuito em 3D com as curvas, a história e as curvas famosas, na cor da equipe
+  const corEq = root.F1Pilotos?.EQUIPES[s.equipe]?.cor; if (corEq) d.style.setProperty("--sv-eq", corEq);
+  import("/corrida/gp-guia.js").then((m) => { if (!d.open) return; m.montarGuia(d, e.pista); d.addEventListener("close", () => m.soltarGuia(), { once: true }); }).catch((err) => console.warn("Carreira: guia do GP indisponível", err));
 }
 function dialogo(id, cls) { let d = document.getElementById(id); if (!d) { d = document.createElement("dialog"); d.id = id; d.className = `cx-dlg ${cls}`; d.addEventListener("click", (e) => { if (e.target === d) d.close(); }); document.body.appendChild(d); } return d; }
 
@@ -273,6 +276,10 @@ function trocarAba(a, render) { const ordem = (x) => ABAS.findIndex((q) => q[0] 
 function abrirMensagens() { const d = dialogo("cxMsgDlg", "cx-msgs"); d.innerHTML = `<form method="dialog"><button class="cx-dlg-x" aria-label="Fechar">✕</button></form>${ctxAtual?.caixaMensagens || ""}`; d.showModal(); }
 // devolve true se o clique era desta tela
 function clique(alvo, render) {
+  if (alvo.dataset.cxVista != null) { // a vista do carro de 2026 (vista-carro.js): gira com o mouse, pontos clicáveis em cada peça
+    const eqVista = ctxAtual?.s?.equipe; import("/corrida/vista-carro.js").then((m) => m.abrirVista(eqVista)).catch((e) => console.warn("Carreira: vista do carro indisponível", e));
+    return true;
+  }
   if (root.CentralAnalise?.clique(alvo, render) || root.CentralContrato?.clique(alvo, render) || root.CentralAcerto?.clique(alvo, render)) return true;
   if (alvo.hasAttribute("data-cx-tema")) { escuro = !escuro; try { localStorage.setItem(CHAVE_TEMA, escuro ? "escuro" : "claro"); } catch {} aplicarTema(); return true; }
   if (alvo.dataset.cxAba) { trocarAba(alvo.dataset.cxAba, render); return true; }

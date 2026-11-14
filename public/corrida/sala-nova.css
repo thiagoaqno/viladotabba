@@ -336,28 +336,3 @@ body.sala-escura:has(#lobby:not(.hidden)) .wrap{padding-bottom:84px}
 }
 
 /* ---------- o editor do capacete (capacete-editor.js) ---------- */
-
-/* ---------- o guia do GP (gp-guia.js): a miniatura 3D no lugar do mapa e os cards da história e das curvas ---------- */
-.sn-sobre-mapa.gg-fig{position:relative}
-.gg-mini{position:absolute;inset:0;border-radius:10px;overflow:hidden;background:radial-gradient(75% 65% at 50% 45%,color-mix(in srgb,var(--sv-eq,#e10600) 16%,transparent),#05080cd9 78%)}
-.gg-modo{position:absolute;top:8px;right:8px;z-index:3;display:flex;border:1px solid #ffffff40;background:#05080cc9}
-.gg-modo button{padding:4px 10px;border:0;background:none;color:#cfd6df;font:800 12px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s}
-.gg-modo button:hover{background:#ffffff1a;color:#fff}.gg-modo button.on{background:var(--sv-eq,#e10600);color:var(--sv-eq-txt,#fff)}
-.gg-ajuda{position:absolute;left:10px;bottom:6px;z-index:3;margin:0;color:#aab4c0;font-size:11px;text-shadow:0 1px 3px #000;pointer-events:none}
-.gg-mini .mn3-curva:hover,.gg-mini .mn3-curva.hi{background:var(--sv-eq,#e10600);color:var(--sv-eq-txt,#fff);cursor:pointer}
-.gg{padding:clamp(12px,2vw,20px);background:#05080cc4;border:1px solid #ffffff22;border-top:3px solid var(--sv-eq,#e10600);backdrop-filter:blur(6px)}
-.gg-cab small{color:#aab4c0;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
-.gg-cab h3{margin:2px 0 10px;font:800 clamp(18px,2.4vw,26px)/1.05 var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;color:#fff}
-.gg-grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(12px,2vw,24px)}
-.gg h4{margin:0 0 8px;color:var(--sv-eq,#e10600);font:800 14px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.08em;text-transform:uppercase;filter:brightness(1.3)}
-.gg-hist ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
-.gg-hist li{padding-left:12px;border-left:2px solid #ffffff30;color:#dfe5ec;font-size:13.5px;line-height:1.45;transition:border-color .15s}
-.gg-hist li:hover{border-left-color:var(--sv-eq,#e10600)}
-.gg-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
-.gg-card{display:flex;flex-direction:column;gap:4px;padding:9px 11px;text-align:left;border:1px solid #ffffff1f;border-left:3px solid var(--sv-eq,#e10600);background:#ffffff08;color:#dfe5ec;font:500 12.5px/1.4 var(--body,system-ui,sans-serif);cursor:pointer;transition:background .15s,transform .15s,border-color .15s}
-.gg-card b{display:flex;align-items:center;gap:7px;color:#fff;font:800 15px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase}
-.gg-card b i{min-width:20px;height:20px;display:grid;place-items:center;border-radius:10px;background:var(--sv-eq,#e10600);color:var(--sv-eq-txt,#fff);font-style:normal;font-size:11px}
-.gg-card:hover:not(:disabled),.gg-card.hi{background:color-mix(in srgb,var(--sv-eq,#e10600) 20%,transparent);transform:translateY(-2px);border-color:#ffffff40}
-.gg-card:disabled{cursor:default}
-@media (max-width:760px){.gg-grade{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.gg-card,.gg-hist li{transition:none}}

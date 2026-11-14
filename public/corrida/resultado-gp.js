@@ -3,7 +3,7 @@
 // degradê da equipe por piloto, a sigla de 3 letras (o humano também tem), o ícone amarelo de quem levou acréscimo de tempo e chips de
 // dano, stop-and-go e bandeira preta. hud.js só chama `htmlResultado` + `aposResultado` (e `resultadoMudou`, para não refazer a tela,
 // e o carro, a cada estado do servidor). O desenho é CSS (resultado-gp.css): a animação de entrada some com "reduzir movimento".
-import { E, PISTAS, h, fmt } from "./estado.js";
+import { E, PISTAS, h, fmt, socket, sNow } from "./estado.js";
 import { MODS3, MODS_PADRAO } from "./carros.js";
 import { podio3d } from "./podio-3d.js";
 import { htmlAnalise, montarAnalise, soltarAnalise } from "./resultado-analise.js";
@@ -126,7 +126,8 @@ function carrosNoPodio(el, S, m) {
 }
 export function aposResultado(el, S, m) {
   carrosNoPodio(el, S, m);
-  try { montarAnalise(el, S, m); } catch (e) { console.warn("Corrida: análise do GP", e); } // um extra: um erro nela não pode tirar o resultado da tela
+  const fonte = { analise: () => new Promise((ok) => socket.emit("analise", ok)), replay: () => new Promise((ok) => socket.emit("replay", ok)), sNow }; // (a sala da Corrida: o servidor responde pelo socket)
+  try { montarAnalise(el, S, m, fonte); } catch (e) { console.warn("Corrida: análise do GP", e); } // um extra: um erro nela não pode tirar o resultado da tela
   if (el.querySelector(".rg-podio.vitoria") && !reduz() && window.Comum) {
     const eq = infoEquipe(m), cores = [eq.cor, "#ffffff", "#ffd23f", "#e10600", eq.cor];
     window.Comum.confetti(cores, { onde: el, dur: [2.4, 2.4], fica: 6500 });

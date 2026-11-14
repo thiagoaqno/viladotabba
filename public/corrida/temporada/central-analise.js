@@ -159,18 +159,28 @@ const IC = {
   sol: '<svg class="cx-cond-svg" viewBox="0 0 48 48" fill="none" stroke="#ffd23f" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="24" cy="24" r="9"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6M10 10l4 4M34 34l4 4M38 10l-4 4M14 34l-4 4"/></svg>',
   chuva: '<svg class="cx-cond-svg" viewBox="0 0 48 48" fill="none" stroke="#8fc7ff" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M14 30a8 8 0 0 1 0-16 11 11 0 0 1 21 3 7 7 0 0 1-1 13Z"/><path d="M16 36l-2 6M26 36l-2 6M36 36l-2 6"/></svg>',
 };
+let ultimoC = null; // o contexto do último desenho (o botão da análise 3D precisa do GP e dos nomes)
 function html(c) {
+  ultimoC = c;
   const s = c.s, UI = U();
   if (!c.gps.length) return `<div class="cx-cabeca"><div><h2>Análise da corrida</h2></div></div><section class="cx-card cx-an-vazio">${IC.medidor}<h3>Nenhum GP disputado nesta temporada</h3><p>Depois da primeira corrida, os tempos de cada volta, os setores, a estratégia e a sua evolução aparecem aqui.</p><button type="button" class="cx-contorno" data-cx-aba="calendario">Ver o calendário ${UI.seta}</button></section>`;
   const { r, a, rival } = escolhas(c), g = s.calendario[r.gp];
   const opcoes = c.gps.map((x) => `<option value="${x.gp}" ${x.gp === r.gp ? "selected" : ""}>${h(s.calendario[x.gp]?.nome || x.pista)}</option>`).join("");
-  const topo = `<div class="cx-cabeca"><div><h2>Análise da corrida</h2><small class="cx-rot">${h(UI.nomeGP(r.pista, g?.nome))} · Etapa ${UI.dois(r.gp + 1)} / ${UI.dois(s.tamanho)}</small></div><label class="cx-sel">${UI.bandeira(r.pista)}<span class="cx-oculto">Escolher o GP</span><select data-cx-gp>${opcoes}</select></label></div>`;
+  const topo = `<div class="cx-cabeca"><div><h2>Análise da corrida</h2><small class="cx-rot">${h(UI.nomeGP(r.pista, g?.nome))} · Etapa ${UI.dois(r.gp + 1)} / ${UI.dois(s.tamanho)}</small></div><label class="cx-sel">${UI.bandeira(r.pista)}<span class="cx-oculto">Escolher o GP</span><select data-cx-gp>${opcoes}</select></label>${r.analise ? `<button type="button" class="cx-bt cx-an-3d" data-cx-an3d="${r.gp}">Replay e análise 3D</button>` : ""}</div>`;
   if (!a) return `${topo}<section class="cx-card cx-an-vazio">${IC.crono}<h3>Este GP foi corrido antes da análise</h3><p>Só há o resultado final dele. Os próximos GPs já trazem as voltas, os setores e a estratégia.</p></section>`;
   const abas = `<div class="cx-subabas cx-an-abas">${SUBS.map(([id, nome]) => `<button type="button" class="${id === sub ? "on" : ""}" aria-pressed="${id === sub}" data-cx-an="${id}">${nome}</button>`).join("")}</div>`;
   const corpo = sub === "voltas" ? voltas(c, r, a, rival) : sub === "estrategia" ? estrategia(c, r, a) : sub === "telemetria" ? telemetria(c, r, a, rival) : visao(c, r, a, rival);
   return `${topo}${abas}<div class="cx-an-corpo">${corpo}</div>`;
 }
-function clique(b, render) { if (b.dataset.cxAn) { sub = b.dataset.cxAn; render(); document.querySelector(`[data-cx-an="${sub}"]`)?.focus({ preventScroll: true }); return true; } return false; }
+// a análise 3D do GP (analise-salva.js): as mesmas abas da tela do resultado, numa tela por cima da Central
+function abrir3d(gp) {
+  const c = ultimoC; if (!c) return;
+  const r = c.gps.find((g) => g.gp === gp) || c.gps.at(-1); if (!r || !r.analise) return;
+  const s = c.s, nomes = { voce: s.nome, ...(s.nomesExtras || {}) }, titulo = U().nomeGP(r.pista, s.calendario[r.gp]?.nome);
+  const pedirReplay = () => (root.SedeGrupo?.ativo ? root.SedeGrupo.replayDoGP(r.ano, r.gp) : root.CarreiraReplay ? root.CarreiraReplay(r.ano, r.gp) : Promise.resolve(null));
+  import("/corrida/analise-salva.js").then((m) => m.abrirAnaliseSalva({ r, titulo, nomes, meu: "voce", pedirReplay })).catch((e) => console.warn("Carreira: análise 3D indisponível", e));
+}
+function clique(b, render) { if (b.dataset.cxAn3d != null) { abrir3d(+b.dataset.cxAn3d); return true; } if (b.dataset.cxAn) { sub = b.dataset.cxAn; render(); document.querySelector(`[data-cx-an="${sub}"]`)?.focus({ preventScroll: true }); return true; } return false; }
 function mudou(e, render) {
   if (e.target.matches?.("[data-cx-gp]")) { gpEscolhido = +e.target.value; comparar = null; render(); return true; }
   if (e.target.matches?.("[data-cx-comparar]")) { comparar = e.target.value; render(); return true; }

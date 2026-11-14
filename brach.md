@@ -1,10 +1,10 @@
-# Viseira curva e saltada, com borda e dobradiças (pela imagem do Thiago)
+# Carreiras guardadas por 3 dias sem ninguém entrar; salas rápidas vazias somem
 
-Antes, a viseira era uma faixa da própria casca, só 1,2% maior: parecia pintada e reta. Agora (`f1-piloto.js`, `geometrias`):
+**Carreiras (3 dias sem entrar):**
+- **GP da carreira (`corrida.js`):** a sala do GP da carreira (solo e em grupo) sumia depois de 12 horas parada. Agora fica 3 dias (`HORAS_CARREIRA = 72`, pelo `horasDe` novo de `limparSalasParadas` em `salas.js`); as outras salas seguem com 12 horas.
+- **O GP que sumiu não trava mais a carreira:** quando a sala do GP já não existia, a carreira solo (`corrida-temporada.js`) e a em grupo (`corrida-temporada-grupo.js`) continuavam achando o GP aberto e mandavam para uma sala inexistente ("Sala não encontrada"). Agora, sem a sala, ela abre o GP de novo.
+- **Temporada em grupo:** já guardava 72 h, mas contava da última MUDANÇA na sala: quem só entrava para olhar não segurava nada. Agora entrar conta (`ligar` → `guardar`, também no banco, para valer depois de um reinício), e com alguém conectado o relógio não anda (`cadaVolta`). A carreira solo fica no banco sem prazo (não mudou).
 
-- **Curva e saltada:** é uma peça à parte que dá a volta pela frente (~150°, antes ~130°) seguindo a forma da cabeça. Fica 2 mm para fora do casco e estufa no meio (até +3,5 mm), como uma lente de verdade (`estufar`).
-- **Mais alta:** vai da altura dos olhos até perto do queixo (0,44 rad de altura na esfera, antes 0,36). A faixa do nome, acima dela, continua livre.
-- **Moldura (`molduraDaViseira`):** a borracha escura da borda (um pedaço da casca um pouco maior, rente ao casco, que aparece em volta da viseira) e as duas dobradiças redondas nas pontas. É uma malha à parte, com um material escuro acetinado (`materialDaMoldura`) dividido por todos os pilotos. Ela não entra em `k.mats` (o piloto não está lá).
-- **Entradas de ar no queixo (`f1-capacetes.js`, `pintarFolha`):** duas fendas escuras inclinadas logo abaixo da viseira, em todo capacete.
-- **Onde aparece:** no piloto da pista e na prévia 3D do editor (`capacete-3d.js`). Nos mecânicos e no pódio, entra pelo #720, que já usa a moldura quando ela existe. A prévia 2D (sem WebGL) desenha a viseira no tamanho novo.
-- Conferido só com `node --check`: a forma precisa ser vista (a prévia do editor mostra de perto).
+**Salas rápidas sem humanos (`corrida.js`):** antes, quando todos saíam, os robôs seguiam correndo sozinhos (física, IA, rede) por até 12 horas. Agora a sala fora da carreira sem nenhuma conexão (de quem joga ou de quem assiste) some depois de 2 min (`SALA_VAZIA_MS`, ajustável por `CORRIDA_SALA_VAZIA_MS`); a espera cobre quem só recarregou a página. Os relógios dela param no mesmo `apagarSala` da limpeza de sempre.
+
+Conferido com `node --check`. Sem entrada no `novidades.json` (está quebrado na `main`; o conserto está no #717).

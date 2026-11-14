@@ -96,7 +96,8 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
         const linha = carregar(socket), s = linha.dados;
         if (s.gp >= s.tamanho) throw Error("A temporada terminou. Comece a próxima.");
         const atual = ativos.get(linha.id);
-        if (atual && corrida.salaGP(atual.code)?.phase !== "results") return enviar({ ok: true, acesso: atual }, resposta);
+        const viva = atual && corrida.salaGP(atual.code); // (a sala do GP pode ter sumido: aí abre outra, em vez de mandar para uma que não existe)
+        if (viva && viva.phase !== "results") return enviar({ ok: true, acesso: atual }, resposta);
         ativos.delete(linha.id);
         const indice = s.gp, ano = s.ano;
         const acesso = corrida.abrirGP(s, (room) => {

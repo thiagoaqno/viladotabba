@@ -108,7 +108,13 @@ const NOVAS = {
   penultimaruim: ["Penúltima volta. Não é o que queríamos, mas tudo vale até a bandeirada.", "Faltam duas. Corrida difícil hoje. Vamos buscar o que der.", "Penúltima volta. Abaixo do esperado. Ataque se tiver chance.", "Duas voltas. Vamos aprender com essa. Dê tudo até o fim."],
 };
 // (2026-11-13) o Jeff, o engenheiro que ouve os comandos de voz (voz.js): quando não entende
-NOVAS.jeffnaoentendi = ["Não entendi. Pode repetir?", "Rádio cortado. Repete?", "Não peguei essa. De novo?"];
+NOVAS.jeffnaoentendi = ["Não entendi. Pode repetir?", "Rádio cortado. Repete?", "Não peguei essa. De novo?", "Chiado no rádio. Fala de novo?", "Não ficou claro. Repete devagar?", "Perdi o começo. Pode falar de novo?"];
+// mais jeitos do Jeff confirmar o box com o pneu (entram depois dos três primeiros: os números dos mp3 que já existem não mudam)
+NOVAS.boxmacio.push("Copiado. Macio na próxima parada. Box nesta volta.", "Pode vir. Os macios estão prontos.", "Box, box. Jogo de macios esperando.");
+NOVAS.boxmedio.push("Copiado. Médio na próxima parada. Box nesta volta.", "Pode vir. Os médios estão prontos.", "Box, box. Jogo de médios esperando.");
+NOVAS.boxduro.push("Copiado. Duro na próxima parada. Box nesta volta.", "Pode vir. Os duros estão prontos.", "Box, box. Jogo de duros esperando.");
+NOVAS.boxintermediario.push("Copiado. Intermediário na próxima parada. Box nesta volta.", "Pode vir. Os intermediários estão prontos.", "Box, box. Intermediários esperando.");
+NOVAS.boxchuva.push("Copiado. Pneu de chuva na próxima parada. Box nesta volta.", "Pode vir. Os de chuva estão prontos.", "Box, box. Pneus de chuva esperando.");
 for (const [q, textos] of Object.entries(NOVAS)) SITUACOES[q] = textos;
 
 // situações que passam na frente do intervalo mínimo entre falas
@@ -149,8 +155,8 @@ const PECAS_TEXTO = {
   afastando: ["Ele está abrindo.", "Ele está mais rápido agora.", "Estamos perdendo tempo para ele."],
   lider: ["Você está liderando.", "P1. Ninguém à frente.", "Pista livre. Você é o líder."],
   // o companheiro de equipe (o pedido de voz "diferença para o companheiro", mfd.js executarJeff): abertura + nome + distância
-  companheirofrente: ["Seu companheiro de equipe está à frente,", "O seu companheiro vai à frente,"],
-  companheirotras: ["Seu companheiro de equipe está atrás,", "O seu companheiro vem atrás,"],
+  companheirofrente: ["Seu companheiro de equipe está à frente,", "O seu companheiro vai à frente,", "O outro carro da equipe está à frente,", "Seu parceiro de equipe vai na frente,"],
+  companheirotras: ["Seu companheiro de equipe está atrás,", "O seu companheiro vem atrás,", "O outro carro da equipe vem atrás,", "Seu parceiro de equipe está atrás de você,"],
 };
 // o estrategista (a volta da chuva) e o engenheiro (o objetivo desta corrida): abertura + número
 const VOLTAS_PECA = 60, TOPS_PECA = 20;

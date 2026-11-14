@@ -14,7 +14,7 @@ import { abrirTeclas } from "./teclas-ui.js";
 import { alternarAcerto } from "./acerto.js";
 import { abrirCamera, fecharCamera, cameraAberta } from "./camera-ui.js";
 import { estiloHud, definirEstiloHud, ESTILOS_HUD } from "./hud-telemetria.js";
-import { comecarVoz, pararVoz } from "./voz.js"; // o Jeff: segurar a tecla e falar
+import { comecarVoz } from "./voz.js"; // o Jeff: aperta (Caps Lock), fala, e ele fecha sozinho
 
 // os atalhos (teclas.js, grupo "Atalhos"): fazem o mesmo que o botão de cada coisa
 const ATALHOS = {
@@ -96,7 +96,7 @@ acoes.cameraIr = irParaCamera;
 acoes.cameraAjuste = () => (cameraAberta() ? fecharCamera() : abrirCamera());
 acoes.camera = (d) => nextCam(d); acoes.camNome = () => NOMES[camEstado.modo || camMode] || "";
 document.addEventListener("keyup", (e) => {
-  for (const id of acoesDaTecla(e.code)) { if (PILOTO[id]) keys[PILOTO[id]] = false; if (id === "ers") keys.ers = false; if (id === "olharTras") keys.olharTras = false; if (id === "voz") pararVoz(); }
+  for (const id of acoesDaTecla(e.code)) { if (PILOTO[id]) keys[PILOTO[id]] = false; if (id === "ers") keys.ers = false; if (id === "olharTras") keys.olharTras = false; }
   if (SETAS[e.code]) keys[PILOTO[SETAS[e.code]]] = false; // (as setas do esterço antigo, se estavam apertadas)
 });
 document.querySelectorAll(".pad button[data-marcha]").forEach((b) => b.addEventListener("pointerdown", (e) => { e.preventDefault(); trocarMarcha(+b.dataset.marcha); }));
@@ -131,7 +131,7 @@ export function pollPad() {
   x = window.Volante.analogico(x, volante.zona, volante.p); // a zona morta e o ganho do analógico (tela Controles)
   const gas = botoesDe("gas").some(i => b(i) && !(i === 0 && mfdAtivo() && mfd.aberto)), brake = um("freio");
   pad.olharTras = um("olharTras");
-  { const v = um("voz"); if (v && !pad.voz) comecarVoz(); else if (!v && pad.voz) pararVoz(); pad.voz = v; } // o Jeff pelo controle (o botão que a pessoa escolher na tela Controles)
+  if (bate("voz")) comecarVoz(); // o Jeff pelo controle (o botão que a pessoa escolher na tela Controles)
   if (gas || brake || x || pad.on) { pad.on = true; pad.steer = x; keys.gas = gas; keys.brake = brake && !gas; }
   if (bate("camera")) nextCam();
   if (bate("respawn")) respawn();

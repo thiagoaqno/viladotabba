@@ -1,7 +1,5 @@
-# Interlagos real, na escala antiga
+# Noite no pôr do sol e sem travada na primeira parada
 
-- O traçado desenhado à mão (que rodava no sentido contrário) sai; entra a linha central real de #601 (bacinger/f1-circuits br-1940, 129 vértices, anti-horária), com `scale` 2,539 em vez de 3,9: a volta fica com ~13.500 u, o comprimento da Interlagos antiga, e a pista com 124 de largura. Relevo real reduzido na mesma proporção (×0,651); sem os muros da OSM (como a antiga).
-- Cenário de #601 (`gps/interlagos.js`, `interlagos.js`): frações reais das zebras, escapes, arquibancadas e passarelas; o lago e a caixa-d'água nas posições reais (×0,651); prédios e prédio dos boxes nos tamanhos da escala antiga. `gp-info.js` e `destaques-tv.js` com as curvas reais.
-- Boxes: `lado -1` (prédio do lado de dentro), corredor ±0,0187.
-- Linha dos robôs refeita (`ferramentas/gerar-linhas-f1.js interlagos`).
-- Migração 053: limpa voltas/recordes/setores de Interlagos.
+- **Anoitecer (`anoitecer.js`):** as corridas noturnas (Bahrein, Jeddah, Singapura, Las Vegas) largam no pôr do sol: o céu, a neblina, o sol e a luz do céu começam mais alaranjados e mais escuros. Elas viram noite fechada em **2 voltas do líder** (antes: de 10% a 50% da corrida). Entre uma volta e outra, a fração anda pelo tempo, pela duração da última volta do líder (90 s na primeira), para escurecer sem degrau.
+- **Travada do box (`mecanicos.js`, `jogo.js`):** cada equipe de mecânicos (16 bonecos com esqueleto, mais a folha de 1024 do macacão pintada e enviada para a placa) nascia na primeira parada de cada equipe e travava o jogo. Agora o aquecimento da largada pinta e sobe as texturas de **todas** as equipes da sala (`renderer.initTexture`) e os materiais dos 5 pneus. Os bonecos das outras equipes são montados aos poucos durante a corrida (`adiantar`: no máximo 4 ms por quadro, um boneco por vez), enquanto ninguém está no box perto da câmera. A minha equipe continua montada inteira antes da largada, como antes.
+- Sem medição nova da travada: conferir jogando (a primeira parada dos robôs com a câmera da TV perto do box).

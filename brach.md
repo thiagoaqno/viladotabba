@@ -1,10 +1,8 @@
-# Ferrari SF-26: a asa traseira de trás e por baixo, pelo modelo 3D
+# Haas e Racing Bulls de 2026 como os modelos de 2024
 
-Revisão das quatro equipes que tinham sido feitas por print (Mercedes, Ferrari, McLaren e Red Bull), agora pelos modelos do Sketchfab, olhando principalmente por baixo da asa traseira, que é o que se vê do carro da frente:
-- Mercedes (CROWDSTRIKE no carbono), McLaren (ETIHAD no carbono) e Red Bull (ORACLE no carbono) já batiam com o modelo;
-- **Ferrari:** a asa traseira, vista de trás e por baixo, é **azul vivo** (`#2341b3`) com o **IBM prateado**; no jogo estava azul-marinho com o IBM azul. Corrigido em `ASA_BAIXO` e na vista de trás.
-
-**Saiu do #738 (RB)**, na fila #733 → #734 → #735 → #736 → #737 → #738 → este.
+A pedido do Thiago, a Haas e a Racing Bulls de 2026 ficam iguais aos modelos de 2024 do Sketchfab (não há os de 2026), nas medidas do carro de 2026:
+- **Haas** (VF-24): preta, o HAAS branco grande na caixa e no alto das caixas, o filete branco, a faixa branca no alto da tampa, a MoneyGram na tampa e no bico, o bico e a volta do cockpit brancos, os losangos vermelhos, a asa dianteira branca com vermelho, a asa traseira vermelha em cima, o HAAS embaixo da asa traseira. (Antes era a branca da Toyota.)
+- **Racing Bulls** (VCARB 01): azul-royal escurecendo embaixo, o branco do lado do cockpit com a HUGO e no meio do bico, a faixa branca com a HONDA, o VISA grande, o touro na tampa, o Red Bull na frente do cockpit, a asa dianteira branca com a HUGO, o Cash App atrás e embaixo da asa traseira.
 
 Conferido só com `node --check` (`f1-pintura.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
 

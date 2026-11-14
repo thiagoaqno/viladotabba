@@ -339,31 +339,37 @@ DESENHOS["red-bull"] = {
   },
 };
 
-// Racing Bulls: azul-marinho em cima e embaixo, a grande cunha branca com VISA, os touros e a entrada de ar amarela
+// Racing Bulls (2026), a pedido do Thiago igual ao modelo do VCARB 01 do Sketchfab (o de 2024), olhado de lado, de cima e de trás: azul-royal
+// escurecendo embaixo, o branco do lado do cockpit (com a HUGO) e no meio do bico (com a TUDOR, o VISA e o Cash App), o filete vermelho, a
+// faixa branca no alto da caixa com a HONDA vermelha, o VISA grande na caixa, o touro na tampa, o Red Bull na frente do cockpit, a asa dianteira
+// branca com a HUGO vermelha e o Cash App atrás e embaixo da asa traseira. (Medidas do carro de 2026; a de 2024 está em racing-bulls@2024.)
 DESENHOS["racing-bulls"] = {
-  numero: "#d3112f", carbono: 1, numPos: [3.5, 0.72, 9, 9],
+  numero: "#e2001a", carbono: 1, numPos: [3.5, 0.72, 9, 9],
   pintar(ctx) {
-    const BRANCO = "#eff1f6", MAR = "#14224f", AMAR = "#f9b000", VERM = "#d3112f", LARANJA = "#ff6a13";
-    base(ctx, MAR);
+    const AZUL = "#1f3fd0", MAR = "#14248a", BRANCO = "#f4f5f8", VERM = "#e2001a", PRETO = "#101114";
+    base(ctx, AZUL);
     lados(ctx, (c) => {
-      // a cunha branca, larga atrás e fina até o bico
-      c.beginPath(); c.moveTo(3.55, 0.16); c.lineTo(3.1, 0.54); c.quadraticCurveTo(2.0, 0.64, 1.1, 0.5); c.lineTo(0.5, 0.26); c.lineTo(1.05, 0.28); c.quadraticCurveTo(2.0, 0.42, 2.3, 0.2); c.closePath(); c.fillStyle = BRANCO; c.fill();
-      ret(c, 1.3, 0.45, 2.1, 0.6, BRANCO);
-      poli(c, [[2.2, 0.72], [2.2, 1.1], [2.66, 1.1], [2.66, 0.72]], AMAR);
+      c.fillStyle = degrade(c, 0, 0.45, 0, 0.12, [[0, "rgba(20,36,138,0)"], [1, "rgba(20,36,138,0.85)"]]); c.fillRect(0.3, 0.1, 3.6, 0.35); // escurece embaixo
+      c.beginPath(); c.moveTo(0.9, 0.3); c.lineTo(1.05, 0.5); c.lineTo(1.95, 0.55); c.lineTo(1.95, 0.32); c.closePath(); c.fillStyle = BRANCO; c.fill(); // o branco do lado do cockpit
+      c.beginPath(); c.moveTo(0.9, 0.3); c.lineTo(1.95, 0.32); c.lineWidth = 0.012; c.strokeStyle = VERM; c.stroke(); // o filete vermelho embaixo dele
+      ret(c, 2.05, 0.5, 3.6, 0.53, BRANCO); ret(c, 2.05, 0.495, 3.6, 0.502, VERM); // a faixa branca no alto da caixa, com o filete
+      touros(c, 2.55, 0.62, 3.3, 0.88);
       baixo(c, MAR);
-      poli(c, [[0.04, 0.12], [0.5, 0.12], [0.42, 0.28], [0.04, 0.2]], LARANJA); ret(c, 0.05, 0, 0.6, 0.16, BRANCO);
-      ret(c, 3.86, 0.3, 4.45, 1.1, "#0e1021");
-      touros(c, 2.68, 0.64, 3.46, 0.96);
-      marca(c, "visa", 2.86, 0.31, 0.14, { tinta: MAR }); marca(c, "redbull", 3.05, 0.61, 0.055, { tinta: VERM }); marca(c, "cashapp", 2.42, 0.57, 0.045, { tinta: MAR }); marca(c, "hugo", 1.75, 0.53, 0.045, { tinta: VERM });
-      marca(c, "ford", 3.5, 0.34, 0.075); marca(c, "cashapp", 0.33, 0.08, 0.042, { tinta: MAR }); marca(c, "visa", 4.15, 0.72, 0.055, { tinta: BRANCO });
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO); // as placas da asa dianteira, pretas com o Cash App
+      ret(c, 3.82, 0.3, 4.45, 1.1, MAR);
+      marca(c, "hugo", 1.4, 0.43, 0.06, { tinta: VERM }); marca(c, "visa", 2.5, 0.3, 0.12, { tinta: BRANCO }); marca(c, "cashapp", 2.4, 0.64, 0.035, { tinta: BRANCO });
+      marca(c, "honda", 3.1, 0.515, 0.026, { tinta: VERM }); marca(c, "orlen", 1.75, 0.13, 0.045); marca(c, "cashapp", 0.3, 0.1, 0.035, { tinta: BRANCO });
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.3, -0.3, 2.72, 0.3, AMAR); ret(c, 2.72, -0.3, 4, 0.3, MAR); ret(c, 1.3, -0.25, 2.1, 0.25, BRANCO);
-      asasT(c, MAR, "#0e1021", MAR); poli(c, [[0, -0.09], [0.35, -0.12], [0.35, 0.12], [0, 0.09]], LARANJA);
-      const f = { giro: DE_FRENTE, tinta: "#fff" }; marca(c, "visa", 0.86, 0, 0.09, f); marca(c, "hugo", 0.62, 0, 0.04, f); marca(c, "visa", 4.15, 0, 0.1, f);
+      asasT(c, BRANCO, PRETO, AZUL);
+      poli(c, [[0.45, -0.11], [1.25, -0.13], [1.25, 0.13], [0.45, 0.11]], BRANCO); // o meio do bico branco
+      for (const l of [-1, 1]) { ret(c, 1.9, l * 0.3, 3.2, l * 0.33, BRANCO); marca(c, "hugo", 0.3, l * 0.45, 0.06, { giro: DE_FRENTE, tinta: VERM }); marca(c, "cashapp", 1.4, l * 0.24, 0.025, { giro: DE_FRENTE }); }
+      marca(c, "tudor", 0.55, 0, 0.022, { giro: DE_FRENTE, tinta: AZUL }); marca(c, "visa", 0.68, 0, 0.04, { giro: DE_FRENTE, tinta: AZUL }); marca(c, "cashapp", 0.8, 0, 0.025, { giro: DE_FRENTE, tinta: AZUL });
+      marca(c, "redbull", 1.22, 0, 0.04, { giro: DE_FRENTE, tinta: VERM }); marca(c, "visa", 0.2, 0, 0.03, { giro: DE_FRENTE });
+      marca(c, "cashapp", 4.12, 0, 0.07, { giro: -DE_FRENTE, tinta: BRANCO });
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); ret(c, -0.15, 0.1, 0.15, 0.45, LARANJA); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); ret(c, -0.5, 0.45, 0.5, 0.75, BRANCO); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.15, 0.2, 0.15, 0.45, BRANCO); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); ret(c, -0.8, 0.8, 0.8, 1.1, PRETO); marca(c, "cashapp", 0, 0.9, 0.08, { tinta: BRANCO }); });
   },
 };
 
@@ -513,28 +519,33 @@ DESENHOS.alpine = {
   },
 };
 
-// Haas VF-26: branco, o GR preto e vermelho na tampa, filete vermelho, barriga preta com HAAS na caixa e bico com vermelho
+// Haas (2026), a pedido do Thiago igual ao modelo do VF-24 do Sketchfab (o de 2024: ele não achou o de 2026), olhado de lado, de cima e de trás:
+// preto, o HAAS branco grande na caixa lateral e no alto das caixas, o filete branco no alto da caixa, a faixa branca no alto da tampa, o
+// redondo vermelho da MoneyGram na tampa e no bico, o bico e a volta do cockpit brancos, os dois losangos vermelhos atrás da entrada de ar, a asa
+// dianteira branca com o vermelho e a asa traseira vermelha em cima. (Medidas do carro de 2026; as de 2024 e 2025 estão em pinturaHaas24.)
 DESENHOS.haas = {
-  numero: "#111111", carbono: 2, numPos: [3.55, 0.6, 9, 9],
+  numero: "#ffffff", carbono: 1, numPos: [3.38, 0.5, 9, 9],
   pintar(ctx) {
-    const BRANCO = "#f0f0ee", VERM = "#e10a2b", PRETO = "#141416";
-    base(ctx, BRANCO);
+    const PRETO = "#101113", BRANCO = "#eef0f2", VERM = "#e10600";
+    base(ctx, PRETO);
     lados(ctx, (c) => {
-      c.fillStyle = VERM; c.beginPath(); c.moveTo(2.15, 0.54); c.lineTo(3.5, 0.54); c.lineTo(3.5, 0.5); c.lineTo(2.15, 0.5); c.closePath(); c.fill();
-      c.beginPath(); c.moveTo(1.2, 0.09); c.lineTo(1.2, 0.2); c.lineTo(2.25, 0.2); c.lineTo(2.3, 0.14); c.lineTo(3.86, 0.14); c.lineTo(3.86, 0); c.lineTo(1.2, 0); c.closePath(); c.fillStyle = PRETO; c.fill();
+      c.beginPath(); c.moveTo(1.5, 0.5); c.quadraticCurveTo(2.6, 0.53, 3.6, 0.52); c.lineWidth = 0.014; c.strokeStyle = BRANCO; c.stroke(); // o filete no alto da caixa
+      ret(c, 2.3, 0.62, 3.4, 0.68, BRANCO); // a faixa no alto da tampa
+      ret(c, 1.35, 0.55, 2.1, 0.6, BRANCO); ret(c, 2.15, 0.54, 2.3, 0.57, VERM); // a volta do cockpit e o detalhe vermelho
       baixo(c, PRETO);
-      poli(c, [[0.04, 0.1], [1.05, 0.1], [0.95, 0.28], [0.04, 0.2]], VERM);
-      poli(c, [[2.2, 0.72], [2.2, 1.1], [2.56, 1.1], [2.56, 0.72]], VERM);
-      ret(c, 3.86, 0.3, 4.45, 0.46, PRETO); ret(c, 3.86, 0.86, 4.45, 1.1, VERM);
-      marca(c, "gr", 3.02, 0.65, 0.17); marca(c, "haas", 2.82, 0.33, 0.14); marca(c, "zoomex", 2.05, 0.16, 0.036); marca(c, "toyota", 1.6, 0.46, 0.036, { tinta: PRETO }); marca(c, "toyota", 4.15, 0.64, 0.045, { tinta: PRETO });
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], BRANCO); ret(c, 0, 0.1, 0.62, 0.125, VERM); // a placa da asa dianteira
+      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); ret(c, 3.82, 0.9, 4.45, 1.1, VERM); // a placa da asa traseira, vermelha em cima
+      marca(c, "haas", 2.44, 0.32, 0.13, { tinta: BRANCO }); marca(c, "moneygram", 2.75, 0.72, 0.05, { tinta: BRANCO });
+      marca(c, "palmangels", 1.46, 0.12, 0.03, { tinta: BRANCO }); marca(c, "haas", 4.15, 0.74, 0.06, { tinta: BRANCO });
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.3, -0.3, 2.62, 0.3, VERM);
-      asasT(c, VERM, PRETO, BRANCO);
-      const f = { giro: DE_FRENTE, tinta: PRETO }; marca(c, "haas", 0.72, 0, 0.055, f); marca(c, "toyota", 0.5, 0, 0.03, f); marca(c, "gr", 3.0, 0, 0.13, { giro: DE_FRENTE }); marca(c, "toyota", 4.15, 0, 0.07, { giro: DE_FRENTE, tinta: "#fff" });
+      asasT(c, BRANCO, VERM, BRANCO);
+      poli(c, [[0, -0.09], [1.3, -0.13], [1.3, 0.13], [0, 0.09]], BRANCO); ret(c, 1.3, -0.3, 2.1, 0.3, BRANCO); // o bico e a volta do cockpit
+      for (const l of [-1, 1]) { poli(c, [[2.5, l * 0.03], [2.6, l * 0.08], [2.7, l * 0.03], [2.6, l * 0.005]], VERM); marca(c, "haas", 2.75, l * 0.47, 0.1, { giro: l > 0 ? Math.PI : 0, tinta: BRANCO }); ret(c, 0.08, l * 0.62, 0.5, l * 0.66, VERM); }
+      marca(c, "moneygram", 0.4, 0, 0.06, { giro: DE_FRENTE }); marca(c, "haas", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: BRANCO });
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); ret(c, -0.8, 0, 0.8, 0.12, VERM); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.45, 0.45, 0.45, 0.75, VERM); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.15, 0.2, 0.15, 0.45, BRANCO); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.8, 0.9, 0.8, 1.1, VERM); });
   },
 };
 
@@ -1133,6 +1144,8 @@ const ASA_BAIXO = {
   "haas@2024": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "haas@2025": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "racing-bulls@2024": { cor: "#101114", marcas: (c) => marcaU(c, "cashapp", 0, 0.32, 0.1) },
+  haas: { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
+  "racing-bulls": { cor: "#101114", marcas: (c) => marcaU(c, "cashapp", 0, 0.32, 0.1) },
 };
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)

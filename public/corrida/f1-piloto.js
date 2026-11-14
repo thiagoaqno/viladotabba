@@ -73,13 +73,32 @@ function estufar(g, base, meio) {
   }
   P.needsUpdate = true; g.computeBoundingSphere(); g.computeBoundingBox(); return g;
 }
+// a viseira em ARCO (2026-11-14, o Thiago: "a viseira está reta, deve ser um arco"): antes era uma faixa entre dois paralelos, com as bordas
+// retas; agora cada ponto desce conforme se afasta do meio da frente (u = 0 no meio, ±1 nas pontas): a faixa sobe no meio e desce para os
+// lados até as dobradiças, e afina nas pontas, como a janela de um capacete de verdade. Mexe na esfera unitária, antes de `casco`, e vale para
+// a viseira, a borracha em volta, o lábio de cima e as dobradiças (todos usam a mesma conta).
+const ARCO = { desce: 0.26, afina: 0.38 };
+function noArco(V, th, phi) {
+  let d = phi - 1.5 * Math.PI; d = Math.atan2(Math.sin(d), Math.cos(d));
+  const u = Math.max(-1.2, Math.min(1.2, d / (V.phi / 2))), u2 = u * u, centro = V.theta0 + V.theta / 2;
+  return centro + (th - centro) * (1 - ARCO.afina * u2) + ARCO.desce * u2;
+}
+function arquear(g, V) {
+  const P = g.attributes.position;
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i), z = P.getZ(i), r = Math.hypot(x, y, z) || 1, th = Math.acos(Math.max(-1, Math.min(1, y / r))), phi = Math.atan2(z, -x);
+    const t2 = noArco(V, th, phi);
+    P.setXYZ(i, -Math.cos(phi) * Math.sin(t2) * r, Math.cos(t2) * r, Math.sin(phi) * Math.sin(t2) * r);
+  }
+  P.needsUpdate = true; return g;
+}
 // a moldura da viseira: a borda de borracha (um pedaço da casca um pouco maior que o da viseira, rente ao casco, que aparece em volta dela) e as
 // duas dobradiças redondas nas pontas, onde a viseira gira
 function molduraDaViseira(V) {
-  const m = 0.035, borda = estufar(casco(new THREE.SphereGeometry(1, 56, 8, V.phi0 - m * 1.5, V.phi + m * 3, V.theta0 - m, V.theta + m * 2), 1), 0.0012, 0.0015);
+  const m = 0.035, borda = estufar(casco(arquear(new THREE.SphereGeometry(1, 56, 8, V.phi0 - m * 1.5, V.phi + m * 3, V.theta0 - m, V.theta + m * 2), V), 1), 0.0012, 0.0015);
   const partes = [borda];
   for (const phi of [V.phi0, V.phi0 + V.phi]) {
-    const th = V.theta0 + V.theta * 0.45, dir = new THREE.Vector3(-Math.cos(phi) * Math.sin(th), Math.cos(th), Math.sin(phi) * Math.sin(th));
+    const th = noArco(V, V.theta0 + V.theta * 0.45, phi), dir = new THREE.Vector3(-Math.cos(phi) * Math.sin(th), Math.cos(th), Math.sin(phi) * Math.sin(th));
     const ponto = casco(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute([dir.x, dir.y, dir.z], 3)).setAttribute("normal", new THREE.Float32BufferAttribute([0, 1, 0], 3)), 1);
     const p = new THREE.Vector3().fromBufferAttribute(ponto.attributes.position, 0), nrm = dir.clone().normalize();
     const d = new THREE.CylinderGeometry(0.009, 0.011, 0.005, 20); // (a dobradiça: um disco baixo, deitado na lateral)
@@ -100,7 +119,7 @@ function detalhesDoCasco(V) {
     faixaDaCasca(0, Math.PI * 2, TH_CASCO, Math.PI - TH_CASCO, 0.0, 0.0, 48), // a borracha do pescoço (fecha a casca por baixo)
     faixaDaCasca(0, Math.PI * 2, TH_CASCO - 0.05, 0.07, 0.004, 0.0, 48), // o friso de borracha na borda de baixo
     faixaDaCasca(T - 0.62, 1.24, 1.08, 0.2, 0.004, 0.026, 28), // a aba aerodinâmica atrás, levantada no meio
-    faixaDaCasca(V.phi0 - 0.02, V.phi + 0.04, V.theta0 - 0.05, 0.04, 0.006, 0.004, 40), // o lábio em cima da viseira
+    estufar(casco(arquear(new THREE.SphereGeometry(1, 40, 3, V.phi0 - 0.02, V.phi + 0.04, V.theta0 - 0.05, 0.04), V), 1), 0.006, 0.004).toNonIndexed(), // o lábio em cima da viseira (no arco dela)
     faixaDaCasca(F - 0.16, 0.13, 1.93, 0.035, 0.002, 0.0015, 6), faixaDaCasca(F + 0.03, 0.13, 1.93, 0.035, 0.002, 0.0015, 6), // as duas fendas do queixo (rasas: na prévia, mais fundas viravam um bloco preto)
   ];
 }
@@ -118,7 +137,7 @@ function geometrias() {
   // frente (~150°) seguindo a forma da cabeça, mais alta que antes (da altura dos olhos até perto do queixo) e SALTADA: fica 2 mm para fora do
   // casco e estufa mais no meio (até +3,5 mm), como a lente de verdade. Em volta, a `moldura` (a borracha escura da borda e as duas dobradiças).
   const V = { phi0: 1.5 * Math.PI - 1.25, phi: 2.5, theta0: 1.24, theta: 0.36 }; // (2026-11-14: um pouco mais estreita na altura, como a da referência)
-  const viseira = estufar(casco(new THREE.SphereGeometry(1, 56, 8, V.phi0, V.phi, V.theta0, V.theta), 1), 0.002, 0.0035);
+  const viseira = estufar(casco(arquear(new THREE.SphereGeometry(1, 56, 8, V.phi0, V.phi, V.theta0, V.theta), V), 1), 0.002, 0.0035);
   const moldura = molduraDaViseira(V);
   // o braço (manga) afina do ombro ao cotovelo e o antebraço do cotovelo ao pulso; o ombro e o cotovelo são bolinhas (a junta arredondada). As bolas levam a escala inversa do comprimento do osso, que estica o cilindro a cada quadro.
   const junta = (r, y, L) => { const e = new THREE.SphereGeometry(r, 12, 8); e.scale(1, 1 / L, 1); e.translate(0, y, 0); return e; };

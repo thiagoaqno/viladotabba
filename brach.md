@@ -1,4 +1,4 @@
-# Capacete: o formato de F1 de verdade, e o editor que não atualiza a página de todos a cada clique
+# Capacete: o formato de F1 de verdade com a viseira em arco, e o editor que não atualiza a página de todos a cada clique
 
 Pedido do Thiago depois do #754: mudar o formato do capacete para ficar parecido com a referência, mostrar o print no fim, e consertar a página que "atualiza para todos" a cada clique.
 
@@ -19,6 +19,7 @@ Pedido do Thiago depois do #754: mudar o formato do capacete para ficar parecido
   - a nuca que desce e vai para trás, com o degrau da aba;
   - a borda de baixo abrindo para fora.
 - **As medidas:** o casco ficou 7% mais alto e 5% mais largo, e o corte de baixo desceu, mostrando a barra do queixo. A viseira ficou um pouco mais estreita na altura, e as dobradiças, menores. A normal passou a ser a do casco deformado (a da elipse sombreava errado o queixo e a nuca).
+- **A viseira em arco** (o Thiago: "a viseira está reta, deve ser um arco"): antes era uma faixa entre dois paralelos, com as bordas retas. Agora cada ponto desce conforme se afasta do meio da frente (`arquear` e `noArco`, na esfera antes de `casco`). A faixa sobe no meio, desce uns 15° nas pontas até as dobradiças e afina 38% nelas. A borracha em volta, o lábio de cima e as dobradiças seguem a mesma conta.
 - **As entradas de ar da testa saíram:** viravam dois "chifres". A grade do queixo virou duas fendas rasas.
 - **A prévia:** a câmera ficou mais perto e de três-quartos, e as miniaturas ganharam uma câmera um pouco mais longe, para o capacete aparecer inteiro.
 - **A faixa do nome e do patrocínio** subiu, para não ficar embaixo do lábio da viseira.

@@ -96,6 +96,9 @@ const VISTAS = {
   T: { r: [0, 512, 1024, 384], m: [K, 0, 0, -K, 0, 704] },               // (s, x)
   F: { r: [0, 896, 512, 256], m: [-K, 0, 0, -K, 256, 896 + 1.1 * K] },   // (x, y)
   R: { r: [512, 896, 512, 256], m: [K, 0, 0, -K, 768, 896 + 1.1 * K] },  // (x, y)
+  // embaixo da asa traseira, como a vê quem vem atrás: (x, t) com x para a direita e t = s − 3,7 para baixo (a frente do carro fica para cima).
+  // Fica num canto da vista A sem carro (s 0,05..1,25 com y acima de 0,62: medido, nada do carro ali). A escala não é igual nos dois eixos: desenhe com marcaU.
+  U: { r: [733, 4, 279, 108], m: [253, 0, 0, 153, 872.5, 4.65] },
 };
 function vista(ctx, nome, fn) {
   const v = VISTAS[nome]; ctx.save(); ctx.beginPath(); ctx.rect(...v.r.map((n) => n * ESC)); ctx.clip(); ctx.setTransform(...v.m.map((n) => n * ESC)); fn(ctx); ctx.restore();
@@ -1008,6 +1011,16 @@ export function aplicarCockpit(sh, textura) {
   }`);
 }
 
+// ---------------------------------------------------------------- embaixo da asa traseira (a vista U): o que se vê do carro da frente
+// Pelos prints do Thiago (2026-11-13). A marca vai em metros no carro (x, t = s − 3,7: a asa vai de t 0 a 0,65 e de x −0,47 a 0,47).
+function marcaU(c, id, x, t, h, op) { c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
+const ASA_BAIXO = {
+  mercedes: { cor: "#0c0d0f", marcas: (c) => marcaU(c, "crowdstrike", 0, 0.32, 0.1) },
+  ferrari: { cor: "#182035", marcas: (c) => marcaU(c, "ibm", 0, 0.32, 0.16, { tinta: "#3a6fd0", fundo: "#182035" }) },
+  "red-bull": { cor: "#25272b", marcas: (c) => marcaU(c, "oracle", 0, 0.32, 0.11) },
+  mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
+};
+
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)
 const FOLHAS = new Map();
 export function folhaDaEquipe(equipe, alta = false) {
@@ -1018,6 +1031,7 @@ export function folhaDaEquipe(equipe, alta = false) {
   ESC = alta ? 2 : 1;
   const cv = document.createElement("canvas"); cv.width = FW * ESC; cv.height = FH * ESC;
   const ctx = cv.getContext("2d"); DESENHOS[equipe].pintar(ctx);
+  vista(ctx, "U", (c) => { const d = ASA_BAIXO[equipe]; ret(c, -0.6, -0.05, 0.6, 0.75, d?.cor || "#101113"); d?.marcas?.(c); });
   lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO)); // a entrada de ar das caixas laterais é escura em qualquer pintura
   ESC = 1;
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = alta ? 8 : 4; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
@@ -1043,8 +1057,8 @@ export function texturaDosDigitos() {
 
 // ---------------------------------------------------------------- o shader da pintura de equipe (corpo)
 // (com NOVO, o carro de 2026: o atributo mcar diz quanto de cada ponto é pintura, 0 = carbono; ver f1-2026.js)
-export const LIV_VERT_DECL = "attribute vec3 pcar;\nattribute vec3 ncar;\nvarying vec3 vPc;\nvarying vec3 vNc;\n#ifdef NOVO\nattribute float mcar;\nvarying float vMc;\n#endif\n";
-export const LIV_VERT_MAIN = "\nvPc = pcar; vNc = ncar;\n#ifdef NOVO\nvMc = mcar;\n#endif";
+export const LIV_VERT_DECL = "attribute vec3 pcar;\nattribute vec3 ncar;\nvarying vec3 vPc;\nvarying vec3 vNc;\n#ifdef NOVO\nattribute float mcar;\nvarying float vMc;\nattribute float fcar;\nvarying float vFc;\n#endif\n";
+export const LIV_VERT_MAIN = "\nvPc = pcar; vNc = ncar;\n#ifdef NOVO\nvMc = mcar; vFc = fcar;\n#endif";
 // onde ficam os números (s, y, altura em metros) nos lados e (s, x, altura) em cima: ver NUM_* abaixo
 export const LIV_FRAG_DECL = `
 uniform sampler2D liv;
@@ -1057,6 +1071,7 @@ varying vec3 vPc;
 varying vec3 vNc;
 #ifdef NOVO
 varying float vMc;
+varying float vFc;
 #endif
 const float KK = 232.72727;
 vec2 lv(vec2 px, vec4 r) { px = clamp(px, r.xy + 1.5, r.zw - 1.5); return vec2(px.x / 1024.0, 1.0 - px.y / 1152.0); }
@@ -1074,11 +1089,17 @@ export const LIV_FRAG_MAIN = `
 {
   vec3 mk = diffuseColor.rgb;
   vec3 p = vPc, n = normalize(vNc);
-  vec3 a = pow(abs(n), vec3(6.0)); a /= (a.x + a.y + a.z);
+  vec3 a = pow(abs(n), vec3(10.0)); a /= (a.x + a.y + a.z); // (a troca de vista nas curvas é curta: com 6, o lado e o de cima se misturavam e os logos saíam pela metade)
   bool dir = n.x > 0.0;
   vec2 pS = dir ? vec2((4.4 - p.z) * KK, (1.1 - p.y) * KK) : vec2(p.z * KK, 256.0 + (1.1 - p.y) * KK);
-  vec3 cS = texture2D(liv, lv(pS, dir ? vec4(0.0, 0.0, 1024.0, 256.0) : vec4(0.0, 256.0, 1024.0, 512.0))).rgb;
-  vec3 cT = n.y > 0.0 ? texture2D(liv, lv(vec2(p.z * KK, 704.0 - p.x * KK), vec4(0.0, 512.0, 1024.0, 896.0))).rgb : vec3(0.012);
+  vec2 uS = lv(pS, dir ? vec4(0.0, 0.0, 1024.0, 256.0) : vec4(0.0, 256.0, 1024.0, 512.0));
+  vec3 cS = texture2D(liv, uS).rgb;
+#ifdef NOVO
+  cS = mix(texture2D(liv, uS, 4.5).rgb, cS, vFc); // as superfícies escondidas atrás de outra (f1-2026.js camadas): só a cor, sem repetir o logo
+#endif
+  vec3 cT = vec3(0.012);
+  if (n.y > 0.0) cT = texture2D(liv, lv(vec2(p.z * KK, 704.0 - p.x * KK), vec4(0.0, 512.0, 1024.0, 896.0))).rgb;
+  else if (p.z > 3.7 && p.y > 0.48) cT = texture2D(liv, lv(vec2(872.5 + p.x * 253.0, 4.65 + (p.z - 3.7) * 153.0), vec4(733.0, 4.0, 1012.0, 112.0))).rgb; // embaixo da asa traseira (a vista U)
   bool fr = n.z < 0.0;
   vec2 pZ = vec2(fr ? 256.0 - p.x * KK : 768.0 + p.x * KK, 896.0 + (1.1 - p.y) * KK);
   vec3 cZ = texture2D(liv, lv(pZ, fr ? vec4(0.0, 896.0, 512.0, 1152.0) : vec4(512.0, 896.0, 1024.0, 1152.0))).rgb;

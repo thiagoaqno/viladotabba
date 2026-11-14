@@ -121,6 +121,23 @@ export function faceDoEspelho(f) {
   return { centro: centro.toArray(), n: dom.toArray(), r: dir.toArray(), u: cima.toArray(), w: r1 - r0, h: u1 - u0 };
 }
 
+// a camada de cada ponto para a vista de lado da pintura (f1-pintura.js): a folha de lado é projetada de lado, então tudo o que está na mesma
+// altura e na mesma distância do bico pega o mesmo desenho, mesmo uma superfície escondida atrás de outra (a caixa lateral cavada embaixo tem três
+// camadas: o mesmo logo saía três vezes). `fcar` = 1 na superfície de fora (até 3 cm dela) e cai a 0 nas de dentro (a 7 cm), que ficam só com a cor.
+// As faces que olham para dentro do carro também ficam com 0. Células de 3 cm em (s, y), de cada lado; a de fora é a mais de fora a até 6 cm no comprimento e 3 cm na altura.
+export function camadas(P, NN, N) {
+  const F = new Float32Array(N).fill(1), C = 0.03, RS = 2, RY = 1, ext = new Map(); // (a de fora é procurada a até 6 cm no comprimento e 3 cm na altura)
+  const cel = (i) => [NN[i * 3] > 0 ? 1 : -1, Math.round(P[i * 3 + 2] / C), Math.round(P[i * 3 + 1] / C)];
+  for (let i = 0; i < N; i++) { if (Math.abs(NN[i * 3]) <= 0.25) continue; const [l, a, b] = cel(i), k = l + "," + a + "," + b, e = P[i * 3] * l; if (!(ext.get(k) >= e)) ext.set(k, e); }
+  for (let i = 0; i < N; i++) {
+    if (Math.abs(NN[i * 3]) <= 0.25) continue;
+    const [l, a, b] = cel(i), e = P[i * 3] * l; let mx = e;
+    for (let da = -RS; da <= RS; da++) for (let db = -RY; db <= RY; db++) { const v = ext.get(l + "," + (a + da) + "," + (b + db)); if (v > mx) mx = v; }
+    F[i] = e < -0.02 ? 0 : Math.min(1, Math.max(0, 1 - (mx - e - 0.03) / 0.04));
+  }
+  return F;
+}
+
 // ---------- o carro: tudo o que f1.js precisa, pronto e no quadro do carro ----------
 // `raiz`: a cena do arquivo; `tam`: o comprimento do carro (m); `leve`: o modelo dos outros carros (sem o cockpit)
 export function construir2026(raiz, tam, leve) {
@@ -167,13 +184,14 @@ export function construir2026(raiz, tam, leve) {
       const y = p.getY(i), ny = n.getY(i), sv = p.getZ(i) - zNariz;
       P[i * 3] = p.getX(i); P[i * 3 + 1] = y; P[i * 3 + 2] = sv; NN[i * 3] = n.getX(i); NN[i * 3 + 1] = ny; NN[i * 3 + 2] = n.getZ(i);
       let m = Math.min(1, Math.max(0, (ny + 0.45) / 0.3)); // de baixo para cima: a barriga é de carbono
+      if (sv > 3.7 && y > 0.48 && ny < 0) m = 1;            // menos embaixo da asa traseira: é o que se vê do carro da frente (a folha tem a vista dela)
       if (y < 0.1 && sv > 1.15 && sv < 4.05) m = 0;         // o assoalho, entre os eixos
       if (noVolante(p.getX(i), y, p.getZ(i))) m = 0;
       if (tinta && !(sv > 2.15 && sv < 3.85 && y > 0.42)) m *= tinta.getX(i); // tampa externa pode receber a pintura da equipe
       M[i] = m;
     }
     if (tinta) g.deleteAttribute("color");
-    g.setAttribute("pcar", new THREE.BufferAttribute(P, 3)); g.setAttribute("ncar", new THREE.BufferAttribute(NN, 3)); g.setAttribute("mcar", new THREE.BufferAttribute(M, 1)); return g;
+    g.setAttribute("pcar", new THREE.BufferAttribute(P, 3)); g.setAttribute("ncar", new THREE.BufferAttribute(NN, 3)); g.setAttribute("mcar", new THREE.BufferAttribute(M, 1)); g.setAttribute("fcar", new THREE.BufferAttribute(camadas(P, NN, N), 1)); return g;
   };
   D.corpo = comPintura(juntar(restoFontes, { cor: true }));
   if (flapFontes.length) {

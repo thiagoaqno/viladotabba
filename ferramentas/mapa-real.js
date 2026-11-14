@@ -95,7 +95,11 @@ async function umaPista(id, o) {
       else verde.push(achatar(anel));
     }
   }
-  const saida = { v: 1, pista: id, fonte: "© colaboradores do OpenStreetMap (ODbL), pela Overpass API; encaixe na linha de bacinger/f1-circuits (MIT)", uPorMetro: Math.round(enc.s * 1000) / 1000, semAltura, predios, ruas, agua, verde };
+  // `geo`: a conta do traçado do jogo de volta para o mundo (gp-satelite.js põe a imagem de satélite no lugar com ela). Do jogo (x, y):
+  // u = (x - mb0) / s, v = (y - mb1) / s; mx = c·u + d·v + ma0; my = −d·u + c·v + ma1 (com espelho, my troca de sinal); lon = mx / (R cos lat0), lat = my / R
+  const r6 = (v) => Math.round(v * 1e6) / 1e6, lat0 = linha[0][1];
+  const geo = { lat0: r6(lat0), ma: enc.ma.map((v) => Math.round(v * 100) / 100), mb: enc.mb.map((v) => Math.round(v * 100) / 100), s: r6(enc.s), c: r6(enc.c), d: r6(enc.d), espelho: !!enc.espelho };
+  const saida = { v: 2, pista: id, fonte: "© colaboradores do OpenStreetMap (ODbL), pela Overpass API; encaixe na linha de bacinger/f1-circuits (MIT)", uPorMetro: Math.round(enc.s * 1000) / 1000, geo, semAltura, predios, ruas, agua, verde };
   const arq = path.join(__dirname, "..", "public", "corrida", "mapas", `${id}.json`), texto = JSON.stringify(saida);
   fs.mkdirSync(path.dirname(arq), { recursive: true }); fs.writeFileSync(arq, texto);
   const nr = Object.values(ruas).reduce((s, l) => s + l.length, 0);

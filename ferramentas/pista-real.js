@@ -98,7 +98,7 @@ function encaixar(G, pts) {
     const aplicar = ([x0, y0]) => { const x = x0 - ma[0], y = (espelho ? -y0 : y0) - ma[1]; return [mb[0] + s * (c * x - d * y), mb[1] + s * (d * x + c * y)]; };
     let erro = 0;
     for (let i = 0; i < 200; i++) { const g = aplicar(A[i][0] === undefined ? [0, 0] : [A[i][0], espelho ? -A[i][1] : A[i][1]]); erro += Math.hypot(g[0] - B[i][0], g[1] - B[i][1]); }
-    return { erro: erro / 200, s, aplicar, desl };
+    return { erro: erro / 200, s, aplicar, desl, ma, mb, c, d, espelho }; // (os parâmetros: o mapa real guarda para fazer a conta ao contrário no navegador)
   };
   let melhor = null;
   for (const espelho of [false, true]) for (let k = 0; k < N; k += 2) { const e = tentar(k / N, espelho); if (!melhor || e.erro < melhor.erro) melhor = e; }

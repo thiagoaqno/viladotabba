@@ -1,17 +1,11 @@
-# RB de 2024 pelo modelo 3D do VCARB 01
+# Ferrari SF-26: a asa traseira de trás e por baixo, pelo modelo 3D
 
-O modelo que o Thiago mandou para a Racing Bulls é o VCARB 01 de 2024 ("vai essa"). Ele é exatamente a pintura da temporada 2024 do jogo (`racing-bulls@2024`, no carro de 2022 a 2025), que estava com a tampa e a asa traseira brancas, o que o carro não tem. A Racing Bulls de 2026 ficou como está.
+Revisão das quatro equipes que tinham sido feitas por print (Mercedes, Ferrari, McLaren e Red Bull), agora pelos modelos do Sketchfab, olhando principalmente por baixo da asa traseira, que é o que se vê do carro da frente:
+- Mercedes (CROWDSTRIKE no carbono), McLaren (ETIHAD no carbono) e Red Bull (ORACLE no carbono) já batiam com o modelo;
+- **Ferrari:** a asa traseira, vista de trás e por baixo, é **azul vivo** (`#2341b3`) com o **IBM prateado**; no jogo estava azul-marinho com o IBM azul. Corrigido em `ASA_BAIXO` e na vista de trás.
 
-Pelo modelo, olhado de lado, de cima e de trás:
-- azul-royal escurecendo embaixo; o branco do lado do cockpit com a HUGO vermelha e o filete vermelho; a faixa branca no alto da caixa com a HONDA vermelha;
-- o VISA grande na caixa, o Cash App na tampa, o touro na tampa, o ORLEN embaixo, o Cash App na placa da asa dianteira;
-- de cima: a asa dianteira branca com a HUGO, o meio do bico branco com o 22 vermelho, a TUDOR, o VISA e o Cash App, o Red Bull na frente do cockpit, as faixas brancas no alto das caixas;
-- atrás e embaixo da asa traseira (`ASA_BAIXO`): preto com o Cash App;
-- o número do piloto em vermelho, como o 22 do modelo.
-- Marca nova em `f1-marcas.js`: `tudor`.
+**Saiu do #738 (RB)**, na fila #733 → #734 → #735 → #736 → #737 → #738 → este.
 
-**Saiu do #737 (Haas)**, na fila #733 → #734 → #735 → #736 → #737 → este.
-
-Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+Conferido só com `node --check` (`f1-pintura.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

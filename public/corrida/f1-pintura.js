@@ -228,7 +228,7 @@ DESENHOS.ferrari = {
       for (const l of [-1, 1]) marca(c, "hp", 4.18, l * 0.45, 0.1, { giro: DE_FRENTE });
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ESCURO); ret(c, -0.8, 0, 0.8, 0.24, AZUL); ret(c, -0.16, 0.06, 0.16, 0.5, VERM); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.3, 0.36, 0.3, 0.72, VERM); marca(c, "ibm", 0, 0.88, 0.1, { tinta: "#3a6fd0", fundo: AZUL }); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.3, 0.36, 0.3, 0.72, VERM); ret(c, -0.8, 0.8, 0.8, 1.0, "#2341b3"); marca(c, "ibm", 0, 0.9, 0.1, { tinta: "#d8dce6", fundo: "#2341b3" }); }); // (atrás, a asa é azul vivo com o IBM prateado, como no modelo)
   },
 };
 
@@ -1123,7 +1123,7 @@ export function aplicarCockpit(sh, textura) {
 function marcaU(c, id, x, t, h, op) { c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
 const ASA_BAIXO = {
   mercedes: { cor: "#0c0d0f", marcas: (c) => marcaU(c, "crowdstrike", 0, 0.32, 0.1) },
-  ferrari: { cor: "#182035", marcas: (c) => marcaU(c, "ibm", 0, 0.32, 0.16, { tinta: "#3a6fd0", fundo: "#182035" }) },
+  ferrari: { cor: "#2341b3", marcas: (c) => marcaU(c, "ibm", 0, 0.32, 0.16, { tinta: "#d8dce6", fundo: "#2341b3" }) }, // (o modelo do Sketchfab: azul vivo com o IBM prateado)
   "red-bull": { cor: "#25272b", marcas: (c) => marcaU(c, "oracle", 0, 0.32, 0.11) },
   mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
   audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },

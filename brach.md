@@ -1,8 +1,10 @@
-# Pré-carga: os arquivos pesados de todas as pistas baixados no menu
+# Viseira curva e saltada, com borda e dobradiças (pela imagem do Thiago)
 
-O Thiago viu travadas na primeira carga de cada pista e sugeriu deixar tudo em cache já na abertura.
+Antes, a viseira era uma faixa da própria casca, só 1,2% maior: parecia pintada e reta. Agora (`f1-piloto.js`, `geometrias`):
 
-- **`/api/corrida/pre-carga` (`server.js`):** a lista dos arquivos pesados de todas as pistas (céus, fotos do GP, fotos da tela de carregamento e da capa, modelos dos carros, do piloto, do pódio e dos enfeites). São 64 arquivos e 15,8 MB, medidos na pasta. A lista é montada uma vez por servidor.
-- **`pre-carga.js` (novo):** com o menu na tela, depois de 5 s, o navegador baixa esses arquivos um por vez, só quando está folgado (`requestIdleCallback`) e com a aba visível. Eles ficam no cache do service worker (`sw.js`, que já serve arquivo pesado do cache primeiro). Pula o que já está no cache, refaz a lista no máximo uma vez por dia e para quando a corrida começa (`menuNaTela`). Não roda com "economia de dados", em rede 2G nem no programa de PC (lá os arquivos já estão no computador).
-- **O que isto resolve e o que não resolve:** tira a espera da REDE na primeira vez em cada pista no site. Não muda a montagem da pista (o cenário é gerado em código) nem a primeira compilação dos sombreadores de cada pista, que também travam e acontecem no PC. Para essas, o próximo passo precisa de uma medição na máquina do Thiago (em que pista e em que momento: na tela de carregamento ou nos primeiros segundos de corrida).
-- Sem entrada no `novidades.json`: o arquivo está quebrado na `main`, e o conserto está no #717.
+- **Curva e saltada:** é uma peça à parte que dá a volta pela frente (~150°, antes ~130°) seguindo a forma da cabeça. Fica 2 mm para fora do casco e estufa no meio (até +3,5 mm), como uma lente de verdade (`estufar`).
+- **Mais alta:** vai da altura dos olhos até perto do queixo (0,44 rad de altura na esfera, antes 0,36). A faixa do nome, acima dela, continua livre.
+- **Moldura (`molduraDaViseira`):** a borracha escura da borda (um pedaço da casca um pouco maior, rente ao casco, que aparece em volta da viseira) e as duas dobradiças redondas nas pontas. É uma malha à parte, com um material escuro acetinado (`materialDaMoldura`) dividido por todos os pilotos. Ela não entra em `k.mats` (o piloto não está lá).
+- **Entradas de ar no queixo (`f1-capacetes.js`, `pintarFolha`):** duas fendas escuras inclinadas logo abaixo da viseira, em todo capacete.
+- **Onde aparece:** no piloto da pista e na prévia 3D do editor (`capacete-3d.js`). Nos mecânicos e no pódio, entra pelo #720, que já usa a moldura quando ela existe. A prévia 2D (sem WebGL) desenha a viseira no tamanho novo.
+- Conferido só com `node --check`: a forma precisa ser vista (a prévia do editor mostra de perto).

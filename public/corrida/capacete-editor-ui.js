@@ -44,7 +44,7 @@ export function montarEditorCapacete(el, op = {}) {
     if (p3d) return p3d.mostrar(atual, numero());
     const x = cv.getContext("2d");
     pintarFolha(x, atual.cores, atual.desenho, numero(), { bandeira: atual.bandeira, nome: atual.nome }, previa);
-    x.fillStyle = atual.viseira; x.fillRect(290, 98, 188, 29); // a viseira (na pista ela é uma peça à parte, f1-piloto.js)
+    x.fillStyle = atual.viseira; x.fillRect(278, 98, 212, 36); // a viseira (na pista ela é uma peça à parte, f1-piloto.js)
   };
   const marcar = () => el.querySelectorAll("[data-vis]").forEach((b) => { const on = b.dataset.vis === atual.viseira; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
   const q = (k) => el.querySelector(`[data-cp="${k}"]`);

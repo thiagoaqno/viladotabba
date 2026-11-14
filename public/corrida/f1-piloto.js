@@ -55,12 +55,40 @@ function casco(g, esc) {
   }
   P.needsUpdate = true; N.needsUpdate = true; g.computeBoundingSphere(); g.computeBoundingBox(); return g;
 }
+// empurra um pedaço da casca para fora pela normal: `base` em todo ele e mais `meio` no centro (pelo uv da esfera: 0 nas bordas, 1 no meio)
+function estufar(g, base, meio) {
+  const P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv;
+  for (let i = 0; i < P.count; i++) {
+    const d = base + meio * Math.sin(Math.PI * U.getX(i)) * Math.sin(Math.PI * U.getY(i));
+    P.setXYZ(i, P.getX(i) + N.getX(i) * d, P.getY(i) + N.getY(i) * d, P.getZ(i) + N.getZ(i) * d);
+  }
+  P.needsUpdate = true; g.computeBoundingSphere(); g.computeBoundingBox(); return g;
+}
+// a moldura da viseira: a borda de borracha (um pedaço da casca um pouco maior que o da viseira, rente ao casco, que aparece em volta dela) e as
+// duas dobradiças redondas nas pontas, onde a viseira gira
+function molduraDaViseira(V) {
+  const m = 0.035, borda = estufar(casco(new THREE.SphereGeometry(1, 56, 8, V.phi0 - m * 1.5, V.phi + m * 3, V.theta0 - m, V.theta + m * 2), 1), 0.0012, 0.0015);
+  const partes = [borda];
+  for (const phi of [V.phi0, V.phi0 + V.phi]) {
+    const th = V.theta0 + V.theta * 0.45, dir = new THREE.Vector3(-Math.cos(phi) * Math.sin(th), Math.cos(th), Math.sin(phi) * Math.sin(th));
+    const ponto = casco(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute([dir.x, dir.y, dir.z], 3)).setAttribute("normal", new THREE.Float32BufferAttribute([0, 1, 0], 3)), 1);
+    const p = new THREE.Vector3().fromBufferAttribute(ponto.attributes.position, 0), nrm = dir.clone().normalize();
+    const d = new THREE.CylinderGeometry(0.014, 0.016, 0.006, 20); // (a dobradiça: um disco baixo, deitado na lateral)
+    d.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), nrm)); d.translate(p.x + nrm.x * 0.003, p.y + nrm.y * 0.003, p.z + nrm.z * 0.003);
+    partes.push(d.toNonIndexed());
+  }
+  return mergeGeometries([borda.toNonIndexed(), ...partes.slice(1)]);
+}
 let G = null;
 function geometrias() {
   if (G) return G;
   const capacete = casco(new THREE.SphereGeometry(1, 40, 24), 1);
-  // a viseira: uma faixa escura larga e bem marcada na frente (u = 0,75), na altura dos olhos (~25% da altura do capacete), que dá a volta pela frente seguindo a curva da cabeça (um pedaço da mesma forma, 1,2% maior)
-  const viseira = casco(new THREE.SphereGeometry(1, 40, 3, 1.5 * Math.PI - 1.15, 2.3, 1.2, 0.36), 1.012);
+  // a viseira (2026-11-13, pela imagem do Thiago: "a viseira fica melhor assim ao invés de reta"): uma peça à parte, curva, que dá a volta pela
+  // frente (~150°) seguindo a forma da cabeça, mais alta que antes (da altura dos olhos até perto do queixo) e SALTADA: fica 2 mm para fora do
+  // casco e estufa mais no meio (até +3,5 mm), como a lente de verdade. Em volta, a `moldura` (a borracha escura da borda e as duas dobradiças).
+  const V = { phi0: 1.5 * Math.PI - 1.3, phi: 2.6, theta0: 1.2, theta: 0.44 };
+  const viseira = estufar(casco(new THREE.SphereGeometry(1, 56, 8, V.phi0, V.phi, V.theta0, V.theta), 1), 0.002, 0.0035);
+  const moldura = molduraDaViseira(V);
   // o braço (manga) afina do ombro ao cotovelo e o antebraço do cotovelo ao pulso; o ombro e o cotovelo são bolinhas (a junta arredondada). As bolas levam a escala inversa do comprimento do osso, que estica o cilindro a cada quadro.
   const junta = (r, y, L) => { const e = new THREE.SphereGeometry(r, 12, 8); e.scale(1, 1 / L, 1); e.translate(0, y, 0); return e; };
   const tubo = (rTopo, rBase) => { const c = new THREE.CylinderGeometry(rTopo, rBase, 1, 12, 1, true); c.translate(0, 0.5, 0); return c; };
@@ -68,7 +96,7 @@ function geometrias() {
   const antebraco = mergeGeometries([tubo(0.015, 0.0215), junta(0.0235, 0, OSSO.baixo)]); // do cotovelo (y = 0) ao pulso (y = 1)
   const tronco = new THREE.CapsuleGeometry(0.085, 0.13, 4, 12); tronco.scale(1.3, 1, 0.8); // o peito e os ombros (deitado para trás, na malha)
   const aro = new THREE.BoxGeometry(0.235, 0.12, 0.035); // o volante dos carros "leves" (que não trazem o do modelo): só para as mãos terem onde segurar
-  return (G = { capacete, viseira, braco, antebraco, tronco, aro });
+  return (G = { capacete, viseira, moldura, braco, antebraco, tronco, aro });
 }
 // a luva fechada em volta da pegada lateral do volante, de cada lado, numa malha só com cor por vértice (a da equipe nos dedos, no punho fechado e no polegar; o punho escuro):
 // o punho fechado (a palma na pegada), quatro dedos que dão a volta no aro para a frente, o polegar por cima e o punho escuro de onde sai o antebraço.
@@ -129,7 +157,9 @@ const LUVA = () => (LUVA.m ||= new THREE.MeshStandardMaterial({ vertexColors: tr
 const VISEIRA = (cor) => { const k = cor || "#090b10"; VISEIRA.m ||= new Map(); if (!VISEIRA.m.has(k)) VISEIRA.m.set(k, new THREE.MeshPhysicalMaterial({ color: k, roughness: 0.05, metalness: k === "#090b10" ? 0.6 : 0.9, clearcoat: 1, clearcoatRoughness: 0.03 })); return VISEIRA.m.get(k); };
 export const materialDaViseira = VISEIRA;
 // as geometrias do capacete e da viseira (as mesmas da pista), para a prévia 3D do editor (capacete-3d.js)
-export const geometriasDoCapacete = () => { const g = geometrias(); return { capacete: g.capacete, viseira: g.viseira }; }; // (a cor da viseira: a de quem joga escolhe; f1-capacetes.js VISEIRAS)
+export const geometriasDoCapacete = () => { const g = geometrias(); return { capacete: g.capacete, viseira: g.viseira, moldura: g.moldura }; };
+// a borracha da borda da viseira e as dobradiças: escuras, acetinadas (uma só para todos)
+export const materialDaMoldura = (() => { let m = null; return () => (m ||= new THREE.MeshStandardMaterial({ color: 0x111216, roughness: 0.45, metalness: 0.3 })); })(); // (a cor da viseira: a de quem joga escolhe; f1-capacetes.js VISEIRAS)
 const CARBONO = () => (CARBONO.m ||= new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.4, metalness: 0.1 }));
 const TECIDOS = new Map(), CAPACETES = new Map();
 // o tecido do macacão e das luvas: um material por cor (e por escurecimento), guardado e reaproveitado por todos os carros da equipe
@@ -197,6 +227,7 @@ export function criarPiloto(kt, op) {
   const cab = new THREE.Group(); cab.position.set(PESCOCO.x, PESCOCO.y, PESCOCO.z); cab.rotation.order = "YXZ"; corpo.add(cab);
   const capacete = solta(new THREE.Mesh(g.capacete, materialDoCapacete(cor1, cor2, op.numero, op.sigla ? capacetePorSigla(op.sigla) : null, op.capacete || null))); capacete.name = "capacete"; capacete.position.y = 0.14; cab.add(capacete);
   const viseira = solta(new THREE.Mesh(g.viseira, VISEIRA(op.capacete?.viseira))); viseira.name = "viseira"; viseira.position.y = 0.14; cab.add(viseira);
+  const moldura = solta(new THREE.Mesh(g.moldura, materialDaMoldura())); moldura.name = "viseira-moldura"; moldura.position.y = 0.14; cab.add(moldura);
   const tronco = solta(new THREE.Mesh(g.tronco, traje(cor1, cor2))); tronco.name = "tronco"; tronco.position.set(0, 0.45, 0.16); tronco.rotation.x = 0.6; corpo.add(tronco); // o piloto deitado: o peito inclinado para trás
   const bracos = [-1, 1].map((l) => { const m = solta(new THREE.Mesh(g.braco, traje(cor1, cor2))); m.name = "braco"; m.position.set(l * OMBRO.x, OMBRO.y, OMBRO.z); corpo.add(m); return m; });
   // os antebraços ficam fora do corpo: aparecem também na primeira pessoa, junto das luvas

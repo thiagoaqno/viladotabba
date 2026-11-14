@@ -367,28 +367,50 @@ DESENHOS["racing-bulls"] = {
   },
 };
 
-// Aston Martin AMR26: verde de corrida bem escuro, filete limão e as marcas em branco
+// Aston Martin AMR26 (2026), pelo modelo do Sketchfab que o Thiago mandou ("2026 Aston Martin AMR26", olhado de lado, de cima, de frente e de
+// trás): o verde-petróleo do carro (mais claro que o de antes), a barriga e o assoalho pretos com o filete limão na borda, o alto das caixas
+// laterais preto com os pontinhos limão (meio-tom) e o aramco, a asa dianteira e o alto da asa traseira cinza-prata com o aramco, o bico com a
+// fileira Valvoline, Pirelli, NetApp, xerox, NexGen e o H da Honda, o número limão; embaixo da asa traseira, o Valvoline no carbono.
+function meioTom(c, s0, s1, x0, x1, cor, semente) { // os pontinhos que somem para dentro (de x1 para x0)
+  const r = mulberry(semente); c.fillStyle = cor;
+  for (let s = s0; s < s1; s += 0.03) for (let x = x0; x < x1; x += 0.03) { const f = (x - x0) / (x1 - x0), rr = 0.011 * f; if (rr < 0.002 || r() > 0.92) continue; c.beginPath(); c.arc(s, x, rr, 0, Math.PI * 2); c.fill(); }
+}
 DESENHOS["aston-martin"] = {
   numero: "#d7e600", carbono: 1, numPos: [3.5, 0.66, 9, 9],
   pintar(ctx) {
-    const VERDE = "#0a4a3f", ESC = "#062d27", LIMAO = "#cedc00", PRETO = "#0a1210";
+    const VERDE = "#0f6a5f", VERDE_CL = "#14806f", LIMAO = "#cedc00", PRETO = "#0a1210", PRATA = "#8f979b";
     base(ctx, VERDE);
     lados(ctx, (c) => {
-      c.beginPath(); c.moveTo(2.2, 0.66); c.lineTo(2.2, 1.1); c.lineTo(3.9, 1.1); c.lineTo(3.9, 0.56); c.quadraticCurveTo(3, 0.72, 2.2, 0.66); c.closePath(); c.fillStyle = ESC; c.fill();
-      c.fillStyle = LIMAO; c.fillRect(2.05, 0.405, 1.5, 0.012);
+      // o verde fica mais claro em cima da caixa (o reflexo da pintura do modelo)
+      c.fillStyle = degrade(c, 0, 0.75, 0, 0.35, [[0, VERDE], [1, VERDE_CL]]); c.fillRect(1.2, 0.35, 2.6, 0.4);
+      // a barriga preta, com o filete limão na borda, do bico até trás
+      c.beginPath(); c.moveTo(0.3, 0.2); c.lineTo(1.2, 0.25); c.quadraticCurveTo(2.4, 0.24, 3.45, 0.16); c.lineTo(3.45, 0); c.lineTo(0.3, 0); c.closePath(); c.fillStyle = PRETO; c.fill();
+      c.beginPath(); c.moveTo(0.3, 0.2); c.lineTo(1.2, 0.25); c.quadraticCurveTo(2.4, 0.24, 3.45, 0.16); c.lineWidth = 0.012; c.strokeStyle = LIMAO; c.stroke();
       baixo(c, PRETO);
-      poli(c, [[0, 0.18], [1.1, 0.37], [1.1, 0.385], [0, 0.195]], LIMAO);
-      ret(c, 3.86, 0.3, 4.45, 1.1, PRETO);
-      marca(c, "aramco", 2.8, 0.31, 0.125); marca(c, "astonmartin", 3.2, 0.74, 0.042); marca(c, "maaden", 3.1, 0.64, 0.042); marca(c, "boss", 2.15, 0.52, 0.042); marca(c, "valvoline", 3.2, 0.17, 0.036); marca(c, "honda", 3.32, 0.44, 0.036);
-      marca(c, "coinbase", 4.15, 0.72, 0.065); marca(c, "cognizant", 1.72, 0.22, 0.036, { tinta: LIMAO }); marca(c, "coreweave", 2.56, 0.82, 0.03);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO); // as placas da asa dianteira
+      ret(c, 3.82, 0.3, 4.45, 0.55, PRETO); // embaixo da placa traseira (a placa é verde, com o coinbase)
+      marca(c, "aramco", 2.4, 0.39, 0.1); marca(c, "boss", 1.89, 0.57, 0.034); marca(c, "coherent", 2.28, 0.6, 0.03); marca(c, "coreweave", 2.6, 0.83, 0.028);
+      marca(c, "maaden", 2.83, 0.71, 0.04); marca(c, "aramco", 3.39, 0.75, 0.045); marca(c, "honda", 3.27, 0.59, 0.034); marca(c, "valvoline", 3.27, 0.44, 0.034);
+      marca(c, "proforce", 3.07, 0.3, 0.026); marca(c, "cognizant", 1.5, 0.15, 0.034); marca(c, "pepperstone", 1.3, 0.58, 0.026); marca(c, "astonmartin", 1.34, 0.47, 0.03);
+      marca(c, "coinbase", 4.13, 0.77, 0.06); marca(c, "glenfiddich", 0.3, 0.1, 0.03);
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.3, -0.3, 4, 0.3, ESC); ret(c, 2.3, -0.012, 3.9, 0.012, LIMAO); ret(c, 0.15, -0.012, 1.1, 0.012, LIMAO);
-      asasT(c, ESC, PRETO, VERDE);
-      const f = { giro: DE_FRENTE, tinta: "#fff" }; marca(c, "aramco", 0.72, 0, 0.08, f); marca(c, "coinbase", 4.15, 0, 0.08, f); marca(c, "aramco", 2.9, 0, 0.09, f);
+      // o alto das caixas: preto por fora, com o meio-tom limão e o aramco ao longo da caixa
+      for (const l of [-1, 1]) {
+        c.beginPath(); c.moveTo(1.95, l * 0.42); c.quadraticCurveTo(2.6, l * 0.36, 3.4, l * 0.3); c.lineTo(3.4, l * 0.72); c.lineTo(1.95, l * 0.72); c.closePath(); c.fillStyle = PRETO; c.fill();
+        c.save(); c.scale(1, l); meioTom(c, 2.0, 3.3, 0.3, 0.46, LIMAO, l > 0 ? 3 : 4); c.restore();
+        marca(c, "aramco", 2.65, l * 0.56, 0.07, { giro: l > 0 ? Math.PI : 0 });
+      }
+      ret(c, 2.0, -0.09, 2.45, 0.09, PRETO); // a entrada de ar
+      asasT(c, PRATA, PRATA, VERDE);
+      const f = { giro: DE_FRENTE };
+      for (const l of [-1, 1]) { marca(c, "aramco", 0.32, l * 0.46, 0.06, f); marca(c, "cognizant", 0.18, l * 0.46, 0.03, f); marca(c, "cw", 1.3, l * 0.07, 0.03, f); }
+      marca(c, "valvoline", 0.16, 0, 0.026, f); marca(c, "pirelli", 0.27, 0, 0.026, f); marca(c, "netapp", 0.37, 0, 0.03, f); marca(c, "xerox", 0.48, 0, 0.03, f);
+      marca(c, "nexgen", 0.58, 0, 0.03, f); marca(c, "hhonda", 0.76, 0, 0.06, f); marca(c, "cognizant", 1.2, 0, 0.03, f);
+      marca(c, "maaden", 2.9, 0, 0.045, { giro: 0 }); marca(c, "aramco", 4.12, 0, 0.09, { giro: -DE_FRENTE, tinta: PRETO });
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERDE); ret(c, -0.75, 0, 0.75, 0.1, ESC); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.45, 0.45, 0.45, 0.75, VERDE); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERDE); ret(c, -0.75, 0, 0.75, 0.12, PRETO); ret(c, -0.75, 0.12, 0.75, 0.13, LIMAO); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.45, 0.45, 0.45, 0.75, VERDE); marca(c, "valvoline", 0, 0.9, 0.08); });
   },
 };
 
@@ -1066,6 +1088,7 @@ const ASA_BAIXO = {
   mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
   audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },
   cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillac", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
+  "aston-martin": { cor: "#0a1210", marcas: (c) => marcaU(c, "valvoline", 0, 0.32, 0.11) },
 };
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)

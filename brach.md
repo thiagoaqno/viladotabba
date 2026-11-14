@@ -1,16 +1,14 @@
-# Cadillac MAC-26 (2026) pelo modelo 3D
+# Aston Martin AMR26 (2026) pelo modelo 3D
 
-A Cadillac de 2026 refeita pelo modelo "2026 Cadillac MAC-26" do Sketchfab que o Thiago mandou, olhado dos dois lados, de cima (bico, asa dianteira e tampa), de frente e de trás.
+A Aston Martin de 2026 refeita pelo modelo "2026 Aston Martin AMR26" do Sketchfab que o Thiago mandou, olhado de lado, de cima (bico, asas e caixas), de frente e de trás e por baixo da asa traseira.
 
-O carro é **assimétrico**, e a pintura agora segue isso:
-- **Lado esquerdo:** prata-claro, com uma faixa preta larga descendo do cockpit até embaixo atrás, a barriga preta embaixo do bico e da frente da caixa, as duas barras pretas na tampa e o TWG preto.
-- **Lado direito:** o contrário. Preto, com a faixa prata subindo de trás até a frente da caixa, os frisos cromados na tampa e o TWG prata.
-- **Nos dois lados:** o triângulo do TWG AI, o brasão na tampa, Cadillac no bico, Claro, Jim Beam no painel preto, Core Scientific, a barbatana preta, as placas da asa dianteira cromadas e o IFS na placa da asa traseira (preto no prata, prata no preto).
-- **De cima:** a tampa meio a meio (prata à esquerda, preta à direita) com a espinha preta e os frisos; o bico prata com o brasão, TWG, IFS e a bandeirinha da Tommy Hilfiger; o preto antes do cockpit, onde fica o número; a asa dianteira em blocos pretos e brancos.
-- **Atrás e embaixo da asa** (`ASA_BAIXO`): preto com o Cadillac prata.
-- Marcas novas em `f1-marcas.js`: `twgai`, `jimbeam`, `corescientific`, `brasao`, `hilfiger`.
+- **Cores:** o verde-petróleo do modelo (`#0f6a5f`, mais claro que o `#0a4a3f` de antes), mais claro ainda no alto da caixa; a barriga e o assoalho pretos, com o filete limão na borda, do bico até trás.
+- **De lado:** aramco grande na caixa, BOSS, coherent, CoreWeave, MAADEN, aramco na tampa, Honda, Valvoline, PROFORCE+, cognizant, pepperstone, as asas da Aston Martin, coinbase na placa traseira e Glenfiddich na placa da asa dianteira.
+- **De cima:** o alto das caixas preto, com os pontinhos limão em meio-tom e o aramco ao longo da caixa; a asa dianteira e o alto da asa traseira cinza-prata com o aramco e o cognizant; o bico com a fileira Valvoline, Pirelli, NetApp, xerox e NexGen, o H da Honda e o cognizant; o CW na frente do cockpit; MAADEN na tampa.
+- **Embaixo da asa traseira** (`ASA_BAIXO`) e na vista de trás: carbono com o Valvoline.
+- Marcas novas em `f1-marcas.js`: `coherent`, `proforce`, `pepperstone`, `glenfiddich`, `netapp`, `xerox`, `nexgen`, `hhonda`, `cw`.
 
-**Saiu do #733 (Audi), que conserta o `novidades.json` da `main`:** faça o merge do #733 primeiro.
+**Saiu do #734 (Cadillac), que saiu do #733 (Audi), que conserta o `novidades.json`:** faça o merge na ordem #733, #734, este.
 
 **Peso:** zero a mais (a folha projetada de 2026, um canvas por equipe, só desenho).
 

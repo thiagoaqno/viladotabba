@@ -92,6 +92,18 @@ Object.assign(MARCAS, {
   // a bandeirinha da Tommy Hilfiger
   hilfiger(c) { c.fillStyle = "#ffffff"; c.fillRect(-0.62, -0.42, 1.24, 0.84); c.fillStyle = "#00205b"; c.fillRect(-0.58, -0.38, 0.58, 0.38); c.fillRect(0, 0, 0.58, 0.38); c.fillStyle = "#c8102e"; c.fillRect(-0.58, 0, 0.58, 0.38); },
 });
+// As da Aston Martin AMR26 (o modelo do Sketchfab, 2026-11-14)
+Object.assign(MARCAS, {
+  coherent(c, { tinta = "#fff" } = {}) { letra(c, "coherent", { h: 1, peso: 600, cor: tinta }); },
+  proforce(c, { tinta = "#fff" } = {}) { letra(c, "PROFORCE+", { h: 0.95, peso: 800, ital: true, cor: tinta }); },
+  pepperstone(c, { tinta = "#fff" } = {}) { disco(c, -2.6, 0, 0.36, tinta); letra(c, "pepperstone", { x: 0.3, h: 0.9, peso: 600, cor: tinta }); },
+  glenfiddich(c, { tinta = "#fff" } = {}) { letra(c, "GLENFIDDICH", { h: 0.9, peso: 700, fam: SERIFA, cor: tinta, esp: 3 }); },
+  netapp(c, { tinta = "#fff" } = {}) { letra(c, "NetApp", { h: 1, peso: 800, cor: tinta }); },
+  xerox(c, { tinta = "#fff" } = {}) { letra(c, "xerox", { h: 1.05, peso: 600, cor: tinta }); },
+  nexgen(c, { tinta = "#fff" } = {}) { letra(c, "NexGen", { h: 1, peso: 700, cor: tinta }); },
+  hhonda(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.08; c.beginPath(); c.moveTo(-0.45, -0.42); c.lineTo(0.45, -0.42); c.lineTo(0.38, 0.42); c.lineTo(-0.38, 0.42); c.closePath(); c.stroke(); letra(c, "H", { h: 0.7, peso: 900, cor: tinta }); },
+  cw(c, { tinta = "#fff" } = {}) { letra(c, "CW", { h: 1.05, peso: 900, cor: tinta }); },
+});
 // As que têm um traço a mais
 Object.assign(MARCAS, {
   gemini(c, { tinta = "#fff" } = {}) { c.save(); c.translate(-1.75, 0); c.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; c.lineTo(Math.cos(a) * 0.46, Math.sin(a) * 0.46); c.lineTo(Math.cos(a + Math.PI / 4) * 0.09, Math.sin(a + Math.PI / 4) * 0.09); } c.closePath(); c.fillStyle = "#6fb6ff"; c.fill(); c.restore(); letra(c, "Gemini", { x: 0.35, h: 1, peso: 500, cor: tinta }); },

@@ -158,7 +158,8 @@ function corDaFaixa(c1, c2) {
   return lum(c1) > 0.5 || lum(c2) > 0.5 ? "#14161b" : "#ffffff";
 }
 // o desenho do capacete numa folha 512x256 (ver f1-capacetes.js): o do robô é o do piloto dele (`cap`), o dos outros é o genérico nas cores 1 e 2 da equipe
-const materialDoCapacete = (c1, c2, numero, cap, proprio = null) => {
+// (exportado: os mecânicos e os pilotos do pódio usam o mesmo capacete da pista, capacete-boneco.js)
+export const materialDoCapacete = (c1, c2, numero, cap, proprio = null) => {
   if (proprio) cap = proprio; // o capacete de quem joga (mods.capacete): desenho, cores, bandeira e nome
   const extra = proprio ? { bandeira: proprio.bandeira, nome: proprio.nome } : null;
   const cores = cap ? cap.cores : [c1, c2, corDaFaixa(c1, c2)], desenho = cap ? cap.desenho : "generico", k = [...cores, desenho, numero ?? "", extra ? extra.bandeira + "/" + extra.nome : ""].join("|"); let m = CAPACETES.get(k);

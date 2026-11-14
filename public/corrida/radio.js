@@ -197,6 +197,8 @@ function avisoF1(tipo) { // `tipo` vem de AvisosF1.tipoDoTexto
 function fim(pos, pontos, dnf) { dizer(dnf ? "abandono" : pos === 1 ? "vitoria" : pos <= 3 ? "podio" : pontos > 0 ? "pontos" : "foradospontos", { forcar: true }); }
 function classificacao(pos, total) { dizer(pos <= Math.ceil(total / 3) ? "classboa" : pos > Math.floor(total * 2 / 3) ? "classruim" : "", { forcar: true }); }
 
-const api = { escolher, dizer, frase, pedaco, usarSaida, posicao, uma, avisoF1, fim, classificacao, silenciar, desenharBotoes, get mudo() { return mudo; }, get tocando() { return tocando; }, INTERVALO };
+// o apito de abrir o rádio sozinho (o Jeff começando a ouvir: voz.js); respeita o botão do fone (mudo) e o volume geral
+function bipe() { try { if (mudo || !temDOM) return; const x = contexto(); if (!x || x.c.state === "suspended") return; abertura(x.c, x.destino, x.c.currentTime + 0.02); } catch { /* sem áudio */ } }
+const api = { bipe, escolher, dizer, frase, pedaco, usarSaida, posicao, uma, avisoF1, fim, classificacao, silenciar, desenharBotoes, get mudo() { return mudo; }, get tocando() { return tocando; }, INTERVALO };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Radio = api;
 })(typeof self !== "undefined" ? self : this);

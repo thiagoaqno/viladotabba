@@ -46,12 +46,13 @@ const nomeEmUso = (room, name) => Object.values(room.players).some((p) => p.name
 // faxina: de tempos em tempos (a cada hora, por padrão), apaga as salas sem movimento (room.t) há mais de `horas`.
 // cadaVolta(room): roda em toda sala a cada passada (ex.: parar o jogo de quem saiu todo mundo);
 // aoApagar(room): para os relógios da sala antes de ela sumir.
-function limparSalasParadas(rooms, { horas = 12, intervalo = 3600e3, cadaVolta = null, aoApagar = null } = {}) {
+// `horasDe(r)` (opcional): quantas horas ESTA sala pode ficar parada (no lugar de `horas`, que vale para todas)
+function limparSalasParadas(rooms, { horas = 12, horasDe = null, intervalo = 3600e3, cadaVolta = null, aoApagar = null } = {}) {
   return setInterval(() => {
     const now = Date.now();
     for (const [code, r] of rooms) {
       if (cadaVolta) cadaVolta(r);
-      if (now - r.t > horas * 3600e3) { if (aoApagar) aoApagar(r); rooms.delete(code); }
+      if (now - r.t > (horasDe ? horasDe(r) : horas) * 3600e3) { if (aoApagar) aoApagar(r); rooms.delete(code); }
     }
   }, intervalo).unref?.();
 }

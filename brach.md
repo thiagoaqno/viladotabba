@@ -1,17 +1,17 @@
-# Red Bull RB22 (2026) pelos prints do Thiago
+# McLaren MCL40 (2026) pelos prints do Thiago
 
-A pintura da Red Bull de 2026 refeita pelos prints de `Carros F1/2026/Redbull`:
+A pintura da McLaren de 2026 refeita pelos prints de `Carros F1/2026/Mclaren`:
 
-- Azul-marinho com manchas mais escuras (como a textura do carro), de lado e de cima.
-- O touro vermelho grande na tampa do motor, com o sol amarelo na entrada de ar; de cima, os touros no alto das caixas laterais.
-- Bico amarelo na ponta com a chama vermelha atrás; VISA, AT&T e o escudo da TAG Heuer na frente do cockpit.
-- Asas de carbono (antes azul-escuro): na dianteira o "Red Bull" vermelho grande com contorno branco e o VISA; na traseira o Gate em cima, o ORACLE atrás e o Mobil 1 nas placas.
-- ORACLE na caixa lateral, Red Bull vermelho na tampa, ROKT, CARLYLE e Mobil 1 no bico.
-- Marcas novas em `f1-marcas.js`: `gate`, `carlyle`, `att`, `tagheuer`.
+- Papaia com a tampa do motor preta, descendo em diagonal até a asa traseira, e a entrada de ar azul-petróleo com o allwyn.
+- Faixa preta em diagonal na frente da caixa lateral (VELO e OKX), Mastercard e DELL no papaia, Gemini grande na tampa, DP WORLD no bico.
+- Asa dianteira preta com a faixa papaia do ONEflight na borda e os círculos do Mastercard.
+- Bico: a ponta preta com a estrela do Gemini e a fileira PIRELLI, DEWALT, rubrik, CISCO, Deloitte, DELL (o atlas do nariz), o Hilton perto do cockpit.
+- Asa traseira papaia em cima com o ETIHAD; atrás, ETIHAD no preto; Dropbox nas placas e groq embaixo.
+- Marcas novas em `f1-marcas.js`: `etihad`, `groq`, `hilton`, `oneflight`.
 
-**Depende do #725 (Ferrari), que depende do #724 (Mercedes):** os três saíram um do outro para as entradas do `novidades.json` não brigarem. Merge na ordem #724, #725, este.
+Saiu direto da `main`. Se o #726 (Red Bull) entrar antes, o topo do `novidades.json` pode dar conflito: eu acerto.
 
-**Peso:** zero a mais (a folha projetada de 2026, um canvas por equipe, só desenho; o touro é o logo que o jogo já tinha).
+**Peso:** zero a mais (a folha projetada de 2026, um canvas por equipe, só desenho).
 
 Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
 

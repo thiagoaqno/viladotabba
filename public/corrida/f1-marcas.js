@@ -61,6 +61,13 @@ const SO_LETRA = {
   ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }],
 };
 for (const [id, [str, o]] of Object.entries(SO_LETRA)) MARCAS[id] = (c, { tinta } = {}) => letra(c, str, { ...o, cor: tinta || o.tinta || "#fff" });
+// As da McLaren MCL40 (os prints de 2026-11-13)
+Object.assign(MARCAS, {
+  etihad(c, { tinta = "#e9e3d4" } = {}) { letra(c, "ETIHAD", { h: 1.05, peso: 400, fam: SERIFA, cor: tinta, esp: 8 }); },
+  groq(c, { tinta = "#fff" } = {}) { letra(c, "groq", { h: 1.05, peso: 700, cor: tinta }); },
+  hilton(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.07; c.strokeRect(-1.45, -0.42, 2.9, 0.84); letra(c, "Hilton", { h: 0.7, peso: 400, fam: SERIFA, cor: tinta }); },
+  oneflight(c, { tinta = "#fff" } = {}) { letra(c, "ONE", { x: -1.25, h: 1, peso: 900, cor: tinta }); letra(c, "flight", { x: 0.85, h: 1, peso: 400, ital: true, cor: tinta }); },
+});
 // As que têm um traço a mais
 Object.assign(MARCAS, {
   gemini(c, { tinta = "#fff" } = {}) { c.save(); c.translate(-1.75, 0); c.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; c.lineTo(Math.cos(a) * 0.46, Math.sin(a) * 0.46); c.lineTo(Math.cos(a + Math.PI / 4) * 0.09, Math.sin(a + Math.PI / 4) * 0.09); } c.closePath(); c.fillStyle = "#6fb6ff"; c.fill(); c.restore(); letra(c, "Gemini", { x: 0.35, h: 1, peso: 500, cor: tinta }); },

@@ -12,6 +12,8 @@ import { renderer, scene, hemi, sun, canvasTex } from "./cena.js";
 import { clima } from "./clima.js";
 import { Sound } from "./sons.js";
 import { $ } from "./estado.js";
+import { passoMarcas } from "./marcas-pista.js";
+import { passoGotasCarro, limparGotasCarro, amostraGotas } from "./gotas-carro.js";
 
 const reduz = matchMedia("(prefers-reduced-motion: reduce)");
 const lim = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
@@ -219,7 +221,7 @@ function passoSpray(dt, c, race, cam, coberto, mode) {
     for (const gh of race.ghosts.values()) if (gh.kart && gh.kart.g.visible !== false) candidato(gh, false, cp);
     for (let k = 0; k < nEmissores; k++) {
       const car = emissor[k], meu = emissorMeu[k], v = Math.abs(car.v || 0), f = suave(70, 290, v) * agua, lod = k < K_PERTO ? 1 : emissorD[k] > 900 * 900 ? 0.25 : 0.45;
-      const fx = Math.cos(car.a || 0), fy = Math.sin(car.a || 0), rastro = v > 20 ? lim(v * 0.5, 0, 150) : 0;
+      const fx = Math.cos(car.a || 0), fy = Math.sin(car.a || 0), rastro = 0; // (o rastro seco colado atrás do carro saiu: as marcas de verdade ficam na pista, marcas-pista.js)
       const kt = car.kart, kart = meu ? race.kart : kt, rodas = rodasDe(kart), dentro = meu && Math.hypot(cp.x - car.x, cp.z - car.y) < 25; // dentro: cockpit, onboard ou bico
       const pisca = kt && !kt.lanterna?.visible ? 0 : kt && !reduz.matches && kt.tempoGP % 0.8 >= 0.2 ? 0.25 : 2.2; // o reflexo da lanterna pisca junto com ela (carros.js)
       for (let q = 0; q < asfU.length; q++) { // o asfalto: o rastro mais seco por trás do carro e a luz traseira e o farol refletidos (o meu carro não reflete: a câmera está nele)
@@ -311,7 +313,7 @@ export function exercitarChuva(tr) {
 // liga a chuva inteira (domo, gotas, respingos, borrifo, asfalto encharcado com o rastro e as luzes de um carro em `q`) para um desenho de
 // ensaio; devolve a função que deixa tudo como estava. Usada aqui e pelo ensaio da largada (jogo.js), que desenha na tela atrás da carga.
 export function ligarChuvaDeEnsaio(tr, q = tr.pts[Math.min(tr.n - 1, 12)]) {
-  const objs = [domo, gotas, resp, spray], antes = objs.map((o) => o.visible), mats = [];
+  const objs = [domo, gotas, resp, spray, amostraGotas], antes = objs.map((o) => o.visible), mats = [];
   tr.grp.traverse((o) => { const m = o.material; if (m && !Array.isArray(m) && m.userData.aguaPista && !mats.includes(m)) mats.push(m); });
   const guardado = mats.map((m) => { const u = m.userData.aguaPista; return { agua: u.uAgua.value, dif: u.uDif.value, carro: u.uCarros.value[0].clone(), A: u.uLuzA.value[0].clone(), B: u.uLuzB.value[0].clone() }; });
   const drawGotas = { ...gotasGeo.drawRange };
@@ -337,7 +339,7 @@ const G = Array.from({ length: N_TELA }, () => ({
   vivo: false, x: 0, y: 0, vx: 0, vy: 0, r: 0, t: 0, vida: 0, a: 0, ang: Math.PI / 2, grude: 0, fase: 0, esc: 0, dir: 0, px: 0, py: 0,
   rx: new Float32Array(N_RASTRO), ry: new Float32Array(N_RASTRO), rt: new Float32Array(N_RASTRO), rCab: 0, rN: 0,
 }));
-let telaW = 0, telaH = 0, telaEsc = 1, telaNivel = 0, telaOn = false, telaAc = 0, telaOp = -1, telaRel = 1;
+let telaAcumulo = 0, telaW = 0, telaH = 0, telaEsc = 1, telaNivel = 0, telaOn = false, telaAc = 0, telaOp = -1, telaRel = 1;
 // o corpo da gota: miolo claro e translúcido, anel escuro fino na borda (a borda de baixo é reforçada por um arco, por gota)
 const sprGota = (() => {
   const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 31);
@@ -360,11 +362,13 @@ function nascerGota(g, w) {
 }
 function passoTela(dt, mode, sK) {
   if (!cvTela) return;
-  const alvo = reduz.matches ? 0 : mode === "cockpit" ? 1 : mode === "perto" ? 0.4 : 0, w = suave(0.04, 1, Math.min(1, sK)); // w: a velocidade do carro, 0 a 1
+  // só na câmera de dentro (cockpit): na de trás as gotas ficam em cima do carro (gotas-carro.js), não na tela (2026-11-13: era 0,4 ali)
+  const alvo = reduz.matches ? 0 : mode === "cockpit" ? 1 : 0, w = suave(0.04, 1, Math.min(1, sK)); // w: a velocidade do carro, 0 a 1
+  telaAcumulo += ((I > 0.02 ? 1 : 0) - telaAcumulo) * (1 - Math.exp(-dt / (I > 0.02 ? 25 : 60))); // a água vai juntando aos poucos (~25 s), e não de uma vez
   telaNivel += (alvo * (I > 0.02 ? 1 : 0.0001) - telaNivel) * (1 - Math.exp(-dt * 2.5)); // sem chuva, o nível desce e as gotas que sobram escorrem
   let vivas = 0; for (const g of G) if (g.vivo) vivas++;
   if (I > 0.02 && alvo > 0.02) { // poucas: garoa umas 6, chuva forte umas 30; vão nascendo uma a uma enquanto faltam
-    const meta = Math.round(alvo * (2 + 30 * Math.pow(I, 1.6)));
+    const meta = Math.round(alvo * (2 + 30 * Math.pow(I, 1.6)) * (0.15 + 0.85 * telaAcumulo));
     if (vivas < meta) {
       telaAc += dt * (0.9 + 2.2 * w) * (meta - vivas) * 0.5;
       while (telaAc >= 1 && vivas < meta) { telaAc -= 1; let g = null; for (const o of G) if (!o.vivo) { g = o; break; } if (!g) break; nascerGota(g, w); vivas++; }
@@ -431,13 +435,13 @@ function passoHud() {
 }
 
 // ---------- o laço ----------
-scene.add(domo, gotas, resp, spray);
-let ultRace = null, ativoAntes = false;
+scene.add(domo, gotas, resp, spray, amostraGotas);
+let ultRace = null, ativoAntes = false; const marcasCarros = [], meuMarca = { x: 0, y: 0, a: 0, v: 0 };
 // chamado por quadro (jogo.js, depois de posicionar a câmera): `mode` é a câmera ("perto", "cockpit", "longe", "cima"), `src` o carro
 // que a câmera segue e `c` o meu carro como é desenhado
 export function passoClima(dt, race, cam, mode, src, c) {
   camPreaquecer = cam;
-  if (race !== ultRace) { ultRace = race; I = clima.chuva; sVivos = 0; sVida.fill(0); sAlfa.fill(0); rVivos = 0; rVida.fill(0); gotaT = -1; grX = NaN; coletarAsfalto(race.tr); }
+  if (race !== ultRace) { ultRace = race; meuMarca.__marca = null; I = clima.chuva; sVivos = 0; sVida.fill(0); sAlfa.fill(0); rVivos = 0; rVida.fill(0); gotaT = -1; grX = NaN; coletarAsfalto(race.tr); }
   else if (race.tr !== trAtual) coletarAsfalto(race.tr);
   const k = clima.chuva > I ? 1 - Math.exp(-dt / 5) : 1 - Math.exp(-dt / 10);
   I += (clima.chuva - I) * k; if (I < 0.002 && clima.chuva === 0) I = 0;
@@ -495,8 +499,12 @@ export function passoClima(dt, race, cam, mode, src, c) {
   if (aguaSuave !== aguaAplicada || difSuave !== difAplicada) { aguaAplicada = aguaSuave; difAplicada = difSuave; aplicarAsfalto(aguaSuave, difSuave); }
   if (aguaSuave > 0 && scene.fog) for (let q = 0; q < asfU.length; q++) asfU[q].uCeu.value.copy(scene.fog.color).multiplyScalar(0.9);
 
+  // as marcas dos pneus (marcas-pista.js): todos os carros desenhados riscam a pista, no seco e no molhado
+  // (o meu carro entra por um objeto fixo, `meuMarca`: o `c` desenhado pode ser outro a cada quadro)
+  { const lista = marcasCarros; lista.length = 0; if (race.kart) { meuMarca.x = c.x; meuMarca.y = c.y; meuMarca.a = c.a; meuMarca.v = c.v; lista.push(meuMarca); } for (const gh of race.ghosts.values()) if (gh.kart && gh.kart.g.visible !== false) lista.push(gh); passoMarcas(dt, race.tr, lista, clima.agua, clima.chuva); }
   passoSpray(dt, c, race, cam, coberto, mode);
   passoTela(dt, coberto ? "longe" : mode, sK);
+  passoGotasCarro(dt, src === c ? race.kart : src.kart || null, I, coberto, renderer, cam); // as gotas em cima do carro que a câmera segue (gotas-carro.js)
   passoHud();
 
   // o som: chuva pela intensidade, pneus no molhado pela velocidade do meu carro (mais baixo no túnel)
@@ -512,7 +520,7 @@ export function limparClima() {
     sun.shadow.intensity = 1; sun.color.copy(eCorSol.base); hemi.color.copy(eCorHemi.base);
     if (scene.fog && scene.fog === fogRef) { scene.fog.near = escalar(eNear, scene.fog.near, 1); scene.fog.far = escalar(eFar, scene.fog.far, 1); scene.fog.color.copy(eCorFog.base); }
   }
-  aplicarAsfalto(0, 0); aguaAplicada = difAplicada = -1; aguaSuave = difSuave = 0; for (const g of G) g.vivo = false; telaNivel = 0;
+  aplicarAsfalto(0, 0); aguaAplicada = difAplicada = -1; aguaSuave = difSuave = 0; for (const g of G) g.vivo = false; telaNivel = 0; telaAcumulo = 0; limparGotasCarro();
   if (telaOn) { telaOn = false; cvTela.style.display = "none"; }
   Sound.chuva(0, 0);
 }

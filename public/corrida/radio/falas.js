@@ -107,6 +107,8 @@ const NOVAS = {
   penultimaok: ["Penúltima volta. Estamos dentro do objetivo. Mantenha.", "Faltam duas. Resultado sólido, a equipe está satisfeita.", "Penúltima volta. Corrida consistente. Sem riscos agora.", "Duas voltas. É o resultado que viemos buscar."],
   penultimaruim: ["Penúltima volta. Não é o que queríamos, mas tudo vale até a bandeirada.", "Faltam duas. Corrida difícil hoje. Vamos buscar o que der.", "Penúltima volta. Abaixo do esperado. Ataque se tiver chance.", "Duas voltas. Vamos aprender com essa. Dê tudo até o fim."],
 };
+// (2026-11-13) o Jeff, o engenheiro que ouve os comandos de voz (voz.js): quando não entende
+NOVAS.jeffnaoentendi = ["Não entendi. Pode repetir?", "Rádio cortado. Repete?", "Não peguei essa. De novo?"];
 for (const [q, textos] of Object.entries(NOVAS)) SITUACOES[q] = textos;
 
 // situações que passam na frente do intervalo mínimo entre falas
@@ -146,6 +148,9 @@ const PECAS_TEXTO = {
   alcancando: ["Estamos chegando nele.", "Você está tirando a diferença.", "Ganhando tempo nele a cada volta."],
   afastando: ["Ele está abrindo.", "Ele está mais rápido agora.", "Estamos perdendo tempo para ele."],
   lider: ["Você está liderando.", "P1. Ninguém à frente.", "Pista livre. Você é o líder."],
+  // o companheiro de equipe (o pedido de voz "diferença para o companheiro", mfd.js executarJeff): abertura + nome + distância
+  companheirofrente: ["Seu companheiro de equipe está à frente,", "O seu companheiro vai à frente,"],
+  companheirotras: ["Seu companheiro de equipe está atrás,", "O seu companheiro vem atrás,"],
 };
 // o estrategista (a volta da chuva) e o engenheiro (o objetivo desta corrida): abertura + número
 const VOLTAS_PECA = 60, TOPS_PECA = 20;

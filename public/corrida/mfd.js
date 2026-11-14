@@ -79,6 +79,65 @@ function pedirRadio(tipo) {
   }
   if (refs.r.radio?.radioResposta) set(refs.r.radio.radioResposta, "t", texto);
   if (situacao && window.Radio) window.Radio.dizer(situacao, { forcar: true });
+  return texto;
+}
+
+// ---------- o Jeff: os comandos de voz (voz.js ouve, jeff-comandos.js entende, aqui ele faz e responde) ----------
+// Cada comando faz o mesmo que o MFD ou as teclas fariam e o Jeff responde no rádio (as falas de radio/falas.js; a que ainda não tem mp3 fica
+// muda) e por escrito, num aviso na tela. `falado`: o que o reconhecimento ouviu (vai no aviso quando ele não entende).
+const seg1 = (s) => (s == null ? "—" : s >= 60 ? "mais de um minuto" : `${s.toFixed(1).replace(".", ",")} s`);
+const jeff = (texto, ms = 3800) => toast("🎧 Jeff: " + texto, ms);
+export function executarJeff(cmd, falado = "") {
+  const R = window.Radio, Fr = window.RadioFalas, m = LEITURA.m || me(), f1 = E.S && E.S.config && E.S.config.regras === "f1";
+  if (!cmd) { jeff(falado ? `não entendi “${falado}”. Tente “box”, “como estão meus pneus” ou “quem está na frente”.` : "não ouvi nada. Segure a tecla e fale.", 4200); R?.dizer("jeffnaoentendi", { forcar: true }); return; }
+  if (!race || !m || !f1 || E.S.phase !== "race") { jeff("só na corrida de F1."); return; }
+  const P = F().PNEUS, nome = (c) => (P[c] ? P[c].nome.toLowerCase() : c);
+  if (cmd.tipo === "box" || cmd.tipo === "pneu") {
+    const B = race.box; if (!B) { jeff("sem box nesta corrida."); return; }
+    if (B.fase) { jeff("você já está no box."); return; }
+    const c = cmd.composto || (B.pedido && B.pedido !== "decidir" ? B.pedido : proximo());
+    if (B.pedido === c) { jeff(`box já pedido, pneu ${nome(c)}.`); R?.dizer("box" + c, { forcar: true, reserva: "box" }); return; }
+    escolherComposto(c); // (box.js recusa sozinho a última volta e o pneu esgotado, com o aviso dele)
+    if (race.box.pedido === c) { mfd.prox = null; jeff(`box nesta volta, pneu ${nome(c)}.`); R?.dizer("box" + c, { forcar: true, reserva: "box" }); mexeu(); atualizarLinhas(); }
+    return;
+  }
+  if (cmd.tipo === "pneus" || cmd.tipo === "carro") { const t = pedirRadio(cmd.tipo); if (t) jeff(t); return; }
+  if (cmd.tipo === "frente" || cmd.tipo === "tras" || cmd.tipo === "gapFrente") {
+    const lado = cmd.tipo === "tras" ? "tras" : "frente", i = acoes.infoRival && acoes.infoRival(lado);
+    if (!i) { jeff(lado === "frente" ? "ninguém à sua frente: você lidera." : "ninguém atrás de você."); if (lado === "frente") acoes.radioRival?.("frente"); return; }
+    jeff(`${lado === "frente" ? "à sua frente" : "atrás de você"}, ${i.nome}, a ${seg1(i.seg)}${i.pneu && P[i.pneu] ? `, de ${nome(i.pneu)}` : ""}${i.desg >= 60 ? " (pneus no fim)" : ""}.`);
+    acoes.radioRival?.(lado); return;
+  }
+  if (cmd.tipo === "gapCompanheiro") {
+    const i = acoes.infoCompanheiro && acoes.infoCompanheiro();
+    if (!i) { jeff("seu companheiro de equipe não está na pista."); return; }
+    jeff(`seu companheiro, ${i.nome}, está ${i.frente ? "à frente" : "atrás"}, a ${seg1(i.seg)}.`);
+    if (R && Fr && i.seg != null) R.frase([R.pedaco(i.frente ? "companheirofrente" : "companheirotras"), Fr.pecaDoNome(i.nome), Fr.pecaDoGap(i.seg)].filter(Boolean), "rival", { forcar: true });
+    return;
+  }
+  if (cmd.tipo === "previsao") { jeff(textoPrevisao(m)); return; }
+  if (cmd.tipo === "completa") {
+    const st = LEITURA.st || [], pos = st.findIndex((r) => r.id === m.id) + 1, fr = acoes.infoRival && acoes.infoRival("frente"), tr = acoes.infoRival && acoes.infoRival("tras");
+    const vida = race.pneu ? Math.round(F().vidaRestante(race.pneu) * 100) : null, voltas = E.S.config.voltas, falta = Math.max(0, voltas - (m.laps || 0));
+    const partes = [`P${pos || "—"} de ${st.length}, ${falta === 1 ? "última volta" : `faltam ${falta} voltas`}.`,
+      race.pneu ? `Pneu ${nome(race.pneu.composto)} com ${vida}% de vida.` : "", `Dano: ${Math.round(m.dano || 0)}%.`,
+      fr ? `À frente: ${fr.nome}, a ${seg1(fr.seg)}.` : "Você lidera.", tr ? `Atrás: ${tr.nome}, a ${seg1(tr.seg)}.` : "", textoPrevisao(m)];
+    jeff(partes.filter(Boolean).join(" "), 9000);
+    acoes.radioRival?.("frente"); pedirRadio("pneus"); // (o rádio fala primeiro os pneus e depois o carro da frente: os forçados entram na frente da fila)
+  }
+}
+// o tempo: a chuva que vem (ou que para) e em que volta, pela previsão e pelo roteiro do clima; o estrategista fala a volta no rádio
+function textoPrevisao(m) {
+  const S = E.S, Fr = F(), R = window.Radio, ref = m.best || m.last;
+  const mud = S.clima && S.clima.chove && Fr.proximaMudanca && clima.t >= 0 ? Fr.proximaMudanca(S.clima, clima.t) : null;
+  const agora = clima.chuva > 0.05 ? (clima.chuva < 0.7 ? "Garoa agora" : "Chuva forte agora") : clima.agua > 0.15 ? "Sem chuva, pista ainda molhada" : "Tempo seco";
+  if (mud && ref && (mud.tipo === "comeca" || mud.tipo === "para")) {
+    const volta = (m.laps || 0) + 1 + Math.floor(mud.em / ref);
+    if (volta <= S.config.voltas) { R?.frase?.([mud.tipo === "comeca" ? "chuvavolta" : "secavolta", `volta-${volta}`], "estrategista", { forcar: true }); return `${agora}. ${mud.tipo === "comeca" ? "Chuva prevista" : "A chuva deve parar"} na volta ${volta}.`; }
+  }
+  R?.dizer(clima.agua > 0.15 ? "corridachuva" : "corridaseca", { forcar: true });
+  const d = S.previsao && Fr.descreverPrevisao ? Fr.descreverPrevisao(S.previsao, S.config.voltas) : null;
+  return `${agora}. ${S.clima && S.clima.chove ? "Nada muda até o fim, pelo radar." : d && !d.seco ? `${d.titulo} (${d.pct}%), mas nada no radar agora.` : "Sem chuva prevista."}`;
 }
 
 // ---------- as linhas ajustáveis (setas ‹ › ): só o que o jogo de fato muda ----------

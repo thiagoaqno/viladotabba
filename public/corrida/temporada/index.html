@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/corrida/temporada/entrada.css">
   <link rel="stylesheet" href="/corrida/temporada/stories.css">
   <link rel="stylesheet" href="/corrida/estante.css">
+  <link rel="stylesheet" href="/corrida/capacete.css">
 </head>
 <body>
   <header class="bar"><div class="bar-in"><a class="tovila" href="/">← Vila</a></div></header>
@@ -53,6 +54,13 @@
   <script src="/corrida/acerto-sugestao.js"></script>
   <script src="/corrida/temporada/central-acerto.js"></script>
   <script src="/corrida/temporada/sede.js"></script>
+  <script type="module">
+    // o editor do capacete na aba "Capacete" da Central (central.js chama window.CapaceteCarreira.montar no lugar marcado)
+    import { montarEditorCapacete } from "/corrida/capacete-editor-ui.js";
+    let caixa = null;
+    window.CapaceteCarreira = { montar(lugar) { if (!caixa) { caixa = document.createElement("section"); caixa.className = "cx-card cx-capacete cp-cartao"; montarEditorCapacete(caixa, { sub: "vai para a pista na próxima corrida" }); } else caixa._capacete.redesenhar(); lugar.replaceWith(caixa); } };
+    window.dispatchEvent(new Event("capacete:pronto"));
+  </script>
   <script src="/carreira/musica.js"></script>
   <script defer src="/corrida/gpu-aviso.js"></script>
 </body>

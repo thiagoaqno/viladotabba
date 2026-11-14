@@ -336,12 +336,3 @@ body.sala-escura:has(#lobby:not(.hidden)) .wrap{padding-bottom:84px}
 }
 
 /* ---------- o editor do capacete (capacete-editor.js) ---------- */
-.cp-previa{display:block;width:100%;max-width:420px;aspect-ratio:2/1;margin:6px auto 10px;border-radius:10px;background:#0b0c10}
-.cp-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px 10px}
-.cp-grade label{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:#aab1bd}
-.cp-grade select,.cp-grade input[type=text]{background:#0f1218;color:#f1f3f6;border:1px solid #2a2f3a;border-radius:8px;padding:6px 8px;font:inherit}
-.cp-grade input[type=color]{width:100%;height:34px;border:1px solid #2a2f3a;border-radius:8px;background:#0f1218;padding:2px;cursor:pointer}
-.cp-viseiras{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
-.cp-viseiras small{color:#aab1bd;margin-right:4px}
-.cp-vis{width:28px;height:28px;border-radius:50%;border:2px solid #2a2f3a;background:var(--c);cursor:pointer}
-.cp-vis.on{border-color:#fff;box-shadow:0 0 0 2px #e10600}

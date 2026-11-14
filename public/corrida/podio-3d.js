@@ -128,7 +128,7 @@ function montar(el, itens) {
     let s;
     if (i >= 0) { s = velhos.splice(i, 1)[0]; s.vivoDesde = 0; } // o mesmo carro: só troca o degrau (a tela foi refeita)
     else {
-      try { s = { chave, ...criarStand(it), fase: it.pos * 1.7, vivoDesde: 0, escala: it.pos === 1 ? 1.1 : 1, pil: null, pilDesde: 0, dados: { pos: it.pos, equipe: it.equipe, corEquipe: it.corEquipe, cor: it.cor, numero: it.numero, sigla: it.sigla, temLogo: !!it.temLogo } }; s.car.escalaBase = s.car.g.scale.x; } catch (e) { console.warn("Corrida: carro do pódio não montou", e); continue; }
+      try { s = { chave, ...criarStand(it), fase: it.pos * 1.7, vivoDesde: 0, escala: it.pos === 1 ? 1.1 : 1, pil: null, pilDesde: 0, dados: { pos: it.pos, equipe: it.equipe, corEquipe: it.corEquipe, cor: it.cor, numero: it.numero, sigla: it.sigla, capacete: (it.mods && it.mods.capacete) || null, temLogo: !!it.temLogo } }; s.car.escalaBase = s.car.g.scale.x; } catch (e) { console.warn("Corrida: carro do pódio não montou", e); continue; }
     }
     s.slot = it.slot; s.bloco = it.bloco; s.pos = it.pos; stands.push(s);
   }

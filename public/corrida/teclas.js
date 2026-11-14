@@ -30,6 +30,7 @@ export const ACOES = [
   { id: "radio", g: "Atalhos", nome: "Rádio do engenheiro liga / desliga", k: ["KeyU"], p: [] },
   { id: "telaCheia", g: "Atalhos", nome: "Tela cheia", k: ["KeyF"], p: [] },
   { id: "acerto", g: "Atalhos", nome: "Painel de acerto da direção", k: ["KeyP"], p: [] },
+  { id: "voz", g: "Atalhos", nome: "Falar com o Jeff, o engenheiro (aperte, fale; fecha sozinho)", k: ["CapsLock"], p: [] },
   { id: "controles", g: "Atalhos", nome: "Abrir esta tela (Controles)", k: ["KeyK"], p: [] },
   { id: "box", g: "Box", nome: "Box (abre o MFD; de novo pede, sem cancelar)", k: ["KeyB"], p: [] },
   { id: "pneu1", g: "Box", nome: "Pneu macio (escolhe e pede)", k: ["Digit1", "Numpad1"], p: [] },

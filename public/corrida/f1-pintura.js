@@ -287,29 +287,52 @@ DESENHOS.mercedes = {
   },
 };
 
-// Red Bull RB22: azul-marinho fosco, os touros vermelhos na tampa, a entrada de ar amarela e o bico com amarelo e vermelho
+// Red Bull RB22, pelos prints do Thiago (2026-11-13): azul-marinho com manchas mais escuras, o touro vermelho grande na tampa com o sol amarelo
+// na entrada de ar, o bico amarelo com a chama vermelha, as asas de carbono com o "Red Bull" vermelho grande e o VISA na dianteira, o Mobil 1 nas
+// placas da traseira, o ORACLE atrás e na caixa lateral, a TAG Heuer na frente do cockpit. Tudo desenhado no canvas (nenhuma imagem nova).
+function manchas(c, s0, s1, y0, y1, n, cor, semente) {
+  const r = mulberry(semente); c.fillStyle = cor;
+  for (let i = 0; i < n; i++) { c.beginPath(); c.ellipse(s0 + r() * (s1 - s0), y0 + r() * (y1 - y0), 0.01 + r() * 0.03, 0.008 + r() * 0.02, r() * Math.PI, 0, Math.PI * 2); c.fill(); }
+}
+// letra grossa com contorno, girada (em metros, no plano da vista)
+function letreiro(c, str, a, b, h, cor, borda, giro = 0) {
+  const [px, py] = pt(c, a, b); c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.translate(px, py); c.rotate(giro);
+  c.font = `italic 900 ${Math.round(h * PX())}px 'Arial Black', Arial, sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+  c.strokeStyle = borda; c.lineWidth = Math.max(2, h * PX() * 0.16); c.lineJoin = "round"; c.strokeText(str, 0, 0); c.fillStyle = cor; c.fillText(str, 0, 0); c.restore();
+}
 DESENHOS["red-bull"] = {
   numero: "#ffffff", carbono: 1, numPos: [3.5, 0.62, 9, 9],
   pintar(ctx) {
-    const AZUL = "#141c42", ESC = "#0d1330", VERM = "#d3112f", AMAR = "#f7b500";
+    const AZUL = "#1b2452", ESC = "#0e1430", MANCHA = "#131a3e", VERM = "#d3112f", AMAR = "#f7c600", CARB = "#25272b";
     base(ctx, AZUL);
     lados(ctx, (c) => {
-      poli(c, [[2.2, 0.72], [2.2, 1.1], [2.66, 1.1], [2.66, 0.72]], AMAR); // a entrada de ar
+      manchas(c, 1.1, 3.9, 0.15, 1.05, 140, MANCHA, 22);
+      // o sol amarelo na entrada de ar e o touro grande na tampa
+      ret(c, 2.18, 0.86, 2.52, 1.1, AMAR); c.beginPath(); c.arc(2.46, 0.84, 0.19, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill();
+      touros(c, 2.42, 0.6, 3.48, 1.02);
       baixo(c, ESC);
-      poli(c, [[0.04, 0.12], [0.62, 0.12], [0.5, 0.3], [0.04, 0.2]], AMAR); poli(c, [[0.28, 0.12], [0.9, 0.12], [0.74, 0.36], [0.28, 0.3]], VERM);
-      ret(c, 3.86, 0.3, 4.45, 1.1, ESC);
-      touros(c, 2.68, 0.66, 3.5, 0.98);
-      marca(c, "redbull", 3.02, 0.56, 0.075, { tinta: VERM }); marca(c, "oracle", 2.78, 0.31, 0.105); marca(c, "rokt", 2.3, 0.62, 0.035); marca(c, "mobil1", 4.15, 0.72, 0.06); marca(c, "mobil1", 1.52, 0.42, 0.036);
+      // o bico: amarelo na ponta, a chama vermelha atrás
+      poli(c, [[0, 0.17], [0.7, 0.17], [0.58, 0.32], [0, 0.24]], AMAR); poli(c, [[0.55, 0.17], [1.05, 0.17], [0.92, 0.38], [0.58, 0.32]], VERM);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], CARB); // a asa dianteira
+      ret(c, 3.82, 0.3, 4.45, 1.1, CARB); // a asa traseira
+      marca(c, "redbull", 2.98, 0.57, 0.075, { tinta: VERM }); marca(c, "oracle", 2.7, 0.33, 0.105); marca(c, "rokt", 2.28, 0.63, 0.035);
+      marca(c, "carlyle", 1.72, 0.5, 0.03); marca(c, "mobil1", 1.05, 0.28, 0.035); marca(c, "mobil1", 0.32, 0.1, 0.035);
+      marca(c, "mobil1", 4.15, 0.8, 0.07); marca(c, "redbull", 4.15, 0.62, 0.04, { tinta: VERM });
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.3, -0.3, 2.7, 0.3, AMAR); ret(c, 2.7, -0.1, 3.5, 0.1, VERM);
-      asasT(c, ESC, ESC, AZUL); poli(c, [[0, -0.09], [0.32, -0.12], [0.32, 0.12], [0, 0.09]], AMAR); poli(c, [[0.32, -0.12], [0.7, -0.14], [0.7, 0.14], [0.32, 0.12]], VERM);
-      for (const l of [-1, 1]) marca(c, "redbull", 0.3, l * 0.45, 0.05, { giro: DE_FRENTE, tinta: "#fff" });
-      touros(c, 3.94, -0.3, 4.4, 0.3);
-      textoTopo(c, "Red Bull", 1.6, 0, 0.11, "#e51a3a", { larg: 0.26, borda: "#ffffff" });
+      manchas(c, 1.2, 3.9, -0.65, 0.65, 160, MANCHA, 7);
+      c.beginPath(); c.arc(2.42, 0, 0.17, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill(); // o sol, de cima
+      touros(c, 2.55, 0.26, 3.45, 0.62); touros(c, 2.55, -0.62, 3.45, -0.26); // os touros no alto das caixas
+      asasT(c, CARB, CARB, AZUL);
+      poli(c, [[0, -0.09], [0.45, -0.12], [0.45, 0.12], [0, 0.09]], AMAR); poli(c, [[0.45, -0.12], [0.78, -0.14], [0.78, 0.14], [0.45, 0.12]], VERM); // o bico
+      const f = { giro: DE_FRENTE };
+      for (const l of [-1, 1]) { letreiro(c, "Red Bull", 0.16, l * 0.47, 0.1, VERM, "#ffffff", DE_FRENTE); marca(c, "visa", 0.42, l * 0.46, 0.05, f); }
+      marca(c, "visa", 0.82, 0, 0.03, f); marca(c, "att", 0.88, 0, 0.026, f); marca(c, "tagheuer", 1.22, 0, 0.075, f);
+      marca(c, "oracle", 2.0, 0.42, 0.04, { giro: DE_FRENTE }); marca(c, "oracle", 2.0, -0.42, 0.04, { giro: DE_FRENTE });
+      marca(c, "gate", 4.12, 0, 0.09, f);
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.2, 0.1, 0.2, 0.45, VERM); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); touros(c, -0.45, 0.45, 0.45, 0.8); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.14, 0.1, 0.14, 0.4, AMAR); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); touros(c, -0.45, 0.42, 0.45, 0.76); ret(c, -0.8, 0.8, 0.8, 1.1, CARB); marca(c, "oracle", 0, 0.9, 0.08); });
   },
 };
 

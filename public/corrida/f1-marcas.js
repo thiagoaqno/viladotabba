@@ -108,4 +108,14 @@ Object.assign(MARCAS, {
   gota(c) { c.fillStyle = "#00d2be"; c.beginPath(); c.moveTo(0, -0.5); c.quadraticCurveTo(0.42, 0, 0.36, 0.2); c.arc(0, 0.2, 0.36, 0, Math.PI); c.quadraticCurveTo(-0.42, 0, 0, -0.5); c.fill(); c.fillStyle = "#fff"; c.beginPath(); c.ellipse(0, 0.16, 0.13, 0.2, 0, 0, Math.PI * 2); c.fill(); },
   syntium(c, { tinta = "#fff" } = {}) { letra(c, "PETRONAS", { y: -0.3, h: 0.36, peso: 800, cor: tinta, esp: 4 }); letra(c, "Syntium", { y: 0.2, h: 0.72, peso: 700, ital: true, cor: tinta }); },
 });
+// As da Red Bull RB22 (os prints de 2026-11-13)
+Object.assign(MARCAS, {
+  gate(c, { tinta = "#fff" } = {}) { letra(c, "Gate", { h: 1.15, peso: 900, cor: tinta }); },
+  carlyle(c, { tinta = "#fff" } = {}) { letra(c, "CARLYLE", { h: 0.9, peso: 400, fam: SERIFA, cor: tinta, esp: 5 }); },
+  att(c, { tinta = "#fff" } = {}) { letra(c, "AT&T", { h: 1, peso: 800, cor: tinta }); },
+  // o escudo vermelho e verde com o nome
+  tagheuer(c) { c.beginPath(); c.moveTo(-0.5, -0.5); c.lineTo(0.5, -0.5); c.lineTo(0.5, 0.25); c.lineTo(0, 0.5); c.lineTo(-0.5, 0.25); c.closePath(); c.fillStyle = "#fff"; c.fill();
+    c.fillStyle = "#0b7a43"; c.fillRect(-0.42, -0.42, 0.84, 0.36); c.fillStyle = "#d4152b"; c.fillRect(-0.42, -0.02, 0.84, 0.3);
+    letra(c, "TAG", { y: -0.24, h: 0.28, peso: 900, cor: "#fff" }); letra(c, "HEUER", { y: 0.13, h: 0.24, peso: 900, cor: "#fff" }); },
+});
 export function desenharMarca(c, id, op) { MARCAS[id]?.(c, op); }

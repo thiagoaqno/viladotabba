@@ -9,7 +9,10 @@ import { criarPiloto, animarPiloto, ocultarPiloto as ocultarPilotoDe, soltarPilo
 let kartChegou = false; f1Pronto.then(() => { kartChegou = true; }); // a foto da garagem é refeita quando o modelo 3D chega
 import { faiscas } from "./efeitos.js";
 import { ACERTO_CARRO_PADRAO, alturaParada, afundaAero } from "./acerto-carro.js";
-const SUSP_VER = 3; // a suspensão desenhada com 3 × o curso calculado: centímetros não se veem da câmera (o raspar usa a conta sem exagero)
+// A suspensão no desenho (o raspar usa a conta de sim.js, sem nada disto). Antes era 3 × o curso, só a carroceria descia (até ~37 cm) e as rodas
+// ficavam no chão: na câmera de cockpit as rodas da frente saíam dos braços da suspensão. Agora o curso é o de verdade, no máximo SUSP_MAX, e as
+// rodas descem com o carro: a roda sobe em relação ao carro até RODA_CURSO (o que se vê nos braços) e o pneu amassa o resto, com a base no chão.
+const SUSP_VER = 1, SUSP_MAX = 0.06, RODA_CURSO = 0.03; // (m)
 import { luzNoMaterial } from "./kit/luz-postes.js";
 import { modeloItem } from "./modelos.js";
 
@@ -143,11 +146,15 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   if (bate > 0.012 && v > 150 && performance.now() > (k.pancadaAte || 0)) { k.pancada = true; k.pancadaAte = performance.now() + 600; } // a suspensão bate no fundo (jogo.js toca o som do meu carro)
   k.afunda = (k.afunda ?? 0) + (alvoAfunda - (k.afunda ?? 0)) * (1 - Math.exp(-dt * 12));
   k.folga = alturaParada(ac) - k.afunda;
-  const suspY = (alturaParada(ac) - alturaParada(ACERTO_CARRO_PADRAO) - k.afunda) * KS * SUSP_VER;
+  const suspM = Math.max(-SUSP_MAX, Math.min(SUSP_MAX, (alturaParada(ac) - alturaParada(ACERTO_CARRO_PADRAO) - k.afunda) * SUSP_VER)), suspY = suspM * KS; // (m; negativo = mais baixo)
   k.body.position.y = (fx.rodando && k.tAt < 0.6 ? Math.sin((k.tAt / 0.6) * Math.PI) * 14 : 0) + suspY;
-  // só a carroceria desce: os pivôs das rodas sobem o mesmo tanto e os pneus continuam no chão (como na Central, temporada/acerto3d.js)
+  // as rodas descem com o carro (presas nos braços): sobem em relação a ele no máximo RODA_CURSO, e o pneu amassa o que faltar para a base ficar no chão
   const rodas = k.kt?.rodas, esc = k.kt?.g.scale.y || 1; // (os pivôs ficam no quadro do modelo, que tem escala própria)
-  if (rodas) for (const r of rodas) { const p = r.esterca || r.gira.parent; if (!p) continue; p.userData.y0 ??= p.position.y; p.position.y = p.userData.y0 - suspY / esc; }
+  const sobe = Math.max(-RODA_CURSO, Math.min(RODA_CURSO, -suspM)), amassa = Math.max(0, -suspM - sobe);
+  if (rodas) for (const r of rodas) {
+    const p = r.esterca || r.gira.parent, roda = r.gira.parent; if (!p) continue; p.userData.y0 ??= p.position.y; p.position.y = p.userData.y0 + sobe * KS / esc;
+    if (roda && r.r) roda.scale.y = Math.max(0.85, 1 - (amassa * KS / esc) / r.r); // (no centro da roda: o centro desce `amassa` e a base fica)
+  }
   k.tontura.visible = !!fx.rodando; if (fx.rodando) { k.tontura.rotation.y += dt * 7; k.tontura.position.y = 24 + Math.sin(k.tAt * 9) * 1.2; }
   if (fx.rodando) k.giro += dt * 13;
   else if (k.giro > 0) { const fim = Math.ceil(k.giro / (Math.PI * 2) - 1e-6) * Math.PI * 2; k.giro += dt * 9; if (k.giro >= fim) k.giro = 0; } // termina a volta inteira

@@ -6,6 +6,8 @@ import * as THREE from "three";
 import { canvasTex, M } from "./cena.js";
 import { marcaTex } from "./kit/marcas.js";
 import { livre, sorteio } from "./kit/comum.js";
+import { placasDasCurvas } from "./kit/interlagos/placas.js";
+import { mataDeInterlagos } from "./kit/interlagos/mata.js";
 
 // o lago a nordeste da Junção (OSM, natural=water, simplificado de 263 para 38 pontos): [x, z] no mundo do jogo
 const LAGO = [[2657, 1080], [2674, 1092], [2753, 1089], [2777, 1042], [2842, 1016], [2855, 958], [2883, 919], [2884, 875], [2945, 803], [3040, 594], [3036, 566], [3070, 545], [3149, 361], [3155, 342], [3139, 311], [3156, 285], [3124, 238], [3067, 242], [3051, 222], [3019, 208], [2956, 213], [2877, 237], [2828, 281], [2785, 355], [2738, 477], [2736, 523], [2710, 598], [2646, 692], [2578, 863], [2581, 976], [2557, 1061], [2573, 1064], [2596, 1040], [2614, 1045], [2613, 1065], [2579, 1085], [2590, 1098], [2637, 1057]];
@@ -50,9 +52,16 @@ export function cenarioInterlagos(tr, { add, hAt, blds, aguaTex }) {
   }
 }
 
-// o depois, por cima dos enfeites: o prédio dos boxes com a torre de controle, do lado de dentro da reta (o oposto das arquibancadas),
+// o depois, por cima dos enfeites: as placas das curvas e a mata (kit/interlagos/), depois do prédio dos boxes para não entrar nele
+export function depoisInterlagos(tr, ctx, arquibancadas = []) {
+  predioDosBoxes(tr, ctx);
+  tr.placasInterlagos = placasDasCurvas(tr, ctx);
+  tr.mataInterlagos = mataDeInterlagos(tr, ctx.add, { fora: (x, z) => dentroDoLago(x, z, 60), arquibancadas });
+}
+
+// o prédio dos boxes com a torre de controle, do lado de dentro da reta (o oposto das arquibancadas),
 // atrás das garagens do corredor dos boxes (que ficam em volta da linha de chegada)
-export function depoisInterlagos(tr, { add, hAt }) {
+function predioDosBoxes(tr, { add, hAt }) {
   const { pts, n, W } = tr, i = Math.floor(n * 0.0097), p = pts[i], d = W / 2 + 115, x = p.x - p.nx * d, z = p.y - p.ny * d; // (lado -1: para dentro da pista)
   const COMP = 585, FUNDO = 46;
   if (!livre(tr, x, z, 70)) return;

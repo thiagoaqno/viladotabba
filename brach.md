@@ -1,33 +1,25 @@
-# Análise repaginada: Replay primeiro, tela cheia, ícones, logos e o tempo certo das ultrapassagens
+# Análise da carreira na interface nova
 
-Pedidos do Thiago depois do #747.
+O Thiago mandou a interface nova da Análise: o layout, as funções e os temas claro e escuro. No replay e na análise, ele pediu animações e itens que respondem ao mouse. As abas ficaram na ordem que ele aprovou: Replay, Visão geral, Desempenho, Pneus, Estratégia, Voltas e Eventos.
 
-## Correção: "Ver no replay" mostrava a ultrapassagem segundos depois
+## O que mudou
 
-- O laço das regras de F1 roda a cada 100 ms, e a gravação pegava uma amostra "250 ms depois da última", o que na prática dava 300 ms. A tela converte o tempo em amostras contando 250 ms cada, e a conta passava do ponto (com 100 s de corrida, uns 17 s de erro).
-- Agora a próxima amostra é marcada no relógio, em t0 + k × 250 ms (`corrida-gravacao.js`); rodando à mão, 30 s deram 121 amostras.
-- Cada ultrapassagem guarda `j`, a amostra exata em que os dois trocaram. As gravadas antes desta correção usam o tempo dividido por 0,3 s.
-- "Ver no replay" abre de 8 s antes até 4 s depois, com a câmera no lugar da ultrapassagem.
+- **Cabeçalho** (`central-analise.js`, `central.css`): a bandeira do país com o filete na cor da equipe, "/ Análise da corrida", o GP em letra grande, "Etapa X / Y · circuito" e a foto da cidade (`GpInfo.fundoDe`, as mesmas fotos dos GPs) esmaecendo à direita. Vale no tema claro e no escuro.
+- **Visão geral** (`central-analise-geral.js`, novo):
+  - a faixa com o vencedor, a volta mais rápida (com a volta) e o melhor de cada setor, com o logo de cada um;
+  - o **mapa da corrida** em 3D (veja abaixo);
+  - o **resultado final**: os 5 primeiros, com a diferença (tempo, voltas a menos ou abandono) e os pontos; "Ver todos" abre o grid inteiro;
+  - o **desempenho por setor**;
+  - as **estratégias em destaque**: quantas paradas fez quem terminou, a parte do grid em cada uma, o melhor colocado e os pneus dele;
+  - os **destaques**: o vencedor, a volta mais rápida, o maior ganho e a maior queda de posições, as ultrapassagens e quem mais passou;
+  - as **informações da corrida**: tempo, voltas, paradas, ultrapassagens, safety car, bandeiras amarelas e condições.
+  - Só números que o jogo mede: sem temperatura, e sem distância em km, porque a escala das pistas é a antiga.
+- **Mapa da corrida** (`resultado-analise.js`, aba `mapa`): em "Posições", os carros, cada um com o logo da equipe, refazem a última volta do vencedor em loop, no dobro da velocidade e com a posição interpolada entre as amostras; clicar num carro diz quem é e a posição final. "Traçado" mostra só a pista, os setores, as curvas e o carrinho de luz. Sem replay gravado, fica o Traçado. Os rótulos dos carros da miniatura agora aceitam o logo (`gp-miniatura.js`).
+- **Desempenho:** os três setores em quadros, com o melhor de cada um em destaque e os 5 primeiros em barras na cor da equipe e com a diferença. Embaixo vêm o gráfico das posições (3D), "O seu desempenho" (a visão antiga: resultado, tempos, ritmo e comparação por setor) e a distância para o líder.
+- **Pneus:** a tabela com o logo, o piloto, os pneus de cada stint (com a dica do composto e das voltas), as paradas, as voltas e o tempo no box, com abas por equipe.
+- **Eventos:** os momentos e as ultrapassagens juntos na mesma lista e no mapa. Cada ultrapassagem tem o botão "Replay", que abre o Replay na manobra.
+- **Animação e mouse:** os cartões entram em sequência, as linhas deslizam e as barras crescem (com "reduzir movimento" desligado); os cartões sobem no hover, e as linhas e os pneus reagem ao mouse. No Replay, passar o mouse num piloto da torre acende o carro dele na pista.
 
-## Replay
-
-- É a primeira aba e a que abre, na tela do resultado e na Central.
-- "Seguir" começa desligado.
-- O botão de tela cheia põe a pista, a torre, a barra do tempo e a telemetria inteiras em tela cheia (`requestFullscreen`).
-
-## Repaginada
-
-- **Sem emoji na interface:** os ícones dos momentos (largada, pit, batida, punição, bandeira, recorde, rádio) e os botões (tocar e pausar, zoom, centralizar, tela cheia, seta, fechar da vista do carro) são SVG de linha.
-- **O logo da equipe no lugar das faixas de cor:** na lista de momentos, na torre do replay, na telemetria, nos pneus, nas ultrapassagens e nas legendas e listas das sub-abas antigas da Central.
-- **A escolha do piloto:** os seletores A (de quem é a análise) e B (com quem comparar) têm o logo da equipe.
-- **Momentos no layout das referências:**
-  - um cartão com o mapa 3D, com a legenda dos setores e os botões de aproximar, afastar e ver a pista inteira (`gp-miniatura.js`, `aproximar`);
-  - um cartão com a lista, em filtros de abas e ícones;
-  - embaixo, os **setores de cada volta** do piloto A: roxo é o melhor da corrida naquele setor, verde o melhor dele, amarelo os outros. Clicar numa volta filtra os momentos dela.
-- **Cartões arredondados**, também no tema claro e escuro da Central.
-- **Cabeçalho da Análise na Central:** o rótulo "/ Análise da corrida", o nome do GP grande e "Etapa X / Y · circuito".
-- O X de quem abandonou, no gráfico das posições, é desenhado (antes era um caractere).
-
-Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`; a amostragem foi rodada uma vez à mão, sem teste novo. O teste jogando fica com o Thiago.
+Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`. O teste jogando fica com o Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

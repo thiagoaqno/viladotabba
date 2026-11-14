@@ -158,11 +158,11 @@ function html(S, A, L, idA, idB) {
   const a = L.find((s) => s.id === idA), bb = L.find((s) => s.id === idB) || null;
   const abas = [["replay", "Replay"], ["momentos", "Momentos"], ["posicoes", "Posições"], ["ultrapassagens", "Ultrapassagens"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
   const corpo = aba === "ritmo" ? `<div class="ra-par">${cartao(A, a, "a")}${bb ? cartao(A, bb, "b") : ""}</div>${graficoRitmo(A, a, bb)}<p class="ra-legenda">Escolha outro piloto clicando no gráfico das posições, nos pneus ou na tabela acima.</p>`
-    : aba === "pneus" ? pneus(L, idA, idB) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A, L, a) : aba === "ultrapassagens" ? ultrapassagensHTML(A, L) : aba === "replay" ? replayHTML(replayAgora, L) : graficoPosicoes(L, A, idA, idB);
+    : aba === "pneus" ? pneus(L, idA, idB) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A, L, a) : aba === "ultrapassagens" ? ultrapassagensHTML(A, L) : aba === "replay" ? replayHTML(replayAgora, L) : aba === "mapa" ? mapaHTML(replayAgora || null) : graficoPosicoes(L, A, idA, idB);
   const resumo = [A.safeties ? `${A.safeties} safety car${A.safeties > 1 ? "s" : ""}` : "", A.amarelas ? `${A.amarelas} bandeira${A.amarelas > 1 ? "s" : ""} amarela${A.amarelas > 1 ? "s" : ""}` : "", A.chuva ? "chuva" : ""].filter(Boolean).join(" · ");
   return `${modo.semCab ? "" : `<header class="ra-cab"><div><h3>Análise da corrida</h3><small>${A.voltas} volta${A.voltas > 1 ? "s" : ""}${resumo ? ` · ${resumo}` : ""}</small></div>
     <div class="ra-abas" role="tablist">${abas.map(([k, r]) => `<button type="button" role="tab" data-ra-aba="${k}" class="${aba === k ? "on" : ""}" aria-selected="${aba === k}">${r}</button>`).join("")}</div></header>`}
-    <div class="ra-vs">${seletor("a", a, L)}<small>vs</small>${seletor("b", bb, L)}</div>
+    ${aba === "mapa" ? "" : `<div class="ra-vs">${seletor("a", a, L)}<small>vs</small>${seletor("b", bb, L)}</div>`}
     <div class="ra-corpo">${corpo}</div>`;
 }
 function desenhar(box, S, m, A) {
@@ -171,7 +171,7 @@ function desenhar(box, S, m, A) {
   const idA = (escolhidoA && L.some((s) => s.id === escolhidoA) && escolhidoA) || (m && L.some((s) => s.id === m.id) && m.id) || L[0].id;
   // o B padrão: o carro que chegou logo à frente de A (ou logo atrás, se A ganhou)
   if (!escolhidoB || !L.some((s) => s.id === escolhidoB) || escolhidoB === idA) { const i = L.findIndex((s) => s.id === idA); escolhidoB = (L[i - 1] || L[i + 1] || {}).id || null; }
-  if (aba === "replay") replayAgora = pedirReplay(S, () => { if (aba === "replay" && box.isConnected) desenhar(box, S, m, A); });
+  if (aba === "replay" || aba === "mapa") replayAgora = pedirReplay(S, () => { if ((aba === "replay" || aba === "mapa") && box.isConnected) desenhar(box, S, m, A); });
   box.innerHTML = html(S, A, L, idA, escolhidoB); box.hidden = false;
   const escolher = (id) => { if (id && id !== idA) { escolhidoB = id; if (aba === "posicoes" && !modo.semCab) aba = "ritmo"; desenhar(box, S, m, A); } };
   box.querySelectorAll("[data-ra-sel]").forEach((sel) => { sel.onchange = () => { const v = sel.value; if (!v) return; if (sel.dataset.raSel === "a") { escolhidoA = v; rep.sel = v; if (escolhidoB === v) escolhidoB = null; } else { escolhidoB = v; rep.cmp = v; } desenhar(box, S, m, A); }; });
@@ -179,6 +179,7 @@ function desenhar(box, S, m, A) {
   if (aba === "momentos") ligarMomentos(box, S, m, A, L, idA, escolher);
   if (aba === "ultrapassagens") ligarUltrapassagens(box, S, m, A, L);
   if (aba === "replay" && replayAgora) ligarReplay(box, S, m, A, L, idA);
+  if (aba === "mapa") ligarMapa(box, S, m, A, L);
   const g = box.querySelector(".ra-graf");
   if (g && g.dataset.graf === "posicoes") ligarPosicoes(g, L, A, escolher);
   if (g && g.dataset.graf === "ritmo") ligarRitmo(g, A, L.find((s) => s.id === idA), L.find((s) => s.id === escolhidoB) || null);
@@ -261,7 +262,7 @@ const logoDe = (eq, cls = "ra-logo") => (eq ? `<img class="${cls}" src="${h((win
 // amarelo os outros (clicar numa volta filtra os momentos dela).
 const TIPOS = {
   largada: { rot: "Largada", cor: "#9aa4b1" }, pit: { rot: "Pits", cor: "#2aa8ff" }, batida: { rot: "Batidas", cor: "#ff5a36" },
-  punicao: { rot: "Punições", cor: "#9b5de5" }, bandeira: { rot: "Bandeiras", cor: "#f5b400" }, destaque: { rot: "Recordes", cor: "#22b864" }, radio: { rot: "Rádio", cor: "#7c8a99" },
+  ultrapassagem: { rot: "Ultrapassagens", cor: "#00b39b" }, punicao: { rot: "Punições", cor: "#9b5de5" }, bandeira: { rot: "Bandeiras", cor: "#f5b400" }, destaque: { rot: "Recordes", cor: "#22b864" }, radio: { rot: "Rádio", cor: "#7c8a99" },
 };
 function tipoDe(x) {
   if (/^🏁/u.test(x)) return "largada"; if (/^🔧/u.test(x)) return /quebrou/.test(x) ? "batida" : "pit"; if (/^💥/u.test(x)) return "batida";
@@ -274,6 +275,8 @@ function momentos(S, A, L) {
   const porId = new Map(L.map((s) => [s.id, s])), cum = []; let soma = 0; for (const t of (L[0] && L[0].d.v) || []) cum.push((soma += t));
   const voltaEm = (t) => { const i = cum.findIndex((c) => c >= t); return i < 0 ? Math.max(1, cum.length) : i + 1; };
   const lista = (A.eventos || []).map((e) => ({ t: e.t, v: e.v || voltaEm(e.t), tipo: tipoDe(e.x), txt: semEmoji(e.x), id: e.id, f: e.f, eq: e.id && porId.get(e.id) ? porId.get(e.id).eqId : null }));
+  // as ultrapassagens (corrida-gravacao.js) entram como momentos, com o botão de ver no replay
+  (A.ultrapassagens || []).forEach((u, k) => { const a = porId.get(u.a), b = porId.get(u.b); if (a && b) lista.push({ t: u.t, v: u.v, tipo: "ultrapassagem", txt: `${a.nome} passa ${b.nome} e vai a ${u.pos}º${u.sob ? " (sob bandeira)" : ""}`, id: u.a, f: u.f, eq: a.eqId, ult: k }); });
   // o rádio: a hora do navegador vira a do servidor (sNow), e só entra o que caiu dentro desta corrida
   const fim = Math.max(soma, ...lista.map((e) => e.t), 1), desvio = fonte.sNow() - Date.now();
   if (typeof S.startAt === "number" && window.Radio && window.Radio.historico) for (const r of window.Radio.historico()) {
@@ -306,7 +309,7 @@ function momentosHTML(M, A, L, a) {
   const filtros = [["tudo", "Tudo", lista.length], ...Object.keys(TIPOS).filter((k) => conta[k]).map((k) => [k, TIPOS[k].rot, conta[k]])];
   const itens = lista.length ? lista.map((e) => `<li data-ev="${e.i}" tabindex="0" style="--c:${TIPOS[e.tipo].cor}" class="${fora(e) ? "fora" : ""}">
       <span class="ra-mom-v"><b>V${e.v}</b><small>${mmss(e.t)}</small></span><span class="ra-mom-ico">${ICO[e.tipo]}</span>
-      <span class="ra-mom-txt">${e.eq ? logoDe(e.eq) : ""}<span>${h(e.txt)}</span></span><i class="ra-chev">${ICO.chev}</i></li>`).join("") : `<li class="vazio">Nada anotado nesta corrida.</li>`;
+      <span class="ra-mom-txt">${e.eq ? logoDe(e.eq) : ""}<span>${h(e.txt)}</span></span>${e.ult != null ? `<button type="button" class="ra-chip ra-ver-ult" data-ver-ult="${e.ult}" title="Ver no replay">Replay</button>` : `<i class="ra-chev">${ICO.chev}</i>`}</li>`).join("") : `<li class="vazio">Nada anotado nesta corrida.</li>`;
   return `<div class="ra-mom">
     <section class="ra-card ra-mapa">
       <div class="ra-mini"></div><div class="ra-dica ra-mom-dica" hidden></div>
@@ -363,7 +366,11 @@ function ligarMomentos(box, S, m, A, L, idA, escolher) {
   const deEv = (ev) => { const a = ev.target.closest && ev.target.closest("[data-ev]"); return a ? +a.dataset.ev : null; };
   ol.addEventListener("pointerover", (ev) => { const i = deEv(ev); if (i != null) acender(i); });
   ol.addEventListener("pointerleave", () => acender(escolhido));
-  ol.addEventListener("click", (ev) => { const i = deEv(ev); if (i != null) escolherEv(i); });
+  ol.addEventListener("click", (ev) => {
+    const v = ev.target.closest && ev.target.closest("[data-ver-ult]");
+    if (v) { verUltrapassagem((A.ultrapassagens || [])[+v.dataset.verUlt], () => desenhar(box, S, m, A)); return; }
+    const i = deEv(ev); if (i != null) escolherEv(i);
+  });
   ol.addEventListener("keydown", (ev) => { if (ev.key !== "Enter" && ev.key !== " ") return; const i = deEv(ev); if (i != null) { ev.preventDefault(); escolherEv(i); } });
   ol.addEventListener("dblclick", (ev) => { const i = deEv(ev), e = i != null ? lista[i] : null; if (e && e.id && e.id !== idA) escolher(e.id); });
   // o zoom e a volta à pista inteira
@@ -498,10 +505,10 @@ function ligarReplay(box, S, m, A, L, idA) {
       ${series.map((s) => { const c = info(s.id).cor, papel = s.id === rep.sel ? "a" : "b"; return `<g class="ra-tl ${papel}" style="--c:${c}"><path class="v" d="${caminho(s.pts, (e) => yv(e.kmh))}"/><path class="p" d="${caminho(s.pts, (e) => pedal(e.gas, 98))}"/><path class="p f" d="${caminho(s.pts, (e) => pedal(e.freio, 118))}"/></g>`; }).join("")}
       ${rep.janela ? `<line class="ra-cabeca" x1="${x(j).toFixed(1)}" x2="${x(j).toFixed(1)}" y1="4" y2="${H - 2}"/>` : ""}</svg>`;
   };
-  let ultimoDesenho = 0;
+  let ultimoDesenho = 0, sobTorre = null;
   function desenharTudo(forcar) {
     const j = Math.max(0, Math.min(D.n - 1, Math.round(rep.j))), ordem = ordemEm(j);
-    for (const id of D.ids) { const e = D.em(j, D.col.get(id)); mini.posicionar(id, e ? e.f : null, id === rep.sel || id === rep.cmp); }
+    for (const id of D.ids) { const e = D.em(j, D.col.get(id)); mini.posicionar(id, e ? e.f : null, id === rep.sel || id === rep.cmp || id === sobTorre); }
     const eSel = D.em(j, D.col.get(rep.sel)); if (rep.seguir && eSel) mini.seguir(eSel.f); else mini.seguir(null);
     const agora = performance.now(); if (!forcar && agora - ultimoDesenho < 110) return; ultimoDesenho = agora;
     const lider = ordem[0] && !isNaN(ordem[0].pr) ? Math.max(1, Math.floor(ordem[0].pr) + 1) : 1;
@@ -534,10 +541,20 @@ function ligarReplay(box, S, m, A, L, idA) {
   box.querySelector("[data-rep-seguir]").onclick = (ev) => { rep.seguir = !rep.seguir; ev.currentTarget.classList.toggle("on", rep.seguir); if (!rep.seguir) mini.focar(null); };
   box.querySelector("[data-rep-calor]").onclick = (ev) => { rep.calor = !rep.calor; ev.currentTarget.classList.toggle("on", rep.calor); calor(); };
   barra.oninput = () => { rep.j = +barra.value; rep.janela = null; desenharTudo(true); };
+  // passar o mouse num piloto da torre acende o carro dele na pista
+  torre.onpointerover = (ev) => { const li = ev.target.closest("[data-carro]"); sobTorre = li ? li.dataset.carro : null; };
+  torre.onpointerleave = () => { sobTorre = null; };
   torre.onclick = (ev) => { const li = ev.target.closest("[data-carro]"); if (li) escolherCarro(li.dataset.carro); };
   calor(); desenharTudo(true);
 }
 
+// "Ver no replay": a janela de 8 s antes a 4 s depois da troca, os dois escolhidos e a câmera no lugar; na Central, ela troca a sub-aba
+function verUltrapassagem(u, redesenhar) {
+  if (!u) return; const passo = 250, jj = amostraDe(u);
+  rep.sel = u.a; rep.cmp = u.b; rep.janela = [Math.max(0, jj - Math.round(8000 / passo)), jj + Math.round(4000 / passo)]; rep.j = rep.janela[0]; rep.tocando = true; rep.vel = 1; rep.foco = u.f;
+  if (modo.aoAba) return modo.aoAba("replay");
+  aba = "replay"; redesenhar();
+}
 // ---------- Ultrapassagens: a lista, os pinos na miniatura e o atalho para o replay ----------
 function ultrapassagensHTML(A, L) {
   const U = A.ultrapassagens || [], porId = new Map(L.map((s) => [s.id, s])), info = (id) => porId.get(id) || { cor: "#9aa1ad", sigla: "?", nome: "?" };
@@ -555,7 +572,7 @@ function ligarUltrapassagens(box, S, m, A, L) {
   const U = A.ultrapassagens || [], palco = box.querySelector(".ra-mini"), dica = box.querySelector(".ra-mom-dica"), ol = box.querySelector(".ra-mom-lista");
   const porId = new Map(L.map((s) => [s.id, s])), info = (id) => porId.get(id) || { cor: "#9aa1ad", sigla: "?", nome: "?" };
   const acender = (i) => { box.querySelectorAll(".ra-mom-lista li.hi").forEach((x) => x.classList.remove("hi")); if (mini) mini.destacar(i); if (i == null) return; const li = ol.querySelector(`li[data-ev="${i}"]`); if (li) li.classList.add("hi"); };
-  const verNoReplay = (i) => { const u = U[i]; if (!u) return; const passo = 250, jj = amostraDe(u); rep.sel = u.a; rep.cmp = u.b; rep.janela = [Math.max(0, jj - Math.round(8000 / passo)), jj + Math.round(4000 / passo)]; rep.j = rep.janela[0]; rep.tocando = true; rep.vel = 1; rep.foco = u.f; if (modo.aoAba) return modo.aoAba("replay"); aba = "replay"; desenhar(box, S, m, A); };
+  const verNoReplay = (i) => verUltrapassagem(U[i], () => desenhar(box, S, m, A));
   mini = criarMiniatura(palco, A.pista || S.config.pista, {
     ...temaMini(), corredor: false,
     aoMarcador: (id, como, xy) => { if (id == null) { acender(null); dica.hidden = true; return; } acender(id); const u = U[id]; dica.innerHTML = `<small>Volta ${u.v}</small><br><b style="--c:${info(u.a).cor}">${h(info(u.a).sigla)}</b> passa <b style="--c:${info(u.b).cor}">${h(info(u.b).sigla)}</b> · ${u.pos}º`; dica.hidden = false; dica.style.left = Math.min(xy.x + 14, palco.clientWidth - dica.offsetWidth - 4) + "px"; dica.style.top = Math.max(4, xy.y - dica.offsetHeight - 12) + "px"; if (como === "clique") verNoReplay(id); },
@@ -565,3 +582,56 @@ function ligarUltrapassagens(box, S, m, A, L) {
   ol.addEventListener("pointerleave", () => acender(null));
   ol.addEventListener("click", (ev) => { const v = ev.target.closest("[data-ver]"); if (v) return verNoReplay(+v.dataset.ver); const li = ev.target.closest("[data-ev]"); if (li && mini) mini.focar(U[+li.dataset.ev].f); });
 }
+
+// ---------- o Mapa da corrida (a Visão geral da Central): a pista em 3D com os carros refazendo a última volta, cada um com o logo da equipe ----------
+// "Posições": os carros andam (a última volta do vencedor, em loop, no dobro da velocidade), com o logo; passar o mouse num carro diz quem é e a
+// posição final. "Traçado": só a pista, com os setores, as curvas e o carrinho de luz. Sem replay gravado, fica o Traçado.
+let mapaModo = "posicoes";
+const ICO_PINO = svg('<path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/>');
+function mapaHTML(D) {
+  const temRep = !!D, modo = temRep ? mapaModo : "tracado";
+  return `<section class="ra-card ra-mapa ra-mapa-geral">
+    <header class="ra-mapa-cab"><span class="ra-mapa-tit">${ICO_PINO}<b>Mapa da corrida</b></span>
+      <span class="ra-seg" role="group" aria-label="O que mostrar no mapa"><button type="button" data-mapa-modo="tracado" class="${modo === "tracado" ? "on" : ""}" aria-pressed="${modo === "tracado"}">Traçado</button><button type="button" data-mapa-modo="posicoes" class="${modo === "posicoes" ? "on" : ""}" aria-pressed="${modo === "posicoes"}" ${temRep ? "" : 'disabled title="Esta corrida não tem replay gravado"'}>Posições</button></span></header>
+    <div class="ra-mini"></div><div class="ra-dica ra-mom-dica" hidden></div>
+    <div class="ra-mapa-ctl"><button type="button" data-mini="mais" aria-label="Aproximar">${ICO.mais}</button><button type="button" data-mini="menos" aria-label="Afastar">${ICO.menos}</button><button type="button" data-mini="centro" aria-label="Ver a pista inteira">${ICO.centro}</button></div>
+    <small class="ra-mapa-nota">${modo === "posicoes" ? "A última volta, em loop · passe o mouse num carro" : "Arraste para girar · roda para aproximar"}</small></section>`;
+}
+function ligarMapa(box, S, m, A, L) {
+  const D = cacheRep.dados || null, modo = D ? mapaModo : "tracado", pista = A.pista || S.config.pista;
+  const palco = box.querySelector(".ra-mini"), dica = box.querySelector(".ra-mom-dica"), porId = new Map(L.map((s) => [s.id, s]));
+  const G = window.GpInfo, curvas = G && G.get ? G.get(pista).curvas || [] : [];
+  const mostrar = (txt, xy) => { if (!txt || !xy) { dica.hidden = true; return; } dica.innerHTML = txt; dica.hidden = false; dica.style.left = Math.max(4, Math.min(xy.x + 14, palco.clientWidth - dica.offsetWidth - 4)) + "px"; dica.style.top = Math.max(4, xy.y - dica.offsetHeight - 12) + "px"; };
+  let realce = null;
+  mini = criarMiniatura(palco, pista, {
+    ...temaMini(), corredor: modo === "tracado", cor: L[0] ? L[0].cor : null,
+    aoCarro: (id) => { realce = realce === id ? null : id; const s = realce && porId.get(realce); mostrar(s ? `${logoDe(s.eqId)}<b>${h(s.nome)}</b><br><small>${s.r.dnf ? "Abandonou" : `${s.r.pos}º no fim`}</small>` : null, s ? { x: palco.clientWidth / 2 - 60, y: 70 } : null); },
+    aoPassar: (p) => { if (!p) return mostrar(null); const c = curvas.find((k) => Math.min(Math.abs(k.f - p.f), 1 - Math.abs(k.f - p.f)) < 0.035); mostrar(`<small>${Math.round(p.f * 100)}% da volta</small>${c ? `<br>Curva ${c.n}${c.nome ? ` · ${h(c.nome)}` : ""}` : ""}`, p); },
+  });
+  if (!mini) { palco.classList.add("sem3d"); palco.innerHTML = window.GpSobre ? window.GpSobre.mapaSvg(pista, "sn-sobre-svg ra-mapa2d") : ""; box.querySelector(".ra-mapa-ctl")?.remove(); return; }
+  if (curvas.length && modo === "tracado") mini.curvas(curvas);
+  box.querySelectorAll("[data-mini]").forEach((b) => { b.onclick = () => { const k = b.dataset.mini; if (k === "centro") mini.focar(null); else mini.aproximar(k === "mais" ? 0.8 : 1.25); }; });
+  box.querySelectorAll("[data-mapa-modo]").forEach((b) => { b.onclick = () => { if (b.disabled || mapaModo === b.dataset.mapaModo) return; mapaModo = b.dataset.mapaModo; desenhar(box, S, m, A); }; });
+  if (modo !== "posicoes") return;
+  // a janela da animação: do começo ao fim da última volta do vencedor (o primeiro da classificação que tem coluna no replay)
+  const lider = L.find((s) => D.col.has(s.id)); if (!lider) return;
+  const kL = D.col.get(lider.id), voltas = Math.floor(Math.max(...Array.from(D.prog[kL]).filter((x) => !isNaN(x))));
+  let j0 = 0, j1 = D.n - 1;
+  for (let j = 0; j < D.n; j++) { const pr = D.prog[kL][j]; if (!isNaN(pr) && Math.floor(pr) >= voltas - 1) { j0 = j; break; } }
+  for (let j = D.n - 1; j >= 0; j--) { if (!isNaN(D.prog[kL][j])) { j1 = j; break; } }
+  if (j1 - j0 < 8) j0 = Math.max(0, j1 - 120);
+  const ids = D.ids.filter((id) => porId.has(id));
+  mini.definirCarros(ids.map((id) => { const s = porId.get(id); return { id, cor: s.cor, rotulo: s.sigla, logo: s.eqId ? (window.logoF1 || ((i) => "/api/corrida/logo/" + i))(s.eqId) : null }; }));
+  // a posição de um carro entre duas amostras (a fração passa da linha de chegada: 0,98 → 0,02 anda para a frente)
+  const fEm = (k, jj) => { const a = D.em(Math.floor(jj), k), b = D.em(Math.min(D.n - 1, Math.floor(jj) + 1), k); if (!a) return null; if (!b) return a.f; let d = b.f - a.f; if (d < -0.5) d += 1; else if (d > 0.5) d -= 1; return (((a.f + d * (jj - Math.floor(jj))) % 1) + 1) % 1; };
+  let jj = j0, ant = performance.now();
+  const passo = (agora) => {
+    if (!box.isConnected || !tocar) return;
+    const dt = Math.min(0.1, (agora - ant) / 1000); ant = agora;
+    if (!reduzMov()) { jj += (dt * 1000 * 2) / D.passo; if (jj > j1) jj = j0; }
+    for (const id of ids) mini.posicionar(id, fEm(D.col.get(id), jj), id === realce);
+    tocar.raf = requestAnimationFrame(passo);
+  };
+  tocar = { raf: requestAnimationFrame(passo) };
+}
+const reduzMov = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);

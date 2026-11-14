@@ -4,10 +4,11 @@
 (function (root) {
 const U = () => root.CentralUI, h = (v) => U().h(v);
 const Reg = () => root.F1Temporada, Pil = () => root.F1Pilotos, F = () => root.F1Regras;
-let sub = "replay", gpEscolhido = null, comparar = null;
-// as quatro primeiras são a análise 3D (analise-salva.js, sobre a miniatura da pista); o Replay abre primeiro
-const SUBS = [["replay", "Replay"], ["momentos", "Momentos"], ["posicoes", "Posições"], ["ultrapassagens", "Ultrapassagens"], ["visao", "Visão geral"], ["voltas", "Voltas"], ["estrategia", "Estratégia"], ["telemetria", "Telemetria"]];
-const SUBS_3D = new Set(["momentos", "posicoes", "ultrapassagens", "replay"]);
+let sub = "replay", gpEscolhido = null, comparar = null, verTodos = false, filtroEq = "";
+// as sub-abas (a interface nova do Thiago, 2026-11-14): o Replay abre primeiro. As que têm pista em 3D usam o módulo da tela do resultado
+// (analise-salva.js) numa aba dele: o Replay, o mapa da Visão geral, as posições do Desempenho e os Eventos (momentos e ultrapassagens)
+const SUBS = [["replay", "Replay"], ["visao", "Visão geral"], ["desempenho", "Desempenho"], ["pneus", "Pneus"], ["estrategia", "Estratégia"], ["voltas", "Voltas"], ["eventos", "Eventos"]];
+const ABA_3D = { replay: "replay", visao: "mapa", desempenho: "posicoes", eventos: "momentos" };
 
 const tempo = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`);
 const tempoLongo = (s) => { if (s == null) return "—"; const m = Math.floor(s / 60), hh = Math.floor(m / 60); return hh ? `${hh}:${String(m % 60).padStart(2, "0")}:${(s % 60).toFixed(3).padStart(6, "0")}` : tempo(s); };
@@ -172,13 +173,17 @@ function html(c) {
   const { r, a, rival } = escolhas(c), g = s.calendario[r.gp];
   const opcoes = c.gps.map((x) => `<option value="${x.gp}" ${x.gp === r.gp ? "selected" : ""}>${h(s.calendario[x.gp]?.nome || x.pista)}</option>`).join("");
   const circ = root.GpInfo?.get(r.pista); // o cabeçalho: o rótulo, o nome do GP grande e a etapa com o circuito
-  const topo = `<div class="cx-cabeca cx-an-cab"><div><small class="cx-an-olho">Análise da corrida</small><h2>${h(UI.nomeGP(r.pista, g?.nome))}</h2><small class="cx-rot">Etapa ${UI.dois(r.gp + 1)} / ${UI.dois(s.tamanho)}${circ?.real && circ.circuito ? ` · ${h(circ.circuito)}` : ""}</small></div><label class="cx-sel">${UI.bandeira(r.pista)}<span class="cx-oculto">Escolher o GP</span><select data-cx-gp>${opcoes}</select></label></div>`;
+  const foto = root.GpInfo?.fundoDe?.(r.pista);
+  const topo = `<div class="cx-cabeca cx-an-cab ${foto ? "com-foto" : ""}" ${foto ? `style="--foto:url('${h(foto)}')"` : ""}><span class="cx-an-band" aria-hidden="true">${UI.bandeira(r.pista)}</span><div><small class="cx-an-olho">Análise da corrida</small><h2>${h(UI.nomeGP(r.pista, g?.nome))}</h2><small class="cx-rot">Etapa ${UI.dois(r.gp + 1)} / ${UI.dois(s.tamanho)}${circ?.real && circ.circuito ? ` · ${h(circ.circuito)}` : ""}</small></div><label class="cx-sel">${UI.bandeira(r.pista)}<span class="cx-oculto">Escolher o GP</span><select data-cx-gp>${opcoes}</select></label></div>`;
   if (!a) return `${topo}<section class="cx-card cx-an-vazio">${IC.crono}<h3>Este GP foi corrido antes da análise</h3><p>Só há o resultado final dele. Os próximos GPs já trazem as voltas, os setores e a estratégia.</p></section>`;
   const abas = `<div class="cx-subabas cx-an-abas">${SUBS.map(([id, nome]) => `<button type="button" class="${id === sub ? "on" : ""}" aria-pressed="${id === sub}" data-cx-an="${id}">${nome}</button>`).join("")}</div>`;
-  // a análise 3D entra num bloco "vivo": o redesenho da Central não mexe nele enquanto a marca (o GP, a sub-aba e o tema) for a mesma
-  const tema = document.body.classList.contains("cx-escuro") ? "e" : "c";
-  const corpo = SUBS_3D.has(sub) ? `<div class="ra ra-cx" data-cx-vivo="${r.ano}:${r.gp}:${sub}:${tema}" data-cx-an-gp="${r.gp}"><p class="ra-vazio">Carregando a pista em 3D…</p></div>`
-    : sub === "voltas" ? voltas(c, r, a, rival) : sub === "estrategia" ? estrategia(c, r, a) : sub === "telemetria" ? telemetria(c, r, a, rival) : visao(c, r, a, rival);
+  // a análise 3D entra num bloco "vivo": o redesenho da Central não mexe nele enquanto a marca (o GP, a aba do módulo e o tema) for a mesma
+  const tema = document.body.classList.contains("cx-escuro") ? "e" : "c", G = root.CentralAnaliseGeral;
+  const vivo = (abaMod) => `<div class="ra ra-cx" data-cx-vivo="${r.ano}:${r.gp}:${abaMod}:${tema}" data-cx-an-gp="${r.gp}"><p class="ra-vazio">Carregando a pista em 3D…</p></div>`;
+  const corpo = sub === "visao" ? G.visaoGeral(c, r, a, vivo("mapa"), verTodos)
+    : sub === "desempenho" ? `${G.quadrosSetor(c, r, a)}${vivo("posicoes")}<h3 class="cx-an-sub">O seu desempenho</h3>${visao(c, r, a, rival)}${telemetria(c, r, a, rival)}`
+    : sub === "pneus" ? G.pneusTabela(c, r, a, filtroEq)
+    : sub === "voltas" ? voltas(c, r, a, rival) : sub === "estrategia" ? estrategia(c, r, a) : vivo(ABA_3D[sub] || "replay");
   return `${topo}${abas}<div class="cx-an-corpo">${corpo}</div>`;
 }
 // monta a análise 3D no bloco vivo, uma vez por marca (depois de cada redesenho, por ligarGraficos)
@@ -192,9 +197,12 @@ function montar3d() {
   import("/corrida/analise-salva.js").then((m) => { if (el.isConnected) m.montarNaCentral(el, { r, nomes, meu: "voce", aba, pedirReplay, aoAba }); })
     .catch((e) => { console.warn("Carreira: análise 3D indisponível", e); el.innerHTML = '<p class="ra-vazio">A análise 3D não carregou.</p>'; });
 }
-function clique(b, render) { if (b.dataset.cxAn) { sub = b.dataset.cxAn; render(); document.querySelector(`[data-cx-an="${sub}"]`)?.focus({ preventScroll: true }); return true; } return false; }
+function clique(b, render) {
+  if (b.dataset.cxAgTodos != null) { verTodos = !verTodos; render(); return true; } // o resultado final inteiro (Visão geral)
+  if (b.dataset.cxAgEq != null) { filtroEq = b.dataset.cxAgEq; render(); return true; } // o filtro por equipe (Pneus)
+  if (b.dataset.cxAn) { sub = b.dataset.cxAn; render(); document.querySelector(`[data-cx-an="${sub}"]`)?.focus({ preventScroll: true }); return true; } return false; }
 function mudou(e, render) {
-  if (e.target.matches?.("[data-cx-gp]")) { gpEscolhido = +e.target.value; comparar = null; render(); return true; }
+  if (e.target.matches?.("[data-cx-gp]")) { gpEscolhido = +e.target.value; comparar = null; verTodos = false; filtroEq = ""; render(); return true; }
   if (e.target.matches?.("[data-cx-comparar]")) { comparar = e.target.value; render(); return true; }
   return false;
 }

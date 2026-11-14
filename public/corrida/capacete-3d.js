@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { geometriasDoCapacete, materialDaViseira, materialDaMoldura } from "./f1-piloto.js";
-import { pintarFolha } from "./f1-capacetes.js";
+import { pintarFolha, acabamentoDoCasco } from "./f1-capacetes.js";
 
 // cv: o canvas; devolve { mostrar(cap, numero), soltar() } (ou null sem WebGL: o editor volta para a folha aberta)
 export function previaDoCapacete(cv) {
@@ -25,7 +25,7 @@ export function previaDoCapacete(cv) {
   if (G.moldura) pivo.add(new THREE.Mesh(G.moldura, materialDaMoldura())); // a borracha da borda e as dobradiças da viseira
   pivo.add(cab, vis); cena.add(pivo); pivo.rotation.y = -0.6; // (começa de três-quartos: a frente do capacete é −z, virada para a câmera, e a lateral aparece)
 
-  let ang = pivo.rotation.y, arrasto = null, parado = 0, vivo = true, raf = 0;
+  let ang = pivo.rotation.y, arrasto = null, parado = 0, vivo = true, raf = 0, numero0 = null;
   cv.style.touchAction = "pan-y"; cv.style.cursor = "grab";
   cv.addEventListener("pointerdown", (e) => { arrasto = { x: e.clientX, a: ang }; cv.setPointerCapture?.(e.pointerId); cv.style.cursor = "grabbing"; });
   cv.addEventListener("pointermove", (e) => { if (arrasto) ang = arrasto.a + (e.clientX - arrasto.x) * 0.012; });
@@ -39,7 +39,7 @@ export function previaDoCapacete(cv) {
     raf = requestAnimationFrame(quadro);
     if (!cv.isConnected || cv.offsetParent === null || document.hidden) return; // (fora da tela: não desenha)
     const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora;
-    if (!arrasto && !reduz.matches && agora - parado > 2500) ang += dt * 0.45; // gira sozinho, e espera um pouco depois que a pessoa soltou
+    // (sem girar sozinho: o Thiago, 2026-11-14; parado de três-quartos, como na referência, e o mouse gira)
     pivo.rotation.y = ang;
     const w = cv.clientWidth | 0, h = cv.clientHeight | 0;
     if (w && h && (cv.width !== Math.round(w * renderer.getPixelRatio()) || cv.height !== Math.round(h * renderer.getPixelRatio()))) { renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
@@ -49,10 +49,22 @@ export function previaDoCapacete(cv) {
 
   return {
     // cap: { desenho, cores, viseira, bandeira, nome } (mods.capacete); numero: o do carro, se houver
+    // cap: também { variante, acabamento, patrocinio } (2026-11-14)
     mostrar(cap, numero = null) {
-      const pintar = () => { pintarFolha(folha.getContext("2d"), cap.cores, cap.desenho, numero, { bandeira: cap.bandeira, nome: cap.nome }, () => { pintar(); tex.needsUpdate = true; }); };
+      const pintar = () => { pintarFolha(folha.getContext("2d"), cap.cores, cap.desenho, numero, { bandeira: cap.bandeira, nome: cap.nome, variante: cap.variante | 0, patrocinio: cap.patrocinio || "" }, () => { pintar(); tex.needsUpdate = true; }); };
       pintar(); tex.needsUpdate = true; vis.material = materialDaViseira(cap.viseira);
+      Object.assign(casco, acabamentoDoCasco(cap.acabamento)); casco.needsUpdate = true;
     },
+    // as miniaturas da grade de desenhos: o mesmo capacete com cada desenho (ou cada variante), fotografado de três-quartos num canvas pequeno
+    // (o mesmo renderer, num tamanho só; devolve as imagens em dataURL). `lista`: os capacetes inteiros de cada miniatura.
+    fotografar(lista, w = 180, h = 128) {
+      const salvo = { w: cv.width, h: cv.height, ang: pivo.rotation.y, aspect: cam.aspect }, fotos = [];
+      renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); pivo.rotation.y = -0.75;
+      for (const cap of lista) { this.mostrar(cap, numero0); renderer.render(cena, cam); fotos.push(cv.toDataURL("image/png")); }
+      renderer.setSize(salvo.w / renderer.getPixelRatio(), salvo.h / renderer.getPixelRatio(), false); cam.aspect = salvo.aspect; cam.updateProjectionMatrix(); pivo.rotation.y = salvo.ang;
+      return fotos;
+    },
+    usarNumero(n) { numero0 = n; },
     soltar() { vivo = false; cancelAnimationFrame(raf); tex.dispose(); casco.dispose(); cena.environment?.dispose(); renderer.dispose(); },
   };
 }

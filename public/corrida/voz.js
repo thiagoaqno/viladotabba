@@ -6,7 +6,8 @@
 import { toast } from "./estado.js";
 import { executarJeff } from "./mfd.js";
 
-const SILENCIO_MS = 1000, ESPERA_MS = 500, MAX_MS = 12000; // (1 s de silêncio + até 0,5 s pelo resultado final: o Jeff responde até 1,5 s depois da última palavra; antes eram 3 s + 2,5 s)
+const SILENCIO_MS = 3000, ESPERA_MS = 2500, MAX_MS = 12000; // (3 s de silêncio, e até 2,5 s pelo resultado final do navegador. Com 1 s + 0,5 s
+// (#729) o Jeff cortava a frase no meio e desistia antes do texto final chegar: deixou de entender. Pedido do Thiago, 2026-11-14: voltar ao de antes.)
 const Rec = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 let rec = null, ouvindo = false, fechando = false, texto = "", parcial = "", avisado = false, tSilencio = 0, tMax = 0, tEspera = 0;
 

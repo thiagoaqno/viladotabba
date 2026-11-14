@@ -6,7 +6,7 @@
 import { toast } from "./estado.js";
 import { executarJeff } from "./mfd.js";
 
-const SILENCIO_MS = 2000, ESPERA_MS = 500, MAX_MS = 12000; // (2 s de silêncio + até 0,5 s pelo resultado final: o Jeff responde até 2,5 s depois da última palavra; antes eram 3 s + 2,5 s)
+const SILENCIO_MS = 1000, ESPERA_MS = 500, MAX_MS = 12000; // (1 s de silêncio + até 0,5 s pelo resultado final: o Jeff responde até 1,5 s depois da última palavra; antes eram 3 s + 2,5 s)
 const Rec = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 let rec = null, ouvindo = false, fechando = false, texto = "", parcial = "", avisado = false, tSilencio = 0, tMax = 0, tEspera = 0;
 

@@ -1,16 +1,17 @@
-# Haas de 2024 e 2025 pelo modelo 3D do VF-24
+# RB de 2024 pelo modelo 3D do VCARB 01
 
-O modelo que o Thiago mandou para a Haas é o VF-24, a Haas **preta de 2024**. A Haas de 2026 do jogo já é a branca da Toyota (TGR Haas, a de 2026 de verdade) e ficou como está; o modelo foi usado para a pintura das temporadas 2024 e 2025 (`haas@2024` e `haas@2025`, no carro de 2022 a 2025), que estava inventada (branco em cima, HAAS cinza).
+O modelo que o Thiago mandou para a Racing Bulls é o VCARB 01 de 2024 ("vai essa"). Ele é exatamente a pintura da temporada 2024 do jogo (`racing-bulls@2024`, no carro de 2022 a 2025), que estava com a tampa e a asa traseira brancas, o que o carro não tem. A Racing Bulls de 2026 ficou como está.
 
 Pelo modelo, olhado de lado, de cima e de trás:
-- preta, com o HAAS branco grande na caixa lateral e no alto das caixas (de cima);
-- o filete branco no alto da caixa, a faixa branca no alto da tampa, o redondo vermelho da MoneyGram na tampa e no bico;
-- o bico e a volta do cockpit brancos, os dois losangos vermelhos atrás da entrada de ar;
-- a asa dianteira branca com o vermelho nas pontas e na placa, a asa traseira vermelha em cima; Palm Angels embaixo da frente da caixa;
-- embaixo da asa traseira (`ASA_BAIXO`): o carbono do modelo, com o HAAS branco.
+- azul-royal escurecendo embaixo; o branco do lado do cockpit com a HUGO vermelha e o filete vermelho; a faixa branca no alto da caixa com a HONDA vermelha;
+- o VISA grande na caixa, o Cash App na tampa, o touro na tampa, o ORLEN embaixo, o Cash App na placa da asa dianteira;
+- de cima: a asa dianteira branca com a HUGO, o meio do bico branco com o 22 vermelho, a TUDOR, o VISA e o Cash App, o Red Bull na frente do cockpit, as faixas brancas no alto das caixas;
+- atrás e embaixo da asa traseira (`ASA_BAIXO`): preto com o Cash App;
+- o número do piloto em vermelho, como o 22 do modelo.
+- Marca nova em `f1-marcas.js`: `tudor`.
 
-**Saiu do #736 (Williams)**, na fila #733 → #734 → #735 → #736 → este.
+**Saiu do #737 (Haas)**, na fila #733 → #734 → #735 → #736 → #737 → este.
 
-Conferido só com `node --check` (`f1-pintura.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+Conferido só com `node --check` (`f1-pintura.js`, `f1-marcas.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

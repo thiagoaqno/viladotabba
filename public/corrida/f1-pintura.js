@@ -690,20 +690,34 @@ DESENHOS["racing-bulls@2023"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0
   vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); });
   vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); });
 } };
-// ---- RB VCARB 01 (2024, fotos do Thiago): azul forte, a tampa e a asa traseira brancas, "VISA" branco grande na lateral, a HUGO vermelha na asa da frente branca
-DESENHOS["racing-bulls@2024"] = { numero: "#ffffff", carbono: 1, numPos: [3.5, 0.72, 9, 9], pintar(ctx) {
-  const AZUL = "#1e3cd8", BRANCO = "#f4f5f8", VERM = "#e2001a";
+// ---- RB VCARB 01 (2024), pelo modelo do Sketchfab que o Thiago mandou ("F1 2024 Racing Bulls VCARB 01", olhado de lado, de cima e de trás):
+// azul-royal escurecendo embaixo, o branco do lado do cockpit (com a HUGO) e no meio do bico (com o 22, a TUDOR e o VISA), o filete vermelho, a
+// faixa branca no alto da caixa com a HONDA vermelha, o VISA grande na caixa, o touro na tampa, o Red Bull na frente do cockpit, a asa dianteira
+// branca com a HUGO vermelha e o Cash App atrás e embaixo da asa traseira. Medidas do carro de 2022 a 2025 (f1-2022.js).
+DESENHOS["racing-bulls@2024"] = { numero: "#e2001a", carbono: 1, numPos: [3.5, 0.72, 9, 9], pintar(ctx) {
+  const AZUL = "#1f3fd0", MAR = "#14248a", BRANCO = "#f4f5f8", VERM = "#e2001a", PRETO = "#101114";
   base(ctx, AZUL);
   lados(ctx, (c) => {
-    c.beginPath(); c.moveTo(2.75, 1.1); c.lineTo(3.9, 1.1); c.lineTo(3.9, 0.45); c.quadraticCurveTo(3.3, 0.52, 2.9, 0.68); c.closePath(); c.fillStyle = BRANCO; c.fill();
-    filete(c, VERM, 0.2, 0.025, 2.7);
-    baixo(c, AZUL); ret(c, 0.05, 0, 0.6, 0.16, BRANCO); ret(c, 3.95, 0.3, 4.45, 1.1, BRANCO);
-    M(c, "visa", 2.4, 0.3, 0.12, { tinta: BRANCO }); M(c, "cashapp", 1.25, 0.42, 0.04, { tinta: BRANCO }); M(c, "hugo", 0.32, 0.08, 0.05, { tinta: VERM });
-    M(c, "orlen", 2.0, 0.13, 0.05); M(c, "orlen", 4.17, 0.9, 0.055); M(c, "honda", 3.35, 0.6, 0.04, { tinta: AZUL });
+    c.fillStyle = degrade(c, 0, 0.45, 0, 0.12, [[0, "rgba(20,36,138,0)"], [1, "rgba(20,36,138,0.85)"]]); c.fillRect(0.3, 0.1, 3.6, 0.35); // escurece embaixo
+    c.beginPath(); c.moveTo(1.1, 0.3); c.lineTo(1.25, 0.52); c.lineTo(2.1, 0.55); c.lineTo(2.1, 0.32); c.closePath(); c.fillStyle = BRANCO; c.fill(); // o branco do lado do cockpit
+    c.beginPath(); c.moveTo(1.1, 0.3); c.lineTo(2.1, 0.32); c.lineWidth = 0.012; c.strokeStyle = VERM; c.stroke(); // o filete vermelho embaixo dele
+    ret(c, 2.2, 0.47, 3.6, 0.5, BRANCO); ret(c, 2.2, 0.465, 3.6, 0.472, VERM); // a faixa branca no alto da caixa, com o filete
+    touros(c, 2.65, 0.56, 3.35, 0.82);
+    baixo(c, MAR);
+    ret(c, 0.05, 0, 0.6, 0.16, PRETO); ret(c, 3.95, 0.3, 4.45, 1.1, MAR);
+    M(c, "hugo", 1.62, 0.43, 0.06, { tinta: VERM }); M(c, "visa", 2.65, 0.3, 0.12, { tinta: BRANCO }); M(c, "cashapp", 2.5, 0.62, 0.035, { tinta: BRANCO });
+    M(c, "honda", 3.15, 0.485, 0.026, { tinta: VERM }); M(c, "orlen", 1.95, 0.13, 0.045); M(c, "cashapp", 0.32, 0.09, 0.035, { tinta: BRANCO });
   });
-  vista(ctx, "T", (c) => { ret(c, 2.75, -0.3, 4.0, 0.3, BRANCO); asasT(c, BRANCO, BRANCO, AZUL); M(c, "visa", 1.0, 0, 0.09, frente); M(c, "hugo", 0.3, -0.42, 0.05, frente); M(c, "hugo", 0.3, 0.42, 0.05, frente); });
-  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); });
-  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); });
+  vista(ctx, "T", (c) => {
+    asasT(c, BRANCO, PRETO, AZUL);
+    poli(c, [[0.55, -0.11], [1.45, -0.13], [1.45, 0.13], [0.55, 0.11]], BRANCO); // o meio do bico branco
+    for (const l of [-1, 1]) { ret(c, 1.9, l * 0.3, 3.2, l * 0.33, BRANCO); M(c, "hugo", 0.3, l * 0.45, 0.06, { giro: DE_FRENTE, tinta: VERM }); M(c, "cashapp", 1.6, l * 0.24, 0.025, frente); }
+    M(c, "tudor", 1.18, 0, 0.022, { giro: DE_FRENTE, tinta: AZUL }); M(c, "visa", 1.27, 0, 0.04, { giro: DE_FRENTE, tinta: AZUL }); M(c, "cashapp", 1.37, 0, 0.025, { giro: DE_FRENTE, tinta: AZUL });
+    M(c, "redbull", 1.55, 0, 0.04, { giro: DE_FRENTE, tinta: VERM }); M(c, "visa", 0.3, 0, 0.03, frente);
+    M(c, "cashapp", 4.17, 0, 0.07, { giro: -DE_FRENTE, tinta: BRANCO });
+  });
+  vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.15, 0.3, 0.15, 0.55, BRANCO); });
+  vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); ret(c, -0.8, 0.82, 0.8, 1.1, PRETO); M(c, "cashapp", 0, 0.92, 0.08, { tinta: BRANCO }); });
 } };
 // ---- Racing Bulls VCARB 02 (2025, fotos): branco, o azul embaixo da lateral, o touro vermelho com o sol amarelo na tampa, o bico amarelo, "VISA" azul
 DESENHOS["racing-bulls@2025"] = { numero: "#1534cc", carbono: 1, numPos: [3.5, 0.72, 9, 9], pintar(ctx) {
@@ -1118,6 +1132,7 @@ const ASA_BAIXO = {
   williams: { cor: "#0b1140", marcas: (c) => { ret(c, -0.45, 0.2, 0.45, 0.44, "#5741d9"); marcaU(c, "kraken", 0, 0.32, 0.12); } },
   "haas@2024": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "haas@2025": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
+  "racing-bulls@2024": { cor: "#101114", marcas: (c) => marcaU(c, "cashapp", 0, 0.32, 0.1) },
 };
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)

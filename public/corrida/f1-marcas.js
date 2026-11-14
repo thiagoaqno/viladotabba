@@ -117,6 +117,8 @@ Object.assign(MARCAS, {
   // o A do Atlassian (o triângulo cortado)
   atlassiana(c, { tinta = "#fff" } = {}) { c.fillStyle = tinta; c.beginPath(); c.moveTo(0, -0.48); c.lineTo(0.42, 0.42); c.lineTo(0.12, 0.42); c.lineTo(0, 0.12); c.lineTo(-0.12, 0.42); c.lineTo(-0.42, 0.42); c.closePath(); c.fill(); },
 });
+// A da RB VCARB 01 (o modelo do Sketchfab, 2026-11-14)
+Object.assign(MARCAS, { tudor(c, { tinta = "#fff" } = {}) { letra(c, "TUDOR", { h: 1, peso: 700, fam: SERIFA, cor: tinta, esp: 6 }); } });
 // As que têm um traço a mais
 Object.assign(MARCAS, {
   gemini(c, { tinta = "#fff" } = {}) { c.save(); c.translate(-1.75, 0); c.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; c.lineTo(Math.cos(a) * 0.46, Math.sin(a) * 0.46); c.lineTo(Math.cos(a + Math.PI / 4) * 0.09, Math.sin(a + Math.PI / 4) * 0.09); } c.closePath(); c.fillStyle = "#6fb6ff"; c.fill(); c.restore(); letra(c, "Gemini", { x: 0.35, h: 1, peso: 500, cor: tinta }); },

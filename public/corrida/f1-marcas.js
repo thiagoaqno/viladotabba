@@ -68,6 +68,18 @@ Object.assign(MARCAS, {
   hilton(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.07; c.strokeRect(-1.45, -0.42, 2.9, 0.84); letra(c, "Hilton", { h: 0.7, peso: 400, fam: SERIFA, cor: tinta }); },
   oneflight(c, { tinta = "#fff" } = {}) { letra(c, "ONE", { x: -1.25, h: 1, peso: 900, cor: tinta }); letra(c, "flight", { x: 0.85, h: 1, peso: 400, ital: true, cor: tinta }); },
 });
+// As da Audi R26 (o modelo do Sketchfab, 2026-11-14)
+Object.assign(MARCAS, {
+  castrol(c, { tinta = "#fff" } = {}) { disco(c, -1.85, 0, 0.42, "#009a44"); disco(c, -1.85, 0, 0.3, "#ffffff"); disco(c, -1.85, 0, 0.18, "#e4002b"); letra(c, "Castrol", { x: 0.35, h: 0.95, peso: 800, ital: true, cor: tinta }); },
+  hyatt(c, { tinta = "#fff" } = {}) { letra(c, "WORLD OF HYATT", { h: 0.9, peso: 400, fam: SERIFA, cor: tinta, esp: 4 }); },
+  // o girassol verde e amarelo e o "bp"
+  bp(c) { for (let i = 0; i < 12; i++) { c.save(); c.rotate(i * Math.PI / 6); c.fillStyle = i % 2 ? "#99cc00" : "#009b3a"; c.beginPath(); c.moveTo(0, 0); c.lineTo(-0.1, -0.5); c.lineTo(0.1, -0.5); c.closePath(); c.fill(); c.restore(); }
+    disco(c, 0, 0, 0.2, "#ffe600"); letra(c, "bp", { x: 1.05, h: 0.9, peso: 800, cor: "#009b3a" }); },
+  // o R do Revolut
+  revolutr(c, { tinta = "#fff" } = {}) { letra(c, "R", { h: 1.25, peso: 900, cor: tinta }); },
+  // as três faixas inclinadas
+  adidas(c, { tinta = "#fff" } = {}) { c.fillStyle = tinta; for (const [x, h] of [[-0.32, 0.4], [0, 0.65], [0.32, 0.9]]) { c.save(); c.translate(x, 0.45 - h / 2); c.rotate(-0.5); c.fillRect(-0.09, -h / 2, 0.18, h); c.restore(); } },
+});
 // As que têm um traço a mais
 Object.assign(MARCAS, {
   gemini(c, { tinta = "#fff" } = {}) { c.save(); c.translate(-1.75, 0); c.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; c.lineTo(Math.cos(a) * 0.46, Math.sin(a) * 0.46); c.lineTo(Math.cos(a + Math.PI / 4) * 0.09, Math.sin(a + Math.PI / 4) * 0.09); } c.closePath(); c.fillStyle = "#6fb6ff"; c.fill(); c.restore(); letra(c, "Gemini", { x: 0.35, h: 1, peso: 500, cor: tinta }); },

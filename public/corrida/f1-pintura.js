@@ -417,27 +417,41 @@ DESENHOS.williams = {
   },
 };
 
-// Audi R26: titânio na frente, preto atrás e o bloco vermelho de corte reto na caixa lateral
+// Audi R26 (2026), pelo modelo do Sketchfab que o Thiago mandou ("F1 2026 Audi R26 Launch version", olhado de lado, de cima, de trás e por baixo
+// da asa): titânio do bico até logo atrás da entrada de ar (s 2,33), grafite dali para trás; a cunha laranja na caixa lateral, de s 2,33 a 3,28,
+// afinando para trás (de lado e no alto da caixa); o painel preto embaixo da frente da caixa com o ninjaOne; o Revolut grande em preto no
+// titânio; os anéis vermelhos na tampa, no bico e na espinha; as asas de titânio com o Revolut; as placas grafite com o visit QATAR.
 DESENHOS.audi = {
-  numero: "#ffffff", carbono: 1, numPos: [3.55, 0.68, 9, 9],
+  numero: "#e8401c", carbono: 1, numPos: [3.55, 0.68, 9, 9],
   pintar(ctx) {
-    const PRATA = "#aeb3b8", ESC = "#3a3e45", VERM = "#e8391a", PRETO = "#0d0e11";
-    base(ctx, PRATA);
+    const TIT = "#c4c8cc", TIT_CL = "#d9dcdf", GRAF = "#2c3036", LAR = "#e8401c", PRETO = "#0d0e11", CORTE = 2.33;
+    base(ctx, TIT);
     lados(ctx, (c) => {
-      c.beginPath(); c.moveTo(2.42, 1.1); c.lineTo(3.9, 1.1); c.lineTo(3.9, 0.1); c.lineTo(3.3, 0.1); c.lineTo(3.3, 0.6); c.lineTo(2.7, 0.62); c.lineTo(2.42, 0.6); c.closePath(); c.fillStyle = PRETO; c.fill();
-      poli(c, [[2.58, 0.14], [3.3, 0.14], [3.3, 0.6], [2.86, 0.6]], VERM); // o bloco vermelho
+      ret(c, CORTE, 0, 4.45, 1.1, GRAF); // atrás da entrada de ar, grafite
+      // a cunha laranja: alta no corte, afinando para trás até a ponta em s 3,28
+      c.beginPath(); c.moveTo(CORTE, 0.18); c.lineTo(CORTE, 0.6); c.quadraticCurveTo(2.85, 0.56, 3.28, 0.26); c.lineTo(3.2, 0.18); c.closePath(); c.fillStyle = LAR; c.fill();
+      poli(c, [[1.3, 0.1], [2.05, 0.1], [2.05, 0.3], [1.3, 0.33]], PRETO); // o painel preto embaixo da frente da caixa
       baixo(c, PRETO);
-      poli(c, [[0, 0], [0.9, 0], [0.8, 0.26], [0, 0.26]], ESC);
-      ret(c, 3.86, 0.3, 4.45, 1.1, PRETO);
-      marca(c, "aneis", 3.0, 0.76, 0.09); marca(c, "revolut", 2.58, 0.52, 0.058, { tinta: PRETO }); marca(c, "nexo", 1.42, 0.43, 0.04, { tinta: PRETO }); marca(c, "ninjaone", 1.75, 0.13, 0.036, { tinta: PRETO }); marca(c, "visitqatar", 0.42, 0.13, 0.036);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], GRAF); // as placas da asa dianteira
+      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); // a asa traseira de carbono
+      marca(c, "revolut", 1.95, 0.4, 0.075, { tinta: PRETO }); marca(c, "castrol", 2.05, 0.56, 0.032, { tinta: PRETO });
+      marca(c, "nexo", 1.15, 0.45, 0.034, { tinta: PRETO }); marca(c, "ninjaone", 1.66, 0.22, 0.036); marca(c, "hyatt", 1.62, 0.62, 0.016, { tinta: PRETO });
+      marca(c, "aneis", 2.58, 0.8, 0.07, { tinta: LAR }); marca(c, "bp", 3.2, 0.78, 0.06); marca(c, "visitqatar", 2.42, 0.95, 0.022);
+      marca(c, "visitqatar", 0.28, 0.12, 0.05);
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.3, -0.3, 4, 0.3, PRETO); c.fillStyle = VERM; c.fillRect(2.7, -0.3, 0.6, 0.08); c.fillRect(2.7, 0.22, 0.6, 0.08);
-      asasT(c, ESC, PRETO, PRATA);
-      const f = { giro: DE_FRENTE, tinta: PRETO }; marca(c, "aneis", 0.72, 0, 0.055, { giro: DE_FRENTE, tinta: VERM }); marca(c, "revolut", 0.5, 0, 0.05, f); marca(c, "aneis", 4.15, 0, 0.09, { giro: DE_FRENTE, tinta: VERM }); marca(c, "aneis", 2.9, 0, 0.09, { giro: DE_FRENTE, tinta: VERM });
+      // atrás do corte: a espinha e a tampa grafite, e a cunha laranja no alto de cada caixa lateral
+      ret(c, CORTE, -0.7, 4.45, 0.7, GRAF);
+      for (const l of [-1, 1]) { c.beginPath(); c.moveTo(CORTE, l * 0.14); c.lineTo(CORTE, l * 0.68); c.quadraticCurveTo(2.95, l * 0.62, 3.28, l * 0.4); c.lineTo(3.05, l * 0.14); c.closePath(); c.fillStyle = LAR; c.fill(); }
+      asasT(c, TIT_CL, GRAF, TIT_CL);
+      const f = { giro: DE_FRENTE, tinta: PRETO };
+      for (const l of [-1, 1]) { marca(c, "revolut", 0.26, l * 0.48, 0.06, f); marca(c, "nexo", 1.22, l * 0.09, 0.02, f); marca(c, "castrol", 2.1, l * 0.36, 0.03, { giro: Math.PI / 2 * l, tinta: PRETO }); }
+      marca(c, "revolutr", 0.14, 0, 0.06, f); marca(c, "adidas", 0.74, 0, 0.05, f); marca(c, "aneis", 1.26, 0, 0.045, { giro: DE_FRENTE, tinta: LAR });
+      marca(c, "aneis", 2.75, 0, 0.065, { tinta: LAR }); // os anéis ao longo da espinha
+      marca(c, "revolut", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: TIT });
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRATA); ret(c, -0.55, 0, 0.55, 0.12, ESC); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.45, 0.45, 0.45, 0.75, VERM); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, TIT); ret(c, -0.55, 0, 0.55, 0.12, PRETO); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, GRAF); for (const l of [-1, 1]) ret(c, l * 0.25, 0.2, l * 0.52, 0.55, LAR); ret(c, -0.8, 0.8, 0.8, 1.1, PRETO); marca(c, "revolut", 0, 0.9, 0.09, { tinta: TIT }); });
   },
 };
 
@@ -1019,6 +1033,7 @@ const ASA_BAIXO = {
   ferrari: { cor: "#182035", marcas: (c) => marcaU(c, "ibm", 0, 0.32, 0.16, { tinta: "#3a6fd0", fundo: "#182035" }) },
   "red-bull": { cor: "#25272b", marcas: (c) => marcaU(c, "oracle", 0, 0.32, 0.11) },
   mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
+  audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },
 };
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)

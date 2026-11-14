@@ -218,8 +218,8 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
       if (!atual || corrida.salaGP(atual.code)?.phase === "results") {
         ativos.delete(sala.codigo);
         const grid = G.gridDoGP(sala), indice = sala.gp, ano = sala.ano;
-        const rivais = require("./public/corrida/temporada/regras.js").desenvolvimentoRivais({ semente: sala.semente, ano: sala.ano, gp: sala.gp, tamanho: sala.opcoes.tamanho }, Object.keys(sala.equipes));
-        const montagens = { ...rivais.montagens }, bonusMontagem = { ...rivais.bonus }, bonusBox = {};
+        const rivais = require("./public/corrida/temporada/regras.js").desenvolvimentoRivais({ semente: sala.semente, ano: sala.ano, gp: sala.gp, tamanho: sala.opcoes.tamanho }, Object.keys(sala.equipes), sala.calendario[sala.gp].pista);
+        const montagens = { ...rivais.montagens }, bonusMontagem = { ...rivais.bonus }, bonusBox = { ...rivais.bonusBox }; // (os rivais: carro ajustado à pista e os engenheiros deles)
         const estrategistas = {};
         for (const [eq, t] of Object.entries(sala.equipes)) { montagens[eq] = t.montagem; bonusMontagem[eq] = t.bonus; bonusBox[eq] = t.engenheiros.mecanico * 0.5 + t.engenheiros.estrategista * 0.25; estrategistas[eq] = t.engenheiros.estrategista || 0; }
         const acesso = corrida.abrirGPGrupo({ salaTemporada: sala.codigo, pista: sala.calendario[sala.gp].pista, voltas: sala.opcoes.voltas, nivel: sala.opcoes.nivel,

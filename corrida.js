@@ -48,6 +48,7 @@ const LUZES_MS = 3500; // regras de F1: o tempo até acender a primeira das cinc
 // regras de F1: a transmissão de TV (a pista, o clima, o campeonato e o grid) tem tempo próprio ANTES das luzes: 25 s numa
 // temporada (com a tabela do campeonato), 20 s fora dela. `CORRIDA_TV_MS` troca os dois (0 desliga: os testes de rede usam).
 const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 8000; // (a avulsa: 20 → 8 s, a pedido do Thiago, 2026-11-11: a largada demorava demais; dá para pular nas duas)
+const HORAS_CARREIRA = 72, SALA_VAZIA_MS = Number(process.env.CORRIDA_SALA_VAZIA_MS) || 120000; // (os GPs da carreira ficam 3 dias; a sala rápida sem ninguém, 2 min)
 const MAX_PLAYERS = 8, COUNTDOWN_MS = 4500, AFTER_FIRST_MS = 60000, MAX_RACE_MS = 45 * 60000; // 45 min: dá para as 21 voltas
 const COLORS = ["#e63946", "#1e88e5", "#43a047", "#fdd835", "#8e24aa", "#fb8c00", "#00acc1", "#f06292"];
 const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "🦄", "🐙", "👻", "🤡", "🦁", "🐵", "🐧", "🏎️"];
@@ -878,8 +879,23 @@ module.exports = function attachCorrida(io) {
     });
   });
 
-  // salas paradas há mais de 12 horas somem
-  limparSalasParadas(rooms, { aoApagar: (r) => { Quali.cancelar(r); clearTimeout(r.endTimer); clearTimeout(r.abandonoTimer); clearTimeout(r.esperaTimer); for (const id of r.order) clearTimeout(r.players[id]?.assumeTimer); clearInterval(r.itemTimer); clearInterval(r.botTimer); clearInterval(r.f1Timer); clearInterval(r.humanosTimer); } });
+  // apagar uma sala: os relógios dela param (os robôs, a física, os avisos) e ela sai da lista
+  const apagarSala = (r) => { Quali.cancelar(r); clearTimeout(r.endTimer); clearTimeout(r.abandonoTimer); clearTimeout(r.esperaTimer); for (const id of r.order) clearTimeout(r.players[id]?.assumeTimer); clearInterval(r.itemTimer); clearInterval(r.botTimer); clearInterval(r.f1Timer); clearInterval(r.humanosTimer); };
+  // salas paradas somem: as dos GPs da carreira depois de 3 dias (o Thiago, 2026-11-13: "manter carreiras por 3 dias sem entrar"; antes era
+  // 12 horas, e a carreira mandava para um GP que já não existia), as outras depois de 12 horas
+  limparSalasParadas(rooms, { horasDe: (r) => (r.temporada ? HORAS_CARREIRA : 12), aoApagar: apagarSala });
+  // as salas rápidas (fora da carreira) sem nenhum humano conectado somem em SALA_VAZIA_MS: antes os robôs seguiam correndo sozinhos, gastando o
+  // servidor, por até 12 horas. Conta qualquer conexão na sala (quem joga ou assiste); a espera cobre quem recarrega a página.
+  setInterval(() => {
+    const agora = Date.now();
+    for (const [code, r] of rooms) {
+      if (r.temporada) continue;
+      const conectados = nsp.adapter.rooms.get(code)?.size || 0;
+      if (conectados) { r.vaziaDesde = 0; continue; }
+      if (!r.vaziaDesde) { r.vaziaDesde = agora; continue; }
+      if (agora - r.vaziaDesde >= SALA_VAZIA_MS) { apagarSala(r); rooms.delete(code); }
+    }
+  }, 15000).unref?.();
   // (as regras de cada evento da física, para os testes chamarem sem passar pela rede: checkpoint, parada nos boxes e batida)
   return { abrirGP, abrirGPGrupo, salaGP, internos: { sala: (codigo) => rooms.get(codigo), endRace, estimarRobos, startRace, entrouNoGP, onSector, concluirParada, aplicarBatida } };
 };

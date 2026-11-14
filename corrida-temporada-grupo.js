@@ -33,7 +33,8 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
       ausenteDesde.set(`${codigo}:${dados.host}`, Date.now()); // (depois do reinício, o relógio do anfitrião ausente começa agora)
     }
   } catch (e) { console.warn("temporada em grupo: o banco não abriu; as salas ficam só na memória.", e.message); }
-  limparSalasParadas(salas, { horas: HORAS_PARADA, aoApagar: (s) => { try { bd.apagarSalaTemporadaCorrida(s.codigo); } catch {} ativos.delete(s.codigo); } });
+  // 3 dias SEM NINGUÉM ENTRAR (antes contava da última mudança: quem só entrava para olhar não segurava a sala); com alguém nela, não conta
+  limparSalasParadas(salas, { horas: HORAS_PARADA, cadaVolta: (s) => { const m = presentes.get(s.codigo); if (m && [...m.values()].some((c) => c.size)) s.t = Date.now(); }, aoApagar: (s) => { try { bd.apagarSalaTemporadaCorrida(s.codigo); } catch {} ativos.delete(s.codigo); } });
 
   // ---------- quem está na sala ----------
   const conexoes = (codigo, pid) => { const m = presentes.get(codigo); return m && m.get(pid) ? m.get(pid).size : 0; };
@@ -48,6 +49,7 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
     if (!presentes.has(sala.codigo)) presentes.set(sala.codigo, new Map());
     const m = presentes.get(sala.codigo); if (!m.has(pid)) m.set(pid, new Set());
     m.get(pid).add(socket.id); ausenteDesde.delete(`${sala.codigo}:${pid}`);
+    guardar(sala); // (entrar conta: os 3 dias da sala parada recomeçam, também no banco, para valer depois de um reinício)
   }
   function desligar(socket) {
     const { codigo, pid } = socket.data;
@@ -215,7 +217,7 @@ module.exports = function ligarTemporadaGrupo(io, corrida) {
       if (sala.fase !== "temporada") throw Error("A temporada ainda não começou.");
       if (sala.gp >= sala.opcoes.tamanho) throw Error("A temporada terminou. Comece a próxima.");
       const atual = ativos.get(sala.codigo);
-      if (!atual || corrida.salaGP(atual.code)?.phase === "results") {
+      if (!atual || !corrida.salaGP(atual.code) || corrida.salaGP(atual.code).phase === "results") { // (a sala do GP que sumiu também abre outra)
         ativos.delete(sala.codigo);
         const grid = G.gridDoGP(sala), indice = sala.gp, ano = sala.ano;
         const rivais = require("./public/corrida/temporada/regras.js").desenvolvimentoRivais({ semente: sala.semente, ano: sala.ano, gp: sala.gp, tamanho: sala.opcoes.tamanho }, Object.keys(sala.equipes), sala.calendario[sala.gp].pista);

@@ -1,5 +1,12 @@
 [
   {
+    "id": "2026-11-14-jeff-volta",
+    "data": "2026-11-14",
+    "itens": [
+      "Comando de voz de volta ao tempo de antes: o Jeff espera 3 s de silêncio e o texto completo antes de responder (com 1 s ele cortava a frase e não entendia)"
+    ]
+  },
+  {
     "id": "2026-11-13-rodas-suspensao",
     "data": "2026-11-13",
     "itens": [

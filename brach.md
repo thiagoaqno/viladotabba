@@ -1,18 +1,10 @@
-# Rodas presas na suspensão quando o carro baixa
+# Jeff: de volta ao tempo de ouvir de antes
 
-Pelo print do Thiago (câmera de cockpit da Mercedes): quando o carro baixa, as rodas da frente saíam dos braços da suspensão.
+Pedido do Thiago: com 1 s de silêncio (#729) o Jeff não entendia mais. Volta ao de antes de #729 (o que ele sentia como uns 4 s):
 
-**Por quê:** em `carros.js` (`poseKart`), só a carroceria descia, e com 3 × o curso calculado (`SUSP_VER = 3`); as rodas subiam o mesmo tanto para ficar no chão. Os braços da suspensão são da carroceria, então a roda se afastava deles. Pelas contas de `sim.js` (`afundaAero` até 0,045 × força da asa × 1,6, mais a pancada de 0,03 e a diferença de altura do acerto de 0,025 m), o desenho chegava a descer uns 37 cm.
+- `SILENCIO_MS` 1000 → **3000**: ele para de ouvir depois de 3 s sem fala (com 1 s, uma pausa no meio da frase já fechava);
+- `ESPERA_MS` 500 → **2500**: depois de parar, espera até 2,5 s pelo texto final do navegador (com 0,5 s ele desistia antes e ficava só com o pedaço parcial).
 
-**Agora:**
-- o curso desenhado é o calculado (`SUSP_VER = 1`), no máximo 6 cm (`SUSP_MAX`);
-- as rodas descem com o carro, presas nos braços: sobem em relação a ele no máximo 3 cm (`RODA_CURSO`, o curso que se vê);
-- o que faltar o pneu amassa (escala vertical em volta do centro da roda, no mínimo 85 %), e a base fica no chão.
-
-**E conserta o `novidades.json` da `main`:** o merge do #728 com o #729 juntou as duas entradas sem fechar a primeira (faltava o `]`, `},` e `{`), e o JSON não abria. Conferido com `JSON.parse`.
-
-O raspar do assoalho, as faíscas e a pancada continuam com a conta de `sim.js`, sem mudança.
-
-Conferido só com `node --check` (`carros.js`) e o `JSON.parse` do `novidades.json`. O teste jogando é do Thiago.
+Conferido só com `node --check` e o `JSON.parse` do `novidades.json`. O teste falando é do Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

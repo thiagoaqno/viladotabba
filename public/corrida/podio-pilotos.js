@@ -7,6 +7,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone as clonarEsqueleto } from "three/addons/utils/SkeletonUtils.js";
 import { pintarFolha, capacetePorSigla } from "./f1-capacetes.js";
 import { uniformeDe, pintarTraje, pintarLuvas, TAM_FOLHA } from "./f1-uniformes.js";
+import { vestirCapacete } from "./capacete-boneco.js";
 
 const PASTA = "/corrida/f1/podio/";
 // a sequência de comemorações de cada degrau: [clipe, quantas vezes]. O clipe entra no meio de um movimento, com a transição.
@@ -91,6 +92,8 @@ export function criarPilotoPodio(it, parado) {
     else if (o.name === "viseira" && viseiraM) o.material = viseiraM;
     else if (base.fixos[o.name]) o.material = base.fixos[o.name];
   });
+  // o MESMO capacete da pista (capacete-boneco.js): o de quem joga, o do piloto robô ou o genérico nas cores da equipe, com o número
+  vestirCapacete(g, { c1: u.base, c2: u.faixa, numero: it.numero, robo: proprio ? null : (it.sigla ? capacetePorSigla(it.sigla) : null), proprio });
   const mixer = new THREE.AnimationMixer(g), seq = SEQUENCIAS[it.pos] || SEQUENCIAS[3];
   let i = 0, ativo = null, falta = 0;
   const tocar = (entra) => {

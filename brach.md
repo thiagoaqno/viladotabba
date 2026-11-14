@@ -1,17 +1,17 @@
-# Interlagos: a mata do autódromo e as placas das curvas
+# Logos das equipes na classificação
 
-O Thiago mandou a coleção "F1 Tracks" do Sketchfab (10 pistas cartoon do rccdesign) e escolheu refazer só Interlagos. Os modelos não entram no jogo: são pagos (US$ 25 cada, nenhum com download grátis) e têm de 0,5 a 1,5 milhão de faces cada. Serviram só de referência, e o cenário continua desenhado em código. Interlagos era a pista com menos cenário próprio: só o lago, a caixa-d'água e o prédio dos boxes, sem `kit/interlagos/`.
+Primeiro PR do pós-corrida interativo: o Thiago pediu as logos das equipes na classificação. O resultado do GP e o pódio já tinham; faltavam nas tabelas abaixo, que só mostravam uma faixinha na cor do carro.
 
 ## O que mudou
-- `public/corrida/kit/interlagos/placas.js` (novo): as placas com o nome de cada curva (S do Senna, Curva do Sol, Descida do Lago, Ferradura, Laranjinha, Pinheirinho, Bico de Pato, Mergulho, Junção e Café), nas frações de `gps/interlagos.js`, com a faixa verde e amarela em cima. Ficam atrás da barreira e de frente para quem vem, como as do Red Bull Ring. Uma malha de placas (atlas no canvas) e uma de postes.
-- `public/corrida/kit/interlagos/mata.js` (novo): a mata da beira, dos dois lados, em manchas de ruído (o gramado fica aberto entre elas). Tem copas largas de mata atlântica e eucaliptos altos de tronco claro. Fica fora da pista, atrás das barreiras, fora do que está reservado (boxes, caixa-d'água, placas), fora do lago e atrás das arquibancadas de `gps/interlagos.js`. São três InstancedMesh, sem sombra. Os troncos ficam 1,5 u abaixo do chão, para não flutuar.
-- `public/corrida/interlagos.js`: `depoisInterlagos` agora monta o prédio dos boxes (o código de antes, que virou `predioDosBoxes`), depois as placas e depois a mata. As contagens ficam em `tr.placasInterlagos` e `tr.mataInterlagos`.
-- `public/corrida/gps/interlagos.js`: o `depois` passa os trechos das arquibancadas para a mata.
-- `public/corrida/novidades.json`: entrada nova no topo.
 
-Não mexi em `kit/*.js` nem em `pista.js`. O traçado, o relevo e a física continuam iguais.
+- **Classificação (Q1, Q2, Q3):** a tabela entre as sessões e o grid de largada (`hud.js`, `renderQuali`) mostram a logo da equipe antes do nome. Com o mouse em cima, a logo cresce e o `title` dá o nome da equipe.
+- **Quadro de tempos no HUD durante a sessão** (`hudClassificacao`): a logo pequena no lugar da faixa de cor.
+- **Campeonato da carreira** (`temporada/central.js`): as tabelas de pilotos e de construtores ganham a logo ao lado da faixa de cor, com o mesmo hover.
+- **Temporada com os amigos** (`temporada/grupo.js`): o placar de pilotos e construtores também.
+- Sem equipe (regras arcade) ou sem arquivo de logo, fica a faixa de cor de antes. Se a imagem não carregar, entra a sigla (o tratador que já existe em `menus.js`), ou ela some na Central, como as outras logos de lá.
+- O endereço vem de `window.logoF1`, então as temporadas de 2023 a 2025 mostram as logos da época (AlphaTauri, Alfa Romeo, Sauber...).
+- Entrada nova no topo de `novidades.json`.
 
-## Conferido
-- `node --input-type=module --check` em `interlagos.js`, `gps/interlagos.js`, `kit/interlagos/placas.js` e `kit/interlagos/mata.js`: tudo ok.
-- `novidades.json` com `JSON.parse`: ok.
-- Nada foi testado no jogo nem no navegador, sem prints: o Thiago testa jogando.
+Conferido só com `node --check` e `JSON.parse`. O teste jogando fica com o Thiago.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

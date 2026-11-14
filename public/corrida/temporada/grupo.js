@@ -112,7 +112,7 @@ function telaDaSala() {
 function tabela(linhas, tipo, destaque) {
   const lista = linhas.slice(0, 10);
   for (const x of linhas) if (destaque(x) && !lista.includes(x)) lista.push(x);
-  return `<table class="placar"><thead><tr><th>Pos.</th><th>${tipo}</th><th>Pontos</th></tr></thead><tbody>${lista.map((r) => `<tr class="${destaque(r) ? "eu" : ""}"><td>${linhas.indexOf(r) + 1}</td><td><i class="faixa" style="--c:${h(equipe(r.equipe || r.id)?.cor || "#fff")}"></i><b>${h(r.nome)}</b>${r.humano ? ` <small class="muted">amigo</small>` : ""}</td><td><b>${r.pontos}</b></td></tr>`).join("")}</tbody></table>`;
+  return `<table class="placar"><thead><tr><th>Pos.</th><th>${tipo}</th><th>Pontos</th></tr></thead><tbody>${lista.map((r) => `<tr class="${destaque(r) ? "eu" : ""}"><td>${linhas.indexOf(r) + 1}</td><td><i class="faixa" style="--c:${h(equipe(r.equipe || r.id)?.cor || "#fff")}"></i>${equipe(r.equipe || r.id) ? `<span class="placar-logo" title="${h(equipe(r.equipe || r.id).nome)}">${marca(r.equipe || r.id)}</span>` : ""}<b>${h(r.nome)}</b>${r.humano ? ` <small class="muted">amigo</small>` : ""}</td><td><b>${r.pontos}</b></td></tr>`).join("")}</tbody></table>`;
 }
 // quem está sem carro: entre os GPs, pode assumir o lugar de um piloto de uma equipe de robôs
 function blocoDeSubstituir(terminou) {

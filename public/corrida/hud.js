@@ -395,6 +395,12 @@ function luzesDaLargada(left) {
 const tempo3 = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`);
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const pilotoNome = (p) => (p && (p.nomeCompleto || p.name)) || "?";
+// o logo da equipe na tabela da classificação (passar o mouse dá o nome); sem equipe ou sem arquivo, fica a faixa na cor (a sigla entra pelo menus.js se a imagem falhar)
+function logoEquipe(p, cls) {
+  const e = p && p.equipe && window.EQUIPES_F1 && window.EQUIPES_F1[p.equipe], nome = p && p.equipe && window.F1Pilotos && window.F1Pilotos.EQUIPES[p.equipe];
+  if (!e || !e.arquivo) return `<i class="faixa-eq" style="background:${p ? p.color : "#999"}"></i>`;
+  return `<span class="equipe-marca ${cls}" style="--equipe:${e.cor}" title="${h((nome && nome.nome) || e.nome)}"><img data-logo-f1 src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(p.equipe)}" alt="${h((nome && nome.nome) || e.nome)}" data-sigla="${h(e.sigla)}"></span>`;
+}
 // o lugar no grid de quem foi eliminado na sessão `i` (quem passa tem `sessoes[i + 1]` carros): depois dos que seguem
 const lugarDoEliminado = (q, i, id) => { const f = q.fechadas[i], passam = f.ordem.length - f.eliminados.length; return passam + f.eliminados.indexOf(id) + 1; };
 function hudClassificacao(m, now) {
@@ -406,8 +412,8 @@ function hudClassificacao(m, now) {
   $("hLap").textContent = q.pausa ? `${q.nome} encerrado` : now < q.startAt ? q.nome : restante > 0 ? `${q.nome} · ${mmss(restante)}` : `${q.nome} · bandeirada`;
   $("hTime").textContent = meu ? `melhor ${tempo3(meu.tempo)}` : dentro ? "sem tempo" : "";
   const el = $("hDelta"); el.textContent = meu && pole && pole.id !== m.id ? `+${(meu.tempo - pole.tempo).toFixed(3)} s da pole` : ""; el.className = "time num behind";
-  const linhas = tab.slice(0, 8).map((x, i) => { const p = P(x.id); return `<div class="${m && x.id === m.id ? "eu" : ""}"><span>${i + 1}</span><i style="background:${p ? p.color : "#999"}"></i>${h(p ? p.name : "?")}<em>${tempo3(x.tempo)}</em></div>`; });
-  if (meu && pos > 8) linhas.push(`<div class="eu"><span>${pos}</span><i style="background:${m.color}"></i>${h(m.name)} <em>${tempo3(meu.tempo)}</em></div>`);
+  const linhas = tab.slice(0, 8).map((x, i) => { const p = P(x.id); return `<div class="${m && x.id === m.id ? "eu" : ""}"><span>${i + 1}</span>${logoEquipe(p, "q-marca")}${h(p ? p.name : "?")}<em>${tempo3(x.tempo)}</em></div>`; });
+  if (meu && pos > 8) linhas.push(`<div class="eu"><span>${pos}</span>${logoEquipe(m, "q-marca")}${h(m.name)} <em>${tempo3(meu.tempo)}</em></div>`);
   const quadro = linhas.join(""); if (race.hudQuadro !== quadro) { race.hudQuadro = quadro; $("hBoard").innerHTML = quadro; }
   const eliminado = m && !dentro ? q.fechadas.findIndex((f) => f.eliminados.includes(m.id)) : -1;
   let msg = "";
@@ -438,7 +444,7 @@ export function renderQuali() {
     ${ultima && m ? `<div class="pneus-largada" role="group" aria-label="Pneu da largada">${Object.entries(window.F1Regras.PNEUS).map(([id, pneu]) => `<button type="button" data-pneu-largada="${id}" class="${(m.pneu || "medio") === id ? "on" : ""}" ${confirmado ? "disabled" : ""}><i class="bola-pneu" style="--c:${pneu.cor}"></i>${pneu.nome}</button>`).join("")}</div>` : ""}
     ${montagem ? `<details class="acerto-grid" ${!confirmado ? "open" : ""}><summary>Acerto do carro · ${window.F1Equipes.custoDaMontagem(montagem)} pontos usados</summary>${window.F1Garagem.pontosHTML({ equipe: m.equipe, montagem, bonus: S.bonusMontagem[m.equipe] || 0, pode: !confirmado, motivo: "Largada já confirmada." })}</details>` : ""}
     ${ultima && m ? `<button type="button" id="confirmarLargada" class="confirmar-largada" ${confirmado ? "disabled" : ""}>${confirmado ? "✓ Largada confirmada" : "Confirmar largada"}</button>` : ""}
-    <table class="qtab">${linhas.map((r, i) => { const p = P(r.id), t = tempos[r.id]; return `<tr class="${r.fora ? "fora" : ""} ${m && r.id === m.id ? "eu" : ""}"><td>${i + 1}</td><td><i class="faixa-eq" style="background:${p ? p.color : "#999"}"></i><b>${h(pilotoNome(p))}</b>${p ? ` <small class="muted">${h(window.HudTorre.siglaDe(p))}</small>` : ""}</td><td class="num">${t == null ? "sem tempo" : tempo3(t)}</td><td class="num muted">${t != null && i > 0 && pole != null && (!ultima || naUltima.has(r.id)) ? "+" + (t - pole).toFixed(3) : ""}</td></tr>`; }).join("")}</table></div></div>`;
+    <table class="qtab">${linhas.map((r, i) => { const p = P(r.id), t = tempos[r.id]; return `<tr class="${r.fora ? "fora" : ""} ${m && r.id === m.id ? "eu" : ""}"><td>${i + 1}</td><td>${logoEquipe(p, "q-marca")}<b>${h(pilotoNome(p))}</b>${p ? ` <small class="muted">${h(window.HudTorre.siglaDe(p))}</small>` : ""}</td><td class="num">${t == null ? "sem tempo" : tempo3(t)}</td><td class="num muted">${t != null && i > 0 && pole != null && (!ultima || naUltima.has(r.id)) ? "+" + (t - pole).toFixed(3) : ""}</td></tr>`; }).join("")}</table></div></div>`;
   if (montagem && !confirmado) el.querySelectorAll("[data-ponto], [data-ponto-zerar]").forEach((botao) => { botao.onclick = () => {
       const nova = window.F1Garagem.cliquePonto(botao, montagem, m.equipe, S.bonusMontagem[m.equipe] || 0);
       if (nova) act("montagemGrid", { montagem: nova });

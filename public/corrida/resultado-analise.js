@@ -5,7 +5,10 @@
 //  - Ritmo: o tempo de cada volta de dois pilotos (A = você, ou o vencedor para quem assiste; B = o escolhido), com a diferença volta a volta;
 //  - Pneus: os stints de cada um, na ordem de chegada, na cor do composto.
 // Clicar num piloto (no gráfico, nos pneus ou na tabela do resultado) faz dele o B. As cores são as das equipes.
-import { socket, h, sNow } from "./estado.js";
+// (sem estado.js: a página da carreira também usa este módulo, analise-salva.js; quem chama passa a `fonte` dos dados)
+const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// de onde vêm os dados: { analise(): Promise<resumo>, replay(): Promise<replay | null>, sNow(): a hora do servidor }
+let fonte = { analise: () => Promise.resolve(null), replay: () => Promise.resolve(null), sNow: () => Date.now() };
 import { criarMiniatura } from "./gp-miniatura.js";
 
 const cache = { chave: null, dados: null, pedindo: null };
@@ -182,7 +185,8 @@ function desenhar(box, S, m, A) {
 // o lugar da análise na tela do resultado (fica vazio até o servidor responder; sem regras de F1 ou sem dados, some)
 export const htmlAnalise = (S) => (S && S.config && S.config.regras === "f1" ? `<section class="ra" id="rgAnalise" hidden aria-label="Análise da corrida"></section>` : "");
 
-export function montarAnalise(el, S, m) {
+export function montarAnalise(el, S, m, f) {
+  if (f) fonte = f;
   const box = el.querySelector("#rgAnalise"); if (!box) return;
   // a tabela do resultado também escolhe o B: clicar numa linha
   el.querySelectorAll(".rg-linha[data-id]").forEach((li) => { li.addEventListener("click", () => { if (!cache.dados || li.dataset.id === (m && m.id)) return; escolhidoB = li.dataset.id; if (aba === "posicoes") aba = "ritmo"; desenhar(box, S, m, cache.dados); box.scrollIntoView({ behavior: "smooth", block: "nearest" }); }); });
@@ -190,13 +194,21 @@ export function montarAnalise(el, S, m) {
   if (cache.chave === chave && cache.dados) { desenhar(box, S, m, cache.dados); return; }
   if (cache.pedindo === chave) return;
   cache.pedindo = chave; setTimeout(() => { if (cache.pedindo === chave) cache.pedindo = null; }, 8000); // (sem resposta: a próxima vez que a tela for refeita pede de novo)
-  socket.emit("analise", (A) => {
+  fonte.analise().catch(() => null).then((A) => {
     if (cache.pedindo === chave) cache.pedindo = null;
     if (!A || !A.pilotos) return;
     if (cache.chave !== chave) { escolhidoB = null; aba = "posicoes"; }
     cache.chave = chave; cache.dados = A;
     const atual = document.getElementById("rgAnalise"); if (atual && atual.isConnected) desenhar(atual, S, m, A);
   });
+}
+
+// a análise de um GP já guardado (a Central da carreira: analise-salva.js): o resumo `A` já veio no save; `chave` separa um GP do outro
+export function montarAnaliseSalva(box, S, m, A, f, chave) {
+  fonte = f || fonte;
+  if (cache.chave !== chave) { escolhidoB = null; aba = "posicoes"; filtro = "tudo"; }
+  cache.chave = chave; cache.dados = A;
+  desenhar(box, S, m, A);
 }
 
 // sai da tela do resultado: solta a miniatura 3D e o replay dos momentos
@@ -222,8 +234,8 @@ function momentos(S, A, L) {
   const voltaEm = (t) => { const i = cum.findIndex((c) => c >= t); return i < 0 ? Math.max(1, cum.length) : i + 1; };
   const lista = (A.eventos || []).map((e) => ({ t: e.t, v: e.v || voltaEm(e.t), tipo: tipoDe(e.x), ico: emojiDe(e.x), txt: semEmoji(e.x), id: e.id, f: e.f, cor: e.id && porId.get(e.id) ? porId.get(e.id).cor : null }));
   // o rádio: a hora do navegador vira a do servidor (sNow), e só entra o que caiu dentro desta corrida
-  const fim = Math.max(soma, ...lista.map((e) => e.t), 1), desvio = sNow() - Date.now();
-  if (S.startAt && window.Radio && window.Radio.historico) for (const r of window.Radio.historico()) {
+  const fim = Math.max(soma, ...lista.map((e) => e.t), 1), desvio = fonte.sNow() - Date.now();
+  if (typeof S.startAt === "number" && window.Radio && window.Radio.historico) for (const r of window.Radio.historico()) {
     const t = (r.em + desvio - S.startAt) / 1000; if (t < 0 || t > fim + 30) continue;
     lista.push({ t: Math.round(t * 10) / 10, v: voltaEm(t), tipo: "radio", ico: "📻", txt: r.texto, id: null, f: null, cor: null });
   }
@@ -338,7 +350,7 @@ function pedirReplay(S, aoChegar) {
   if (cacheRep.chave === chave) return cacheRep.dados; // (false: esta corrida não tem replay)
   if (cacheRep.pedindo === chave) return null;
   cacheRep.pedindo = chave; setTimeout(() => { if (cacheRep.pedindo === chave) cacheRep.pedindo = null; }, 15000);
-  socket.emit("replay", (R) => {
+  fonte.replay().catch(() => null).then((R) => {
     if (cacheRep.pedindo === chave) cacheRep.pedindo = null;
     if (!R || !R.dados) { cacheRep.chave = chave; cacheRep.dados = false; aoChegar(); return; }
     try { cacheRep.dados = lerReplay(R); cacheRep.chave = chave; if (!rep.janela) rep.j = 0; } catch (e) { cacheRep.dados = false; cacheRep.chave = chave; console.warn("Corrida: replay", e); }

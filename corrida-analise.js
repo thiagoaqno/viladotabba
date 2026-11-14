@@ -47,7 +47,10 @@ function resumo(room, chave) {
       t: p.finish != null ? ms(p.finish + (p.acrescimo || 0)) : null, a: ms(p.acrescimo || 0), e: !!p.estimado,
     };
   }
-  return { pilotos, voltas: room.config?.voltas || 0, pista: room.config?.pista || null, eventos: a.eventos || [], sc: a.sc, safeties: a.safeties, amarelas: a.amarelas, chuva: !!(room.clima && room.clima.chove), hora: room.config?.hora || "dia" };
+  // os momentos com o id do save (o mesmo `chave` dos pilotos)
+  const troca = new Map(); for (const id of room.order || []) { const p = room.players[id]; if (p) troca.set(id, chave(p)); }
+  const eventos = (a.eventos || []).map((e) => (e.id && troca.has(e.id) ? { ...e, id: troca.get(e.id) } : e));
+  return { pilotos, voltas: room.config?.voltas || 0, pista: room.config?.pista || null, eventos, sc: a.sc, safeties: a.safeties, amarelas: a.amarelas, chuva: !!(room.clima && room.clima.chove), hora: room.config?.hora || "dia" };
 }
 
 module.exports = { setor, volta, evento, limpar, resumo };

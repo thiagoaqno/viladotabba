@@ -204,35 +204,3 @@ body.em-home button:hover:not(:disabled).mn-cartao{background:linear-gradient(12
 .mn-vista{display:flex;flex-direction:column;gap:2px;width:100%;margin-top:10px;padding:10px 12px;text-align:left;border:1px solid #ffffff2a;border-left:3px solid var(--sv-eq,#e10600);border-radius:0;background:linear-gradient(90deg,color-mix(in srgb,var(--sv-eq,#e10600) 22%,transparent),#ffffff06);color:#fff;cursor:pointer;transition:background .15s,transform .15s}
 .mn-vista b{font:800 16px var(--display);text-transform:uppercase;letter-spacing:.03em}.mn-vista small{color:#c4ccd6;font:500 12px/1.3 var(--body)}
 .mn-vista:hover,.mn-vista:focus-visible{background:linear-gradient(90deg,color-mix(in srgb,var(--sv-eq,#e10600) 40%,transparent),#ffffff0c);transform:translateX(3px);outline:none}
-
-/* ---------- a vista do carro (vista-carro.js): o carro num palco escuro, com os pontos das peças e o cartão ---------- */
-body.vc-on{overflow:hidden}
-.vc{position:fixed;inset:0;z-index:9000;background:radial-gradient(70% 60% at 50% 62%,color-mix(in srgb,var(--vc) 22%,#0a0d13),#030407 78%);color:#fff;animation:vcEntra .35s ease both}
-@keyframes vcEntra{from{opacity:0}to{opacity:1}}
-.vc-palco{position:absolute;inset:0}.vc-canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}.vc-canvas:active{cursor:grabbing}
-.vc-pontos{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.vc-ponto{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;margin:-11px 0 0 -11px;padding:0;border:0;background:none;color:#fff;pointer-events:auto;cursor:pointer;opacity:0;transition:opacity .4s}
-.vc.pronto .vc-ponto{opacity:1}
-.vc-ponto i{width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:color-mix(in srgb,var(--vc) 70%,#000);box-shadow:0 0 0 0 color-mix(in srgb,var(--vc) 70%,transparent);animation:vcPulso 2s infinite;transition:transform .15s}
-@keyframes vcPulso{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--vc) 70%,transparent)}70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
-.vc-ponto span{padding:3px 8px;background:#05080cd9;border-left:2px solid var(--vc);font:800 12px var(--display,"Barlow Condensed",sans-serif);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;opacity:0;transform:translateX(-4px);transition:opacity .15s,transform .15s}
-.vc-ponto:hover i,.vc-ponto:focus-visible i,.vc-ponto.on i{transform:scale(1.25);background:var(--vc)}
-.vc-ponto:hover span,.vc-ponto:focus-visible span,.vc-ponto.on span{opacity:1;transform:none}
-.vc-ponto:focus-visible{outline:none}
-.vc-ponto.atras{opacity:.28!important}.vc-ponto.atras i{animation:none}
-.vc-topo{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:clamp(14px,3vw,30px);pointer-events:none}
-.vc-topo small{color:#c4ccd6;font:700 12px var(--body);letter-spacing:.18em;text-transform:uppercase}
-.vc-topo h2{margin:2px 0 0;font:900 italic clamp(30px,5vw,64px)/.95 var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;border-left:6px solid var(--vc);padding-left:12px}
-.vc-x{pointer-events:auto;width:44px;height:44px;border-radius:50%;border:1px solid #ffffff40;background:#05080cb3;color:#fff;font-size:18px;cursor:pointer;transition:background .15s,transform .15s}
-.vc-x:hover,.vc-x:focus-visible{background:var(--vc);transform:rotate(90deg);outline:none}
-.vc-cartao{position:absolute;right:clamp(12px,3vw,32px);bottom:clamp(54px,8vh,90px);width:min(380px,calc(100% - 24px));padding:16px 18px;background:#05080ce6;border:1px solid #ffffff22;border-top:4px solid var(--vc);box-shadow:0 18px 50px #000c;animation:vcCartao .3s ease both}
-@keyframes vcCartao{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.vc-cartao small{color:#9aa4b1;font:700 11px var(--body);letter-spacing:.14em;text-transform:uppercase}
-.vc-cartao h3{margin:2px 0 8px;font:900 italic 28px/1 var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase}
-.vc-cartao p{margin:0 0 12px;color:#dfe5ec;font:500 14px/1.5 var(--body)}
-.vc-c-nav{display:flex;gap:6px}.vc-c-nav button{flex:none;padding:7px 12px;border:1px solid #ffffff30;background:#ffffff0a;color:#fff;font:800 13px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;cursor:pointer;transition:background .15s}
-.vc-c-nav button[data-vc-geral]{flex:1}.vc-c-nav button:hover,.vc-c-nav button:focus-visible{background:var(--vc);outline:none}
-.vc-ajuda{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);margin:0;color:#aab4c0;font:500 12px var(--body);text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap}
-.vc-carga{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:#c4ccd6;font:700 16px var(--body);pointer-events:none}
-@media (max-width:640px){.vc-cartao{left:12px;right:12px;width:auto;bottom:44px}.vc-ponto span{display:none}.vc-ajuda{white-space:normal;text-align:center;width:90%}}
-@media (prefers-reduced-motion:reduce){.vc,.vc-cartao,.vc-ponto i{animation:none}}

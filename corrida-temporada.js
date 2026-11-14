@@ -65,6 +65,13 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
       try { const linha = bd.recuperarTemporadaCorrida(d.codigo); if (!linha) throw Error("Código de recuperação inválido."); entrar(socket, linha, linha.token, resposta); }
       catch (e) { erro(resposta, e); }
     });
+    // o replay de um GP já corrido desta carreira (a análise 3D da Central: analise-salva.js)
+    socket.on("replay", (d = {}, resposta) => {
+      try {
+        if (!socket.data.idTemporada) throw Error("Abra a carreira primeiro.");
+        enviar({ ok: true, replay: bd.replayCorrida("solo:" + socket.data.idTemporada, Number(d.ano), Number(d.gp)) }, resposta);
+      } catch (e) { erro(resposta, e); }
+    });
     socket.on("montagem", (d = {}, resposta) => mudar(socket, resposta, (s) => { Regras.aplicarMontagem(s, d); }));
     socket.on("piloto", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.contratarPiloto(s, d.id)));
     socket.on("engenheiro", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.contratarEngenheiro(s, d.area, Number(d.nivel))));
@@ -108,8 +115,12 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
             return { piloto: p.bot ? p.piloto.id : "voce", equipe: p.equipe, pos: r.pos, pontos: r.pontos, dnf: r.dnf, nc: r.nc, voltaRapida: !!r.voltaRapida };
           });
           let analise = null; // a análise é um extra: um erro nela nunca pode perder o resultado do GP
-          try { analise = require("./corrida-analise.js").resumo(room, (p) => (p.bot ? p.piloto.id : "voce")); } catch (e) { console.warn("Temporada F1: análise do GP não salva:", e.message); }
+          const chave = (p) => (p.bot ? p.piloto.id : "voce");
+          let gravado = null; // as ultrapassagens e o replay (corrida-gravacao.js): extras, como a análise
+          try { gravado = require("./corrida-gravacao.js").paraSave(room, chave); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); }
+          try { analise = require("./corrida-analise.js").resumo(room, chave); if (gravado) analise.ultrapassagens = gravado.ultrapassagens; } catch (e) { console.warn("Temporada F1: análise do GP não salva:", e.message); }
           Regras.registrarResultado(fresco.dados, linhas, analise);
+          if (gravado && gravado.replay) { try { bd.guardarReplayCorrida("solo:" + fresco.id, ano, indice, gravado.replay); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); } }
           if (bd.salvarTemporadaCorrida(fresco.id, fresco.dados, indice)) {
             ativos.delete(fresco.id); avisar(fresco);
           }

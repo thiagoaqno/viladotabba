@@ -75,4 +75,15 @@ function replay(room) {
   return { t0: g.t0, passo: PASSO_MS, campos: CAMPOS, ids: g.ids, n: g.amostras.length, dados: Buffer.concat(g.amostras).toString("base64") };
 }
 
-module.exports = { passo, limpar, replay, listaUltrapassagens, PASSO_MS, CAMPOS, FORA };
+// para o save da carreira: os ids da sala viram os do save (`chave(p)`: "voce", "h:<pessoa>" ou o id do piloto real) nas ultrapassagens e nas
+// colunas do replay; o replay vai cru (Buffer), e o bd.js comprime
+function paraSave(room, chave) {
+  const g = room.grav, troca = new Map();
+  for (const id of room.order) { const p = room.players[id]; if (p) { try { troca.set(id, chave(p)); } catch (e) { troca.set(id, id); } } }
+  const novo = (id) => troca.get(id) || id;
+  const ultrapassagens = g ? g.ultrapassagens.map((u) => ({ ...u, a: novo(u.a), b: novo(u.b) })) : [];
+  const replay = g && g.amostras.length ? { t0: g.t0, passo: PASSO_MS, campos: CAMPOS, ids: g.ids.map(novo), n: g.amostras.length, dados: Buffer.concat(g.amostras) } : null;
+  return { ultrapassagens, replay };
+}
+
+module.exports = { passo, limpar, replay, listaUltrapassagens, paraSave, PASSO_MS, CAMPOS, FORA };

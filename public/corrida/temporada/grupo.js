@@ -163,7 +163,7 @@ function fimDaNoite(t) {
 function telaCentral(terminou) {
   const eq = S.minhaEquipe, t = S.equipes[eq], me = G.idDoHumano(S.eu), C = window.Central, Reg = window.F1Temporada, eh = S.eu === S.host, GA = window.F1Garagem;
   const vira = (id) => (id === me ? "voce" : id);
-  const resultados = S.resultados.map((r) => ({ ...r, financas: r.financas?.[eq] || {}, linhas: r.linhas.map((l) => ({ ...l, piloto: vira(l.piloto) })), analise: r.analise ? { ...r.analise, pilotos: Object.fromEntries(Object.entries(r.analise.pilotos).map(([k, v]) => [vira(k), v])) } : null }));
+  const resultados = S.resultados.map((r) => ({ ...r, financas: r.financas?.[eq] || {}, linhas: r.linhas.map((l) => ({ ...l, piloto: vira(l.piloto) })), analise: r.analise ? { ...r.analise, pilotos: Object.fromEntries(Object.entries(r.analise.pilotos).map(([k, v]) => [vira(k), v])), eventos: (r.analise.eventos || []).map((e) => (e.id ? { ...e, id: vira(e.id) } : e)), ultrapassagens: (r.analise.ultrapassagens || []).map((u) => ({ ...u, a: vira(u.a), b: vira(u.b) })) } : null }));
   const eu = S.pessoas.find((p) => p.id === S.eu), tam = S.opcoes.tamanho;
   const s = { nome: eu?.nome || "", equipe: eq, ano: S.ano, gp: S.gp, tamanho: tam, voltas: S.opcoes.voltas, nivel: S.opcoes.nivel, semente: S.semente, montagem: t.montagem, bonus: t.bonus, caixa: t.caixa, gasto: t.gasto || 0, patrocinio: t.patrocinio, engenheiros: t.engenheiros, piloto2: t.companheiro, calendario: S.calendario, resultados, nomesExtras: Object.fromEntries(S.pessoas.map((p) => [G.idDoHumano(p.id), p.nome])) };
   const meuId = (tb) => ({ ...tb, pilotos: tb.pilotos.map((p) => (p.id === me ? { ...p, id: "voce" } : p)) });
@@ -277,5 +277,11 @@ const enviar = async (e) => {
 app.addEventListener("click", clicar);
 app.addEventListener("submit", enviar);
 
-window.SedeGrupo = { formulario, ativo: !!CODIGO_URL, iniciar() { ligar(); if (CODIGO_URL && !ler(chaveSala(CODIGO_URL))) telaDoConvite(); } };
+// o replay de um GP da sala (a análise 3D da Central, analise-salva.js): os seus carros viram "voce", como no resto da Central
+function replayDoGP(ano, gp) {
+  if (!socket || !S) return Promise.resolve(null);
+  const me = G.idDoHumano(S.eu);
+  return emitir("replay", { ano, gp }).then((r) => (r && r.ok && r.replay ? { ...r.replay, ids: r.replay.ids.map((id) => (id === me ? "voce" : id)) } : null));
+}
+window.SedeGrupo = { formulario, replayDoGP, ativo: !!CODIGO_URL, iniciar() { ligar(); if (CODIGO_URL && !ler(chaveSala(CODIGO_URL))) telaDoConvite(); } };
 })();

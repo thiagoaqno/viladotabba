@@ -258,6 +258,23 @@ function salvarTemporadaCorrida(id, dados, gpEsperado) {
       .run(JSON.stringify(dados), Date.now(), id, gpEsperado);
   return r.changes > 0;
 }
+// o replay de um GP da carreira (corrida-gravacao.js, `paraSave`): as amostras com gzip e as colunas em JSON; cada dono fica com os 30 mais recentes
+const REPLAYS_POR_DONO = 30;
+function guardarReplayCorrida(dono, ano, gp, replay) {
+  if (!replay || !replay.dados || !replay.dados.length) return false;
+  const { dados, ...meta } = replay, gz = require("zlib").gzipSync(dados);
+  bd().prepare("INSERT INTO corrida_replays (dono, ano, gp, meta, dados, criado_em) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(dono, ano, gp) DO UPDATE SET meta = excluded.meta, dados = excluded.dados, criado_em = excluded.criado_em")
+    .run(String(dono), ano | 0, gp | 0, JSON.stringify(meta), gz, Date.now());
+  bd().prepare("DELETE FROM corrida_replays WHERE dono = ? AND rowid NOT IN (SELECT rowid FROM corrida_replays WHERE dono = ? ORDER BY criado_em DESC LIMIT ?)").run(String(dono), String(dono), REPLAYS_POR_DONO);
+  return true;
+}
+// o replay para o navegador: as colunas e as amostras em base64 (o mesmo formato da sala da Corrida, evento `replay`)
+function replayCorrida(dono, ano, gp) {
+  const l = bd().prepare("SELECT meta, dados FROM corrida_replays WHERE dono = ? AND ano = ? AND gp = ?").get(String(dono), ano | 0, gp | 0);
+  if (!l) return null;
+  return { ...JSON.parse(l.meta), dados: require("zlib").gunzipSync(l.dados).toString("base64") };
+}
+const apagarReplaysCorrida = (dono) => bd().prepare("DELETE FROM corrida_replays WHERE dono = ?").run(String(dono)).changes;
 function novoCodigoTemporadaCorrida(id) {
   const recuperacao = novoCodigoRecuperacao();
   const r = bd().prepare("UPDATE corrida_temporadas SET recuperacao_hash = ?, atualizada_em = ? WHERE id = ?").run(hash(recuperacao), Date.now(), id);
@@ -277,9 +294,10 @@ const salasTemporadaCorrida = () => bd().prepare("SELECT * FROM corrida_temporad
 }).filter((s) => s.dados);
 // apagar a temporada solo de vez (o token e o código de recuperação deixam de valer)
 function excluirTemporadaCorrida(id) {
+  bd().prepare("DELETE FROM corrida_replays WHERE dono = ?").run("solo:" + id); // os replays dos GPs vão junto
   return bd().prepare("DELETE FROM corrida_temporadas WHERE id = ?").run(id).changes > 0;
 }
-const apagarSalaTemporadaCorrida = (codigo) => bd().prepare("DELETE FROM corrida_temporadas_grupo WHERE codigo = ?").run(codigo).changes > 0;
+const apagarSalaTemporadaCorrida = (codigo) => { bd().prepare("DELETE FROM corrida_replays WHERE dono = ?").run("grupo:" + codigo); return bd().prepare("DELETE FROM corrida_temporadas_grupo WHERE codigo = ?").run(codigo).changes > 0; };
 
 // ---------- a moderação das carreiras solo (admin-carreira.js) ----------
 // a lista sem abrir o save inteiro de cada uma: só os campos que o painel mostra, tirados do JSON pelo próprio SQLite
@@ -514,4 +532,4 @@ const historicoPokemon = (treinador, limite = 20) => bd().prepare("SELECT ator, 
   .map((r) => ({ ator: r.ator, tipo: r.tipo, captura: r.captura, antes: JSON.parse(r.antes || "null"), depois: JSON.parse(r.depois || "null"), em: Number(r.criado_em) }));
 
 module.exports = { registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
-Object.assign(module.exports, { excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });
+Object.assign(module.exports, { guardarReplayCorrida, replayCorrida, apagarReplaysCorrida, excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });

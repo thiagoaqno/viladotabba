@@ -1,6 +1,8 @@
 // Sede da temporada: a tela é refeita a partir do save recebido, nunca de números guardados no navegador.
 const Pilotos = window.F1Pilotos, Equipes = window.F1Equipes, Regras = window.F1Temporada;
 const socket = io("/corrida-temporada"), app = document.getElementById("app"), aviso = document.getElementById("aviso");
+// o replay de um GP desta carreira (a análise 3D da Central, analise-salva.js)
+window.CarreiraReplay = (ano, gp) => new Promise((ok) => socket.emit("replay", { ano, gp }, (r) => ok(r && r.ok ? r.replay : null)));
 const chave = "corrida:temporada:token";
 let token = localStorage.getItem(chave), estado = null, codigo = null, ocupado = false;
 const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

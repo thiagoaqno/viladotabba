@@ -1,30 +1,31 @@
-# Mapa real em volta da pista na miniatura 3D, e a Análise da carreira mais enxuta
+# Notícias da carreira: fotos da internet com reserva local, e mais tipos de notícia
 
-## Mapa real (o fundo do replay, do mapa da corrida, dos eventos e do guia do GP)
+O Thiago pediu fotos da internet nas notícias, com fotos de reserva, e mais variedade de notícias.
 
-O Thiago escolheu o "mapa desenhado real" para o fundo da miniatura 3D: os prédios em blocos, as ruas, a água e as áreas verdes de verdade em volta de cada circuito, no lugar do disco liso.
+## Fotos
 
-- **`ferramentas/mapa-real.js` (novo):** para cada pista, pega a linha central real (bacinger/f1-circuits, MIT) e a encaixa na do jogo com a rotação, a escala e o espelho de `ferramentas/pista-real.js`, que agora exporta essas funções. Depois baixa uma vez, pela Overpass API, os prédios, as ruas, a água e o verde num raio em volta (© colaboradores do OpenStreetMap, licença ODbL).
-  - Simplifica os contornos (Douglas-Peucker, 1,5 m), arredonda para unidades inteiras do jogo e grava `public/corrida/mapas/<pista>.json`.
-  - A altura do prédio vem de `height` ou de `building:levels` × 3,2 m; sem as duas, fica com 9 m. O arquivo anota quantos prédios ficaram assim (`semAltura`).
-  - Tenta até 4 vezes, alternando com um servidor de reserva, com limite de tempo por tentativa (`--tempo` para as cidades densas) e um modo `--faltam`.
-- **Os mapas (23 pistas, medidos):** somam 2,1 MB (`du`), de 13 KB (Bahrein, Hungaroring) a 320 KB (Melbourne). O download do OpenStreetMap foi de uns 28 MB no total, uma vez, e fica no cache fora do repositório.
-  - O encaixe ficou com erro médio de 4,3 m (Interlagos) a 13,5 m (Miami); Baku é a exceção, com 20,4 m.
-  - O jogo só busca o mapa quando a miniatura da pista abre.
-- **`gp-mapa-real.js` (novo):** transforma o mapa em malhas, todas juntas: uma para os prédios (paredes e telhado, altura × 2 para aparecer na escala da miniatura), uma para as ruas (as grandes mais claras) e uma para cada cor do chão.
-  - Só desenha dentro do disco e fora da faixa da pista, para nada furar a pista nem a parede do relevo.
-  - Tem as cores do tema padrão (escuro) e do claro e do escuro da Central.
-- **`gp-miniatura.js`:** carrega o mapa sem travar (o resto aparece antes), mostra "© colaboradores do OpenStreetMap" e solta tudo junto com a cena.
+- **`ferramentas/fotos-noticias.js` (novo):** pega na Wikipédia (em inglês) a foto principal do artigo de cada piloto do grid de 2026 e do carro de 2025 de cada equipe, só as de licença livre (`pilicense=free`, Wikimedia Commons), com o autor e a licença.
+  - Grava `public/corrida/temporada/fotos-noticias.js`: 22 pilotos e 10 equipes. A Cadillac não tem foto livre do carro e usa a reserva.
+  - Imprime o artigo e o arquivo de cada um para conferir. Três buscas tinham caído no pai do piloto (Hamilton, Verstappen, Sainz) e estão corrigidas em `FIXOS`.
+  - Espera e tenta de novo quando a API limita o ritmo (429) ou a rede cai.
+- **As imagens não entram no jogo:** o navegador carrega a miniatura de 900 px da Wikimedia na hora, e o crédito ("Foto: autor · licença · Wikimedia Commons") vai no pé do cartão.
+- **Reserva:** se a foto não carregar (sem internet ou link fora do ar), o cartão troca para a foto local do GP (`gp-fotos/`) e tira o crédito; sem ela, fica com as cores da equipe.
+- **Quem ganha foto:** o Campeonato (o líder ou o seu carro), o Rival e os stories novos.
 
-## A Análise da carreira
+## Notícias novas (`stories.js` e `stories-textos.js`)
 
-- **Abas:** Visão geral (a principal, que abre primeiro), Desempenho, Pneus, Eventos e Replay, por último. Estratégia e Voltas saíram, porque a tabela de Pneus e o Desempenho cobrem o que elas mostravam.
-- **Paradas para conserto:** a ida ao box só para consertar o carro (o "não trocar" do menu do box, ou o robô avariado com o pneu bom) saía da função antes de anotar qualquer coisa.
-  - Agora fica em `p.consertos`, à parte de `p.paradas` (a regra dos pneus não muda), entra no log ("parou nos boxes só para consertar o carro") e vai para a análise (`k`).
-  - Ela conta nas paradas da tabela de Pneus (marcada com *), nas estratégias, nas informações da corrida e no resultado do GP.
-- **Eventos mais limpos:** saem o rádio do engenheiro, os avisos de devolver a posição, as bandeiras amarelas comuns (o safety car fica), a batida leve, o stop-and-go cumprido, a contagem das batidas propositais, o ritmo dos robôs, o "entrou no quadro de recordes", o "venceu o GP" e o "fim de corrida".
-- **Sem giro automático:** a miniatura só se mexe com o mouse, os botões e os voos da câmera.
+Todas saem dos dados que o jogo grava (o resultado e a análise de cada GP):
 
-Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`, inclusive os 23 mapas. O teste jogando fica com o Thiago.
+- **Destaque do GP:** quem mais ultrapassou, se fez 3 ou mais; senão, quem mais ganhou posições, se foram 4 ou mais.
+- **Volta mais rápida:** com o tempo e a volta, e um texto próprio quando é sua.
+- **Box mais rápido:** o menor tempo no box medido no servidor.
+- **Corrida caótica:** 3 ou mais abandonos.
+- **Duelo na equipe:** quantas vezes você e o companheiro chegaram um na frente do outro na temporada.
+- **Sequência:** pódios seguidos (2 ou mais) ou GPs seguidos nos pontos (3 ou mais).
+- **Construtores:** a sua equipe na tabela, com um texto próprio para quando lidera.
+
+São 24 situações (eram 11) e 2420 combinações de título e texto (eram 1050), cada nova com os seus layouts. O fechar do story virou SVG.
+
+Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`; os textos novos foram sorteados uma vez à mão, sem teste novo. O teste jogando fica com o Thiago.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

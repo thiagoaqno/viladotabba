@@ -1,7 +1,7 @@
 // Os textos dos stories (stories.js): para cada situação, títulos (`t`) e textos (`s`) que se combinam, então a mesma notícia sai de
 // centenas de jeitos (`StoriesTextos.combinacoes()` conta). A escolha é fixa pela chave da notícia: o mesmo story não muda a cada
 // redesenho, mas o próximo GP já sai diferente. Marcas: {gp} {pos} {pts} {vencedor} {lider} {segundo} {dif} {vant} {rival} {equipe}
-// {etapa} {total} {previsao}.
+// {etapa} {total} {previsao}; e as dos stories novos: {piloto} {n} {de} {ate} {tempo} {volta} {t} {terminaram} {comp} {eu} {ele}.
 (function (root) {
 "use strict";
 const T = {
@@ -70,6 +70,85 @@ const T = {
       "Preparando o {gp}", "Contagem para o {gp}", "Próximo desafio: {gp}", "{gp} na mira"],
     s: ["Etapa {etapa} de {total}{previsao}.", "Etapa {etapa} de {total}. Bora!{previsao}", "Mais uma chance de pontuar{previsao}.", "O carro já está a caminho{previsao}.", "Etapa {etapa} de {total}: hora de acelerar{previsao}.",
       "A equipe já estuda a pista{previsao}.", "Etapa {etapa}: tudo pronto{previsao}.", "Prepara o capacete{previsao}.", "Mais um GP, mais uma chance{previsao}.", "Faltam {faltam} etapas{previsao}."],
+  },
+  // ---------- os stories novos (2026-11-14) ----------
+  destaque_ult: {
+    t: ["{piloto}: {n} ultrapassagens no {gp}", "O rei das ultrapassagens", "{piloto} não parou de passar", "Show de ultrapassagens no {gp}", "{n} vezes {piloto}", "Ninguém passou mais que {piloto}",
+      "{piloto} fez a festa no {gp}", "Ultrapassagem atrás de ultrapassagem", "O destaque do {gp}: {piloto}", "{piloto} veio voando"],
+    s: ["Foram {n} ultrapassagens na pista no {gp}.", "{n} carros ficaram para trás.", "Cada volta, um carro a menos na frente.", "A torcida não tirou o olho.", "Ninguém conseguiu segurar.",
+      "{n} ultrapassagens: o maior número da corrida.", "Uma aula de corrida.", "O replay está cheio de manobras dele.", "Briga roda a roda o tempo todo.", "Vale rever no replay."],
+  },
+  destaque_ganho: {
+    t: ["{piloto} ganhou {n} posições", "A escalada de {piloto}", "De {de} a {ate} no {gp}", "{piloto} subiu {n} lugares", "A corrida de recuperação de {piloto}", "O destaque do {gp}: {piloto}",
+      "{piloto} veio de trás", "+{n} para {piloto}", "Que remontada no {gp}", "{piloto} não desistiu"],
+    s: ["Largou em {de} e terminou em {ate}.", "{n} posições ganhas da largada à bandeirada.", "Uma corrida inteira de ataque.", "Ninguém ganhou mais lugares.", "Paciência e ritmo: a receita.",
+      "De {de} para {ate}: corrida para guardar.", "Estratégia e coragem.", "O pelotão inteiro viu passar.", "A equipe comemora a remontada.", "Vale rever no replay."],
+  },
+  voltarapida: {
+    t: ["{piloto} faz a volta mais rápida", "Volta mais rápida: {piloto}", "{tempo}: a melhor volta do {gp}", "Ninguém foi mais rápido que {piloto}", "O relógio é de {piloto}", "Ritmo de classificação no {gp}",
+      "{piloto} cravou {tempo}", "A volta do dia", "Volta voadora de {piloto}", "O cronômetro parou para {piloto}"],
+    s: ["{tempo} na volta {volta}.", "A melhor volta do {gp}, na volta {volta}.", "Ritmo que ninguém acompanhou.", "Pneu novo e pé embaixo.", "Uma volta para guardar.",
+      "{tempo}: a referência da corrida.", "A pista estava no ponto.", "O setor mais rápido saiu dessa volta.", "Na volta {volta}, tudo encaixou.", "Os engenheiros vão estudar essa volta."],
+  },
+  voltarapida_eu: {
+    t: ["Sua a volta mais rápida!", "Volta mais rápida: você", "{tempo}: ninguém foi mais rápido", "O relógio é seu no {gp}", "Volta voadora", "Você cravou {tempo}",
+      "A melhor volta do {gp} é sua", "Ritmo de pole no {gp}", "O cronômetro parou para você", "Recorde do dia: você"],
+    s: ["{tempo} na volta {volta}.", "Ninguém andou mais rápido no {gp}.", "Se terminou no top 10, vale ponto extra.", "O carro estava no ponto.", "Uma volta para a estante.",
+      "{tempo}: a referência da corrida.", "Pneu novo e coragem.", "Os rivais viram o tempo e engoliram seco.", "Na volta {volta}, tudo encaixou.", "O engenheiro gritou no rádio."],
+  },
+  pitrapido: {
+    t: ["Box mais rápido: {equipe}", "{t} s no box", "Os mecânicos da {equipe} voaram", "Pit stop relâmpago no {gp}", "{equipe} faz o melhor pit stop", "Troca de pneus em {t} s",
+      "A parada do dia", "Ninguém parou tão rápido", "Box perfeito da {equipe}", "Mecânicos em dia de glória"],
+    s: ["{piloto} ficou {t} s no box, na volta {volta}.", "{t} s do começo ao fim da parada.", "Treino de box que deu resultado.", "Pneus trocados num piscar de olhos.", "A equipe inteira comemora.",
+      "Volta {volta}: entrou e saiu num instante.", "O tempo no box conta posições.", "Os rivais perderam tempo no box; eles, não.", "{piloto} agradece no rádio.", "Uma parada de manual."],
+  },
+  abandonos: {
+    t: ["{n} abandonos no {gp}", "Corrida de sobreviventes", "O {gp} cobrou caro", "Só {terminaram} terminaram o {gp}", "Caos no {gp}", "Domingo de quebras e batidas",
+      "{n} carros fora no {gp}", "Corrida dura no {gp}", "Quem terminou, pontuou", "O {gp} não perdoou"],
+    s: ["{n} carros não viram a bandeirada.", "Terminar já foi uma vitória.", "Pista difícil e muita disputa.", "Os mecânicos vão trabalhar a noite toda.", "Cuidar do carro valeu ouro.",
+      "{terminaram} chegaram ao fim.", "Uma corrida para quem teve paciência.", "Muro, batida e quebra: teve de tudo.", "A direção de prova trabalhou muito.", "Vale rever os momentos."],
+  },
+  companheiro_frente: {
+    t: ["Você {eu} × {ele} {comp}", "Na frente do companheiro", "O duelo da {equipe} é seu", "{comp} atrás de você", "Primeiro piloto da {equipe}?", "Vencendo o duelo interno",
+      "{eu} a {ele} contra {comp}", "Quem manda na {equipe}", "O placar interno", "Você leva a melhor"],
+    s: ["Você chegou na frente de {comp} {eu} vezes; ele, {ele}.", "{comp} precisa reagir.", "O placar da equipe: {eu} × {ele}.", "O chefe da equipe está de olho.", "Mantém a pressão.",
+      "Na garagem, o assunto é você.", "{comp} quer virar esse jogo.", "Duelo saudável, mas é seu.", "Contra o mesmo carro, você está na frente.", "Bom sinal para a renovação."],
+  },
+  companheiro_atras: {
+    t: ["{comp} {ele} × {eu} você", "Atrás do companheiro", "{comp} vence o duelo interno", "O placar da {equipe}", "Hora de virar o duelo", "{comp} na frente",
+      "{ele} a {eu} para {comp}", "O desafio é dentro de casa", "Duelo na {equipe}", "Recado dado por {comp}"],
+    s: ["{comp} chegou na sua frente {ele} vezes; você, {eu}.", "Mesmo carro, resultado diferente.", "Dá para virar.", "O chefe da equipe está de olho.", "Hora de estudar a telemetria do {comp}.",
+      "O placar interno: {ele} × {eu}.", "Cada GP conta nesse duelo.", "Os dados do companheiro estão na Análise.", "Bora mostrar quem é o primeiro piloto.", "A temporada é longa."],
+  },
+  companheiro_empate: {
+    t: ["Empate na {equipe}", "{eu} × {ele} com {comp}", "Duelo equilibrado", "Ninguém manda na {equipe}", "Tudo igual com {comp}", "O duelo interno está aberto",
+      "Empate técnico", "Quem desempata?", "{comp} e você, lado a lado", "A briga da garagem"],
+    s: ["Cada um chegou na frente {eu} vezes.", "O próximo GP desempata.", "Mesmo carro, mesmo ritmo.", "O chefe da equipe adora isso.", "Duelo pegado.",
+      "Placar: {eu} × {ele}.", "Ninguém dá trégua.", "O detalhe vai decidir.", "Os dados dos dois estão na Análise.", "Que vença o melhor."],
+  },
+  sequencia_podio: {
+    t: ["{n} pódios seguidos", "Sequência de pódios", "Fase iluminada", "Pódio virou rotina", "{n} troféus seguidos", "Ninguém tira você do pódio",
+      "Mais um pódio: são {n}", "Em alta", "A estante está ficando cheia", "Momento de ouro"],
+    s: ["São {n} GPs seguidos no pódio.", "A equipe vive o melhor momento.", "Constância de campeão.", "Quem segura?", "O carro e você, em sintonia.",
+      "{n} pódios seguidos e contando.", "Os rivais já sabem quem vigiar.", "Pódio atrás de pódio.", "Champanhe toda semana.", "Bora esticar a sequência."],
+  },
+  sequencia_pontos: {
+    t: ["{n} GPs seguidos nos pontos", "Sequência nos pontos", "Sempre pontuando", "Constância é o nome", "{n} corridas pontuando", "Pontos toda semana",
+      "A regularidade paga", "Mais uma nos pontos", "Sem zerar", "Pontos atrás de pontos"],
+    s: ["São {n} GPs seguidos na zona de pontos.", "Constância vale campeonato.", "Cada ponto conta.", "A equipe agradece a regularidade.", "Sem erro, sem zero.",
+      "{n} corridas pontuando.", "O próximo passo é o pódio.", "A tabela agradece.", "Regularidade de veterano.", "Bora manter."],
+  },
+  construtores: {
+    t: ["{equipe} em {pos} nos construtores", "A tabela dos construtores", "{equipe}: {pts} pontos", "{lider} lidera os construtores", "A briga das equipes", "{equipe} na tabela",
+      "{dif} pontos para o topo", "Construtores: {equipe} em {pos}", "Pontos para a equipe", "O campeonato das fábricas"],
+    s: ["A {equipe} tem {pts} pontos, a {dif} da {lider}.", "{lider} lidera os construtores.", "Cada ponto vale dinheiro para a equipe.", "Os dois carros somam juntos.", "A fábrica acompanha cada corrida.",
+      "{pts} pontos até aqui.", "Subir na tabela é verba para o carro.", "A {equipe} quer mais.", "A briga das equipes é longa.", "Bora somar."],
+  },
+  construtores_lider: {
+    t: ["{equipe} lidera os construtores", "A {equipe} no topo", "Líder entre as equipes", "{pts} pontos e a liderança", "A melhor equipe do grid", "{equipe} na frente",
+      "Construtores: {equipe} em 1º", "Ninguém somou mais", "O topo das equipes", "A fábrica comemora"],
+    s: ["{vant} pontos à frente da {segundo}.", "A {segundo} vem atrás, a {vant} pontos.", "Os dois carros puxando junto.", "A fábrica está em festa.", "Agora é defender.",
+      "{pts} pontos até aqui.", "O título de construtores está ao alcance.", "A {segundo} quer a liderança.", "Trabalho de equipe.", "Bora segurar."],
   },
 };
 // o mesmo número para a mesma chave (o story não muda a cada redesenho)

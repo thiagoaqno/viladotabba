@@ -6,6 +6,13 @@
 const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const logo = (id) => `<img src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(encodeURIComponent(id))}" alt="" onerror="this.style.display='none'">`;
 const ord = (n) => `${n}º`;
+const X_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+// as fotos das notícias (fotos-noticias.js, ferramentas/fotos-noticias.js): a do piloto ou a do carro da equipe, da Wikimedia Commons, carregada
+// na hora; o crédito vai no cartão. Se não carregar (sem internet, link fora do ar), entra a reserva local (a foto do GP) ou só as cores da equipe.
+const FN = () => root.FotosNoticias || { pilotos: {}, equipes: {} };
+const comFoto = (f) => (f && f.url ? { foto: f.url, credito: `Foto: ${f.autor} · ${f.licenca} · Wikimedia Commons` } : {});
+const fotoPiloto = (id) => comFoto(FN().pilotos[id]);
+const fotoEquipe = (eq) => comFoto(FN().equipes[eq]);
 const nomeGP = (e) => { if (!e) return "GP"; const of = root.GpInfo?.get(e.pista)?.gp; return of ? of.replace(/^Grande Prêmio/, "GP") : `GP ${/^[AEIOU]/i.test(e.nome) ? "da" : "de"} ${e.nome}`; }; // (o nome oficial já vem com o artigo: "GP da China")
 let atuais = [], aberto = -1, timer = null, inicio = 0;
 const DURA = 5200;
@@ -33,14 +40,56 @@ function montar(c) {
     const sit = eu === 0 ? "lider" : eu <= 2 || dif <= 25 ? "caca" : "longe";
     story(`camp:${s.ano}:${gps.length}`, "Campeonato", eu === 0 ? s.equipe : lider.equipe, null, sit,
       { pts: meu.pontos, vant: eu === 0 ? meu.pontos - (seg?.pontos || 0) : 0, segundo: seg?.nome || "ninguém", lider: lider.nome, pos: ord(eu + 1), dif },
-      { num: ord(eu + 1), numRot: `${meu.pontos} pts`, eq2: eu === 0 ? seg?.equipe : s.equipe, dif: eu === 0 ? meu.pontos - (seg?.pontos || 0) : dif, nomeA: eu === 0 ? "Você" : lider.nome, nomeB: eu === 0 ? seg?.nome || "" : "Você" });
+      { ...(eu === 0 ? fotoEquipe(s.equipe) : fotoPiloto(lider.id)), reserva: ultimo ? Gi?.fundoDe(ultimo.pista) : null, num: ord(eu + 1), numRot: `${meu.pontos} pts`, eq2: eu === 0 ? seg?.equipe : s.equipe, dif: eu === 0 ? meu.pontos - (seg?.pontos || 0) : dif, nomeA: eu === 0 ? "Você" : lider.nome, nomeB: eu === 0 ? seg?.nome || "" : "Você" });
     const frente = pil[eu - 1];
     if (frente && eu > 1) story(`rival:${s.ano}:${gps.length}`, "Rival", frente.equipe, null, "rival",
       { rival: frente.nome, dif: frente.pontos - meu.pontos, pontos_txt: ptsTxt(frente.pontos - meu.pontos), equipe: eqs[frente.equipe]?.nome || "" },
-      { num: `${frente.pontos - meu.pontos}`, numRot: "pontos de diferença", eq2: s.equipe, dif: frente.pontos - meu.pontos, nomeA: frente.nome, nomeB: "Você" });
+      { ...fotoPiloto(frente.id), reserva: ultimo ? Gi?.fundoDe(ultimo.pista) : null, num: `${frente.pontos - meu.pontos}`, numRot: "pontos de diferença", eq2: s.equipe, dif: frente.pontos - meu.pontos, nomeA: frente.nome, nomeB: "Você" });
     const melhor = gps.map((g) => ({ g, l: g.linhas.find((x) => x.piloto === "voce") })).filter((x) => x.l && !x.l.dnf).sort((a, b) => a.l.pos - b.l.pos)[0];
     if (melhor && gps.length > 1) story(`melhor:${s.ano}:${melhor.g.gp}`, "Seu melhor", s.equipe, Gi?.fundoDe(melhor.g.pista), "melhor",
       { pos: ord(melhor.l.pos), gp: nomeGP(s.calendario[melhor.g.gp]), ano: String(s.ano).padStart(2, "0") }, { num: ord(melhor.l.pos), numRot: "melhor do ano", pista: melhor.g.pista });
+  }
+  // ---------- os stories novos (2026-11-14): o que o último GP e a temporada contam ----------
+  const a = ultimo && ultimo.analise, fotoGP = ultimo ? Gi?.fundoDe(ultimo.pista) : null, eGP = ultimo ? s.calendario[ultimo.gp] : null;
+  const eqDe = (id) => (ultimo?.linhas.find((l) => l.piloto === id) || {}).equipe;
+  if (a && a.pilotos) {
+    // o destaque do GP: quem mais ultrapassou (com 3 ou mais) ou, senão, quem mais ganhou posições da largada à chegada
+    const ult = a.ultrapassagens || [], conta = {}; for (const u of ult) conta[u.a] = (conta[u.a] || 0) + 1;
+    const rei = Object.entries(conta).sort((x, y) => y[1] - x[1])[0];
+    const ganhos = ultimo.linhas.filter((l) => !l.dnf && !l.nc && a.pilotos[l.piloto]?.g > 0).map((l) => ({ l, d: a.pilotos[l.piloto].g - l.pos })).sort((x, y) => y.d - x.d);
+    if (rei && rei[1] >= 3) story(`dest:${s.ano}:${ultimo.gp}`, "Destaque do GP", eqDe(rei[0]) || s.equipe, null, "destaque_ult",
+      { piloto: nome(rei[0]), n: rei[1], gp: nomeGP(eGP) }, { ...fotoPiloto(rei[0]), reserva: fotoGP, num: String(rei[1]), numRot: "ultrapassagens", pista: ultimo.pista });
+    else if (ganhos[0] && ganhos[0].d >= 4) story(`dest:${s.ano}:${ultimo.gp}`, "Destaque do GP", ganhos[0].l.equipe, null, "destaque_ganho",
+      { piloto: nome(ganhos[0].l.piloto), n: ganhos[0].d, de: ord(a.pilotos[ganhos[0].l.piloto].g), ate: ord(ganhos[0].l.pos), gp: nomeGP(eGP) }, { ...fotoPiloto(ganhos[0].l.piloto), reserva: fotoGP, num: `+${ganhos[0].d}`, numRot: "posições", pista: ultimo.pista });
+    // a volta mais rápida do GP
+    let vr = null; for (const [id, d] of Object.entries(a.pilotos)) (d.v || []).forEach((tv, i) => { if (!vr || tv < vr.t) vr = { id, t: tv, v: i + 1 }; });
+    if (vr) story(`vr:${s.ano}:${ultimo.gp}`, "Volta mais rápida", eqDe(vr.id) || s.equipe, null, vr.id === "voce" ? "voltarapida_eu" : "voltarapida",
+      { piloto: nome(vr.id), tempo: `${Math.floor(vr.t / 60)}:${(vr.t % 60).toFixed(3).padStart(6, "0")}`, volta: vr.v, gp: nomeGP(eGP) }, { ...fotoPiloto(vr.id), reserva: fotoGP, num: `${Math.floor(vr.t / 60)}:${(vr.t % 60).toFixed(3).padStart(6, "0")}`, numRot: `volta ${vr.v}` });
+    // o pit stop mais rápido (o tempo no box medido no servidor)
+    let pit = null; for (const [id, d] of Object.entries(a.pilotos)) for (const b of d.b || []) if (b.t != null && (!pit || b.t < pit.t)) pit = { id, t: b.t, v: b.v };
+    if (pit) story(`pit:${s.ano}:${ultimo.gp}`, "Box mais rápido", eqDe(pit.id) || s.equipe, null, "pitrapido",
+      { equipe: eqs[eqDe(pit.id)]?.nome || "", piloto: nome(pit.id), t: String(pit.t).replace(".", ","), volta: pit.v, gp: nomeGP(eGP) }, { ...fotoEquipe(eqDe(pit.id)), reserva: fotoGP, num: `${String(pit.t).replace(".", ",")} s`, numRot: "no box" });
+  }
+  // a corrida dos abandonos (3 ou mais carros fora)
+  if (ultimo) { const fora = ultimo.linhas.filter((l) => l.dnf).length; if (fora >= 3) story(`dnf:${s.ano}:${ultimo.gp}`, "Corrida caótica", s.equipe, fotoGP, "abandonos", { n: fora, gp: nomeGP(eGP), terminaram: ultimo.linhas.length - fora }, { num: String(fora), numRot: "abandonos", pista: ultimo.pista }); }
+  if (gps.length >= 2 && meu) {
+    // o duelo com o companheiro de equipe na temporada: quem chegou na frente mais vezes
+    const comp = ultimo.linhas.find((l) => l.equipe === s.equipe && l.piloto !== "voce");
+    if (comp) {
+      let eu2 = 0, ele = 0; for (const g of gps) { const x = g.linhas.find((l) => l.piloto === "voce"), y = g.linhas.find((l) => l.piloto === comp.piloto); if (!x || !y) continue; if (x.dnf && y.dnf) continue; if (!x.dnf && (y.dnf || x.pos < y.pos)) eu2++; else ele++; }
+      if (eu2 + ele >= 2) story(`comp:${s.ano}:${gps.length}`, "Duelo na equipe", s.equipe, null, eu2 > ele ? "companheiro_frente" : eu2 < ele ? "companheiro_atras" : "companheiro_empate",
+        { comp: nome(comp.piloto), eu: eu2, ele, equipe: eqs[s.equipe]?.nome || "" }, { ...fotoPiloto(comp.piloto), reserva: fotoGP, num: `${eu2} × ${ele}`, numRot: "na temporada", eq2: s.equipe, dif: `${eu2}-${ele}`, nomeA: "Você", nomeB: nome(comp.piloto) });
+    }
+    // a sequência: pódios ou pontos seguidos, contando do último GP para trás
+    const seq = (ok) => { let n = 0; for (let i = gps.length - 1; i >= 0; i--) { const x = gps[i].linhas.find((l) => l.piloto === "voce"); if (x && ok(x)) n++; else break; } return n; };
+    const pod = seq((x) => !x.dnf && x.pos <= 3), pts = seq((x) => x.pontos > 0);
+    if (pod >= 2) story(`seq:${s.ano}:${gps.length}`, "Sequência", s.equipe, null, "sequencia_podio", { n: pod }, { ...fotoEquipe(s.equipe), reserva: fotoGP, num: String(pod), numRot: "pódios seguidos" });
+    else if (pts >= 3) story(`seq:${s.ano}:${gps.length}`, "Sequência", s.equipe, null, "sequencia_pontos", { n: pts }, { ...fotoEquipe(s.equipe), reserva: fotoGP, num: String(pts), numRot: "GPs seguidos nos pontos" });
+    // os construtores: a sua equipe na tabela
+    const te = t.equipes || [], ie = te.findIndex((e) => e.id === s.equipe);
+    if (ie >= 0) story(`cons:${s.ano}:${gps.length}`, "Construtores", s.equipe, null, ie === 0 ? "construtores_lider" : "construtores",
+      { equipe: eqs[s.equipe]?.nome || "", pos: ord(ie + 1), pts: te[ie].pontos, lider: te[0]?.nome || "", dif: (te[0]?.pontos || 0) - te[ie].pontos, vant: ie === 0 ? te[0].pontos - (te[1]?.pontos || 0) : 0, segundo: te[1]?.nome || "" },
+      { ...fotoEquipe(s.equipe), reserva: fotoGP, num: ord(ie + 1), numRot: `${te[ie].pontos} pts` });
   }
   // os stories que os amigos lançaram (temporada em grupo): vêm antes das notícias, o mais novo primeiro
   if (c.grupo) for (const a of (c.storiesAmigos || []).slice().sort((x, y) => y.em - x.em)) {
@@ -71,7 +120,7 @@ function tela() {
 // da equipe, papel, neon, listras, bandeirada, dividido, vidro). Cada situação só usa os layouts que combinam com ela; o fundo é livre.
 // A escolha é fixa pela chave da notícia (o mesmo story sai sempre igual). Stories.vitrine() mostra os 40 em sequência.
 const GERAIS = ["capa", "numero", "manchete", "topo", "centro", "faixa", "lateral", "contorno", "cartao", "selo", "citacao", "tv", "poster", "minimal", "grade"];
-const LAYOUTS = { amigo: ["capa", "topo", "centro", "faixa", "cartao", "citacao", "tv", "poster", "minimal", "manchete", "lateral"], gp: [...GERAIS, "pista", "placar", "medalha"], camp: [...GERAIS, "duelo", "placar"], rival: [...GERAIS, "duelo", "duelo"], melhor: [...GERAIS, "pista", "medalha"], prox: [...GERAIS, "pista", "ticket", "ticket"] };
+const LAYOUTS = { amigo: ["capa", "topo", "centro", "faixa", "cartao", "citacao", "tv", "poster", "minimal", "manchete", "lateral"], gp: [...GERAIS, "pista", "placar", "medalha"], camp: [...GERAIS, "duelo", "placar"], rival: [...GERAIS, "duelo", "duelo"], melhor: [...GERAIS, "pista", "medalha"], prox: [...GERAIS, "pista", "ticket", "ticket"], dest: [...GERAIS, "pista", "medalha"], vr: [...GERAIS, "medalha"], pit: [...GERAIS, "placar"], dnf: [...GERAIS, "pista"], comp: [...GERAIS, "duelo", "duelo"], seq: [...GERAIS, "medalha"], cons: [...GERAIS, "placar"] };
 const FUNDOS = ["foto", "gradiente", "papel", "neon", "listras", "bandeirada", "dividido", "vidro"];
 const TODOS = [...GERAIS, "duelo", "pista", "placar", "ticket", "medalha"].flatMap((l) => FUNDOS.map((f) => `${l}:${f}`)); // 20 layouts × 8 fundos = 160
 function hashK(k) { let x = 2166136261; for (const c of String(k)) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return x >>> 0; }
@@ -115,9 +164,11 @@ function mostrar(i) {
   const [l, f] = modeloDe(x);
   el.innerHTML = `<div class="st-card st-l-${l} st-f-${f}" data-modelo="${l}:${f}" style="--c:${h(cor)};--foto:${x.foto ? `url('${h(x.foto)}')` : "none"}">
     <div class="st-barras">${atuais.map((_, k) => `<i class="${k < i ? "cheia" : ""}"><b${k === i ? ' class="anda"' : ""}></b></i>`).join("")}</div>
-    <header><span class="st-mini">${logo(x.eq)}</span><b>${h(x.rot)}</b><button type="button" class="st-x" data-st-fechar aria-label="Fechar">✕</button></header>
-    ${corpoDo(x, l)}${x.amigo ? rodapeAmigo(x) : ""}
+    <header><span class="st-mini">${logo(x.eq)}</span><b>${h(x.rot)}</b><button type="button" class="st-x" data-st-fechar aria-label="Fechar">${X_SVG}</button></header>
+    ${corpoDo(x, l)}${x.amigo ? rodapeAmigo(x) : ""}${x.credito && f === "foto" ? `<small class="st-credito">${h(x.credito)}</small>` : ""}
     <button type="button" class="st-lado esq" data-st-ir="-1" aria-label="Anterior"></button><button type="button" class="st-lado dir" data-st-ir="1" aria-label="Próxima"></button></div>`;
+  // a foto da internet: se não carregar, a reserva local (a foto do GP) ou só as cores da equipe, e o crédito sai
+  if (x.foto && x.credito) { const card = el.querySelector(".st-card"), im = new Image(); im.onerror = () => { if (!card.isConnected) return; card.style.setProperty("--foto", x.reserva ? `url('${x.reserva}')` : "none"); card.querySelector(".st-credito")?.remove(); }; im.src = x.foto; }
   el.hidden = false; clearTimeout(timer); inicio = performance.now(); timer = setTimeout(() => mostrar(aberto + 1), DURA);
 }
 // o rodapé do story de um amigo: as reações (quem não é o autor reage; o autor vê quem reagiu e pode apagar)
@@ -137,7 +188,7 @@ function abrirLancar() {
   const ultimo = (c.gps || []).at(-1), minha = ultimo && ultimo.linhas.find((l) => l.piloto === "voce"), el = tela();
   clearTimeout(timer); aberto = -2;
   const opt = (v, t) => `<option value="${v}">${h(t)}</option>`;
-  el.innerHTML = `<div class="st-lancar"><header><b>Lançar story</b><button type="button" class="st-x" data-st-fechar aria-label="Fechar">✕</button></header>
+  el.innerHTML = `<div class="st-lancar"><header><b>Lançar story</b><button type="button" class="st-x" data-st-fechar aria-label="Fechar">${X_SVG}</button></header>
     <div class="st-lancar-corpo"><div class="st-previa" id="stPrevia"></div><form id="stForm" class="st-form" autocomplete="off">
       <label for="stTexto">O que você quer contar?</label><textarea id="stTexto" maxlength="120" rows="3" placeholder="Ex.: Semana que vem eu passo todo mundo na largada"></textarea><small id="stConta">0/120</small>
       <label for="stLayout">Modelo</label><div class="st-duas"><select id="stLayout">${opt("", "Layout surpresa")}${LAY().map((l) => opt(l, l)).join("")}</select><select id="stFundo">${opt("", "Fundo surpresa")}${["foto", "gradiente", "papel", "neon", "listras", "bandeirada", "dividido", "vidro"].map((f) => opt(f, f)).join("")}</select></div>

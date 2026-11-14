@@ -148,8 +148,9 @@ function passo(c, ent, amb, p, dt = PASSO) {
   const kGrip = (pn ? pn.grip : 1) * (dn ? dn.grip : 1) * (ex.grip || 1) * (amb.chao === false ? (amb.superficie === "brita" ? 0.35 : 0.5) : 1) * (amb.vacuo ? amb.vacuo.aderencia : 1) * (1 - INST_GRIP * ins);
   const kFreio = (pn ? pn.freio : 1) * (dn ? dn.freio : 1) * (ex.freio || 1);
   const kTracao = (pn ? pn.tracao : 1) * (dn ? dn.tracao : 1) * (ex.tracao || 1);
-  const fin = (pn ? pn.final : 1) * (dn ? dn.final : 1);
-  const kPot = fin * fin * fin * (ex.potencia || 1) * (amb.ers ? 1 + ERS_POTENCIA : 1);
+  const ruina = !!(pn && pn.ruina); // o pneu em ruína (F1.aderencia): a velocidade máxima é cortada no acelerador, e a potência cai a `pn.potencia`
+  const fin = (pn && !ruina ? pn.final : 1) * (dn ? dn.final : 1);
+  const kPot = fin * fin * fin * (ex.potencia || 1) * (amb.ers ? 1 + ERS_POTENCIA : 1) * (ruina ? pn.potencia : 1);
   const drsK = amb.drs ? p.drs : 0;
   const kArr = (ex.arrasto || 1) * (amb.drs ? (1 + DRS_GANHO * drsK) ** -3 : 1) * (amb.vacuo ? (1 + amb.vacuo.final) ** -3 : 1);
   const kCarga = (ex.carga || 1) * (amb.drs ? 0.85 : 1);
@@ -189,7 +190,7 @@ function passo(c, ent, amb, p, dt = PASSO) {
   }
   // limite de velocidade por bandeira (safety car, amarela): corta o acelerador e freia
   const limiteV = amb.limiteV || Infinity, acima = uU > limiteV;
-  const gas = acima || uU > (amb.tetoV || Infinity) ? 0 : c.gasP, freioAuto = acima ? Math.min(1, (uU - limiteV) / 25 + 0.25) : 0;
+  const gas = acima || uU > (amb.tetoV || Infinity) || (ruina && uU > p.vmaxU * pn.final) ? 0 : c.gasP, freioAuto = acima ? Math.min(1, (uU - limiteV) / 25 + 0.25) : 0;
   const pedalFreio = Math.max(c.brkP, freioAuto);
   // parado (ou quase) e só o freio: engata a ré. Antes o limite era 1 u/s, mas o carro que acabava de parar ficava rastejando a ~1,2 u/s (o freio some
   // devagar perto do zero e nada puxava para trás): travava nessa faixa por mais de 1 s, ou para sempre numa subida, e a ré "não engatava"

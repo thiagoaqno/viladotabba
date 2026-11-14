@@ -46,8 +46,8 @@ test("pneus: depois do penhasco o carro fica muito ruim; frio na largada, esquen
   for (const c of F1.SECOS) {
     const novo = F1.aderencia({ composto: c, desgaste: 0, temp: 1 }), fim = F1.aderencia({ composto: c, desgaste: 1, temp: 1 }), cliff = F1.aderencia({ composto: c, desgaste: F1.PENHASCO, temp: 1 });
     assert.ok(cliff.grip > novo.grip * 0.9, `${c}: até o penhasco perde pouco`);
-    assert.ok(fim.grip < novo.grip * 0.85 && fim.tracao < novo.tracao * 0.9 && fim.freio < novo.freio * 0.9 && fim.final < 0.97 && fim.final > 0.9, // (penhasco 50% mais brando)
-      `${c}: depois dele despenca`);
+    // (2026-11-14: apagado o "depois dele despenca" com freio < 90% e final entre 90% e 97%: o pneu em ruína agora tem 20% da aderência, 60% da
+    // tração e 60% da velocidade final, e o freio fica como no penhasco, a pedido do Thiago; f1-regras.js RUINA_*)
   }
   const quanto = (c) => { const pn = F1.pneuNovo(c); for (let t = 0; t < 60 * 30; t++) { if (!F1.frio(pn)) return t / 60; F1.gastarPneu(pn, { dist: 0, volta: 1, v: 250, vmax: 295, dt: 1 / 60 }); } return Infinity; };
   assert.ok(F1.frio(F1.pneuNovo("duro")));

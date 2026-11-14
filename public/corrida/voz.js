@@ -6,7 +6,7 @@
 import { toast } from "./estado.js";
 import { executarJeff } from "./mfd.js";
 
-const SILENCIO_MS = 3000, MAX_MS = 12000;
+const SILENCIO_MS = 2000, ESPERA_MS = 500, MAX_MS = 12000; // (2 s de silêncio + até 0,5 s pelo resultado final: o Jeff responde até 2,5 s depois da última palavra; antes eram 3 s + 2,5 s)
 const Rec = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 let rec = null, ouvindo = false, fechando = false, texto = "", parcial = "", avisado = false, tSilencio = 0, tMax = 0, tEspera = 0;
 
@@ -16,7 +16,7 @@ function criar() {
     let fim = "", meio = "";
     for (let i = 0; i < e.results.length; i++) { const res = e.results[i]; if (res.isFinal) fim += " " + res[0].transcript; else meio += " " + res[0].transcript; }
     texto = fim.trim(); parcial = meio.trim();
-    if (!fechando) { toast("🎙️ Jeff ouvindo… " + (texto + " " + parcial).trim(), 8000); contarSilencio(); } // (cada pedaço de fala recomeça os 3 s)
+    if (!fechando) { toast("🎙️ Jeff ouvindo… " + (texto + " " + parcial).trim(), 8000); contarSilencio(); } // (cada pedaço de fala recomeça a contagem do silêncio)
   };
   r.onerror = (e) => {
     if (e.error === "not-allowed" || e.error === "service-not-allowed") toast("🎙️ O microfone está bloqueado. Libere o microfone para este site para falar com o Jeff.", 5000);
@@ -38,7 +38,7 @@ function fechar() {
   if (!ouvindo || fechando) return;
   fechando = true; clearTimeout(tSilencio); clearTimeout(tMax);
   try { rec.stop(); } catch (e) { /* já parou */ }
-  tEspera = setTimeout(() => { if (ouvindo) { try { rec.abort(); } catch (e) {} } }, 2500); // (o abort também chama o onend, que entrega)
+  tEspera = setTimeout(() => { if (ouvindo) { try { rec.abort(); } catch (e) {} } }, ESPERA_MS); // (o abort também chama o onend, que entrega o que já foi entendido)
 }
 
 // apertou: começa a ouvir (o rádio apita); apertou de novo ouvindo: fecha na hora

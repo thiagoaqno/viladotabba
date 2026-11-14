@@ -1,14 +1,14 @@
-# Aston Martin AMR26 (2026) pelo modelo 3D
+# Williams (2026) pelo modelo 3D do FW47
 
-A Aston Martin de 2026 refeita pelo modelo "2026 Aston Martin AMR26" do Sketchfab que o Thiago mandou, olhado de lado, de cima (bico, asas e caixas), de frente e de trás e por baixo da asa traseira.
+A Williams refeita pelo modelo "F1 2025 Williams Racing FW47" do Sketchfab (o Thiago não achou o de 2026), olhado de lado, de cima (bico e asa dianteira), de trás e por baixo da asa traseira. A FW48 de antes era inventada.
 
-- **Cores:** o verde-petróleo do modelo (`#0f6a5f`, mais claro que o `#0a4a3f` de antes), mais claro ainda no alto da caixa; a barriga e o assoalho pretos, com o filete limão na borda, do bico até trás.
-- **De lado:** aramco grande na caixa, BOSS, coherent, CoreWeave, MAADEN, aramco na tampa, Honda, Valvoline, PROFORCE+, cognizant, pepperstone, as asas da Aston Martin, coinbase na placa traseira e Glenfiddich na placa da asa dianteira.
-- **De cima:** o alto das caixas preto, com os pontinhos limão em meio-tom e o aramco ao longo da caixa; a asa dianteira e o alto da asa traseira cinza-prata com o aramco e o cognizant; o bico com a fileira Valvoline, Pirelli, NetApp, xerox e NexGen, o H da Honda e o cognizant; o CW na frente do cockpit; MAADEN na tampa.
-- **Embaixo da asa traseira** (`ASA_BAIXO`) e na vista de trás: carbono com o Valvoline.
-- Marcas novas em `f1-marcas.js`: `coherent`, `proforce`, `pepperstone`, `glenfiddich`, `netapp`, `xerox`, `nexgen`, `hhonda`, `cw`.
+- **Cores:** azul-royal vivo (`#1d3fc4`), escurecendo para trás; a barriga azul-marinho subindo para trás, com dois frisos azul-claro; as placas da asa dianteira e a asa dianteira azul-marinho.
+- **De lado:** Stephens no bico, MYPROTEIN com o triângulo vermelho, Kraken, ATLASSIAN no alto da caixa, KOMATSU grande, o redondo da Gulf, KEEPER embaixo, DURACELL na entrada de ar, o "bw SCORES" na placa da asa dianteira, KOMATSU e twilio na placa traseira.
+- **De cima:** ATLASSIAN e MYPROTEIN na asa dianteira, ATLASSIAN ao longo do alto das caixas, e no bico a fileira com o W da Williams, Pirelli, VAST, twilio, bw, KOMATSU, a Gulf, o A do Atlassian e o Santander.
+- **Embaixo da asa traseira** (`ASA_BAIXO`) e na vista de trás: a faixa roxa do Kraken com o logo branco, no azul-marinho.
+- Marcas novas em `f1-marcas.js`: `stephens`, `myprotein`, `kraken`, `twilio`, `vast`, `bwscores`, `williamsw`, `atlassiana`.
 
-**Saiu do #734 (Cadillac), que saiu do #733 (Audi), que conserta o `novidades.json`:** faça o merge na ordem #733, #734, este.
+**Saiu do #735 (Aston), que saiu do #734 (Cadillac) e do #733 (Audi, que conserta o `novidades.json`):** merge na ordem #733, #734, #735, este.
 
 **Peso:** zero a mais (a folha projetada de 2026, um canvas por equipe, só desenho).
 

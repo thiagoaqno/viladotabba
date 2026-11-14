@@ -414,28 +414,40 @@ DESENHOS["aston-martin"] = {
   },
 };
 
-// Williams FW48: azul-royal escuro em cima, azul-claro no meio da caixa, a cunha branca com KOMATSU e a asa traseira branca e azul
+// Williams (2026), pelo modelo do FW47 de 2025 no Sketchfab (o Thiago não achou o de 2026), olhado de lado, de cima, de frente, de trás e por
+// baixo da asa: azul-royal vivo, escurecendo embaixo e para trás, a barriga azul-marinho com os frisos azul-claro, a asa dianteira azul-marinho
+// com o ATLASSIAN e o MYPROTEIN, KOMATSU grande e o redondo da Gulf na caixa, ATLASSIAN no alto das caixas; embaixo da asa traseira, a faixa
+// roxa do Kraken.
 DESENHOS.williams = {
-  numero: "#ffffff", carbono: 1, numPos: [3.5, 0.58, 9, 9],
+  numero: "#ffffff", carbono: 1, numPos: [3.5, 0.66, 9, 9],
   pintar(ctx) {
-    const ROYAL = "#0f2f8f", ESC = "#08184f", CEU = "#3d7be0", BRANCO = "#f2f5fb";
+    const ROYAL = "#1d3fc4", ROYAL_ESC = "#14299a", MARINHO = "#0b1140", CEU = "#5aa8ff";
     base(ctx, ROYAL);
     lados(ctx, (c) => {
-      c.beginPath(); c.moveTo(1.1, 0.5); c.quadraticCurveTo(2.2, 0.56, 3.1, 0.46); c.lineTo(2.55, 0.34); c.lineTo(1.1, 0.34); c.closePath(); c.fillStyle = CEU; c.fill();
-      c.beginPath(); c.moveTo(3.6, 0.14); c.lineTo(3.48, 0.44); c.lineTo(3.1, 0.46); c.lineTo(2.4, 0.3); c.lineTo(2.6, 0.14); c.closePath(); c.fillStyle = BRANCO; c.fill();
-      baixo(c, ESC);
-      poli(c, [[2.3, 0.72], [2.3, 0.98], [2.66, 0.98], [2.66, 0.72]], "#101114");
-      ret(c, 3.86, 0.62, 4.45, 1.1, ESC); ret(c, 3.86, 0.3, 4.45, 0.62, BRANCO);
-      marca(c, "komatsu", 3.1, 0.28, 0.09, { tinta: ROYAL }); marca(c, "atlassian", 2.92, 0.62, 0.065); marca(c, "barclays", 2.22, 0.43, 0.042); marca(c, "duracell", 2.48, 0.85, 0.04); marca(c, "gulf", 3.55, 0.3, 0.09);
-      marca(c, "komatsu", 4.15, 0.73, 0.055); marca(c, "gulf", 4.15, 0.48, 0.1); marca(c, "keeper", 1.75, 0.22, 0.034);
+      c.fillStyle = degrade(c, 1.0, 0, 4.0, 0, [[0, "rgba(11,17,64,0)"], [1, "rgba(11,17,64,0.45)"]]); c.fillRect(1.0, 0, 3.0, 1.1); // escurece para trás
+      // a barriga azul-marinho subindo para trás, com dois frisos azul-claro
+      c.beginPath(); c.moveTo(1.2, 0.08); c.lineTo(1.2, 0.2); c.quadraticCurveTo(2.4, 0.2, 3.5, 0.3); c.lineTo(3.5, 0.08); c.closePath(); c.fillStyle = MARINHO; c.fill();
+      c.lineWidth = 0.008; c.strokeStyle = CEU; for (const d of [0.03, 0.07]) { c.beginPath(); c.moveTo(1.6, 0.2 - d); c.quadraticCurveTo(2.5, 0.2 - d, 3.4, 0.28 - d); c.stroke(); }
+      baixo(c, MARINHO);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], MARINHO); // as placas da asa dianteira
+      ret(c, 3.82, 0.3, 4.45, 1.1, ROYAL_ESC); // a placa da asa traseira
+      ret(c, 2.3, 0.86, 2.62, 1.0, "#101114"); // a entrada de ar
+      marca(c, "stephens", 1.49, 0.35, 0.035); marca(c, "myprotein", 2.2, 0.42, 0.034); marca(c, "kraken", 2.4, 0.56, 0.026);
+      marca(c, "atlassian", 2.95, 0.62, 0.05); marca(c, "komatsu", 2.85, 0.3, 0.07); marca(c, "gulf", 3.32, 0.33, 0.085);
+      marca(c, "keeper", 1.7, 0.13, 0.03); marca(c, "duracell", 2.46, 0.92, 0.026); marca(c, "bwscores", 0.27, 0.12, 0.05);
+      marca(c, "komatsu", 4.15, 0.8, 0.045); marca(c, "twilio", 4.15, 0.64, 0.04);
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.3, -0.3, 4, 0.3, ESC);
-      asasT(c, ESC, ESC, ROYAL);
-      const f = { giro: DE_FRENTE, tinta: "#fff" }; marca(c, "komatsu", 0.72, 0, 0.05, f); marca(c, "atlassian", 4.15, 0, 0.08, f); marca(c, "atlassian", 2.9, 0, 0.06, f); marca(c, "barclays", 0.5, 0, 0.038, f);
+      for (const l of [-1, 1]) { c.fillStyle = "rgba(11,17,64,0.35)"; c.fillRect(3.0, l > 0 ? 0.3 : -0.8, 0.9, 0.5); }
+      asasT(c, MARINHO, ROYAL_ESC, ROYAL);
+      const f = { giro: DE_FRENTE };
+      for (const l of [-1, 1]) { marca(c, "atlassian", 0.24, l * 0.47, 0.045, f); marca(c, "myprotein", 0.1, l * 0.47, 0.03, f); marca(c, "atlassian", 2.85, l * 0.5, 0.055, { giro: l > 0 ? Math.PI : 0 }); }
+      marca(c, "williamsw", 0.1, 0, 0.04, f); marca(c, "pirelli", 0.2, 0, 0.024, f); marca(c, "vast", 0.3, 0, 0.024, f); marca(c, "twilio", 0.4, 0, 0.03, f);
+      marca(c, "bwscores", 0.5, 0, 0.03, f); marca(c, "komatsu", 0.6, 0, 0.026, f); marca(c, "gulf", 0.74, 0, 0.06, f);
+      marca(c, "atlassiana", 1.18, 0, 0.06, f); marca(c, "santander", 1.28, 0, 0.022, f); marca(c, "duracell", 2.4, 0, 0.03, f);
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ROYAL); ret(c, -0.55, 0, 0.55, 0.12, ESC); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ESC); ret(c, -0.45, 0.3, 0.45, 0.6, BRANCO); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ROYAL); ret(c, -0.6, 0, 0.6, 0.12, MARINHO); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MARINHO); ret(c, -0.45, 0.35, 0.45, 0.7, ROYAL_ESC); ret(c, -0.5, 0.82, 0.5, 0.98, "#5741d9"); marca(c, "kraken", 0, 0.9, 0.08); });
   },
 };
 
@@ -1089,6 +1101,7 @@ const ASA_BAIXO = {
   audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },
   cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillac", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
   "aston-martin": { cor: "#0a1210", marcas: (c) => marcaU(c, "valvoline", 0, 0.32, 0.11) },
+  williams: { cor: "#0b1140", marcas: (c) => { ret(c, -0.45, 0.2, 0.45, 0.44, "#5741d9"); marcaU(c, "kraken", 0, 0.32, 0.12); } },
 };
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)

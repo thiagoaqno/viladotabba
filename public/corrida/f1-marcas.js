@@ -104,6 +104,19 @@ Object.assign(MARCAS, {
   hhonda(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.08; c.beginPath(); c.moveTo(-0.45, -0.42); c.lineTo(0.45, -0.42); c.lineTo(0.38, 0.42); c.lineTo(-0.38, 0.42); c.closePath(); c.stroke(); letra(c, "H", { h: 0.7, peso: 900, cor: tinta }); },
   cw(c, { tinta = "#fff" } = {}) { letra(c, "CW", { h: 1.05, peso: 900, cor: tinta }); },
 });
+// As da Williams (o modelo do FW47 no Sketchfab, 2026-11-14)
+Object.assign(MARCAS, {
+  stephens(c, { tinta = "#fff" } = {}) { letra(c, "Stephens", { h: 1.05, peso: 400, fam: SERIFA, cor: tinta }); },
+  myprotein(c, { tinta = "#fff" } = {}) { c.fillStyle = "#e4002b"; c.beginPath(); c.moveTo(-3.4, 0.4); c.lineTo(-3.15, -0.4); c.lineTo(-2.95, 0.4); c.closePath(); c.fill(); letra(c, "MYPROTEIN", { x: 0.3, h: 0.95, peso: 800, cor: tinta, esp: 3 }); },
+  // o polvo do Kraken (um arco com os tentáculos) e o nome
+  kraken(c, { tinta = "#fff" } = {}) { c.fillStyle = tinta; c.beginPath(); c.arc(-1.75, 0.05, 0.42, Math.PI, 0); c.lineTo(0.42 - 1.75, 0.42); c.lineTo(-1.75 - 0.42, 0.42); c.closePath(); c.fill(); letra(c, "kraken", { x: 0.4, h: 1.05, peso: 600, cor: tinta }); },
+  twilio(c, { tinta = "#fff" } = {}) { c.strokeStyle = "#f22f46"; c.lineWidth = 0.1; c.beginPath(); c.arc(-1.55, 0, 0.4, 0, Math.PI * 2); c.stroke(); for (const [x, y] of [[-0.15, -0.15], [0.15, -0.15], [-0.15, 0.15], [0.15, 0.15]]) disco(c, -1.55 + x, y, 0.08, "#f22f46"); letra(c, "twilio", { x: 0.35, h: 1, peso: 600, cor: tinta }); },
+  vast(c, { tinta = "#fff" } = {}) { letra(c, "VAST", { h: 1, peso: 300, cor: tinta, esp: 8 }); },
+  bwscores(c, { tinta = "#fff" } = {}) { letra(c, "bw", { y: -0.15, h: 0.85, peso: 900, cor: tinta }); letra(c, "SCORES", { y: 0.42, h: 0.28, peso: 700, cor: tinta, esp: 4 }); },
+  williamsw(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.13; c.lineJoin = "round"; c.beginPath(); c.moveTo(-0.5, -0.35); c.lineTo(-0.25, 0.35); c.lineTo(0, -0.1); c.lineTo(0.25, 0.35); c.lineTo(0.5, -0.35); c.stroke(); },
+  // o A do Atlassian (o triângulo cortado)
+  atlassiana(c, { tinta = "#fff" } = {}) { c.fillStyle = tinta; c.beginPath(); c.moveTo(0, -0.48); c.lineTo(0.42, 0.42); c.lineTo(0.12, 0.42); c.lineTo(0, 0.12); c.lineTo(-0.12, 0.42); c.lineTo(-0.42, 0.42); c.closePath(); c.fill(); },
+});
 // As que têm um traço a mais
 Object.assign(MARCAS, {
   gemini(c, { tinta = "#fff" } = {}) { c.save(); c.translate(-1.75, 0); c.beginPath(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; c.lineTo(Math.cos(a) * 0.46, Math.sin(a) * 0.46); c.lineTo(Math.cos(a + Math.PI / 4) * 0.09, Math.sin(a + Math.PI / 4) * 0.09); } c.closePath(); c.fillStyle = "#6fb6ff"; c.fill(); c.restore(); letra(c, "Gemini", { x: 0.35, h: 1, peso: 500, cor: tinta }); },

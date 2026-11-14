@@ -6,6 +6,7 @@
 import { E, PISTAS, h, fmt } from "./estado.js";
 import { MODS3, MODS_PADRAO } from "./carros.js";
 import { podio3d } from "./podio-3d.js";
+import { htmlAnalise, montarAnalise } from "./resultado-analise.js";
 
 const reduz = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
 const EQUIPES = () => (window.F1Pilotos && window.F1Pilotos.EQUIPES) || {};
@@ -71,7 +72,7 @@ function linhaHTML(r, i, ctx) {
     danoPct >= 1 ? `<span class="rg-chip dano ${danoPct >= 66 ? "alto" : danoPct >= 33 ? "medio" : "baixo"}" title="Dano no carro: ${danoPct}%">${ICONE.dano}${danoPct}%</span>` : "",
   ].join("");
   const est = r.estimado ? `<abbr class="rg-est" title="Tempo estimado: o robô ainda estava na pista quando o GP acabou">est.</abbr>` : "";
-  return `<li class="rg-linha ${eu ? "eu" : ""} ${fora ? "nc" : ""} ${r.pos <= 3 && !fora ? "p" + r.pos : ""}" style="${estiloEq(eq.cor)};--i:${Math.min(i, 14)}">
+  return `<li data-id="${h(r.id)}" class="rg-linha ${eu ? "eu" : ""} ${fora ? "nc" : ""} ${r.pos <= 3 && !fora ? "p" + r.pos : ""}" style="${estiloEq(eq.cor)};--i:${Math.min(i, 14)}">
     <span class="rg-pos">${fora ? "—" : r.pos}</span>
     <span class="rg-piloto">${marca(eq)}<span class="rg-nomes"><span class="rg-l1"><b>${h(nomeDe(p))}</b>${alerta}${r.voltaRapida ? `<i class="rg-vr" title="Volta mais rápida: +1 ponto">${ICONE.rapida}</i>` : ""}${eu ? `<em class="rg-voce">você</em>` : ""}</span><small>${p ? `<span class="rg-sigla">${h(siglaDe(p))}</span>` : ""}${eq.nome ? ` · ${h(eq.nome)}` : ""}</small></span></span>
     <span class="rg-tempo"><span class="rg-t1"><b>${final}</b>${est}</span>${chips ? `<span class="rg-chips">${chips}</span>` : ""}</span>
@@ -105,6 +106,7 @@ export function htmlResultado(S, m, isHost, aviso) {
     <h2 class="rg-titulo">${ICONE.copa}<span>GP · ${h(PISTAS[S.config.pista].name)}</span></h2>${alto}
     <div class="rg-cab" aria-hidden="true"><span></span><span>Piloto</span><span>Tempo</span><span class="rg-extra"><span>Grid</span><span>Paradas</span><span>Melhor</span></span><span>Pts</span></div>
     <ol class="rg-tab">${R.map((r, i) => linhaHTML(r, i, ctx)).join("")}</ol>
+    <div class="rg-ana-tema" style="${estiloEq(infoEquipe(m || S.players.find((x) => x.id === vencedor.id)).cor)}">${htmlAnalise(S)}</div>
     <div class="row rg-botoes">${S.temporada ? `<button class="primary" id="rSede">← Voltar à sede</button>` : isHost ? `<button class="primary" id="rAgain">🏁 Novo GP</button><button id="rLobby">Trocar pista</button>` : `<span class="muted">Esperando o organizador…</span>`}${S.temporada ? "" : `<button class="ghost" onclick="location.href='/'">🏠 Vila</button>`}</div></div></div>`;
 }
 
@@ -124,6 +126,7 @@ function carrosNoPodio(el, S, m) {
 }
 export function aposResultado(el, S, m) {
   carrosNoPodio(el, S, m);
+  try { montarAnalise(el, S, m); } catch (e) { console.warn("Corrida: análise do GP", e); } // um extra: um erro nela não pode tirar o resultado da tela
   if (el.querySelector(".rg-podio.vitoria") && !reduz() && window.Comum) {
     const eq = infoEquipe(m), cores = [eq.cor, "#ffffff", "#ffd23f", "#e10600", eq.cor];
     window.Comum.confetti(cores, { onde: el, dur: [2.4, 2.4], fica: 6500 });

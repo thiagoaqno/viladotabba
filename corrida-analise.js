@@ -18,7 +18,7 @@ function volta(room, p, tempo, inicio) {
   if (d.safety) { if (!a.sc.includes(n)) a.sc.push(n); if (a.ultSafety !== d.safety) { a.ultSafety = d.safety; a.safeties++; } }
   if (d.amarelo && a.ultAmarelo !== d.amarelo) { a.ultAmarelo = d.amarelo; a.amarelas++; }
 }
-function limpar(room) { room.analise = null; for (const id of room.order) { const p = room.players[id]; if (p) { p.ana = null; p.anaS1 = 0; p.anaS2 = 0; } } }
+function limpar(room) { room.analise = null; room.analiseGP = null; for (const id of room.order) { const p = room.players[id]; if (p) { p.ana = null; p.anaS1 = 0; p.anaS2 = 0; } } }
 
 // O resumo do GP. `chave(p)` dá o nome do piloto no save ("voce" ou o id do piloto real).
 function resumo(room, chave) {

@@ -388,6 +388,9 @@ module.exports = function attachCorrida(io) {
       room.resultado = F1.classificacaoFinal(room.order.map((id) => { const p = room.players[id]; const bonus = bonusDoBox(room, p); return { id, laps: p.laps, finish: p.finish, dnf: !!p.dnf, acrescimo: (p.acrescimo || 0) - bonus, prog: p.pos ? p.pos.prog : 0, best: p.best, dsq: !!p.dsq }; }), room.config.voltas)
         .map((r) => { const p = room.players[r.id]; return { ...r, voltas: p.laps, grid: p.grid, paradas: (p.paradas || []).length, compostos: p.compostos || [], estimado: !!p.estimado, penal: p.penal || 0, sg: p.sgFeitos || 0, dano: p.dano || 0, batidas: p.batidas || 0, melhor: p.best }; });
       const v = room.resultado[0]; if (v) log(room, `🏆 ${nameOf(room, v.id)} venceu o GP e leva ${v.pontos} pontos.`);
+      // a análise do GP (posição, tempo e setores de cada volta, pits e safety car: corrida-analise.js) para a tela do resultado de qualquer sala;
+      // vai só quando o navegador pede (`analise`), e não no estado, que sai várias vezes por segundo. Um erro nela nunca pode perder o resultado.
+      try { room.analiseGP = Analise.resumo(room, (p) => p.id); } catch (e) { room.analiseGP = null; console.warn("Corrida: análise do GP:", e.message); }
     }
     if (room.finishOrder.length) noite.vitoria("corrida", room.code, nomesDe(room, room.finishOrder.slice(0, 1)), nomesDe(room, room.order.filter((id) => id !== room.finishOrder[0])));
     log(room, "🏆 Fim de corrida!");
@@ -813,6 +816,13 @@ module.exports = function attachCorrida(io) {
     socket.on("item:use", (d = {}) => {
       const { room, me } = ctx(); if (!room || !me) return;
       if (Itens.use(room, me, d.back === true, (event, data) => nsp.to(room.code).emit(event, data))) broadcast(room);
+    });
+
+    // a análise do GP que acabou (a tela do resultado pede uma vez: resultado-analise.js)
+    socket.on("analise", (cb) => {
+      if (typeof cb !== "function") return;
+      const { room } = ctx();
+      cb(room && room.phase === "results" && room.analiseGP ? { startAt: room.startAt || null, ...room.analiseGP } : null);
     });
 
     // Voltas de corrida e classificação (amostras a cada 0,1 s) ensinam até cinco traçados.

@@ -1,5 +1,14 @@
 [
   {
+    "id": "2026-11-14-analise-corrida",
+    "data": "2026-11-14",
+    "itens": [
+      "Análise da corrida no resultado de todo GP, não só na carreira: o gráfico das posições volta a volta de todos os pilotos, com o mouse mostrando a posição e o tempo de cada um",
+      "Ritmo: o tempo de cada volta seu contra o de outro piloto, com a diferença volta a volta, a melhor volta, a média sem pit e sem safety car e os setores",
+      "Pneus: os stints de cada piloto na cor do composto; clique num piloto (no gráfico, nos pneus ou na tabela) para comparar com ele"
+    ]
+  },
+  {
     "id": "2026-11-14-logos-classificacao",
     "data": "2026-11-14",
     "itens": [

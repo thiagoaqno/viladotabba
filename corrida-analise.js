@@ -18,7 +18,20 @@ function volta(room, p, tempo, inicio) {
   if (d.safety) { if (!a.sc.includes(n)) a.sc.push(n); if (a.ultSafety !== d.safety) { a.ultSafety = d.safety; a.safeties++; } }
   if (d.amarelo && a.ultAmarelo !== d.amarelo) { a.ultAmarelo = d.amarelo; a.amarelas++; }
 }
-function limpar(room) { room.analise = null; for (const id of room.order) { const p = room.players[id]; if (p) { p.ana = null; p.anaS1 = 0; p.anaS2 = 0; } } }
+// os momentos da corrida (a linha do tempo da tela do resultado): cada linha da direção de prova, com a hora desde a largada, a volta do líder
+// e, quando a linha fala de um piloto, o ponto da pista onde ele estava (fração da volta, a mesma do mapa). `onde(p)` dá { idx, n }.
+const SEM_MOMENTO = /^(🔵|🏁 \S.* cruzou a chegada)/; // a bandeira azul e cada chegada encheriam a linha do tempo
+function evento(room, texto, onde) {
+  if (room.phase !== "race" || !room.startAt || SEM_MOMENTO.test(texto)) return;
+  const a = (room.analise ||= { porVolta: {}, sc: [], amarelas: 0, safeties: 0 }), ev = (a.eventos ||= []);
+  if (ev.length >= 300) return;
+  const resto = texto.replace(/^\S+\s+/, "");
+  let quem = null, quemId = null; for (const id of room.order) { const p = room.players[id]; if (p && p.name && resto.startsWith(p.name) && (!quem || p.name.length > quem.name.length)) { quem = p; quemId = id; } }
+  let lider = 0; for (const id of room.order) { const p = room.players[id]; if (p && p.laps > lider) lider = p.laps; }
+  let f = null; if (quem && onde) { try { const o = onde(quem); if (Number.isFinite(o.idx) && o.n) f = Math.round((o.idx / o.n) * 1000) / 1000; } catch (e) { f = null; } }
+  ev.push({ t: Math.max(0, Math.round((Date.now() - room.startAt) / 100) / 10), v: lider + 1, x: texto, id: quemId, f });
+}
+function limpar(room) { room.analise = null; room.analiseGP = null; for (const id of room.order) { const p = room.players[id]; if (p) { p.ana = null; p.anaS1 = 0; p.anaS2 = 0; } } }
 
 // O resumo do GP. `chave(p)` dá o nome do piloto no save ("voce" ou o id do piloto real).
 function resumo(room, chave) {
@@ -34,7 +47,7 @@ function resumo(room, chave) {
       t: p.finish != null ? ms(p.finish + (p.acrescimo || 0)) : null, a: ms(p.acrescimo || 0), e: !!p.estimado,
     };
   }
-  return { pilotos, voltas: room.config?.voltas || 0, sc: a.sc, safeties: a.safeties, amarelas: a.amarelas, chuva: !!(room.clima && room.clima.chove), hora: room.config?.hora || "dia" };
+  return { pilotos, voltas: room.config?.voltas || 0, pista: room.config?.pista || null, eventos: a.eventos || [], sc: a.sc, safeties: a.safeties, amarelas: a.amarelas, chuva: !!(room.clima && room.clima.chove), hora: room.config?.hora || "dia" };
 }
 
-module.exports = { setor, volta, limpar, resumo };
+module.exports = { setor, volta, evento, limpar, resumo };

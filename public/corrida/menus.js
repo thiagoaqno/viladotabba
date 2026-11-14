@@ -11,6 +11,7 @@ import { menuNaTela } from "./menu.js";
 import { alternarAcerto } from "./acerto.js";
 import { usarPista } from "./acerto-carro.js";
 import { renderCapacete, sincronizarCapacete } from "./capacete-editor.js"; // o capacete de quem joga
+import { montarGuia, soltarGuia } from "./gp-guia.js"; // a miniatura 3D do circuito e o guia do GP na ficha "Sobre o GP"
 const EQUIPES_F1 = window.EQUIPES_F1 || {};
 // o logo da equipe sozinho (sem a sigla por trás, que aparecia pelas transparências do PNG); só sem arquivo, ou se ele não carregar, entra a sigla
 const siglaEquipe = (e) => `<span class="sigla">${h(e.sigla)}</span>`;
@@ -271,6 +272,7 @@ function renderSobre() {
   const antes = sobreChave.split("|")[0], trocou = !!antes && antes !== id, tinhaFoco = $("sobreCorpo").contains(document.activeElement);
   sobreChave = chave;
   $("sobreCorpo").innerHTML = sobreCorpo(id);
+  try { montarGuia($("sobreCorpo"), id); } catch (e) { console.warn("Corrida: guia do GP", e); } // um extra: o erro não tira a ficha
   if (!antes || trocou) fundoSobre(id, trocou);
   const g = G.get(id);
   $("sobreCred").textContent = g.credito ? `Foto: ${g.credito.autor} · ${g.credito.licenca} · Wikimedia Commons` : g.ceu ? "Céu: Poly Haven · CC0" : "";
@@ -297,7 +299,7 @@ function abrirSobre() {
 }
 function fecharSobre(devolverFoco = true) {
   if (!sobreAberto) return;
-  sobreAberto = false; $("snSobre").classList.add("hidden"); $("sn").inert = false; if (!gavetaAberta) document.body.classList.remove("sn-gaveta-on");
+  sobreAberto = false; soltarGuia(); $("snSobre").classList.add("hidden"); $("sn").inert = false; if (!gavetaAberta) document.body.classList.remove("sn-gaveta-on");
   destacarCurva(null);
   if (devolverFoco) { const b = sobreFocoAntes && sobreFocoAntes.isConnected && !sobreFocoAntes.disabled ? sobreFocoAntes : document.querySelector("[data-sobre]"); if (b) b.focus({ preventScroll: true }); }
   sobreFocoAntes = null; renderLobby();

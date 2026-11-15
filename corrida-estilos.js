@@ -64,7 +64,8 @@ function original(id) {
   return { ataque, defesa, frenagem, paciencia, pneus, box, entrada, retomada, zebra, erro, consistencia: consistenciaOriginal(id) };
 }
 const AJUSTES = new Map(); // o que o admin mudou (id → campos); vale para as próximas corridas
-function dePiloto(id) { return { ...original(id), ...AJUSTES.get(id) }; }
+// `x`: o id do piloto ou o próprio piloto; com o piloto, o `perfil` dele (2026-11-15: a carreira ajusta o companheiro pelo Paddock) vale por cima
+function dePiloto(x) { const id = x && typeof x === "object" ? x.id : x, extra = x && typeof x === "object" && x.perfil ? x.perfil : null; return { ...original(id), ...AJUSTES.get(id), ...(extra || {}) }; }
 // O ajuste que vale: só os campos conhecidos, com número de 0 a 1. Devolve null se algo está fora disso.
 function limpar(perfil) {
   if (!perfil || typeof perfil !== "object") return null;
@@ -85,7 +86,7 @@ function pressao(room, p) {
   return atraso === 0 && lider.id === id ? -0.08 : atraso > 0 && atraso <= 25 ? 0.08 : 0;
 }
 function parametros(room, p, nivel) {
-  const perfil = dePiloto(p.piloto && p.piloto.id), press = pressao(room, p);
+  const perfil = dePiloto(p.piloto), press = pressao(room, p);
   const ataque = Math.max(0, Math.min(1, perfil.ataque + press));
   return { perfil, ataque, antec: nivel.antec * (0.84 + 0.16 * ataque),
     defende: Math.max(0, Math.min(0.9, nivel.defende * (0.6 + perfil.defesa * 0.4))),

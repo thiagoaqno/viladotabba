@@ -314,7 +314,7 @@ function passo(c, ent, amb, tr, ev) {
       if (vn > 0) { c.vx -= q.nx * s * vn * 1.2; c.vy -= q.ny * s * vn * 1.2; const ca = Math.cos(c.a), sa = Math.sin(c.a); c.v = c.vx * ca + c.vy * sa; c.vl = -c.vx * sa + c.vy * ca; if (vn > 60 && ev) ev.push({ t: "bump", forca: vn }); }
     }
   }
-  if (amb.f1 !== false) F1.gastarPneu(c.pneu, { dist: Math.hypot(nx - xAnt, ny - yAnt), volta: n * 6, slip: c.slip, travada: c.travada, patina: c.patina, zebra: Math.max(0, Math.min(1, (Math.abs(fr.lat) - (tr.W / 2 - 10)) / 10)), v: c.v, vmax: spec.vmax, dt, fator: (spec.desgaste || 1) * (amb.fatorDesgastePneu ?? 1), agua: amb.agua }); // (zebra: os últimos 10 da borda e além)
+  if (amb.f1 !== false) F1.gastarPneu(c.pneu, { dist: Math.hypot(nx - xAnt, ny - yAnt), volta: n * 6, slip: c.slip, travada: c.travada, patina: c.patina, zebra: Math.max(0, Math.min(1, (Math.abs(fr.lat) - (tr.W / 2 - 10)) / 10)), v: c.v, vmax: spec.vmax, dt, fator: (spec.desgaste || 1) * (amb.fatorDesgastePneu ?? 1) * ((amb2.extra && amb2.extra.desgaste) || 1), agua: amb.agua }); // (zebra: os últimos 10 da borda e além)
   c.x = nx; c.y = ny;
   // altura: no chão acompanha o relevo; se o chão some (lombada rápida), voa e cai com a gravidade
   const gh = alturaDoChao(tr, c.x, c.y, c.idx);
@@ -718,19 +718,24 @@ function reconciliar(c, st, tr, ctx) {
 //   câmbio (curto 0 · longo 1): a tração (a arrancada) contra o arrasto (a velocidade final): curto arranca mais e chega menos longe;
 //   freio (dianteiro 0 · traseiro 1): a força de frenagem contra a aderência na curva: na frente freia mais, atrás o carro gira mais;
 //   diferencial (aberto 0 · travado 1): a aderência no meio da curva contra a tração na saída.
-const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5 });
+// (2026-11-15, a segunda leva, a tela de acerto do jogo da F1) mais três, também em escala de jogo, e os dois primeiros mexem no desgaste do pneu:
+//   cambagem (pouca 0 · muita 1): a aderência na curva contra a frenagem e a tração em linha reta e o desgaste (até ±4% e +12% de desgaste);
+//   pressão dos pneus (baixa 0 · alta 1): baixa agarra mais e gasta mais; alta gasta menos e agarra menos (até ±4% e ±15% de desgaste);
+//   rigidez da suspensão (macia 0 · dura 1): dura segura a plataforma da asa (mais carga) e sofre nas zebras e lombadas (menos aderência mecânica).
+const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5, cambagem: 0.5, pressao: 0.5, rigidez: 0.5 });
 const meio = (v) => (Number.isFinite(v) ? v : 0.5) - 0.5; // −0,5 a +0,5
 const alturaParada = (a) => 0.025 + a.altura * 0.05;
 const forcaDaAsa = (a) => 0.8 + a.asa * 0.4;
 const afundaAero = (a, v) => 0.045 * forcaDaAsa(a) * Math.min(1.6, (Math.max(0, v) / 400) ** 2);
 function extraDoAcerto(a, v, o = {}) {
   const asa = forcaDaAsa(a), folga = alturaParada(a) - afundaAero(a, v), raspa = Math.max(0, -folga) / 0.01, solo = 1 + (0.05 - alturaParada(a)) * 2;
-  const cb = meio(a.cambio), fr = meio(a.freio), df = meio(a.diferencial);
+  const cb = meio(a.cambio), fr = meio(a.freio), df = meio(a.diferencial), cm = meio(a.cambagem), pr = meio(a.pressao), rg = meio(a.rigidez);
   o.potencia = 1;
-  o.tracao = (1 - cb * 0.08) * (1 + df * 0.06);  // câmbio curto e diferencial travado: mais tração
-  o.freio = 1 - fr * 0.08;                        // freio na frente: freia mais
-  o.grip = (1 + fr * 0.04) * (1 - df * 0.06);     // freio atrás e diferencial aberto: o carro vira mais
-  o.carga = asa * solo * (1 - Math.min(0.35, raspa * 0.12));
+  o.tracao = (1 - cb * 0.08) * (1 + df * 0.06) * (1 - cm * 0.06);  // câmbio curto e diferencial travado: mais tração; muita cambagem: menos
+  o.freio = (1 - fr * 0.08) * (1 - cm * 0.06);                      // freio na frente: freia mais; muita cambagem: menos
+  o.grip = (1 + fr * 0.04) * (1 - df * 0.06) * (1 + cm * 0.08) * (1 - pr * 0.08) * (1 - rg * 0.04); // cambagem, pressão baixa e suspensão macia: mais aderência
+  o.desgaste = (1 + cm * 0.24) * (1 - pr * 0.3);                    // muita cambagem e pressão baixa gastam mais o pneu
+  o.carga = asa * solo * (1 - Math.min(0.35, raspa * 0.12)) * (1 + rg * 0.06); // (suspensão dura: a plataforma segura a carga)
   o.arrasto = (1 + (asa - 1) * 1.6) * (1 + Math.min(0.5, raspa * 0.15)) * (1 + cb * 0.06); // (câmbio curto: corta antes, como mais arrasto no fim da reta)
   o.raspa = raspa;
   return o;

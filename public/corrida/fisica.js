@@ -364,7 +364,7 @@ export function enviarEntradas(agora) {
     const n = Math.min(120, c.tick - net.enviado), k = new Array(n);
     for (let i = 0; i < n; i++) k[i] = net.cod[(net.enviado + i) & MASCARA];
     const tt = net.tf[(net.enviado + n) & MASCARA]; // (a hora do servidor em que o último passo do pacote terminou; sem ela o servidor usa a da chegada)
-    const ac = [ACERTO_CARRO.asa, ACERTO_CARRO.altura, ACERTO_CARRO.cambio ?? 0.5, ACERTO_CARRO.freio ?? 0.5, ACERTO_CARRO.diferencial ?? 0.5]; // o acerto do carro vai junto (o servidor roda o meu carro com ele)
+    const ac = [ACERTO_CARRO.asa, ACERTO_CARRO.altura, ACERTO_CARRO.cambio ?? 0.5, ACERTO_CARRO.freio ?? 0.5, ACERTO_CARRO.diferencial ?? 0.5, ACERTO_CARRO.cambagem ?? 0.5, ACERTO_CARRO.pressao ?? 0.5, ACERTO_CARRO.rigidez ?? 0.5]; // o acerto do carro vai junto (o servidor roda o meu carro com ele)
     socket.emit("inp", tt > 0 ? { s: R.startAt, t0: net.enviado, k, tt, ac } : { s: R.startAt, t0: net.enviado, k, ac });
     net.enviado += n;
   }

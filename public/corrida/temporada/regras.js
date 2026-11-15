@@ -154,7 +154,8 @@ function pilotosNoGrid(s) {
     if (deslocado) rivais.push({ ...deslocado, equipe: companheiro.equipe });
   }
   const ritmo = companheiro.ritmo + (s.paddock ? Paddock.ajusteDeRitmo(s) : 0); // (a moral do Paddock: ±2 pontos de ritmo nos extremos)
-  return [{ ...companheiro, equipe: s.equipe, ritmo }, ...rivais].slice(0, 21);
+  const pers = s.paddock ? Paddock.personalidade(s, companheiro) : null; // (a confiança, a experiência e a agressividade: paddock.js)
+  return [{ ...companheiro, equipe: s.equipe, ritmo, ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais].slice(0, 21);
 }
 // Metas dependem da força inicial da equipe, não do resultado que acabou de acontecer.
 function metas(s) {

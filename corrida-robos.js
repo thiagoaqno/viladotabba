@@ -412,7 +412,7 @@ function largar(room) {
     const rng = F1.sorteio(`estilo:${room.semente}:${id}`); // regras de F1: cada robô tem o seu jeito (sorteado pela semente do GP)
     // o jeito de cada robô com o box (sorteado pela semente do GP): segue o plano, faz o undercut (para uma volta antes quando está colado no
     // da frente), o overcut (estica uma volta em ar limpo) ou é oportunista (aproveita o safety car para parar mais cedo)
-    const estiloBox = pil && Estilos.PERFIS[pil.id] ? Estilos.dePiloto(pil.id).box : ESTILOS_BOX[Math.floor(F1.sorteio(`box:${room.semente}:${id}`)() * ESTILOS_BOX.length)];
+    const estiloBox = pil && Estilos.PERFIS[pil.id] ? Estilos.dePiloto(pil).box : ESTILOS_BOX[Math.floor(F1.sorteio(`box:${room.semente}:${id}`)() * ESTILOS_BOX.length)];
     // Cada corrida conserva seus perfis: aprender uma volta invalida o cache global só para as próximas largadas.
     p.ia = { estiloBox, perfil: pf, s: g.idx, s0: g.idx, lat: g.lat, lat0: g.lat, desvio: 0, v: 0, nivel, jeito: pil ? rnd(-1, 1) * (2 + (100 - pil.constancia) * 0.3) : rnd(-7, 7), tracadoId, reacao: pil ? Math.max(150, Math.min(400, Pilotos.reacaoNaLargada(pil.largada) + rnd(-25, 25))) : rnd(150, 400), usaEm: 0,
       pneu: f1 ? F1.pneuNovo(p.pneu) : null, ers: f1 ? F1.ersNovo() : null, plano, box: null,
@@ -450,7 +450,7 @@ function aquecerNiveis(room, fila, nBots) {
 function estiloDe(room, p, rng) {
   const pil = p.piloto, nivel = { facil: 1.5, medio: 1, dificil: 0.6 }[room.config.nivel] || 1;
   const estreita = T.PISTAS[room.config.pista].width <= LARGURA_ESTREITA;
-  return { dentro: (rng() * 2 - 1) * (estreita ? 0.5 : 1), lado: (rng() * 2 - 1) * (estreita ? 2 : 9), look: pil && Estilos.PERFIS[pil.id] ? 2 + Math.min(3, Math.floor((1 - Estilos.dePiloto(pil.id).frenagem) * 4)) : 2 + Math.floor(rng() * 4), erroK: nivel * (pil ? 0.5 + (100 - pil.constancia) / 40 : 1), erros: F1.sorteio(`erros:${room.semente}:${p.id}`) };
+  return { dentro: (rng() * 2 - 1) * (estreita ? 0.5 : 1), lado: (rng() * 2 - 1) * (estreita ? 2 : 9), look: pil && Estilos.PERFIS[pil.id] ? 2 + Math.min(3, Math.floor((1 - Estilos.dePiloto(pil).frenagem) * 4)) : 2 + Math.floor(rng() * 4), erroK: nivel * (pil ? 0.5 + (100 - pil.constancia) / 40 : 1), erros: F1.sorteio(`erros:${room.semente}:${p.id}`) };
 }
 let L_CARRO = 44, W_CARRO = 26; // o carro em unidades da pista (carros.js: 4,4 m x 2,6 m, escala 10; no Formula GP 26,4 × 9,1: 5,5 m × 1,9 m, escala 4,8)
 // atrás de um HUMANO, no Formula GP, o robô guarda mais espaço (de antes de #665): RESERVA_HUMANO s da velocidade dele na folga e FREADA_HUMANO s da freada medida
@@ -901,7 +901,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const saidaGrid = Math.min(1, ((car.prog - (car.gridIdx - n)) / 100));
   const precisao = T.baseDe(room.config.pista) === "monaco" ? 0.4 : 1; // a variação de estilo é menor onde há pouco espaço para corrigir
   // (o piloto novo segue a linha base: a variedade vem do perfil do piloto, sem desvio fixo nem senoide somados ao traçado)
-  const jeitoP = pf.linha.hi ? (ia.jeitoPiloto || (ia.jeitoPiloto = Piloto.jeitoDe(Estilos.dePiloto(p.piloto && p.piloto.id)))) : null;
+  const jeitoP = pf.linha.hi ? (ia.jeitoPiloto || (ia.jeitoPiloto = Piloto.jeitoDe(Estilos.dePiloto(p.piloto)))) : null;
   const linhaEm = pf.linha.hi ? (k) => pf.lat[(k + 2) % n] + jeitoP.zebra * pf.linha.sinal[k % n] * Math.min(1, pf.kf[k % n] * 400) * precisao : (k, prog) => pf.lat[(k + 2) % n] * pf.fator + ia.jeito + Math.sin(prog / 105 + ia.tracadoId * 1.7) * 3 * precisao
     + est.dentro * pf.linha.sinal[k % n] * Math.min(1, pf.kf[k % n] * 400) * 7 * precisao;
   const linha = linhaEm(i, car.prog);
@@ -924,7 +924,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const cautelaPneu = 1 - 0.04 * cl.agua - 0.25 * perdaAgua;
   const velFreio = Math.max(car.v, 60), ref = aderRef();
   const alongaFreio = Math.max(1, Math.min(2.2, D.frenagemMaxima(spec, velFreio, 0, { freio: ref.freio, grip: ref.grip }) / Math.max(1, D.frenagemMaxima(spec, velFreio, 0, { freio: pneu.freio * dano.freio, grip: pneu.grip * dano.grip })))) * (1 + 0.3 * perdaAgua);
-  const perfilPiloto = Estilos.dePiloto(p.piloto && p.piloto.id);
+  const perfilPiloto = Estilos.dePiloto(p.piloto);
   const ajusteFreada = 1 + Math.max(0, 0.8 - perfilPiloto.frenagem) * (T.baseDe(room.config.pista) === "monaco" ? 0.06 : 0.14);
   const olhar = Math.max(3, Math.ceil(Math.max(car.v, 30) * (T.baseDe(room.config.pista) === "monaco" ? 0.20 : tr.W <= LARGURA_ESTREITA ? 0.27 : 0.20) * alongaFreio * ajusteFreada / STEP)); // o perfil já antecipa a frenagem; circuitos estreitos pedem mais folga
   let alvo = Infinity;

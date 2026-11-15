@@ -22,7 +22,7 @@ function sugestoes(c, id) {
 // as variáveis do desenho e dos medidores para um acerto (no style do .ac)
 function estilo(a) {
   const n = A().numeros(a), parado = (A().alturaParada(a) - A().alturaParada(A().PADRAO)) * PX, rapido = parado - A().afundaAero(a, 400) * PX;
-  return `--v-asa:${a.asa};--v-altura:${a.altura};--v-cambio:${a.cambio ?? 0.5};--v-freio:${a.freio ?? 0.5};--v-diferencial:${a.diferencial ?? 0.5};--asa-ang:${ANG(a).toFixed(1)}deg;--parado:${(-parado).toFixed(1)}px;--rapido:${(-rapido).toFixed(1)}px;--carga:${n.carga};--arrasto:${n.arrasto}`;
+  return `--v-asa:${a.asa};--v-altura:${a.altura};--v-cambio:${a.cambio ?? 0.5};--v-freio:${a.freio ?? 0.5};--v-diferencial:${a.diferencial ?? 0.5};--v-cambagem:${a.cambagem ?? 0.5};--v-pressao:${a.pressao ?? 0.5};--v-rigidez:${a.rigidez ?? 0.5};--asa-ang:${ANG(a).toFixed(1)}deg;--parado:${(-parado).toFixed(1)}px;--rapido:${(-rapido).toFixed(1)}px;--carga:${n.carga};--arrasto:${n.arrasto}`;
 }
 const sinal = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
 function medidores(a) {
@@ -74,6 +74,11 @@ const LINHAS = {
   diferencial: { nome: "Diferencial", v: (a) => lado(a.diferencial, "aberto", "travado"), faixa: "",
     texto: "Aberto vira mais no meio da curva; travado tem mais tração na saída." },
 };
+Object.assign(LINHAS, {
+  cambagem: { nome: "Cambagem", v: (a) => lado(a.cambagem, "pouca", "muita"), faixa: "", texto: "Muita: mais curva, menos freio e tração, e o pneu gasta mais." },
+  pressao: { nome: "Pressão dos pneus", v: (a) => lado(a.pressao, "baixa", "alta"), faixa: "", texto: "Baixa agarra mais e gasta mais o pneu; alta dura mais e agarra menos." },
+  rigidez: { nome: "Rigidez da suspensão", v: (a) => lado(a.rigidez, "macia", "dura"), faixa: "", texto: "Dura segura a carga da asa; macia passa melhor nas zebras." },
+});
 // o lado do ajuste em palavras (e o quanto, de 0 a 100)
 function lado(v, menos, mais) { const x = Number.isFinite(v) ? v : 0.5; return x < 0.42 ? menos : x > 0.58 ? mais : "no meio"; }
 const SV = (d, w = 22) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -118,7 +123,7 @@ function html(c) {
         <p class="ac-legenda"><i class="ac-sug ac-sug-engenheiro">E</i> onde o <b>engenheiro</b> propõe <i class="ac-sug ac-sug-estrategista">S</i> onde o <b>estrategista</b> sugere, nas barras da aba Ajustes.</p>` : `<p class="ac-carregando">Chamando a equipe no rádio…</p>`)
     : sub === "pista"
       ? cab('<path d="M5 18c-2-3 0-6 3-6s4-4 7-4 5 3 3 6-6 2-8 4-4 2-5 0z"/>', h(nome), "O traçado e o que o acerto de agora faz nele.") + `<div class="acf2-pista"><div class="ac-mapa" aria-hidden="true">${mapa}</div><div>${ficha(id, c)}<p class="acf2-desc">${h(A().frase(atual))}</p><p class="acf2-desc">${h(A().efeito(atual))}</p></div></div>`
-      : cab(IC_MOLA, "Aerodinâmica e Suspensão", "") + `${linhaHTML("asa")}${linhaHTML("altura")}${linhaHTML("cambio")}${linhaHTML("freio")}${linhaHTML("diferencial")}
+      : cab(IC_MOLA, "Aerodinâmica e Suspensão", "") + `${linhaHTML("asa")}${linhaHTML("altura")}${linhaHTML("rigidez")}${linhaHTML("cambagem")}${linhaHTML("pressao")}${linhaHTML("cambio")}${linhaHTML("freio")}${linhaHTML("diferencial")}
           <p class="acf2-desc" data-cx-acerto-desc>${h(LINHAS[linha].texto)}</p>
           <div class="acf2-meds" data-cx-acerto-med>${medidoresF1(atual)}</div>`;
   const vr = n.raspaKmh;

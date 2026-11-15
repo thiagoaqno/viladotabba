@@ -142,7 +142,7 @@ body.cx-escuro .pd{--pd-card:var(--cx-bg2)}
 .pd-aviso.demitido{border-left-color:var(--cx-verm);background:color-mix(in srgb,var(--cx-verm) 12%,var(--pd-card))}
 .pd-aviso b{font:800 14px var(--cx-f);text-transform:uppercase;letter-spacing:.04em}.pd-aviso span{color:var(--cx-tx2);font-size:13.5px}
 .pd-tag{display:inline-block;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--pd-ac) 12%,transparent);color:var(--pd-ac);font:800 11px var(--cx-f)}
-.pd-staff{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--cx-lin)}
+.pd-staff{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--cx-lin)}
 .pd-staff small{display:block;color:var(--cx-tx2);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}.pd-staff b{font:700 14.5px var(--cx-f)}
 /* o efeito só aparece depois da escolha: entra deslizando, com um brilho na cor da equipe */
 .pd-revela{animation:pdRevela .7s cubic-bezier(.2,.8,.2,1) .15s backwards}

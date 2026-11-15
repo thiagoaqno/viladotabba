@@ -1,5 +1,16 @@
 [
   {
+    "id": "2026-11-15-pilotos-telemetria",
+    "data": "2026-11-15",
+    "itens": [
+      "Carreira: o companheiro tem confiança, agressividade e experiência, que mudam como ele corre; com a moral lá embaixo, ele vai embora sozinho",
+      "Instrução de corrida para o companheiro: atacar, corrida limpa ou deixar com ele",
+      "Análise: aba Telemetria com o mapa da pista colorido (velocidade, frenagem, aceleração), a telemetria comparando com outro piloto, o desgaste dos pneus e a estratégia",
+      "Acerto: rigidez da suspensão, cambagem e pressão dos pneus (a cambagem e a pressão mexem no desgaste)",
+      "Classificação: eliminado e sozinho na sala, um botão pula a espera para o Q2"
+    ]
+  },
+  {
     "id": "2026-11-15-paddock",
     "data": "2026-11-15",
     "itens": [
@@ -11,6 +22,9 @@
       "Desenvolvimento balanceado: o nível alto custa mais, a aerodinâmica depende da suspensão e o motor da confiabilidade",
       "Notícias do paddock com as melhorias das rivais e a previsão, o mural do que aconteceu e o histórico da equipe",
       "Insights do engenheiro na Análise: o setor em que você mais perde, a comparação com o companheiro, a consistência e a estratégia"
+    ]
+  },
+  {
     "id": "2026-11-14-capacete-formato",
     "data": "2026-11-14",
     "itens": [

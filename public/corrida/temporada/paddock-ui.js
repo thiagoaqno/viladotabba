@@ -11,6 +11,7 @@
 const U = () => root.CentralUI, h = (v) => U().h(v), P = () => root.F1Paddock, Reg = () => root.F1Temporada, Pil = () => root.F1Pilotos; // (Reg: as regras da carreira)
 const nomeEq = (id) => (Pil().EQUIPES[id] && Pil().EQUIPES[id].nome) || id;
 const nomePil = (id) => (id === "voce" ? "Você" : (Pil().PILOTOS.find((p) => p.id === id) || {}).nome || id);
+const sobrenomeDe = (n) => String(n || "").trim().split(/\s+/).at(-1);
 const num = (v, casas = 1) => String(v.toFixed(casas)).replace(".", ",");
 const ICONES = {
   Piloto: '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6"/>',
@@ -146,7 +147,8 @@ function html(c) {
       <div class="pd-meio">${U().marca(s.equipe, "pd-meio-logo")}<b>${duelo[0]} × ${duelo[1]}</b><small>duelo interno</small></div>
       ${cartaoPiloto(comp.nome, fotoPiloto(s.piloto2), comp.ritmo, `Ritmo${p.salarioComp ? ` · <span class="pd-tag">salário +${p.salarioComp} mi/GP</span>` : ""}`, ritmo ? `<em class="${ritmo > 0 ? "mais" : "menos"}">${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))}</em>` : "", ele)}</div>
     <div class="pd-staff">${(() => { const E = Reg().ENGENHEIROS, en = s.engenheiros || { mecanico: 0, estrategista: 0 }, ct = Reg().contrato(s);
-      return `<div><small>Estrategista</small><b>${h(E.estrategista[en.estrategista].nome)}</b></div><div><small>Mecânicos</small><b>${h(E.mecanico[en.mecanico].nome)}${p.salarioStaff ? ` <span class="pd-tag">+${p.salarioStaff} mi/GP</span>` : ""}</b></div><div><small>Seu bônus por vitória</small><b>${ct.bonusVitoria} mi</b></div><div><small>Salários extras por GP</small><b>${P().salarios(s) ? `${P().salarios(s)} mi` : "nenhum"}</b></div>`; })()}</div>`;
+      const exp = P().experiencia ? P().experiencia(s) : 0;
+      return `<div title="Sobe com bons resultados, cai com abandonos: mexe na constância dele"><small>Confiança · ${h(sobrenomeDe(comp.nome))}</small><b>${p.confianca ?? 55}</b></div><div title="Das instruções de corrida e das brigas: mais ataque, mais erro"><small>Agressividade</small><b>${p.agressividade ?? 50}</b></div><div title="Os GPs com a equipe: melhora a largada e a constância"><small>Experiência</small><b>${exp} ${exp === 1 ? "GP" : "GPs"}</b></div><div><small>Estrategista</small><b>${h(E.estrategista[en.estrategista].nome)}</b></div><div><small>Mecânicos</small><b>${h(E.mecanico[en.mecanico].nome)}${p.salarioStaff ? ` <span class="pd-tag">+${p.salarioStaff} mi/GP</span>` : ""}</b></div><div><small>Seu bônus por vitória</small><b>${ct.bonusVitoria} mi</b></div><div><small>Salários extras por GP</small><b>${P().salarios(s) ? `${P().salarios(s)} mi` : "nenhum"}</b></div>`; })()}</div>`;
   // as notícias das decisões (as deste GP e do anterior) entram primeiro
   const dasDecisoes = (p.noticias || []).filter((n) => n.ano === s.ano && n.gp >= s.gp - 1).slice(-2).reverse().map((n) => ({ ...n, nova: n.gp === s.gp }));
   const nts = [...dasDecisoes, ...noticias(c)];

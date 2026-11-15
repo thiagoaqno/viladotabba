@@ -38,3 +38,34 @@ body:not(.cx-on) .folha h2,body:not(.cx-on) .sede .bloco h2{font-family:var(--di
 .cx-ag-ins-l li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--cx-lin);border-radius:8px;background:var(--cx-bg)}
 .cx-ag-ins-ic{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--eq,#e10600) 14%,transparent);color:var(--eq-at,var(--eq,#e10600))}
 .cx-ag-ins-l b{font-size:14px}.cx-ag-ins-l p{margin:2px 0 0;color:var(--cx-tx2);font-size:13px;line-height:1.4}
+
+/* (2026-11-15) a sub-aba Telemetria da Análise (central-telemetria.js) */
+.ct{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:16px}
+.ct-card{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ct-vazio{margin:6px 0;color:var(--cx-tx2);font-size:13.5px}
+.ct-mets{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:var(--cx-hover);align-self:flex-start}
+.cx .ct-mets button{padding:5px 14px;border-radius:999px;color:var(--cx-tx2);font:700 12.5px var(--cx-f);cursor:pointer;transition:background .15s,color .15s}
+.cx .ct-mets button:hover:not(:disabled){color:var(--cx-tx)}.cx .ct-mets button.on{background:var(--cx-tx);color:var(--cx-bg)}
+.ct-mapa{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.ct-mapa svg{width:100%;max-height:340px}
+.ct-base{fill:none;stroke:var(--cx-trilho);stroke-width:4;stroke-linejoin:round}
+.ct-seg line{stroke-width:2.6;stroke-linecap:round}
+.ct-largada{fill:var(--cx-tx)}
+.ct-escala{display:flex;flex-direction:column;align-items:center;gap:4px;height:180px}
+.ct-escala i{flex:1;width:8px;border-radius:4px;background:linear-gradient(rgb(230,40,40),rgb(250,200,40),rgb(40,190,120),rgb(46,110,230))}
+.ct-escala small{color:var(--cx-tx2);font-size:10.5px;white-space:nowrap}
+.ct-graf{width:100%;height:auto;font:600 10.5px var(--cx-f);fill:var(--cx-tx2)}
+.ct-graf polyline,.ct-graf path{fill:none;stroke-width:2;stroke-linejoin:round}
+.ct-eu{stroke:var(--eq-at,var(--eq,#e10600))}.ct-ou{stroke:var(--cx-tx2);opacity:.8}
+.ct-setor{stroke:var(--cx-lin);stroke-dasharray:3 4}
+.ct-pior{fill:var(--cx-bg2);stroke:var(--eq-at,var(--eq));stroke-width:2.5}
+.ct-nota{margin:0;color:var(--cx-tx2);font-size:12.5px}.ct-ganha{color:var(--cx-verde)}.ct-perde{color:var(--cx-verm)}
+.ct-leg{display:inline-flex;align-items:center;gap:5px;font-weight:700}.ct-leg::before{content:"";width:14px;height:3px;border-radius:2px;background:var(--cx-tx2)}.ct-leg.eu::before{background:var(--eq-at,var(--eq))}
+.ct-estr{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;margin:4px 0}
+.ct-estr small{color:var(--cx-tx2);font-weight:700;font-size:12.5px}
+.ct-faixa{position:relative;height:26px;border-radius:6px;background:var(--cx-trilho);overflow:hidden}
+.ct-faixa i{position:absolute;top:0;bottom:0;display:grid;place-items:center;background:var(--c);border-right:2px solid var(--cx-bg2);transition:filter .15s}
+.ct-faixa i:hover{filter:brightness(1.12)}
+.ct-faixa b{font:800 11px var(--cx-f);color:#111}
+.ct-estr-eixo span{display:flex;justify-content:space-between;color:var(--cx-tx2);font-size:11px}.ct-estr-eixo em{font-style:normal}
+@media (max-width:1000px){.ct{grid-template-columns:1fr}}

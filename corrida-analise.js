@@ -9,9 +9,11 @@ function setor(p, s, agora) {
 // a volta fechou (`p.laps` já subiu, `inicio` é a hora em que ela começou)
 function volta(room, p, tempo, inicio) {
   const a = (room.analise ||= { porVolta: {}, sc: [], amarelas: 0, safeties: 0 });
-  const n = p.laps, h = (p.ana ||= { v: [], s: [], p: [] });
+  const n = p.laps, h = (p.ana ||= { v: [], s: [], p: [], d: [] });
   a.porVolta[n] = (a.porVolta[n] || 0) + 1; // a ordem em que cruzaram a linha nesta volta é a posição
   h.v.push(ms(tempo)); h.p.push(a.porVolta[n]);
+  // (2026-11-15) o desgaste do pneu no fim de cada volta (0 a 1): o gráfico de desgaste da Análise. O de quem joga está no carro da física; o do robô, na IA
+  const pn = (p.sim && p.sim.c && p.sim.c.pneu) || (p.ia && p.ia.pneu) || null; (h.d ||= []).push(pn && Number.isFinite(pn.desgaste) ? Math.round(pn.desgaste * 1000) / 1000 : null);
   const s1 = p.anaS1 > inicio ? p.anaS1 - inicio : null, s2 = s1 != null && p.anaS2 > p.anaS1 ? p.anaS2 - p.anaS1 : null;
   h.s.push(s1 != null && s2 != null && tempo * 1000 > s1 + s2 ? [ms(s1 / 1000), ms(s2 / 1000), ms(tempo - (s1 + s2) / 1000)] : null);
   const d = room.direcao; if (!d) return;
@@ -38,10 +40,10 @@ function resumo(room, chave) {
   const a = room.analise || { sc: [], amarelas: 0, safeties: 0 }, pilotos = {};
   for (const r of room.resultado || []) {
     const p = room.players[r.id]; if (!p) continue;
-    const h = p.ana || { v: [], s: [], p: [] };
+    const h = p.ana || { v: [], s: [], p: [], d: [] };
     let melhorV = -1; h.v.forEach((t, i) => { if (melhorV < 0 || t < h.v[melhorV]) melhorV = i; });
     pilotos[chave(p)] = {
-      g: (p.grid ?? -1) + 1, v: h.v, p: h.p, // largada, tempo e posição em cada volta
+      g: (p.grid ?? -1) + 1, v: h.v, p: h.p, d: h.d || [], // largada, tempo, posição e desgaste do pneu em cada volta
       s: melhorV >= 0 ? h.s[melhorV] : null, sv: h.s, mv: melhorV + 1, // setores da melhor volta, setores de cada volta e o número da melhor volta
       c0: (p.compostos && p.compostos[0]) || p.pneu || null, b: (p.paradas || []).map((x) => ({ v: x.volta, c: x.composto, t: x.tempo })), k: (p.consertos || []).map((x) => ({ v: x.volta, t: x.tempo })), // k: as paradas só de conserto
       t: p.finish != null ? ms(p.finish + (p.acrescimo || 0)) : null, a: ms(p.acrescimo || 0), e: !!p.estimado,

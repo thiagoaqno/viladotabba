@@ -86,7 +86,9 @@ export function renderQuali() {
       <span class="pq-pe-gp"><small>Circuito</small><b>${h(pista ? pista.name : "")}</b></span>
       <span class="pq-pe-estado">${ultima ? "Classificação concluída" : `${h(f.nome)} concluído`}${precisa || !m ? ` · <em>${prontos}/${q.aguardados.length} prontos</em>` : ""} <small data-pq-relogio></small></span>
       ${m ? (vista === "ajustes" ? `<button type="button" class="pq-bt ghost" data-pq-vista="resultado">${IC.voltar}Resultado</button>` : `<button type="button" class="pq-bt ghost" data-pq-vista="ajustes">${IC.ajustes}Ajustes do carro</button>`) : ""}
-      ${precisa ? `<button type="button" class="pq-bt primario" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? "Pronto: esperando os outros" : h(proximo)}</button>` : m ? `<span class="pq-espera">Você assiste: ${ultima ? "a largada" : `o Q${q.fechadas.length + 1}`} abre quando os outros estiverem prontos</span>` : ""}
+      ${precisa ? `<button type="button" class="pq-bt primario" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? "Pronto: esperando os outros" : h(proximo)}</button>`
+        : m && !q.aguardados.length ? `<button type="button" class="pq-bt primario" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${ultima ? "Ir para a largada" : `Pular para o Q${q.fechadas.length + 1}`}</button>` // (2026-11-15: eliminado e sem ninguém para esperar, não fica 3 min parado; o servidor já segue quando ninguém precisa confirmar)
+        : m ? `<span class="pq-espera">Você assiste: ${ultima ? "a largada" : `o Q${q.fechadas.length + 1}`} abre quando os outros estiverem prontos</span>` : ""}
     </footer></div>`;
   relogio();
   el.querySelectorAll("[data-pq-vista]").forEach((b) => { b.onclick = () => { vista = b.dataset.pqVista; chaveHtml = ""; renderQuali(); }; });

@@ -6,7 +6,7 @@
 // Acerto da carreira (temporada/central-acerto.js). `ACERTO_CARRO` é o da pista da corrida (`usarPista`, chamado na largada por jogo.js):
 // o painel, o desenho e a física leem dele.
 const S = () => window.AcertoSugestao;
-export const ACERTO_CARRO_PADRAO = { asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5 }; // (2026-11-15: câmbio, freio e diferencial, sim.js)
+export const ACERTO_CARRO_PADRAO = { asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5, cambagem: 0.5, pressao: 0.5, rigidez: 0.5 }; // (2026-11-15: câmbio, freio e diferencial, sim.js)
 export const ACERTO_CARRO = { ...ACERTO_CARRO_PADRAO };
 let pista = null;
 export const acertoGuardado = (id) => S().lerGuardado(id);

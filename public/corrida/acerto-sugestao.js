@@ -7,7 +7,7 @@
 // A altura parada e a força da asa são a MESMA conta de sim.js (alturaParada, forcaDaAsa), repetida aqui porque a Central não carrega a física.
 (function (root) {
 "use strict";
-const PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5 }); // (2026-11-15: câmbio, freio e diferencial, sim.js)
+const PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5, cambagem: 0.5, pressao: 0.5, rigidez: 0.5 }); // (2026-11-15: câmbio, freio e diferencial, sim.js)
 const chave = (id) => `corrida:acerto-carro:${id}`;
 const limpo = (s) => { const a = { ...PADRAO }; if (s) for (const k of Object.keys(a)) if (Number.isFinite(+s[k])) a[k] = Math.max(0, Math.min(1, +s[k])); return a; };
 function lerGuardado(id) { try { const s = root.localStorage.getItem(chave(id)); return s ? limpo(JSON.parse(s)) : null; } catch { return null; } }

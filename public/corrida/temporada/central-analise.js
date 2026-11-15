@@ -8,7 +8,7 @@ let sub = "visao", gpEscolhido = null, comparar = null, verTodos = false, filtro
 // as sub-abas (a interface nova do Thiago, 2026-11-14): a Visão geral é a principal (abre primeiro); Estratégia e Voltas saíram (a tabela de
 // pneus e o Desempenho cobrem o que elas mostravam). As que têm pista em 3D usam o módulo da tela do resultado
 // (analise-salva.js) numa aba dele: o Replay, o mapa da Visão geral, as posições do Desempenho e os Eventos (momentos e ultrapassagens)
-const SUBS = [["visao", "Visão geral"], ["desempenho", "Desempenho"], ["pneus", "Pneus"], ["eventos", "Eventos"], ["replay", "Replay"]]; // (o Replay por último: o Thiago, 2026-11-14)
+const SUBS = [["visao", "Visão geral"], ["desempenho", "Desempenho"], ["telemetria", "Telemetria"], ["pneus", "Pneus"], ["eventos", "Eventos"], ["replay", "Replay"]]; // (o Replay por último: o Thiago, 2026-11-14)
 const ABA_3D = { replay: "replay", visao: "mapa", desempenho: "posicoes", eventos: "momentos" };
 
 const tempo = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`);
@@ -61,6 +61,7 @@ function graficoRitmo(a, eu, ou, nomeEu, nomeOu) {
     <line class="mira" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" style="display:none"/><circle class="mira-a" r="4" style="display:none"/><circle class="mira-b" r="4" style="display:none"/></svg><div class="cx-dica" hidden></div></div>`;
 }
 function ligarGraficos() {
+  root.CentralTelemetria?.montar(() => document.querySelector('[data-cx-an="telemetria"]')?.click()); // (o replay chega depois: redesenha a aba)
   montar3d();
   document.querySelectorAll("[data-cx-graf]").forEach((g) => {
     if (g._ligado) return; g._ligado = true;
@@ -164,6 +165,7 @@ function html(c) {
   const vivo = (abaMod) => `<div class="ra ra-cx" data-cx-vivo="${r.ano}:${r.gp}:${abaMod}:${tema}" data-cx-an-gp="${r.gp}"><p class="ra-vazio">Carregando a pista em 3D…</p></div>`;
   const corpo = sub === "visao" ? G.visaoGeral(c, r, a, vivo("mapa"), verTodos)
     : sub === "desempenho" ? `${G.quadrosSetor(c, r, a)}${vivo("posicoes")}<h3 class="cx-an-sub">O seu desempenho</h3>${visao(c, r, a, rival)}${telemetria(c, r, a, rival)}`
+    : sub === "telemetria" && root.CentralTelemetria ? root.CentralTelemetria.html(c, r, a, rival) // (2026-11-15: o mapa colorido, a telemetria comparativa, o desgaste e a estratégia)
     : sub === "pneus" ? G.pneusTabela(c, r, a, filtroEq)
     : vivo(ABA_3D[sub] || "replay");
   return `${topo}${abas}<div class="cx-an-corpo">${corpo}</div>`;
@@ -180,6 +182,7 @@ function montar3d() {
     .catch((e) => { console.warn("Carreira: análise 3D indisponível", e); el.innerHTML = '<p class="ra-vazio">A análise 3D não carregou.</p>'; });
 }
 function clique(b, render) {
+  if (root.CentralTelemetria?.clique(b, render)) return true;
   if (b.dataset.cxAgTodos != null) { verTodos = !verTodos; render(); return true; } // o resultado final inteiro (Visão geral)
   if (b.dataset.cxAgEq != null) { filtroEq = b.dataset.cxAgEq; render(); return true; } // o filtro por equipe (Pneus)
   if (b.dataset.cxAn) { sub = b.dataset.cxAn; render(); document.querySelector(`[data-cx-an="${sub}"]`)?.focus({ preventScroll: true }); return true; } return false; }

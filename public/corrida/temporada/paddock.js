@@ -26,7 +26,7 @@ function gerador(semente) {
 function garantir(s) {
   if (!s.paddock || typeof s.paddock !== "object") s.paddock = {};
   const p = s.paddock;
-  for (const [k, v] of [["moral", 55], ["lealdade", 50], ["patrocinador", 60], ["torcida", 50], ["diretoria", 0]]) if (!Number.isFinite(p[k])) p[k] = v;
+  for (const [k, v] of [["moral", 55], ["lealdade", 50], ["patrocinador", 60], ["torcida", 50], ["diretoria", 0], ["confianca", 55], ["agressividade", 50]]) if (!Number.isFinite(p[k])) p[k] = v;
   if (!p.decisoes || typeof p.decisoes !== "object") p.decisoes = {};
   if (!Array.isArray(p.mural)) p.mural = [];
   if (p.promessa === undefined) p.promessa = null;
@@ -40,6 +40,20 @@ function anotar(s, tipo, texto, efeito = null) {
 }
 // o ajuste de ritmo do companheiro pela moral (regras.js pilotosNoGrid): 50 é neutro, 0 tira 2 pontos, 100 dá 2
 const ajusteDeRitmo = (s) => Math.round(((garantir(s).moral - 50) / 25) * 10) / 10;
+// (2026-11-15) a personalidade do companheiro na corrida (regras.js pilotosNoGrid; os números do piloto são os de f1-pilotos-2026.js e os de
+// corrida-estilos.js), em escala de jogo, para sentir jogando:
+//  - confiança (0 a 100, sobe com bons resultados e cai com abandonos): a constância, ±6 pontos nos extremos (as voltas variam menos ou mais);
+//  - experiência (os GPs que ele já fez pela sua equipe): até +4 de constância e +6 de largada (a reação no semáforo), 0,25 e 0,4 por GP;
+//  - agressividade (0 a 100, das instruções e das brigas): o ataque e a defesa ±0,2 e a taxa de erro ±40% (ataca mais e erra mais).
+// (os perfis de corrida só existem no servidor: corrida-estilos.js; no navegador a personalidade serve só para a tela)
+const Estilos = () => { if (typeof module === "undefined" || !module.exports) return null; try { return require("../../../corrida-estilos.js"); } catch (e) { return null; } };
+function experiencia(s) { return (s.resultados || []).filter((r) => r.linhas.some((l) => l.piloto === s.piloto2 && l.equipe === s.equipe)).length; }
+function personalidade(s, piloto) {
+  const p = garantir(s), exp = experiencia(s), base = Estilos() ? Estilos().dePiloto(piloto.id) : null, a = (p.agressividade - 50) / 50; // −1 a +1
+  const c01 = (v) => Math.max(0, Math.min(1, Math.round(v * 100) / 100));
+  const perfil = base ? { ataque: c01(base.ataque + a * 0.2), defesa: c01(base.defesa + a * 0.2), erro: c01(base.erro * (1 + a * 0.4)) } : null;
+  return { constancia: Math.round(piloto.constancia + ((p.confianca - 50) / 25) * 3 + Math.min(4, exp * 0.25)), largada: Math.round(piloto.largada + Math.min(6, exp * 0.4)), perfil, exp };
+}
 
 // o que os acontecimentos olham: o último GP deste ano, a minha linha e a do companheiro, a meta, o nome dele
 function contexto(s) {
@@ -65,14 +79,25 @@ const EVENTOS = {
       { id: "aumento", rotulo: "Dar um aumento a ele", efeito: { moral: 10, lealdade: 8 }, acao: "aumentoComp" },
     ],
   },
+  instrucao: {
+    quem: "Engenheiros", fase: "sexta",
+    quando: (c) => !!c.proximo,
+    titulo: () => "Instrução de corrida para o companheiro",
+    texto: (c) => `Os engenheiros querem saber como ${c.nomeComp} deve correr neste GP.`,
+    opcoes: [
+      { id: "ataque", rotulo: "Atacar: buscar ultrapassagens", efeito: { agressividade: 15, confianca: 2 } },
+      { id: "limpa", rotulo: "Corrida limpa: levar o carro até o fim", efeito: { agressividade: -15 } },
+      { id: "livre", rotulo: "Deixar com ele", efeito: { moral: 3 } },
+    ],
+  },
   conflito: {
     quem: "Piloto", fase: "pos",
     quando: (c) => bem(c.eu) && bem(c.comp) && Math.abs(c.eu.pos - c.comp.pos) <= 2,
     titulo: () => "Conflito entre companheiros",
     texto: (c) => `Vocês terminaram colados no último GP e ${c.nomeComp} reclama que você não respeitou o espaço na pista. A imprensa já percebeu o clima.`,
     opcoes: [
-      { id: "eu", rotulo: "Defender a sua corrida", efeito: { moral: -8, lealdade: -5, torcida: 3 } },
-      { id: "ele", rotulo: "Dar razão a ele", efeito: { moral: 10, lealdade: 6, diretoria: -2 } },
+      { id: "eu", rotulo: "Defender a sua corrida", efeito: { moral: -8, lealdade: -5, torcida: 3, agressividade: -8 } },
+      { id: "ele", rotulo: "Dar razão a ele", efeito: { moral: 10, lealdade: 6, diretoria: -2, agressividade: 8 } },
       { id: "nada", rotulo: "Não interferir", efeito: { moral: -3 } },
       { id: "reuniao", rotulo: "Conversar com os dois juntos", efeito: { moral: 5, lealdade: 3, caixa: -1 } },
     ],
@@ -199,7 +224,7 @@ function acontecimentos(s) {
 const NOMES = { moral: "moral do companheiro", lealdade: "lealdade", patrocinador: "patrocinador", torcida: "torcida", diretoria: "diretoria", caixa: "caixa" };
 function aplicar(s, efeito) {
   const p = garantir(s);
-  for (const k of ["moral", "lealdade", "patrocinador", "torcida"]) if (efeito[k]) p[k] = lim(p[k] + efeito[k]);
+  for (const k of ["moral", "lealdade", "patrocinador", "torcida", "confianca", "agressividade"]) if (efeito[k]) p[k] = lim(p[k] + efeito[k]);
   if (efeito.diretoria) p.diretoria = lim(p.diretoria + efeito.diretoria, -20, 20);
   if (efeito.caixa) s.caixa = Math.max(0, s.caixa + efeito.caixa);
 }
@@ -307,8 +332,10 @@ function acao(s, a) {
 // Depois de cada GP (regras.js registrarResultado): o resultado mexe no humor da equipe. `meta`: a posição-alvo do GP.
 function aoResultado(s, resultado, meta) {
   const p = garantir(s), eu = resultado.linhas.find((r) => r.piloto === "voce"), comp = resultado.linhas.find((r) => r.piloto === s.piloto2);
-  const ef = { moral: 0, patrocinador: 0, torcida: 0, lealdade: 0 }, notas = [];
+  const ef = { moral: 0, patrocinador: 0, torcida: 0, lealdade: 0, confianca: 0 }, notas = [];
   if (comp) {
+    ef.confianca += !bem(comp) ? -8 : (PONTOS[comp.pos - 1] || 0) > 0 ? 6 : -2;
+    if (bem(comp) && bem(eu) && comp.pos < eu.pos) ef.confianca += 4;
     if (!bem(comp)) { ef.moral -= 4; notas.push("o abandono pesou no companheiro"); }
     else if ((PONTOS[comp.pos - 1] || 0) > 0) { ef.moral += 4; notas.push("o companheiro pontuou"); }
     if (bem(comp) && bem(eu) && comp.pos < eu.pos) { ef.moral += 3; ef.lealdade += 1; notas.push("ele chegou na sua frente"); }
@@ -328,6 +355,16 @@ function aoResultado(s, resultado, meta) {
   ef.torcida += bem(eu) ? Math.min(8, Math.round(((PONTOS[eu.pos - 1] || 0) + (eu.voltaRapida ? 1 : 0)) / 3)) - 1 : -3;
   aplicar(s, ef);
   anotar(s, "Fim de semana", `GP de ${s.calendario[resultado.gp]?.nome || resultado.pista}: ${bem(eu) ? `você em ${eu.pos}º` : "você não terminou"}${comp ? `, ${Pilotos.PILOTOS.find((x) => x.id === s.piloto2)?.nome || "o companheiro"} ${bem(comp) ? `em ${comp.pos}º` : "fora"}` : ""}${notas.length ? ` (${notas.join("; ")})` : ""}.`, ef);
+  // (2026-11-15) com a moral e a lealdade lá embaixo, o companheiro assina com uma rival e vai embora sem pedir: outro piloto assume o carro
+  if (p.moral < 22 && p.lealdade < 25 && resultado.gp < s.tamanho - 1) {
+    const antigo = Pilotos.PILOTOS.find((x) => x.id === s.piloto2), novo = substituto(s);
+    if (antigo && novo) {
+      s.piloto2 = novo.id; p.moral = 60; p.lealdade = 55; p.confianca = 55; p.agressividade = 50; p.salarioComp = 0;
+      const texto = `${antigo.nome} assinou com outra equipe e foi embora. ${novo.nome}, que estava na ${nomeEq(novo.equipe)}, assume o segundo carro.`;
+      anotar(s, "Piloto", texto); p.ultimaMudanca = { ano: s.ano, gp: s.gp, quem: "Piloto", texto };
+      (p.noticias ||= []).push({ ano: s.ano, gp: s.gp, t: `${antigo.nome} deixa a ${nomeEq(s.equipe)}`, x: `${novo.nome} assume o segundo carro a partir do próximo GP.`, eq: s.equipe, quem: "Piloto" });
+    }
+  }
   // o patrocinador nos extremos muda a verba por GP
   if (p.patrocinador >= 80 && s.patrocinio < 12) { s.patrocinio++; p.patrocinador = 62; anotar(s, "Patrocinador", `O patrocinador gostou e aumentou a verba para ${s.patrocinio} milhões por GP.`); }
   else if (p.patrocinador <= 20 && s.patrocinio > 3) { s.patrocinio--; p.patrocinador = 42; anotar(s, "Patrocinador", `O patrocinador cortou a verba para ${s.patrocinio} milhões por GP.`); }
@@ -340,7 +377,7 @@ function novaTemporada(s) {
   for (const k of Object.keys(p.decisoes)) if (Number(k.split(":")[0]) < s.ano - 1) delete p.decisoes[k];
 }
 const salarios = (s) => (s.paddock ? (s.paddock.salarioComp || 0) + (s.paddock.salarioStaff || 0) : 0);
-const api = { garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
+const api = { personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Paddock = api;
 })(typeof window !== "undefined" ? window : globalThis);

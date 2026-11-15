@@ -144,6 +144,13 @@ body.cx-escuro .pd{--pd-card:var(--cx-bg2)}
 .pd-tag{display:inline-block;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--pd-ac) 12%,transparent);color:var(--pd-ac);font:800 11px var(--cx-f)}
 .pd-staff{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--cx-lin)}
 .pd-staff small{display:block;color:var(--cx-tx2);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}.pd-staff b{font:700 14.5px var(--cx-f)}
+/* o efeito só aparece depois da escolha: entra deslizando, com um brilho na cor da equipe */
+.pd-revela{animation:pdRevela .7s cubic-bezier(.2,.8,.2,1) .15s backwards}
+@keyframes pdRevela{from{opacity:0;transform:translateY(-6px);filter:blur(3px)}}
+.pd-ev.decidido .pd-op.on{animation:pdEscolha 1s ease}
+@keyframes pdEscolha{0%{background:color-mix(in srgb,var(--pd-ac) 22%,transparent)}100%{background:transparent}}
+.pd-agora-tag{display:table;margin-bottom:4px;padding:1px 8px;border-radius:999px;background:var(--pd-ac);color:#fff;font:800 10px var(--cx-f);text-transform:uppercase;letter-spacing:.08em}
+.pd-noticia.nova{animation:pdConseq .6s cubic-bezier(.2,.8,.2,1) backwards}
 /* o resto responde ao mouse */
 .pd-card{transition:box-shadow .2s,transform .2s}
 .pd-card:hover{box-shadow:0 1px 2px #0000000f,0 16px 38px #0000001a;transform:translateY(-1px)}

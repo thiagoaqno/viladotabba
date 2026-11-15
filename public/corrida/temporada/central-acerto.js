@@ -22,7 +22,7 @@ function sugestoes(c, id) {
 // as variáveis do desenho e dos medidores para um acerto (no style do .ac)
 function estilo(a) {
   const n = A().numeros(a), parado = (A().alturaParada(a) - A().alturaParada(A().PADRAO)) * PX, rapido = parado - A().afundaAero(a, 400) * PX;
-  return `--v-asa:${a.asa};--v-altura:${a.altura};--asa-ang:${ANG(a).toFixed(1)}deg;--parado:${(-parado).toFixed(1)}px;--rapido:${(-rapido).toFixed(1)}px;--carga:${n.carga};--arrasto:${n.arrasto}`;
+  return `--v-asa:${a.asa};--v-altura:${a.altura};--v-cambio:${a.cambio ?? 0.5};--v-freio:${a.freio ?? 0.5};--v-diferencial:${a.diferencial ?? 0.5};--asa-ang:${ANG(a).toFixed(1)}deg;--parado:${(-parado).toFixed(1)}px;--rapido:${(-rapido).toFixed(1)}px;--carga:${n.carga};--arrasto:${n.arrasto}`;
 }
 const sinal = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
 function medidores(a) {
@@ -66,7 +66,16 @@ const LINHAS = {
     texto: "Mais asa aumenta a carga aerodinâmica: o carro gruda nas curvas e freia mais tarde, mas o arrasto tira velocidade no fim da reta. A carga também empurra o carro para baixo e come a folga do assoalho. Menos asa deixa o carro mais rápido em linha reta, porém com menos aderência." },
   altura: { nome: "Altura do carro", v: (a) => A().cm(a), faixa: "(Mín. 2,5 – Máx. 7,5 cm)",
     texto: "Mais baixo, o assoalho trabalha mais perto do chão e o efeito solo dá mais aderência. Baixo demais, a carga da asa afunda o carro no fim da reta e o assoalho raspa no asfalto, soltando faísca. Alto é seguro, mas perde aderência." },
+  // (2026-11-15) os três ajustes novos (sim.js extraDoAcerto): cada um troca uma coisa por outra, até ±4%
+  cambio: { nome: "Câmbio", v: (a) => lado(a.cambio, "curto", "longo"), faixa: "(Curto · Longo)",
+    texto: "Marchas curtas: o carro arranca mais forte na saída das curvas lentas, mas corta antes no fim da reta. Marchas longas: chega mais longe na reta, mas sai devagar das curvas. Pistas de reta longa pedem câmbio longo." },
+  freio: { nome: "Balanço de freio", v: (a) => lado(a.freio, "na frente", "atrás"), faixa: "(Frente · Trás)",
+    texto: "Com o balanço na frente, o carro freia mais forte e fica estável, mas não quer virar na entrada da curva. Puxando para trás, a traseira ajuda a virar o carro, com uma frenagem um pouco mais longa." },
+  diferencial: { nome: "Diferencial", v: (a) => lado(a.diferencial, "aberto", "travado"), faixa: "(Aberto · Travado)",
+    texto: "Aberto, as rodas de trás giram livres e o carro contorna melhor o meio da curva. Travado, as duas empurram juntas: mais tração na saída, mas o carro sai de frente no meio da curva." },
 };
+// o lado do ajuste em palavras (e o quanto, de 0 a 100)
+function lado(v, menos, mais) { const x = Number.isFinite(v) ? v : 0.5, pct = Math.round(x * 100); return x < 0.42 ? `${menos} · ${pct}` : x > 0.58 ? `${mais} · ${pct}` : `no meio · ${pct}`; }
 const SV = (d, w = 22) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const IC_MOLA = '<path d="M12 2v3M12 19v3M8 5h8M8 19h8M7 8l10 2M7 12l10 2M7 16l10-2M17 10 7 12M17 14 7 16"/>';
 const IC_VELOC = '<path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 16 4-5"/><circle cx="12" cy="16" r="1.3"/>';
@@ -86,10 +95,10 @@ function html(c) {
   const UI = U(), prox = c.prox, id = prox && prox.pista;
   if (!A()) return `<section class="cx-card">${UI.tituloCard("Acerto do carro")}<p>O acerto não carregou. Recarregue a página.</p></section>`;
   if (!id) return `<section class="cx-card cx-an-vazio"><h3>Sem GP pela frente</h3><p>O acerto do carro é por pista: ele aparece aqui quando houver um próximo GP no calendário.</p></section>`;
-  if (!ideais) A().carregarIdeais().then((j) => { ideais = j || {}; if (root.Central?.aba?.() === "acerto") document.querySelector('.cx-aba[data-cx-aba="acerto"]')?.click(); });
+  if (!ideais) A().carregarIdeais().then((j) => { ideais = j || {}; if (root.Central?.aba?.() === "carro" && root.Central?.carroSub?.() === "acerto") document.querySelector('[data-cx-carro="acerto"]')?.click(); });
   const nome = (root.Pistas?.PISTAS?.[id]?.name) || prox.nome || id, atual = A().lerGuardado(id) || A().PADRAO, sg = sugestoes(c, id), n = A().numeros(atual), raspa = n.folgaCm < 0;
   const mapa = root.GpSobre ? root.GpSobre.mapaSvg(id, "cx-traco ac-mapa-svg") : "", etapa = (c.s.gp || 0) + 1;
-  const marca = (quem, letra, a, campo) => (a ? `<i class="ac-sug ac-sug-${quem}" style="left:${(a[campo] * 100).toFixed(1)}%" title="${quem === "engenheiro" ? "Engenheiro" : "Estrategista"}">${letra}</i>` : "");
+  const marca = (quem, letra, a, campo) => (a && (campo === "asa" || campo === "altura") ? `<i class="ac-sug ac-sug-${quem}" style="left:${(a[campo] * 100).toFixed(1)}%" title="${quem === "engenheiro" ? "Engenheiro" : "Estrategista"}">${letra}</i>` : "");
   const linhaHTML = (campo) => { const L = LINHAS[campo], on = linha === campo;
     return `<div class="acf2-linha ${on ? "on" : ""}" data-cx-acerto-linha="${campo}">
       <span class="acf2-nome">${h(L.nome)}</span>
@@ -109,7 +118,7 @@ function html(c) {
         <p class="ac-legenda"><i class="ac-sug ac-sug-engenheiro">E</i> onde o <b>engenheiro</b> propõe <i class="ac-sug ac-sug-estrategista">S</i> onde o <b>estrategista</b> sugere, nas barras da aba Ajustes.</p>` : `<p class="ac-carregando">Chamando a equipe no rádio…</p>`)
     : sub === "pista"
       ? cab('<path d="M5 18c-2-3 0-6 3-6s4-4 7-4 5 3 3 6-6 2-8 4-4 2-5 0z"/>', h(nome), "O traçado e o que o acerto de agora faz nele.") + `<div class="acf2-pista"><div class="ac-mapa" aria-hidden="true">${mapa}</div><div>${ficha(id, c)}<p class="acf2-desc">${h(A().frase(atual))}</p><p class="acf2-desc">${h(A().efeito(atual))}</p></div></div>`
-      : cab(IC_MOLA, "Aerodinâmica e Suspensão", "Ajuste o equilíbrio do seu carro para encontrar o melhor desempenho.") + `${linhaHTML("asa")}${linhaHTML("altura")}
+      : cab(IC_MOLA, "Aerodinâmica e Suspensão", "Ajuste o equilíbrio do seu carro para encontrar o melhor desempenho.") + `${linhaHTML("asa")}${linhaHTML("altura")}${linhaHTML("cambio")}${linhaHTML("freio")}${linhaHTML("diferencial")}
           <p class="acf2-desc" data-cx-acerto-desc>${h(LINHAS[linha].texto)}</p>
           <div class="acf2-meds" data-cx-acerto-med>${medidoresF1(atual)}</div>`;
   const vr = n.raspaKmh;
@@ -162,8 +171,7 @@ function mudarValor(k, valor, noInput = true) {
   if (alerta) { alerta.classList.toggle("on", n.raspaKmh != null && n.raspaKmh < 300); alerta.querySelector("b").textContent = n.raspaKmh == null ? "Nunca raspa" : `Raspa a ${n.raspaKmh} km/h`; }
   raiz.setAttribute("style", estilo(a)); raiz.classList.toggle("ac-raspa", A().numeros(a).folgaCm < 0);
   const v = (c) => raiz.querySelector(`[data-cx-acerto-v="${c}"]`);
-  if (v("asa")) v("asa").textContent = Math.round(A().forcaDaAsa(a) * 100) + "%";
-  if (v("altura")) v("altura").textContent = A().cm(a);
+  for (const c of Object.keys(LINHAS)) if (v(c)) v(c).textContent = LINHAS[c].v(a);
   const ef = raiz.querySelector("[data-cx-acerto-efeito]"); if (ef) ef.textContent = A().efeito(a);
   const med = raiz.querySelector("[data-cx-acerto-med]"); if (med) med.innerHTML = medidoresF1(a);
   ajustar3d(a);
@@ -186,7 +194,7 @@ function clique(b, render) {
   const ctx = root.CentralAcerto._ctx, id = ctx && ctx.prox && ctx.prox.pista;
   if (b.dataset.cxAcertoSub) { sub = b.dataset.cxAcertoSub; render(); return true; }
   if (b.dataset.cxAcertoPasso && id) { const [k, d] = b.dataset.cxAcertoPasso.split(":"), a = A().lerGuardado(id) || A().PADRAO; escolherLinha(k); mudarValor(k, a[k] + Number(d) * 0.05); return true; }
-  if (b.dataset.cxAcertoUsar && id) { const a = sugestoes(ctx, id)[b.dataset.cxAcertoUsar]; if (a) A().guardar(id, a); render(); return true; }
+  if (b.dataset.cxAcertoUsar && id) { const a = sugestoes(ctx, id)[b.dataset.cxAcertoUsar]; if (a) A().guardar(id, { ...(A().lerGuardado(id) || A().PADRAO), asa: a.asa, altura: a.altura }); render(); return true; }
   if (b.hasAttribute("data-cx-acerto-padrao") && id) { A().guardar(id, A().PADRAO); render(); return true; }
   return false;
 }

@@ -55,8 +55,21 @@ const EQUIPES = {
   cadillac: { orcamento: 15, padrao: { motor: 3, aero: 2, chassi: 3, freios: 2, suspensao: 2, confiab: 3 }, nota: "Estreante: simples e resistente." },
 };
 
-const soma = (m) => ORDEM.reduce((s, k) => s + (m[k] || 0), 0);
-const custoDaMontagem = soma; // 1 ponto por nível
+// (2026-11-15, o Thiago: "hoje é só upar 8 pontos em motor, 8 em aerodinâmica que você tem um carro overpowered") Dois freios no exagero:
+//  1) o nível custa mais no alto: do 1º ao 5º, 1 ponto cada; o 6º e o 7º, 2 cada; o 8º, 3. Uma peça no máximo custa 12 pontos, não 8.
+//     (os carros padrão vão até o nível 5, então custam o mesmo de antes);
+//  2) uma peça depende de outra (specDaMontagem): a aerodinâmica só rende até a suspensão + 4 (sem plataforma, a carga não chega ao chão)
+//     e o motor só rende até a confiabilidade + 4 (o câmbio e o arrefecimento não aguentam a potência). Passando disso, o nível extra só custa.
+const custoDoNivel = (n) => (n <= 5 ? 1 : n <= 7 ? 2 : 3);
+function custoDaPeca(nivel) { let c = 0; for (let i = 1; i <= nivel; i++) c += custoDoNivel(i); return c; }
+const custoDaMontagem = (m) => ORDEM.reduce((s, k) => s + custoDaPeca(Math.max(0, Math.min(MAX_NIVEL, m[k] || 0))), 0);
+const soma = custoDaMontagem;
+// o quanto cada peça rende de verdade (a aerodinâmica presa à suspensão, o motor à confiabilidade)
+const SUPORTE = 4;
+function rendimento(m) {
+  const n = {}; for (const k of ORDEM) n[k] = Math.max(0, Math.min(MAX_NIVEL, Math.round(+m[k] || 0)));
+  return { ...n, aero: Math.min(n.aero, n.suspensao + SUPORTE), motor: Math.min(n.motor, n.confiab + SUPORTE) };
+}
 
 // A montagem de uma equipe, conferida: todas as seis peças, inteiros de 0 a MAX_NIVEL, nada além delas e a soma dentro
 // do orçamento. Devolve { ok: true, montagem } (uma cópia limpa) ou { ok: false, erro }.
@@ -95,12 +108,12 @@ function quebraDaConfiab(confiab) {
 //   desgaste: quanto o pneu gasta (1 é o normal) · drs: quanto o DRS rende (1 é o normal) · quebra: chance de o carro quebrar na corrida
 // `m` já tem que ter passado por `validar` (ou ser uma padrão); níveis fora de 0..MAX_NIVEL são cortados mesmo assim.
 function specDaMontagem(m, nome = "Carro de F1") {
-  const n = {}; for (const k of ORDEM) n[k] = Math.max(0, Math.min(MAX_NIVEL, Math.round(+m[k] || 0)));
+  const n = rendimento(m); // (o nível que rende: ver `rendimento`)
   // carros mais parelhos: cada nível conta 60% da distância até o nível médio (3), então a equipe forte e a fraca ficam mais perto
   const PARELHO = 0.6, c = (x) => 3 + (x - 3) * PARELHO;
   const motor = c(n.motor), aero = c(n.aero), chassi = c(n.chassi), freios = c(n.freios), suspensao = c(n.suspensao), confiab = c(n.confiab), e = estilo(n);
   return {
-    name: nome, inspo: ESTILOS[e].inspo, desc: ESTILOS[e].nome, estilo: e, chave: ORDEM.map((k) => n[k]).join("-"),
+    name: nome, inspo: ESTILOS[e].inspo, desc: ESTILOS[e].nome, estilo: e, chave: ORDEM.map((k) => Math.max(0, Math.min(MAX_NIVEL, Math.round(+m[k] || 0)))).join("-"),
     vmax: arredonda(entre((286 + 6 * motor - 2.5 * aero) * VMAX_F1, LIMITES.vmax), 1),
     acc: arredonda(entre(66 + 1.6 * motor + 3.5 * chassi - 0.4 * aero, LIMITES.acc), 1),
     grip: arredonda(entre(380 + 13 * aero + 3 * suspensao, LIMITES.grip), 1),
@@ -138,7 +151,7 @@ function ficha(s) {
 // Os números que o servidor compara na hora de dizer "melhor em tudo": todos no sentido "maior é melhor"
 const eixos = (s) => [s.vmax, s.acc, s.grip, s.turn, s.brake, s.kin, -s.scrub, s.offMax, s.wall, -s.desgaste, s.drs, -s.quebra];
 
-const api = { BONUS_POR_TEMPORADA, BONUS_MAX, MAX_NIVEL, VMAX_F1, CDA_F1, EMERGENCIA, QUEBRA_PADRAO, CONFIAB_PADRAO, quebraDaConfiab, sortearFalha, ORDEM, PECAS, LIMITES, EQUIPES, ESTILOS, custoDaMontagem, validar, montagemPadrao, sobra, estilo, specDaMontagem, specDaEquipe, ficha, eixos };
+const api = { custoDoNivel, custoDaPeca, rendimento, SUPORTE, BONUS_POR_TEMPORADA, BONUS_MAX, MAX_NIVEL, VMAX_F1, CDA_F1, EMERGENCIA, QUEBRA_PADRAO, CONFIAB_PADRAO, quebraDaConfiab, sortearFalha, ORDEM, PECAS, LIMITES, EQUIPES, ESTILOS, custoDaMontagem, validar, montagemPadrao, sobra, estilo, specDaMontagem, specDaEquipe, ficha, eixos };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Equipes = api;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -213,13 +213,59 @@ function decidir(s, id, opcao) {
   aplicar(s, o.efeito);
   if (o.promessa) s.paddock.promessa = { ano: s.ano, gp: s.gp };
   s.paddock.decisoes[`${s.ano}:${s.gp}:${id}`] = opcao;
+  const antesComp = Pilotos.PILOTOS.find((x) => x.id === s.piloto2);
   const mudou = o.acao ? acao(s, o.acao) : null;
+  // a notícia da decisão (os 12 últimos ficam)
+  const m = MANCHETES[`${id}:${opcao}`];
+  if (m) {
+    const novo = Pilotos.PILOTOS.find((x) => x.id === s.piloto2), gpNome = (s.calendario[s.gp] && s.calendario[s.gp].nome) || "";
+    const troca = (t) => t.replace(/\{eq\}/g, nomeEq(s.equipe)).replace(/\{comp\}/g, antesComp ? antesComp.nome : "o companheiro").replace(/\{novo\}/g, novo ? novo.nome : "outro piloto").replace(/\{gp\}/g, gpNome);
+    const ns = (s.paddock.noticias ||= []); ns.push({ ano: s.ano, gp: s.gp, t: troca(m[0]), x: troca(m[1]), eq: s.equipe, quem: EVENTOS[id].quem });
+    if (ns.length > 12) ns.splice(0, ns.length - 12);
+  }
   const tx = (s.paddock.textos ||= {}); tx[`${s.ano}:${s.gp}:${id}`] = { titulo: ev.titulo, texto: ev.texto, resultado: mudou };
   for (const k of Object.keys(tx)) if (Number(k.split(":")[0]) < s.ano - 1) delete tx[k];
   anotar(s, EVENTOS[id].quem, `${ev.titulo}: ${o.rotulo.replace(/\s*\(.*\)$/, "")}.${mudou ? ` ${mudou}` : ""}`, o.efeito);
   if (mudou) s.paddock.ultimaMudanca = { ano: s.ano, gp: s.gp, quem: EVENTOS[id].quem, texto: mudou };
   return s;
 }
+// (2026-11-15) cada decisão vira notícia na Central de notícias: a manchete e a linha de baixo. {eq} a equipe, {comp} o companheiro (o de
+// antes da decisão), {novo} quem entrou no lugar dele, {gp} o próximo GP.
+const MANCHETES = {
+  "segundoCockpit:pecas": ["{eq} promete o mesmo carro para os dois pilotos", "{comp} recebe a garantia de peças iguais e o clima melhora no box."],
+  "segundoCockpit:foco": ["{eq} define a hierarquia: o primeiro piloto é a prioridade", "{comp} não gostou de ouvir que o foco da equipe é o outro carro."],
+  "segundoCockpit:conversa": ["Conversa franca acalma o segundo cockpit da {eq}", "{comp} saiu da reunião sem promessa, mas mais tranquilo."],
+  "segundoCockpit:aumento": ["{comp} ganha aumento na {eq}", "A equipe sobe o salário do companheiro para segurar o clima no box."],
+  "conflito:eu": ["Clima tenso na {eq}: a equipe defende o primeiro piloto", "{comp} reclamou do espaço na pista e ficou sem apoio da direção."],
+  "conflito:ele": ["{eq} dá razão a {comp} na briga interna", "A equipe admite que faltou espaço na disputa entre os dois carros."],
+  "conflito:nada": ["{eq} se cala sobre a briga entre os pilotos", "Sem posição da equipe, {comp} segue incomodado."],
+  "conflito:reuniao": ["Reunião a portas fechadas acalma a {eq}", "Os dois pilotos saíram juntos da sala e combinaram as regras da disputa."],
+  "patrocinadorVisibilidade:acao": ["{eq} lança ação de marketing para o GP de {gp}", "O patrocinador principal ganha espaço no fim de semana."],
+  "patrocinadorVisibilidade:promessa": ["{eq} promete resultado ao patrocinador", "A meta do GP de {gp} agora vale também para o contrato com a marca."],
+  "patrocinadorVisibilidade:recusar": ["{eq} prioriza o carro e irrita o patrocinador", "A marca esperava mais visibilidade e não escondeu a decepção."],
+  "imprensaCritica:assumir": ["{eq} assume o erro e promete reação", "A franqueza da equipe agradou a diretoria."],
+  "imprensaCritica:carro": ["{eq} culpa o carro pelo resultado", "A declaração caiu mal na fábrica e entre os torcedores."],
+  "imprensaCritica:defender": ["{eq} sai em defesa da equipe", "O discurso unido animou o box e a torcida."],
+  "patrocinioExtra:aceitar": ["Nova marca estampa o carro da {eq}", "Contrato curto rende 3 milhões para o caixa da equipe."],
+  "patrocinioExtra:recusar": ["{eq} recusa patrocínio extra", "A equipe preferiu não dividir o carro e agradou o patrocinador principal."],
+  "torcida:fazer": ["Pilotos da {eq} param para autógrafos", "A sessão com o fã-clube lotou antes do GP de {gp}."],
+  "torcida:fabrica": ["{eq} cancela encontro com a torcida", "Os pilotos ficaram na fábrica, e o fã-clube reclamou nas redes."],
+  "diretoria:aumento": ["Diretoria da {eq} aumenta o seu bônus por vitória", "O conselho premiou a boa fase com um contrato melhor."],
+  "diretoria:verba": ["{eq} libera verba extra para o carro", "O conselho aprovou 2 milhões a mais para o desenvolvimento."],
+  "diretoria:seguir": ["{eq} mantém o plano para a temporada", "A diretoria segue confiante no rumo da equipe."],
+  "ultimato:aceitar": ["Ultimato na {eq}: é resultado no GP de {gp} ou nada", "O conselho deu uma última chance ao piloto titular."],
+  "ultimato:tempo": ["Piloto da {eq} pede mais tempo à diretoria", "O conselho não gostou e a pressão aumenta."],
+  "cortes:demitir": ["{eq} demite o estrategista para cortar custos", "A equipe volta ao time de base na estratégia de corrida."],
+  "cortes:manter": ["{eq} corta na fábrica e mantém o estrategista", "A economia caiu sobre o pessoal da sede."],
+  "mecanicos:aumento": ["Mecânicos da {eq} ganham aumento", "O pessoal do box recebe o reajuste pedido."],
+  "mecanicos:recusar": ["Chefe dos mecânicos deixa a {eq}", "Sem o aumento, ele aceitou uma proposta rival; o box perde qualidade."],
+  "saida:segurar": ["{eq} segura {comp} com aumento", "O companheiro desiste de ouvir outras equipes."],
+  "saida:confiar": ["{eq} renova a confiança em {comp}", "O piloto ouviu que segue nos planos da equipe."],
+  "saida:demitir": ["{eq} demite {comp}; {novo} assume o carro", "A troca vale a partir do GP de {gp}."],
+  "reuniaoTecnica:juntos": ["{eq} divide o programa entre os dois carros", "Os engenheiros vão testar as peças nos dois pilotos em {gp}."],
+  "reuniaoTecnica:voce": ["{eq} concentra os testes no primeiro carro", "{comp} fica com o programa secundário em {gp}."],
+  "reuniaoTecnica:extra": ["{eq} paga sessão extra no simulador", "Os pilotos chegam a {gp} com horas a mais de preparação."],
+};
 // o substituto quando o companheiro é demitido: o piloto de ritmo mais perto (e não acima) do dele, de outra equipe (nunca o titular que você
 // substituiu na sua equipe); na falta, o mais lento de todos
 function substituto(s) {

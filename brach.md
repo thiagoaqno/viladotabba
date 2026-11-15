@@ -1,4 +1,4 @@
-# Carreira: o Paddock (a temporada viva, com decisões e consequências), a tela de acerto no jeito do jogo da F1 e os insights do engenheiro
+# Carreira: o Paddock (decisões e consequências), a aba Carro (peças e acerto juntos, com câmbio, freio e diferencial), o balanceamento do desenvolvimento e os insights do engenheiro
 
 Pedido do Thiago (2026-11-15), com o print da tela de acerto do jogo da F1, uma ideia de central de análise e o texto sobre deixar a temporada "viva":
 paddock, acontecimentos inesperados e consequências das decisões. "Pode fazer sem minha aprovação. Um PR só."
@@ -101,6 +101,37 @@ O Thiago: "preciso sentir as decisões mudando em algo além de números, talvez
   - as barras do humor mostram, listrado, para onde vão, com o número ao lado.
 - **O resto também responde ao mouse:** os cartões sobem, a foto do piloto e a da notícia aproximam, e a seta anda.
 - **No Acerto:** as abas inclinadas viraram texto com o traço da equipe deslizando, e os botões ficaram retos (um cheio, dois discretos), subindo ao passar o mouse.
+
+## A quarta rodada: sem viés nas escolhas, a aba Carro e o desenvolvimento balanceado
+
+O Thiago:
+- "se a gente já mostrar o resultado da escolha embaixo dela, dá muito viés: oculta e só mostra depois de escolher, com uma animação e talvez uma notícia";
+- "acerto e desenvolvimento são as mesmas coisas em guias diferentes; deviam ser juntas, num layout mais bonito e intuitivo, com mais opções";
+- "hoje é só upar 8 pontos em motor, 8 em aerodinâmica que você tem um carro overpowered".
+
+- **As escolhas do Paddock** mostram só o rótulo, sem o efeito, sem a consequência e sem a prévia no humor. Depois de escolher:
+  - o efeito e o que mudou entram com animação;
+  - a escolha acende;
+  - as barras andam;
+  - a decisão vira notícia na Central de notícias, com a etiqueta "Agora". São manchetes para as 34 opções (`paddock.js`, `MANCHETES`), como "Audi demite Hülkenberg; Bearman assume o carro".
+- **A aba Carro** (`central.js`) junta Desenvolvimento e Acerto:
+  - o topo tem a nota e a ficha do carro (reta, aceleração, curva, freio, resistência e confiabilidade);
+  - a troca entre "Peças" (o carro da temporada, na garagem 3D) e "Acerto" (o carro do próximo GP);
+  - as abas salvas antigas abrem a parte certa.
+- **As peças:** viraram uma lista com as seis peças. Cada uma mostra os níveis em gomos (os listrados não rendem), o − e o +, o custo do próximo nível e o aviso "rende X: falta suspensão". Embaixo fica o detalhe da escolhida.
+- **O balanceamento** (`f1-equipes.js`):
+  - **o custo sobe no alto:** do 1º ao 5º nível, 1 ponto cada; o 6º e o 7º, 2; o 8º, 3. Uma peça no máximo custa 12 pontos (antes, 8). Os carros padrão vão até o nível 5 e custam o mesmo de antes;
+  - **uma peça depende de outra:** a aerodinâmica só rende até a suspensão + 4, e o motor até a confiabilidade + 4. O 8 de motor com 8 de aero e o resto zerado agora custa 24 pontos e rende como nível 4;
+  - **os rivais** evoluem gastando o mesmo custo (`regras.js desenvolvimentoRivais`).
+- **Três ajustes novos no acerto**, valendo na física do servidor e do navegador (`sim.js extraDoAcerto`), cada um trocando uma coisa por outra em até ±4% (valores para se sentir jogando, não medidos):
+  - **câmbio:** curto arranca, longo chega mais longe;
+  - **balanço de freio:** na frente freia mais, atrás o carro vira;
+  - **diferencial:** aberto vira no meio da curva, travado tem mais tração na saída.
+
+  O navegador manda 5 números (`fisica.js`), e o servidor aceita 2 (os programas de antes) ou 5 (`corrida-humanos.js`). "Usar" a sugestão do engenheiro mexe só na asa e na altura.
+- **Os testes antigos:**
+  - em `corrida-f1-equipes.test.js`, a montagem recusada agora é a que custa mais de 20 (não a que soma 21);
+  - o teste "nenhuma montagem é melhor em tudo que outra" saiu: com a peça presa à outra, pôr ponto onde ele não rende é de propósito pior.
 
 ## Insights do engenheiro (Visão geral da Análise)
 

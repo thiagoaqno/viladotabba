@@ -53,7 +53,8 @@ function entrada(room, p, d, agora = Date.now()) {
   let S = p.sim;
   if (!S || S.serie !== d.s) S = p.sim = criarSim(room, p, d.s, d.t0, agora);
   // o acerto do carro (asa e altura, de 0 a 1: o painel P), que vem junto com as entradas e vale no passo (sim.js, extraDoAcerto)
-  if (Array.isArray(d.ac) && d.ac.length === 2 && d.ac.every(Number.isFinite)) p.acerto = { asa: Math.max(0, Math.min(1, d.ac[0])), altura: Math.max(0, Math.min(1, d.ac[1])) };
+  const c01 = (v) => (Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0.5);
+  if (Array.isArray(d.ac) && (d.ac.length === 2 || d.ac.length === 5) && d.ac.every(Number.isFinite)) p.acerto = { asa: c01(d.ac[0]), altura: c01(d.ac[1]), cambio: c01(d.ac[2]), freio: c01(d.ac[3]), diferencial: c01(d.ac[4]) }; // (2 números: os programas de antes; 5: com câmbio, freio e diferencial)
   if (p.acerto) S.c.acerto = p.acerto;
   const n = d.k.length;
   let tt = Number.isFinite(d.tt) ? d.tt : null; // a hora real do último passo do pacote: possível ou ignorada (sem ela vale a hora da chegada, como antes)

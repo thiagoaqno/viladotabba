@@ -112,8 +112,8 @@ function html(c) {
   const cartao = (e) => `<article class="pd-ev ${e.escolha ? "decidido" : ""}"><span class="pd-ev-ic">${icone(e.quem)}</span><div class="pd-ev-txt">
       <div class="pd-ev-topo"><small>${h(e.quem)}</small>${e.escolha ? `<em class="pd-selo ok">Decidido</em>` : `<em class="pd-selo novo">Esperando você</em>`}</div>
       <h4>${h(e.titulo)}</h4><p>${h(e.texto)}</p>
-      <div class="pd-opcoes">${e.opcoes.filter((o) => !e.escolha || o.id === e.escolha).map((o) => `<button type="button" class="pd-op ${e.escolha === o.id ? "on" : ""} ${o.consequencia ? "pesa" : ""}" data-pd-ev="${h(e.id)}" data-pd-op="${h(o.id)}" data-pd-ef="${h(JSON.stringify(o.efeito))}" ${e.escolha ? "disabled" : ""}>
-        <i class="pd-op-marca" aria-hidden="true"></i><span class="pd-op-txt"><b>${h(o.rotulo)}</b>${textoEfeito(o.efeito) ? `<small>${textoEfeito(o.efeito)}</small>` : ""}${e.escolha ? (e.resultado ? `<em>${h(e.resultado)}</em>` : "") : o.consequencia ? `<em>${h(o.consequencia)}</em>` : ""}</span>${SVG(IH.seta, 18)}</button>`).join("")}</div></div></article>`;
+      <div class="pd-opcoes">${e.opcoes.filter((o) => !e.escolha || o.id === e.escolha).map((o) => `<button type="button" class="pd-op ${e.escolha === o.id ? "on" : ""} ${o.consequencia ? "pesa" : ""}" data-pd-ev="${h(e.id)}" data-pd-op="${h(o.id)}" ${e.escolha ? "disabled" : ""}>
+        <i class="pd-op-marca" aria-hidden="true"></i><span class="pd-op-txt"><b>${h(o.rotulo)}</b>${e.escolha && textoEfeito(o.efeito) ? `<small class="pd-revela">${textoEfeito(o.efeito)}</small>` : ""}${e.escolha && e.resultado ? `<em class="pd-revela">${h(e.resultado)}</em>` : ""}</span>${SVG(IH.seta, 18)}</button>`).join("")}</div></div></article>`;
   const agora = terminou ? `<p class="pd-vazio">A temporada terminou. O paddock volta a ferver no próximo ano.</p>` : evs.length ? evs.map(cartao).join("") : `<p class="pd-vazio">Tudo calmo no paddock antes deste GP.</p>`;
   const ritmo = P().ajusteDeRitmo(s), dir100 = (p.diretoria + 20) * 2.5;
   const media = Math.round((p.moral + p.lealdade + p.patrocinador + p.torcida + dir100) / 5);
@@ -122,7 +122,7 @@ function html(c) {
   const linhaH = (ic, rot, v, mostra, nota) => { const de = velho ? velho[ic] : v, d = Math.round(ic === "diretoria" ? (v - de) / 2.5 : v - de);
     return `<div class="pd-hl ${d ? "mudou" : ""}" data-pd-hl="${ic}" data-pd-v="${v}" title="${h(nota)}"><span class="pd-hl-ic">${SVG(IH[ic], 22)}</span><div><div class="pd-hl-topo"><span>${h(rot)}</span><span class="pd-hl-num">${d ? `<em class="pd-delta ${d > 0 ? "mais" : "menos"}">${d > 0 ? "+" : "−"}${Math.abs(d)}</em>` : ""}<i class="pd-prev" aria-hidden="true"></i><b>${mostra}</b></span></div><div class="pd-barra"><i style="--de:${Math.max(1, Math.min(100, de)).toFixed(0)}%;width:${Math.max(1, Math.min(100, v)).toFixed(0)}%"></i><s class="pd-fantasma"></s></div><small>${h(nota)}</small></div></div>`; };
   const dCaixa = velho ? s.caixa - velho.caixa : 0;
-  const humor = `<div class="pd-humor-topo"><b>${media}</b><span>/100</span><div class="pd-barra grossa"><i style="width:${media}%"></i></div></div><small class="pd-humor-leg">A média dos cinco abaixo (a diretoria vai de −20 a +20). Passe o mouse numa opção para ver o que ela muda.</small>
+  const humor = `<div class="pd-humor-topo"><b>${media}</b><span>/100</span><div class="pd-barra grossa"><i style="width:${media}%"></i></div></div><small class="pd-humor-leg">A média dos cinco abaixo (a diretoria vai de −20 a +20).</small>
       <div class="pd-caixa ${dCaixa ? "mudou" : ""}" data-pd-hl="caixa" data-pd-v="${s.caixa}"><span>Caixa</span><span class="pd-hl-num">${dCaixa ? `<em class="pd-delta ${dCaixa > 0 ? "mais" : "menos"}">${dCaixa > 0 ? "+" : "−"}${Math.abs(dCaixa)}</em>` : ""}<i class="pd-prev" aria-hidden="true"></i><b>${s.caixa} mi</b></span></div>
       ${linhaH("moral", `Moral · ${comp.nome}`, p.moral, p.moral, ritmo ? `${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))} de ritmo na corrida` : "ritmo normal na corrida")}
       ${linhaH("lealdade", "Lealdade", p.lealdade, p.lealdade, p.lealdade < 30 ? "pode procurar outra equipe" : "segue com a equipe")}
@@ -141,9 +141,11 @@ function html(c) {
       ${cartaoPiloto(comp.nome, fotoPiloto(s.piloto2), comp.ritmo, `Ritmo${p.salarioComp ? ` · <span class="pd-tag">salário +${p.salarioComp} mi/GP</span>` : ""}`, ritmo ? `<em class="${ritmo > 0 ? "mais" : "menos"}">${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))}</em>` : "", ele)}</div>
     <div class="pd-staff">${(() => { const E = Reg().ENGENHEIROS, en = s.engenheiros || { mecanico: 0, estrategista: 0 }, ct = Reg().contrato(s);
       return `<div><small>Estrategista</small><b>${h(E.estrategista[en.estrategista].nome)}</b></div><div><small>Mecânicos</small><b>${h(E.mecanico[en.mecanico].nome)}${p.salarioStaff ? ` <span class="pd-tag">+${p.salarioStaff} mi/GP</span>` : ""}</b></div><div><small>Seu bônus por vitória</small><b>${ct.bonusVitoria} mi</b></div><div><small>Salários extras por GP</small><b>${P().salarios(s) ? `${P().salarios(s)} mi` : "nenhum"}</b></div>`; })()}</div>`;
-  const nts = noticias(c);
+  // as notícias das decisões (as deste GP e do anterior) entram primeiro
+  const dasDecisoes = (p.noticias || []).filter((n) => n.ano === s.ano && n.gp >= s.gp - 1).slice(-2).reverse().map((n) => ({ ...n, nova: n.gp === s.gp }));
+  const nts = [...dasDecisoes, ...noticias(c)];
   const miniDe = (n) => (n.eq ? fotoEquipe(n.eq) : foto);
-  const news = nts.length ? nts.slice(0, 3).map((n) => { const m = miniDe(n); return `<article class="pd-noticia"><span class="pd-mini">${m ? `<img src="${h(m)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${n.eq ? U().marca(n.eq, "pd-mini-logo") : ""}</span><div><b>${h(n.t)}</b><p>${h(n.x)}</p></div>${SVG('<path d="M5 12h14M13 6l6 6-6 6"/>', 18)}</article>`; }).join("") : `<p class="pd-vazio">Sem notícias por enquanto.</p>`;
+  const news = nts.length ? nts.slice(0, 3).map((n) => { const m = miniDe(n); return `<article class="pd-noticia ${n.nova ? "nova" : ""}"><span class="pd-mini">${m ? `<img src="${h(m)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${n.eq ? U().marca(n.eq, "pd-mini-logo") : ""}</span><div>${n.nova ? `<small class="pd-agora-tag">Agora</small>` : ""}<b>${h(n.t)}</b><p>${h(n.x)}</p></div>${SVG('<path d="M5 12h14M13 6l6 6-6 6"/>', 18)}</article>`; }).join("") : `<p class="pd-vazio">Sem notícias por enquanto.</p>`;
   const mural = p.mural.slice(-6).reverse().map((m) => `<li><span class="pd-balao">${SVG(IH.balao, 20)}</span><div><small>${h(m.tipo)} · ano ${m.ano}</small><p>${h(m.texto)}</p>${m.efeito ? `<span class="pd-efs">${plaquinhas(m.efeito)}</span>` : ""}</div></li>`).join("");
   const hist = historico(s);
   const historicoHTML = `${hist.momentos.length ? `<div class="pd-momentos">${hist.momentos.map(([t, x]) => `<div><small>${h(t)}</small><b>${h(x)}</b></div>`).join("")}</div>` : `<p class="pd-vazio">Os momentos marcantes aparecem aqui conforme a equipe vai somando resultados.</p>`}
@@ -180,8 +182,7 @@ function previa(op) {
     const pv = el.querySelector(".pd-prev"); if (pv) pv.textContent = `${d > 0 ? "+" : "−"}${Math.abs(d)}${k === "caixa" ? " mi" : ""}`;
   }
 }
-document.addEventListener("pointerover", (e) => { const op = e.target?.closest?.(".pd-op:not(:disabled)"); if (op || e.target?.closest?.(".pd")) previa(op || null); });
-document.addEventListener("focusin", (e) => { const op = e.target?.closest?.(".pd-op:not(:disabled)"); previa(op || null); });
+// (2026-11-15: o Thiago achou que mostrar o resultado antes dá viés; a prévia no humor saiu, e o efeito só aparece depois da escolha)
 function clique(b) {
   if (b.dataset.pdEv && b.dataset.pdOp) { const ctx = root.CentralPaddock._ctx; if (ctx && ctx.decidirPaddock) ctx.decidirPaddock(b.dataset.pdEv, b.dataset.pdOp); return true; }
   return false;

@@ -120,8 +120,8 @@ function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipe
     const r = gerador(`desenvolvimento:${base}:${id}`), atraso = Math.floor(r() * tamanho);
     const pontos = Math.min(Equipes.BONUS_MAX, Math.floor((rodadas * Equipes.BONUS_POR_TEMPORADA + atraso) / tamanho));
     const ordem = embaralhar(["motor", "aero", "chassi", "freios", "suspensao"], r);
-    const m = { ...equipe.padrao };
-    for (let i = 0, k = 0; i < pontos && k < pontos + ordem.length * Equipes.MAX_NIVEL; k++) { const p = ordem[k % ordem.length]; if (m[p] < Equipes.MAX_NIVEL) { m[p]++; i++; } }
+    const m = { ...equipe.padrao }, limite = equipe.orcamento + pontos; // (2026-11-15: os níveis altos custam mais; o rival gasta do mesmo jeito que você)
+    for (let k = 0, falhas = 0; falhas < ordem.length && k < 200; k++) { const p = ordem[k % ordem.length]; if (m[p] < Equipes.MAX_NIVEL && Equipes.custoDaMontagem({ ...m, [p]: m[p] + 1 }) <= limite) { m[p]++; falhas = 0; } else falhas++; }
     if (ideal != null) ajustarParaPista(m, ideal);
     montagens[id] = m; bonus[id] = pontos;
     const faixa = faixaDe(id), nivel = Math.min(2, (faixa === 0 ? 1 : 0) + Math.floor((rodadas + atraso) / tamanho));

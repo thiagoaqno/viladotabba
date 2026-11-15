@@ -74,10 +74,11 @@ function estufar(g, base, meio) {
   P.needsUpdate = true; g.computeBoundingSphere(); g.computeBoundingBox(); return g;
 }
 // a viseira em ARCO (2026-11-14, o Thiago: "a viseira está reta, deve ser um arco"): antes era uma faixa entre dois paralelos, com as bordas
-// retas; agora cada ponto desce conforme se afasta do meio da frente (u = 0 no meio, ±1 nas pontas): a faixa sobe no meio e desce para os
-// lados até as dobradiças, e afina nas pontas, como a janela de um capacete de verdade. Mexe na esfera unitária, antes de `casco`, e vale para
+// retas; agora cada ponto muda de altura conforme se afasta do meio da frente (u = 0 no meio, ±1 nas pontas), e a faixa afina nas pontas. Mexe na esfera unitária, antes de `casco`, e vale para
 // a viseira, a borracha em volta, o lábio de cima e as dobradiças (todos usam a mesma conta).
-const ARCO = { desce: 0.26, afina: 0.38 };
+// (2026-11-15, o Thiago: "rotaciona a viseira em 180 graus, com a concavidade voltada para cima") o arco em U: o meio da frente mais baixo e as
+// pontas subindo até as dobradiças (`desce` negativo sobe as pontas)
+const ARCO = { desce: -0.24, afina: 0.3 };
 function noArco(V, th, phi) {
   let d = phi - 1.5 * Math.PI; d = Math.atan2(Math.sin(d), Math.cos(d));
   const u = Math.max(-1.2, Math.min(1.2, d / (V.phi / 2))), u2 = u * u, centro = V.theta0 + V.theta / 2;

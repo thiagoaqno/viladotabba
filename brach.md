@@ -76,6 +76,32 @@ paddock, acontecimentos inesperados e consequências das decisões. "Pode fazer 
   - o carro grande, agora de três-quartos, com o logo da equipe atrás;
   - a faixa de baixo com os três botões inclinados.
 
+## Decisões que mudam a equipe, e não só números (a terceira rodada)
+
+O Thiago: "preciso sentir as decisões mudando em algo além de números, talvez aumento e demissão"; os botões "com cara de IA"; e responder ao mouse.
+
+- **Ações de verdade** (`paddock.js`, `acao`):
+  - **aumento do companheiro:** o salário dele sobe 1 milhão por GP, somado aos salários de cada GP em `registrarResultado`;
+  - **aumento dos mecânicos:** o mesmo, nos salários do box;
+  - **demissão do companheiro:** custa 2 milhões de rescisão. O piloto de ritmo mais perto (e não acima) de outra equipe assume o segundo carro, e o grid já usa o piloto novo no próximo GP;
+  - **o estrategista demitido** para cortar custos: a equipe volta um nível e recupera a diferença;
+  - **o chefe dos mecânicos sai** se o aumento for recusado: o box cai um nível e as paradas ficam mais lentas;
+  - **o seu aumento:** o bônus por vitória sobe 1 milhão no contrato;
+  - **o ultimato da diretoria** (confiança abaixo de 30%): aceitar é prometer a meta no próximo GP. Falhar é ser demitido: a renovação fica bloqueada, e no fim do ano, se você não assinar com outra, vai para a equipe mais fraca que fez proposta.
+- **Cada opção que muda a equipe** mostra antes o que vai acontecer ("Nico Hülkenberg sai; Oliver Bearman (Haas) assume o carro · rescisão de 2 milhões").
+- **Depois de decidir:**
+  - um cartão "O que mudou na equipe" aparece em destaque, vermelho na demissão;
+  - as barras do humor andam do valor antigo ao novo, com o "+38" aparecendo e sumindo;
+  - o caixa também mostra a diferença;
+  - o acontecimento decidido guarda o texto e o resultado da hora da decisão.
+- **No topo**, avisos de ultimato e de demissão. Embaixo dos pilotos fica a equipe técnica: o estrategista, os mecânicos, o seu bônus por vitória e os salários extras. O companheiro mostra o aumento.
+- **As opções viraram linhas limpas:** a bolinha, o rótulo, o efeito em texto (verde ou vermelho) e a consequência. Ao passar o mouse:
+  - a linha acende na cor da equipe;
+  - a bolinha enche e a seta anda;
+  - as barras do humor mostram, listrado, para onde vão, com o número ao lado.
+- **O resto também responde ao mouse:** os cartões sobem, a foto do piloto e a da notícia aproximam, e a seta anda.
+- **No Acerto:** as abas inclinadas viraram texto com o traço da equipe deslizando, e os botões ficaram retos (um cheio, dois discretos), subindo ao passar o mouse.
+
 ## Insights do engenheiro (Visão geral da Análise)
 
 Um quadro novo, só com o que o resumo do GP mede:
@@ -87,7 +113,7 @@ Um quadro novo, só com o que o resumo do GP mede:
 
 ## Prints
 
-Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, numa carreira nova da Audi, no tema escuro e depois no claro (o das referências): o Central com a chamada, o Paddock antes e depois de uma decisão e o Acerto. Estão em `C:\Users\thiag\Downloads\lts\prints\paddock\`, fora do repositório. Os insights da Análise precisam de um GP corrido e não entraram nos prints.
+Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, numa carreira nova da Audi, no tema escuro e depois no claro (o das referências): o Central com a chamada, o Paddock antes e depois de uma decisão e o Acerto. Estão em `C:\Users\thiag\Downloads\lts\prints\paddock\`, fora do repositório. Os insights da Análise precisam de um GP corrido e não entraram nos prints. Os prints da demissão usam um estado simulado só na página (um GP e a moral baixa), sem mexer no servidor.
 
 Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`. O `brach.md` e o `novidades.json` também mudam no #755: quem for juntado depois precisa juntar as duas entradas.
 

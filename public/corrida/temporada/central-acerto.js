@@ -116,7 +116,7 @@ function html(c) {
   return `<div class="ac acf2 ${raspa ? "ac-raspa" : ""}" style="${estilo(atual)}">
     <div class="acf2-esq">
       <h2 class="acf2-titulo">Acerto do carro</h2>
-      <nav class="acf2-abas" role="tablist" aria-label="Partes do acerto">${ABAS_AC.map(([k, t]) => `<button type="button" role="tab" class="${sub === k ? "on" : ""}" aria-selected="${sub === k}" data-cx-acerto-sub="${k}"><span>${t}</span></button>`).join("")}</nav>
+      <nav class="acf2-abas" role="tablist" aria-label="Partes do acerto">${ABAS_AC.map(([k, t]) => `<button type="button" role="tab" class="${sub === k ? "on" : ""}" aria-selected="${sub === k}" data-cx-acerto-sub="${k}">${t}</button>`).join("")}</nav>
       <section class="acf2-painel">${corpo}</section>
     </div>
     <div class="acf2-dir">
@@ -127,7 +127,7 @@ function html(c) {
       <div class="acf2-gp">${SV('<path d="M3 20 9 6l4 9 3-5 5 10"/>', 40)}<div><small>Etapa ${etapa}</small><b>${UI.bandeira ? UI.bandeira(id) : ""}${h(nome)}</b></div></div>
       <div class="acf2-folga"><small>Folga do assoalho no fim da reta</small><b data-cx-acerto-folga>${raspa ? `raspa ${String(-n.folgaCm).replace(".", ",")} cm` : `${String(n.folgaCm).replace(".", ",")} cm`}</b></div>
       <div class="acf2-alerta ${vr != null && vr < 300 ? "on" : ""}" data-cx-acerto-alerta><small>Assoalho</small><b>${vr == null ? "Nunca raspa" : `Raspa a ${vr} km/h`}</b></div>
-      <div class="acf2-botoes"><button type="button" class="acf2-bt contorno" data-cx-acerto-padrao>${SV('<path d="M7 5v14l11-7z"/>', 16)}<span>Carro padrão</span></button>${ideais && sg.engenheiro ? `<button type="button" class="acf2-bt cheio" data-cx-acerto-usar="engenheiro">${SV('<path d="M14 7l3-3 3 3-3 3M4 20l9-9M8 4a4 4 0 0 0 5 5l-6 6a2 2 0 0 1-3-3z"/>', 16)}<span>Usar o do engenheiro</span></button>` : ""}${ideais && sg.estrategista ? `<button type="button" class="acf2-bt claro" data-cx-acerto-usar="estrategista">${SV('<path d="M4 18v-5a8 8 0 0 1 16 0v5"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/>', 16)}<span>Usar o do estrategista</span></button>` : ""}</div>
+      <div class="acf2-botoes"><button type="button" class="acf2-bt" data-cx-acerto-padrao>${SV('<path d="M7 5v14l11-7z"/>', 16)}<span>Carro padrão</span></button>${ideais && sg.engenheiro ? `<button type="button" class="acf2-bt cheio" data-cx-acerto-usar="engenheiro">${SV('<path d="M14 7l3-3 3 3-3 3M4 20l9-9M8 4a4 4 0 0 0 5 5l-6 6a2 2 0 0 1-3-3z"/>', 16)}<span>Usar o do engenheiro</span></button>` : ""}${ideais && sg.estrategista ? `<button type="button" class="acf2-bt" data-cx-acerto-usar="estrategista">${SV('<path d="M4 18v-5a8 8 0 0 1 16 0v5"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/>', 16)}<span>Usar o do estrategista</span></button>` : ""}</div>
     </footer>
   </div>`;
 }

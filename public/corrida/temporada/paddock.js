@@ -7,11 +7,16 @@
 //  - satisfação do patrocinador (0 a 100): passando de 80 ele aumenta a verba por GP em 1 milhão; abaixo de 20 ele corta 1 milhão;
 //  - torcida (0 a 100) e a conta com a diretoria (−20 a +20, somada à confiança da caixa de mensagens, regras.js imersao);
 //  - as decisões tomadas (uma por acontecimento) e o mural: o que aconteceu, GP a GP.
+// Além dos números, algumas opções mudam a equipe de verdade (`acao`, 2026-11-15, o Thiago: "sentir as decisões mudando em algo além de números,
+// talvez aumento e demissão"): aumento de salário do companheiro e dos mecânicos (os salários de cada GP sobem), demissão do companheiro (outro
+// piloto assume o segundo carro), corte do estrategista ou saída do chefe dos mecânicos (a equipe técnica cai um nível), aumento no seu bônus
+// por vitória, e o ultimato da diretoria: falhar nele é ser demitido, e no fim do ano você vai para a equipe mais fraca que fez proposta.
 // Os acontecimentos de cada GP são sorteados pela semente da carreira (o mesmo save vê sempre os mesmos) entre os que fazem sentido agora
 // (o último resultado, a briga com o companheiro, a moral). Cada opção mexe nesses números e no caixa; a prova sai no mural.
 (function (root) {
 "use strict";
 const Pilotos = root.F1Pilotos || require("../f1-pilotos-2026.js");
+const Reg = () => root.F1Temporada || require("./regras.js"); // (na hora do uso: regras.js também carrega este arquivo)
 const PONTOS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 const lim = (v, a = 0, b = 100) => Math.max(a, Math.min(b, Math.round(v)));
 function gerador(semente) {
@@ -25,6 +30,7 @@ function garantir(s) {
   if (!p.decisoes || typeof p.decisoes !== "object") p.decisoes = {};
   if (!Array.isArray(p.mural)) p.mural = [];
   if (p.promessa === undefined) p.promessa = null;
+  for (const k of ["salarioComp", "salarioStaff"]) if (!Number.isFinite(p[k])) p[k] = 0; // (os aumentos: milhões a mais por GP nos salários)
   return p;
 }
 // uma linha no mural (os 60 últimos ficam)
@@ -56,6 +62,7 @@ const EVENTOS = {
       { id: "pecas", rotulo: "Garantir peças iguais para os dois", efeito: { moral: 12, lealdade: 6, caixa: -3, diretoria: -1 } },
       { id: "foco", rotulo: "Dizer que o foco da equipe é você", efeito: { moral: -10, lealdade: -6, diretoria: 3 } },
       { id: "conversa", rotulo: "Conversar com calma, sem prometer nada", efeito: { moral: 4, lealdade: 2 } },
+      { id: "aumento", rotulo: "Dar um aumento a ele", efeito: { moral: 10, lealdade: 8 }, acao: "aumentoComp" },
     ],
   },
   conflito: {
@@ -114,12 +121,43 @@ const EVENTOS = {
   },
   diretoria: {
     quem: "Diretoria", fase: "pos",
-    quando: (c) => c.ultimo && (c.p.diretoria < -4 || c.p.diretoria > 8),
-    titulo: (c) => (c.p.diretoria < 0 ? "A diretoria está impaciente" : "A diretoria está satisfeita"),
-    texto: (c) => (c.p.diretoria < 0 ? "O conselho pediu uma reunião para entender o plano da equipe para o resto da temporada." : "O conselho gostou do rumo da equipe e quer saber o que você precisa."),
+    quando: (c) => c.ultimo && !c.p.demitido && c.p.diretoria > 8,
+    titulo: () => "A diretoria está satisfeita",
+    texto: () => "O conselho gostou do rumo da equipe e quer saber o que você precisa para seguir assim.",
     opcoes: [
-      { id: "plano", rotulo: "Apresentar um plano detalhado", efeito: { diretoria: 3 } },
-      { id: "verba", rotulo: "Pedir mais verba (+2 milhões)", efeito: { caixa: 2, diretoria: -3 } },
+      { id: "aumento", rotulo: "Pedir um aumento no bônus por vitória", efeito: { diretoria: -2 }, acao: "aumentoVoce" },
+      { id: "verba", rotulo: "Pedir verba para o carro (+2 milhões)", efeito: { caixa: 2, diretoria: -3 } },
+      { id: "seguir", rotulo: "Agradecer e seguir o plano", efeito: { diretoria: 2 } },
+    ],
+  },
+  ultimato: {
+    quem: "Diretoria", fase: "pos",
+    quando: (c, s) => c.ultimo && !c.p.demitido && !c.p.ultimato && Reg().imersao(s).confianca < 30,
+    titulo: () => "Ultimato da diretoria",
+    texto: (c, s) => `A confiança do conselho caiu para ${Reg().imersao(s).confianca}%. Eles querem você no top ${Reg().imersao(s).meta.gp} no próximo GP, ou não renovam o seu contrato.`,
+    opcoes: [
+      { id: "aceitar", rotulo: "Aceitar o ultimato", efeito: { diretoria: 2 }, acao: "ultimato" },
+      { id: "tempo", rotulo: "Pedir mais tempo", efeito: { diretoria: -4, torcida: -2 } },
+    ],
+  },
+  cortes: {
+    quem: "Diretoria", fase: "sexta",
+    quando: (c, s) => c.ultimo && s.caixa < 12 && (s.engenheiros?.estrategista || 0) > 0,
+    titulo: () => "A diretoria quer cortar custos",
+    texto: (c, s) => `O caixa está em ${s.caixa} milhões. O conselho sugere dispensar o estrategista (${Reg().ENGENHEIROS.estrategista[s.engenheiros.estrategista].nome.toLowerCase()}).`,
+    opcoes: [
+      { id: "demitir", rotulo: "Demitir o estrategista", efeito: { diretoria: 3 }, acao: "demitirEstrategista" },
+      { id: "manter", rotulo: "Mantê-lo e cortar na fábrica", efeito: { diretoria: -3, moral: -3 } },
+    ],
+  },
+  mecanicos: {
+    quem: "Engenheiros", fase: "sexta",
+    quando: (c, s) => c.ultimo && (s.engenheiros?.mecanico || 0) > 0 && c.p.salarioStaff < 2,
+    titulo: () => "Os mecânicos pedem aumento",
+    texto: (c, s) => `O chefe dos mecânicos (${Reg().ENGENHEIROS.mecanico[s.engenheiros.mecanico].nome.toLowerCase()}) diz que o pessoal do box está ganhando abaixo das rivais.`,
+    opcoes: [
+      { id: "aumento", rotulo: "Dar o aumento aos mecânicos", efeito: { moral: 2 }, acao: "aumentoMecanicos" },
+      { id: "recusar", rotulo: "Recusar", efeito: { diretoria: 1 }, acao: "perderMecanico" },
     ],
   },
   saida: {
@@ -128,9 +166,9 @@ const EVENTOS = {
     titulo: (c) => `${c.nomeComp} conversa com outra equipe`,
     texto: (c) => `O empresário de ${c.nomeComp} foi visto no motorhome de uma rival. Com a moral baixa, ele pode não render no carro.`,
     opcoes: [
-      { id: "segurar", rotulo: "Oferecer um aumento (−3 milhões)", efeito: { moral: 15, lealdade: 15, caixa: -3 } },
+      { id: "segurar", rotulo: "Oferecer um aumento", efeito: { moral: 15, lealdade: 15 }, acao: "aumentoComp" },
       { id: "confiar", rotulo: "Mostrar que conta com ele", efeito: { moral: 6, lealdade: 8 } },
-      { id: "deixar", rotulo: "Deixar ir, se quiser", efeito: { moral: -6, lealdade: -10, diretoria: 1 } },
+      { id: "demitir", rotulo: "Demitir e trazer outro piloto", efeito: { diretoria: 1 }, acao: "demitirComp" },
     ],
   },
   reuniaoTecnica: {
@@ -154,8 +192,8 @@ function acontecimentos(s) {
   const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r(), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   const decididos = embaralhados.filter((id) => s.paddock.decisoes[`${base}:${id}`]), resto = embaralhados.filter((id) => !s.paddock.decisoes[`${base}:${id}`]);
   return [...decididos, ...resto].slice(0, 2).map((id) => {
-    const e = EVENTOS[id], escolha = s.paddock.decisoes[`${base}:${id}`] || null;
-    return { id, quem: e.quem, fase: e.fase, titulo: e.titulo(c), texto: e.texto(c), escolha, opcoes: e.opcoes.map((o) => ({ id: o.id, rotulo: o.rotulo, efeito: o.efeito })) };
+    const e = EVENTOS[id], escolha = s.paddock.decisoes[`${base}:${id}`] || null, fixo = escolha && s.paddock.textos && s.paddock.textos[`${base}:${id}`]; // (decidido: o texto da hora da decisão, mesmo que o companheiro tenha mudado)
+    return { id, quem: e.quem, fase: e.fase, titulo: fixo ? fixo.titulo : e.titulo(c, s), texto: fixo ? fixo.texto : e.texto(c, s), escolha, resultado: fixo ? fixo.resultado : null, opcoes: e.opcoes.filter((o) => !o.pode || o.pode(s)).map((o) => ({ id: o.id, rotulo: o.rotulo, efeito: o.efeito, consequencia: o.acao ? previaDaAcao(s, o.acao) : null })) };
   });
 }
 const NOMES = { moral: "moral do companheiro", lealdade: "lealdade", patrocinador: "patrocinador", torcida: "torcida", diretoria: "diretoria", caixa: "caixa" };
@@ -175,8 +213,50 @@ function decidir(s, id, opcao) {
   aplicar(s, o.efeito);
   if (o.promessa) s.paddock.promessa = { ano: s.ano, gp: s.gp };
   s.paddock.decisoes[`${s.ano}:${s.gp}:${id}`] = opcao;
-  anotar(s, EVENTOS[id].quem, `${ev.titulo}: ${o.rotulo.replace(/\s*\(.*\)$/, "")}.`, o.efeito);
+  const mudou = o.acao ? acao(s, o.acao) : null;
+  const tx = (s.paddock.textos ||= {}); tx[`${s.ano}:${s.gp}:${id}`] = { titulo: ev.titulo, texto: ev.texto, resultado: mudou };
+  for (const k of Object.keys(tx)) if (Number(k.split(":")[0]) < s.ano - 1) delete tx[k];
+  anotar(s, EVENTOS[id].quem, `${ev.titulo}: ${o.rotulo.replace(/\s*\(.*\)$/, "")}.${mudou ? ` ${mudou}` : ""}`, o.efeito);
+  if (mudou) s.paddock.ultimaMudanca = { ano: s.ano, gp: s.gp, quem: EVENTOS[id].quem, texto: mudou };
   return s;
+}
+// o substituto quando o companheiro é demitido: o piloto de ritmo mais perto (e não acima) do dele, de outra equipe (nunca o titular que você
+// substituiu na sua equipe); na falta, o mais lento de todos
+function substituto(s) {
+  const atual = Pilotos.PILOTOS.find((p) => p.id === s.piloto2), titulares = Pilotos.PILOTOS.filter((p) => p.equipe === s.equipe);
+  const livres = Pilotos.PILOTOS.filter((p) => p.id !== s.piloto2 && p.id !== (titulares[1] && titulares[1].id) && p.equipe !== s.equipe);
+  const abaixo = livres.filter((p) => !atual || p.ritmo <= atual.ritmo).sort((a, b) => b.ritmo - a.ritmo || a.id.localeCompare(b.id));
+  return abaixo[0] || livres.sort((a, b) => a.ritmo - b.ritmo)[0] || null;
+}
+const nomeEq = (id) => (Pilotos.EQUIPES[id] && Pilotos.EQUIPES[id].nome) || id;
+// o que a ação vai fazer, em palavras (mostrado na opção antes de decidir)
+function previaDaAcao(s, a) {
+  const p = garantir(s), comp = Pilotos.PILOTOS.find((x) => x.id === s.piloto2), E = Reg().ENGENHEIROS;
+  if (a === "aumentoComp") return `Salário de ${comp ? comp.nome : "seu companheiro"} +1 milhão por GP`;
+  if (a === "aumentoMecanicos") return "Salários do box +1 milhão por GP";
+  if (a === "demitirComp") { const n = substituto(s); return n ? `${comp ? comp.nome : "Ele"} sai; ${n.nome} (${nomeEq(n.equipe)}) assume o carro · rescisão de 2 milhões` : "Ele sai da equipe"; }
+  if (a === "demitirEstrategista") { const n = s.engenheiros.estrategista; return `O estrategista volta para a ${E.estrategista[0].nome.toLowerCase()} · devolve ${E.estrategista[n].custo - E.estrategista[n - 1].custo} milhões`; }
+  if (a === "perderMecanico") return `O chefe dos mecânicos sai: o box cai para ${E.mecanico[Math.max(0, s.engenheiros.mecanico - 1)].nome.toLowerCase()}`;
+  if (a === "aumentoVoce") return `Bônus por vitória +1 milhão (hoje ${Reg().contrato(s).bonusVitoria})`;
+  if (a === "ultimato") return `Top ${Reg().imersao(s).meta.gp} no próximo GP; falhar é ser demitido no fim do ano`;
+  void p; return null;
+}
+// a ação de verdade; devolve a frase do mural
+function acao(s, a) {
+  const p = garantir(s), comp = Pilotos.PILOTOS.find((x) => x.id === s.piloto2), E = Reg().ENGENHEIROS;
+  if (a === "aumentoComp") { p.salarioComp = Math.min(3, p.salarioComp + 1); return `${comp ? comp.nome : "O companheiro"} ganhou aumento: o salário dele subiu 1 milhão por GP.`; }
+  if (a === "aumentoMecanicos") { p.salarioStaff = Math.min(3, p.salarioStaff + 1); return "Os mecânicos ganharam aumento: os salários do box subiram 1 milhão por GP."; }
+  if (a === "demitirComp") {
+    const n = substituto(s); if (!n) return null;
+    if (s.caixa < 2) throw Error("Caixa insuficiente para a rescisão (2 milhões).");
+    s.caixa -= 2; s.piloto2 = n.id; p.moral = 60; p.lealdade = 55; p.salarioComp = 0;
+    return `${comp ? comp.nome : "O companheiro"} foi demitido. ${n.nome}, que estava na ${nomeEq(n.equipe)}, assume o segundo carro a partir do próximo GP.`;
+  }
+  if (a === "demitirEstrategista") { const n = s.engenheiros.estrategista; if (!n) return null; const volta = E.estrategista[n].custo - E.estrategista[n - 1].custo; s.engenheiros.estrategista = n - 1; s.caixa += volta; return `O estrategista foi demitido: a equipe volta para o nível "${E.estrategista[n - 1].nome}" e recupera ${volta} milhões.`; }
+  if (a === "perderMecanico") { const n = s.engenheiros.mecanico; if (!n) return null; s.engenheiros.mecanico = n - 1; return `O chefe dos mecânicos pediu demissão: o box caiu para "${E.mecanico[n - 1].nome}" e as paradas ficam mais lentas.`; }
+  if (a === "aumentoVoce") { const c = Reg().contrato(s); s.contrato = { inicio: c.inicio, fim: c.fim, bonusVitoria: c.bonusVitoria + 1 }; return `Você ganhou aumento: o bônus por vitória subiu para ${c.bonusVitoria + 1} milhões.`; }
+  if (a === "ultimato") { const alvo = Reg().imersao(s).meta.gp; p.ultimato = { ano: s.ano, gp: s.gp, alvo }; return `Agora é top ${alvo} no próximo GP.`; }
+  return null;
 }
 // Depois de cada GP (regras.js registrarResultado): o resultado mexe no humor da equipe. `meta`: a posição-alvo do GP.
 function aoResultado(s, resultado, meta) {
@@ -194,6 +274,11 @@ function aoResultado(s, resultado, meta) {
     ef.patrocinador += cumpriu ? 10 : -15; notas.push(cumpriu ? "a promessa ao patrocinador foi cumprida" : "a promessa ao patrocinador não foi cumprida");
     p.promessa = null;
   }
+  if (p.ultimato && p.ultimato.ano === resultado.ano && p.ultimato.gp === resultado.gp) {
+    const passou = bem(eu) && eu.pos <= p.ultimato.alvo; p.ultimato = null;
+    if (passou) { p.diretoria = lim(p.diretoria + 8, -20, 20); notas.push("o ultimato foi cumprido"); }
+    else { p.demitido = { ano: resultado.ano }; s.paddock.ultimaMudanca = { ano: s.ano, gp: s.gp, quem: "Diretoria", texto: "Você foi demitido: a equipe não renova o seu contrato. No fim do ano, você vai para a equipe mais fraca que fizer proposta." }; anotar(s, "Diretoria", "O ultimato não foi cumprido: você foi demitido. A equipe não renova o seu contrato no fim do ano."); }
+  }
   ef.torcida += bem(eu) ? Math.min(8, Math.round(((PONTOS[eu.pos - 1] || 0) + (eu.voltaRapida ? 1 : 0)) / 3)) - 1 : -3;
   aplicar(s, ef);
   anotar(s, "Fim de semana", `GP de ${s.calendario[resultado.gp]?.nome || resultado.pista}: ${bem(eu) ? `você em ${eu.pos}º` : "você não terminou"}${comp ? `, ${Pilotos.PILOTOS.find((x) => x.id === s.piloto2)?.nome || "o companheiro"} ${bem(comp) ? `em ${comp.pos}º` : "fora"}` : ""}${notas.length ? ` (${notas.join("; ")})` : ""}.`, ef);
@@ -208,7 +293,8 @@ function novaTemporada(s) {
   p.diretoria = lim(p.diretoria * 0.5, -20, 20); p.promessa = null;
   for (const k of Object.keys(p.decisoes)) if (Number(k.split(":")[0]) < s.ano - 1) delete p.decisoes[k];
 }
-const api = { garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, EVENTOS, NOMES };
+const salarios = (s) => (s.paddock ? (s.paddock.salarioComp || 0) + (s.paddock.salarioStaff || 0) : 0);
+const api = { garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Paddock = api;
 })(typeof window !== "undefined" ? window : globalThis);

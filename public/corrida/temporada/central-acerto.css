@@ -115,11 +115,13 @@ body.cx-escuro .acf2{--ac-painel:var(--cx-bg2)}
 .acf2-dir{grid-area:dir;position:relative;z-index:1;min-width:0;display:flex;flex-direction:column}
 .cx .acf2-titulo{position:relative;margin:4px 0 22px;padding-bottom:10px;font:800 clamp(34px,3.6vw,56px)/1 var(--cx-f);letter-spacing:-.02em}
 .cx .acf2-titulo::after{content:"";position:absolute;left:0;bottom:0;width:88px;height:4px;border-radius:2px;background:var(--ac-at)}
-.acf2-abas{display:flex;gap:0;margin:0 0 18px 0;padding-left:clamp(0px,8vw,170px)}
-.cx .acf2-abas button{min-width:112px;padding:7px 22px;border:1px solid var(--cx-lin);background:var(--ac-painel);color:var(--cx-tx);font:600 15px var(--cx-f);transform:skewX(-18deg);cursor:pointer;transition:background .15s,color .15s}
-.acf2-abas button span{display:inline-block;transform:skewX(18deg)}
-.cx .acf2-abas button:hover:not(:disabled){background:var(--cx-hover)}
-.cx .acf2-abas button.on{border-color:var(--ac-at);background:var(--ac-at);color:#fff;font-weight:700;box-shadow:0 6px 16px color-mix(in srgb,var(--ac-at) 35%,transparent)}
+/* as abas: texto com o traço da equipe embaixo, que desliza para a aba escolhida (sem as pílulas inclinadas) */
+.acf2-abas{display:flex;gap:28px;margin:0 0 16px;border-bottom:1px solid var(--cx-lin)}
+.cx .acf2-abas button{position:relative;padding:8px 2px 10px;color:var(--cx-tx2);font:700 15px var(--cx-f);cursor:pointer;transition:color .15s}
+.cx .acf2-abas button::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;border-radius:2px;background:var(--ac-at);transform:scaleX(0);transition:transform .2s}
+.cx .acf2-abas button:hover:not(:disabled){color:var(--cx-tx)}
+.cx .acf2-abas button:hover:not(:disabled)::after{transform:scaleX(.4)}
+.cx .acf2-abas button.on{color:var(--cx-tx)}.cx .acf2-abas button.on::after{transform:scaleX(1)}
 .acf2-painel{padding:16px 18px 18px;border-radius:12px;background:var(--ac-painel);box-shadow:0 1px 2px #0000000d,0 14px 34px #00000012;border:1px solid var(--cx-lin)}
 .acf2-cab{display:flex;align-items:center;gap:16px;margin-bottom:8px;padding-bottom:12px;border-bottom:1px solid var(--cx-lin)}
 .acf2-cab-ic{display:grid;place-items:center;width:62px;height:62px;flex:none;border-radius:10px;background:#16181c;color:#fff;box-shadow:0 6px 14px #0003}
@@ -172,15 +174,19 @@ body.cx-escuro .acf2-medbar i{background:linear-gradient(90deg,#9aa0aa,#eef0f3)}
 .acf2-alerta{justify-self:start;padding:6px 12px;border-radius:6px;color:var(--cx-tx2)}.acf2-alerta b{font:800 14px var(--cx-f);color:var(--cx-tx)}
 .acf2-alerta.on{background:color-mix(in srgb,var(--ac-at) 12%,transparent);animation:acfPisca 1.6s ease-in-out infinite}.acf2-alerta.on b,.acf2-alerta.on small{color:var(--ac-at)}
 @keyframes acfPisca{50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--ac-at) 25%,transparent)}}
-.acf2-botoes{display:flex;grid-column:5}
-.cx .acf2-bt{display:flex;align-items:center;gap:8px;padding:12px 22px;border:1.5px solid var(--ac-at);background:var(--ac-painel);color:var(--cx-tx);font:800 13px var(--cx-f);text-transform:uppercase;letter-spacing:.02em;transform:skewX(-14deg);cursor:pointer;transition:transform .15s,filter .15s}
-.acf2-bt > *{transform:skewX(14deg)}
-.cx .acf2-bt + .acf2-bt{margin-left:-1px}
-.cx .acf2-bt.contorno svg{color:var(--ac-at)}
-.cx .acf2-bt.cheio{background:var(--ac-at);color:#fff}
-.cx .acf2-bt.claro{border-color:var(--cx-lin)}
-.cx .acf2-bt:hover:not(:disabled){filter:brightness(1.08);transform:skewX(-14deg) translateY(-2px);background-color:inherit}
-.cx .acf2-bt.cheio:hover:not(:disabled){background:var(--ac-at)}
+/* os botões: retos, um principal cheio e dois discretos; ao passar o mouse sobem um pouco e escurecem */
+.acf2-botoes{display:flex;gap:10px;grid-column:5}
+.cx .acf2-bt{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid var(--cx-lin);border-radius:8px;background:transparent;color:var(--cx-tx);font:700 14px var(--cx-f);cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s,color .15s}
+.cx .acf2-bt svg{opacity:.75}
+.cx .acf2-bt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--cx-tx2);background:var(--cx-hover);box-shadow:0 8px 18px #00000014}
+.cx .acf2-bt.cheio{border-color:var(--ac-at);background:var(--ac-at);color:#fff}.cx .acf2-bt.cheio svg{opacity:1}
+.cx .acf2-bt.cheio:hover:not(:disabled){background:color-mix(in srgb,var(--ac-at) 86%,#000);border-color:color-mix(in srgb,var(--ac-at) 86%,#000);box-shadow:0 10px 22px color-mix(in srgb,var(--ac-at) 35%,transparent)}
+.cx .acf2-bt:active{transform:translateY(0)}
+/* o resto do acerto também responde ao mouse */
+.acf2-painel{transition:box-shadow .2s}.acf2-painel:hover{box-shadow:0 1px 2px #0000000f,0 18px 40px #0000001a}
+.acf2-med{border-radius:6px;transition:background .15s}.acf2-med:hover{background:var(--cx-hover)}
+.acf2-linha:hover .acf2-cheio{filter:brightness(1.35)}
+.acf2-raspa{transition:transform .2s}.acf2-raspa:hover{transform:translateX(3px)}
 @media (max-width:1100px){.acf2{grid-template-columns:1fr;grid-template-areas:"esq" "dir" "pe"}.acf2-pe{grid-template-columns:1fr 1fr}.acf2-gp{border-right:0}.acf2-botoes{grid-column:1/-1;flex-wrap:wrap}.acf2-abas{padding-left:0}}
 @media (max-width:640px){.acf2-linha{grid-template-columns:1fr 26px 1fr 26px;}.acf2-valor,.acf2-faixa{grid-column:span 2;text-align:left}.acf2-med{grid-template-columns:1fr 70px}.acf2-medbar{display:none}}
 @media (prefers-reduced-motion:reduce){.acf2-alerta.on{animation:none}}

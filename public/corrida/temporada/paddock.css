@@ -38,12 +38,6 @@ body.cx-escuro .pd{--pd-card:var(--cx-bg2)}
 .pd-ev-topo small{color:var(--cx-tx2);font:700 11.5px var(--cx-f);text-transform:uppercase;letter-spacing:.08em}
 .pd-ev h4{margin:4px 0 4px;font:700 17px/1.25 var(--cx-f)}
 .pd-ev p{margin:0 0 12px;color:var(--cx-tx2);font-size:14px;line-height:1.45}
-.pd-opcoes{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
-.cx .pd-op{display:inline-flex;align-items:center;gap:10px;padding:9px 14px 9px 22px;border:1.5px solid var(--cx-tx2);border-radius:999px;background:transparent;color:var(--cx-tx);font:700 14px var(--cx-f);text-align:left;cursor:pointer;transition:border-color .15s,background .15s,color .15s,transform .15s}
-.cx .pd-op:hover:not(:disabled){border-color:var(--pd-ac);background:var(--pd-ac);color:#fff;transform:translateY(-1px)}
-.cx .pd-op:disabled{cursor:default;opacity:1}
-.cx .pd-op.on{border-color:var(--cx-tx);background:transparent}
-.pd-op .pd-efs{margin-left:-4px}
 .pd-efs{display:inline-flex;flex-wrap:wrap;gap:4px}
 .pd-ef{padding:2px 7px;border-radius:999px;font:800 10.5px var(--cx-f);font-style:normal;white-space:nowrap}
 .pd-ef.mais{background:color-mix(in srgb,var(--cx-verde) 14%,transparent);color:var(--cx-verde)}
@@ -101,3 +95,63 @@ body.cx-escuro .pd{--pd-card:var(--cx-bg2)}
 .cx .pd-chamada:hover{transform:translateX(4px)}
 .cx .pd-chamada small{color:var(--eq-at,var(--eq));font:800 11px var(--cx-f);text-transform:uppercase;letter-spacing:.1em}
 .cx .pd-chamada b{font:800 16px var(--cx-f)}.cx .pd-chamada span{display:flex;align-items:center;gap:6px;color:var(--cx-tx2);font-size:12.5px}.pd-chamada .cx-seta{width:18px;height:11px}
+/* (2026-11-15, "botões com cara de IA") as opções viram linhas limpas: a bolinha, o rótulo, o efeito em texto e a consequência; ao passar o
+   mouse a linha acende na cor da equipe, a bolinha enche, a seta anda e as barras do humor mostram para onde vão */
+.pd-opcoes{display:flex;flex-direction:column;border-top:1px solid var(--cx-lin)}
+.cx .pd-op{position:relative;display:grid;grid-template-columns:18px 1fr 18px;align-items:center;gap:14px;width:100%;padding:11px 12px 11px 14px;border-bottom:1px solid var(--cx-lin);background:transparent;color:var(--cx-tx);text-align:left;cursor:pointer;transition:background .18s,padding .18s}
+.cx .pd-op::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pd-ac);transform:scaleY(0);transition:transform .18s}
+.cx .pd-op:hover:not(:disabled),.cx .pd-op:focus-visible{background:color-mix(in srgb,var(--pd-ac) 7%,transparent);padding-left:18px}
+.cx .pd-op:hover:not(:disabled)::before,.cx .pd-op:focus-visible::before{transform:scaleY(1)}
+.pd-op-marca{width:16px;height:16px;border:2px solid var(--cx-tx2);border-radius:50%;transition:border-color .18s,background .18s,box-shadow .18s}
+.cx .pd-op:hover:not(:disabled) .pd-op-marca{border-color:var(--pd-ac);box-shadow:inset 0 0 0 3px var(--pd-card)}
+.cx .pd-op:hover:not(:disabled) .pd-op-marca{background:var(--pd-ac)}
+.pd-op-txt b{display:block;font:700 14.5px/1.3 var(--cx-f)}
+.pd-op-txt small{display:block;margin-top:2px;color:var(--cx-tx2);font-size:12.5px}
+.pd-op-txt small .mais{color:var(--cx-verde);font-weight:700}.pd-op-txt small .menos{color:var(--cx-verm);font-weight:700}
+.pd-op-txt em{display:block;margin-top:4px;padding-left:10px;border-left:2px solid var(--pd-ac);color:var(--cx-tx);font:600 12.5px/1.35 var(--cx-f);font-style:normal}
+.pd-op > svg{color:var(--cx-tx2);opacity:.4;transition:transform .18s,opacity .18s,color .18s}
+.cx .pd-op:hover:not(:disabled) > svg{opacity:1;color:var(--pd-ac);transform:translateX(4px)}
+.cx .pd-op:disabled{cursor:default;opacity:1}
+.cx .pd-op.on .pd-op-marca{border-color:var(--pd-ac);background:var(--pd-ac);box-shadow:inset 0 0 0 3px var(--pd-card)}
+.cx .pd-op.on > svg{display:none}
+/* a prévia nas barras: a parte que muda aparece por cima, verde subindo e vermelha descendo, com o número ao lado */
+.pd-barra{position:relative}
+.pd-fantasma{position:absolute;top:0;bottom:0;width:0;border-radius:2px;opacity:0;transition:opacity .15s,left .2s,width .2s;text-decoration:none}
+.pd-hl.previa.sobe .pd-fantasma{opacity:1;background:repeating-linear-gradient(135deg,var(--cx-verde) 0 4px,color-mix(in srgb,var(--cx-verde) 55%,transparent) 4px 8px)}
+.pd-hl.previa.desce .pd-fantasma{opacity:1;background:repeating-linear-gradient(135deg,var(--cx-tx) 0 4px,transparent 4px 8px);opacity:.55}
+.pd-hl-num{display:inline-flex;align-items:baseline;gap:8px}
+.pd-prev{font:800 12.5px var(--cx-f);font-style:normal}
+.previa.sobe .pd-prev{color:var(--cx-verde)}.previa.desce .pd-prev{color:var(--cx-verm)}
+.pd-hl{transition:background .15s;border-radius:8px;margin:0 -6px;padding-inline:6px}
+.pd-hl.previa{background:var(--cx-hover)}
+.pd-caixa{display:flex;justify-content:space-between;align-items:baseline;margin:2px -6px 6px;padding:6px;border-radius:8px;font-size:14px;font-weight:600;transition:background .15s}
+.pd-caixa b{font:800 16px var(--cx-f)}.pd-caixa.previa{background:var(--cx-hover)}
+/* o que acabou de mudar: a barra anda do valor antigo e o "+12" aparece e some */
+.pd-hl.mudou .pd-barra i{animation:pdAnda 1.1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pdAnda{from{width:var(--de)}}
+.pd-delta{font:800 12.5px var(--cx-f);font-style:normal;animation:pdSome 3.2s ease forwards}
+.pd-delta.mais{color:var(--cx-verde)}.pd-delta.menos{color:var(--cx-verm)}
+@keyframes pdSome{0%{opacity:0;transform:translateY(6px)}12%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0}}
+/* a consequência em destaque e os avisos */
+.pd-conseq{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;margin:0 0 10px;padding:12px 14px;border-radius:10px;background:#16181c;color:#f1f2f4;animation:pdConseq .6s cubic-bezier(.2,.8,.2,1) backwards;box-shadow:0 10px 24px #0002}
+.pd-conseq.forte{background:linear-gradient(110deg,var(--pd-ac),color-mix(in srgb,var(--pd-ac) 60%,#000))}
+.pd-conseq-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#ffffff1a;color:#fff}
+.pd-conseq small{color:#ffffffa8;font:800 10.5px var(--cx-f);text-transform:uppercase;letter-spacing:.1em}.pd-conseq p{margin:2px 0 0;font:600 14px/1.4 var(--cx-f)}
+@keyframes pdConseq{from{opacity:0;transform:translateY(-8px) scale(.98)}}
+.pd-aviso{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin-top:14px;padding:10px 14px;border-radius:10px;border-left:4px solid var(--cx-amb);background:color-mix(in srgb,var(--cx-amb) 12%,var(--pd-card))}
+.pd-aviso.demitido{border-left-color:var(--cx-verm);background:color-mix(in srgb,var(--cx-verm) 12%,var(--pd-card))}
+.pd-aviso b{font:800 14px var(--cx-f);text-transform:uppercase;letter-spacing:.04em}.pd-aviso span{color:var(--cx-tx2);font-size:13.5px}
+.pd-tag{display:inline-block;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--pd-ac) 12%,transparent);color:var(--pd-ac);font:800 11px var(--cx-f)}
+.pd-staff{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--cx-lin)}
+.pd-staff small{display:block;color:var(--cx-tx2);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}.pd-staff b{font:700 14.5px var(--cx-f)}
+/* o resto responde ao mouse */
+.pd-card{transition:box-shadow .2s,transform .2s}
+.pd-card:hover{box-shadow:0 1px 2px #0000000f,0 16px 38px #0000001a;transform:translateY(-1px)}
+.pd-piloto{border-radius:10px;transition:background .18s}.pd-piloto:hover{background:var(--cx-hover)}
+.pd-foto img{transition:transform .35s}.pd-piloto:hover .pd-foto img{transform:scale(1.06)}
+.pd-noticia{border-radius:8px;transition:background .18s;cursor:default}.pd-noticia:hover{background:var(--cx-hover)}
+.pd-noticia > svg{transition:transform .18s,color .18s}.pd-noticia:hover > svg{transform:translateX(4px);color:var(--pd-ac)}
+.pd-mini img{transition:transform .35s}.pd-noticia:hover .pd-mini img{transform:scale(1.07)}
+.pd-mural li{border-radius:8px;transition:background .18s}.pd-mural li:hover{background:var(--cx-hover)}
+@media (max-width:900px){.pd-staff{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.pd-hl.mudou .pd-barra i,.pd-delta,.pd-conseq{animation:none}.pd-card:hover{transform:none}}

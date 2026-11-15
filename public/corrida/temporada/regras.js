@@ -203,7 +203,7 @@ function registrarResultado(s, linhas, analise = null) {
   const humano = resultado.linhas.find((r) => r.piloto === "voce");
   const premio = 4 + Math.round((humano.pontos || 0) * 0.4);
   const contratado = Pilotos.PILOTOS.find((p) => p.id === s.piloto2);
-  const salarios = 3 + Math.round((contratado.ritmo - 70) / 8) + s.engenheiros.mecanico + s.engenheiros.estrategista;
+  const salarios = 3 + Math.round((contratado.ritmo - 70) / 8) + s.engenheiros.mecanico + s.engenheiros.estrategista + Paddock.salarios(s); // (+ os aumentos do Paddock)
   const bonus = pagarBonus(s, humano);
   s.caixa = Math.max(0, s.caixa + s.patrocinio + premio + bonus - salarios);
   resultado.financas = { patrocinio: s.patrocinio, premio, salarios, bonus };
@@ -294,6 +294,7 @@ function renovar(s, anos) {
   if (![1, 2].includes(anos)) throw Error("Prazo inválido.");
   const c = garantirContrato(s), p = perspectiva(s);
   if (c.fim > s.ano) throw Error("Seu contrato já cobre a próxima temporada.");
+  if (s.paddock && s.paddock.demitido && s.paddock.demitido.ano === s.ano) throw Error("Você foi demitido: a equipe não renova. Escolha uma das propostas.");
   if (p.confianca < 25) throw Error("A diretoria não quer conversar agora. Melhore os resultados primeiro.");
   c.fim = s.ano + anos;
   if (p.confianca >= 70) s.patrocinio = Math.min(12, s.patrocinio + 1); // boa fase: a verba por GP sobe na assinatura
@@ -312,7 +313,7 @@ function aceitarProposta(s, id) {
   const p = propostas(s).find((x) => x.equipe === id);
   if (!p) throw Error("Esta equipe não fez proposta.");
   const titulares = Pilotos.PILOTOS.filter((x) => x.equipe === id);
-  if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; s.paddock.patrocinador = 60; } // (equipe nova: o humor recomeça)
+  if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; s.paddock.patrocinador = 60; s.paddock.salarioComp = 0; s.paddock.salarioStaff = 0; s.paddock.demitido = null; } // (equipe nova: o humor recomeça)
   s.equipe = id; s.piloto2 = titulares[0].id; s.montagem = Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])); s.pecas = null; s.bonus = 0;
   s.patrocinio = p.verbaGP; s.contrato = { inicio: s.ano + 1, fim: s.ano + 1, bonusVitoria: p.bonusVitoria };
   return s;
@@ -320,6 +321,8 @@ function aceitarProposta(s, id) {
 function proximaTemporada(s) {
   if (s.gp !== s.tamanho) throw Error("Termine o calendário primeiro.");
   garantirContrato(s);
+  // demitido no Paddock e sem ter assinado com outra: vai para a equipe mais fraca que fez proposta
+  if (s.paddock && s.paddock.demitido && s.paddock.demitido.ano === s.ano) { const ps = propostas(s); if (ps.length) aceitarProposta(s, ps[ps.length - 1].equipe); if (s.paddock) s.paddock.demitido = null; }
   if (s.contrato.fim <= s.ano) s.contrato.fim = s.ano + 1; // sem conversa, o contrato segue por mais um ano nos mesmos termos
   for (const r of s.resultados) if (r.ano < s.ano) delete r.analise; // o detalhe volta a volta só vale para o ano atual e o anterior (o save não cresce sem fim)
   s.ano++; s.gp = 0; s.gasto = 0; s.semente = Number(s.semente) + 937;

@@ -53,7 +53,8 @@ Pedido do Thiago (2026-11-15), com um print de onboard da Audi: "faz no hud ao i
   - a direita diz "visit QATAR", antes só "QATAR";
   - a Castrol ganhou o redondo verde, branco e vermelho (`f1-marcas.js`);
   - as letras do halo ficaram brancas com contorno escuro, como no carro (antes eram escuras sobre o prata);
-  - os anéis e o Revolut na face continuam;
+  - os anéis ("o símbolo da audi tá meio errado"): do cockpit, esse trecho do halo é visto ao longo da coluna do meio, e o desenho estica uns 3x na altura. Os ovais de antes viravam "tulipas" altas. Agora são desenhados achatados a 1/3 na altura e saem redondos e cruzados, como os da Audi;
+  - o Revolut na face continua;
   - no cockpit, o "aleph" virou "Aleph".
 
 ## Prints

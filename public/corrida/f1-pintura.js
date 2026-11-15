@@ -1016,8 +1016,12 @@ export function texturaDoHalo(equipe) {
       ctx.font = "700 30px Arial, sans-serif"; ctx.fillText("Snapdragon", 0, 27, 245);
     } else if (central && equipe === "audi") {
       // Os quatro anéis laranja no topo e Revolut na face dianteira do arco.
-      ctx.strokeStyle = "#f24d1d"; ctx.lineWidth = 7;
-      for (const dx of [-57, -19, 19, 57]) { ctx.beginPath(); ctx.ellipse(dx, -26, 31, 22, 0, 0, Math.PI * 2); ctx.stroke(); }
+      // (2026-11-15) do cockpit esse trecho do halo é visto ao longo da coluna do meio, e o desenho estica uns 3x na altura: os anéis de antes
+      // (ovais de 31x22) viravam "tulipas" altas. Desenhados achatados a 1/3 na altura, eles chegam redondos ao olho do piloto, e mais baixos para
+      // o alto não sair do pedaço pintado do halo.
+      ctx.save(); ctx.translate(0, -28); ctx.scale(1, 0.33); ctx.strokeStyle = "#f24d1d"; ctx.lineWidth = 8;
+      for (const dx of [-66, -22, 22, 66]) { ctx.beginPath(); ctx.arc(dx, 0, 30, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.restore();
       ctx.fillStyle = "#ffffff"; ctx.font = "700 50px Arial, sans-serif"; ctx.fillText("Revolut", 0, 44, 205);
     } else if (equipe === "audi" && nome === "Castrol") {
       // a Castrol do halo da Audi: o redondo verde, branco e vermelho e o nome em branco, com contorno escuro para ler no prata

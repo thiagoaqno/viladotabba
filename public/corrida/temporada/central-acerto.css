@@ -140,7 +140,7 @@ body.cx-escuro .acf2-cheio{background:linear-gradient(90deg,#9aa0aa,#eef0f3)}
 .acf2-valor{font:800 15px var(--cx-f);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .acf2-faixa{color:var(--cx-tx2);font-size:12px;white-space:nowrap}
 .acf2-desc{margin:12px 6px 10px;color:var(--cx-tx2);font-size:13.5px;line-height:1.5}
-.acf2-raspa{position:relative;display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px 18px;margin:6px 0 4px;padding:12px 16px;border:1px solid var(--cx-lin);border-left:4px solid var(--cx-verde);border-radius:8px;background:var(--cx-hover)}
+.acf2-raspa{position:relative;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px 18px;margin:6px 0 4px;padding:12px 16px;border:1px solid var(--cx-lin);border-left:4px solid var(--cx-verde);border-radius:8px;background:var(--cx-hover)}
 .acf2-raspa.perigo{border-left-color:var(--ac-at)}.acf2-raspa.nunca{border-left-color:var(--cx-tx2)}
 .acf2-raspa-ic{color:var(--cx-tx)}
 .acf2-raspa small{display:block;font-weight:700;font-size:14px}.acf2-raspa b{font:800 26px/1.1 var(--cx-f)}
@@ -166,7 +166,7 @@ body.cx-escuro .acf2-medbar i{background:linear-gradient(90deg,#9aa0aa,#eef0f3)}
 .acf2-palco .ac-palco3d{aspect-ratio:16/10}
 .acf2-palco .ac-palco-rot{position:absolute;left:0;bottom:8px;z-index:2}
 /* a faixa de baixo */
-.acf2-pe{grid-area:pe;position:relative;z-index:1;display:grid;grid-template-columns:auto auto 1fr auto auto;align-items:center;gap:22px;padding:14px 20px;border-radius:12px;background:var(--ac-painel);border:1px solid var(--cx-lin);box-shadow:0 1px 2px #0000000d,0 10px 26px #0000000f}
+.acf2-pe{grid-area:pe;position:relative;z-index:1;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;padding:14px 20px;border-radius:12px;background:var(--ac-painel);border:1px solid var(--cx-lin);box-shadow:0 1px 2px #0000000d,0 10px 26px #0000000f}
 .acf2-gp{display:flex;align-items:center;gap:14px;padding-right:22px;border-right:1px solid var(--cx-lin);color:var(--cx-tx)}
 .acf2-gp small,.acf2-folga small,.acf2-alerta small{display:block;color:var(--cx-tx2);font:700 11.5px var(--cx-f);text-transform:uppercase;letter-spacing:.08em}
 .acf2-gp b{display:flex;align-items:center;gap:8px;font:800 17px var(--cx-f)}.acf2-gp b img,.acf2-gp b svg,.acf2-gp b .cx-bandeira{height:16px;width:auto}
@@ -175,7 +175,7 @@ body.cx-escuro .acf2-medbar i{background:linear-gradient(90deg,#9aa0aa,#eef0f3)}
 .acf2-alerta.on{background:color-mix(in srgb,var(--ac-at) 12%,transparent);animation:acfPisca 1.6s ease-in-out infinite}.acf2-alerta.on b,.acf2-alerta.on small{color:var(--ac-at)}
 @keyframes acfPisca{50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--ac-at) 25%,transparent)}}
 /* os botões: retos, um principal cheio e dois discretos; ao passar o mouse sobem um pouco e escurecem */
-.acf2-botoes{display:flex;gap:10px;grid-column:5}
+.acf2-botoes{display:flex;gap:10px;grid-column:3}
 .cx .acf2-bt{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border:1px solid var(--cx-lin);border-radius:8px;background:transparent;color:var(--cx-tx);font:700 14px var(--cx-f);cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s,color .15s}
 .cx .acf2-bt svg{opacity:.75}
 .cx .acf2-bt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--cx-tx2);background:var(--cx-hover);box-shadow:0 8px 18px #00000014}

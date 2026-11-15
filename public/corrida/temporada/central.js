@@ -184,11 +184,11 @@ function carro(c) {
   const { s } = c, E = Eq(), ficha = E.ficha(E.specDaEquipe(s.equipe, s.montagem)), nota = notaDe(s.equipe, s.montagem), est = E.ESTILOS[E.estilo(s.montagem)];
   const gp = c.prox ? c.prox.nome : null;
   const fichaHTML = ficha.map((f) => `<div class="cr-f" title="${h(f.rotulo)}: ${f.nota} de 10"><small>${h(f.rotulo)}</small><i><u style="width:${f.nota * 10}%"></u></i><b>${f.nota}</b></div>`).join("");
-  const partes = [["pecas", "Peças", "o carro da temporada"], ["acerto", "Acerto", gp ? `o carro para ${gp}` : "sem GP pela frente"]];
+  const partes = [["pecas", "Peças", ""], ["acerto", "Acerto", gp || ""]];
   return `<div class="cr">
-    <header class="cr-topo"><div class="cr-tit"><small class="cx-rot">Temporada ${dois(s.ano)} · ${h(c.eq.nome)}</small><h2>Seu carro</h2><p><b>Nota ${nota}</b> · ${h(est.nome)} (${h(est.inspo)})</p></div>
+    <header class="cr-topo"><div class="cr-tit"><small class="cx-rot">Temporada ${dois(s.ano)} · ${h(c.eq.nome)}</small><h2>Seu carro</h2><p><b>Nota ${nota}</b> · ${h(est.nome)}</p></div>
       <div class="cr-ficha">${fichaHTML}</div></header>
-    <nav class="cr-partes" role="tablist" aria-label="Partes do carro">${partes.map(([k, t, sub]) => `<button type="button" role="tab" class="${carroSub === k ? "on" : ""}" aria-selected="${carroSub === k}" data-cx-carro="${k}"><b>${t}</b><small>${h(sub)}</small></button>`).join("")}</nav>
+    <nav class="cr-partes" role="tablist" aria-label="Partes do carro">${partes.map(([k, t, sub]) => `<button type="button" role="tab" class="${carroSub === k ? "on" : ""}" aria-selected="${carroSub === k}" data-cx-carro="${k}"><b>${t}</b>${sub ? `<small>${h(sub)}</small>` : ""}</button>`).join("")}</nav>
     <div class="cr-corpo">${carroSub === "acerto" ? (root.CentralAcerto ? root.CentralAcerto.html(c) : "") : desenvolvimento(c)}</div>
   </div>`;
 }
@@ -205,22 +205,22 @@ function desenvolvimento(c) {
   const SUPORTE_DE = { aero: "suspensão", motor: "confiabilidade" };
   const linhaPeca = ([id, nome]) => { const nv = s.montagem[id], ef = rende[id], prox = nv >= max ? null : E.custoDoNivel(nv + 1), on = id === k;
     return `<div class="cr-peca ${on ? "on" : ""}">
-      <button type="button" class="cr-p-nome" data-cx-attr="${id}" aria-pressed="${on}"><b>${h(nome)}</b>${ef < nv ? `<small class="cr-p-limite">rende ${ef}: falta ${h(SUPORTE_DE[id])}</small>` : `<small>${h(E.PECAS[id].bom)}</small>`}</button>
+      <button type="button" class="cr-p-nome" data-cx-attr="${id}" aria-pressed="${on}"><b>${h(nome)}</b>${ef < nv ? `<small class="cr-p-limite">rende ${ef}: falta ${h(SUPORTE_DE[id])}</small>` : ""}</button>
       <span class="cr-gomos" aria-label="Nível ${nv} de ${max}">${Array.from({ length: max }, (_, i) => `<i class="${i < ef ? "cheio" : i < nv ? "sobra" : ""} ${i >= 5 ? (i >= 7 ? "c3" : "c2") : ""}"></i>`).join("")}</span>
       <span class="cr-p-acoes"><button type="button" class="cr-pm" data-ponto="${id}" data-delta="-1" ${!pode || nv <= 0 ? "disabled" : ""} aria-label="Tirar um nível de ${h(nome)}">−</button><b>${nv}</b><button type="button" class="cr-pm mais" data-ponto="${id}" data-delta="1" ${!pode || !prox || livres < prox ? "disabled" : ""} aria-label="Pôr um nível em ${h(nome)}" title="${prox ? `Próximo nível: ${prox} ${prox === 1 ? "ponto" : "pontos"}` : "Nível máximo"}">+</button></span>
       <small class="cr-p-custo">${prox ? `${prox} pt` : "máx."}</small></div>`; };
-  const lista = `<div class="cr-pecas"><header><small class="cx-rot">As peças</small><span><b>${livres}</b> ${livres === 1 ? "ponto livre" : "pontos livres"} de ${limite}</span></header>${ATTR.map(linhaPeca).join("")}<p class="cr-regra">Do 1º ao 5º nível, 1 ponto cada; o 6º e o 7º, 2; o 8º, 3. A aerodinâmica só rende até a suspensão + ${E.SUPORTE} e o motor até a confiabilidade + ${E.SUPORTE}: os gomos listrados não rendem.</p></div>`;
-  const painel = `<aside class="cx-dv-painel">${lista}<small class="cx-rot">Melhoria selecionada</small><h3>${h(atual[2])}</h3><span class="cx-dv-nivel">${maxou ? `Nível ${n} · máximo` : `Nível ${n} → ${n + 1}`}</span><h4>${h(peca.nome)}</h4><p>${h(peca.desc)}</p>
-      <dl><div><dt>Custo</dt><dd>${maxou ? "—" : `${custoProx} ${custoProx === 1 ? "ponto" : "pontos"}`}</dd></div><div><dt>Melhora</dt><dd class="cx-verde">${h(peca.bom)}</dd></div><div><dt>Cobra em troca</dt><dd>${h(peca.custa)}</dd></div></dl>
-      <small class="cx-rot">Impacto previsto</small><ul>${dif.length ? dif.map((x) => `<li><span>${h(x.r)}</span><b class="${x.d > 0 ? "cx-verde" : "cx-verm"}">${x.d > 0 ? "+" : ""}${x.d}</b></li>`).join("") : '<li><span>Sem mudança visível na nota</span><b>—</b></li>'}<li class="total"><span>Desempenho do carro</span><b>${nA}${!maxou ? ` → ${nD}` : ""}</b></li></ul>
+  const lista = `<div class="cr-pecas"><header title="Níveis 1 a 5: 1 ponto · 6 e 7: 2 · 8: 3. A aerodinâmica rende até a suspensão + ${E.SUPORTE}; o motor, até a confiabilidade + ${E.SUPORTE}."><small class="cx-rot">As peças</small><span><b>${livres}</b> ${livres === 1 ? "ponto livre" : "pontos livres"} de ${limite}</span></header>${ATTR.map(linhaPeca).join("")}</div>`;
+  const painel = `<aside class="cx-dv-painel">${lista}<h3>${h(peca.nome)}</h3><span class="cx-dv-nivel">${maxou ? `Nível ${n} · máximo` : `Nível ${n} → ${n + 1}`}</span>
+      
+      <ul>${dif.length ? dif.map((x) => `<li><span>${h(x.r)}</span><b class="${x.d > 0 ? "cx-verde" : "cx-verm"}">${x.d > 0 ? "+" : ""}${x.d}</b></li>`).join("") : '<li><span>Sem mudança visível na nota</span><b>—</b></li>'}<li class="total"><span>Desempenho do carro</span><b>${nA}${!maxou ? ` → ${nD}` : ""}</b></li></ul>
       <button type="button" class="cx-bt" data-ponto="${k}" data-delta="1" ${!pode || maxou || livres < custoProx ? "disabled" : ""}>Instalar melhoria ${seta}</button>
       <small class="cx-dv-saldo">${motivo || `Saldo após a melhoria: ${livres - custoProx} ${livres - custoProx === 1 ? "ponto" : "pontos"}`}</small>
-      <div class="cx-dv-acoes"><button type="button" class="cx-link" data-ponto="${k}" data-delta="-1" ${!pode || n <= 0 ? "disabled" : ""}>Tirar 1 nível</button><button type="button" class="cx-link" data-ponto-zerar ${!pode || !usado ? "disabled" : ""}>Zerar tudo</button></div></aside>`;
+      <div class="cx-dv-acoes"><button type="button" class="cx-link" data-ponto-zerar ${!pode || !usado ? "disabled" : ""}>Zerar tudo</button></div></aside>`;
   const CURTO = { aero: "Aero", chassi: "Chassi", motor: "Potência", freios: "Freios", suspensao: "Suspensão", confiab: "Durabilidade" };
   const geral = ATTR.map(([id]) => { const nome = CURTO[id], nv = s.montagem[id]; return `<button type="button" class="cx-dv-mini ${id === k ? "on" : ""}" data-cx-attr="${id}"><span>${h(nome)}</span><b>${nv}<small>/${max}</small></b><i class="cx-prog"><u style="width:${nv / max * 100}%"></u></i></button>`; }).join("");
   const rotulos = ATTR.map(([id, , peca2]) => `<button type="button" class="cx-rotulo ${id === k ? "on" : ""}" data-cx-attr="${id}" data-rotulo="${id}"><i></i><span>${h(peca2)}</span></button>`).join("");
   return `<div class="cx-g-dev"><div class="cx-dv-esq"><div class="cx-dv-palco" id="cxDvPalco" title="Arraste para girar o carro"><svg class="cx-linhas" id="cxLinhas" aria-hidden="true"></svg>${rotulos}<small class="cx-dv-dica">Arraste para girar</small></div></div>${painel}
-    <section class="cx-dv-base"><div class="cx-dv-geral"><small class="cx-rot">Desempenho do carro</small><div class="cx-dv-minis">${geral}</div></div><div class="cx-dv-prox"><small class="cx-rot">Orçamento do carro</small><div class="cx-dv-orc"><b>${s.bonus}/${limDev} melhorias</b><span>Caixa ${h(c.dinheiro(s.caixa))}</span></div><i class="cx-prog"><u style="width:${(s.bonus || 0) / limDev * 100}%"></u></i><button type="button" class="cx-link" id="${c.idDesenvolver || "desenvolver"}" ${s.bonus >= limDev || ativo || terminou ? "disabled" : ""}>${s.bonus >= limDev ? "Limite do ano" : `+1 ponto · ${c.dinheiro(custoDev)}`}</button></div></section></div>`;
+    <section class="cx-dv-base"><div class="cx-dv-prox"><small class="cx-rot">Orçamento do carro</small><div class="cx-dv-orc"><b>${s.bonus}/${limDev} melhorias</b><span>Caixa ${h(c.dinheiro(s.caixa))}</span></div><i class="cx-prog"><u style="width:${(s.bonus || 0) / limDev * 100}%"></u></i><button type="button" class="cx-link" id="${c.idDesenvolver || "desenvolver"}" ${s.bonus >= limDev || ativo || terminou ? "disabled" : ""}>${s.bonus >= limDev ? "Limite do ano" : `+1 ponto · ${c.dinheiro(custoDev)}`}</button></div></section></div>`;
 }
 function posicionarRotulos() {
   if (!naGaragem() || !garagem) return;

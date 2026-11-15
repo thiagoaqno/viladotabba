@@ -110,7 +110,7 @@ function html(c) {
   const pilulas = `<div class="pd-pilulas" aria-label="O fim de semana">${["Sexta", "Sábado", "Domingo", "Pós-corrida"].map((d, i) => `<span class="${i === fase ? "on" : i < fase ? "feito" : ""}">${d}</span>`).join("")}</div>`;
   const tit = (t, extra = "") => `<header class="pd-tit"><h3>${t}</h3>${extra}</header>`;
   const cartao = (e) => `<article class="pd-ev ${e.escolha ? "decidido" : ""}"><span class="pd-ev-ic">${icone(e.quem)}</span><div class="pd-ev-txt">
-      <div class="pd-ev-topo"><small>${h(e.quem)}</small>${e.escolha ? `<em class="pd-selo ok">Decidido</em>` : `<em class="pd-selo novo">Esperando você</em>`}</div>
+      <div class="pd-ev-topo"><small>${h(e.quem)}</small></div>
       <h4>${h(e.titulo)}</h4><p>${h(e.texto)}</p>
       <div class="pd-opcoes">${e.opcoes.filter((o) => !e.escolha || o.id === e.escolha).map((o) => `<button type="button" class="pd-op ${e.escolha === o.id ? "on" : ""} ${o.consequencia ? "pesa" : ""}" data-pd-ev="${h(e.id)}" data-pd-op="${h(o.id)}" ${e.escolha ? "disabled" : ""}>
         <i class="pd-op-marca" aria-hidden="true"></i><span class="pd-op-txt"><b>${h(o.rotulo)}</b>${e.escolha && textoEfeito(o.efeito) ? `<small class="pd-revela">${textoEfeito(o.efeito)}</small>` : ""}${e.escolha && e.resultado ? `<em class="pd-revela">${h(e.resultado)}</em>` : ""}</span>${SVG(IH.seta, 18)}</button>`).join("")}</div></div></article>`;
@@ -122,7 +122,7 @@ function html(c) {
   const linhaH = (ic, rot, v, mostra, nota) => { const de = velho ? velho[ic] : v, d = Math.round(ic === "diretoria" ? (v - de) / 2.5 : v - de);
     return `<div class="pd-hl ${d ? "mudou" : ""}" data-pd-hl="${ic}" data-pd-v="${v}" title="${h(nota)}"><span class="pd-hl-ic">${SVG(IH[ic], 22)}</span><div><div class="pd-hl-topo"><span>${h(rot)}</span><span class="pd-hl-num">${d ? `<em class="pd-delta ${d > 0 ? "mais" : "menos"}">${d > 0 ? "+" : "−"}${Math.abs(d)}</em>` : ""}<i class="pd-prev" aria-hidden="true"></i><b>${mostra}</b></span></div><div class="pd-barra"><i style="--de:${Math.max(1, Math.min(100, de)).toFixed(0)}%;width:${Math.max(1, Math.min(100, v)).toFixed(0)}%"></i><s class="pd-fantasma"></s></div><small>${h(nota)}</small></div></div>`; };
   const dCaixa = velho ? s.caixa - velho.caixa : 0;
-  const humor = `<div class="pd-humor-topo"><b>${media}</b><span>/100</span><div class="pd-barra grossa"><i style="width:${media}%"></i></div></div><small class="pd-humor-leg">A média dos cinco abaixo (a diretoria vai de −20 a +20).</small>
+  const humor = `<div class="pd-humor-topo"><b>${media}</b><span>/100</span><div class="pd-barra grossa"><i style="width:${media}%"></i></div></div>
       <div class="pd-caixa ${dCaixa ? "mudou" : ""}" data-pd-hl="caixa" data-pd-v="${s.caixa}"><span>Caixa</span><span class="pd-hl-num">${dCaixa ? `<em class="pd-delta ${dCaixa > 0 ? "mais" : "menos"}">${dCaixa > 0 ? "+" : "−"}${Math.abs(dCaixa)}</em>` : ""}<i class="pd-prev" aria-hidden="true"></i><b>${s.caixa} mi</b></span></div>
       ${linhaH("moral", `Moral · ${comp.nome}`, p.moral, p.moral, ritmo ? `${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))} de ritmo na corrida` : "ritmo normal na corrida")}
       ${linhaH("lealdade", "Lealdade", p.lealdade, p.lealdade, p.lealdade < 30 ? "pode procurar outra equipe" : "segue com a equipe")}
@@ -154,19 +154,18 @@ function html(c) {
   const conseq = mostraMudanca ? `<div class="pd-conseq ${/demitido/i.test(um.texto) ? "forte" : ""}"><span class="pd-conseq-ic">${icone(um.quem)}</span><div><small>O que mudou na equipe</small><p>${h(um.texto)}</p></div></div>` : "";
   const aviso = p.demitido && p.demitido.ano === s.ano ? `<div class="pd-aviso demitido"><b>Você foi demitido</b><span>A equipe não renova o seu contrato. No fim do ano, você vai para a equipe mais fraca que fizer proposta, a não ser que aceite outra antes.</span></div>`
     : p.ultimato && p.ultimato.ano === s.ano ? `<div class="pd-aviso"><b>Ultimato</b><span>Top ${p.ultimato.alvo} neste GP, ou a diretoria não renova o seu contrato.</span></div>` : "";
-  const sub = terminou ? "A temporada terminou: veja como ela ficou na história da equipe." : c.ativo ? "O GP está aberto: a corrida decide o resto." : "Prepare-se para a próxima etapa do campeonato.";
   return `<div class="pd">
-    <header class="pd-hero" ${foto ? `style="--foto:url('${h(foto)}')"` : ""}><div class="pd-hero-txt"><small class="pd-sobre">Paddock · ${h(c.eq.nome)}<i></i></small><h2>${terminou ? "Fim de temporada" : `Fim de semana: ${h(c.prox ? c.prox.nome : "")}`}</h2><p>${sub}</p>${pilulas}${aviso}</div></header>
+    <header class="pd-hero" ${foto ? `style="--foto:url('${h(foto)}')"` : ""}><div class="pd-hero-txt"><small class="pd-sobre">Paddock · ${h(c.eq.nome)}<i></i></small><h2>${terminou ? "Fim de temporada" : `Fim de semana: ${h(c.prox ? c.prox.nome : "")}`}</h2>${pilulas}${aviso}</div></header>
     <div class="pd-grade">
-      <section class="pd-card pd-agora">${tit(`Acontecendo agora${pendentes ? '<i class="pd-ponto" aria-hidden="true"></i>' : ""}`, pendentes ? `<em class="pd-selo novo">${pendentes} esperando</em>` : evs.length ? `<em class="pd-selo ok">Decidido</em>` : "")}${conseq}${agora}</section>
+      <section class="pd-card pd-agora">${tit(`Acontecendo agora${pendentes ? '<i class="pd-ponto" aria-hidden="true"></i>' : ""}`, pendentes ? `<em class="pd-selo novo">${pendentes} esperando</em>` : "")}${conseq}${agora}</section>
       <section class="pd-card pd-humor">${tit("O humor da equipe")}${humor}</section>
     </div>
     <section class="pd-card">${tit("Os pilotos")}${pilotos}</section>
     <div class="pd-grade pd-grade-baixo">
       <section class="pd-card">${tit("Central de notícias")}${news}</section>
-      <section class="pd-card">${tit("Mural")}${mural ? `<ol class="pd-mural">${mural}</ol>` : `<p class="pd-vazio">As decisões e o que cada GP mudou na equipe ficam guardados aqui.</p>`}</section>
+      <section class="pd-card">${tit("Mural")}${mural ? `<ol class="pd-mural">${mural}</ol>` : `<p class="pd-vazio">Nada ainda.</p>`}</section>
     </div>
-    <section class="pd-card">${tit("Histórico da equipe")}${historicoHTML}</section>
+    ${hist.momentos.length || hist.linhas.length ? `<section class="pd-card">${tit("Histórico da equipe")}${historicoHTML}</section>` : ""}
   </div>`;
 }
 function previa(op) {

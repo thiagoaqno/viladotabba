@@ -133,6 +133,30 @@ O Thiago:
   - em `corrida-f1-equipes.test.js`, a montagem recusada agora é a que custa mais de 20 (não a que soma 21);
   - o teste "nenhuma montagem é melhor em tudo que outra" saiu: com a peça presa à outra, pôr ponto onde ele não rende é de propósito pior.
 
+## Menos texto (a quinta rodada)
+
+O Thiago: "muita coisa tem descrição demais e fica redundante".
+
+- **No Paddock saíram:**
+  - a frase embaixo do título;
+  - os selos "Esperando você" e "Decidido" de cada cartão (o título do quadro já conta quantos esperam);
+  - a legenda do humor;
+  - o histórico vazio;
+  - a frase longa do mural vazio.
+
+  O aviso depois da decisão virou só "Decidido."
+- **Na aba Carro saíram:**
+  - o "(pouca asa, motor forte)" ao lado da nota;
+  - o subtítulo das partes;
+  - o subtítulo de cada peça (fica só o aviso de quando não rende);
+  - o parágrafo da regra do custo, que virou dica no título da lista;
+  - no detalhe da peça: a descrição, o "melhora / cobra em troca", o "Tirar 1 nível" (o − da lista faz isso) e os níveis repetidos embaixo.
+- **No Acerto:**
+  - as explicações viraram uma frase curta cada uma;
+  - os três ajustes novos mostram só o lado ("curto", "no meio", "longo");
+  - saíram o subtítulo do painel, a frase do cartão de raspar e os subtítulos dos medidores;
+  - saíram também a folga e o "raspa a" da faixa de baixo (já estão no painel) e o "Acerto guardado" (a página já diz "Salvo").
+
 ## Insights do engenheiro (Visão geral da Análise)
 
 Um quadro novo, só com o que o resumo do GP mede:

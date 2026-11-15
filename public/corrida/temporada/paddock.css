@@ -11,7 +11,7 @@ body.cx-escuro .pd{--pd-card:var(--cx-bg2)}
 .pd-hero-txt{position:relative;z-index:1;max-width:min(640px,60%)}
 .pd-sobre{display:flex;align-items:center;gap:12px;color:var(--cx-tx);font:700 13px var(--cx-f);text-transform:uppercase;letter-spacing:.2em}
 .pd-sobre i{display:block;width:56px;height:2px;background:var(--pd-ac)}
-.pd-hero h2{margin:8px 0 6px;font:800 clamp(30px,3.4vw,52px)/1.05 var(--cx-f);letter-spacing:-.01em}
+.pd-hero h2{margin:8px 0 16px;font:800 clamp(30px,3.4vw,52px)/1.05 var(--cx-f);letter-spacing:-.01em}
 .pd-hero p{margin:0 0 16px;color:var(--cx-tx2);font-size:clamp(14px,1.1vw,17px)}
 .pd-pilulas{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:var(--cx-hover)}
 .pd-pilulas span{padding:8px 20px;border-radius:999px;color:var(--cx-tx2);font:600 14px var(--cx-f)}

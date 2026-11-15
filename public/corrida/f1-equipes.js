@@ -73,7 +73,9 @@ function rendimento(m) {
 
 // A montagem de uma equipe, conferida: todas as seis peças, inteiros de 0 a MAX_NIVEL, nada além delas e a soma dentro
 // do orçamento. Devolve { ok: true, montagem } (uma cópia limpa) ou { ok: false, erro }.
-function validar(equipeId, m, bonus = 0) {
+// `anterior`: a montagem de agora. Uma montagem acima do orçamento (os saves de antes do custo novo dos níveis altos, 2026-11-15) só pode
+// mudar para uma mais barata: dá para tirar níveis até caber, sem ficar preso.
+function validar(equipeId, m, bonus = 0, anterior = null) {
   const eq = EQUIPES[equipeId];
   if (!eq) return { ok: false, erro: "Equipe inválida." };
   if (!m || typeof m !== "object" || Array.isArray(m)) return { ok: false, erro: "Montagem inválida." };
@@ -85,7 +87,7 @@ function validar(equipeId, m, bonus = 0) {
     limpa[k] = v;
   }
   const limite = eq.orcamento + Math.max(0, Math.min(BONUS_MAX, Number(bonus) || 0));
-  if (soma(limpa) > limite) return { ok: false, erro: `A montagem passa do orçamento (${soma(limpa)} de ${limite} pontos).` };
+  if (soma(limpa) > limite && !(anterior && soma(limpa) < soma(anterior))) return { ok: false, erro: `A montagem passa do orçamento (${soma(limpa)} de ${limite} pontos). Tire níveis até caber.` };
   return { ok: true, montagem: limpa };
 }
 const montagemPadrao = (equipeId) => ({ ...(EQUIPES[equipeId] || EQUIPES.mclaren).padrao });

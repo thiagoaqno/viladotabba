@@ -87,10 +87,10 @@ function validarPecas(equipeId, pecas, bonus = 0) {
 }
 
 // O que os servidores usam: `d` é o pedido ({ pecas } novo, ou { montagem } do formato antigo). Devolve { ok, montagem, pecas|null }.
-function resolver(equipeId, d, bonus = 0) {
+function resolver(equipeId, d, bonus = 0, anterior = null) {
   d = d || {};
   if (d.pecas != null) { const v = validarPecas(equipeId, d.pecas, bonus); return v.ok ? { ok: true, montagem: v.montagem, pecas: v.pecas } : v; }
-  const v = Equipes.validar(equipeId, d.montagem, bonus);
+  const v = Equipes.validar(equipeId, d.montagem, bonus, anterior);
   return v.ok ? { ok: true, montagem: v.montagem, pecas: null } : v;
 }
 

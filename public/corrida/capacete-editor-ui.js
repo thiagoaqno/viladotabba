@@ -126,9 +126,12 @@ export function montarEditorCapacete(el, op = {}) {
     if (d.cpVisor) { atual.viseira = d.cpVisor; return mudar(); }
     if (d.cpAcabamento) { atual.acabamento = d.cpAcabamento; return mudar(); }
   });
+  el.addEventListener("change", (e) => { if (e.target.dataset?.cpLivre != null) mudar(); });
   el.addEventListener("input", (e) => {
     const t = e.target;
-    if (t.dataset.cpLivre != null) { slot = +t.dataset.cpLivre; atual.cores[slot] = t.value; return mudar(); }
+    // (2026-11-15) a cor livre: enquanto o seletor está aberto, só o capacete muda (redesenhar o painel trocava o campo e fechava o seletor
+    // no primeiro clique); o painel e as miniaturas se refazem quando o seletor fecha (o "change", abaixo)
+    if (t.dataset.cpLivre != null) { slot = +t.dataset.cpLivre; atual.cores[slot] = t.value; return mudar(false); }
     if (t.dataset.cp === "nome") { atual.nome = t.value.replace(/[^\p{L}\p{N} .\-]/gu, "").slice(0, 14); return mudar(false); }
     if (t.dataset.cp === "bandeira") { atual.bandeira = t.value; return mudar(false); }
   });

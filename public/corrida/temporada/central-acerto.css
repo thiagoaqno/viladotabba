@@ -233,3 +233,4 @@ body.cx-escuro .acf2-medbar i{background:linear-gradient(90deg,#9aa0aa,#eef0f3)}
 @media (max-width:1100px){.cr .cx-g-dev{grid-template-columns:minmax(0,1fr)}.cr-ficha{grid-template-columns:repeat(2,minmax(120px,1fr))}}
 @media (max-width:640px){.cr-peca{grid-template-columns:1fr auto;}.cr-gomos{grid-column:1/-1}.cr-p-custo{display:none}.cr-ficha{grid-template-columns:1fr}}
 .cr .acf2-titulo{display:none}.cr .acf2{padding-top:0}
+.cr-pecas header .cr-passou{color:var(--cx-verm);font-weight:700}.cr-pecas header .cr-passou b{color:var(--cx-verm)}

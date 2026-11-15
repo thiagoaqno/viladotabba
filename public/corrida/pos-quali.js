@@ -67,12 +67,13 @@ export function renderQuali() {
   const linhas = ultima ? q.grid.map((id) => ({ id, fora: false })) : f.ordem.map((x) => ({ id: x.id, fora: f.eliminados.includes(x.id) }));
   const precisa = !!m && q.aguardados.includes(m.id), confirmado = !!m && q.confirmados.includes(m.id), prontos = q.aguardados.filter((id) => q.confirmados.includes(id)).length;
   const montagem = S.temporada && S.montagens && m && S.montagens[m.equipe];
-  const chave = JSON.stringify([sessao, vista, q.confirmados, q.aguardados, m && m.pneu, montagem, linhas.length]);
+  // (2026-11-15) a confirmação de OUTRO jogador só muda o contador (abaixo, sem refazer a tela): refazer tudo atrapalhava quem estava mexendo
+  const chave = JSON.stringify([sessao, vista, confirmado, q.aguardados, m && m.pneu, montagem, linhas.length]);
   el.classList.remove("hidden");
   // o relógio da pausa (só entre as sessões: antes da corrida, a largada espera todos), andando a cada segundo
   const relogio = () => { const r = el.querySelector("[data-pq-relogio]"); if (r) r.textContent = !ultima && q.pausaAte ? `· abre sozinho em ${mmss(q.pausaAte - sNow())}` : ""; };
   relogioAtual = relogio; if (!timer) timer = setInterval(() => { if (relogioAtual && !el.classList.contains("hidden")) relogioAtual(); }, 1000);
-  if (chave === chaveHtml) return relogio();
+  if (chave === chaveHtml) { const em = el.querySelector(".pq-pe-estado em"); if (em) em.textContent = `${prontos}/${q.aguardados.length} prontos`; return relogio(); }
   chaveHtml = chave;
   const pista = PISTAS[S.config.pista], titulo = ultima ? "Resultado da classificação" : `${f.nome} encerrado`;
   const proximo = ultima ? "Ir para a largada" : `Largar para o Q${q.fechadas.length + 1}`;

@@ -82,10 +82,26 @@ const etapasAtivas = () => {
 };
 // troca o HTML de um trecho só se ele mudou, e devolve o foco ao mesmo botão (quando o trecho refaz os botões)
 const chaveDe = (e) => { const d = Object.entries(e.dataset).map(([k, v]) => `${k}=${v}`).join("&"); return `${e.tagName}|${d || (e.id || "") + e.textContent.trim().slice(0, 30)}`; };
+// (2026-11-15, o Thiago: "tudo que redesenha para todos é ruim: ninguém consegue mexer") Quem está mexendo num campo deste trecho (texto,
+// número, seletor de cor, deslizante, lista de opções) não perde o campo quando chega a mudança de outro jogador: o HTML novo espera o foco
+// sair do trecho e entra nessa hora. E o que estava aberto (os <details>) e a rolagem dentro do trecho continuam como estavam.
+const editando = (no) => { const f = document.activeElement; return !!(f && no.contains(f) && (f.matches?.("input:not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]),select,textarea") || f.isContentEditable)); };
 function trocar(no, s) {
   if (!no || no._h === s) return false;
+  if (editando(no)) {
+    no._pend = s;
+    if (!no._esperando) {
+      no._esperando = true;
+      const depois = () => setTimeout(() => { if (editando(no)) return; no.removeEventListener("focusout", depois); no._esperando = false; const p = no._pend; no._pend = null; if (p != null) trocar(no, p); }, 0);
+      no.addEventListener("focusout", depois);
+    }
+    return false;
+  }
   const foco = document.activeElement, chave = foco && no.contains(foco) ? chaveDe(foco) : null;
-  no._h = s; no.innerHTML = s;
+  const abertos = new Set([...no.querySelectorAll("details[open]")].map(chaveDe)), rolagens = [...no.querySelectorAll("*")].filter((x) => x.scrollTop > 0).map((x) => [chaveDe(x), x.scrollTop]);
+  no._h = s; no.innerHTML = s; no._pend = null;
+  if (abertos.size) for (const d of no.querySelectorAll("details")) if (abertos.has(chaveDe(d))) d.open = true;
+  for (const [k, t] of rolagens) { const x = [...no.querySelectorAll("*")].find((y) => chaveDe(y) === k); if (x) x.scrollTop = t; }
   if (chave) { const novo = [...no.querySelectorAll("button,summary,[tabindex]")].find((x) => chaveDe(x) === chave); if (novo) novo.focus({ preventScroll: true }); }
   return true;
 }

@@ -1,57 +1,42 @@
-# Carreira: a personalidade dos pilotos, a aba Telemetria da Análise, mais ajustes no acerto e o botão de pular a espera do Q1
+# Carreira: a montagem antiga acima do orçamento destrava, a carreira do programa de PC sobe para o site (o código vale no navegador) a cor livre do capacete não fecha mais e o que um jogador muda não atrapalha os outros
 
-O Thiago pediu os itens 2, 5 e 6 da lista do que faltou ("um PR só"):
-- 2: a personalidade dos pilotos;
-- 5: a central de análise da referência;
-- 6: mais opções no acerto, como na tela do jogo da F1.
+Dois problemas que o Thiago achou depois do #756 e do #757.
 
-Pediu também, no meio, o botão de pular a espera do Q1. O `novidades.json` da `main` estava quebrado pela junção do #755 com o #756 (faltava fechar a entrada do Paddock antes da do capacete) e foi consertado aqui.
+## "Não consigo mais mexer no meu carro na minha carreira existente"
 
-## A personalidade do companheiro (`temporada/paddock.js`, `regras.js`, `corrida-estilos.js`, `corrida-robos.js`)
+O custo novo dos níveis altos (#756: o 6º e o 7º custam 2 pontos, o 8º custa 3) deixou as montagens antigas acima do orçamento. O servidor conferia o orçamento em toda mudança e recusava até tirar um nível, então o carro ficava preso.
 
-- **Confiança** (0 a 100, no save):
-  - sobe 6 quando ele pontua e 4 quando chega na sua frente;
-  - cai 8 quando ele abandona e 2 quando fica fora dos pontos;
-  - na corrida, mexe na constância dele, ±6 pontos nos extremos: as voltas variam menos ou mais.
-- **Experiência:** os GPs que ele já fez pela sua equipe, contados no save. Cada GP dá +0,25 de constância (até 4) e +0,4 de largada (até 6), e a largada é a reação no semáforo.
-- **Agressividade** (0 a 100):
-  - vem da instrução de corrida, um acontecimento novo: "Atacar" (+15), "Corrida limpa" (−15) ou "Deixar com ele";
-  - a briga entre os dois também mexe: defender a sua corrida dá −8, dar razão a ele dá +8;
-  - na corrida, muda o ataque e a defesa dele (±0,2) e a taxa de erro (±40%), no perfil de corrida (`corrida-estilos.js`, que agora aceita um ajuste do próprio piloto: `perfil`).
-- **Ele vai embora sozinho:** com a moral abaixo de 22 e a lealdade abaixo de 25 depois de um GP (antes do último), ele assina com uma rival. O piloto de ritmo mais perto (e não acima) de outra equipe assume o carro, e isso vai para o mural, as notícias e "O que mudou na equipe".
-- **A tela:** a confiança, a agressividade e a experiência aparecem ao abrir "Os pilotos" no Paddock.
+- **A regra** (`f1-equipes.js validar`, com a montagem de agora em `anterior`): uma montagem acima do orçamento pode mudar para uma mais barata. Dá para tirar níveis (ou zerar) até caber; pôr nível continua recusado.
+- **Onde vale:** a carreira (`regras.js aplicarMontagem`, por `f1-pecas.js resolver`) e a tela de ajustes entre as sessões da classificação (`corrida.js montagemGrid`).
+- **Na lista das peças**, acima do orçamento, aparece "N pontos acima do orçamento: tire níveis até caber" no lugar dos pontos livres negativos.
 
-Os números são de jogo, para sentir jogando; não são medidos.
+## "Minha carreira no aplicativo tem um código que não consigo usar no navegador"
 
-## A aba Telemetria da Análise (`temporada/central-telemetria.js`)
+O programa de PC trazia a carreira do site na primeira vez (`trazerCarreiraDoSite`), mas nunca a levava de volta. A carreira criada ou jogada no PC só existia no banco do PC, e o código de recuperação que o programa mostra só valia lá.
 
-Uma sub-aba nova entre Desempenho e Pneus:
-- **Mapa da pista** na sua melhor volta, colorido por velocidade, frenagem ou aceleração. As amostras de 250 ms do replay (a fração da volta, a velocidade, o acelerador e o freio, `corrida-gravacao.js`) vão sobre o traçado de `Pistas.pontos`.
-- **Telemetria comparativa:** a velocidade ao longo da melhor volta sua e a do piloto escolhido para comparar, com os setores, a diferença na volta e o ponto marcado onde você mais perde.
-- **Desgaste dos pneus:** a vida do pneu no fim de cada volta, sua e dele, com as paradas. O desgaste passou a ser gravado por volta (`corrida-analise.js`, campo `d`), então só os GPs corridos daqui em diante mostram.
-- **Estratégia de corrida:** a faixa dos stints de cada um, com a letra e a cor do composto.
+- **No programa:** cada vez que a carreira solo muda, o save sobe para o site com o hash do código de recuperação do PC (`corrida-pc.js enviarCarreiraAoSite`). O hash vai, nunca o código. As mudanças são: abrir, criar, decidir algo, mexer no carro e fechar um GP. Sem internet, sobe na próxima mudança.
+- **No site** (`/api/corrida/pc/carreira-enviar`, `bd.js receberTemporadaDoPC`):
+  - acha a carreira pelo código (ela pode ter ganhado outro token numa recuperação) ou pelo token;
+  - se não existe, cria com os dois hashes, e o código que o programa mostra passa a abrir a carreira no navegador;
+  - o save só é trocado se o que chega não está atrás (o ano e o GP), e o código que o site já tinha fica como está.
+- **Para a carreira que já existe no PC:** basta abrir o programa atualizado. Ao abrir a carreira, ela sobe, e o código do programa passa a valer em "Recuperar" no site.
+- **O que não sobe:** os replays dos GPs jogados no PC ficam no PC. No site, a aba Telemetria desses GPs avisa que não tem replay.
 
-O GP sem replay salvo (só o ano atual e o anterior guardam) avisa que não tem.
+## A cor livre do capacete fechava no primeiro clique
 
-## Mais ajustes no acerto (`sim.js`, `corrida-humanos.js`, `fisica.js`, `central-acerto.js`)
+No editor do capacete, o seletor de "outra cor" fechava logo depois do primeiro clique: cada mudança redesenhava o painel e trocava o campo de cor no meio da escolha. Agora (`capacete-editor-ui.js`), enquanto o seletor está aberto, só o capacete muda. O painel e as miniaturas se refazem quando o seletor fecha (o evento `change`).
 
-Três linhas novas. Os efeitos são de jogo (não medidos) e valem no servidor e no navegador:
-- **Rigidez da suspensão:** dura segura a carga da asa (até +3%) e perde aderência mecânica nas zebras (até −2%).
-- **Cambagem:** muita dá mais curva (até +4%), menos freio e tração (até −3%) e gasta mais o pneu (até +12%).
-- **Pressão dos pneus:** baixa agarra mais (até +4%) e gasta mais (até +15%); alta dura mais e agarra menos.
+## O que um jogador muda não atrapalha mais os outros
 
-O desgaste agora também vem do acerto (`extraDoAcerto` → `desgaste`, multiplicado no `gastarPneu`). O navegador manda 8 números, e o servidor aceita 2, 5 ou 8.
+O Thiago: "tudo que redesenha para todos é ruim: fica atualizando pra todo mundo e ninguém consegue mexer".
 
-Combustível não entrou: o jogo não tem consumo nem peso de combustível.
+- **A sala** (`menus.js trocar`, por onde passam todas as etapas): quando chega a mudança de outro jogador e você está mexendo num campo daquele trecho, o HTML novo espera. Vale para texto, número, seletor de cor, deslizante e lista de opções. Ele entra quando o foco sai do trecho. Os `<details>` abertos e a rolagem dentro do trecho também continuam como estavam depois da troca.
+- **A tela entre as sessões da classificação** (`pos-quali.js`): a confirmação de outro jogador só muda o contador "N/M prontos". Antes a tela se refazia inteira.
+- **A tela de resultado depois da corrida** (`resultado-gp.js resultadoMudou`): ela se refazia inteira a cada linha nova no registro da sala, que cresce com qualquer coisa que acontece, e isso zerava a análise e o replay de todos. Agora só se refaz quando o resultado, os acréscimos ou as equipes mudam. No modo sem regras de F1 (`hud.js renderResults`), ela era refeita a cada estado do servidor (várias vezes por segundo) e agora só troca quando o HTML muda.
+- **O editor do capacete** (#755) e a carreira com os amigos (`grupo.js`, que já trocava só os nós que mudaram) já estavam assim.
 
-## O botão de pular a espera entre as sessões da classificação (`pos-quali.js`)
+## Conferido
 
-Eliminado no Q1, sozinho na sala, você esperava os 3 minutos da pausa. Agora, quando nenhum humano precisa confirmar, aparece "Pular para o Q2" (ou "Ir para a largada"). O servidor já seguia quando ninguém precisava confirmar; faltava o botão.
-
-## Prints
-
-Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, no tema claro: o Acerto com as oito linhas e o Paddock com os pilotos abertos. A Telemetria foi vista com um GP simulado só na página (dois carros e um replay inventado para desenhar a tela), porque o servidor de teste não tem corrida gravada. O botão do Q1 não foi visto em print.
-
-Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`.
+`node --check` em tudo. No banco em memória, uma carreira criada, com o hash enviado ao "site" e aberta pelo código, voltou com o GP certo. Uma montagem antiga com 8 de motor e 8 de aero aceitou tirar um nível e recusou pôr nível com "acima do orçamento". Nada foi testado jogando nem com o programa de PC de verdade.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

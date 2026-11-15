@@ -59,7 +59,7 @@ function criar(nome, equipe, tamanho = 8, voltas = 3, semente = Date.now(), nive
 }
 // monta o carro: a carreira usa `d.montagem` (pontos livres); `d.pecas` segue aceito em saves antigos.
 function aplicarMontagem(s, d) {
-  const v = Pecas.resolver(s.equipe, d, s.bonus);
+  const v = Pecas.resolver(s.equipe, d, s.bonus, s.montagem); // (acima do orçamento, só deixa mudar para mais barato: f1-equipes.js validar)
   if (!v.ok) throw Error(v.erro);
   s.montagem = v.montagem; s.pecas = v.pecas; // `pecas` é null quando veio do formato antigo
 }

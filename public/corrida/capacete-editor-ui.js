@@ -4,7 +4,8 @@
 // A tela (2026-11-14, pela referência do Thiago): o menu à esquerda (Desenho, Cores, Detalhes, Patrocínios, Visor, Acabamento), o painel da opção
 // no meio (no Desenho, a grade de miniaturas em 3D com as suas cores, 12 por página) e o capacete grande à direita (arrastar gira), com as
 // cores principais e o "Padrão" (as 4 variações do desenho) embaixo. Sem WebGL, a prévia volta a ser a folha aberta e a grade fica em texto.
-import { pintarFolha, DESENHOS_CAPACETE, VISEIRAS, CAPACETE_PADRAO, VARIANTES, ACABAMENTOS, PATROCINIOS } from "./f1-capacetes.js";
+import { pintarFolha, DESENHOS_CAPACETE, VISEIRAS, CAPACETE_PADRAO, VARIANTES, ACABAMENTOS, PATROCINIOS, MARCAS_CAPACETE, LUGARES_PATROCINIO, FUNDOS_PATROCINIO,
+  patrociniosDe, extraDoCapacete, miniaturaDoPatrocinio } from "./f1-capacetes.js";
 import { previaDoCapacete } from "./capacete-3d.js";
 
 export const CHAVE_CAPACETE = "corrida:capacete";
@@ -28,7 +29,7 @@ const SETA_E = svg('<path d="m15 5-7 7 7 7"/>'), SETA_D = svg('<path d="m9 5 7 7
 
 export function lerCapacete() {
   let c = null; try { c = JSON.parse(localStorage.getItem(CHAVE_CAPACETE)); } catch { /* sem armazenamento */ }
-  return c && c.desenho && Array.isArray(c.cores) ? { ...CAPACETE_PADRAO, variante: 0, acabamento: "brilho", patrocinio: "", ...c, cores: c.cores.slice(0, 3) } : null;
+  return c && c.desenho && Array.isArray(c.cores) ? { ...CAPACETE_PADRAO, variante: 0, acabamento: "brilho", fundoPatrocinio: "auto", ...c, patrocinio: "", patrocinios: patrociniosDe(c), cores: c.cores.slice(0, 3) } : null;
 }
 const gravar = (c) => { try { localStorage.setItem(CHAVE_CAPACETE, JSON.stringify(c)); } catch { /* sem armazenamento */ } };
 
@@ -36,8 +37,9 @@ const gravar = (c) => { try { localStorage.setItem(CHAVE_CAPACETE, JSON.stringif
 // opcional), aoMudar (cap) (cada mudança, já guardada) }
 export function montarEditorCapacete(el, op = {}) {
   if (el._capacete) { el._capacete.redesenhar(); return el._capacete; }
-  let atual = lerCapacete() || { ...CAPACETE_PADRAO, cores: CAPACETE_PADRAO.cores.slice(), variante: 0, acabamento: "brilho", patrocinio: "" };
-  let aba = "desenho", pagina = 0, slot = 0; // slot: a cor que as cores principais trocam (0 casco, 1 segunda, 2 detalhes)
+  let atual = lerCapacete() || { ...CAPACETE_PADRAO, cores: CAPACETE_PADRAO.cores.slice(), variante: 0, acabamento: "brilho", patrocinio: "", patrocinios: {}, fundoPatrocinio: "auto" };
+  let lugar = "lados"; // o lugar do capacete que a lista de patrocínios preenche
+  let aba = "desenho", pagina = 0, slot = 0, ultimaAssinatura = ""; // slot: a cor que as cores principais trocam (0 casco, 1 segunda, 2 detalhes)
   const desenhos = Object.keys(DESENHOS_CAPACETE), paginas = Math.ceil(desenhos.length / POR_PAGINA);
   el.classList.add("cp2-on");
   el.innerHTML = `<div class="cp2">
@@ -53,14 +55,14 @@ export function montarEditorCapacete(el, op = {}) {
   const previa = () => {
     if (p3d) { p3d.usarNumero(numero()); return p3d.mostrar(atual, numero()); }
     const x = cv.getContext("2d");
-    pintarFolha(x, atual.cores, atual.desenho, numero(), { bandeira: atual.bandeira, nome: atual.nome, variante: atual.variante, patrocinio: atual.patrocinio }, previa);
+    pintarFolha(x, atual.cores, atual.desenho, numero(), extraDoCapacete(atual), previa);
     x.fillStyle = atual.viseira; x.fillRect(278, 98, 212, 36);
   };
   // as miniaturas (fotografadas pela prévia 3D, com as cores de agora; refeitas quando as cores, o visor ou o acabamento mudam)
   let fotos = {}, chaveFotos = "", tFotos = 0;
   const fotosDe = (lista) => {
     if (!p3d) return [];
-    const chave = JSON.stringify([atual.cores, atual.viseira, atual.acabamento, atual.patrocinio]);
+    const chave = JSON.stringify([atual.cores, atual.viseira, atual.acabamento, atual.patrocinios, atual.fundoPatrocinio]);
     if (chave !== chaveFotos) { fotos = {}; chaveFotos = chave; }
     const faltam = lista.filter(([k]) => !fotos[k]);
     if (faltam.length) { const imgs = p3d.fotografar(faltam.map(([, cap]) => cap)); faltam.forEach(([k], i) => { fotos[k] = imgs[i]; }); p3d.mostrar(atual, numero()); }
@@ -69,6 +71,7 @@ export function montarEditorCapacete(el, op = {}) {
   const capCom = (mudanca) => ({ ...atual, ...mudanca });
   const corBotao = (c, on, attr) => `<button type="button" class="cp2-cor ${on ? "on" : ""}" ${attr} style="--c:${c}" aria-label="Cor ${c}" aria-pressed="${on}"></button>`;
   function desenharPainel() {
+    const lista = painel.querySelector(".cp2-marcas"), rolagem = lista ? lista.scrollTop : 0; // (a lista de marcas volta para onde estava)
     el.querySelectorAll("[data-cp-aba]").forEach((b) => { const on = b.dataset.cpAba === aba; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
     if (aba === "desenho") {
       const da = desenhos.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA), imgs = fotosDe(da.map((d) => [`d:${d}:${atual.variante}`, capCom({ desenho: d })]));
@@ -81,11 +84,20 @@ export function montarEditorCapacete(el, op = {}) {
       const ban = `<option value="">Sem bandeira</option>` + Object.entries(PAISES).filter(([s]) => window.GpInfo?.BANDEIRAS?.[s]).map(([s, n]) => `<option value="${s}" ${atual.bandeira === s ? "selected" : ""}>${h(n)}</option>`).join("");
       painel.innerHTML = `<header class="cp2-ph"><h4>Detalhes</h4></header><div class="cp2-campos"><label>Bandeira<select data-cp="bandeira">${ban}</select></label><label>Nome no capacete<input type="text" data-cp="nome" maxlength="14" placeholder="Seu nome" autocomplete="off" value="${h(atual.nome || "")}"></label></div><p class="cp2-nota">A bandeira vai atrás e nos lados; o nome, na faixa acima do visor e na nuca. O número do carro entra sozinho.</p>`;
     } else if (aba === "patrocinios") {
-      painel.innerHTML = `<header class="cp2-ph"><h4>Patrocínios</h4></header><div class="cp2-opcoes">${Object.entries(PATROCINIOS).map(([k, n]) => `<button type="button" class="cp2-op cp2-selo-${k || "nenhum"} ${atual.patrocinio === k ? "on" : ""}" data-cp-patrocinio="${k}" aria-pressed="${atual.patrocinio === k}"><b>${h(n)}</b><small>${k ? "na nuca e nos lados" : "o capacete limpo"}</small></button>`).join("")}</div><p class="cp2-nota">Patrocinadores inventados da galera.</p>`;
+      // (2026-11-15) um patrocínio por lugar: escolhe o lugar, depois a marca (os selos da galera e as marcas das pinturas dos carros) e a placa atrás
+      const pt = atual.patrocinios || {}, nomeDe = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || "Vazio", agora = pt[lugar] || "";
+      const ids = [...Object.keys(PATROCINIOS).filter(Boolean), ...Object.keys(MARCAS_CAPACETE).sort((a, b) => MARCAS_CAPACETE[a].localeCompare(MARCAS_CAPACETE[b], "pt"))];
+      painel.innerHTML = `<header class="cp2-ph"><h4>Patrocínios</h4>${Object.values(pt).some(Boolean) ? `<button type="button" class="cp2-limpar" data-cp-limpar>Tirar todos</button>` : ""}</header>
+        <div class="cp2-lugares" role="tablist" aria-label="Lugar do patrocínio">${Object.entries(LUGARES_PATROCINIO).map(([k, n]) => `<button type="button" role="tab" class="cp2-lugar ${lugar === k ? "on" : ""}" data-cp-lugar="${k}" aria-selected="${lugar === k}"><b>${h(n)}</b><small>${h(nomeDe(pt[k]))}</small></button>`).join("")}</div>
+        <div class="cp2-linha"><span class="cp2-rot">Fundo</span><div class="cp2-fundos">${Object.entries(FUNDOS_PATROCINIO).map(([k, n]) => `<button type="button" class="cp2-fundo ${atual.fundoPatrocinio === k ? "on" : ""}" data-cp-fundo="${k}" aria-pressed="${atual.fundoPatrocinio === k}">${h(n)}</button>`).join("")}</div></div>
+        <div class="cp2-marcas"><button type="button" class="cp2-marca cp2-marca-nada ${agora ? "" : "on"}" data-cp-marca="" aria-pressed="${!agora}"><span>Nenhum</span><small>${h(LUGARES_PATROCINIO[lugar])} limpo</small></button>${ids.map((id) => `<button type="button" class="cp2-marca ${agora === id ? "on" : ""}" data-cp-marca="${id}" title="${h(nomeDe(id))}" aria-pressed="${agora === id}"><img src="${miniaturaDoPatrocinio(id)}" alt=""><small>${h(nomeDe(id))}</small>${agora === id ? `<i class="cp2-ok">${CHECK}</i>` : ""}</button>`).join("")}</div>
+        <p class="cp2-nota">Escolha o lugar e depois a marca: as da galera e as das pinturas dos carros. Com marca na faixa do visor, o nome fica só na nuca.</p>`;
+      const nova = painel.querySelector(".cp2-marcas"); if (nova && rolagem) nova.scrollTop = rolagem;
     } else if (aba === "visor") {
       painel.innerHTML = `<header class="cp2-ph"><h4>Visor</h4></header><div class="cp2-opcoes">${Object.entries(VISEIRAS).map(([c, n]) => `<button type="button" class="cp2-op ${atual.viseira === c ? "on" : ""}" data-cp-visor="${c}" aria-pressed="${atual.viseira === c}"><i class="cp2-vis" style="--c:${c}"></i><b>${h(n)}</b></button>`).join("")}</div>`;
     } else {
-      const dicas = { brilho: "verniz de espelho, o clássico", fosco: "sem brilho, aveludado", metal: "pintura metálica com verniz", cromo: "metal polido, reflete tudo" };
+      const dicas = { brilho: "verniz de espelho, o clássico", fosco: "sem brilho, aveludado", acetinado: "meio brilho, sedoso", metal: "pintura metálica com verniz", perola: "brilho perolado que muda de tom",
+        camaleao: "muda de cor conforme o ângulo", flocos: "purpurina de metal sob o verniz", carbono: "a trama da fibra à mostra", cromo: "metal polido, reflete tudo" };
       painel.innerHTML = `<header class="cp2-ph"><h4>Acabamento</h4></header><div class="cp2-opcoes">${Object.entries(ACABAMENTOS).map(([k, n]) => `<button type="button" class="cp2-op cp2-ac-${k} ${atual.acabamento === k ? "on" : ""}" data-cp-acabamento="${k}" aria-pressed="${atual.acabamento === k}"><i class="cp2-amostra"></i><b>${h(n)}</b><small>${dicas[k]}</small></button>`).join("")}</div>`;
     }
   }
@@ -96,9 +108,10 @@ export function montarEditorCapacete(el, op = {}) {
   }
   const tudo = () => { previa(); desenharPainel(); desenharRodape(); };
   // uma mudança: guarda, mostra no 3D e refaz o painel (as miniaturas esperam um instante, para o arrastar da cor livre não travar)
-  const mudar = (refazer = true) => { gravar(atual); previa(); op.aoMudar?.(atual); if (!refazer) return; clearTimeout(tFotos); tFotos = setTimeout(() => { desenharPainel(); desenharRodape(); }, 120); };
+  const mudar = (refazer = true) => { gravar(atual); ultimaAssinatura = JSON.stringify([lerCapacete(), numero()]); /* (a mesma forma que redesenhar() lê) */ previa(); op.aoMudar?.(atual); if (!refazer) return; clearTimeout(tFotos); tFotos = setTimeout(() => { desenharPainel(); desenharRodape(); }, 120); };
   el.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b || !el.contains(b)) return;
+    e.stopPropagation(); // (os cliques do editor param aqui: a sala e a Central não tratam nem redesenham a página por eles)
     const d = b.dataset;
     if (d.cpAba) { aba = d.cpAba; return desenharPainel(); }
     if (d.cpPag) { pagina = Math.max(0, Math.min(paginas - 1, pagina + Number(d.cpPag))); return desenharPainel(); }
@@ -106,7 +119,10 @@ export function montarEditorCapacete(el, op = {}) {
     if (d.cpCor != null) { atual.cores[+d.cpCor] = d.c; slot = +d.cpCor; return mudar(); }
     if (d.cpRapida) { atual.cores[slot] = d.cpRapida; return mudar(); }
     if (d.cpVariante != null) { atual.variante = +d.cpVariante; return mudar(); }
-    if (d.cpPatrocinio != null) { atual.patrocinio = d.cpPatrocinio; return mudar(); }
+    if (d.cpLugar) { lugar = d.cpLugar; return desenharPainel(); }
+    if (d.cpMarca != null) { atual.patrocinios = { ...(atual.patrocinios || {}) }; if (d.cpMarca) atual.patrocinios[lugar] = d.cpMarca; else delete atual.patrocinios[lugar]; atual.patrocinio = ""; return mudar(); }
+    if (d.cpFundo) { atual.fundoPatrocinio = d.cpFundo; return mudar(); }
+    if (d.cpLimpar != null) { atual.patrocinios = {}; atual.patrocinio = ""; return mudar(); }
     if (d.cpVisor) { atual.viseira = d.cpVisor; return mudar(); }
     if (d.cpAcabamento) { atual.acabamento = d.cpAcabamento; return mudar(); }
   });
@@ -119,7 +135,14 @@ export function montarEditorCapacete(el, op = {}) {
   const api = {
     atual: () => atual,
     // de novo a partir do que está guardado (outra aba pode ter mudado) e o número de agora
-    redesenhar() { if (el.contains(document.activeElement)) return previa(); const salvo = lerCapacete(); if (salvo) atual = salvo; tudo(); }, // (não refaz o painel de quem está digitando o nome)
+    // de novo só se o capacete guardado (outra aba) ou o número mudou: a sala e a Central chamam isto a cada redesenho delas, e refazer o painel
+    // a cada estado da sala (que chega a cada clique de qualquer um) fazia a página "atualizar" para todos
+    redesenhar() {
+      const salvo = lerCapacete(), assinatura = JSON.stringify([salvo, numero()]);
+      if (assinatura === ultimaAssinatura) return; ultimaAssinatura = assinatura;
+      if (el.contains(document.activeElement)) return previa(); // (não refaz o painel de quem está digitando o nome)
+      if (salvo) atual = salvo; tudo();
+    },
   };
   el._capacete = api; api.redesenhar(); return api;
 }

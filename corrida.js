@@ -62,10 +62,15 @@ function limparCapacete(c) {
   const cores = Array.isArray(c.cores) ? c.cores.slice(0, 3) : [];
   if (!DESENHOS_CAPACETE.includes(c.desenho) || cores.length !== 3 || !cores.every((x) => HEX.test(x)) || !HEX.test(c.viseira || "")) return null;
   const bandeira = /^[A-Z]{2}$/.test(c.bandeira || "") ? c.bandeira : "", nome = String(c.nome || "").normalize("NFC").replace(/[^\p{L}\p{N} .\-]/gu, "").trim().slice(0, 14);
-  // (2026-11-14) o "Padrão" (0 a 3), o acabamento do casco e o patrocínio: os mesmos de f1-capacetes.js (VARIANTES, ACABAMENTOS, PATROCINIOS)
-  const variante = [0, 1, 2, 3].includes(c.variante) ? c.variante : 0, acabamento = ["brilho", "fosco", "metal", "cromo"].includes(c.acabamento) ? c.acabamento : "brilho";
+  // (2026-11-14) o "Padrão" (0 a 3), o acabamento do casco e o patrocínio: os mesmos de f1-capacetes.js (VARIANTES, ACABAMENTOS, PATROCINIOS, LUGARES_PATROCINIO)
+  const variante = [0, 1, 2, 3].includes(c.variante) ? c.variante : 0;
+  const acabamento = ["brilho", "fosco", "acetinado", "metal", "perola", "camaleao", "flocos", "carbono", "cromo"].includes(c.acabamento) ? c.acabamento : "brilho";
   const patrocinio = ["vila", "galera", "energia", "pneus"].includes(c.patrocinio) ? c.patrocinio : "";
-  return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome, variante, acabamento, patrocinio };
+  // (2026-11-15) um patrocínio por lugar (os selos da galera ou as marcas dos carros, f1-capacetes.js MARCAS_CAPACETE: só o id curto passa) e a placa atrás deles
+  const patrocinios = {};
+  if (c.patrocinios && typeof c.patrocinios === "object") for (const l of ["testa", "faixa", "lados", "nuca", "queixo"]) { const v = c.patrocinios[l]; if (typeof v === "string" && /^[a-z0-9]{1,20}$/.test(v)) patrocinios[l] = v; }
+  const fundoPatrocinio = ["auto", "escuro", "claro", "cor"].includes(c.fundoPatrocinio) ? c.fundoPatrocinio : "auto";
+  return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome, variante, acabamento, patrocinio, patrocinios, fundoPatrocinio };
 }
 
 module.exports = function attachCorrida(io) {

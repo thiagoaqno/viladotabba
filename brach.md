@@ -1,4 +1,4 @@
-# Carreira: a montagem antiga acima do orçamento destrava, e a carreira do programa de PC sobe para o site (o código vale no navegador)
+# Carreira: a montagem antiga acima do orçamento destrava, a carreira do programa de PC sobe para o site (o código vale no navegador) e a cor livre do capacete não fecha mais
 
 Dois problemas que o Thiago achou depois do #756 e do #757.
 
@@ -21,6 +21,10 @@ O programa de PC trazia a carreira do site na primeira vez (`trazerCarreiraDoSit
   - o save só é trocado se o que chega não está atrás (o ano e o GP), e o código que o site já tinha fica como está.
 - **Para a carreira que já existe no PC:** basta abrir o programa atualizado. Ao abrir a carreira, ela sobe, e o código do programa passa a valer em "Recuperar" no site.
 - **O que não sobe:** os replays dos GPs jogados no PC ficam no PC. No site, a aba Telemetria desses GPs avisa que não tem replay.
+
+## A cor livre do capacete fechava no primeiro clique
+
+No editor do capacete, o seletor de "outra cor" fechava logo depois do primeiro clique: cada mudança redesenhava o painel e trocava o campo de cor no meio da escolha. Agora (`capacete-editor-ui.js`), enquanto o seletor está aberto, só o capacete muda. O painel e as miniaturas se refazem quando o seletor fecha (o evento `change`).
 
 ## Conferido
 

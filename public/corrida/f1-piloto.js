@@ -137,7 +137,7 @@ function geometrias() {
   // a viseira (2026-11-13, pela imagem do Thiago: "a viseira fica melhor assim ao invés de reta"): uma peça à parte, curva, que dá a volta pela
   // frente (~150°) seguindo a forma da cabeça, mais alta que antes (da altura dos olhos até perto do queixo) e SALTADA: fica 2 mm para fora do
   // casco e estufa mais no meio (até +3,5 mm), como a lente de verdade. Em volta, a `moldura` (a borracha escura da borda e as duas dobradiças).
-  const V = { phi0: 1.5 * Math.PI - 1.25, phi: 2.5, theta0: 1.24, theta: 0.36 }; // (2026-11-14: um pouco mais estreita na altura, como a da referência)
+  const V = { phi0: 1.5 * Math.PI - 1.33, phi: 2.66, theta0: 1.33, theta: 0.45 }; // (2026-11-15, o Thiago: "aumenta o tamanho e desce mais ela") // (2026-11-14: um pouco mais estreita na altura, como a da referência)
   const viseira = estufar(casco(arquear(new THREE.SphereGeometry(1, 56, 8, V.phi0, V.phi, V.theta0, V.theta), V), 1), 0.002, 0.0035);
   const moldura = molduraDaViseira(V);
   // o braço (manga) afina do ombro ao cotovelo e o antebraço do cotovelo ao pulso; o ombro e o cotovelo são bolinhas (a junta arredondada). As bolas levam a escala inversa do comprimento do osso, que estica o cilindro a cada quadro.

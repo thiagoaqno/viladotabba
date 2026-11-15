@@ -3,8 +3,8 @@
 // para a prévia, que só desenha enquanto o canvas está na página e visível (nada de quadro gasto com a aba escondida).
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { geometriasDoCapacete, materialDaViseira, materialDaMoldura } from "./f1-piloto.js";
-import { pintarFolha, acabamentoDoCasco } from "./f1-capacetes.js";
+import { geometriasDoCapacete, materialDaViseira, materialDaMoldura, aplicarAcabamento } from "./f1-piloto.js";
+import { pintarFolha, extraDoCapacete } from "./f1-capacetes.js";
 
 // cv: o canvas; devolve { mostrar(cap, numero), soltar() } (ou null sem WebGL: o editor volta para a folha aberta)
 export function previaDoCapacete(cv) {
@@ -16,14 +16,14 @@ export function previaDoCapacete(cv) {
   cena.add(new THREE.HemisphereLight(0xdfe8ff, 0x20222a, 0.6));
   const sol = new THREE.DirectionalLight(0xffffff, 2.2); sol.position.set(-0.6, 0.9, -0.8); cena.add(sol);
   const contra = new THREE.DirectionalLight(0x9fb8ff, 1.1); contra.position.set(0.8, 0.3, 0.9); cena.add(contra);
-  const cam = new THREE.PerspectiveCamera(30, 2, 0.05, 5); cam.position.set(0, 0.03, -0.62); cam.lookAt(0, 0, 0);
+  const cam = new THREE.PerspectiveCamera(30, 2, 0.05, 5); cam.position.set(0, 0.045, -0.48); cam.lookAt(0, -0.004, 0); // (mais perto: o capacete enche o palco, como na referência)
 
   const folha = document.createElement("canvas"); folha.width = 512; folha.height = 256;
   const tex = new THREE.CanvasTexture(folha); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   const casco = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.28, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.08 });
   const G = geometriasDoCapacete(), pivo = new THREE.Group(), cab = new THREE.Mesh(G.capacete, casco), vis = new THREE.Mesh(G.viseira, materialDaViseira());
   if (G.moldura) pivo.add(new THREE.Mesh(G.moldura, materialDaMoldura())); // a borracha da borda e as dobradiças da viseira
-  pivo.add(cab, vis); cena.add(pivo); pivo.rotation.y = -0.6; // (começa de três-quartos: a frente do capacete é −z, virada para a câmera, e a lateral aparece)
+  pivo.add(cab, vis); cena.add(pivo); pivo.rotation.y = -0.85; // (começa de três-quartos: a frente do capacete é −z, virada para a câmera, e a lateral aparece)
 
   let ang = pivo.rotation.y, arrasto = null, parado = 0, vivo = true, raf = 0, numero0 = null;
   cv.style.touchAction = "pan-y"; cv.style.cursor = "grab";
@@ -49,19 +49,20 @@ export function previaDoCapacete(cv) {
 
   return {
     // cap: { desenho, cores, viseira, bandeira, nome } (mods.capacete); numero: o do carro, se houver
-    // cap: também { variante, acabamento, patrocinio } (2026-11-14)
+    // cap: também { variante, acabamento, patrocinios, fundoPatrocinio } (2026-11-14 e 15)
     mostrar(cap, numero = null) {
-      const pintar = () => { pintarFolha(folha.getContext("2d"), cap.cores, cap.desenho, numero, { bandeira: cap.bandeira, nome: cap.nome, variante: cap.variante | 0, patrocinio: cap.patrocinio || "" }, () => { pintar(); tex.needsUpdate = true; }); };
+      const pintar = () => { pintarFolha(folha.getContext("2d"), cap.cores, cap.desenho, numero, extraDoCapacete(cap), () => { pintar(); tex.needsUpdate = true; }); };
       pintar(); tex.needsUpdate = true; vis.material = materialDaViseira(cap.viseira);
-      Object.assign(casco, acabamentoDoCasco(cap.acabamento)); casco.needsUpdate = true;
+      aplicarAcabamento(casco, cap.acabamento);
     },
     // as miniaturas da grade de desenhos: o mesmo capacete com cada desenho (ou cada variante), fotografado de três-quartos num canvas pequeno
     // (o mesmo renderer, num tamanho só; devolve as imagens em dataURL). `lista`: os capacetes inteiros de cada miniatura.
     fotografar(lista, w = 180, h = 128) {
       const salvo = { w: cv.width, h: cv.height, ang: pivo.rotation.y, aspect: cam.aspect }, fotos = [];
-      renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); pivo.rotation.y = -0.75;
+      const camPos = cam.position.clone(); cam.position.set(0, 0.04, -0.58); cam.lookAt(0, -0.004, 0); // (um pouco mais longe: a miniatura mostra o capacete inteiro)
+      renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); pivo.rotation.y = -0.85;
       for (const cap of lista) { this.mostrar(cap, numero0); renderer.render(cena, cam); fotos.push(cv.toDataURL("image/png")); }
-      renderer.setSize(salvo.w / renderer.getPixelRatio(), salvo.h / renderer.getPixelRatio(), false); cam.aspect = salvo.aspect; cam.updateProjectionMatrix(); pivo.rotation.y = salvo.ang;
+      renderer.setSize(salvo.w / renderer.getPixelRatio(), salvo.h / renderer.getPixelRatio(), false); cam.aspect = salvo.aspect; cam.position.copy(camPos); cam.lookAt(0, -0.004, 0); cam.updateProjectionMatrix(); pivo.rotation.y = salvo.ang;
       return fotos;
     },
     usarNumero(n) { numero0 = n; },

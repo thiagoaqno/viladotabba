@@ -7,6 +7,8 @@
 // A folha é de 512x256 e envolve a cabeça: x em volta (a frente em 384, as costas em 128, os lados em 0/512 e 256), y da coroa (0) ao queixo (256). A viseira
 // (f1-piloto.js) ocupa y de 98 a 127 e x = 384 ± 94, então esse pedaço fica só com o casco por baixo; a faixa do patrocínio entra logo acima.
 // `cores`: [casco, segunda cor, terceira cor (filetes, detalhes)].
+import { desenharMarca } from "./f1-marcas.js";
+
 export const CAPACETES = {
   norris: { cores: ["#c4f31a", "#101114", "#d9ae2e"], desenho: "faixa" },       // verde-neon e preto, uma estrelinha dourada
   piastri: { cores: ["#f2c10f", "#d62a2a", "#1d3f9a"], desenho: "bandas" },     // amarelo, vermelho e azul
@@ -203,12 +205,96 @@ export const DESENHOS_CAPACETE = { faixa: "Faixa", bandas: "Bandas", blocos: "Bl
 // o "Padrão" (as 4 variações de cada desenho), o acabamento do casco e os patrocínios (selos inventados, sem marca de verdade); a lista do servidor
 // é a mesma (corrida.js, limparCapacete)
 export const VARIANTES = ["Original", "Detalhe trocado", "Cores trocadas", "Espelhado"];
-export const ACABAMENTOS = { brilho: "Brilhante", fosco: "Fosco", metal: "Metálico", cromo: "Cromado" };
+export const ACABAMENTOS = { brilho: "Brilhante", fosco: "Fosco", acetinado: "Acetinado", metal: "Metálico", perola: "Perolado", camaleao: "Camaleão",
+  flocos: "Flocos de metal", carbono: "Fibra de carbono", cromo: "Cromado" }; // (2026-11-15: acetinado, perolado, camaleão, flocos e carbono)
 export const PATROCINIOS = { "": "Nenhum", vila: "Vila do Tabba", galera: "Galera Racing", energia: "Tabba Energy", pneus: "Turbo Pneus" };
+// (2026-11-15) as marcas das pinturas dos carros (f1-marcas.js, desenhadas no canvas) também podem ir no capacete, cada uma num lugar
+export const MARCAS_CAPACETE = { hp: "HP", shell: "Shell", vpower: "V-Power", unicredit: "UniCredit", ceva: "CEVA", ibm: "IBM", zyn: "ZYN", richardmille: "Richard Mille",
+  bitdefender: "Bitdefender", bingx: "BingX", whoop: "WHOOP", pirelli: "Pirelli", genesys: "Genesys", peroni: "Peroni", rayban: "Ray-Ban", ambipar: "Ambipar", dell: "Dell",
+  etihad: "Etihad", groq: "Groq", hilton: "Hilton", oneflight: "ONEflight", castrol: "Castrol", hyatt: "World of Hyatt", bp: "bp", revolutr: "Revolut", adidas: "adidas",
+  twgai: "TWG AI", jimbeam: "Jim Beam", corescientific: "Core Scientific", brasao: "Brasão Cadillac", hilfiger: "Tommy Hilfiger", coherent: "Coherent", proforce: "Proforce+",
+  pepperstone: "Pepperstone", glenfiddich: "Glenfiddich", netapp: "NetApp", xerox: "Xerox", nexgen: "NexGen", hhonda: "Honda", cw: "CW", stephens: "Stephens",
+  myprotein: "Myprotein", kraken: "Kraken", twilio: "Twilio", vast: "VAST", bwscores: "bw Scores", williamsw: "W da Williams", atlassiana: "Atlassian", gemini: "Gemini",
+  mastercard: "Mastercard", dropbox: "Dropbox", microsoft: "Microsoft", cashapp: "Cash App", ford: "Ford", gulf: "Gulf", aneis: "Anéis da Audi", eni: "eni", gr: "GR",
+  moneygram: "MoneyGram", stake: "Stake", kick: "KICK", orlen: "Orlen", alphatauri: "AlphaTauri", alfaromeo: "Alfa Romeo", trevo: "Quadrifoglio", santander: "Santander",
+  chrome: "Chrome", palmangels: "Palm Angels", estrela: "Estrela da Mercedes", gota: "Gota da Petronas", syntium: "Petronas Syntium", gate: "Gate", carlyle: "Carlyle",
+  att: "AT&T", tagheuer: "TAG Heuer", tudor: "Tudor" };
+// os lugares do patrocínio na folha: [x, y, largura, altura] (largura e altura medidas no equador; mais perto do topo ou do queixo a folha
+// encolhe na volta, e a marca é esticada em 1/sen(ângulo) para continuar com a mesma cara). Os lados são dois (256 e 0/512, a costura).
+export const LUGARES_PATROCINIO = { testa: "Testa", faixa: "Faixa do visor", lados: "Lados", nuca: "Nuca", queixo: "Queixo" };
+const LUGARES = { testa: [[384, 52, 120, 20]], faixa: [[384, 77, 150, 15]], lados: [[256, 82, 110, 26], [0, 82, 110, 26], [512, 82, 110, 26]], nuca: [[128, 58, 150, 24]], queixo: [[384, 172, 110, 22]] };
+export const FUNDOS_PATROCINIO = { auto: "Direto no casco", escuro: "Placa escura", claro: "Placa clara", cor: "Placa na cor 3" };
+// os patrocínios de um capacete, lugar por lugar ({ testa, faixa, lados, nuca, queixo }); o de antes (um só, `patrocinio`) ia na nuca e nos lados
+export function patrociniosDe(cap) {
+  if (cap && cap.patrocinios && typeof cap.patrocinios === "object") return { ...cap.patrocinios };
+  return cap && cap.patrocinio ? { lados: cap.patrocinio, nuca: cap.patrocinio } : {};
+}
+// o que pintarFolha recebe de um capacete de quem joga
+export const extraDoCapacete = (cap) => ({ bandeira: cap.bandeira, nome: cap.nome, variante: cap.variante | 0, patrocinios: patrociniosDe(cap), fundoPatrocinio: cap.fundoPatrocinio || "auto", acabamento: cap.acabamento || "brilho" });
+// a caixa da marca desenhada com altura 1 (medida uma vez, pelos pixels: cada marca tem uma largura)
+const CAIXAS = new Map();
+function caixaDaMarca(id) {
+  if (CAIXAS.has(id)) return CAIXAS.get(id);
+  const W = 1400, H = 240, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const c = cv.getContext("2d", { willReadFrequently: true });
+  c.translate(W / 2, H / 2); c.scale(100, 100); desenharMarca(c, id, { tinta: "#fff", fundo: "#fff" });
+  const d = c.getImageData(0, 0, W, H).data; let x0 = W, x1 = -1, y0 = H, y1 = -1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (d[(y * W + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const b = x1 < 0 ? { x0: -1, x1: 1, y0: -0.5, y1: 0.5 } : { x0: (x0 - W / 2) / 100, x1: (x1 + 1 - W / 2) / 100, y0: (y0 - H / 2) / 100, y1: (y1 + 1 - H / 2) / 100 };
+  CAIXAS.set(id, b); return b;
+}
+const claroDe = (h) => { const n = parseInt(String(h).slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) > 140; };
+// a cor média de um pedaço da folha (para a letra da marca contrastar com o que está embaixo)
+function corEmbaixo(x, cx, cy, w, h) {
+  const x0 = Math.max(0, Math.round(cx - w / 2)), x1 = Math.min(512, Math.round(cx + w / 2)), y0 = Math.max(0, Math.round(cy - h / 2)), y1 = Math.min(256, Math.round(cy + h / 2));
+  if (x1 - x0 < 1 || y1 - y0 < 1) return "#808080";
+  const d = x.getImageData(x0, y0, x1 - x0, y1 - y0).data; let r = 0, g = 0, b = 0;
+  for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
+  const n = d.length / 4, hex = (v) => Math.round(v / n).toString(16).padStart(2, "0"); return "#" + hex(r) + hex(g) + hex(b);
+}
+// uma marca (ou um selo da galera) num lugar: a placa (se tiver), a marca cabendo nela e esticada na volta da cabeça
+function patrocinioNoLugar(x, id, [cx, cy, w, h], fundo, c3) {
+  const estica = Math.min(2, 1 / Math.max(0.3, Math.sin(Math.PI * cy / 256)));
+  x.save(); x.translate(cx, cy); x.scale(estica, 1);
+  if (SELOS[id]) { selo(x, id, 0, 0, w, h); x.restore(); return; }
+  const b = caixaDaMarca(id), bw = b.x1 - b.x0, bh = b.y1 - b.y0, folga = h * 0.16, e = Math.min((w - folga * 2) / bw, (h - folga * 2) / bh);
+  const placa = fundo === "escuro" ? "#101114" : fundo === "claro" ? "#f4f4f4" : fundo === "cor" ? c3 : null;
+  if (placa) { const pw = bw * e + folga * 2.4; x.fillStyle = placa; x.beginPath(); x.roundRect ? x.roundRect(-pw / 2, -h / 2, pw, h, h / 4) : x.rect(-pw / 2, -h / 2, pw, h); x.fill(); }
+  x.restore();
+  const sob = placa || corEmbaixo(x, cx, cy, bw * e * estica, bh * e), tinta = claroDe(sob) ? "#101114" : "#ffffff";
+  x.save(); x.translate(cx, cy); x.scale(estica, 1); x.scale(e, e); x.translate(-(b.x0 + b.x1) / 2, -(b.y0 + b.y1) / 2);
+  desenharMarca(x, id, { tinta, fundo: sob }); x.restore();
+}
 // as propriedades do material do casco em cada acabamento (o verniz por cima, como o capacete de verdade)
+// (MeshPhysicalMaterial: todas as chaves vêm sempre, para trocar de um acabamento para outro sem sobrar nada do anterior; `relevo` é a textura
+// de relevo do casco: a trama do carbono ou os flocos, f1-piloto.js aplicarAcabamento)
 export function acabamentoDoCasco(a) {
-  return { fosco: { roughness: 0.72, metalness: 0.02, clearcoat: 0, clearcoatRoughness: 0.6 }, metal: { roughness: 0.32, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.08 },
-    cromo: { roughness: 0.12, metalness: 0.92, clearcoat: 1, clearcoatRoughness: 0.03 } }[a] || { roughness: 0.28, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.08 };
+  const base = { roughness: 0.28, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.08, iridescence: 0, iridescenceIOR: 1.3, sheen: 0, relevo: null };
+  return { ...base, ...({ fosco: { roughness: 0.72, metalness: 0.02, clearcoat: 0, clearcoatRoughness: 0.6 }, acetinado: { roughness: 0.48, metalness: 0.06, clearcoat: 0.45, clearcoatRoughness: 0.4 },
+    metal: { roughness: 0.32, metalness: 0.55 }, perola: { roughness: 0.3, metalness: 0.12, clearcoatRoughness: 0.05, iridescence: 0.6, iridescenceIOR: 1.5, sheen: 0.4 },
+    camaleao: { roughness: 0.24, metalness: 0.6, clearcoatRoughness: 0.04, iridescence: 1, iridescenceIOR: 2 },
+    flocos: { roughness: 0.36, metalness: 0.62, clearcoatRoughness: 0.03, relevo: "flocos" }, carbono: { roughness: 0.34, metalness: 0.18, clearcoatRoughness: 0.04, relevo: "carbono" },
+    cromo: { roughness: 0.12, metalness: 0.92, clearcoatRoughness: 0.03 } }[a] || {}) };
+}
+// as folhas 512x256 do relevo (feitas uma vez): o carbono é a sarja 2x2 (quadros de 4 px com a fibra deitada ou em pé, mais clara no meio do
+// fio) e os flocos, um ruído de pontos. O carbono também é a cor do casco (pintarFolha), com um tanto da cor 1 por cima.
+const RELEVOS = {};
+export function folhaDeRelevo(tipo) {
+  if (RELEVOS[tipo] || typeof document === "undefined") return RELEVOS[tipo] || null;
+  const cv = document.createElement("canvas"); cv.width = 512; cv.height = 256; const x = cv.getContext("2d");
+  if (tipo === "carbono") {
+    const Q = 4;
+    for (let i = 0; i < 512 / Q; i++) for (let j = 0; j < 256 / Q; j++) {
+      const deitada = ((i + j) & 3) < 2, px = i * Q, py = j * Q;
+      x.fillStyle = "#101114"; x.fillRect(px, py, Q, Q);
+      x.fillStyle = "#1d1f24"; deitada ? x.fillRect(px, py + 1, Q, Q - 2) : x.fillRect(px + 1, py, Q - 2, Q);
+      x.fillStyle = "#2b2e35"; deitada ? x.fillRect(px, py + 1.5, Q, 1) : x.fillRect(px + 1.5, py, 1, Q);
+    }
+  } else if (tipo === "flocos") {
+    const d = x.createImageData(512, 256);
+    for (let k = 0; k < d.data.length; k += 4) { const v = Math.random() < 0.35 ? 255 * Math.random() : 128; d.data[k] = d.data[k + 1] = d.data[k + 2] = v; d.data[k + 3] = 255; }
+    x.putImageData(d, 0, 0);
+  } else return null;
+  return (RELEVOS[tipo] = cv);
 }
 // um selo de patrocínio: o texto em caixa alta num retângulo arredondado (as cores e o desenho mudam de um para outro)
 const SELOS = { vila: ["VILA DO TABBA", "#101114", "#ffd23f"], galera: ["GALERA RACING", "#e10600", "#ffffff"], energia: ["TABBA ENERGY", "#18c46b", "#08100b"], pneus: ["TURBO PNEUS", "#ffffff", "#101114"] };
@@ -235,6 +321,8 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   const v = extra && extra.variante | 0, base = v === 1 ? [cores[0], cores[2], cores[1]] : v === 2 ? [cores[1], cores[0], cores[2]] : cores; // (o "Padrão": as cores trocadas)
   const [c1, c2, c3] = base;
   x.fillStyle = c1; x.fillRect(0, 0, 512, 256);
+  const carbono = extra && extra.acabamento === "carbono" && folhaDeRelevo("carbono");
+  if (carbono) { x.drawImage(carbono, 0, 0); x.globalAlpha = 0.2; x.fillStyle = c1; x.fillRect(0, 0, 512, 256); x.globalAlpha = 1; } // (o casco de carbono, puxado para a cor 1)
   x.save(); if (v === 3) { x.translate(512, 0); x.scale(-1, 1); } // (o "Padrão" espelhado: o desenho vira de lado)
   (DESENHOS[desenho] || DESENHOS.generico)(x, base);
   x.restore();
@@ -242,15 +330,21 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   // as duas entradas de ar do queixo, logo abaixo da viseira (2026-11-13, pela imagem do Thiago): fendas escuras inclinadas para fora
   x.fillStyle = "#0b0c10";
   for (const l of [-1, 1]) { x.save(); x.translate(384 + l * 34, 150); x.rotate(l * 0.18); x.beginPath(); x.roundRect ? x.roundRect(-17, -4, 34, 8, 4) : x.rect(-17, -4, 34, 8); x.fill(); x.restore(); }
-  if (extra && extra.patrocinio && SELOS[extra.patrocinio]) { selo(x, extra.patrocinio, 128, 60, 150, 22); for (const cx of [0, 256, 512]) selo(x, extra.patrocinio, cx, 196, 110, 18); } // (na nuca e nos dois lados)
+  const patr = extra ? (extra.patrocinios || patrociniosDe(extra)) : {};
+  for (const [lugar, id] of Object.entries(patr)) {
+    if (!LUGARES[lugar] || !id || !(SELOS[id] || MARCAS_CAPACETE[id])) continue;
+    if (lugar === "faixa") { x.fillStyle = c3; x.fillRect(278, 66, 212, 22); } // (a faixa acima do visor, como a do nome)
+    for (const l of LUGARES[lugar]) patrocinioNoLugar(x, id, l, extra.fundoPatrocinio, c3);
+  }
   if (extra) {
     const img = extra.bandeira ? bandeiraImg(extra.bandeira, aoChegar) : null;
     if (img) for (const [cx, cy, w] of [[128, 104, 84], [256, 120, 54], [0, 120, 54], [512, 120, 54]]) { x.fillStyle = "#0b0c10"; x.fillRect(cx - w / 2 - 2, cy - w / 3 - 2, w + 4, w * 2 / 3 + 4); x.drawImage(img, cx - w / 2, cy - w / 3, w, w * 2 / 3); }
     const nome = String(extra.nome || "").trim();
     if (nome) {
-      const claro = (h) => { const n = parseInt(String(h).slice(1), 16); return ((n >> 16) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) > 140; };
-      x.fillStyle = c3; x.fillRect(278, 66, 212, 22); x.fillStyle = claro(c3) ? "#101114" : "#ffffff";
-      x.font = "900 17px Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(nome.toUpperCase(), 384, 78, 170); // na faixa acima da viseira (acima do lábio dela)
+      if (!patr.faixa) { // na faixa acima da viseira (acima do lábio dela), se a faixa não tiver patrocínio
+        x.fillStyle = c3; x.fillRect(278, 66, 212, 22); x.fillStyle = claroDe(c3) ? "#101114" : "#ffffff";
+        x.font = "900 17px Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(nome.toUpperCase(), 384, 78, 170);
+      }
       x.font = "900 24px Arial, sans-serif"; x.lineWidth = 5; x.strokeStyle = "#0b0c10"; x.strokeText(nome.toUpperCase(), 128, 214, 180); x.fillStyle = "#ffffff"; x.fillText(nome.toUpperCase(), 128, 214, 180); // na nuca
     }
   }
@@ -258,4 +352,18 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
     x.font = "900 54px 'Arial Black', Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineJoin = "round"; x.lineWidth = 7;
     for (const [cx, cy] of [[128, 168], [256, 172], [0, 172], [512, 172]]) { x.strokeStyle = "#0b0c10"; x.strokeText(String(numero), cx, cy); x.fillStyle = "#ffffff"; x.fillText(String(numero), cx, cy); }
   }
+}
+// a miniatura de um patrocínio para o editor (dataURL, feita uma vez): a marca ou o selo num quadro escuro
+const MINIS = new Map();
+export function miniaturaDoPatrocinio(id, w = 150, h = 60) {
+  if (MINIS.has(id)) return MINIS.get(id);
+  if (typeof document === "undefined") return "";
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const x = cv.getContext("2d");
+  x.fillStyle = "#1b1e25"; x.fillRect(0, 0, w, h);
+  if (SELOS[id]) selo(x, id, w / 2, h / 2, w * 0.86, h * 0.42);
+  else if (MARCAS_CAPACETE[id]) {
+    const b = caixaDaMarca(id), e = Math.min((w * 0.8) / (b.x1 - b.x0), (h * 0.6) / (b.y1 - b.y0));
+    x.translate(w / 2, h / 2); x.scale(e, e); x.translate(-(b.x0 + b.x1) / 2, -(b.y0 + b.y1) / 2); desenharMarca(x, id, { tinta: "#ffffff", fundo: "#1b1e25" });
+  }
+  const url = cv.toDataURL(); MINIS.set(id, url); return url;
 }

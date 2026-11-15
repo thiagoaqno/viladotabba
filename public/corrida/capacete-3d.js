@@ -3,8 +3,8 @@
 // para a prévia, que só desenha enquanto o canvas está na página e visível (nada de quadro gasto com a aba escondida).
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { geometriasDoCapacete, materialDaViseira, materialDaMoldura } from "./f1-piloto.js";
-import { pintarFolha, acabamentoDoCasco } from "./f1-capacetes.js";
+import { geometriasDoCapacete, materialDaViseira, materialDaMoldura, aplicarAcabamento } from "./f1-piloto.js";
+import { pintarFolha, extraDoCapacete } from "./f1-capacetes.js";
 
 // cv: o canvas; devolve { mostrar(cap, numero), soltar() } (ou null sem WebGL: o editor volta para a folha aberta)
 export function previaDoCapacete(cv) {
@@ -49,11 +49,11 @@ export function previaDoCapacete(cv) {
 
   return {
     // cap: { desenho, cores, viseira, bandeira, nome } (mods.capacete); numero: o do carro, se houver
-    // cap: também { variante, acabamento, patrocinio } (2026-11-14)
+    // cap: também { variante, acabamento, patrocinios, fundoPatrocinio } (2026-11-14 e 15)
     mostrar(cap, numero = null) {
-      const pintar = () => { pintarFolha(folha.getContext("2d"), cap.cores, cap.desenho, numero, { bandeira: cap.bandeira, nome: cap.nome, variante: cap.variante | 0, patrocinio: cap.patrocinio || "" }, () => { pintar(); tex.needsUpdate = true; }); };
+      const pintar = () => { pintarFolha(folha.getContext("2d"), cap.cores, cap.desenho, numero, extraDoCapacete(cap), () => { pintar(); tex.needsUpdate = true; }); };
       pintar(); tex.needsUpdate = true; vis.material = materialDaViseira(cap.viseira);
-      Object.assign(casco, acabamentoDoCasco(cap.acabamento)); casco.needsUpdate = true;
+      aplicarAcabamento(casco, cap.acabamento);
     },
     // as miniaturas da grade de desenhos: o mesmo capacete com cada desenho (ou cada variante), fotografado de três-quartos num canvas pequeno
     // (o mesmo renderer, num tamanho só; devolve as imagens em dataURL). `lista`: os capacetes inteiros de cada miniatura.

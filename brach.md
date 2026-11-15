@@ -1,4 +1,4 @@
-# Capacete: o formato de F1 de verdade com a viseira em arco, e o editor que não atualiza a página de todos a cada clique
+# Capacete: o formato de F1 de verdade, a viseira em arco, patrocínios por lugar com as marcas dos carros, acabamentos novos e o editor que não atualiza a página de todos
 
 Pedido do Thiago depois do #754: mudar o formato do capacete para ficar parecido com a referência, mostrar o print no fim, e consertar a página que "atualiza para todos" a cada clique.
 
@@ -25,11 +25,28 @@ Pedido do Thiago depois do #754: mudar o formato do capacete para ficar parecido
 - **A faixa do nome e do patrocínio** subiu, para não ficar embaixo do lábio da viseira.
 - **As miniaturas:** apareciam apagadas quando a animação de entrada não corria; agora não ficam presas invisíveis.
 
+## Patrocínios por lugar e acabamentos novos
+
+Pedido do Thiago (2026-11-15): "mais variáveis de texturas no capacete… opções de colocar o patrocinador… da pra aproveitar as logos lá que já temos para os carros".
+
+- **Os lugares** (`f1-capacetes.js`, `LUGARES_PATROCINIO`): testa, faixa do visor, lados, nuca e queixo, cada um com o seu patrocínio. No editor, na aba Patrocínios, você escolhe o lugar e depois a marca, numa lista com miniatura.
+  - **As marcas:** os 4 selos da galera e as 76 marcas das pinturas dos carros (`f1-marcas.js`, as mesmas funções de canvas, sem imagem nova; `MARCAS_CAPACETE` dá o nome de cada uma).
+  - **O tamanho:** cada marca tem uma largura, medida uma vez pelos pixels (`caixaDaMarca`), e cabe no lugar. Perto do topo e do queixo a folha encolhe na volta da cabeça, e a marca é esticada em 1/sen do ângulo (até 2x).
+  - **A placa atrás:** direto no casco (a letra fica clara ou escura conforme a cor média do que está embaixo), placa escura, placa clara ou placa na cor 3.
+  - **Com marca na faixa do visor,** o nome fica só na nuca.
+  - **O capacete de antes** (um patrocínio só, `patrocinio`) continua valendo, na nuca e nos lados.
+- **Os acabamentos** (agora 9): entraram acetinado, perolado (furta-cor leve e brilho de cetim), camaleão (furta-cor forte sobre metal), flocos de metal (relevo de pontos) e fibra de carbono.
+  - **O carbono:** a sarja 2x2 em quadros de 4 px é a cor do casco, com 20% da cor 1 por cima, e também o relevo.
+  - **O material:** o capacete de quem joga, na pista, passou a ser `MeshPhysicalMaterial` com o mesmo acabamento da prévia (`aplicarAcabamento`, em `f1-piloto.js`). O dos robôs continua o simples.
+- **O servidor** (`corrida.js`, `limparCapacete`) aceita os acabamentos novos, `patrocinios` (só os 5 lugares, com id curto de letras e números) e `fundoPatrocinio`.
+
 ## Prints
 
 Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, com o editor montado na página da corrida:
 - no tema claro, o desenho Lâminas com acabamento brilhante;
 - no tema escuro, Chamas com acabamento metálico e o patrocínio Galera Racing.
+- os patrocínios: Lâminas com Santander, Pirelli, Shell, Galera Racing e HP direto no casco, e Corte perolado com placa escura;
+- os acabamentos: Velocidade em fibra de carbono e Chamas em camaleão.
 
 Estão em `C:\Users\thiag\Downloads\lts\prints\capacete\`, fora do repositório.
 

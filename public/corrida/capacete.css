@@ -53,6 +53,27 @@
 .cp2-ac-fosco .cp2-amostra{background:#a51c2c}
 .cp2-ac-metal .cp2-amostra{background:linear-gradient(120deg,#7a0a1c,#e04a5a 40%,#8f1222 60%,#d93a4b)}
 .cp2-ac-cromo .cp2-amostra{background:linear-gradient(120deg,#5b6068,#f4f6f8 35%,#8b9097 55%,#ffffff 70%,#6a7078)}
+/* os patrocínios (2026-11-15): os lugares, a placa e a lista de marcas */
+.cp2-lugares{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:4px}
+.cp2-lugar{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding:8px 10px;border:2px solid var(--cp-lin);border-radius:8px;background:var(--cp-bg);color:var(--cp-tx);text-align:left;cursor:pointer;transition:border-color .15s,transform .15s}
+.cp2-lugar:hover{transform:translateY(-2px)}.cp2-lugar.on{border-color:var(--cp-ac)}
+.cp2-lugar b{font:800 12.5px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;letter-spacing:.04em}
+.cp2-lugar small{max-width:100%;overflow:hidden;color:var(--cp-tx2);font-size:11px;white-space:nowrap;text-overflow:ellipsis}
+.cp2-fundos{display:flex;flex-wrap:wrap;gap:6px}
+.cp2-fundo{padding:6px 10px;border:1px solid var(--cp-lin);border-radius:999px;background:var(--cp-bg);color:var(--cp-tx2);font:700 12px var(--body,system-ui,sans-serif);cursor:pointer;transition:border-color .15s,color .15s}
+.cp2-fundo:hover{color:var(--cp-tx)}.cp2-fundo.on{border-color:var(--cp-ac);color:var(--cp-tx)}
+.cp2-marcas{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;max-height:340px;margin-top:10px;padding:2px 4px 2px 2px;overflow-y:auto}
+.cp2-marca{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px;border:2px solid transparent;border-radius:8px;background:var(--cp-bg);color:var(--cp-tx2);cursor:pointer;transition:transform .15s,border-color .15s,background .15s}
+.cp2-marca:hover{transform:translateY(-2px);background:var(--cp-hover)}.cp2-marca.on{border-color:var(--cp-ac);color:var(--cp-tx)}
+.cp2-marca img,.cp2-marca span{display:grid;place-items:center;width:100%;aspect-ratio:150/60;border-radius:5px;background:#1b1e25;color:#aab1bd;font-weight:800;font-size:12px}
+.cp2-marca small{max-width:100%;overflow:hidden;font-size:10.5px;font-weight:700;white-space:nowrap;text-overflow:ellipsis}
+.cp2-marca .cp2-ok{top:-4px;right:-4px}
+.cp2-limpar{padding:5px 10px;border:1px solid var(--cp-lin);border-radius:6px;background:none;color:var(--cp-tx2);font:700 12px var(--body,system-ui,sans-serif);cursor:pointer}.cp2-limpar:hover{color:var(--cp-tx);background:var(--cp-hover)}
+.cp2-ac-acetinado .cp2-amostra{background:linear-gradient(160deg,#d8505e,#b3172c 50%,#8c1424)}
+.cp2-ac-perola .cp2-amostra{background:linear-gradient(120deg,#f3e7ea,#c8102e 35%,#e9b7d4 55%,#9fd3e8 75%,#c8102e)}
+.cp2-ac-camaleao .cp2-amostra{background:linear-gradient(120deg,#5b1fa8,#c8102e 30%,#e0a020 55%,#1fa67a 80%,#1e4fd0)}
+.cp2-ac-flocos .cp2-amostra{background:radial-gradient(circle at 20% 30%,#fff8 0 1px,transparent 2px) 0 0/7px 7px,radial-gradient(circle at 60% 70%,#fff6 0 1px,transparent 2px) 0 0/9px 9px,linear-gradient(120deg,#7a0a1c,#d93a4b 50%,#8f1222)}
+.cp2-ac-carbono .cp2-amostra{background:repeating-linear-gradient(45deg,#1a1b1f 0 4px,#2e3036 4px 8px),#1a1b1f}
 .cp2-selo-vila b{color:#d4a017}.cp2-selo-galera b{color:#e10600}.cp2-selo-energia b{color:#18c46b}.cp2-selo-pneus b{color:var(--cp-tx)}
 /* o palco do capacete */
 .cp2-palco{grid-area:palco;position:relative;display:flex;flex-direction:column;min-width:0;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,var(--cp-bg) 0,var(--cp-bg2) 100%)}
@@ -70,5 +91,6 @@
 /* a Central dá a largura toda ao editor; na sala ele empilha quando a etapa é estreita */
 .cx-capacete.cp2-on{max-width:none}
 @media (max-width:1100px){.cp2{grid-template-columns:minmax(160px,200px) minmax(0,1fr);grid-template-areas:"cab cab" "palco palco" "menu painel"}}
+@media (max-width:640px){.cp2-lugares{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:640px){.cp2{grid-template-columns:1fr;grid-template-areas:"cab" "palco" "menu" "painel"}.cp2-menu{flex-direction:row;overflow-x:auto}.cp2-menu button{grid-template-columns:20px auto;border-bottom:0;border-right:1px solid var(--cp-lin)}.cp2-seta{display:none}.cp2-grade{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){.cp2-mini{animation:none}}

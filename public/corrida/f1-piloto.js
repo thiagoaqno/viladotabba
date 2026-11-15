@@ -14,7 +14,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-import { pintarFolha, capacetePorSigla, acabamentoDoCasco } from "./f1-capacetes.js";
+import { pintarFolha, capacetePorSigla, acabamentoDoCasco, extraDoCapacete, folhaDeRelevo } from "./f1-capacetes.js";
 
 const menosMovimento = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 const lim = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -240,16 +240,26 @@ function corDaFaixa(c1, c2) {
 }
 // o desenho do capacete numa folha 512x256 (ver f1-capacetes.js): o do robô é o do piloto dele (`cap`), o dos outros é o genérico nas cores 1 e 2 da equipe
 // (exportado: os mecânicos e os pilotos do pódio usam o mesmo capacete da pista, capacete-boneco.js)
+// o acabamento no material do casco (MeshPhysicalMaterial): o verniz, o metal, o furta-cor e o relevo (a trama do carbono, os flocos)
+const RELEVO_TEX = {};
+export function aplicarAcabamento(m, acabamento) {
+  const { relevo, ...props } = acabamentoDoCasco(acabamento);
+  Object.assign(m, props);
+  let t = null;
+  if (relevo) { t = RELEVO_TEX[relevo]; if (!t) { const cv = folhaDeRelevo(relevo); if (cv) { t = RELEVO_TEX[relevo] = new THREE.CanvasTexture(cv); t.anisotropy = 4; } } }
+  m.bumpMap = t; m.bumpScale = relevo === "carbono" ? 0.6 : 0.5; m.needsUpdate = true;
+  return m;
+}
 export const materialDoCapacete = (c1, c2, numero, cap, proprio = null) => {
-  if (proprio) cap = proprio; // o capacete de quem joga (mods.capacete): desenho, cores, bandeira e nome
-  const extra = proprio ? { bandeira: proprio.bandeira, nome: proprio.nome, variante: proprio.variante | 0, patrocinio: proprio.patrocinio || "" } : null;
-  const cores = cap ? cap.cores : [c1, c2, corDaFaixa(c1, c2)], desenho = cap ? cap.desenho : "generico", k = [...cores, desenho, numero ?? "", extra ? [extra.bandeira, extra.nome, extra.variante, extra.patrocinio, proprio.acabamento].join("/") : ""].join("|"); let m = CAPACETES.get(k);
+  if (proprio) cap = proprio; // o capacete de quem joga (mods.capacete): desenho, cores, bandeira, nome, patrocínios e acabamento
+  const extra = proprio ? extraDoCapacete(proprio) : null;
+  const cores = cap ? cap.cores : [c1, c2, corDaFaixa(c1, c2)], desenho = cap ? cap.desenho : "generico", k = [...cores, desenho, numero ?? "", extra ? JSON.stringify(extra) : ""].join("|"); let m = CAPACETES.get(k);
   if (!m) {
     const cv = document.createElement("canvas"); cv.width = 512; cv.height = 256;
     let t = null; const pintar = () => { pintarFolha(cv.getContext("2d"), cores, desenho, numero, extra, () => { pintar(); if (t) t.needsUpdate = true; }); }; pintar(); // (a bandeira que chega depois repinta)
     t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-    const ac = acabamentoDoCasco(proprio && proprio.acabamento); // (o acabamento de quem joga: brilhante, fosco, metálico ou cromado)
-    m = new THREE.MeshStandardMaterial({ map: t, roughness: proprio ? Math.max(0.2, ac.roughness) : 0.3, metalness: proprio ? ac.metalness : 0.12 }); CAPACETES.set(k, m);
+    // (o de quem joga leva o acabamento escolhido, com verniz e relevo; o dos robôs continua o simples)
+    m = proprio ? aplicarAcabamento(new THREE.MeshPhysicalMaterial({ map: t }), proprio.acabamento) : new THREE.MeshStandardMaterial({ map: t, roughness: 0.3, metalness: 0.12 }); CAPACETES.set(k, m);
   }
   return m;
 };

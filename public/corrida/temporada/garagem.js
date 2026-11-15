@@ -205,7 +205,7 @@ function cliquePonto(botao, montagem, equipe, bonus = 0) {
   const k = botao?.dataset.ponto, delta = Number(botao?.dataset.delta);
   if (!Eq.ORDEM.includes(k) || ![-1, 1].includes(delta)) return null;
   const nivel = montagem[k] + delta, limite = Eq.EQUIPES[equipe].orcamento + bonus;
-  if (nivel < 0 || nivel > Eq.MAX_NIVEL || (delta > 0 && Eq.custoDaMontagem(montagem) >= limite)) return null;
+  if (nivel < 0 || nivel > Eq.MAX_NIVEL || (delta > 0 && Eq.custoDaMontagem({ ...montagem, [k]: nivel }) > limite)) return null; // (o nível alto custa mais: f1-equipes.js custoDoNivel)
   return { ...montagem, [k]: nivel };
 }
 

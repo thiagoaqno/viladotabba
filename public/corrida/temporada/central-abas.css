@@ -31,3 +31,10 @@ body:not(.cx-on) .folha h2,body:not(.cx-on) .sede .bloco h2{font-family:var(--di
 /* o contrato na lista da sala (grupo.js): a meta de posição e o selo de demitido */
 .meta-contrato{display:inline-block;margin-left:6px;padding:1px 6px;border:1px solid currentColor;border-radius:999px;font:700 10px/1.5 var(--cx-f,system-ui);font-style:normal;letter-spacing:.06em;text-transform:uppercase;opacity:.7;vertical-align:middle}
 .meta-contrato.demitido{border-color:#e10600;color:#e10600;opacity:1}
+
+/* (2026-11-15) os insights do engenheiro na Visão geral da Análise */
+.cx-ag-ins-faixa{margin-top:14px}
+.cx-ag-ins-l{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 18px;margin:0;padding:0;list-style:none}
+.cx-ag-ins-l li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--cx-lin);border-radius:8px;background:var(--cx-bg)}
+.cx-ag-ins-ic{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--eq,#e10600) 14%,transparent);color:var(--eq-at,var(--eq,#e10600))}
+.cx-ag-ins-l b{font-size:14px}.cx-ag-ins-l p{margin:2px 0 0;color:var(--cx-tx2);font-size:13px;line-height:1.4}

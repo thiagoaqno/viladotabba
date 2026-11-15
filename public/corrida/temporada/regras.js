@@ -3,6 +3,7 @@
 const Pilotos = root.F1Pilotos || require("../f1-pilotos-2026.js");
 const Equipes = root.F1Equipes || require("../f1-equipes.js");
 const Pecas = root.F1Pecas || require("../f1-pecas.js");
+const Paddock = root.F1Paddock || require("./paddock.js"); // (2026-11-15) o humor da equipe: moral do companheiro, patrocinador, torcida e diretoria
 const PONTOS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 // Todas as pistas recriadas do jogo, na ordem do calendário real de 2026.
 const CALENDARIO = [
@@ -77,6 +78,7 @@ function contratarPiloto(s, id) {
   const p = Pilotos.PILOTOS.find((x) => x.id === id);
   if (!p || p.equipe === s.equipe && p.id === Pilotos.PILOTOS.filter((x) => x.equipe === s.equipe)[1].id) throw Error("Piloto indisponível.");
   if (s.piloto2 === id) return s;
+  if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; } // (companheiro novo, humor novo)
   const custo = Math.max(5, Math.round((p.ritmo - 70) * 0.7));
   gastar(s, custo); s.piloto2 = id; return s;
 }
@@ -118,8 +120,8 @@ function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipe
     const r = gerador(`desenvolvimento:${base}:${id}`), atraso = Math.floor(r() * tamanho);
     const pontos = Math.min(Equipes.BONUS_MAX, Math.floor((rodadas * Equipes.BONUS_POR_TEMPORADA + atraso) / tamanho));
     const ordem = embaralhar(["motor", "aero", "chassi", "freios", "suspensao"], r);
-    const m = { ...equipe.padrao };
-    for (let i = 0, k = 0; i < pontos && k < pontos + ordem.length * Equipes.MAX_NIVEL; k++) { const p = ordem[k % ordem.length]; if (m[p] < Equipes.MAX_NIVEL) { m[p]++; i++; } }
+    const m = { ...equipe.padrao }, limite = equipe.orcamento + pontos; // (2026-11-15: os níveis altos custam mais; o rival gasta do mesmo jeito que você)
+    for (let k = 0, falhas = 0; falhas < ordem.length && k < 200; k++) { const p = ordem[k % ordem.length]; if (m[p] < Equipes.MAX_NIVEL && Equipes.custoDaMontagem({ ...m, [p]: m[p] + 1 }) <= limite) { m[p]++; falhas = 0; } else falhas++; }
     if (ideal != null) ajustarParaPista(m, ideal);
     montagens[id] = m; bonus[id] = pontos;
     const faixa = faixaDe(id), nivel = Math.min(2, (faixa === 0 ? 1 : 0) + Math.floor((rodadas + atraso) / tamanho));
@@ -151,7 +153,8 @@ function pilotosNoGrid(s) {
     const deslocado = titulares.find((p) => p.id !== companheiro.id);
     if (deslocado) rivais.push({ ...deslocado, equipe: companheiro.equipe });
   }
-  return [{ ...companheiro, equipe: s.equipe }, ...rivais].slice(0, 21);
+  const ritmo = companheiro.ritmo + (s.paddock ? Paddock.ajusteDeRitmo(s) : 0); // (a moral do Paddock: ±2 pontos de ritmo nos extremos)
+  return [{ ...companheiro, equipe: s.equipe, ritmo }, ...rivais].slice(0, 21);
 }
 // Metas dependem da força inicial da equipe, não do resultado que acabou de acontecer.
 function metas(s) {
@@ -182,6 +185,7 @@ function imersao(s) {
   }
   const rival = [...duelos.values()].sort((a, b) => b.encontros - a.encontros || a.distancia - b.distancia || a.id.localeCompare(b.id))[0] || null;
   const classificacao = tabelas(s).pilotos.findIndex((p) => p.id === "voce") + 1;
+  if (s.paddock && Number.isFinite(s.paddock.diretoria)) confianca = Math.max(0, Math.min(100, confianca + s.paddock.diretoria)); // (a conta com a diretoria no Paddock)
   return { meta, confianca, rival, classificacao };
 }
 function registrarResultado(s, linhas, analise = null) {
@@ -199,11 +203,13 @@ function registrarResultado(s, linhas, analise = null) {
   const humano = resultado.linhas.find((r) => r.piloto === "voce");
   const premio = 4 + Math.round((humano.pontos || 0) * 0.4);
   const contratado = Pilotos.PILOTOS.find((p) => p.id === s.piloto2);
-  const salarios = 3 + Math.round((contratado.ritmo - 70) / 8) + s.engenheiros.mecanico + s.engenheiros.estrategista;
+  const salarios = 3 + Math.round((contratado.ritmo - 70) / 8) + s.engenheiros.mecanico + s.engenheiros.estrategista + Paddock.salarios(s); // (+ os aumentos do Paddock)
   const bonus = pagarBonus(s, humano);
   s.caixa = Math.max(0, s.caixa + s.patrocinio + premio + bonus - salarios);
   resultado.financas = { patrocinio: s.patrocinio, premio, salarios, bonus };
-  return { resultado, receita: s.patrocinio + premio + bonus - salarios };
+  const receita = s.patrocinio + premio + bonus - salarios;
+  Paddock.aoResultado(s, resultado, objetivo.gp); // (o humor da equipe depois do GP; a verba nova do patrocinador vale a partir do próximo)
+  return { resultado, receita };
 }
 function tabelas(s) {
   const pilotos = new Map(), equipes = new Map();
@@ -288,6 +294,7 @@ function renovar(s, anos) {
   if (![1, 2].includes(anos)) throw Error("Prazo inválido.");
   const c = garantirContrato(s), p = perspectiva(s);
   if (c.fim > s.ano) throw Error("Seu contrato já cobre a próxima temporada.");
+  if (s.paddock && s.paddock.demitido && s.paddock.demitido.ano === s.ano) throw Error("Você foi demitido: a equipe não renova. Escolha uma das propostas.");
   if (p.confianca < 25) throw Error("A diretoria não quer conversar agora. Melhore os resultados primeiro.");
   c.fim = s.ano + anos;
   if (p.confianca >= 70) s.patrocinio = Math.min(12, s.patrocinio + 1); // boa fase: a verba por GP sobe na assinatura
@@ -306,6 +313,7 @@ function aceitarProposta(s, id) {
   const p = propostas(s).find((x) => x.equipe === id);
   if (!p) throw Error("Esta equipe não fez proposta.");
   const titulares = Pilotos.PILOTOS.filter((x) => x.equipe === id);
+  if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; s.paddock.patrocinador = 60; s.paddock.salarioComp = 0; s.paddock.salarioStaff = 0; s.paddock.demitido = null; } // (equipe nova: o humor recomeça)
   s.equipe = id; s.piloto2 = titulares[0].id; s.montagem = Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])); s.pecas = null; s.bonus = 0;
   s.patrocinio = p.verbaGP; s.contrato = { inicio: s.ano + 1, fim: s.ano + 1, bonusVitoria: p.bonusVitoria };
   return s;
@@ -313,9 +321,12 @@ function aceitarProposta(s, id) {
 function proximaTemporada(s) {
   if (s.gp !== s.tamanho) throw Error("Termine o calendário primeiro.");
   garantirContrato(s);
+  // demitido no Paddock e sem ter assinado com outra: vai para a equipe mais fraca que fez proposta
+  if (s.paddock && s.paddock.demitido && s.paddock.demitido.ano === s.ano) { const ps = propostas(s); if (ps.length) aceitarProposta(s, ps[ps.length - 1].equipe); if (s.paddock) s.paddock.demitido = null; }
   if (s.contrato.fim <= s.ano) s.contrato.fim = s.ano + 1; // sem conversa, o contrato segue por mais um ano nos mesmos termos
   for (const r of s.resultados) if (r.ano < s.ano) delete r.analise; // o detalhe volta a volta só vale para o ano atual e o anterior (o save não cresce sem fim)
   s.ano++; s.gp = 0; s.gasto = 0; s.semente = Number(s.semente) + 937;
+  Paddock.novaTemporada(s);
   const sorteado = sortearCalendario(s.tamanho, s.semente, s.calendario.map((g) => g.pista));
   s.calendario = sorteado.calendario; s.calendarioSemente = sorteado.semente; return s;
 }

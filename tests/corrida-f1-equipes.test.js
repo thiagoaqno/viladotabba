@@ -52,7 +52,7 @@ test("o orçamento não estoura: o servidor-regra recusa montagem inválida e ac
   assert.equal(E.validar("ninguem", ok).ok, false, "equipe inválida");
   // nenhuma montagem aceita passa do orçamento (todas as de 0 a 20 pontos numa equipe de 20)
   let aceitas = 0;
-  for (const soma of [19, 20, 21]) for (const m of montagens(soma)) { const v = E.validar("mclaren", m); if (v.ok) { aceitas++; assert.ok(E.custoDaMontagem(v.montagem) <= 20); } else assert.equal(soma, 21); }
+  for (const soma of [19, 20, 21]) for (const m of montagens(soma)) { const v = E.validar("mclaren", m); if (v.ok) { aceitas++; assert.ok(E.custoDaMontagem(v.montagem) <= 20); } else assert.ok(E.custoDaMontagem(m) > 20); } // (2026-11-15: o nível alto custa mais que 1 ponto)
   assert.ok(aceitas > 1000);
   // a cópia devolvida é limpa (não guarda o que o navegador mandou além das seis peças)
   assert.deepEqual(Object.keys(E.validar("mclaren", ok).montagem), E.ORDEM);
@@ -89,22 +89,8 @@ test("todo número de toda montagem possível fica entre o pior e o melhor dos c
   for (const id of Object.keys(E.EQUIPES)) assert.match(E.specDaEquipe(id).chave, /^\d-\d-\d-\d-\d-\d$/);
 });
 
-test("com o mesmo orçamento, nenhuma montagem é melhor em tudo que outra", () => {
-  const todas = [...montagens(9)].map((m) => ({ m, v: E.eixos(E.specDaMontagem(m)) }));
-  assert.ok(todas.length > 1500);
-  const domina = (a, b) => a.every((x, i) => x >= b[i] - 1e-9) && a.some((x, i) => x > b[i] + 1e-9);
-  let pares = 0;
-  for (let i = 0; i < todas.length; i++) for (let j = 0; j < todas.length; j++) if (i !== j) { pares++; assert.ok(!domina(todas[i].v, todas[j].v), `${JSON.stringify(todas[i].m)} domina ${JSON.stringify(todas[j].m)}`); }
-  assert.ok(pares > 3e6);
-  // as de 20 pontos, uma amostra: uma troca de um ponto entre duas peças nunca melhora tudo
-  const vinte = [...montagens(20)];
-  for (let i = 0; i < vinte.length; i += 7) for (const de of E.ORDEM) for (const para of E.ORDEM) {
-    if (de === para || vinte[i][de] === 0 || vinte[i][para] === E.MAX_NIVEL) continue;
-    const b = { ...vinte[i], [de]: vinte[i][de] - 1, [para]: vinte[i][para] + 1 };
-    assert.ok(!domina(E.eixos(E.specDaMontagem(b)), E.eixos(E.specDaMontagem(vinte[i]))), `${de}->${para}`);
-  }
-});
-
+// (2026-11-15) o teste "com o mesmo orçamento, nenhuma montagem é melhor em tudo que outra" saiu: com a aerodinâmica presa à suspensão e o
+// motor à confiabilidade (f1-equipes.js rendimento), pôr ponto onde ele não rende é de propósito pior em tudo.
 test("a equipe forte anda mais que a do fim com o carro padrão, mas sem passar de uns 6% na volta", () => {
   for (const pista of ["monaco", "monza", "interlagos"]) {
     const t = (id) => Robos.tempoDaVolta(Robos.perfil(pista, E.specDaEquipe(id), 0), 0.9);

@@ -713,15 +713,25 @@ function reconciliar(c, st, tr, ctx) {
 // F1 de verdade (asa cheia em Mônaco e no Hungaroring, mínima em Monza e Baku, no meio em Spa e Las Vegas); com +40% de carga e +24% de
 // arrasto, a asa cheia era a melhor em 22 das 24 pistas.
 // Raspando: cada centímetro abaixo do chão tira 12% da carga (até 35%) e põe 15% de arrasto (até 50%). Sem acerto (os robôs), o padrão.
-const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5 });
+// (2026-11-15) Três ajustes a mais, de 0 a 1 (0,5 é o carro de antes), cada um troca uma coisa por outra, em até ±4% (escolhidos para se
+// sentir jogando, não medidos):
+//   câmbio (curto 0 · longo 1): a tração (a arrancada) contra o arrasto (a velocidade final): curto arranca mais e chega menos longe;
+//   freio (dianteiro 0 · traseiro 1): a força de frenagem contra a aderência na curva: na frente freia mais, atrás o carro gira mais;
+//   diferencial (aberto 0 · travado 1): a aderência no meio da curva contra a tração na saída.
+const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5 });
+const meio = (v) => (Number.isFinite(v) ? v : 0.5) - 0.5; // −0,5 a +0,5
 const alturaParada = (a) => 0.025 + a.altura * 0.05;
 const forcaDaAsa = (a) => 0.8 + a.asa * 0.4;
 const afundaAero = (a, v) => 0.045 * forcaDaAsa(a) * Math.min(1.6, (Math.max(0, v) / 400) ** 2);
 function extraDoAcerto(a, v, o = {}) {
   const asa = forcaDaAsa(a), folga = alturaParada(a) - afundaAero(a, v), raspa = Math.max(0, -folga) / 0.01, solo = 1 + (0.05 - alturaParada(a)) * 2;
-  o.potencia = 1; o.grip = 1; o.freio = 1; o.tracao = 1;
+  const cb = meio(a.cambio), fr = meio(a.freio), df = meio(a.diferencial);
+  o.potencia = 1;
+  o.tracao = (1 - cb * 0.08) * (1 + df * 0.06);  // câmbio curto e diferencial travado: mais tração
+  o.freio = 1 - fr * 0.08;                        // freio na frente: freia mais
+  o.grip = (1 + fr * 0.04) * (1 - df * 0.06);     // freio atrás e diferencial aberto: o carro vira mais
   o.carga = asa * solo * (1 - Math.min(0.35, raspa * 0.12));
-  o.arrasto = (1 + (asa - 1) * 1.6) * (1 + Math.min(0.5, raspa * 0.15));
+  o.arrasto = (1 + (asa - 1) * 1.6) * (1 + Math.min(0.5, raspa * 0.15)) * (1 + cb * 0.06); // (câmbio curto: corta antes, como mais arrasto no fim da reta)
   o.raspa = raspa;
   return o;
 }

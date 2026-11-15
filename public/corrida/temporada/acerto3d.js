@@ -24,13 +24,13 @@ export async function montarAcerto(palco, equipeId) {
   const [c1, c2] = coresDa(eq.pintura, eq.cor || "#e10600");
   await f1Pronto.catch(() => {});
   const k = montarF1({ cor: c1, cor2: c2, equipe: equipeId }); cena.add(k.g);
-  k.g.rotation.y = Math.PI / 2 + 0.18; // de lado, um pouco virado para mostrar a asa
+  k.g.rotation.y = Math.PI / 2 + 0.62; // de três-quartos, o bico para a esquerda (a referência do Thiago, 2026-11-15)
   // a câmera enquadra o carro inteiro (do bico à asa) para o tamanho do palco: `enquadrar` acha a distância pela largura e pela altura do carro
   const caixa = new THREE.Box3().setFromObject(k.g), centro = caixa.getCenter(new THREE.Vector3()), tam = caixa.getSize(new THREE.Vector3());
   function enquadrar() {
-    const v = THREE.MathUtils.degToRad(cam.fov) / 2, hz = Math.atan(Math.tan(v) * cam.aspect), largura = Math.max(tam.x, tam.z) * 1.02, altura = tam.y * 1.7;
+    const v = THREE.MathUtils.degToRad(cam.fov) / 2, hz = Math.atan(Math.tan(v) * cam.aspect), largura = Math.max(tam.x, tam.z) * 0.86, altura = tam.y * 1.5; // (2026-11-15: o carro maior no palco)
     const d = Math.max(largura / 2 / Math.tan(hz), altura / 2 / Math.tan(v)) + Math.min(tam.x, tam.z) / 2;
-    cam.position.set(centro.x, centro.y + d * 0.08, centro.z + d); cam.lookAt(centro.x, centro.y * 0.85, centro.z);
+    cam.position.set(centro.x, centro.y + d * 0.2, centro.z + d); cam.lookAt(centro.x, centro.y * 0.85, centro.z);
   }
   // as rodas ficam no chão: cada pivô (filho de k.carro) desce o mesmo tanto que a carroceria sobe
   const pivos = k.rodas.map((x) => x.esterca || x.gira.parent).filter(Boolean), baseY = pivos.map((p) => p.position.y), carroY = k.carro.position.y;

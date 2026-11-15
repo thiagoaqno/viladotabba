@@ -137,7 +137,7 @@ function montar(sala, pid, montagem, versao) {
   ativa(sala);
   const eq = equipeDa(sala, pid), t = sala.equipes[eq];
   if (versao != null && versao !== t.versao) throw Error("Sua equipe mudou enquanto você mexia. Confira a tela e tente de novo.");
-  const v = Pecas.resolver(eq, montagem && montagem.pecas !== undefined ? montagem : { montagem }, t.bonus); // `montagem` pode ser { pecas } ou os níveis (formato antigo)
+  const v = Pecas.resolver(eq, montagem && montagem.pecas !== undefined ? montagem : { montagem }, t.bonus, t.montagem); // `montagem` pode ser { pecas } ou os níveis (acima do orçamento, só para mais barato: f1-equipes.js validar) (formato antigo)
   if (!v.ok) throw Error(v.erro);
   if (ORDEM_IGUAL(v.montagem, t.montagem)) { if (v.pecas && JSON.stringify(v.pecas) !== JSON.stringify(t.pecas)) { t.pecas = v.pecas; anotar(sala, pid, t, "trocou as peças do carro"); } return sala; }
   const mudou = Equipes.ORDEM.filter((k) => v.montagem[k] !== t.montagem[k]).map((k) => `${Equipes.PECAS[k].nome} ${t.montagem[k]}→${v.montagem[k]}`).join(", ");

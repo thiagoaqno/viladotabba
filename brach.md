@@ -1,4 +1,4 @@
-# Carreira: a montagem antiga acima do orçamento destrava, a carreira do programa de PC sobe para o site (o código vale no navegador) e a cor livre do capacete não fecha mais
+# Carreira: a montagem antiga acima do orçamento destrava, a carreira do programa de PC sobe para o site (o código vale no navegador) a cor livre do capacete não fecha mais e o que um jogador muda não atrapalha os outros
 
 Dois problemas que o Thiago achou depois do #756 e do #757.
 
@@ -25,6 +25,14 @@ O programa de PC trazia a carreira do site na primeira vez (`trazerCarreiraDoSit
 ## A cor livre do capacete fechava no primeiro clique
 
 No editor do capacete, o seletor de "outra cor" fechava logo depois do primeiro clique: cada mudança redesenhava o painel e trocava o campo de cor no meio da escolha. Agora (`capacete-editor-ui.js`), enquanto o seletor está aberto, só o capacete muda. O painel e as miniaturas se refazem quando o seletor fecha (o evento `change`).
+
+## O que um jogador muda não atrapalha mais os outros
+
+O Thiago: "tudo que redesenha para todos é ruim: fica atualizando pra todo mundo e ninguém consegue mexer".
+
+- **A sala** (`menus.js trocar`, por onde passam todas as etapas): quando chega a mudança de outro jogador e você está mexendo num campo daquele trecho, o HTML novo espera. Vale para texto, número, seletor de cor, deslizante e lista de opções. Ele entra quando o foco sai do trecho. Os `<details>` abertos e a rolagem dentro do trecho também continuam como estavam depois da troca.
+- **A tela entre as sessões da classificação** (`pos-quali.js`): a confirmação de outro jogador só muda o contador "N/M prontos". Antes a tela se refazia inteira.
+- **O editor do capacete** (#755) e a carreira com os amigos (`grupo.js`, que já trocava só os nós que mudaram) já estavam assim.
 
 ## Conferido
 

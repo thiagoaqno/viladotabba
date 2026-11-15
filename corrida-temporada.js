@@ -2,6 +2,7 @@
 const bd = require("./bd.js");
 const Regras = require("./public/corrida/temporada/regras.js");
 const Paddock = require("./public/corrida/temporada/paddock.js"); // (2026-11-15) as decisões do Paddock
+const subir = (token, linha) => { try { require("./corrida-pc.js").enviarCarreiraAoSite(token, linha); } catch { /* fora do programa */ } }; // (a carreira do PC sobe para o site)
 const Anos = require("./public/corrida/f1-temporadas.js"); // o ano da carreira (`anoF1` do save; os saves de antes são de 2026)
 const { limparNome } = require("./salas.js");
 
@@ -37,7 +38,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
       const linha = carregar(socket);
       if (ativos.has(linha.id)) throw Error("O GP está aberto. Volte à sede depois do resultado.");
       fn(linha.dados);
-      bd.salvarTemporadaCorrida(linha.id, linha.dados);
+      bd.salvarTemporadaCorrida(linha.id, linha.dados); subir(socket.data.tokenTemporada, linha);
       avisar(linha); enviar(estado(linha), resposta);
     } catch (e) { erro(resposta, e); }
   }
@@ -51,7 +52,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
         const dados = Regras.criar(nome, d.equipe, Number(d.tamanho), Number(d.voltas), undefined, d.nivel || "medio");
         dados.anoF1 = anoF1;
         const nova = bd.criarTemporadaCorrida(nome, dados);
-        entrar(socket, { id: nova.id, dados }, nova.token, resposta, nova.recuperacao);
+        entrar(socket, { id: nova.id, dados }, nova.token, resposta, nova.recuperacao); subir(nova.token, { id: nova.id });
       } catch (e) { erro(resposta, e); }
     });
     socket.on("abrir", async (d = {}, resposta) => {
@@ -59,7 +60,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
         // no programa de PC (a carreira solo roda no PC, sem ping): o save que só existe no site vem para cá na primeira vez (corrida-pc.js)
         const linha = bd.temporadaCorridaPorToken(d.token) || await require("./corrida-pc.js").trazerCarreiraDoSite(d.token);
         if (!linha) throw Error("Save não encontrado neste navegador. Use o código de recuperação.");
-        entrar(socket, linha, d.token, resposta);
+        entrar(socket, linha, d.token, resposta); subir(d.token, linha); // (no programa: a carreira que já estava no PC sobe ao abrir)
       } catch (e) { erro(resposta, e); }
     });
     socket.on("recuperar", (d = {}, resposta) => {
@@ -108,7 +109,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
         const viva = atual && corrida.salaGP(atual.code); // (a sala do GP pode ter sumido: aí abre outra, em vez de mandar para uma que não existe)
         if (viva && viva.phase !== "results") return enviar({ ok: true, acesso: atual }, resposta);
         ativos.delete(linha.id);
-        const indice = s.gp, ano = s.ano;
+        const indice = s.gp, ano = s.ano, tokenGP = socket.data.tokenTemporada;
         const acesso = corrida.abrirGP(s, (room) => {
           const fresco = bd.temporadaCorridaPorId(linha.id);
           if (!fresco || fresco.dados.gp !== indice || fresco.dados.ano !== ano) return;
@@ -124,6 +125,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
           Regras.registrarResultado(fresco.dados, linhas, analise);
           if (gravado && gravado.replay) { try { bd.guardarReplayCorrida("solo:" + fresco.id, ano, indice, gravado.replay); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); } }
           if (bd.salvarTemporadaCorrida(fresco.id, fresco.dados, indice)) {
+            subir(tokenGP, fresco);
             ativos.delete(fresco.id); avisar(fresco);
           }
         }, (_, montagem) => {

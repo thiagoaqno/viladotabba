@@ -53,6 +53,14 @@ function attach(app) {
     } catch { res.status(500).json({ ok: false }); }
   });
 
+  // (2026-11-15) a carreira jogada no programa sobe para cá (enviarCarreiraAoSite): o mesmo código de recuperação passa a valer no navegador
+  app.post("/api/corrida/pc/carreira-enviar", require("express").json({ limit: "8mb" }), (req, res) => {
+    try {
+      const b = req.body || {}, r = bd().receberTemporadaDoPC(b.token, b.recuperacaoHash, b.nome, b.dados);
+      res.set("Cache-Control", "no-store").status(r ? 200 : 400).json({ ok: !!r, ...(r || {}) });
+    } catch { res.status(500).json({ ok: false }); }
+  });
+
   const Atualizar = require("./corrida-pc-atualizar.js");
   Atualizar.rotasDoSite(app); // a lista dos arquivos do programa e cada arquivo, para ele se atualizar (só com o sim de quem joga)
 
@@ -106,6 +114,22 @@ async function trazerCarreiraDoSite(token) {
   } catch { return null; }
 }
 
+// O caminho de volta: no programa, cada vez que a carreira solo muda (abrir, decidir, fechar um GP), o save sobe para o site com o hash do
+// código de recuperação do PC (bd.js receberTemporadaDoPC). Assim o código que o programa mostra também abre a carreira no navegador.
+// Sem internet não sobe (e tenta de novo na próxima mudança). Fora do programa (no site), não faz nada.
+const enviando = new Map();
+function enviarCarreiraAoSite(token, linha) {
+  if (!SITE || typeof token !== "string" || !linha) return;
+  clearTimeout(enviando.get(linha.id));
+  enviando.set(linha.id, setTimeout(async () => {
+    enviando.delete(linha.id);
+    try {
+      const B = require("./bd.js"), h = B.hashesDaTemporadaCorrida(linha.id), fresco = B.temporadaCorridaPorId(linha.id); if (!h || !fresco) return;
+      await fetch(SITE + "/api/corrida/pc/carreira-enviar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, recuperacaoHash: h.recuperacao_hash, nome: fresco.nome, dados: fresco.dados }), signal: AbortSignal.timeout(20000) });
+    } catch { /* sem internet: sobe na próxima mudança */ }
+  }, 1500));
+}
+
 // O que roda no navegador do programa (logo depois do /socket.io/socket.io.js, antes dos módulos): com o site no ar, os sockets e os
 // /api/ de DADOS vão para o site; os arquivos e o que é calculado do próprio jogo (logos, traçado dos robôs, músicas) seguem no PC.
 const PC_JS = `(function () {
@@ -148,4 +172,4 @@ const PC_JS = `(function () {
   window.fetch = function (u, op) { return f0(typeof u === "string" && u.indexOf("/api/") === 0 && !LOCAL.test(u) ? S + u : u, op); };
 })();`;
 
-module.exports = { attach, corsPC, PROTOCOLO, trazerCarreiraDoSite };
+module.exports = { attach, corsPC, PROTOCOLO, trazerCarreiraDoSite, enviarCarreiraAoSite };

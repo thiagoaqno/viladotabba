@@ -768,7 +768,7 @@ module.exports = function attachCorrida(io) {
           if (!room.temporada || room.phase !== "quali" || !room.quali?.pausaAte || room.quali.carga) return "A montagem só muda nas pausas da classificação (a tela de ajustes).";
           if (room.quali.confirmados.has(me.id)) return "Você já confirmou a largada.";
           if (!me.equipe || !room.montagens?.[me.equipe]) return "Equipe inválida.";
-          const v = Equipes.validar(me.equipe, data.montagem, room.bonusMontagem?.[me.equipe] || 0);
+          const v = Equipes.validar(me.equipe, data.montagem, room.bonusMontagem?.[me.equipe] || 0, room.montagens[me.equipe]);
           if (!v.ok) return v.erro;
           try { if (room.aoMontar) room.aoMontar(me, v.montagem); } catch (e) { return e.message || "Não foi possível salvar a montagem."; }
           room.montagens[me.equipe] = v.montagem;

@@ -239,6 +239,25 @@ function importarTemporadaCorrida(token, nome, dados) {
     .run(hash(token), hash(novoCodigoRecuperacao()), String(nome).slice(0, 40), JSON.stringify(dados), agora, agora);
   return temporadaCorridaPorToken(token);
 }
+// (2026-11-15) O caminho de volta: a carreira jogada no programa de PC sobe para o site (corrida-pc.js enviarCarreiraAoSite), com o MESMO
+// código de recuperação (vai o hash, nunca o código), para o código que o programa mostra valer também no navegador. No site: acha a carreira
+// pelo código (ela pode ter ganhado outro token numa recuperação) ou pelo token; se não existe, cria com os dois hashes. O save só é trocado
+// se o que chega não está atrás (o ano e o GP), e o código do site, se ele já tinha um, fica como está.
+function hashesDaTemporadaCorrida(id) { return bd().prepare("SELECT token_hash, recuperacao_hash FROM corrida_temporadas WHERE id = ?").get(id) || null; }
+function receberTemporadaDoPC(token, recuperacaoHash, nome, dados) {
+  if (!tokenValido(token) || !/^[0-9a-f]{64}$/.test(String(recuperacaoHash || "")) || !dados || typeof dados !== "object" || !Array.isArray(dados.calendario)) return null;
+  const linha = bd().prepare("SELECT * FROM corrida_temporadas WHERE recuperacao_hash = ?").get(recuperacaoHash) || bd().prepare("SELECT * FROM corrida_temporadas WHERE token_hash = ?").get(hash(token));
+  const agora = Date.now();
+  if (!linha) {
+    bd().prepare("INSERT INTO corrida_temporadas (token_hash, recuperacao_hash, nome, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(hash(token), recuperacaoHash, String(nome || "").slice(0, 40), JSON.stringify(dados), agora, agora);
+    return { criada: true };
+  }
+  const atual = JSON.parse(linha.dados), passo = (d) => (Number(d.ano) || 0) * 1000 + (Number(d.gp) || 0);
+  if (passo(dados) < passo(atual)) return { atras: true };
+  bd().prepare("UPDATE corrida_temporadas SET dados = ?, nome = ?, atualizada_em = ? WHERE id = ?").run(JSON.stringify(dados), String(nome || linha.nome).slice(0, 40), agora, linha.id);
+  return { atualizada: true };
+}
 function temporadaCorridaPorId(id) {
   return lerTemporada(bd().prepare("SELECT * FROM corrida_temporadas WHERE id = ?").get(id));
 }
@@ -531,5 +550,5 @@ function nivelDeTodosAdmin(treinador, nivel, ator) {
 const historicoPokemon = (treinador, limite = 20) => bd().prepare("SELECT ator, tipo, captura, antes, depois, criado_em FROM moderacao_pokemon WHERE treinador = ? ORDER BY id DESC LIMIT ?").all(treinador, limite)
   .map((r) => ({ ator: r.ator, tipo: r.tipo, captura: r.captura, antes: JSON.parse(r.antes || "null"), depois: JSON.parse(r.depois || "null"), em: Number(r.criado_em) }));
 
-module.exports = { registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
+module.exports = { hashesDaTemporadaCorrida, receberTemporadaDoPC, registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
 Object.assign(module.exports, { guardarReplayCorrida, replayCorrida, apagarReplaysCorrida, excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });

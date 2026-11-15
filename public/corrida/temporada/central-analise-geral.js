@@ -55,6 +55,39 @@ function diferenca(D, l) {
   return d.t != null && D.tV != null ? `+${(d.t - D.tV).toFixed(3)}` : "—";
 }
 
+// ---------- os insights do engenheiro (2026-11-15, a referência do Thiago): o que a corrida diz do seu carro, em frases curtas ----------
+// Tudo medido no resumo do GP: o setor em que você mais perde para o melhor tempo, a sua melhor volta contra a do companheiro, a
+// consistência (o desvio das voltas limpas: sem a 1ª, sem as de box e sem as 7% mais lentas que a mediana), as posições ganhas e as paradas
+// contra a estratégia mais usada entre quem terminou.
+function insights(D, a) {
+  const eu = D.P.voce; if (!eu) return "";
+  const out = [], s = D.s;
+  // o setor fraco
+  const perdas = [0, 1, 2].map((k) => { const m = D.melhorSetorDe("voce", k), b = D.setores[k]; return m != null && b ? { k, d: m - b.t } : null; }).filter(Boolean).sort((x, y) => y.d - x.d);
+  if (perdas[0] && perdas[0].d > 0.005) out.push(["alvo", `Onde você perde: setor ${perdas[0].k + 1}`, `O seu melhor S${perdas[0].k + 1} ficou ${perdas[0].d.toFixed(3).replace(".", ",")} s atrás do melhor da corrida.${perdas[2] && perdas[2].d < 0.05 ? ` No S${perdas[2].k + 1} você está perto do melhor (${perdas[2].d.toFixed(3).replace(".", ",")} s).` : ""}`]);
+  // a melhor volta contra a do companheiro
+  const comp = D.P[s.piloto2], minha = Math.min(...(eu.v || []).filter(Number.isFinite)), dele = comp ? Math.min(...(comp.v || []).filter(Number.isFinite)) : Infinity;
+  if (Number.isFinite(minha) && Number.isFinite(dele)) { const d = minha - dele; out.push(["dupla", d <= 0 ? "Mais rápido que o companheiro" : "O companheiro foi mais rápido", `A sua melhor volta ficou ${Math.abs(d).toFixed(3).replace(".", ",")} s ${d <= 0 ? "abaixo" : "acima"} da de ${h(nomeDe(s.piloto2, s))}.`]); }
+  // a consistência
+  const box = new Set((eu.b || []).map((x) => x.v).concat((eu.b || []).map((x) => x.v + 1)));
+  const v = (eu.v || []).filter((t, i) => i > 0 && !box.has(i + 1) && Number.isFinite(t));
+  if (v.length >= 3) {
+    const ord = v.slice().sort((x, y) => x - y), med = ord[Math.floor(ord.length / 2)], limpas = v.filter((t) => t <= med * 1.07), m = limpas.reduce((x, y) => x + y, 0) / limpas.length;
+    const dp = Math.sqrt(limpas.reduce((x, y) => x + (y - m) ** 2, 0) / limpas.length);
+    out.push(["ritmo", dp < 0.4 ? "Ritmo consistente" : "Ritmo irregular", `As suas voltas limpas variaram ±${dp.toFixed(2).replace(".", ",")} s em volta da média (${limpas.length} voltas).`]);
+  }
+  // as posições e as paradas
+  const l = D.linhas.find((x) => x.piloto === "voce");
+  if (l && !l.dnf && !l.nc && eu.g > 0 && eu.g !== l.pos) out.push(["pos", eu.g > l.pos ? "Corrida de recuperação" : "Posições perdidas", `Largou em ${eu.g}º e terminou em ${l.pos}º (${eu.g > l.pos ? "+" : "−"}${Math.abs(eu.g - l.pos)}).`]);
+  const fins = D.linhas.filter((x) => !x.dnf && !x.nc && D.P[x.piloto]), cont = {};
+  for (const x of fins) { const n = paradasDe(D.P[x.piloto]).length; cont[n] = (cont[n] || 0) + 1; }
+  const comum = Object.entries(cont).sort((x, y) => y[1] - x[1])[0], minhas = paradasDe(eu).length;
+  if (comum && Number(comum[0]) !== minhas) out.push(["estr", "Estratégia diferente do grid", `Você fez ${minhas} parada${minhas === 1 ? "" : "s"}; a maioria de quem terminou fez ${comum[0]} (${comum[1]} pilotos).`]);
+  if (!out.length) return "";
+  const IC2 = { alvo: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>', dupla: '<path d="M7 7h10M7 12h10M7 17h6"/>', ritmo: '<path d="M3 17l5-5 4 4 8-8M15 8h5v5"/>', pos: '<path d="M12 19V5M5 12l7-7 7 7"/>', estr: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>' };
+  return card("cx-ag-ins", IC.destaque, "Insights do engenheiro", `<ul class="cx-ag-ins-l">${out.slice(0, 4).map(([ic, t, x]) => `<li><i class="cx-ag-ins-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC2[ic]}</svg></i><div><b>${t}</b><p>${x}</p></div></li>`).join("")}</ul>`, "", 3);
+}
+
 // ---------- a Visão geral ----------
 function visaoGeral(c, r, a, mapa, verTodos) {
   const D = dados(c, r, a), U0 = U();
@@ -94,7 +127,7 @@ function visaoGeral(c, r, a, mapa, verTodos) {
   const infos = card("cx-ag-info", IC.info, "Informações da corrida", `<ul class="cx-ag-info-l">
       ${info(IC.crono, "Tempo de corrida", tempoLongo(D.tV))}${info(IC.voltas, "Voltas", a.voltas)}${info(IC.parada, "Paradas nos boxes", paradas)}${info(IC.ultra, "Ultrapassagens", ult.length)}
       ${info(IC.sc, "Safety car", a.safeties || 0)}${info(IC.bandeira, "Bandeiras amarelas", a.amarelas || 0)}${info(a.chuva ? IC.chuva : IC.sol, "Condições", a.chuva ? "Com chuva" : "Pista seca")}</ul>`, "", 6);
-  return `<div class="cx-ag">${faixa}<div class="cx-ag-meio"><div class="cx-ag-mapa" style="--i:1">${mapa}</div>${resultado}</div><div class="cx-ag-baixo">${setor}${estrategias}${destaques}${infos}</div></div>`;
+  return `<div class="cx-ag">${faixa}<div class="cx-ag-meio"><div class="cx-ag-mapa" style="--i:1">${mapa}</div>${resultado}</div>${insights(D, a) ? `<div class="cx-ag-ins-faixa">${insights(D, a)}</div>` : ""}<div class="cx-ag-baixo">${setor}${estrategias}${destaques}${infos}</div></div>`;
 }
 
 // ---------- o Desempenho por setor: cada setor com o melhor e os 5 primeiros, em barras ----------

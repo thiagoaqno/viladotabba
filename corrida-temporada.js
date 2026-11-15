@@ -1,6 +1,7 @@
 // Sede da temporada solo de Fórmula 1. O servidor é dono do save e da passagem entre GPs.
 const bd = require("./bd.js");
 const Regras = require("./public/corrida/temporada/regras.js");
+const Paddock = require("./public/corrida/temporada/paddock.js"); // (2026-11-15) as decisões do Paddock
 const Anos = require("./public/corrida/f1-temporadas.js"); // o ano da carreira (`anoF1` do save; os saves de antes são de 2026)
 const { limparNome } = require("./salas.js");
 
@@ -77,6 +78,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
     socket.on("engenheiro", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.contratarEngenheiro(s, d.area, Number(d.nivel))));
     socket.on("nivel", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.mudarNivel(s, d.nivel))); // a dificuldade dos robôs no meio da carreira
     socket.on("desenvolver", (_, resposta) => mudar(socket, resposta, (s) => Regras.desenvolver(s)));
+    socket.on("paddock", (d = {}, resposta) => mudar(socket, resposta, (s) => Paddock.decidir(s, String(d.id || ""), String(d.opcao || "")))); // (as decisões do Paddock)
     socket.on("renovar", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.renovar(s, Number(d.anos))));
     socket.on("aceitarProposta", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.aceitarProposta(s, d.equipe)));
     socket.on("proximaTemporada", (_, resposta) => mudar(socket, resposta, (s) => Regras.proximaTemporada(s)));

@@ -1,44 +1,77 @@
-# Capacete: o editor novo no estilo da referência, o modelo 3D mais real e as opções novas; e o satélite sai
+# Carreira: o Paddock (a temporada viva, com decisões e consequências), a tela de acerto no jeito do jogo da F1 e os insights do engenheiro
 
-O Thiago mandou a tela de inspiração do capacete, com as opções novas de personalização, e pediu o modelo 3D o mais perto possível de um capacete de verdade. No meio, pediu para desfazer a imagem de satélite do #752, porque a resolução ficou baixa.
+Pedido do Thiago (2026-11-15), com o print da tela de acerto do jogo da F1, uma ideia de central de análise e o texto sobre deixar a temporada "viva":
+paddock, acontecimentos inesperados e consequências das decisões. "Pode fazer sem minha aprovação. Um PR só."
 
-## O editor (`capacete-editor-ui.js`, `capacete.css`)
+## O Paddock (aba nova da Central, só na carreira solo)
 
-O mesmo `montarEditorCapacete` e o mesmo capacete guardado (`corrida:capacete`), na etapa Carro da sala e na aba Capacete da Central:
-- **Menu à esquerda:** Desenho, Cores, Detalhes, Patrocínios, Visor e Acabamento, com ícones em SVG e a barra na cor da equipe na opção ativa.
-- **Desenho:** a grade de miniaturas **em 3D, com as suas cores**, fotografadas pela própria prévia (`capacete-3d.js`, `fotografar`), 12 por página, com "1 / 2" e o selo na escolhida.
-- **Cores:** casco, segunda cor e detalhes, cada uma com 12 cores prontas e o "+" para escolher outra.
-- **Detalhes:** a bandeira e o nome.
-- **Patrocínios:** selos inventados (Vila do Tabba, Galera Racing, Tabba Energy, Turbo Pneus), sem marca de verdade, na nuca e nos lados.
-- **Visor:** as cores de antes.
-- **Acabamento:** brilhante, fosco, metálico ou cromado.
-- **À direita, o capacete grande:** arrastar gira, e ele não gira sozinho. Embaixo ficam as **cores principais** e o **Padrão**, com as 4 variações do desenho em miniatura (original, detalhe trocado, cores trocadas e espelhado).
-- As cores saem do tema de onde o editor está: os tokens da Central (claro ou escuro) ou o escuro da sala. Ele empilha nas telas estreitas.
+- **As regras** (`temporada/paddock.js`, as mesmas no servidor e no navegador). O save ganhou `s.paddock`, criado na hora nos saves antigos:
+  - **moral e lealdade do companheiro.** A moral muda o ritmo dele na corrida (`regras.js pilotosNoGrid`): ±2 pontos de ritmo nos extremos, ±0,4% no tempo de volta pela conta de `fatorDeRitmo`;
+  - **satisfação do patrocinador.** Passando de 80, a verba por GP sobe 1 milhão; abaixo de 20, cai 1 milhão;
+  - **torcida;**
+  - **diretoria** (−20 a +20), somada à confiança do chefe na caixa de mensagens (`regras.js imersao`);
+  - **as decisões e o mural.**
+- **Os acontecimentos:** até dois por GP, sorteados pela semente (o mesmo save vê sempre os mesmos), entre os que fazem sentido agora:
+  - insatisfação no segundo cockpit;
+  - conflito entre companheiros (quando vocês chegaram colados);
+  - patrocinador pedindo visibilidade, com a opção de prometer a meta: cumprir dá +10, falhar dá −15;
+  - imprensa depois de um resultado ruim;
+  - marca querendo entrar depois de um resultado bom;
+  - encontro com a torcida;
+  - diretoria impaciente ou satisfeita;
+  - companheiro conversando com outra equipe (moral ou lealdade abaixo de 30);
+  - reunião técnica do fim de semana.
 
-## O modelo 3D (`f1-piloto.js`, o mesmo da pista)
+  Cada opção mostra o que mexe (+12 moral, −3 mi caixa...).
+- **A decisão:** vai para o servidor (o evento novo `paddock`, `corrida-temporada.js`), que confere se o acontecimento ainda está aberto e se há caixa.
+- **Depois de cada GP** (`registrarResultado`):
+  - o companheiro ganha moral quando pontua ou chega na sua frente, e perde quando abandona;
+  - o patrocinador sobe quando você cumpre a meta do GP e cai quando não cumpre;
+  - a torcida segue os seus pontos.
 
-- O casco ficou mais liso (56 × 34) e **aberto embaixo**, como um capacete de verdade; o UV continua o da esfera inteira, e a pintura não muda de lugar.
-- Peças escuras novas, todas seguindo a forma do casco, na mesma malha da moldura que o carro já tinha (uns 2200 triângulos por piloto, medido no Node):
-  - a borracha do pescoço e o friso da borda de baixo;
-  - a **aba aerodinâmica** atrás, levantada no meio;
-  - o **lábio** em cima da viseira;
-  - as duas **entradas de ar** da testa;
-  - a **grade do queixo**.
-- O acabamento vale também no capacete do carro (`acabamentoDoCasco`).
+  Tudo vai para o mural.
+- **Na virada do ano**, os números voltam um pouco para o meio. Com companheiro novo ou equipe nova, o humor recomeça.
+- **A tela** (`paddock-ui.js`, `paddock.css`):
+  - o fim de semana em quatro passos (sexta, sábado, domingo, pós-corrida);
+  - "Acontecendo agora";
+  - o humor da equipe, com o que cada número faz;
+  - os dois pilotos com o que foi medido no ano: a consistência (o desvio das voltas limpas) e as ultrapassagens por GP, da análise de cada GP;
+  - o duelo interno;
+  - a central de notícias, só com números de verdade: as equipes que levaram melhoria neste GP (`desenvolvimentoRivais`), a previsão do próximo GP, o vencedor do último e o líder;
+  - o mural;
+  - o histórico da equipe: cada temporada e os momentos marcantes (primeira vitória, primeiro pódio, melhor resultado, melhor temporada).
+- **Ao abrir a carreira,** o Central mostra o acontecimento que espera decisão, com o atalho para o Paddock. A aba mostra quantos esperam.
 
-## A pintura e o servidor
+## A tela de acerto no jeito do jogo da F1 (`central-acerto.js`, `central-acerto.css`)
 
-- **`f1-capacetes.js`:**
-  - 4 desenhos novos, angulosos como os da referência: Lâminas, Garras, Corte e Velocidade (20 ao todo);
-  - a variante: as cores trocadas ou o desenho espelhado;
-  - os selos de patrocínio;
-  - as propriedades de cada acabamento.
-- **`corrida.js`** (`limparCapacete`): aceita os desenhos novos, a `variante` (0 a 3), o `acabamento` e o `patrocinio`.
+- O título no meio e as abas em pílula: Ajustes, Equipe e Pista.
+- O painel tem as linhas da asa e da altura:
+  - a escolhida fica em destaque, invertida;
+  - as setas mexem 5 pontos;
+  - a barra é em gomos (cheia até o valor, listrada depois), com as marcas E e S do engenheiro e do estrategista;
+  - o número de 0 a 100 e a faixa "Menos 0 – 100 Mais" vêm com o efeito ao lado.
+- O carro de lado à direita, e a explicação da linha escolhida embaixo, como no jogo.
+- A faixa de baixo tem:
+  - a pista e a etapa;
+  - a folga do assoalho no fim da reta;
+  - o alerta, que fica vermelho e pisca quando o assoalho raspa abaixo de 300 km/h.
+- Os botões com tecla: carro padrão, usar o do engenheiro, usar o do estrategista.
+- O teclado anda como no jogo: para cima e para baixo trocam de linha, para os lados mexem o valor.
+- Só a asa e a altura: são os dois ajustes que a física do jogo tem. Nenhuma linha sem efeito foi inventada.
 
-## O satélite sai
+## Insights do engenheiro (Visão geral da Análise)
 
-`gp-satelite.js` foi apagado. A miniatura 3D volta a usar direto o mapa desenhado do OpenStreetMap, com o crédito. Os mapas continuam com o `geo`, que não pesa e fica para outro uso.
+Um quadro novo, só com o que o resumo do GP mede:
+- o setor em que você mais perde para o melhor tempo da corrida;
+- a sua melhor volta contra a do companheiro;
+- a consistência das voltas limpas;
+- as posições ganhas ou perdidas;
+- as paradas contra a estratégia mais usada.
 
-Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`; as geometrias novas do capacete foram montadas uma vez no Node, sem teste novo. Não vi o capacete na tela. O teste jogando fica com o Thiago.
+## Prints
+
+Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, numa carreira nova da Audi no tema escuro: o Central com a chamada, o Paddock antes e depois de uma decisão e o Acerto. Estão em `C:\Users\thiag\Downloads\lts\prints\paddock\`, fora do repositório. Os insights da Análise precisam de um GP corrido e não entraram nos prints.
+
+Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`. O `brach.md` e o `novidades.json` também mudam no #755: quem for juntado depois precisa juntar as duas entradas.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

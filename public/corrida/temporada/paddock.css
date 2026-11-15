@@ -1,0 +1,76 @@
+/* Corrida da Galera — a aba Paddock da Central (paddock-ui.js, 2026-11-15): os tokens da Central (--cx-*, claro ou escuro) e a cor da equipe (--eq). */
+.cx-aba-n{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-left:6px;padding:0 4px;border-radius:9px;background:var(--eq-at,var(--eq,#e10600));color:#fff;font:800 10.5px/1 var(--cx-f);font-style:normal;vertical-align:2px}
+.pd{display:grid;gap:18px;color:var(--cx-tx)}
+.pd h3{margin:0 0 10px;font:800 13px var(--cx-f);text-transform:uppercase;letter-spacing:.12em;color:var(--cx-tx2);display:flex;align-items:center;gap:8px}
+.pd-n{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--eq-at,var(--eq));color:#fff;font:800 11px var(--cx-f);font-style:normal;letter-spacing:0}
+.pd-cab{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;padding:18px 22px;border:1px solid var(--cx-lin);border-radius:12px;background:linear-gradient(110deg,var(--eq,#e10600) 0 6px,var(--cx-bg2) 6px)}
+.pd-cab h2{margin:4px 0 0;font:900 clamp(22px,2.4vw,34px)/1.05 var(--cx-f)}
+/* o fim de semana em quatro passos */
+.pd-fds{display:flex;gap:4px;margin:0;padding:0;list-style:none}
+.pd-fds li{display:flex;flex-direction:column;gap:2px;min-width:110px;padding:8px 12px;border-top:3px solid var(--cx-lin);color:var(--cx-tx2)}
+.pd-fds li b{font:800 13px var(--cx-f);text-transform:uppercase;letter-spacing:.06em}.pd-fds li span{font-size:11.5px}
+.pd-fds li.feito{border-top-color:color-mix(in srgb,var(--eq,#e10600) 45%,transparent)}
+.pd-fds li.on{border-top-color:var(--eq-at,var(--eq));color:var(--cx-tx);background:var(--cx-hover)}
+.pd-grade{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px}
+.pd-col,.pd-bloco{min-width:0;padding:16px 18px;border:1px solid var(--cx-lin);border-radius:12px;background:var(--cx-bg2)}
+.pd-vazio{margin:0;color:var(--cx-tx2);font-size:13.5px}
+/* os acontecimentos */
+.pd-agora{display:flex;flex-direction:column;gap:12px}
+.pd-ev{padding:14px 16px;border:1px solid var(--cx-lin);border-left:4px solid var(--eq-at,var(--eq));border-radius:8px;background:var(--cx-bg);animation:pdEntra .35s cubic-bezier(.2,.8,.2,1) backwards}
+.pd-ev.decidido{border-left-color:var(--cx-lin)}.pd-ev.decidido h4,.pd-ev.decidido p{opacity:.75}
+@keyframes pdEntra{from{opacity:0;transform:translateY(6px)}}
+.pd-ev header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pd-quem{display:inline-flex;align-items:center;gap:6px;color:var(--cx-tx2);font:800 11px var(--cx-f);text-transform:uppercase;letter-spacing:.1em}
+.pd-ev header em{font:800 10.5px var(--cx-f);font-style:normal;text-transform:uppercase;letter-spacing:.08em;color:var(--cx-tx2)}
+.pd-ev header em.novo{color:var(--eq-at,var(--eq))}
+.pd-ev h4{margin:8px 0 4px;font:800 17px/1.2 var(--cx-f)}
+.pd-ev p{margin:0 0 10px;color:var(--cx-tx2);font-size:13.5px;line-height:1.45}
+.pd-opcoes{display:grid;gap:6px}
+.cx .pd-op{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:9px 12px;border:1px solid var(--cx-lin);border-radius:6px;background:var(--cx-bg2);color:var(--cx-tx);font:700 13px var(--cx-f);text-align:left;cursor:pointer;transition:border-color .15s,transform .15s,background .15s}
+.cx .pd-op:hover:not(:disabled){border-color:var(--eq-at,var(--eq));background:var(--cx-bg2);transform:translateX(3px)}
+.cx .pd-op:disabled{cursor:default;opacity:1}.cx .pd-op:disabled:not(.on){opacity:.5}
+.cx .pd-op.on{border-color:var(--eq-at,var(--eq));background:color-mix(in srgb,var(--eq,#e10600) 12%,var(--cx-bg2))}.pd-op.on > span:first-child::before{content:"✓ ";color:var(--eq-at,var(--eq))}
+.pd-efs{display:inline-flex;flex-wrap:wrap;gap:4px}
+.pd-ef{padding:2px 7px;border-radius:999px;font:800 10.5px var(--cx-f);font-style:normal;white-space:nowrap}
+.pd-ef.mais{background:color-mix(in srgb,var(--cx-verde) 16%,transparent);color:var(--cx-verde)}
+.pd-ef.menos{background:color-mix(in srgb,var(--cx-verm) 14%,transparent);color:var(--cx-verm)}
+/* o humor da equipe */
+.pd-humor{display:grid;gap:12px}
+.pd-med-topo{display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:13.5px}.pd-med-topo b{font:900 16px var(--cx-f);font-variant-numeric:tabular-nums}
+.pd-barra{height:6px;margin:5px 0 4px;border-radius:3px;background:var(--cx-trilho);overflow:hidden}
+.pd-barra i{display:block;height:100%;border-radius:3px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.pd-bom .pd-barra i{background:var(--cx-verde)}.pd-meio .pd-barra i{background:var(--cx-amb)}.pd-ruim .pd-barra i{background:var(--cx-verm)}
+.pd-med small{color:var(--cx-tx2);font-size:11.5px}
+/* os pilotos */
+.pd-pilotos{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;align-items:stretch}
+.pd-piloto{padding:12px 14px;border:1px solid var(--cx-lin);border-radius:8px;background:var(--cx-bg)}
+.pd-piloto h4{margin:0 0 8px;font:800 16px var(--cx-f)}
+.pd-piloto > small{color:var(--cx-tx2);font-size:11.5px}
+.pd-traços{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:8px}
+.pd-traços small{display:block;color:var(--cx-tx2);font-size:11px}.pd-traços b{font:900 18px var(--cx-f);font-variant-numeric:tabular-nums}
+.pd-traços i{font:800 12px var(--cx-f);font-style:normal}.pd-traços i.mais{color:var(--cx-verde)}.pd-traços i.menos{color:var(--cx-verm)}
+.pd-duelo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 10px;text-align:center}
+.pd-duelo small{color:var(--cx-tx2);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.pd-duelo b{font:900 30px var(--cx-f)}
+/* as notícias e o mural */
+.pd-noticia{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--cx-lin)}
+.pd-noticia:last-child{border-bottom:0}
+.pd-noticia .pd-logo{width:34px;height:34px;object-fit:contain;flex:none}
+.pd-noticia b{font:800 14.5px var(--cx-f)}.pd-noticia p{margin:2px 0 0;color:var(--cx-tx2);font-size:13px;line-height:1.4}
+.pd-mural{display:grid;gap:10px;margin:0;padding:0;list-style:none;max-height:380px;overflow:auto}
+.pd-mural li{display:flex;gap:10px;align-items:flex-start}
+.pd-mural li > .pd-quem{display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:50%;background:var(--cx-hover)}
+.pd-mural small{color:var(--cx-tx2);font-size:11px;text-transform:uppercase;letter-spacing:.06em}.pd-mural p{margin:2px 0 4px;font-size:13.5px}
+/* o histórico */
+.pd-momentos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.pd-momentos div{padding:10px 12px;border-left:3px solid var(--eq-at,var(--eq));background:var(--cx-bg)}
+.pd-momentos small{display:block;color:var(--cx-tx2);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.pd-momentos b{font-size:14.5px}
+.pd-anos{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.pd-anos th{padding:6px 8px;color:var(--cx-tx2);font-size:11px;text-transform:uppercase;letter-spacing:.08em;text-align:left;border-bottom:1px solid var(--cx-lin)}
+.pd-anos td{padding:7px 8px;border-bottom:1px solid var(--cx-lin)}
+@media (max-width:900px){.pd-grade{grid-template-columns:1fr}.pd-pilotos{grid-template-columns:1fr}.pd-fds{flex-wrap:wrap}.pd-fds li{min-width:0;flex:1 1 40%}}
+@media (prefers-reduced-motion:reduce){.pd-ev{animation:none}}
+/* a chamada na Central: o acontecimento que espera decisão */
+.cx .pd-chamada{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:0 0 14px;padding:10px 14px;border:1px solid var(--cx-lin);border-left:4px solid var(--eq-at,var(--eq));border-radius:8px;background:var(--cx-bg2);color:var(--cx-tx);text-align:left;cursor:pointer;animation:pdEntra .4s cubic-bezier(.2,.8,.2,1) backwards;transition:transform .15s}
+.cx .pd-chamada:hover{transform:translateX(4px)}
+.cx .pd-chamada small{color:var(--eq-at,var(--eq));font:800 11px var(--cx-f);text-transform:uppercase;letter-spacing:.1em}
+.cx .pd-chamada b{font:800 16px var(--cx-f)}.cx .pd-chamada span{display:flex;align-items:center;gap:6px;color:var(--cx-tx2);font-size:12.5px}.pd-chamada .cx-seta{width:18px;height:11px}

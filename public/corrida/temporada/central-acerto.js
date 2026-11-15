@@ -5,7 +5,7 @@
 //  - os ajustes: a asa e a altura, com a marca de onde o engenheiro (E) e o estrategista (S) sugerem, e três medidores da física do jogo
 //    (acerto-sugestao.js, `numeros`, a mesma conta de sim.js): a carga aerodinâmica numa curva, o arrasto no fim da reta e a folga do assoalho;
 //  - a equipe: o engenheiro e o estrategista contratado (o nível vem de s.engenheiros.estrategista), cada um com a sua frase e "Usar".
-// (2026-11-15) A tela ganhou o jeito da tela de acerto do jogo da F1: ver o comentário de `html`.
+// (2026-11-15) A tela foi refeita pelas referências do Thiago: ver o comentário de `html`.
 // O acerto fica guardado no navegador por pista (acerto-sugestao.js) e a corrida usa o mesmo (acerto-carro.js, na largada; o painel P).
 // Mexer nos deslizantes atualiza a tela sem redesenhar (redesenhar soltaria o deslizante no meio do arrasto).
 (function (root) {
@@ -55,18 +55,33 @@ function ficha(id, c) {
   const item = (rot, v) => `<div class="ac-ficha-i"><small>${h(rot)}</small><b>${h(v)}</b></div>`;
   return `<div class="ac-ficha">${item("Circuito", g.circuito)}${item("Local", [g.cidade, g.pais].filter(Boolean).join(", "))}${g.km ? item("Volta", g.km.toFixed(3).replace(".", ",") + " km") : ""}${g.curvas?.length ? item("Curvas", String(g.curvas.length)) : ""}${c.s.voltas ? item("Voltas no GP", String(c.s.voltas)) : ""}</div>`;
 }
-// A tela no jeito da tela de acerto do jogo da F1 (2026-11-15, o print do Thiago): o título no meio, as abas embaixo dele (Ajustes, Equipe,
-// Pista), o painel com as linhas (a escolhida em destaque, as setas, a barra em gomos com o valor e a faixa "Menos 0 – 100 Mais"), o carro de
-// lado à direita, a explicação da linha embaixo e a faixa de baixo com a pista, a folga do assoalho e o alerta vermelho quando o carro raspa.
-// As setas do teclado também andam: para cima e para baixo trocam de linha, para os lados mexem 5 pontos.
+// A tela pela referência do Thiago (2026-11-15, a segunda): o título "Acerto do carro" com o traço da equipe, as abas inclinadas (Ajustes,
+// Equipe, Pista), o painel com o ícone, as linhas com ‹ barra › o valor e o mínimo e o máximo DE VERDADE (a força da asa vai de 80 a 120%,
+// a altura parada de 2,5 a 7,5 cm: acerto-sugestao.js), o cartão de onde o assoalho começa a raspar, os medidores, o carro grande à direita
+// com o logo da equipe atrás e a faixa de baixo com a etapa, a folga e os três botões. As setas do teclado também andam (para cima e para
+// baixo trocam de linha, para os lados mexem 5 pontos).
 let sub = "ajustes", linha = "asa";
 const LINHAS = {
-  asa: { nome: "Asa (downforce)", menos: "Menos", mais: "Mais", v: (a) => Math.round(A().forcaDaAsa(a) * 100) + "%",
-    texto: "Mais asa é mais carga aerodinâmica: o carro gruda nas curvas e freia mais tarde, mas o arrasto tira velocidade no fim da reta. A carga também empurra o carro para baixo e come a folga do assoalho. Pouca asa deixa o carro rápido na reta e solto nas curvas." },
-  altura: { nome: "Altura do carro", menos: "Baixo", mais: "Alto", v: (a) => A().cm(a),
+  asa: { nome: "Asa (downforce)", v: (a) => Math.round(A().forcaDaAsa(a) * 100) + "%", faixa: "(Mín. 80 – Máx. 120%)",
+    texto: "Mais asa aumenta a carga aerodinâmica: o carro gruda nas curvas e freia mais tarde, mas o arrasto tira velocidade no fim da reta. A carga também empurra o carro para baixo e come a folga do assoalho. Menos asa deixa o carro mais rápido em linha reta, porém com menos aderência." },
+  altura: { nome: "Altura do carro", v: (a) => A().cm(a), faixa: "(Mín. 2,5 – Máx. 7,5 cm)",
     texto: "Mais baixo, o assoalho trabalha mais perto do chão e o efeito solo dá mais aderência. Baixo demais, a carga da asa afunda o carro no fim da reta e o assoalho raspa no asfalto, soltando faísca. Alto é seguro, mas perde aderência." },
 };
-const gomos = (campo) => `<div class="acf-gomos">${Array.from({ length: 10 }, (_, i) => `<i style="--i:${i}"></i>`).join("")}</div><i class="acf-cheio" style="--v:var(--v-${campo})"></i>`;
+const SV = (d, w = 22) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const IC_MOLA = '<path d="M12 2v3M12 19v3M8 5h8M8 19h8M7 8l10 2M7 12l10 2M7 16l10-2M17 10 7 12M17 14 7 16"/>';
+const IC_VELOC = '<path d="M4 16a8 8 0 1 1 16 0"/><path d="m12 16 4-5"/><circle cx="12" cy="16" r="1.3"/>';
+// os medidores (só leitura): a carga numa curva média, o arrasto no fim da reta e a folga do assoalho, cada um na sua barra
+function medidoresF1(a) {
+  const n = A().numeros(a), vr = n.raspaKmh, perigo = vr != null && vr < 300, raspa = n.folgaCm < 0;
+  const pct = (v, min, max) => Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
+  const sinalv = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
+  const linhaM = (rot, sub2, valor, p, cls = "") => `<div class="acf2-med ${cls}"><span><b>${rot}</b>${sub2 ? `<small>${sub2}</small>` : ""}</span><span class="acf2-medbar"><i style="width:${p.toFixed(0)}%"></i></span><output>${valor}</output></div>`;
+  return `<div class="acf2-raspa ${perigo ? "perigo" : vr == null ? "nunca" : ""}"><span class="acf2-raspa-ic">${SV(IC_VELOC, 34)}</span><div><small>Começa a raspar no chão a</small><b>${vr == null ? "nunca raspa" : `${vr} km/h`}</b></div>
+      <p>${vr == null ? "A altura aguenta a carga da asa em qualquer velocidade." : perigo ? "Abaixo de ~300 km/h: raspa em toda reta longa." : "Acima de ~300 km/h: só no vácuo ou com o ERS."}</p>${perigo ? `<i class="acf2-i" title="O assoalho raspa">!</i>` : ""}</div>
+    ${linhaM("Carga aerodinâmica", "aderência numa curva média", `${sinalv(n.carga)}%`, pct(n.carga, -30, 30))}
+    ${linhaM("Arrasto", "no fim da reta, a ~300 km/h", `${sinalv(n.arrasto)}%`, pct(n.arrasto, -90, 90))}
+    ${linhaM("Folga do assoalho", `no fim da reta (o carro afunda ${String(n.afundaCm).replace(".", ",")} cm)`, raspa ? `raspa ${String(-n.folgaCm).replace(".", ",")} cm` : `${String(n.folgaCm).replace(".", ",")} cm`, pct(n.folgaCm, -1, 3), raspa ? "raspa" : "")}`;
+}
 function html(c) {
   const UI = U(), prox = c.prox, id = prox && prox.pista;
   if (!A()) return `<section class="cx-card">${UI.tituloCard("Acerto do carro")}<p>O acerto não carregou. Recarregue a página.</p></section>`;
@@ -76,40 +91,44 @@ function html(c) {
   const mapa = root.GpSobre ? root.GpSobre.mapaSvg(id, "cx-traco ac-mapa-svg") : "", etapa = (c.s.gp || 0) + 1;
   const marca = (quem, letra, a, campo) => (a ? `<i class="ac-sug ac-sug-${quem}" style="left:${(a[campo] * 100).toFixed(1)}%" title="${quem === "engenheiro" ? "Engenheiro" : "Estrategista"}">${letra}</i>` : "");
   const linhaHTML = (campo) => { const L = LINHAS[campo], on = linha === campo;
-    return `<div class="acf-linha ${on ? "on" : ""}" data-cx-acerto-linha="${campo}">
-      <span class="acf-nome">${h(L.nome)}</span>
-      <span class="acf-setas"><button type="button" data-cx-acerto-passo="${campo}:-1" aria-label="Menos ${h(L.nome)}">◀</button><button type="button" data-cx-acerto-passo="${campo}:1" aria-label="Mais ${h(L.nome)}">▶</button></span>
-      <span class="acf-barra">${gomos(campo)}<input type="range" min="0" max="1" step="0.01" value="${atual[campo]}" data-cx-acerto="${campo}" aria-label="${h(L.nome)}"><span class="ac-sugs">${marca("engenheiro", "E", sg.engenheiro, campo)}${marca("estrategista", "S", sg.estrategista, campo)}</span></span>
-      <output class="acf-num" data-cx-acerto-n="${campo}">${Math.round(atual[campo] * 100)}</output>
-      <span class="acf-faixa">${h(L.menos)} 0 – 100 ${h(L.mais)} · <b data-cx-acerto-v="${campo}">${h(L.v(atual))}</b></span>
+    return `<div class="acf2-linha ${on ? "on" : ""}" data-cx-acerto-linha="${campo}">
+      <span class="acf2-nome">${h(L.nome)}</span>
+      <button type="button" class="acf2-seta" data-cx-acerto-passo="${campo}:-1" aria-label="Menos ${h(L.nome)}">${SV('<path d="m15 6-6 6 6 6"/>', 18)}</button>
+      <span class="acf2-barra"><i class="acf2-cheio" style="--v:var(--v-${campo})"></i><input type="range" min="0" max="1" step="0.01" value="${atual[campo]}" data-cx-acerto="${campo}" aria-label="${h(L.nome)}"><span class="ac-sugs">${marca("engenheiro", "E", sg.engenheiro, campo)}${marca("estrategista", "S", sg.estrategista, campo)}</span></span>
+      <button type="button" class="acf2-seta" data-cx-acerto-passo="${campo}:1" aria-label="Mais ${h(L.nome)}">${SV('<path d="m9 6 6 6-6 6"/>', 18)}</button>
+      <output class="acf2-valor" data-cx-acerto-v="${campo}">${h(L.v(atual))}</output><small class="acf2-faixa">${L.faixa}</small>
     </div>`; };
   const radio = (quem, titulo, a, subt) => a ? `<article class="ac-radio">
       <div class="ac-av ac-av-${quem}">${quem === "engenheiro" ? "E" : "S"}</div>
       <div class="ac-radio-txt"><small>${h(subt)}</small><b>${h(titulo)}</b><p>"${h(A().frase(a))}"</p><small class="ac-ef">${h(A().efeito(a))}</small></div>
       <button type="button" class="cx-bt" data-cx-acerto-usar="${quem}">Usar</button></article>` : "";
   const ABAS_AC = [["ajustes", "Ajustes"], ["equipe", "Equipe"], ["pista", "Pista"]];
-  const vr = n.raspaKmh;
+  const cab = (ic, t, st) => `<header class="acf2-cab"><span class="acf2-cab-ic">${SV(ic, 30)}</span><div><h3>${t}</h3><p>${st}</p></div></header>`;
   const corpo = sub === "equipe"
-    ? (ideais ? `<div class="ac-equipe">${radio("engenheiro", "Engenheiro da equipe", sg.engenheiro, "Rádio da equipe")}${radio("estrategista", `Estrategista ${A().NIVEIS_ESTRATEGISTA[sg.nivel]}`, sg.estrategista, sg.nivel ? "O melhor acerto para esta pista" : "Erra um pouco: contrate um experiente em Contratos")}</div>
-        <p class="ac-legenda"><i class="ac-sug ac-sug-engenheiro">E</i> onde o <b>engenheiro da equipe</b> propõe (seguro, sem raspar) <i class="ac-sug ac-sug-estrategista">S</i> onde o <b>estrategista</b> sugere (o melhor para a pista; o de base erra um pouco).</p>` : `<p class="ac-carregando">Chamando a equipe no rádio…</p>`)
+    ? cab('<path d="M4 18v-5a8 8 0 0 1 16 0v5"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/>', "Rádio da equipe", "O engenheiro e o estrategista dizem como acertar o carro para esta pista.") + (ideais ? `<div class="ac-equipe">${radio("engenheiro", "Engenheiro da equipe", sg.engenheiro, "Seguro, sem raspar")}${radio("estrategista", `Estrategista ${A().NIVEIS_ESTRATEGISTA[sg.nivel]}`, sg.estrategista, sg.nivel ? "O melhor acerto para esta pista" : "Erra um pouco: contrate um experiente em Contratos")}</div>
+        <p class="ac-legenda"><i class="ac-sug ac-sug-engenheiro">E</i> onde o <b>engenheiro</b> propõe <i class="ac-sug ac-sug-estrategista">S</i> onde o <b>estrategista</b> sugere, nas barras da aba Ajustes.</p>` : `<p class="ac-carregando">Chamando a equipe no rádio…</p>`)
     : sub === "pista"
-      ? `<div class="acf-pista"><div class="ac-mapa" aria-hidden="true">${mapa}</div><div>${ficha(id, c)}<p class="acf-desc">${h(A().frase(atual))}</p><p class="acf-desc">${h(A().efeito(atual))}</p></div></div>`
-      : `<div class="acf-corpo">
-          <div class="acf-lista">${linhaHTML("asa")}${linhaHTML("altura")}
-            <p class="acf-desc" data-cx-acerto-desc>${h(LINHAS[linha].texto)}</p>
-            <div class="ac-medidores" data-cx-acerto-med>${medidores(atual)}</div></div>
-          <section class="ac-palco${carro3d ? " ac-3d-pronto" : ""}"><div class="ac-palco-rot"><span class="on">Parado</span><span>Fim da reta</span><em class="ac-raspa-selo">Raspando</em></div><div class="ac-palco3d"><canvas aria-label="O carro da equipe, de lado, com a suspensão subindo e descendo"></canvas></div><div class="ac-reserva">${CARRO}</div></section>
-        </div>`;
-  return `<div class="ac acf ${raspa ? "ac-raspa" : ""}" style="${estilo(atual)}">
-    <h2 class="acf-titulo">Acerto do carro</h2>
-    <nav class="acf-abas" role="tablist" aria-label="Partes do acerto">${ABAS_AC.map(([k, t]) => `<button type="button" role="tab" class="${sub === k ? "on" : ""}" aria-selected="${sub === k}" data-cx-acerto-sub="${k}">${t}</button>`).join("")}</nav>
-    <section class="acf-painel"><header class="acf-cab"><b>${sub === "equipe" ? "Sugestões da equipe" : sub === "pista" ? "A pista" : "Aerodinâmica e suspensão"}</b><span>Acerto guardado <em>${h(nome)}</em></span></header>${corpo}</section>
-    <footer class="acf-pe">
-      <div class="acf-gp">${UI.bandeira ? UI.bandeira(id) : ""}<div><small>${h(nome)}</small><b>Etapa ${etapa}</b></div></div>
-      <div class="acf-folga"><small>Folga do assoalho no fim da reta</small><b data-cx-acerto-folga>${raspa ? `raspa ${String(-n.folgaCm).replace(".", ",")} cm` : `${String(n.folgaCm).replace(".", ",")} cm`}</b></div>
-      <div class="acf-alerta ${vr != null && vr < 300 ? "on" : ""}" data-cx-acerto-alerta><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 3 2 21h20z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v5M12 18v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><small>Assoalho</small><b>${vr == null ? "Nunca raspa" : `Raspa a ${vr} km/h`}</b></div></div>
+      ? cab('<path d="M5 18c-2-3 0-6 3-6s4-4 7-4 5 3 3 6-6 2-8 4-4 2-5 0z"/>', h(nome), "O traçado e o que o acerto de agora faz nele.") + `<div class="acf2-pista"><div class="ac-mapa" aria-hidden="true">${mapa}</div><div>${ficha(id, c)}<p class="acf2-desc">${h(A().frase(atual))}</p><p class="acf2-desc">${h(A().efeito(atual))}</p></div></div>`
+      : cab(IC_MOLA, "Aerodinâmica e Suspensão", "Ajuste o equilíbrio do seu carro para encontrar o melhor desempenho.") + `${linhaHTML("asa")}${linhaHTML("altura")}
+          <p class="acf2-desc" data-cx-acerto-desc>${h(LINHAS[linha].texto)}</p>
+          <div class="acf2-meds" data-cx-acerto-med>${medidoresF1(atual)}</div>`;
+  const vr = n.raspaKmh;
+  return `<div class="ac acf2 ${raspa ? "ac-raspa" : ""}" style="${estilo(atual)}">
+    <div class="acf2-esq">
+      <h2 class="acf2-titulo">Acerto do carro</h2>
+      <nav class="acf2-abas" role="tablist" aria-label="Partes do acerto">${ABAS_AC.map(([k, t]) => `<button type="button" role="tab" class="${sub === k ? "on" : ""}" aria-selected="${sub === k}" data-cx-acerto-sub="${k}"><span>${t}</span></button>`).join("")}</nav>
+      <section class="acf2-painel">${corpo}</section>
+    </div>
+    <div class="acf2-dir">
+      <div class="acf2-salvo"><div><b>Acerto guardado</b><span>${h(nome)}</span></div>${SV('<path d="m5 12 4.5 4.5L19 7"/>', 26)}</div>
+      <section class="ac-palco acf2-palco${carro3d ? " ac-3d-pronto" : ""}"><span class="acf2-marca" aria-hidden="true">${UI.marca ? UI.marca(c.s.equipe, "acf2-marca-img") : ""}</span><div class="ac-palco-rot"><span class="on">Parado</span><span>Fim da reta</span><em class="ac-raspa-selo">Raspando</em></div><div class="ac-palco3d"><canvas aria-label="O carro da equipe, com a suspensão subindo e descendo"></canvas></div><div class="ac-reserva">${CARRO}</div></section>
+    </div>
+    <footer class="acf2-pe">
+      <div class="acf2-gp">${SV('<path d="M3 20 9 6l4 9 3-5 5 10"/>', 40)}<div><small>Etapa ${etapa}</small><b>${UI.bandeira ? UI.bandeira(id) : ""}${h(nome)}</b></div></div>
+      <div class="acf2-folga"><small>Folga do assoalho no fim da reta</small><b data-cx-acerto-folga>${raspa ? `raspa ${String(-n.folgaCm).replace(".", ",")} cm` : `${String(n.folgaCm).replace(".", ",")} cm`}</b></div>
+      <div class="acf2-alerta ${vr != null && vr < 300 ? "on" : ""}" data-cx-acerto-alerta><small>Assoalho</small><b>${vr == null ? "Nunca raspa" : `Raspa a ${vr} km/h`}</b></div>
+      <div class="acf2-botoes"><button type="button" class="acf2-bt contorno" data-cx-acerto-padrao>${SV('<path d="M7 5v14l11-7z"/>', 16)}<span>Carro padrão</span></button>${ideais && sg.engenheiro ? `<button type="button" class="acf2-bt cheio" data-cx-acerto-usar="engenheiro">${SV('<path d="M14 7l3-3 3 3-3 3M4 20l9-9M8 4a4 4 0 0 0 5 5l-6 6a2 2 0 0 1-3-3z"/>', 16)}<span>Usar o do engenheiro</span></button>` : ""}${ideais && sg.estrategista ? `<button type="button" class="acf2-bt claro" data-cx-acerto-usar="estrategista">${SV('<path d="M4 18v-5a8 8 0 0 1 16 0v5"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/>', 16)}<span>Usar o do estrategista</span></button>` : ""}</div>
     </footer>
-    <div class="acf-botoes"><button type="button" class="acf-bt" data-cx-acerto-padrao><kbd>□</kbd> Carro padrão</button>${ideais && sg.engenheiro ? `<button type="button" class="acf-bt" data-cx-acerto-usar="engenheiro"><kbd>E</kbd> Usar o do engenheiro</button>` : ""}${ideais && sg.estrategista ? `<button type="button" class="acf-bt" data-cx-acerto-usar="estrategista"><kbd>S</kbd> Usar o do estrategista</button>` : ""}</div>
   </div>`;
 }
 // o carro 3D: um só, montado depois que a aba aparece (o canvas novo de cada pintura ganha um carro novo; o velho para sozinho)
@@ -146,7 +165,7 @@ function mudarValor(k, valor, noInput = true) {
   if (v("asa")) v("asa").textContent = Math.round(A().forcaDaAsa(a) * 100) + "%";
   if (v("altura")) v("altura").textContent = A().cm(a);
   const ef = raiz.querySelector("[data-cx-acerto-efeito]"); if (ef) ef.textContent = A().efeito(a);
-  const med = raiz.querySelector("[data-cx-acerto-med]"); if (med) med.innerHTML = medidores(a);
+  const med = raiz.querySelector("[data-cx-acerto-med]"); if (med) med.innerHTML = medidoresF1(a);
   ajustar3d(a);
 }
 // a linha escolhida (o destaque e a explicação embaixo), sem redesenhar
@@ -157,7 +176,7 @@ function escolherLinha(campo) {
 }
 // o teclado, como no jogo: para cima e para baixo trocam de linha, para os lados mexem 5 pontos (só na aba Acerto, fora de campos de texto)
 document.addEventListener("keydown", (e) => {
-  if (!document.querySelector(".acf") || sub !== "ajustes" || e.target?.closest?.("input:not([type=range]),select,textarea") || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (!document.querySelector(".acf2") || sub !== "ajustes" || e.target?.closest?.("input:not([type=range]),select,textarea") || e.altKey || e.ctrlKey || e.metaKey) return;
   const ctx = root.CentralAcerto._ctx, id = ctx && ctx.prox && ctx.prox.pista; if (!id) return;
   const ordem = Object.keys(LINHAS), i = ordem.indexOf(linha);
   if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); escolherLinha(ordem[(i + (e.key === "ArrowDown" ? 1 : ordem.length - 1)) % ordem.length]); }

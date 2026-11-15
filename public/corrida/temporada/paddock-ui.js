@@ -87,54 +87,68 @@ function historico(s) {
   if (melhorAno) momentos.push(["Melhor temporada", `${melhorAno.pos}º no campeonato · ano ${melhorAno.ano}`]);
   return { linhas, momentos };
 }
-function medidor(rot, v, nota, min = 0, max = 100) {
-  const pct = ((v - min) / (max - min)) * 100, tom = pct >= 66 ? "bom" : pct <= 33 ? "ruim" : "meio";
-  return `<div class="pd-med pd-${tom}"><div class="pd-med-topo"><span>${h(rot)}</span><b>${v > 0 && min < 0 ? "+" : ""}${Math.round(v)}</b></div><div class="pd-barra"><i style="width:${Math.max(2, Math.min(100, pct)).toFixed(0)}%"></i></div><small>${nota}</small></div>`;
-}
+// (2026-11-15, a referência do Thiago) o layout: o topo com a foto do GP à direita e as pílulas do fim de semana; os cartões claros com a barra
+// da equipe no título; o humor com o número grande (a média dos cinco) e as linhas com ícone; os pilotos com foto (Wikimedia Commons,
+// fotos-noticias.js) e o logo da equipe no meio; as notícias com miniatura e o mural com o balão.
+const FN = () => root.FotosNoticias || { pilotos: {}, equipes: {} };
+const fotoPiloto = (id) => FN().pilotos[id]?.url || null, fotoEquipe = (eq) => FN().equipes[eq]?.url || null;
+const SVG = (d, w = 20) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const IH = { moral: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8M9 10h.01M15 10h.01"/>', lealdade: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="m9.5 11 2 2 3-3.5"/>',
+  patrocinador: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM6 5H4v1a3 3 0 0 0 4 3M18 5h2v1a3 3 0 0 1-4 3M12 13v4M9 20h6"/>', torcida: '<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>', diretoria: '<path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/>',
+  seta: '<path d="m9 6 6 6-6 6"/>', balao: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/>' };
 function html(c) {
   const s = c.s;
   if (!P()) return `<section class="cx-card"><p>O Paddock não carregou. Recarregue a página.</p></section>`;
   const p = P().garantir(s), evs = P().acontecimentos(s), comp = Pil().PILOTOS.find((x) => x.id === s.piloto2) || { nome: "Companheiro", ritmo: 0 };
   const terminou = s.gp >= s.tamanho, ultimo = (s.resultados || []).filter((r) => r.ano === s.ano).at(-1);
   const pendentes = evs.filter((e) => !e.escolha).length;
-  // o fim de semana: antes do GP é a sexta (os acontecimentos), com o GP aberto é a corrida; o pós-corrida é o do GP que passou
-  const fase = terminou ? 3 : c.ativo ? 2 : 0;
-  const passos = [["Sexta", "Reunião técnica e bastidores"], ["Sábado", "Classificação"], ["Domingo", "Corrida"], ["Pós-corrida", ultimo ? "Repercussão do último GP" : "Ainda sem GP"]];
-  const fimDeSemana = `<ol class="pd-fds">${passos.map(([d, t], i) => `<li class="${i === fase ? "on" : i < fase ? "feito" : ""}"><b>${d}</b><span>${t}</span></li>`).join("")}</ol>`;
-  const cartao = (e) => `<article class="pd-ev ${e.escolha ? "decidido" : ""}"><header><span class="pd-quem">${icone(e.quem)}${h(e.quem)}</span>${e.escolha ? `<em>Decidido</em>` : `<em class="novo">Esperando você</em>`}</header>
+  const fase = terminou ? 3 : c.ativo ? 2 : 0, foto = c.prox && root.GpInfo?.fundoDe ? root.GpInfo.fundoDe(c.prox.pista) : null;
+  const pilulas = `<div class="pd-pilulas" aria-label="O fim de semana">${["Sexta", "Sábado", "Domingo", "Pós-corrida"].map((d, i) => `<span class="${i === fase ? "on" : i < fase ? "feito" : ""}">${d}</span>`).join("")}</div>`;
+  const tit = (t, extra = "") => `<header class="pd-tit"><h3>${t}</h3>${extra}</header>`;
+  const cartao = (e) => `<article class="pd-ev ${e.escolha ? "decidido" : ""}"><span class="pd-ev-ic">${icone(e.quem)}</span><div class="pd-ev-txt">
+      <div class="pd-ev-topo"><small>${h(e.quem)}</small>${e.escolha ? `<em class="pd-selo ok">Decidido</em>` : `<em class="pd-selo novo">Esperando você</em>`}</div>
       <h4>${h(e.titulo)}</h4><p>${h(e.texto)}</p>
-      <div class="pd-opcoes">${e.opcoes.map((o) => `<button type="button" class="pd-op ${e.escolha === o.id ? "on" : ""}" data-pd-ev="${h(e.id)}" data-pd-op="${h(o.id)}" ${e.escolha ? "disabled" : ""}><span>${h(o.rotulo)}</span><span class="pd-efs">${plaquinhas(o.efeito)}</span></button>`).join("")}</div></article>`;
+      <div class="pd-opcoes">${e.opcoes.filter((o) => !e.escolha || o.id === e.escolha).map((o) => `<button type="button" class="pd-op ${e.escolha === o.id ? "on" : ""}" data-pd-ev="${h(e.id)}" data-pd-op="${h(o.id)}" ${e.escolha ? "disabled" : ""} title="${h(Object.entries(o.efeito).map(([k, v]) => `${v > 0 ? "+" : "−"}${Math.abs(v)} ${ROT[k] || k}`).join(", "))}"><span>${h(o.rotulo)}</span><span class="pd-efs">${plaquinhas(o.efeito)}</span>${SVG(IH.seta, 16)}</button>`).join("")}</div></div></article>`;
   const agora = terminou ? `<p class="pd-vazio">A temporada terminou. O paddock volta a ferver no próximo ano.</p>` : evs.length ? evs.map(cartao).join("") : `<p class="pd-vazio">Tudo calmo no paddock antes deste GP.</p>`;
-  const ritmo = P().ajusteDeRitmo(s);
-  const humor = `<div class="pd-humor">
-      ${medidor(`Moral · ${comp.nome}`, p.moral, ritmo ? `${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))} de ritmo na corrida` : "ritmo normal na corrida")}
-      ${medidor("Lealdade", p.lealdade, p.lealdade < 30 ? "pode procurar outra equipe" : "segue com a equipe")}
-      ${medidor("Patrocinador", p.patrocinador, `acima de 80 a verba sobe; abaixo de 20, cai · hoje ${s.patrocinio} mi/GP`)}
-      ${medidor("Torcida", p.torcida, p.torcida >= 66 ? "a arquibancada está com vocês" : p.torcida <= 33 ? "a torcida anda desconfiada" : "a torcida acompanha")}
-      ${medidor("Diretoria", p.diretoria, `soma na confiança do chefe: ${c.im ? c.im.confianca : "—"}%`, -20, 20)}
-    </div>`;
+  const ritmo = P().ajusteDeRitmo(s), dir100 = (p.diretoria + 20) * 2.5;
+  const media = Math.round((p.moral + p.lealdade + p.patrocinador + p.torcida + dir100) / 5);
+  const linhaH = (ic, rot, v, mostra, nota) => `<div class="pd-hl" title="${h(nota)}"><span class="pd-hl-ic">${SVG(IH[ic], 22)}</span><div><div class="pd-hl-topo"><span>${h(rot)}</span><b>${mostra}</b></div><div class="pd-barra"><i style="width:${Math.max(1, Math.min(100, v)).toFixed(0)}%"></i></div><small>${h(nota)}</small></div></div>`;
+  const humor = `<div class="pd-humor-topo"><b>${media}</b><span>/100</span><div class="pd-barra grossa"><i style="width:${media}%"></i></div></div><small class="pd-humor-leg">A média dos cinco abaixo (a diretoria vai de −20 a +20).</small>
+      ${linhaH("moral", `Moral · ${comp.nome}`, p.moral, p.moral, ritmo ? `${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))} de ritmo na corrida` : "ritmo normal na corrida")}
+      ${linhaH("lealdade", "Lealdade", p.lealdade, p.lealdade, p.lealdade < 30 ? "pode procurar outra equipe" : "segue com a equipe")}
+      ${linhaH("patrocinador", "Patrocinador", p.patrocinador, p.patrocinador, `acima de 80 a verba sobe; abaixo de 20, cai · hoje ${s.patrocinio} mi/GP`)}
+      ${linhaH("torcida", "Torcida", p.torcida, p.torcida, p.torcida >= 66 ? "a arquibancada está com vocês" : p.torcida <= 33 ? "a torcida anda desconfiada" : "a torcida acompanha")}
+      ${linhaH("diretoria", "Diretoria", dir100, `${p.diretoria > 0 ? "+" : ""}${p.diretoria}`, `soma na confiança do chefe: ${c.im ? c.im.confianca : "—"}%`)}`;
   const eu = medidas(s, "voce"), ele = medidas(s, s.piloto2);
   const duelo = (s.resultados || []).filter((r) => r.ano === s.ano).reduce((a, r) => { const x = r.linhas.find((l) => l.piloto === "voce"), y = r.linhas.find((l) => l.piloto === s.piloto2); if (x && y) { if (x.pos < y.pos) a[0]++; else a[1]++; } return a; }, [0, 0]);
-  const linhaMed = (rot, v, fmt) => `<div><small>${h(rot)}</small><b>${v == null ? "—" : fmt(v)}</b></div>`;
-  const piloto = (nome, m, extra) => `<article class="pd-piloto"><h4>${h(nome)}</h4><div class="pd-traços">${extra}${linhaMed("Consistência (desvio das voltas)", m.desvio, (v) => `±${num(v, 2)} s`)}${linhaMed("Ultrapassagens por GP", m.ultrapassagens, (v) => num(v))}</div><small>${m.gps ? `${m.gps} GP${m.gps === 1 ? "" : "s"} medido${m.gps === 1 ? "" : "s"} neste ano` : "Ainda sem GP medido neste ano"}</small></article>`;
-  const pilotos = `<div class="pd-pilotos">${piloto(s.nome || "Você", eu, "")}<div class="pd-duelo"><small>Duelo interno</small><b>${duelo[0]} × ${duelo[1]}</b><small>quem chegou na frente</small></div>${piloto(comp.nome, ele, `<div><small>Ritmo</small><b>${comp.ritmo}${ritmo ? ` <i class="${ritmo > 0 ? "mais" : "menos"}">${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))}</i>` : ""}</b></div>`)}</div>`;
-  const nts = noticias(c), news = nts.length ? nts.map((n) => `<article class="pd-noticia">${n.eq ? U().marca(n.eq, "pd-logo") : ""}<div><b>${h(n.t)}</b><p>${h(n.x)}</p></div></article>`).join("") : `<p class="pd-vazio">Sem notícias por enquanto.</p>`;
-  const mural = p.mural.slice(-10).reverse().map((m) => `<li><span class="pd-quem">${icone(m.tipo)}</span><div><small>${h(m.tipo)} · ano ${m.ano}</small><p>${h(m.texto)}</p>${m.efeito ? `<span class="pd-efs">${plaquinhas(m.efeito)}</span>` : ""}</div></li>`).join("");
+  const medHTML = (m) => `<div class="pd-pm"><small>Consistência</small><b>${m.desvio == null ? "—" : `±${num(m.desvio, 2)} s`}</b></div><div class="pd-pm"><small>Ultrapassagens por GP</small><b>${m.ultrapassagens == null ? "—" : num(m.ultrapassagens)}</b></div>`;
+  const meusPts = (c.t?.pilotos || []).find((x) => x.id === "voce")?.pontos || 0;
+  const iniciais = String(s.nome || "Você").trim().split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+  const cartaoPiloto = (nome, fotoUrl, grande, rotGrande, delta, m) => `<article class="pd-piloto"><span class="pd-foto">${fotoUrl ? `<img src="${h(fotoUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<i>${h(iniciais)}</i></span>
+      <div class="pd-p-nome"><h4>${h(nome)}</h4><div class="pd-p-big"><b>${grande}</b>${delta}</div><small>${rotGrande}</small></div>${medHTML(m)}</article>`;
+  const pilotos = `<div class="pd-pilotos">${cartaoPiloto(s.nome || "Você", null, meusPts, "Pontos no ano", "", eu)}
+      <div class="pd-meio">${U().marca(s.equipe, "pd-meio-logo")}<b>${duelo[0]} × ${duelo[1]}</b><small>duelo interno</small></div>
+      ${cartaoPiloto(comp.nome, fotoPiloto(s.piloto2), comp.ritmo, "Ritmo", ritmo ? `<em class="${ritmo > 0 ? "mais" : "menos"}">${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))}</em>` : "", ele)}</div>`;
+  const nts = noticias(c);
+  const miniDe = (n) => (n.eq ? fotoEquipe(n.eq) : foto);
+  const news = nts.length ? nts.slice(0, 3).map((n) => { const m = miniDe(n); return `<article class="pd-noticia"><span class="pd-mini">${m ? `<img src="${h(m)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${n.eq ? U().marca(n.eq, "pd-mini-logo") : ""}</span><div><b>${h(n.t)}</b><p>${h(n.x)}</p></div>${SVG('<path d="M5 12h14M13 6l6 6-6 6"/>', 18)}</article>`; }).join("") : `<p class="pd-vazio">Sem notícias por enquanto.</p>`;
+  const mural = p.mural.slice(-6).reverse().map((m) => `<li><span class="pd-balao">${SVG(IH.balao, 20)}</span><div><small>${h(m.tipo)} · ano ${m.ano}</small><p>${h(m.texto)}</p>${m.efeito ? `<span class="pd-efs">${plaquinhas(m.efeito)}</span>` : ""}</div></li>`).join("");
   const hist = historico(s);
-  const historicoHTML = `<div class="pd-hist">${hist.momentos.length ? `<div class="pd-momentos">${hist.momentos.map(([t, x]) => `<div><small>${h(t)}</small><b>${h(x)}</b></div>`).join("")}</div>` : `<p class="pd-vazio">Os momentos marcantes aparecem aqui conforme a equipe vai somando resultados.</p>`}
-      ${hist.linhas.length ? `<table class="pd-anos"><thead><tr><th>Ano</th><th>GPs</th><th>Você</th><th>Equipe</th><th>Pontos</th><th>Vitórias</th><th>Pódios</th></tr></thead><tbody>${hist.linhas.map((l) => `<tr><td>${l.ano}${l.completo ? "" : " (em curso)"}</td><td>${l.gps}</td><td>${l.pos}º</td><td>${l.eqPos}º</td><td>${l.pts}</td><td>${l.vit}</td><td>${l.pod}</td></tr>`).join("")}</tbody></table>` : ""}</div>`;
+  const historicoHTML = `${hist.momentos.length ? `<div class="pd-momentos">${hist.momentos.map(([t, x]) => `<div><small>${h(t)}</small><b>${h(x)}</b></div>`).join("")}</div>` : `<p class="pd-vazio">Os momentos marcantes aparecem aqui conforme a equipe vai somando resultados.</p>`}
+      ${hist.linhas.length ? `<table class="pd-anos"><thead><tr><th>Ano</th><th>GPs</th><th>Você</th><th>Equipe</th><th>Pontos</th><th>Vitórias</th><th>Pódios</th></tr></thead><tbody>${hist.linhas.map((l) => `<tr><td>${l.ano}${l.completo ? "" : " (em curso)"}</td><td>${l.gps}</td><td>${l.pos}º</td><td>${l.eqPos}º</td><td>${l.pts}</td><td>${l.vit}</td><td>${l.pod}</td></tr>`).join("")}</tbody></table>` : ""}`;
+  const sub = terminou ? "A temporada terminou: veja como ela ficou na história da equipe." : c.ativo ? "O GP está aberto: a corrida decide o resto." : "Prepare-se para a próxima etapa do campeonato.";
   return `<div class="pd">
-    <header class="pd-cab"><div><small class="cx-rot">Paddock · ${h(c.eq.nome)}</small><h2>${terminou ? "Fim de temporada" : `Fim de semana: ${h(c.prox ? c.prox.nome : "")}`}</h2></div>${fimDeSemana}</header>
+    <header class="pd-hero" ${foto ? `style="--foto:url('${h(foto)}')"` : ""}><div class="pd-hero-txt"><small class="pd-sobre">Paddock · ${h(c.eq.nome)}<i></i></small><h2>${terminou ? "Fim de temporada" : `Fim de semana: ${h(c.prox ? c.prox.nome : "")}`}</h2><p>${sub}</p>${pilulas}</div></header>
     <div class="pd-grade">
-      <section class="pd-col pd-agora"><h3>Acontecendo agora ${pendentes ? `<i class="pd-n">${pendentes}</i>` : ""}</h3>${agora}</section>
-      <section class="pd-col"><h3>O humor da equipe</h3>${humor}</section>
+      <section class="pd-card pd-agora">${tit(`Acontecendo agora${pendentes ? '<i class="pd-ponto" aria-hidden="true"></i>' : ""}`, pendentes ? `<em class="pd-selo novo">${pendentes} esperando</em>` : evs.length ? `<em class="pd-selo ok">Decidido</em>` : "")}${agora}</section>
+      <section class="pd-card pd-humor">${tit("O humor da equipe")}${humor}</section>
     </div>
-    <section class="pd-bloco"><h3>Os pilotos</h3>${pilotos}</section>
-    <div class="pd-grade">
-      <section class="pd-col"><h3>Central de notícias</h3>${news}</section>
-      <section class="pd-col"><h3>Mural</h3>${mural ? `<ol class="pd-mural">${mural}</ol>` : `<p class="pd-vazio">As decisões e o que cada GP mudou na equipe ficam guardados aqui.</p>`}</section>
+    <section class="pd-card">${tit("Os pilotos")}${pilotos}</section>
+    <div class="pd-grade pd-grade-baixo">
+      <section class="pd-card">${tit("Central de notícias")}${news}</section>
+      <section class="pd-card">${tit("Mural")}${mural ? `<ol class="pd-mural">${mural}</ol>` : `<p class="pd-vazio">As decisões e o que cada GP mudou na equipe ficam guardados aqui.</p>`}</section>
     </div>
-    <section class="pd-bloco"><h3>Histórico da equipe</h3>${historicoHTML}</section>
+    <section class="pd-card">${tit("Histórico da equipe")}${historicoHTML}</section>
   </div>`;
 }
 function clique(b) {

@@ -59,6 +59,23 @@ paddock, acontecimentos inesperados e consequências das decisões. "Pode fazer 
 - O teclado anda como no jogo: para cima e para baixo trocam de linha, para os lados mexem o valor.
 - Só a asa e a altura: são os dois ajustes que a física do jogo tem. Nenhuma linha sem efeito foi inventada.
 
+## Refeitos pelas referências do Thiago (2026-11-15, a segunda rodada)
+
+- **Paddock** (`paddock-ui.js`, `paddock.css`):
+  - o topo com a foto do GP à direita, sumindo para a esquerda (a mesma do calendário, `GpInfo.fundoDe`), e as pílulas do fim de semana;
+  - os cartões claros com a barra da equipe no título;
+  - os acontecimentos com ícone, o selo "Decidido" ou "Esperando você" e as opções em pílula, com os efeitos dentro (depois de decidir, fica só a escolhida);
+  - o humor com o número grande (a média dos cinco, com a diretoria levada para 0 a 100) e as linhas com ícone;
+  - os pilotos com foto (`fotos-noticias.js`, Wikimedia Commons) e o logo da equipe no meio, com o duelo interno;
+  - as notícias com miniatura e o mural com o balão.
+- **Acerto** (`central-acerto.js`, `central-acerto.css`, `acerto3d.js`):
+  - o título à esquerda com o traço da equipe e as abas inclinadas;
+  - o painel com o ícone da suspensão;
+  - as linhas com ‹ barra › e o valor com o mínimo e o máximo de verdade: a força da asa vai de 80 a 120% e a altura parada de 2,5 a 7,5 cm (`acerto-sugestao.js`);
+  - o cartão de onde o assoalho começa a raspar e os medidores em barras;
+  - o carro grande, agora de três-quartos, com o logo da equipe atrás;
+  - a faixa de baixo com os três botões inclinados.
+
 ## Insights do engenheiro (Visão geral da Análise)
 
 Um quadro novo, só com o que o resumo do GP mede:
@@ -70,7 +87,7 @@ Um quadro novo, só com o que o resumo do GP mede:
 
 ## Prints
 
-Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, numa carreira nova da Audi no tema escuro: o Central com a chamada, o Paddock antes e depois de uma decisão e o Acerto. Estão em `C:\Users\thiag\Downloads\lts\prints\paddock\`, fora do repositório. Os insights da Análise precisam de um GP corrido e não entraram nos prints.
+Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, numa carreira nova da Audi, no tema escuro e depois no claro (o das referências): o Central com a chamada, o Paddock antes e depois de uma decisão e o Acerto. Estão em `C:\Users\thiag\Downloads\lts\prints\paddock\`, fora do repositório. Os insights da Análise precisam de um GP corrido e não entraram nos prints.
 
 Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`. O `brach.md` e o `novidades.json` também mudam no #755: quem for juntado depois precisa juntar as duas entradas.
 

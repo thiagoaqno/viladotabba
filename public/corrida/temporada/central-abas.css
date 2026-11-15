@@ -32,13 +32,6 @@ body:not(.cx-on) .folha h2,body:not(.cx-on) .sede .bloco h2{font-family:var(--di
 .meta-contrato{display:inline-block;margin-left:6px;padding:1px 6px;border:1px solid currentColor;border-radius:999px;font:700 10px/1.5 var(--cx-f,system-ui);font-style:normal;letter-spacing:.06em;text-transform:uppercase;opacity:.7;vertical-align:middle}
 .meta-contrato.demitido{border-color:#e10600;color:#e10600;opacity:1}
 
-/* (2026-11-15) os insights do engenheiro na Visão geral da Análise */
-.cx-ag-ins-faixa{margin-top:14px}
-.cx-ag-ins-l{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 18px;margin:0;padding:0;list-style:none}
-.cx-ag-ins-l li{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border:1px solid var(--cx-lin);border-radius:8px;background:var(--cx-bg)}
-.cx-ag-ins-ic{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:8px;background:color-mix(in srgb,var(--eq,#e10600) 14%,transparent);color:var(--eq-at,var(--eq,#e10600))}
-.cx-ag-ins-l b{font-size:14px}.cx-ag-ins-l p{margin:2px 0 0;color:var(--cx-tx2);font-size:13px;line-height:1.4}
-
 /* (2026-11-15) a sub-aba Telemetria da Análise (central-telemetria.js) */
 .ct{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:16px}
 .ct-card{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -69,3 +62,31 @@ body:not(.cx-on) .folha h2,body:not(.cx-on) .sede .bloco h2{font-family:var(--di
 .ct-faixa b{font:800 11px var(--cx-f);color:#111}
 .ct-estr-eixo span{display:flex;justify-content:space-between;color:var(--cx-tx2);font-size:11px}.ct-estr-eixo em{font-style:normal}
 @media (max-width:1000px){.ct{grid-template-columns:1fr}}
+/* (2026-11-15) a Telemetria animada: a volta se desenha, as linhas entram, os carros andam e o placar ao vivo */
+.ct-seg line{animation:ctSeg .5s ease backwards;animation-delay:calc(var(--i) * 6ms)}
+@keyframes ctSeg{from{opacity:0;stroke-width:0}}
+.ct-traco{stroke-dasharray:3000;stroke-dashoffset:3000;animation:ctTraco 1.6s cubic-bezier(.4,0,.2,1) .2s forwards}
+@keyframes ctTraco{to{stroke-dashoffset:0}}
+.ct-carro{stroke:#fff;stroke-width:.8;filter:drop-shadow(0 0 1.5px #0008);transition:r .2s}
+.ct-carro.eu{fill:var(--eq-at,var(--eq,#e10600))}.ct-carro.ou{fill:#5d636d}
+.ct-cursor{stroke:var(--cx-tx);stroke-width:1.5;stroke-dasharray:4 3;opacity:.7}
+.ct-alvo{fill:transparent;cursor:crosshair}
+.ct-vivo{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 12px;border-radius:10px;background:var(--cx-hover)}
+.cx .ct-play{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--eq-at,var(--eq));cursor:pointer;transition:transform .15s}
+.cx .ct-play:hover:not(:disabled){transform:scale(1.08);background:var(--eq-at,var(--eq))}
+.ct-play::before{content:"";width:0;height:0;border-left:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px}
+.ct-play.tocando::before{width:10px;height:12px;border:0;margin:0;background:linear-gradient(90deg,#fff 0 35%,transparent 35% 65%,#fff 65%)}
+.ct-tempo{font:800 15px var(--cx-f);font-variant-numeric:tabular-nums;min-width:58px}
+.ct-v{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--cx-tx2)}.ct-v b{font:800 17px var(--cx-f);color:var(--cx-tx);font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.ct-v i{width:10px;height:10px;border-radius:50%;background:#5d636d}.ct-v.eu i{background:var(--eq-at,var(--eq))}
+.ct-dif{font:800 14px var(--cx-f);font-variant-numeric:tabular-nums}.ct-dif.ganha{color:var(--cx-verde)}.ct-dif.perde{color:var(--cx-verm)}
+.ct-pedais{display:inline-flex;gap:4px;margin-left:auto}
+.ct-pedais i{position:relative;width:8px;height:26px;border-radius:3px;background:var(--cx-trilho);overflow:hidden}
+.ct-pedais u{position:absolute;left:0;right:0;bottom:0;height:0;transition:height .08s linear}
+.ct-pedais .gas u{background:var(--cx-verde)}.ct-pedais .freio u{background:var(--cx-verm)}
+.ct-faixa i{animation:ctFaixa .7s cubic-bezier(.2,.8,.2,1) backwards;transform-origin:left}
+.ct-estr:nth-child(2) .ct-faixa i{animation-delay:.15s}
+@keyframes ctFaixa{from{transform:scaleX(0)}}
+.ct-card{animation:ctCard .45s cubic-bezier(.2,.8,.2,1) backwards}.ct-card:nth-child(2){animation-delay:.08s}.ct-card:nth-child(3){animation-delay:.16s}.ct-card:nth-child(4){animation-delay:.24s}
+@keyframes ctCard{from{opacity:0;transform:translateY(10px)}}
+@media (prefers-reduced-motion:reduce){.ct-seg line,.ct-traco,.ct-faixa i,.ct-card{animation:none;stroke-dashoffset:0}}

@@ -1,42 +1,28 @@
-# Carreira: a montagem antiga acima do orçamento destrava, a carreira do programa de PC sobe para o site (o código vale no navegador) a cor livre do capacete não fecha mais e o que um jogador muda não atrapalha os outros
+# Análise: sem os insights do engenheiro, e a Telemetria animada
 
-Dois problemas que o Thiago achou depois do #756 e do #757.
+O Thiago, com um print da Visão geral: "tira esses insights, ficaram feios e mal colocados"; e "em análise, na telemetria deve ser mais animado".
 
-## "Não consigo mais mexer no meu carro na minha carreira existente"
+## Os insights saíram
 
-O custo novo dos níveis altos (#756: o 6º e o 7º custam 2 pontos, o 8º custa 3) deixou as montagens antigas acima do orçamento. O servidor conferia o orçamento em toda mudança e recusava até tirar um nível, então o carro ficava preso.
+O quadro "Insights do engenheiro" da Visão geral (#756) saiu inteiro: a função em `central-analise-geral.js` e o CSS em `central-abas.css`.
 
-- **A regra** (`f1-equipes.js validar`, com a montagem de agora em `anterior`): uma montagem acima do orçamento pode mudar para uma mais barata. Dá para tirar níveis (ou zerar) até caber; pôr nível continua recusado.
-- **Onde vale:** a carreira (`regras.js aplicarMontagem`, por `f1-pecas.js resolver`) e a tela de ajustes entre as sessões da classificação (`corrida.js montagemGrid`).
-- **Na lista das peças**, acima do orçamento, aparece "N pontos acima do orçamento: tire níveis até caber" no lugar dos pontos livres negativos.
+## A Telemetria animada (`temporada/central-telemetria.js`, `central-abas.css`)
 
-## "Minha carreira no aplicativo tem um código que não consigo usar no navegador"
+- **A volta toca sozinha.** Os dois carros andam no mapa ao mesmo tempo: o seu na cor da equipe, o do outro piloto em cinza. Cada um anda na própria melhor volta, no tempo de verdade do replay, 3× mais rápido. Dá para ver quem está na frente em cada ponto da pista.
+- **O cursor corre no gráfico da velocidade,** junto do seu carro.
+- **O placar ao vivo:** o tempo da volta, a velocidade dos dois, a diferença no mesmo ponto da pista (verde quando você ganha, vermelho quando perde) e os seus pedais (acelerador e freio) subindo e descendo.
+- **O mouse no gráfico** pausa e leva a volta até o ponto apontado. O botão toca e pausa.
+- **Ao abrir a aba:**
+  - os quadros entram um depois do outro;
+  - o traçado colorido se desenha na ordem da volta;
+  - as linhas da velocidade e do desgaste se desenham;
+  - as faixas da estratégia crescem da esquerda.
+- **Movimento reduzido:** com ele ligado no sistema, nada disso anima.
 
-O programa de PC trazia a carreira do site na primeira vez (`trazerCarreiraDoSite`), mas nunca a levava de volta. A carreira criada ou jogada no PC só existia no banco do PC, e o código de recuperação que o programa mostra só valia lá.
+## Prints
 
-- **No programa:** cada vez que a carreira solo muda, o save sobe para o site com o hash do código de recuperação do PC (`corrida-pc.js enviarCarreiraAoSite`). O hash vai, nunca o código. As mudanças são: abrir, criar, decidir algo, mexer no carro e fechar um GP. Sem internet, sobe na próxima mudança.
-- **No site** (`/api/corrida/pc/carreira-enviar`, `bd.js receberTemporadaDoPC`):
-  - acha a carreira pelo código (ela pode ter ganhado outro token numa recuperação) ou pelo token;
-  - se não existe, cria com os dois hashes, e o código que o programa mostra passa a abrir a carreira no navegador;
-  - o save só é trocado se o que chega não está atrás (o ano e o GP), e o código que o site já tinha fica como está.
-- **Para a carreira que já existe no PC:** basta abrir o programa atualizado. Ao abrir a carreira, ela sobe, e o código do programa passa a valer em "Recuperar" no site.
-- **O que não sobe:** os replays dos GPs jogados no PC ficam no PC. No site, a aba Telemetria desses GPs avisa que não tem replay.
+Tirados com o servidor de teste e o Playwright, a 1600×900, com um GP simulado só na página (dois carros e um replay inventado para desenhar a tela), em dois momentos da volta: o mapa se desenhando, e os dois carros e o cursor andando. A diferença sai 0,00 s porque os dois carros simulados fazem a mesma volta. Nada foi visto com um GP corrido de verdade.
 
-## A cor livre do capacete fechava no primeiro clique
-
-No editor do capacete, o seletor de "outra cor" fechava logo depois do primeiro clique: cada mudança redesenhava o painel e trocava o campo de cor no meio da escolha. Agora (`capacete-editor-ui.js`), enquanto o seletor está aberto, só o capacete muda. O painel e as miniaturas se refazem quando o seletor fecha (o evento `change`).
-
-## O que um jogador muda não atrapalha mais os outros
-
-O Thiago: "tudo que redesenha para todos é ruim: fica atualizando pra todo mundo e ninguém consegue mexer".
-
-- **A sala** (`menus.js trocar`, por onde passam todas as etapas): quando chega a mudança de outro jogador e você está mexendo num campo daquele trecho, o HTML novo espera. Vale para texto, número, seletor de cor, deslizante e lista de opções. Ele entra quando o foco sai do trecho. Os `<details>` abertos e a rolagem dentro do trecho também continuam como estavam depois da troca.
-- **A tela entre as sessões da classificação** (`pos-quali.js`): a confirmação de outro jogador só muda o contador "N/M prontos". Antes a tela se refazia inteira.
-- **A tela de resultado depois da corrida** (`resultado-gp.js resultadoMudou`): ela se refazia inteira a cada linha nova no registro da sala, que cresce com qualquer coisa que acontece, e isso zerava a análise e o replay de todos. Agora só se refaz quando o resultado, os acréscimos ou as equipes mudam. No modo sem regras de F1 (`hud.js renderResults`), ela era refeita a cada estado do servidor (várias vezes por segundo) e agora só troca quando o HTML muda.
-- **O editor do capacete** (#755) e a carreira com os amigos (`grupo.js`, que já trocava só os nós que mudaram) já estavam assim.
-
-## Conferido
-
-`node --check` em tudo. No banco em memória, uma carreira criada, com o hash enviado ao "site" e aberta pelo código, voltou com o GP certo. Uma montagem antiga com 8 de motor e 8 de aero aceitou tirar um nível e recusou pôr nível com "acima do orçamento". Nada foi testado jogando nem com o programa de PC de verdade.
+Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

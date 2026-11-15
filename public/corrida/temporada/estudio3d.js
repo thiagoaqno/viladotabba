@@ -12,8 +12,8 @@ const VISTAS = {
   entradaCelular: { pos: [0, 1.2, 7.6], alvo: [0, 0.42, 0], fov: 32, tela: [0, 0.06], giro: 4.2 },
   central: { pos: [0, 1.2, 8.1], alvo: [0, 0.42, 0], fov: 29, tela: [-0.03, 0.08], giro: 4.2 },
   centralCelular: { pos: [0, 1.2, 6.8], alvo: [0, 0.42, 0], fov: 32, tela: [0, -0.1], giro: 4.2 },
-  dev: { pos: [0, 1.25, 10.4], alvo: [0, 0.42, 0], fov: 29, tela: [-0.22, 0.08], giro: 4.2 },
-  devCelular: { pos: [0, 1.6, 10.2], alvo: [0, 0.4, 0], fov: 34, tela: [0, -0.24], giro: 4.2 },
+  dev: { pos: [0, 1.15, 8.1], alvo: [0, 0.42, 0], fov: 29, tela: [-0.17, 0.02], giro: 4.2 }, // (2026-11-15: mais perto, o carro com mais destaque na aba Carro)
+  devCelular: { pos: [0, 1.5, 8.6], alvo: [0, 0.4, 0], fov: 34, tela: [0, -0.24], giro: 4.2 },
 };
 
 export function criarEstudio(host, op = {}) {

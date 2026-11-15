@@ -162,3 +162,64 @@ body.cx-escuro .pd{--pd-card:var(--cx-bg2)}
 .pd-mural li{border-radius:8px;transition:background .18s}.pd-mural li:hover{background:var(--cx-hover)}
 @media (max-width:900px){.pd-staff{grid-template-columns:1fr 1fr}}
 @media (prefers-reduced-motion:reduce){.pd-hl.mudou .pd-barra i,.pd-delta,.pd-conseq{animation:none}.pd-card:hover{transform:none}}
+/* (2026-11-15, a referência nova) a tela numa vista: ações em linhas, humor em linhas finas e três cartões pequenos embaixo */
+.pd-hero{min-height:200px}
+.pd-hero p{margin:0 0 14px;color:var(--cx-tx2);font-size:clamp(14px,1.1vw,17px)}
+.pd-hero h2{margin:6px 0 4px}
+.pd-tit h3 svg{color:var(--cx-tx)}
+/* as ações: cada acontecimento é uma linha (ícone num quadrado, título, uma linha de texto e a seta); a aberta mostra as opções */
+.pd-ev{display:block;padding:0;border-bottom:1px solid var(--cx-lin);animation:none}
+.pd-ev:last-child{border-bottom:0}
+.cx .pd-ev-linha{display:grid;grid-template-columns:64px 1fr 34px;align-items:center;gap:16px;width:100%;padding:12px 6px;text-align:left;color:var(--cx-tx);cursor:pointer;border-radius:10px;transition:background .15s}
+.cx .pd-ev-linha:hover:not(:disabled){background:var(--cx-hover)}
+.pd-ev-ic{display:grid;place-items:center;width:64px;height:64px;padding:0;border-radius:12px;background:var(--cx-hover);color:var(--cx-tx)}.pd-ev-ic svg{width:28px;height:28px}
+.pd-ev-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pd-ev-txt small{color:var(--cx-tx2);font-size:12px}
+.pd-ev-txt b{font:700 16.5px/1.25 var(--cx-f)}
+.pd-ev-txt > span{color:var(--cx-tx2);font-size:14px;line-height:1.35}
+.pd-ev:not(.aberto) .pd-ev-txt > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pd-chev{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--cx-hover);color:var(--cx-tx);transition:transform .2s,background .15s}
+.pd-ev.aberto .pd-chev{transform:rotate(90deg);background:var(--cx-trilho)}
+.pd-ev.decidido .pd-ev-ic{color:var(--cx-verde)}
+.pd-ev.aberto .pd-opcoes{border-top:0;margin:0 0 10px 86px;animation:pdAbre .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes pdAbre{from{opacity:0;transform:translateY(-6px)}}
+.cx .pd-op{grid-template-columns:30px 1fr 18px;padding:10px 10px 10px 4px;border-bottom:1px solid var(--cx-lin)}
+.cx .pd-op:last-child{border-bottom:0}
+.cx .pd-op::before{display:none}
+.cx .pd-op:hover:not(:disabled),.cx .pd-op:focus-visible{padding-left:10px;background:var(--cx-hover)}
+.pd-op-ic{display:grid;place-items:center;color:var(--cx-tx2);font-style:normal}
+.cx .pd-op:hover:not(:disabled) .pd-op-ic{color:var(--pd-ac)}
+.cx .pd-op.on .pd-op-ic{color:var(--cx-verde)}
+.pd-op-txt b{font-weight:600;color:var(--cx-tx2)}
+.cx .pd-op:hover:not(:disabled) .pd-op-txt b,.cx .pd-op.on .pd-op-txt b{color:var(--cx-tx)}
+/* o humor em linhas finas */
+.pd-humor-topo b{font-size:60px}
+.pd-hls{display:flex;flex-direction:column;margin-top:14px}
+.pd-hl{display:grid;grid-template-columns:28px minmax(120px,1fr) minmax(90px,1.15fr) 52px;gap:12px;align-items:center;padding:7px 4px;margin:0;border-bottom:1px solid var(--cx-lin);border-radius:0}
+.pd-hl:last-child{border-bottom:0}
+.pd-hl:hover{background:var(--cx-hover)}
+.pd-hl-nome{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pd-hl .pd-barra{margin:0;height:3px}
+.pd-hl .pd-hl-num{justify-content:flex-end}.pd-hl .pd-hl-num b{font:800 16px var(--cx-f)}
+.pd-caixa{margin:8px 0 0;padding:8px 4px 0;border-top:1px solid var(--cx-lin);border-radius:0}
+/* embaixo: os três cartões pequenos */
+.pd-baixo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr);gap:14px}
+.pd-mini-card{padding:14px 18px}
+.pd-mini-card .pd-tit{margin-bottom:10px;padding-bottom:8px}
+.pd-mc{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:16px}
+.pd-mc .pd-foto{width:104px;height:104px;border-radius:10px}
+.pd-mc-logo{padding-left:16px;border-left:1px solid var(--cx-lin)}.pd-mc-logo .pd-meio-logo{width:64px;height:32px}
+.pd-mc-noticia{grid-template-columns:auto 1fr auto}
+.pd-mc-noticia .pd-mini{width:170px;height:100px;border-radius:8px}
+.pd-mc-noticia b{display:block;font:700 15.5px/1.25 var(--cx-f)}.pd-mc-noticia p{margin:4px 0 0;color:var(--cx-tx2);font-size:13.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pd-mc .pd-balao{width:48px;height:48px}
+.pd-mc-txt small{color:var(--cx-tx2);font-size:12px}.pd-mc-txt p{margin:2px 0 6px;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cx .pd-mais{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--cx-hover);color:var(--cx-tx);cursor:pointer;transition:transform .2s,background .15s,color .15s}
+.cx .pd-mais:hover:not(:disabled){background:var(--pd-ac);color:#fff;transform:translateX(2px)}
+.cx .pd-mais.on{transform:rotate(90deg)}
+.pd-cont{color:var(--cx-tx2);font-size:12px;font-variant-numeric:tabular-nums}
+.pd-aberto{animation:pdAbre .3s cubic-bezier(.2,.8,.2,1)}
+.pd-sub{margin:16px 0 10px;font:700 15px var(--cx-f)}
+.pd-mini-card:hover .pd-foto img,.pd-mc-noticia:hover .pd-mini img{transform:scale(1.06)}
+@media (max-width:1200px){.pd-baixo{grid-template-columns:1fr 1fr}.pd-baixo > :last-child{grid-column:1/-1}}
+@media (max-width:760px){.pd-baixo{grid-template-columns:1fr}.pd-ev.aberto .pd-opcoes{margin-left:0}.pd-mc-noticia .pd-mini{width:110px;height:70px}.cx .pd-ev-linha{grid-template-columns:48px 1fr 30px}.pd-ev-ic{width:48px;height:48px}}

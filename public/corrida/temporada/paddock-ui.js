@@ -100,6 +100,10 @@ const SVG = (d, w = 20) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" 
 const IH = { moral: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8M9 10h.01M15 10h.01"/>', lealdade: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="m9.5 11 2 2 3-3.5"/>',
   patrocinador: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM6 5H4v1a3 3 0 0 0 4 3M18 5h2v1a3 3 0 0 1-4 3M12 13v4M9 20h6"/>', torcida: '<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>', diretoria: '<path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/>',
   seta: '<path d="m9 6 6 6-6 6"/>', balao: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/>' };
+// (2026-11-15, a referência nova do Thiago) a tela cabe numa vista: "Ações do fim de semana" em linhas (uma aberta por vez, com as opções),
+// o humor em linhas finas e, embaixo, três cartões pequenos (o companheiro, uma notícia por vez e a última linha do mural), que abrem o resto
+let aberto = null, maisPilotos = false, maisMural = false, nNoticia = 0;
+const IC_OP = ['<path d="M5 19V11M12 19V5M19 19v-9"/>', '<path d="M4 17l5-5 4 4 7-7M15 9h5v5"/>', '<path d="M12 3v18M3 12h18"/>', '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'];
 function html(c) {
   const s = c.s;
   if (!P()) return `<section class="cx-card"><p>O Paddock não carregou. Recarregue a página.</p></section>`;
@@ -109,26 +113,28 @@ function html(c) {
   const fase = terminou ? 3 : c.ativo ? 2 : 0, foto = c.prox && root.GpInfo?.fundoDe ? root.GpInfo.fundoDe(c.prox.pista) : null;
   const pilulas = `<div class="pd-pilulas" aria-label="O fim de semana">${["Sexta", "Sábado", "Domingo", "Pós-corrida"].map((d, i) => `<span class="${i === fase ? "on" : i < fase ? "feito" : ""}">${d}</span>`).join("")}</div>`;
   const tit = (t, extra = "") => `<header class="pd-tit"><h3>${t}</h3>${extra}</header>`;
-  const cartao = (e) => `<article class="pd-ev ${e.escolha ? "decidido" : ""}"><span class="pd-ev-ic">${icone(e.quem)}</span><div class="pd-ev-txt">
-      <div class="pd-ev-topo"><small>${h(e.quem)}</small></div>
-      <h4>${h(e.titulo)}</h4><p>${h(e.texto)}</p>
-      <div class="pd-opcoes">${e.opcoes.filter((o) => !e.escolha || o.id === e.escolha).map((o) => `<button type="button" class="pd-op ${e.escolha === o.id ? "on" : ""} ${o.consequencia ? "pesa" : ""}" data-pd-ev="${h(e.id)}" data-pd-op="${h(o.id)}" ${e.escolha ? "disabled" : ""}>
-        <i class="pd-op-marca" aria-hidden="true"></i><span class="pd-op-txt"><b>${h(o.rotulo)}</b>${e.escolha && textoEfeito(o.efeito) ? `<small class="pd-revela">${textoEfeito(o.efeito)}</small>` : ""}${e.escolha && e.resultado ? `<em class="pd-revela">${h(e.resultado)}</em>` : ""}</span>${SVG(IH.seta, 18)}</button>`).join("")}</div></div></article>`;
+  if (!evs.some((e) => e.id === aberto)) aberto = (evs.find((e) => !e.escolha) || evs[0] || {}).id || null;
+  const cartao = (e) => { const on = e.id === aberto;
+    return `<article class="pd-ev ${e.escolha ? "decidido" : ""} ${on ? "aberto" : ""}">
+      <button type="button" class="pd-ev-linha" data-pd-abrir="${h(e.id)}" aria-expanded="${on}"><span class="pd-ev-ic">${icone(e.quem)}</span><span class="pd-ev-txt"><small>${h(e.quem)}</small><b>${h(e.titulo)}</b><span>${h(e.texto)}</span></span><i class="pd-chev">${SVG(IH.seta, 18)}</i></button>
+      ${on ? `<div class="pd-opcoes">${e.opcoes.filter((o) => !e.escolha || o.id === e.escolha).map((o, i) => `<button type="button" class="pd-op ${e.escolha === o.id ? "on" : ""}" data-pd-ev="${h(e.id)}" data-pd-op="${h(o.id)}" ${e.escolha ? "disabled" : ""}>
+        <i class="pd-op-ic">${e.escolha === o.id ? SVG('<path d="m5 12 4.5 4.5L19 7"/>', 18) : SVG(IC_OP[i % IC_OP.length], 18)}</i><span class="pd-op-txt"><b>${h(o.rotulo)}</b>${e.escolha && textoEfeito(o.efeito) ? `<small class="pd-revela">${textoEfeito(o.efeito)}</small>` : ""}${e.escolha && e.resultado ? `<em class="pd-revela">${h(e.resultado)}</em>` : ""}</span>${e.escolha ? "" : SVG(IH.seta, 16)}</button>`).join("")}</div>` : ""}
+    </article>`; };
   const agora = terminou ? `<p class="pd-vazio">A temporada terminou. O paddock volta a ferver no próximo ano.</p>` : evs.length ? evs.map(cartao).join("") : `<p class="pd-vazio">Tudo calmo no paddock antes deste GP.</p>`;
   const ritmo = P().ajusteDeRitmo(s), dir100 = (p.diretoria + 20) * 2.5;
   const media = Math.round((p.moral + p.lealdade + p.patrocinador + p.torcida + dir100) / 5);
   const agoraN = { moral: p.moral, lealdade: p.lealdade, patrocinador: p.patrocinador, torcida: p.torcida, diretoria: dir100, caixa: s.caixa }, velho = antes && antes.id === s.semente ? antes.n : null;
   antes = { id: s.semente, n: agoraN };
   const linhaH = (ic, rot, v, mostra, nota) => { const de = velho ? velho[ic] : v, d = Math.round(ic === "diretoria" ? (v - de) / 2.5 : v - de);
-    return `<div class="pd-hl ${d ? "mudou" : ""}" data-pd-hl="${ic}" data-pd-v="${v}" title="${h(nota)}"><span class="pd-hl-ic">${SVG(IH[ic], 22)}</span><div><div class="pd-hl-topo"><span>${h(rot)}</span><span class="pd-hl-num">${d ? `<em class="pd-delta ${d > 0 ? "mais" : "menos"}">${d > 0 ? "+" : "−"}${Math.abs(d)}</em>` : ""}<i class="pd-prev" aria-hidden="true"></i><b>${mostra}</b></span></div><div class="pd-barra"><i style="--de:${Math.max(1, Math.min(100, de)).toFixed(0)}%;width:${Math.max(1, Math.min(100, v)).toFixed(0)}%"></i><s class="pd-fantasma"></s></div><small>${h(nota)}</small></div></div>`; };
+    return `<div class="pd-hl ${d ? "mudou" : ""}" title="${h(nota)}"><span class="pd-hl-ic">${SVG(IH[ic], 20)}</span><span class="pd-hl-nome">${h(rot)}</span><div class="pd-barra"><i style="--de:${Math.max(1, Math.min(100, de)).toFixed(0)}%;width:${Math.max(1, Math.min(100, v)).toFixed(0)}%"></i></div><span class="pd-hl-num">${d ? `<em class="pd-delta ${d > 0 ? "mais" : "menos"}">${d > 0 ? "+" : "−"}${Math.abs(d)}</em>` : ""}<b>${mostra}</b></span></div>`; };
   const dCaixa = velho ? s.caixa - velho.caixa : 0;
-  const humor = `<div class="pd-humor-topo"><b>${media}</b><span>/100</span><div class="pd-barra grossa"><i style="width:${media}%"></i></div></div>
-      <div class="pd-caixa ${dCaixa ? "mudou" : ""}" data-pd-hl="caixa" data-pd-v="${s.caixa}"><span>Caixa</span><span class="pd-hl-num">${dCaixa ? `<em class="pd-delta ${dCaixa > 0 ? "mais" : "menos"}">${dCaixa > 0 ? "+" : "−"}${Math.abs(dCaixa)}</em>` : ""}<i class="pd-prev" aria-hidden="true"></i><b>${s.caixa} mi</b></span></div>
+  const humor = `<div class="pd-humor-topo"><b>${media}</b><span>/100</span><div class="pd-barra grossa"><i style="width:${media}%"></i></div></div><div class="pd-hls">
       ${linhaH("moral", `Moral · ${comp.nome}`, p.moral, p.moral, ritmo ? `${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))} de ritmo na corrida` : "ritmo normal na corrida")}
       ${linhaH("lealdade", "Lealdade", p.lealdade, p.lealdade, p.lealdade < 30 ? "pode procurar outra equipe" : "segue com a equipe")}
       ${linhaH("patrocinador", "Patrocinador", p.patrocinador, p.patrocinador, `acima de 80 a verba sobe; abaixo de 20, cai · hoje ${s.patrocinio} mi/GP`)}
       ${linhaH("torcida", "Torcida", p.torcida, p.torcida, p.torcida >= 66 ? "a arquibancada está com vocês" : p.torcida <= 33 ? "a torcida anda desconfiada" : "a torcida acompanha")}
-      ${linhaH("diretoria", "Diretoria", dir100, `${p.diretoria > 0 ? "+" : ""}${p.diretoria}`, `soma na confiança do chefe: ${c.im ? c.im.confianca : "—"}%`)}`;
+      ${linhaH("diretoria", "Diretoria", dir100, `${p.diretoria > 0 ? "+" : ""}${p.diretoria}`, `soma na confiança do chefe: ${c.im ? c.im.confianca : "—"}%`)}</div>
+      <div class="pd-caixa ${dCaixa ? "mudou" : ""}"><span>Caixa</span><span class="pd-hl-num">${dCaixa ? `<em class="pd-delta ${dCaixa > 0 ? "mais" : "menos"}">${dCaixa > 0 ? "+" : "−"}${Math.abs(dCaixa)}</em>` : ""}<b>${s.caixa} mi</b></span></div>`;
   const eu = medidas(s, "voce"), ele = medidas(s, s.piloto2);
   const duelo = (s.resultados || []).filter((r) => r.ano === s.ano).reduce((a, r) => { const x = r.linhas.find((l) => l.piloto === "voce"), y = r.linhas.find((l) => l.piloto === s.piloto2); if (x && y) { if (x.pos < y.pos) a[0]++; else a[1]++; } return a; }, [0, 0]);
   const medHTML = (m) => `<div class="pd-pm"><small>Consistência</small><b>${m.desvio == null ? "—" : `±${num(m.desvio, 2)} s`}</b></div><div class="pd-pm"><small>Ultrapassagens por GP</small><b>${m.ultrapassagens == null ? "—" : num(m.ultrapassagens)}</b></div>`;
@@ -154,18 +160,23 @@ function html(c) {
   const conseq = mostraMudanca ? `<div class="pd-conseq ${/demitido/i.test(um.texto) ? "forte" : ""}"><span class="pd-conseq-ic">${icone(um.quem)}</span><div><small>O que mudou na equipe</small><p>${h(um.texto)}</p></div></div>` : "";
   const aviso = p.demitido && p.demitido.ano === s.ano ? `<div class="pd-aviso demitido"><b>Você foi demitido</b><span>A equipe não renova o seu contrato. No fim do ano, você vai para a equipe mais fraca que fizer proposta, a não ser que aceite outra antes.</span></div>`
     : p.ultimato && p.ultimato.ano === s.ano ? `<div class="pd-aviso"><b>Ultimato</b><span>Top ${p.ultimato.alvo} neste GP, ou a diretoria não renova o seu contrato.</span></div>` : "";
+  const mais = (k, on) => `<button type="button" class="pd-mais ${on ? "on" : ""}" data-pd-mais="${k}" aria-expanded="${on}" aria-label="${on ? "Fechar" : "Ver mais"}">${SVG(IH.seta, 18)}</button>`;
+  const n0 = nts.length ? nts[((nNoticia % nts.length) + nts.length) % nts.length] : null, m0 = n0 ? miniDe(n0) : null, ult = p.mural.at(-1);
+  const cPiloto = `<section class="pd-card pd-mini-card">${tit("Os pilotos")}<div class="pd-mc"><span class="pd-foto">${fotoPiloto(s.piloto2) ? `<img src="${h(fotoPiloto(s.piloto2))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}<i>${h(iniciais(comp.nome))}</i></span>
+      <div class="pd-p-nome"><h4>${h(comp.nome)}</h4><div class="pd-p-big"><b>${comp.ritmo}</b>${ritmo ? `<em class="${ritmo > 0 ? "mais" : "menos"}">${ritmo > 0 ? "+" : "−"}${num(Math.abs(ritmo))}</em>` : ""}</div><small>Ritmo${p.salarioComp ? ` · <span class="pd-tag">+${p.salarioComp} mi/GP</span>` : ""}</small></div>
+      <span class="pd-mc-logo">${U().marca(s.equipe, "pd-meio-logo")}</span>${mais("pilotos", maisPilotos)}</div></section>`;
+  const cNoticia = `<section class="pd-card pd-mini-card">${tit("Notícias", nts.length > 1 ? `<small class="pd-cont">${(((nNoticia % nts.length) + nts.length) % nts.length) + 1}/${nts.length}</small>` : "")}${n0 ? `<div class="pd-mc pd-mc-noticia ${n0.nova ? "nova" : ""}"><span class="pd-mini">${m0 ? `<img src="${h(m0)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${n0.eq ? U().marca(n0.eq, "pd-mini-logo") : ""}</span><div>${n0.nova ? `<small class="pd-agora-tag">Agora</small>` : ""}<b>${h(n0.t)}</b><p>${h(n0.x)}</p></div>${nts.length > 1 ? `<button type="button" class="pd-mais" data-pd-noticia aria-label="Próxima notícia">${SVG(IH.seta, 18)}</button>` : ""}</div>` : `<p class="pd-vazio">Sem notícias.</p>`}</section>`;
+  const cMural = `<section class="pd-card pd-mini-card">${tit("Mural")}${ult ? `<div class="pd-mc"><span class="pd-balao">${SVG(IH.balao, 20)}</span><div class="pd-mc-txt"><small>${h(ult.tipo)} · ano ${ult.ano}</small><p>${h(ult.texto)}</p>${ult.efeito ? `<span class="pd-efs">${plaquinhas(ult.efeito)}</span>` : ""}</div>${p.mural.length > 1 || hist.linhas.length ? mais("mural", maisMural) : ""}</div>` : `<p class="pd-vazio">Nada ainda.</p>`}</section>`;
+  const abertoPilotos = maisPilotos ? `<section class="pd-card pd-aberto">${tit("Os pilotos")}${pilotos}</section>` : "";
+  const abertoMural = maisMural ? `<section class="pd-card pd-aberto">${tit("Mural")}${mural ? `<ol class="pd-mural">${mural}</ol>` : ""}${hist.momentos.length || hist.linhas.length ? `<h4 class="pd-sub">Histórico da equipe</h4>${historicoHTML}` : ""}</section>` : "";
   return `<div class="pd">
-    <header class="pd-hero" ${foto ? `style="--foto:url('${h(foto)}')"` : ""}><div class="pd-hero-txt"><small class="pd-sobre">Paddock · ${h(c.eq.nome)}<i></i></small><h2>${terminou ? "Fim de temporada" : `Fim de semana: ${h(c.prox ? c.prox.nome : "")}`}</h2>${pilulas}${aviso}</div></header>
+    <header class="pd-hero" ${foto ? `style="--foto:url('${h(foto)}')"` : ""}><div class="pd-hero-txt"><small class="pd-sobre">Paddock<i></i></small><h2>${terminou ? "Fim de temporada" : `Fim de semana: ${h(c.prox ? c.prox.nome : "")}`}</h2><p>${terminou ? "A temporada terminou." : "Prepare-se para a próxima etapa do campeonato."}</p>${pilulas}${aviso}</div></header>
     <div class="pd-grade">
-      <section class="pd-card pd-agora">${tit(`Acontecendo agora${pendentes ? '<i class="pd-ponto" aria-hidden="true"></i>' : ""}`, pendentes ? `<em class="pd-selo novo">${pendentes} esperando</em>` : "")}${conseq}${agora}</section>
-      <section class="pd-card pd-humor">${tit("O humor da equipe")}${humor}</section>
+      <section class="pd-card pd-agora">${tit("Ações do fim de semana", pendentes ? `<em class="pd-selo novo">${pendentes} esperando</em>` : "")}${conseq}${agora}</section>
+      <section class="pd-card pd-humor">${tit(`${SVG(IH.moral, 20)} Humor da equipe`)}${humor}</section>
     </div>
-    <section class="pd-card">${tit("Os pilotos")}${pilotos}</section>
-    <div class="pd-grade pd-grade-baixo">
-      <section class="pd-card">${tit("Central de notícias")}${news}</section>
-      <section class="pd-card">${tit("Mural")}${mural ? `<ol class="pd-mural">${mural}</ol>` : `<p class="pd-vazio">Nada ainda.</p>`}</section>
-    </div>
-    ${hist.momentos.length || hist.linhas.length ? `<section class="pd-card">${tit("Histórico da equipe")}${historicoHTML}</section>` : ""}
+    <div class="pd-baixo">${cPiloto}${cNoticia}${cMural}</div>
+    ${abertoPilotos}${abertoMural}
   </div>`;
 }
 function previa(op) {
@@ -182,8 +193,11 @@ function previa(op) {
   }
 }
 // (2026-11-15: o Thiago achou que mostrar o resultado antes dá viés; a prévia no humor saiu, e o efeito só aparece depois da escolha)
-function clique(b) {
-  if (b.dataset.pdEv && b.dataset.pdOp) { const ctx = root.CentralPaddock._ctx; if (ctx && ctx.decidirPaddock) ctx.decidirPaddock(b.dataset.pdEv, b.dataset.pdOp); return true; }
+function clique(b, render) {
+  if (b.dataset.pdAbrir) { aberto = aberto === b.dataset.pdAbrir ? null : b.dataset.pdAbrir; render && render(); return true; }
+  if (b.dataset.pdMais) { if (b.dataset.pdMais === "pilotos") maisPilotos = !maisPilotos; else maisMural = !maisMural; render && render(); return true; }
+  if (b.hasAttribute("data-pd-noticia")) { nNoticia++; render && render(); return true; }
+  if (b.dataset.pdEv && b.dataset.pdOp) { aberto = b.dataset.pdEv; /* (o decidido fica aberto: o efeito aparece nele) */ const ctx = root.CentralPaddock._ctx; if (ctx && ctx.decidirPaddock) ctx.decidirPaddock(b.dataset.pdEv, b.dataset.pdOp); return true; }
   return false;
 }
 // quantos acontecimentos esperam decisão (o número na aba)

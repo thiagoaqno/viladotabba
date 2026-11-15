@@ -108,7 +108,7 @@
 /* (2026-11-15) a tela pela referência do Thiago: o título com o traço da equipe, as abas inclinadas, o painel claro com o ícone, as linhas com
    ‹ barra › valor e mínimo/máximo, o cartão de onde raspa, o carro grande à direita com o logo da equipe atrás e a faixa de baixo com os botões
    inclinados. Os tokens da Central (--cx-*) e a cor da equipe (--eq-at). */
-.acf2{--ac-at:var(--eq-at,var(--eq,#e10600));--ac-painel:color-mix(in srgb,var(--cx-bg2) 85%,#fff 15%);position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"esq dir" "pe pe";gap:18px 26px;padding-top:6px}
+.acf2{--ac-at:var(--eq-at,var(--eq,#e10600));--ac-painel:color-mix(in srgb,var(--cx-bg2) 85%,#fff 15%);position:relative;display:grid;grid-template-columns:minmax(440px,.8fr) minmax(0,1.2fr);grid-template-areas:"esq dir" "pe pe";gap:18px 26px;padding-top:6px}
 body.cx-escuro .acf2{--ac-painel:var(--cx-bg2)}
 .acf2::before{content:"";position:absolute;inset:-10px -40px auto 45%;height:70%;background:repeating-linear-gradient(115deg,transparent 0 60px,var(--cx-hover) 60px 64px,transparent 64px 140px);pointer-events:none;z-index:0}
 .acf2-esq{grid-area:esq;position:relative;z-index:1;min-width:0}
@@ -163,7 +163,8 @@ body.cx-escuro .acf2-medbar i{background:linear-gradient(90deg,#9aa0aa,#eef0f3)}
 .acf2-palco::before{display:none}
 .acf2-marca{position:absolute;inset:6% 4% auto;display:flex;justify-content:center;opacity:.09;pointer-events:none}
 .acf2-marca-img{width:80%;max-height:200px;object-fit:contain;filter:grayscale(1)}
-.acf2-palco .ac-palco3d{aspect-ratio:16/10}
+.acf2-palco .ac-palco3d{aspect-ratio:4/3}
+.cx .acf2-palco{position:sticky;top:12px}
 .acf2-palco .ac-palco-rot{position:absolute;left:0;bottom:8px;z-index:2}
 /* a faixa de baixo */
 .acf2-pe{grid-area:pe;position:relative;z-index:1;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;padding:14px 20px;border-radius:12px;background:var(--ac-painel);border:1px solid var(--cx-lin);box-shadow:0 1px 2px #0000000d,0 10px 26px #0000000f}

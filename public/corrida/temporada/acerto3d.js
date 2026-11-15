@@ -28,7 +28,7 @@ export async function montarAcerto(palco, equipeId) {
   // a câmera enquadra o carro inteiro (do bico à asa) para o tamanho do palco: `enquadrar` acha a distância pela largura e pela altura do carro
   const caixa = new THREE.Box3().setFromObject(k.g), centro = caixa.getCenter(new THREE.Vector3()), tam = caixa.getSize(new THREE.Vector3());
   function enquadrar() {
-    const v = THREE.MathUtils.degToRad(cam.fov) / 2, hz = Math.atan(Math.tan(v) * cam.aspect), largura = Math.max(tam.x, tam.z) * 1.02, altura = tam.y * 1.7;
+    const v = THREE.MathUtils.degToRad(cam.fov) / 2, hz = Math.atan(Math.tan(v) * cam.aspect), largura = Math.max(tam.x, tam.z) * 0.86, altura = tam.y * 1.5; // (2026-11-15: o carro maior no palco)
     const d = Math.max(largura / 2 / Math.tan(hz), altura / 2 / Math.tan(v)) + Math.min(tam.x, tam.z) / 2;
     cam.position.set(centro.x, centro.y + d * 0.2, centro.z + d); cam.lookAt(centro.x, centro.y * 0.85, centro.z);
   }

@@ -157,6 +157,20 @@ O Thiago: "muita coisa tem descrição demais e fica redundante".
   - saíram o subtítulo do painel, a frase do cartão de raspar e os subtítulos dos medidores;
   - saíram também a folga e o "raspa a" da faixa de baixo (já estão no painel) e o "Acerto guardado" (a página já diz "Salvo").
 
+## O Paddock pela referência nova e o carro em destaque (a sexta rodada)
+
+- **O Paddock cabe numa vista** (`paddock-ui.js`, `paddock.css`):
+  - "Ações do fim de semana" em linhas: ícone num quadrado, título, uma linha de texto e a seta;
+  - um acontecimento aberto por vez, com as opções em linhas com ícone. O decidido fica aberto, mostrando o efeito;
+  - o humor em linhas finas (ícone, nome, barra e número na mesma linha);
+  - embaixo, três cartões pequenos:
+    - **o companheiro**, com foto e ritmo; a seta abre os dois pilotos, o duelo e a equipe técnica;
+    - **uma notícia por vez**, e a seta passa para a próxima;
+    - **a última linha do mural**; a seta abre o mural inteiro e o histórico.
+- **O carro com mais destaque na aba Carro:**
+  - nas Peças, a câmera da garagem chegou mais perto (`estudio3d.js`, vista `dev`);
+  - no Acerto, o painel ficou mais estreito, o palco ficou maior (4:3, fixo na tela ao rolar) e o carro enche mais o quadro (`acerto3d.js`).
+
 ## Insights do engenheiro (Visão geral da Análise)
 
 Um quadro novo, só com o que o resumo do GP mede:

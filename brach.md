@@ -19,6 +19,10 @@ O quadro "Insights do engenheiro" da Visão geral (#756) saiu inteiro: a funçã
   - as faixas da estratégia crescem da esquerda.
 - **Movimento reduzido:** com ele ligado no sistema, nada disso anima.
 
+## A montagem antiga na carreira em grupo
+
+O conserto do #758 (a montagem acima do orçamento pode ficar mais barata) não chegava na carreira com os amigos: `grupo-regras.js` não passava a montagem de agora para a conferência. Agora passa, e o carro antigo do grupo também destrava tirando níveis.
+
 ## Prints
 
 Tirados com o servidor de teste e o Playwright, a 1600×900, com um GP simulado só na página (dois carros e um replay inventado para desenhar a tela), em dois momentos da volta: o mapa se desenhando, e os dois carros e o cursor andando. A diferença sai 0,00 s porque os dois carros simulados fazem a mesma volta. Nada foi visto com um GP corrido de verdade.

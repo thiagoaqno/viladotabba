@@ -32,6 +32,7 @@ O Thiago: "tudo que redesenha para todos é ruim: fica atualizando pra todo mund
 
 - **A sala** (`menus.js trocar`, por onde passam todas as etapas): quando chega a mudança de outro jogador e você está mexendo num campo daquele trecho, o HTML novo espera. Vale para texto, número, seletor de cor, deslizante e lista de opções. Ele entra quando o foco sai do trecho. Os `<details>` abertos e a rolagem dentro do trecho também continuam como estavam depois da troca.
 - **A tela entre as sessões da classificação** (`pos-quali.js`): a confirmação de outro jogador só muda o contador "N/M prontos". Antes a tela se refazia inteira.
+- **A tela de resultado depois da corrida** (`resultado-gp.js resultadoMudou`): ela se refazia inteira a cada linha nova no registro da sala, que cresce com qualquer coisa que acontece, e isso zerava a análise e o replay de todos. Agora só se refaz quando o resultado, os acréscimos ou as equipes mudam. No modo sem regras de F1 (`hud.js renderResults`), ela era refeita a cada estado do servidor (várias vezes por segundo) e agora só troca quando o HTML muda.
 - **O editor do capacete** (#755) e a carreira com os amigos (`grupo.js`, que já trocava só os nós que mudaram) já estavam assim.
 
 ## Conferido

@@ -149,7 +149,7 @@ export function limparResultado() { podio3d.soltar(); soltarAnalise(); }
 // a tela só é refeita quando o resultado muda (o servidor manda o estado várias vezes por segundo; refazer reiniciaria a animação e o carro)
 let ultima = "";
 export function resultadoMudou(el, S, m, isHost) {
-  const chave = JSON.stringify([S.startAt, S.resultado.map((r) => [r.id, r.pos, r.tempo, r.pontos, r.dano, r.penal]), S.players.map((p) => [p.id, p.acrescimo, p.equipe]), m && m.id, !!isHost, !!S.temporada, (S.log || []).length]);
+  const chave = JSON.stringify([S.startAt, S.resultado.map((r) => [r.id, r.pos, r.tempo, r.pontos, r.dano, r.penal]), S.players.map((p) => [p.id, p.acrescimo, p.equipe]), m && m.id, !!isHost, !!S.temporada]); // (2026-11-15: sem o tamanho do registro da sala, que crescia com qualquer coisa e refazia a tela de todos, zerando a análise e o replay)
   if (chave === ultima && el.firstChild && !el.classList.contains("hidden")) return false;
   podio3d.desprender(); ultima = chave; return true; // (a tela vai ser refeita: os mesmos carros voltam para os degraus novos, sem recarregar)
 }

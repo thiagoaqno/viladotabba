@@ -562,9 +562,10 @@ export function renderResults() {
   const m = me(), isHost = m && E.S.host === m.id, rows = standings();
   if (E.S.config.regras === "f1" && E.S.resultado) return resultadoGP(el, m, isHost);
   el.classList.remove("hidden");
-  el.innerHTML = `<div class="placa"><div class="chk"></div><div class="in"><h2 style="font-size:28px;margin-bottom:10px">🏆 Resultado · ${h(PISTAS[E.S.config.pista].name)}</h2>
+  const html = `<div class="placa"><div class="chk"></div><div class="in"><h2 style="font-size:28px;margin-bottom:10px">🏆 Resultado · ${h(PISTAS[E.S.config.pista].name)}</h2>
     <table>${rows.map((r, i) => `<tr><td>${r.done != null ? i + 1 + "º" : "—"}</td><td>${r.p.pawn} <b style="color:${r.p.color}">${h(r.p.name)}</b>${E.S.config.regras === "f1" ? ` <small class="muted">${h(r.p.pneuAtual || r.p.pneu)} · ${r.p.paradas}P</small>` : ""}</td><td class="num">${r.done != null ? fmt(r.done) : "não terminou"}${r.p.acrescimo ? ` <small class="muted">(+${r.p.acrescimo} s)</small>` : ""}</td><td class="num muted">${r.p.best != null ? "melhor " + fmt(r.p.best) : ""}</td></tr>`).join("")}</table>
     <div class="row" style="margin-top:14px;justify-content:center">${isHost ? `<button class="primary" id="rAgain">🏁 Correr de novo</button><button id="rLobby">Trocar pista</button>` : `<span class="muted">Esperando o organizador…</span>`}<button class="ghost" onclick="location.href='/'">🏠 Vila</button></div></div></div>`;
+  if (el._h === html) return; el._h = html; el.innerHTML = html; // (2026-11-15: o estado chega várias vezes por segundo; refazer sempre atrapalhava quem estava na tela)
   if ($("rAgain")) $("rAgain").onclick = () => act("start");
   if ($("rLobby")) $("rLobby").onclick = () => act("lobby");
 }

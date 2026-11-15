@@ -174,7 +174,7 @@ function montarTorre() {
   const el = $("hTorre"); if (el.dataset.ok) return; el.dataset.ok = 1;
   el.innerHTML = `<div class="tt-topo">${LOGO_F1}<b class="tt-modo">RACE</b><button type="button" class="tt-alt" id="tAlt" aria-label="Alternar torre compacta e completa" title="Torre: compacta ou completa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="tt-volta"><span id="tVoltaRot">VOLTA</span> <b id="tVolta">1</b><span id="tVoltaTot"> / 1</span></div><div id="tLinhas"></div>`;
   const box = $("tLinhas");
-  for (let i = 0; i < 22; i++) { const d = document.createElement("div"); d.className = "tl hidden"; d.innerHTML = `<span class="n"></span><i class="eq"></i><b class="sg"></b><u class="pn"></u><small class="ic"></small><em class="df"></em><span class="vrx">${ICONE_RELOGIO}</span><span class="troca" role="img"></span>`; box.appendChild(d); }
+  for (let i = 0; i < 22; i++) { const d = document.createElement("div"); d.className = "tl hidden"; d.innerHTML = `<span class="n"></span><i class="eq"><img alt="" decoding="async"></i><b class="sg"></b><u class="pn"></u><small class="ic"></small><em class="df"></em><span class="vrx">${ICONE_RELOGIO}</span><span class="troca" role="img"></span>`; box.appendChild(d); }
   $("tAlt").addEventListener("click", alternarTorre);
   montarCentro(); montarTempo(); montarCrono(); montarMfd();
 }
@@ -304,7 +304,7 @@ function hudF1(m, st, now) {
   const cors = st.map((r) => {
     const p = r.p, gh = race.ghosts.get(r.id), v = m && r.id === m.id ? Math.abs(race.car.v) : gh && gh.v ? Math.abs(gh.v) : 0;
     vs[r.id] = vs[r.id] == null ? v : vs[r.id] + (v - vs[r.id]) * 0.3;
-    return { id: r.id, prog: r.prog, v: vs[r.id], dnf: !!p.dnf, dsq: !!p.dsq, sg: !!p.stopGo, noBox: !!p.noBox, penal: p.penal || 0, done: r.done, best: p.best, pneu: p.pneuAtual || p.pneu, sigla: T.siglaDe(p), nome: p.name, cor: (eqs[p.equipe] || {}).cor || p.color, bot: p.bot, nomeRadio: p.nomeCompleto ? String(p.nomeCompleto).split(" ").pop() : p.name, desg: p.desg || 0, paradas: p.paradas || 0 };
+    return { id: r.id, prog: r.prog, v: vs[r.id], dnf: !!p.dnf, dsq: !!p.dsq, sg: !!p.stopGo, noBox: !!p.noBox, penal: p.penal || 0, done: r.done, best: p.best, pneu: p.pneuAtual || p.pneu, sigla: T.siglaDe(p), nome: p.name, equipe: p.equipe || "", cor: (eqs[p.equipe] || {}).cor || p.color, bot: p.bot, nomeRadio: p.nomeCompleto ? String(p.nomeCompleto).split(" ").pop() : p.name, desg: p.desg || 0, paradas: p.paradas || 0 };
   });
   race.hudCors = cors;
   // a cronometragem: cada carro registra (progresso, hora) a cada tick; o intervalo é o tempo medido entre dois carros (hud-torre.js)
@@ -350,7 +350,7 @@ function hudF1(m, st, now) {
     d._piloto = l ? l.id : null;
     if (!l) continue;
     const c = d.children; // n, eq, sg, pn, ic, df, vrx
-    set(c[0], "t", l.pos); set(c[1], "bg", l.cor); set(c[2], "t", l.sigla);
+    set(c[0], "t", l.pos); logoNaTorre(c[1], l); set(c[2], "t", l.sigla);
     set(c[3], "t", l.letra); set(c[3], "col", (F.PNEUS[l.pneu] || F.PNEUS.medio).cor);
     const ic = l.dif.tipo === "out" ? (l.dsq ? "DSQ" : "DNF") : l.noBox ? "BOX" : l.acabou ? "FIM" : l.sg ? "SG" : l.penal > 0 ? `+${l.penal}s` : ""; // fora (ou desclassificado), no box, bandeirado, com stop-and-go a cumprir ou punido
     set(c[4], "t", ic); set(c[4], "c", "ic" + (ic === "DNF" || ic === "DSQ" ? " dnf" : ic === "BOX" ? " box" : ic === "FIM" ? " fim" : ic ? " pen" : ""));
@@ -379,6 +379,17 @@ function hudF1(m, st, now) {
   const est = estrategia(m, cors, race.hudEsc);
   atualizarMfd({ m, st, cors, linhas, compacta, modoErs, tp: est.tp, janela: est.janela, perda: est.perda, retorno: est.retorno, int: m ? HM.intervalos(cors, m.id, race.hudEsc, undefined, cron, agoraS) : {}, vr: HM.donoDaVoltaRapida(E.S.players) });
   desenharBanner(m, t0); desenharCrono(t0); atualizarMenuBox();
+}
+// o logo da equipe na linha da torre (2026-11-15, pela imagem do Thiago: logos no lugar das barrinhas); sem logo, ou se a imagem falhar,
+// volta a barrinha na cor da equipe. A imagem só é trocada quando a equipe da linha muda (as linhas são reaproveitadas a cada quadro).
+function logoNaTorre(el, l) {
+  const e = l.equipe && window.EQUIPES_F1 && window.EQUIPES_F1[l.equipe], src = e && e.arquivo ? (window.logoF1 || ((i) => "/api/corrida/logo/" + i))(l.equipe) : "";
+  if (el._src !== src) {
+    el._src = src; const img = el.firstChild;
+    el.classList.toggle("logo", !!src); el.classList.remove("falhou");
+    if (src) { img.onerror = () => el.classList.add("falhou"); img.src = src; img.title = e.nome || ""; } else img.removeAttribute("src");
+  }
+  set(el, "bg", src && !el.classList.contains("falhou") ? "transparent" : l.cor);
 }
 // ---------- as cinco luzes da largada (regras de F1) ----------
 // Uma acende por segundo e as cinco apagam juntas depois da espera sorteada pelo servidor (`luzes.espera`): a largada

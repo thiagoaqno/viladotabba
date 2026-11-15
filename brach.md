@@ -1,4 +1,4 @@
-# Capacete: o formato de F1 de verdade, a viseira em arco, patrocínios por lugar com as marcas dos carros, acabamentos novos e o editor que não atualiza a página de todos
+# Capacete: o formato de F1 de verdade, a viseira em arco, patrocínios por lugar com as marcas dos carros, acabamentos novos, logos na torre, o halo da Audi e o editor que não atualiza a página de todos
 
 Pedido do Thiago depois do #754: mudar o formato do capacete para ficar parecido com a referência, mostrar o print no fim, e consertar a página que "atualiza para todos" a cada clique.
 
@@ -40,6 +40,22 @@ Pedido do Thiago (2026-11-15): "mais variáveis de texturas no capacete… opç�
   - **O material:** o capacete de quem joga, na pista, passou a ser `MeshPhysicalMaterial` com o mesmo acabamento da prévia (`aplicarAcabamento`, em `f1-piloto.js`). O dos robôs continua o simples.
 - **O servidor** (`corrida.js`, `limparCapacete`) aceita os acabamentos novos, `patrocinios` (só os 5 lugares, com id curto de letras e números) e `fundoPatrocinio`.
 
+## Os logos na torre e o halo da Audi
+
+Pedido do Thiago (2026-11-15), com um print de onboard da Audi: "faz no hud ao invés das barrinhas, aparecem logos. atenção ao halo da audi".
+
+- **A torre** (`hud.js`, `hud-torre.js`, `hud-f1.css`): cada linha mostra o logo da equipe (os mesmos de `logos/`, do ano em uso por `logoF1`) no lugar da barrinha de cor.
+  - A coluna passou de 4 para 20 px (de 3 para 15 px na tela estreita).
+  - A imagem só é trocada quando a equipe da linha muda.
+  - Sem logo, ou se a imagem não carregar, volta a barrinha na cor.
+- **O halo da Audi** (`f1-pintura.js`, `HALOS`), pelo onboard:
+  - as duas pernas levam `store.audif1.com` (antes eram lisas);
+  - a direita diz "visit QATAR", antes só "QATAR";
+  - a Castrol ganhou o redondo verde, branco e vermelho (`f1-marcas.js`);
+  - as letras do halo ficaram brancas com contorno escuro, como no carro (antes eram escuras sobre o prata);
+  - os anéis e o Revolut na face continuam;
+  - no cockpit, o "aleph" virou "Aleph".
+
 ## Prints
 
 Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900, com o editor montado na página da corrida:
@@ -47,6 +63,7 @@ Tirados com o servidor de teste (`DB_PATH=:memory:`) e o Playwright, a 1600×900
 - no tema escuro, Chamas com acabamento metálico e o patrocínio Galera Racing.
 - os patrocínios: Lâminas com Santander, Pirelli, Shell, Galera Racing e HP direto no casco, e Corte perolado com placa escura;
 - os acabamentos: Velocidade em fibra de carbono e Chamas em camaleão.
+- o cockpit da Audi em Melbourne, com a torre completa: os logos na torre e o halo com Castrol, Revolut e visit QATAR.
 
 Estão em `C:\Users\thiag\Downloads\lts\prints\capacete\`, fora do repositório.
 

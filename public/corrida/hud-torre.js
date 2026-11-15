@@ -73,7 +73,7 @@ function torre(corredores, { n, meuId, esc = 1, atraso = null }) { // esc: unida
     else if (atraso && !eLider && !c.dnf && dif.tipo !== "voltas" && lider) { const s = atraso(c, lider); if (s != null) dif = { tipo: "seg", texto: `+${tempoCurto(s)}` }; } // o tempo medido (cronometragem), quando existe
     if (!eLider && !c.dnf && c.done != null && lider.done != null) dif = { tipo: "seg", texto: `+${tempoCurto(Math.max(0, c.done - lider.done))}` }; // os dois já chegaram: o tempo de verdade
     else if (c.done != null && !c.dnf && !eLider && dif.tipo === "m") dif = { tipo: "fim", texto: "Fim" }; // parou depois da bandeirada
-    return { pos: i + 1, id: c.id, sigla: c.sigla, nome: c.nome, cor: c.cor, bot: !!c.bot, eu: c.id === meuId, dif, letra: LETRA[c.pneu] || "M", pneu: c.pneu,
+    return { pos: i + 1, id: c.id, sigla: c.sigla, nome: c.nome, equipe: c.equipe || "", cor: c.cor, bot: !!c.bot, eu: c.id === meuId, dif, letra: LETRA[c.pneu] || "M", pneu: c.pneu,
       volta: !!melhor && melhor.id === c.id, noBox: !!c.noBox, penal: c.penal || 0, dsq: !!c.dsq, sg: !!c.sg, acabou: c.done != null };
   });
 }

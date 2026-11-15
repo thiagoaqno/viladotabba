@@ -993,7 +993,7 @@ const HALOS = {
   "racing-bulls": ["HUGO", "VISA", "FORD", "Cash App", "HUGO"],
   "aston-martin": ["BOSS", "Valvoline", "VALHALLA", "aramco", "Cognizant"],
   williams: ["DURACELL", "kraken", "WILLIAMS", "kraken", "DURACELL"],
-  audi: ["", "Castrol", "aneis", "QATAR", ""],
+  audi: ["store.audif1.com", "Castrol", "aneis", "visit QATAR", "store.audif1.com"], // (o onboard de 2026-11-15: as pernas com o site, "visit QATAR")
   alpine: ["", "eni", "BWT", "MSC", ""],
   haas: ["OAKBERRY", "HAAS", "TOYOTA", "TGR", "Pirelli"],
   cadillac: ["", "3M", "", "", ""],
@@ -1019,6 +1019,15 @@ export function texturaDoHalo(equipe) {
       ctx.strokeStyle = "#f24d1d"; ctx.lineWidth = 7;
       for (const dx of [-57, -19, 19, 57]) { ctx.beginPath(); ctx.ellipse(dx, -26, 31, 22, 0, 0, Math.PI * 2); ctx.stroke(); }
       ctx.fillStyle = "#ffffff"; ctx.font = "700 50px Arial, sans-serif"; ctx.fillText("Revolut", 0, 44, 205);
+    } else if (equipe === "audi" && nome === "Castrol") {
+      // a Castrol do halo da Audi: o redondo verde, branco e vermelho e o nome em branco, com contorno escuro para ler no prata
+      ctx.save(); ctx.scale(62, 62); ctx.shadowColor = "#000c"; ctx.shadowBlur = 0.08; desenharMarca(ctx, "castrol", { tinta: "#ffffff" }); ctx.restore();
+    } else if (equipe === "audi") {
+      // as letras brancas com o contorno escuro, como no onboard (no prata do halo o branco sozinho some)
+      const site = nome.startsWith("store"), qatar = nome.startsWith("visit");
+      ctx.font = site ? "700 44px Arial, sans-serif" : "800 50px Arial, sans-serif"; ctx.lineJoin = "round"; ctx.lineWidth = 7; ctx.strokeStyle = "#151a20";
+      if (qatar) { ctx.font = "italic 600 34px Georgia, serif"; ctx.strokeText("visit", -92, 0); ctx.fillStyle = "#fff"; ctx.fillText("visit", -92, 0); ctx.font = "800 48px Arial, sans-serif"; ctx.strokeText("QATAR", 45, 0, 190); ctx.fillText("QATAR", 45, 0, 190); }
+      else { ctx.strokeText(nome, 0, 0, 340); ctx.fillStyle = "#fff"; ctx.fillText(nome, 0, 0, 340); }
     } else if (central && equipe === "ferrari") {
       // Painel branco do HP sobre o arco escuro, como na vista onboard.
       ctx.fillStyle = "#f3f3f1"; ctx.fillRect(-160, -145, 320, 290);
@@ -1073,7 +1082,7 @@ const COCKPIT_MARCAS = {
   mclaren: { lado: ["allwyn", "allwyn"], asa: ["FxPro", "FxPro"], anguloAsa: 0, posAsa: 1.84, tamanhoAsa: 24, cor: "#ffffff" },
   ferrari: { lado: ["ambipar", "ambipar"], asa: ["CEVA", "CEVA"], cor: "#111111" },
   williams: { centro: ["KOMATSU", "KOMATSU"], lado: ["BARCLAYS", "BARCLAYS"], cor: "#ffffff" },
-  audi: { centro: ["NEXO", "NEXO"], asa: ["aleph", "aleph"], lado: ["WORLD OF HYATT", "WORLD OF HYATT"], cor: "#25272b" },
+  audi: { centro: ["NEXO", "NEXO"], asa: ["Aleph", "Aleph"], lado: ["WORLD OF HYATT", "WORLD OF HYATT"], cor: "#25272b" },
   cadillac: { centro: ["telcel", "telcel"], lado: ["TWG", "TWG"], cor: "#34383a", corDireita: "#ffffff" },
 };
 const TEXTURAS_COCKPIT = new Map();

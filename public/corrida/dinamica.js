@@ -179,7 +179,9 @@ function passo(c, ent, amb, p, dt = PASSO) {
   }
   c.trocaT = Math.max(0, c.trocaT - dt); c.desceT = Math.max(0, (c.desceT || 0) - dt);
   // A oitava acompanha os ganhos aerodinâmicos para não cortar o motor antes do novo limite.
-  const vmaxRot = c.marcha === NUM ? vmaxU * (amb.drs ? 1 + DRS_GANHO * drsK : 1) * (amb.vacuo ? 1 + amb.vacuo.final : 1) : vmaxU;
+  // (2026-11-16, o Thiago: "parece que o carro tem um limitador") com o ERS a 8ª cortava a 1,07 × a final (CORTE) e o carro batia no corte nas retas
+  // longas; com o ERS ligado o corte vai ao teto das regras, 1,09 × a final (f1-regras.js TETO_VELOCIDADE)
+  const vmaxRot = c.marcha === NUM ? vmaxU * (amb.drs ? 1 + DRS_GANHO * drsK : 1) * (amb.vacuo ? 1 + amb.vacuo.final : 1) * (amb.ers ? 1.09 / CORTE : 1) : vmaxU;
   const x = rotacao(uU, vmaxRot, c.marcha);
   c.rpm = Math.max(0.3, x);
   if (amb.ar) { // no ar: sem pneu e sem motor; só o arrasto e a guinada que já tinha

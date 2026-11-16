@@ -529,3 +529,13 @@ button.rs3-c:focus-visible,button.rs3-pe:focus-visible{outline:2px solid var(--e
 #hMfd .mfd-pg[hidden]{display:none}
 #hMfd .rs3{flex:1;justify-content:space-between}
 #hMfd .rs3{justify-content:flex-start}#hMfd .rs3-l{flex:1}
+/* (2026-11-16) a aba Pedidos (o Caps Lock): a única maior; os pedidos em duas colunas, cada um com o que dizer */
+#race:is(.f1hud,.f1mfd) #hMfd.grande{height:min(520px,calc(100vh - 140px))}
+.m3-ped{gap:10px}
+.m3-ped-t{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 4px}
+.m3-ped-t b{font-size:14px;font-weight:700;letter-spacing:.04em}.m3-ped-t small{font-size:11px;color:rgba(255,255,255,.55)}
+.m3-ped-g{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.m3-ped-i{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;text-align:left;font:inherit;color:#fff;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:12px;cursor:pointer;transition:background .15s,border-color .15s}
+.m3-ped-i:hover{background:rgba(255,255,255,.12);border-color:#e10600}
+.m3-ped-i:focus-visible{outline:2px solid #e10600;outline-offset:1px}
+.m3-ped-i b{font-size:13px;font-weight:700}.m3-ped-i small{font-size:11px;color:rgba(255,255,255,.6)}

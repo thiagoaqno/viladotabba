@@ -29,6 +29,7 @@ const CARRO = (cls) => `<svg class="mp-carro ${cls}" viewBox="0 0 90 120" aria-h
 // os ícones das abas (como no jogo: um por página)
 const ICONE = {
   resumo: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+  pedidos: '<path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v6H4zM17 14h3v6h-3z"/>',
   jogos: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/>',
   condicoes: '<path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z"/>',
   pneus: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>', danos: '<path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/>',
@@ -38,7 +39,20 @@ const ICONE = {
 };
 const icone = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONE[id] || ""}</svg>`;
 const linhasDe = (id) => `<div class="mr-lista" data-linhas="${id}"></div>`;
+// os pedidos da aba Pedidos: [o que é, o que dizer, o comando do Jeff]
+const PEDIDOS = [
+  ["Atualização completa", "me atualiza", { tipo: "completa" }], ["Estado dos pneus", "como estão os pneus", { tipo: "pneus" }],
+  ["Condição do carro", "como está o carro", { tipo: "carro" }], ["Previsão do tempo", "vai chover?", { tipo: "previsao" }],
+  ["Quem está na frente", "quem está na frente", { tipo: "frente" }], ["Quem está atrás", "quem está atrás", { tipo: "tras" }],
+  ["Diferença para a frente", "qual o gap da frente", { tipo: "gapFrente" }], ["Diferença do companheiro", "e o meu companheiro?", { tipo: "gapCompanheiro" }],
+  ["Box nesta volta", "box", { tipo: "box" }], ["Box com macio", "box, macio", { tipo: "box", composto: "macio" }],
+  ["Box com médio", "box, médio", { tipo: "box", composto: "medio" }], ["Box com duro", "box, duro", { tipo: "box", composto: "duro" }],
+  ["Box com intermediário", "box, intermediário", { tipo: "box", composto: "intermediario" }], ["Box com chuva", "box, pneu de chuva", { tipo: "box", composto: "chuva" }],
+];
 const HTML = {
+  // (2026-11-16, o Thiago: "o Caps Lock deve abrir o MFD com TODOS os pedidos possíveis legendados: o piloto pode falar ou apertar uma fala") a aba
+  // Pedidos: cada pedido que o Jeff entende (jeff-comandos.js), com o que dizer; clicar faz o mesmo que falar (executarJeff). A única aba maior.
+  pedidos: `<div class="m3 m3-ped"><header class="m3-ped-t"><b>PEDIDOS AO ENGENHEIRO</b><small>fale com o Caps Lock apertado ou clique</small></header><div class="m3-ped-g">${PEDIDOS.map(([rot, diga, cmd]) => `<button type="button" class="m3-ped-i" data-cmd='${JSON.stringify(cmd)}'><b>${rot}</b><small>“${diga}”</small></button>`).join("")}</div></div>`,
   // (2026-11-16, a imagem do Thiago: "o MFD resumo e minimalista") uma faixa: o pneu (anel da vida com a letra; voltas nele / voltas que aguenta), o carro
   // (condição), a pista (o estado; o jogo não mede a temperatura) e o mini mapa (você na cor da equipe, o líder em amarelo, a chegada quadriculada);
   // embaixo, o carro da frente, a diferença para ele e o carro de trás. Cada bloco leva à sua página.
@@ -281,6 +295,7 @@ export function montarMfd() {
     if (b.classList.contains("mfd-x")) return abrir(false);
     if (b.dataset.pg) return irPara(b.dataset.pg);
     if (b.dataset.ir) return irPara(b.dataset.ir);
+    if (b.dataset.cmd) { try { executarJeff(JSON.parse(b.dataset.cmd), ""); } catch (e) {} return; } // (a aba Pedidos: clicar é o mesmo que falar)
     if (b.classList.contains("bx-btn")) { digitoPneu(b.dataset.c); return; }
     const lin = b.closest(".mr");
     if (lin) { mfd.linha[mfd.pagina] = +lin.dataset.i; const d = b.dataset.d; if (d) linhasDaPagina()[+lin.dataset.i].mudar(+d); atualizarLinhas(); }
@@ -301,6 +316,8 @@ function abrir(v, guardar = true) { mfd.aberto = !!v; if (v) mexeu(); if (guarda
 // (M, N, B, 1-4, Tab, D-pad ajustando, toques no painel) chama mexeu() e reinicia a contagem. Não grava a escolha: o próximo GP começa com o painel à vista.
 const RECOLHE_MS = 10000;
 export function mexeu() { mfd.ultimo = performance.now(); }
+// o Caps Lock (a tecla do Jeff, controles.js): abre o MFD na aba Pedidos enquanto ele ouve
+export function abrirPedidos() { if (!raiz) return; if (!mfd.aberto) abrir(true); mfd.pagina = "pedidos"; paginaVista = null; mexeu(); }
 // B e o botão de box mostram a estratégia sem tirar as setas da pilotagem.
 export function abrirBoxMfd() {
   if (!ativo() || !race.box) return;
@@ -436,6 +453,7 @@ export function atualizarMfd(ctx) {
   if (paginaVista !== mfd.pagina) {
     paginaVista = mfd.pagina;
     for (const [id, s] of Object.entries(refs.pg)) s.hidden = id !== mfd.pagina;
+    raiz.classList.toggle("grande", mfd.pagina === "pedidos"); // (a aba Pedidos é a única maior)
     set(refs.mfd.nome, "t", M().nomeDaPagina(mfd.pagina));
     for (const b of refs.mfd.abas.children) { const on = b.dataset.pg === mfd.pagina; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); }
   }

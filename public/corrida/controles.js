@@ -8,7 +8,7 @@ import { rotacao, NUM } from "./cambio.js";
 import { Sound } from "./sons.js";
 import { ORDEM, NOMES, usavel, camEstado } from "./cameras.js";
 import { menuBoxTecla, menuBoxPad } from "./box-menu.js";
-import { mfd, mfdTecla, mfdPad, mfdAtivo, acoes, teclaBox, digitoPneu, cancelarBoxTecla } from "./mfd.js";
+import { mfd, mfdTecla, mfdPad, mfdAtivo, acoes, teclaBox, digitoPneu, cancelarBoxTecla, abrirPedidos } from "./mfd.js";
 import { acoesDaTecla, botoesDe, ui, volante } from "./teclas.js";
 import { abrirTeclas } from "./teclas-ui.js";
 import { alternarAcerto } from "./acerto.js";
@@ -59,7 +59,7 @@ document.addEventListener("keydown", (e) => {
   for (const id of ids) {
     if (PILOTO[id]) { keys[PILOTO[id]] = true; e.preventDefault(); }
     else if (id === "olharTras") { keys.olharTras = true; e.preventDefault(); }
-    else if (id === "voz") { e.preventDefault(); if (!e.repeat) comecarVoz(); }
+    else if (id === "voz") { e.preventDefault(); if (!e.repeat) { comecarVoz(); if (mfdAtivo()) abrirPedidos(); } } // (e abre a aba Pedidos, com tudo o que dá para pedir)
     else if (e.repeat) continue;
     else if (id === "marchaMais") { e.preventDefault(); trocarMarcha(1); }
     else if (id === "marchaMenos") { e.preventDefault(); trocarMarcha(-1); }
@@ -131,7 +131,7 @@ export function pollPad() {
   x = window.Volante.analogico(x, volante.zona, volante.p); // a zona morta e o ganho do analógico (tela Controles)
   const gas = botoesDe("gas").some(i => b(i) && !(i === 0 && mfdAtivo() && mfd.aberto)), brake = um("freio");
   pad.olharTras = um("olharTras");
-  if (bate("voz")) comecarVoz(); // o Jeff pelo controle (o botão que a pessoa escolher na tela Controles)
+  if (bate("voz")) { comecarVoz(); if (mfdAtivo()) abrirPedidos(); } // o Jeff pelo controle (o botão que a pessoa escolher na tela Controles)
   if (gas || brake || x || pad.on) { pad.on = true; pad.steer = x; keys.gas = gas; keys.brake = brake && !gas; }
   if (bate("camera")) nextCam();
   if (bate("respawn")) respawn();

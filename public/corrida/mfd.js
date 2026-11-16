@@ -5,7 +5,7 @@
 //
 // As SETAS são do MFD (sem modo ajustar): ↑↓ escolhem a linha, ←→ mudam o valor (ou a página nas páginas sem linhas); mexer nelas abre o painel e
 // reinicia os 3 s. Tudo remapeável na tela Controles (teclas.js / teclas-ui.js). Tab e Start só abrem e fecham o painel.
-import { E, $, me, carOf, store, toast } from "./estado.js";
+import { E, $, me, carOf, store, toast, PISTAS } from "./estado.js";
 import { race } from "./jogo.js";
 import { alternarPedido, escolherComposto, cancelarPedido, pedirNoBox, jogosDe, textoJogos } from "./box.js";
 import { set } from "./hud-painel.js";
@@ -13,7 +13,7 @@ import { acoesDaTecla, teclasDe, nomeDaTecla, nomeDoBotao, botoesDe, ui } from "
 import { clima } from "./clima.js";
 
 const M = () => window.HudMfd, F = () => window.F1Regras;
-export const mfd = { aberto: true, pagina: "pneus", lista: [], linha: {}, ultimo: 0, entrada: "teclado" };
+export const mfd = { aberto: true, pagina: "resumo", lista: [], linha: {}, ultimo: 0, entrada: "teclado" };
 // o que controles.js registra (a câmera e a torre são dele e do hud.js): { camera(d), torre(): alterna compacta/completa }
 import { estiloHud, definirEstiloHud, ESTILOS_HUD } from "./hud-telemetria.js";
 export const acoes = { camera: null, cameraAjuste: null, camNome: () => "", radioRival: null, torreCompacta: () => true, torreAlternar: null, mapaPerto: () => false, mapaAlternar: null };
@@ -28,6 +28,7 @@ const guardarAberto = () => { try { store.set("corrida:mfd", mfd.aberto); } catc
 const CARRO = (cls) => `<svg class="mp-carro ${cls}" viewBox="0 0 90 120" aria-hidden="true"><rect class="mp-asa" x="18" y="2" width="54" height="7" rx="2"/><rect class="mp-roda" data-r="w0" x="3" y="14" width="19" height="28" rx="5"/><rect class="mp-roda" data-r="w1" x="68" y="14" width="19" height="28" rx="5"/><rect class="mp-roda" data-r="w2" x="2" y="72" width="21" height="30" rx="5"/><rect class="mp-roda" data-r="w3" x="67" y="72" width="21" height="30" rx="5"/><path class="mp-corpo" data-r="corpo" d="M42 9h6l2 22 9 9v22l-5 8 3 28H33l3-28-5-8V40l9-9z"/><rect class="mp-asa" data-r="asaT" x="16" y="108" width="58" height="8" rx="2"/></svg>`;
 // os ícones das abas (como no jogo: um por página)
 const ICONE = {
+  resumo: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
   pneus: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>', danos: '<path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/>',
   ers: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>', box: '<path d="M4 21V4M4 5h13l-2 4 2 4H4"/>', tempos: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 2.5h5"/>',
   classificacao: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>', ajustes: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
@@ -36,6 +37,38 @@ const ICONE = {
 const icone = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONE[id] || ""}</svg>`;
 const linhasDe = (id) => `<div class="mr-lista" data-linhas="${id}"></div>`;
 const HTML = {
+  // (2026-11-16, o MFD novo, pelo conceito do Thiago: "um painel vivo, não um menu: bater o olho por um segundo e entender a corrida")
+  // centro: o carro com os quatro pneus (o jogo mede UM conjunto: os quatro mostram a mesma vida e o mesmo estado de temperatura) e a condição
+  // geral num anel; esquerda: a estratégia (a contagem muda com a situação) e os jogos; direita: os danos (clicável: abre a página Danos) e o clima;
+  // rodapé: o líder, o carro da frente e o de trás, e o mapa com você e o líder. Nada inventado: sem temperatura do ar e da pista (o jogo não mede).
+  resumo: `<div class="rs">
+    <div class="rs-col">
+      <button type="button" class="rs-card rs-pneu" data-ir="box" data-r="rpCard"><header><span class="rs-ico">⟳</span><b data-r="rpTit">PNEU ATUAL</b></header>
+        <div class="rs-pneu-corpo"><svg class="rs-roda" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" class="rs-borracha"/><circle cx="40" cy="40" r="27" class="rs-faixa" data-r="rpFaixa"/><circle cx="40" cy="40" r="13" class="rs-cubo"/></svg>
+        <div class="rs-pneu-txt"><b class="rs-chip" data-r="rpChip">MÉDIO</b><strong><span data-r="rpNum">—</span><small data-r="rpUn"></small></strong><em data-r="rpSub"></em></div></div>
+        <i class="rs-prog"><i data-r="rpProg"></i></i></button>
+      <button type="button" class="rs-card rs-jogos" data-ir="box"><header><span class="rs-ico">◎</span><b>JOGOS DE PNEU</b></header>
+        <div class="rs-jg">${["duro", "medio", "macio", "intermediario", "chuva"].map((c) => `<span class="rs-jg-i" data-r="jg${c}"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="14" class="tr"/><circle cx="18" cy="18" r="14" class="vl" data-r="jgv${c}"/></svg><b data-r="jgn${c}">0</b></span>`).join("")}</div></button>
+    </div>
+    <div class="rs-meio">
+      <svg class="rs-anel" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" class="tr"/><circle cx="100" cy="100" r="92" class="vl" data-r="rcAnel"/></svg>
+      <svg class="rs-carro" viewBox="0 0 90 150" aria-hidden="true"><rect x="16" y="4" width="58" height="9" rx="3" class="asa"/><path d="M45 8 L53 40 L56 92 L62 128 L28 128 L34 92 L37 40 Z" class="corpo" data-r="rcCorpo"/><rect x="20" y="132" width="50" height="10" rx="3" class="asa"/>${[[4, 26], [70, 26], [4, 104], [70, 104]].map(([x, y], i) => `<rect x="${x}" y="${y}" width="16" height="26" rx="4" class="roda" data-r="rcR${i}"/>`).join("")}</svg>
+      ${["ed", "dd", "et", "dt"].map((k, i) => `<div class="rs-tp rs-tp${i}"><b data-r="tpV${i}">—</b><small data-r="tpT${i}">—</small><i><i data-r="tpB${i}"></i></i></div>`).join("")}
+      <div class="rs-cond"><small>CONDIÇÃO</small><b data-r="rcCond">—</b></div>
+    </div>
+    <div class="rs-col">
+      <button type="button" class="rs-card rs-dano" data-ir="danos" data-r="rdCard"><header><span class="rs-ico alerta">▲</span><b>DANO NO CARRO</b></header>
+        <div class="rs-dano-corpo"><svg viewBox="0 0 120 50" aria-hidden="true"><path d="M8 25 h18 l8 -10 h52 l8 10 h18 M8 25 h18 l8 10 h52 l8 -10 h18" class="sil" data-r="rdSil"/></svg><div><strong data-r="rdPct">100%</strong><i class="rs-barra"><i data-r="rdBarra"></i></i><em data-r="rdSub">sem danos</em></div></div></button>
+      <div class="rs-card rs-clima"><header><span class="rs-ico">☁</span><b>CONDIÇÕES DA PISTA</b></header>
+        <div class="rs-clima-corpo"><div><span data-r="rlIco">☀</span><b data-r="rlEstado">Seco</b></div><div><small>ÁGUA NA PISTA</small><b data-r="rlAgua">0%</b></div><div><small>PREVISÃO</small><b data-r="rlPrev">—</b></div></div></div>
+    </div>
+    <div class="rs-rodape">
+      <div class="rs-lider"><small>LÍDER DA CORRIDA</small><div><b class="rs-num">1</b><span><strong data-r="rlNome">—</strong><em data-r="rlEq"></em></span><img data-r="rlLogo" alt="" hidden></div></div>
+      <div class="rs-gap frente"><small>À SUA FRENTE</small><strong data-r="gfT">—</strong><em data-r="gfN"></em></div>
+      <div class="rs-gap tras"><small>ATRÁS DE VOCÊ</small><strong data-r="gtT">—</strong><em data-r="gtN"></em></div>
+      <div class="rs-mapa"><svg viewBox="0 0 200 90" aria-hidden="true"><path class="pista" data-r="mpPista"/><circle r="4" class="lid" data-r="mpLid"/><circle r="5" class="eu" data-r="mpEu"/></svg><em data-r="mpNome"></em></div>
+    </div>
+  </div>`,
   // como a página de pneus do jogo da EA (F1 24): o carro no meio com as 4 rodas coloridas pela temperatura e um anel de desgaste em cada canto
   // (o jogo daqui mede UM conjunto de pneus, então os quatro anéis mostram o mesmo valor); embaixo o composto, a temperatura e a previsão
   // só o essencial, grande: o pneu de agora com a vida, quantas voltas ainda aguenta e o próximo pneu (B abre o Box)
@@ -231,7 +264,7 @@ export function montarMfd() {
   if (raiz) return;
   raiz = $("hMfd"); if (!raiz) return;
   mfd.aberto = lerAberto(); mexeu(); // (a contagem dos 3 s começa agora)
-  raiz.innerHTML = `<div class="mfd-topo"><b class="mfd-nome" data-r="nome">PNEUS</b><div class="mfd-abas" data-r="abas" role="tablist"></div><button class="mfd-x" data-r="fechar" aria-label="Fechar o MFD" title="Fechar o MFD">▾</button></div>
+  raiz.innerHTML = `<div class="mfd-topo"><i class="mfd-marca" aria-hidden="true"></i><b class="mfd-nome" data-r="nome">RESUMO</b><div class="mfd-abas" data-r="abas" role="tablist"></div><div class="mfd-pos"><span><b data-r="posN">—</b><small data-r="posT">/—</small></span><span class="mfd-volta">VOLTA <b data-r="voltaN">—</b><small data-r="voltaT">/—</small></span></div><button class="mfd-x" data-r="fechar" aria-label="Fechar o MFD" title="Fechar o MFD">▾</button></div>
     <div class="mfd-sug" data-r="sug" hidden role="alert"><small>BOX SUGERIDO</small><div class="sg-linha"><b class="mp-bola" data-r="sgLetra">M</b><strong data-r="sgNome">Médio</strong><span class="sg-cont" data-r="sgCont">10</span></div><em data-r="sgMotivo"></em><p class="sg-dica" data-r="sgDica"></p><i class="sg-barra"><s data-r="sgBarra"></s></i></div><div class="mfd-corpo">${Object.entries(HTML).map(([id, h]) => `<section class="mfd-pg" data-pg="${id}" hidden>${h}</section>`).join("")}</div>
     <div class="mfd-dicas" data-r="dicas"></div>`;
   const q = (sel, ctx = raiz) => ctx.querySelector(sel);
@@ -251,6 +284,7 @@ export function montarMfd() {
     const b = e.target.closest("button, .mr"); if (!b) return; mexeu();
     if (b.classList.contains("mfd-x")) return abrir(false);
     if (b.dataset.pg) return irPara(b.dataset.pg);
+    if (b.dataset.ir) return irPara(b.dataset.ir);
     if (b.classList.contains("bx-btn")) { digitoPneu(b.dataset.c); return; }
     const lin = b.closest(".mr");
     if (lin) { mfd.linha[mfd.pagina] = +lin.dataset.i; const d = b.dataset.d; if (d) linhasDaPagina()[+lin.dataset.i].mudar(+d); atualizarLinhas(); }
@@ -353,7 +387,7 @@ function listaDePaginas(ctx) {
   const chave = lista.join();
   if (chave !== abas) {
     abas = chave;
-    refs.mfd.abas.innerHTML = lista.map((id, i) => `<button type="button" role="tab" data-pg="${id}" title="${M().nomeDaPagina(id)}" aria-label="${M().nomeDaPagina(id)}">${icone(id)}</button>`).join("");
+    refs.mfd.abas.innerHTML = lista.map((id, i) => `<button type="button" role="tab" data-pg="${id}" class="${id === "ajustes" ? "sec" : ""}" title="${M().nomeDaPagina(id)}" aria-label="${M().nomeDaPagina(id)}">${icone(id)}<span>${M().nomeDaPagina(id)}</span></button>`).join("");
   }
 }
 // ---------- a sugestão de box (estrategia-box.js decide; aqui só aparece o cartão) ----------
@@ -398,6 +432,7 @@ export function atualizarMfd(ctx) {
   if (mfd.aberto && t - mfd.ultimo > RECOLHE_MS) abrir(false, false);
   { const bt = $("bMfd"), B = race.box, rot = bt && bt.querySelector("span"); if (rot) set(rot, "t", B && B.pedido && !B.fase ? "BOX " + nomeDoPedido(B.pedido) : B && B.fase ? "NO BOX" : "MFD"); if (bt) set(bt, "c", "mfd-botao" + (B && (B.pedido || B.fase) ? " pedido" : "")); } // fechado, o pedido de box segue à vista no botão
   raiz.dataset.entrada = mfd.entrada;
+  { const m = ctx.m, eq = m && window.F1Pilotos ? window.F1Pilotos.EQUIPES[m.equipe] : null, cor = eq ? eq.cor : (m && m.color) || "#e10600"; if (raiz.dataset.cor !== cor) { raiz.dataset.cor = cor; raiz.style.setProperty("--equipe", cor); } } // (o tema é sempre o da equipe)
   const rr = $("race"); if (rr && rr.dataset.entrada !== mfd.entrada) rr.dataset.entrada = mfd.entrada;
   Object.assign(LEITURA, ctx);
   listaDePaginas(ctx);
@@ -405,17 +440,75 @@ export function atualizarMfd(ctx) {
   if (paginaVista !== mfd.pagina) {
     paginaVista = mfd.pagina;
     for (const [id, s] of Object.entries(refs.pg)) s.hidden = id !== mfd.pagina;
+    raiz.classList.toggle("largo", mfd.pagina === "resumo");
     set(refs.mfd.nome, "t", M().nomeDaPagina(mfd.pagina));
     for (const b of refs.mfd.abas.children) { const on = b.dataset.pg === mfd.pagina; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); }
   }
+  { const m = ctx.m, pos = m ? ctx.st.findIndex((x) => x.id === m.id) + 1 : 0; set(refs.mfd.posN, "t", pos ? "P" + pos : "—"); set(refs.mfd.posT, "t", "/" + ctx.st.length); set(refs.mfd.voltaN, "t", m ? Math.min(E.S.config.voltas, (m.laps || 0) + 1) : "—"); set(refs.mfd.voltaT, "t", "/" + E.S.config.voltas); }
   (ATU[mfd.pagina] || (() => {}))(ctx, refs.r[mfd.pagina]);
   atualizarLinhas();
 }
 
 const F1U = () => window.F1Regras;
+let mapaPista = null, mapaEsc = null;
+function mapaDoResumo(r, idLider) {
+  const tr = race.tr; if (!tr || !r.mpPista) return;
+  if (mapaPista !== tr) {
+    mapaPista = tr; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const p of tr.pts) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+    const k = Math.min(188 / (x1 - x0 || 1), 80 / (y1 - y0 || 1)), ox = (200 - (x1 - x0) * k) / 2, oy = (90 - (y1 - y0) * k) / 2;
+    mapaEsc = (x, y) => [ox + (x - x0) * k, oy + (y - y0) * k];
+    const passo = Math.max(1, Math.floor(tr.n / 240)); let d = ""; for (let i = 0; i < tr.n; i += passo) { const [a, b] = mapaEsc(tr.pts[i].x, tr.pts[i].y); d += (i ? "L" : "M") + a.toFixed(1) + " " + b.toFixed(1); }
+    r.mpPista.setAttribute("d", d + "Z"); set(r.mpNome, "t", (PISTAS[E.S.config.pista] ? PISTAS[E.S.config.pista].name : "").toUpperCase());
+  }
+  const c = race.car; if (c) { const [a, b] = mapaEsc(c.x, c.y); r.mpEu.setAttribute("cx", a.toFixed(1)); r.mpEu.setAttribute("cy", b.toFixed(1)); }
+  const g = idLider && race.ghosts.get(idLider); r.mpLid.style.display = g ? "" : "none"; if (g) { const [a, b] = mapaEsc(g.x, g.y); r.mpLid.setAttribute("cx", a.toFixed(1)); r.mpLid.setAttribute("cy", b.toFixed(1)); }
+}
 const pc = (v) => Math.round(Math.max(0, Math.min(1, v)) * 100);
 const corRodas = (r, nivel) => { for (const k of ["w0", "w1", "w2", "w3"]) set(r[k], "c", "mp-roda " + nivel); };
 const ATU = {
+  resumo(ctx, r) {
+    const m = ctx.m, pn = race.pneu, F = F1U(), M_ = M(); if (!m || !pn) return;
+    const e = M_.estadoDoPneu(pn, F), tipo = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], B = race.box, j = ctx.janela, voltaAtual = Math.min(E.S.config.voltas, (m.laps || 0) + 1);
+    const COR = { bom: "#2ee08a", medio: "#ffb02e", baixo: "#ff6a3d", fim: "#ff3d4a" };
+    // o cartão da estratégia: a contagem muda com a situação (no box; box pedido; a janela chegando; senão, quanto o pneu de agora aguenta)
+    let tit = "PNEU ATUAL", chip = tipo, num = "—", un = "", sub = "", prog = e.vida / 100, alerta = false;
+    const prox = B && !B.fase ? (B.pedido && F.PNEUS[B.pedido] ? F.PNEUS[B.pedido] : F.PNEUS[proximo()]) : null;
+    if (B && B.fase) { tit = "NO BOX"; num = "BOX"; sub = "parada em andamento"; prog = 1; }
+    else if (B && B.pedido) { tit = "BOX PEDIDO"; chip = prox || tipo; num = "BOX"; sub = "nesta passagem pelo box"; alerta = true; }
+    else if (j && j.precisa && Number.isFinite(j.abre) && prox) { const faltam = Math.max(0, j.abre - voltaAtual); tit = "PRÓXIMO PNEU"; chip = prox; num = faltam === 0 ? "AGORA" : String(faltam); un = faltam === 0 ? "" : faltam === 1 ? " volta" : " voltas"; sub = faltam === 0 ? "a janela de box está aberta" : "até a janela de box"; alerta = faltam <= 1; prog = Math.max(0, Math.min(1, 1 - faltam / 10)); }
+    else { const v = ctx.tp, n = v ? Math.max(0, Math.floor(v.voltas)) : null; num = e.nivel === "fim" ? "NO LIMITE" : n == null || v.voltas >= 90 ? `${e.vida}%` : String(n); un = e.nivel === "fim" || n == null || v.voltas >= 90 ? "" : n === 1 ? " volta" : " voltas"; sub = e.nivel === "fim" ? "faça a parada" : n == null || v.voltas >= 90 ? "de vida" : "o pneu ainda aguenta"; alerta = e.nivel === "fim"; }
+    set(r.rpTit, "t", tit); set(r.rpChip, "t", chip.nome.toUpperCase()); set(r.rpChip, "style", `--c:${chip.cor}`); set(r.rpFaixa, "style", `stroke:${chip.cor}`);
+    set(r.rpNum, "t", num); set(r.rpUn, "t", un); set(r.rpSub, "t", sub); set(r.rpProg, "w", Math.round(prog * 100) + "%"); set(r.rpProg, "style", `background:${chip.cor}`);
+    set(r.rpCard, "c", "rs-card rs-pneu" + (alerta ? " alerta" : ""));
+    // os jogos: quantos sobram de cada composto; o anel é a vida do jogo que está no carro, cheio nos guardados (novos), vazio sem jogo
+    const jogos = jogosDe(m);
+    for (const c of ["duro", "medio", "macio", "intermediario", "chuva"]) {
+      const n = jogos[c] ?? 0, atual = pn.composto === c, frac = atual ? e.vida / 100 : n > 0 ? 1 : 0;
+      set(r["jgn" + c], "t", n); set(r["jg" + c], "c", "rs-jg-i" + (n <= 0 && !atual ? " vazio" : "") + (atual ? " atual" : "")); set(r["jg" + c], "style", `--c:${F.PNEUS[c].cor}`);
+      set(r["jgv" + c], "style", `stroke-dasharray:${(frac * 88).toFixed(1)} 88`);
+    }
+    // o centro: os quatro pneus (o mesmo conjunto) e a condição geral do carro
+    const dano = Math.max(0, Math.min(100, m.dano || 0)), cond = Math.round(100 - dano), corT = e.temp === "Ideal" ? "#2ee08a" : e.temp === "Frio" ? "#5fc8ff" : "#ff6a3d";
+    for (let i = 0; i < 4; i++) { set(r["tpV" + i], "t", e.vida + "%"); set(r["tpT" + i], "t", e.temp); set(r["tpB" + i], "w", Math.round(e.tempPct * 100) + "%"); set(r["tpB" + i], "style", `background:${corT}`); set(r["rcR" + i], "style", `fill:${COR[e.nivel]}`); }
+    set(r.rcCond, "t", cond + "%"); set(r.rcAnel, "style", `stroke-dasharray:${(cond / 100 * 578).toFixed(0)} 578;stroke:${cond > 66 ? "var(--equipe,#2ee08a)" : cond > 33 ? "#ffb02e" : "#ff3d4a"}`);
+    // os danos (clicável: abre a página Danos)
+    const des = Math.round(F.efeitoDoDano(dano).final * 100), b = m.ultimaBatida;
+    set(r.rdPct, "t", cond + "%"); set(r.rdBarra, "w", cond + "%"); set(r.rdBarra, "c", cond > 66 ? "bom" : cond > 33 ? "medio" : "baixo");
+    set(r.rdSub, "t", dano < 1 ? "sem danos" : `${des}% do desempenho${b ? ` · última batida ${b.nivel === "media" ? "média" : b.nivel}` : ""}`);
+    set(r.rdCard, "c", "rs-card rs-dano" + (dano >= 33 ? " alerta" : "")); set(r.rdSil, "c", "sil " + (cond > 66 ? "bom" : cond > 33 ? "medio" : "baixo"));
+    // o clima: o estado, a água e a previsão (sem número inventado: o jogo não mede a temperatura do ar e da pista)
+    const agua = clima.agua || 0, estado = agua > 0.45 ? "Chuva" : agua > 0.15 ? "Molhado" : clima.chuva > 0.05 ? "Garoa" : "Seco";
+    set(r.rlEstado, "t", estado); set(r.rlIco, "t", estado === "Seco" ? "☀" : estado === "Garoa" ? "🌦" : "🌧"); set(r.rlAgua, "t", Math.round(agua * 100) + "%");
+    const S = E.S, mud = S.clima && S.clima.chove && F.proximaMudanca && clima.t >= 0 ? F.proximaMudanca(S.clima, clima.t) : null;
+    set(r.rlPrev, "t", !mud ? "Estável" : mud.tipo === "comeca" ? "Chuva chegando" : mud.tipo === "para" ? "Chuva parando" : "Mudando");
+    // o rodapé: o líder, os intervalos e o mapa
+    const lid = ctx.st[0], eqs = window.F1Pilotos ? window.F1Pilotos.EQUIPES : {};
+    if (lid) { const p = lid.p, eq = eqs[p.equipe]; set(r.rlNome, "t", lid.id === m.id ? "VOCÊ" : (p.nomeCompleto || p.name || "").split(" ").slice(-1)[0].toUpperCase()); set(r.rlEq, "t", eq ? eq.nome : ""); if (p.equipe && r.rlLogo.dataset.eq !== p.equipe) { r.rlLogo.dataset.eq = p.equipe; r.rlLogo.src = (window.logoF1 || ((i) => "/api/corrida/logo/" + i))(p.equipe); r.rlLogo.hidden = false; } }
+    const nome = (id) => { const x = ctx.st.find((y) => y.id === id); return x ? (x.p.nomeCompleto || x.p.name || "").split(" ").slice(-1)[0].toUpperCase() : ""; }, i = ctx.int || {};
+    set(r.gfT, "t", i.frente ? M_.intervalo(i.frente.seg, "-") + " s" : "—"); set(r.gfN, "t", i.frente ? nome(i.frente.id) : "");
+    set(r.gtT, "t", i.tras ? M_.intervalo(i.tras.seg, "+") + " s" : "—"); set(r.gtN, "t", i.tras ? nome(i.tras.id) : "");
+    mapaDoResumo(r, lid && lid.id !== m.id ? lid.id : null);
+  },
   pneus(ctx, r) {
     const pn = race.pneu; if (!pn) return;
     const F = F1U(), e = M().estadoDoPneu(pn, F), tipo = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], B = race.box;

@@ -1,5 +1,12 @@
 [
   {
+    "id": "2026-11-16-hitbox",
+    "data": "2026-11-16",
+    "itens": [
+      "Batida entre carros só quando os carros encostam de verdade: a área de colisão era bem mais larga que o carro desenhado (os toques entre carros caíram pela metade)"
+    ]
+  },
+  {
     "id": "2026-11-16-rivalidade",
     "data": "2026-11-16",
     "itens": [

@@ -1,6 +1,6 @@
 # Vila da Galera: o foco agora é a Corrida F1
 
-Site de jogos com os amigos, tudo em português. Hoje o projeto principal é **só a Corrida (F1 3D)**. Os outros jogos (Vila, Carreira de Treinador, Leilão, Pokémon e os de mesa) continuam no ar, mas o mapa deles saiu daqui para não gastar tokens: está em [`docs/mapa-completo.md`](docs/mapa-completo.md), o `CLAUDE.md` antigo inteiro. Quando for mexer num desses jogos, leia só o trecho dele lá (com grep) e, se o trabalho virar frequente, traga um resumo para cá.
+Site de jogos com os amigos, tudo em português. Hoje o projeto principal é **só a Corrida (F1 3D)**. Os outros jogos (Vila, Carreira de Treinador, Leilão, Pokémon e os de mesa) continuam no ar, mas o mapa deles saiu daqui para não gastar tokens: está em [`docs/mapa-completo.md`](docs/mapa-completo.md), o `CLAUDE.md` antigo inteiro. O guia "onde mexer" da F1 (arquivo e variável de cada pedido comum) está em [`docs/mapa-f1.md`](docs/mapa-f1.md). Quando for mexer num desses jogos, leia só o trecho dele lá (com grep) e, se o trabalho virar frequente, traga um resumo para cá.
 
 ## Como trabalhar (regras do Thiago)
 

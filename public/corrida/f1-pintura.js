@@ -1323,8 +1323,11 @@ const VERNIZ_CEU = 1.2;        // quanto a camada amplia o reflexo do céu
 // "estrelas" piscando nos carros)
 const VERNIZ_TETO_SOL = 0.03;  // o brilho direto do sol na camada não passa disso
 const VERNIZ_TETO_BASE = 0.14;  // e o da tinta por baixo, de dia
-export function aplicarVerniz(sh) {
-  sh.uniforms.uVerniz = VERNIZ; sh.uniforms.uMetal = METAL;
+// (2026-11-16, o Thiago: "quero o carro com acabamento cromado, brilhoso igual o capacete, mas só o meu") `cromo`: só o carro do jogador (f1.js, o do
+// volante vivo): sem o acetinado e sempre metálico espelhado (o cromado do capacete: metalness 0,92, rugosidade 0,12), de dia e de noite
+const CROMO_LIGADO = { value: 1 }, CROMO_SEM_VERNIZ = { value: 0 };
+export function aplicarVerniz(sh, cromo = false) {
+  sh.uniforms.uVerniz = cromo ? CROMO_SEM_VERNIZ : VERNIZ; sh.uniforms.uMetal = cromo ? CROMO_LIGADO : METAL;
   sh.fragmentShader = VERNIZ_DECL + sh.fragmentShader
     .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
 #ifdef NOVO
@@ -1338,9 +1341,9 @@ export function aplicarVerniz(sh) {
 #else
   float metalTinta = uMetal;
 #endif
-  roughnessFactor = mix(roughnessFactor, ${METAL_ASPERO.toFixed(2)}, metalTinta);`)
+  roughnessFactor = mix(roughnessFactor, ${(cromo ? 0.12 : METAL_ASPERO).toFixed(2)}, metalTinta);`)
     .replace("#include <metalnessmap_fragment>", `#include <metalnessmap_fragment>
-  metalnessFactor = mix(metalnessFactor, ${METAL_TINTA.toFixed(2)}, metalTinta);`)
+  metalnessFactor = mix(metalnessFactor, ${(cromo ? 0.92 : METAL_TINTA).toFixed(2)}, metalTinta);`)
     .replace("#include <lights_physical_fragment>", `#include <lights_physical_fragment>
 #ifdef USE_CLEARCOAT
   material.clearcoat *= vern * ${VERNIZ_CAMADA.toFixed(2)};

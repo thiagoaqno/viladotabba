@@ -95,9 +95,9 @@ function contratarEngenheiro(s, area, nivel) {
   s.engenheiros[area] = nivel; return s;
 }
 // O desenvolvimento do carro: até BONUS_POR_TEMPORADA pontos por temporada, que se acumulam de um ano para o outro (até BONUS_MAX). O preço
-// sobe dentro da temporada (12, 18, 24, 30) e recomeça na seguinte.
+// sobe dentro da temporada (20, 30) e recomeça na seguinte (2026-11-16: eram 12, 18, 24, 30, com 4 pontos por ano).
 const limiteDoAno = (ano) => Math.min(Equipes.BONUS_MAX, Equipes.BONUS_POR_TEMPORADA * Math.max(1, ano || 1));
-const custoDoDesenvolvimento = (bonus, ano) => 12 + Math.max(0, bonus - (limiteDoAno(ano) - Equipes.BONUS_POR_TEMPORADA)) * 6;
+const custoDoDesenvolvimento = (bonus, ano) => 20 + Math.max(0, bonus - (limiteDoAno(ano) - Equipes.BONUS_POR_TEMPORADA)) * 10; // (2026-11-16: era 12 + 6 por ponto; a progressão mais lenta)
 function desenvolver(s) {
   if (s.bonus >= limiteDoAno(s.ano)) throw Error(s.bonus >= Equipes.BONUS_MAX ? "O carro atingiu o limite de desenvolvimento." : "O carro já evoluiu tudo o que dava nesta temporada.");
   if (s.paddock && s.paddock.desenvolvimentoGratis) s.paddock.desenvolvimentoGratis = false; // (o marco do companheiro parceiro: paddock.js MARCOS)
@@ -119,8 +119,9 @@ function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipe
   const rodadas = Math.max(0, (ano - 1) * tamanho + gp), ideal = pista ? asaIdeal(pista) : null;
   for (const [id, equipe] of Object.entries(Equipes.EQUIPES)) {
     if (humanos.has(id)) continue;
-    // (2026-11-15, o Thiago: "não deve ser aleatório, tem que fazer sentido") quem tem mais dinheiro evolui antes: as 3 grandes no ritmo
-    // cheio, as do meio com 1/4 de temporada de atraso, as pequenas com meia temporada. As peças seguem a conta de prioridadeDaPeca.
+    // (2026-11-15, o Thiago: "não deve ser aleatório, tem que fazer sentido") o momento do ponto na temporada sai do tamanho da equipe: o `atraso` entra
+    // SOMANDO na conta, então as pequenas recebem o ponto mais cedo (meia temporada) e as do meio 1/4 antes das 3 grandes; no ano todas somam o mesmo
+    // (2026-11-16, corrigido o comentário, que dizia o contrário; o Thiago quer as pequenas acompanhando). As peças seguem prioridadeDaPeca.
     const atraso = Math.floor(tamanho * [0, 0.25, 0.5][faixaDe(id)]);
     const pontos = Math.min(Equipes.BONUS_MAX, Math.floor((rodadas * Equipes.BONUS_POR_TEMPORADA + atraso) / tamanho));
     const m = { ...equipe.padrao }, limite = equipe.orcamento + pontos; // (2026-11-15: os níveis altos custam mais; o rival gasta do mesmo jeito que você)

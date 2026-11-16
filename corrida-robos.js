@@ -318,7 +318,7 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.04, medio: 0.025, dificil: 0.025 }, // (2026-11-16, o Thiago: "os bots no difícil estão insanos", e o médio junto para não andar mais que o difícil: os dois eram 0; o fácil segue 0,04)
+const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0 }, // (2026-11-16: os 2,5% de folga no médio e no difícil foram desfeitos no mesmo dia: o difícil insano era só em Baku, pelo ajuste do qualify de lá; nas outras pistas o Thiago passou a fazer a pole sempre)
   FOLGA_F1_ANTIGA = { ...FOLGA_F1 }, FOLGA_F1_REAL = { facil: 0.13, medio: 0.08, dificil: 0 }; // (Formula GP: os de antes de #665, afinados na escala real) // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
 // por nível, a fração do limite das curvas e da frenagem que o robô usa, por cima do nível que dá o ideal. 1 é o limite do pneu:
 // o perfil (Piloto.perfilDoNivel) para nele, então acima de 1 não muda nada.

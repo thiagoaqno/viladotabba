@@ -18,6 +18,7 @@
 // compartilhado) porque muda de carro para carro; o composto do pneu vira uma faixa na lateral do pneu (shader do pneu).
 import * as THREE from "three";
 import { desenharMarca } from "./f1-marcas.js";
+import { patrocinioNoHalo } from "./f1-capacetes.js";
 
 export const K = 1024 / 4.4, FW = 1024, FH = 1152;
 // A folha sai em 2× no carro do jogador (e na garagem) e em 1× nos outros, para um grid de 20 não pesar na memória: ESC vale durante a pintura.
@@ -999,9 +1000,11 @@ const HALOS = {
   cadillac: ["", "3M", "", "", ""],
 };
 const TEXTURAS_HALO = new Map();
-export function texturaDoHalo(equipe) {
+// `escolha` (só o carro do jogador): { lugares: [5 ids], fundo } do editor do capacete; "-" deixa o lugar liso, vazio mantém a marca da equipe
+export function texturaDoHalo(equipe, escolha = null) {
   if (!HALOS[equipe] || anoEmUso() !== 2026) return null; // (as marcas do halo são as das equipes de 2026: nas outras temporadas, o halo fica liso)
-  if (TEXTURAS_HALO.has(equipe)) return TEXTURAS_HALO.get(equipe);
+  const meus = escolha?.lugares?.some(Boolean) ? escolha.lugares : null, chave = meus ? equipe + JSON.stringify(escolha) : equipe;
+  if (TEXTURAS_HALO.has(chave)) return TEXTURAS_HALO.get(chave);
   const cv = document.createElement("canvas"); cv.width = 2048; cv.height = 256;
   const ctx = cv.getContext("2d"); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -1009,6 +1012,7 @@ export function texturaDoHalo(equipe) {
   ctx.fillStyle = ({ alpine: "#182356", haas: "#151a21", audi: "#151a20" })[equipe] || "#fff";
   HALOS[equipe].forEach((nome, i) => {
     const x = equipe === "mclaren" ? [260, 600, 1024, 1448, 1788][i] : 180 + i * 422, central = i === 2;
+    if (meus?.[i]) { if (meus[i] !== "-") { ctx.save(); patrocinioNoHalo(ctx, meus[i], x, 330, 120, escolha.fundo || "escuro"); ctx.restore(); } return; } // (a marca escolhida pelo jogador)
     ctx.save(); ctx.translate(x, 128); ctx.scale(1, 0.9);
     if (central && equipe === "mercedes") {
       ctx.fillStyle = "#1ccfb7"; ctx.fillRect(-150, -100, 300, 18);
@@ -1053,7 +1057,7 @@ export function texturaDoHalo(equipe) {
     ctx.restore();
   });
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-  t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.userData.baseEscura = equipe === "cadillac" || equipe === "ferrari" || equipe === "mclaren" || equipe === "williams" || equipe === "mercedes" || equipe === "aston-martin" || equipe === "racing-bulls"; t.userData.faceAudi = equipe === "audi"; t.userData.baseRosa = equipe === "alpine"; TEXTURAS_HALO.set(equipe, t); return t;
+  t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.userData.baseEscura = equipe === "cadillac" || equipe === "ferrari" || equipe === "mclaren" || equipe === "williams" || equipe === "mercedes" || equipe === "aston-martin" || equipe === "racing-bulls"; t.userData.faceAudi = equipe === "audi"; t.userData.baseRosa = equipe === "alpine"; TEXTURAS_HALO.set(chave, t); return t;
 }
 export function aplicarHalo(sh, textura) {
   sh.uniforms.haloPatrocinios = { value: textura };

@@ -43,6 +43,10 @@ function abrir(caminho = process.env.DB_PATH || path.join(__dirname, "dados", "g
   if (caminho !== ":memory:") fs.mkdirSync(path.dirname(caminho), { recursive: true });
   const db = new DatabaseSync(caminho);
   if (caminho !== ":memory:") db.exec("PRAGMA journal_mode = WAL");
+  // (2026-11-16) com WAL, o "NORMAL" não espera o disco a cada gravação (só no checkpoint) e o banco continua íntegro se o programa cair. Medido no
+  // PC do Thiago: gravar a volta (3.000 pontos) levava até 117 ms e o recorde com os setores até 49 ms, no meio da corrida, e o servidor parava de
+  // mandar as posições dos robôs (as travadinhas do programa do PC); no NORMAL, 2,6 ms e 1,1 ms no pior caso.
+  if (caminho !== ":memory:") db.exec("PRAGMA synchronous = NORMAL");
   db.exec("PRAGMA foreign_keys = ON");
   migrar(db);
   banco = db;

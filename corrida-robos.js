@@ -740,7 +740,9 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       // robô não parte para a manobra: fica atrás guardando energia. Na garoa e na chuva a bateria não conta (passa quando quiser), e um carro quase
       // parado à frente sempre pode ser passado.
       const molhado = room.clima ? F1.climaEm(room.clima, now).agua > 0.1 : false, comBateria = !ia.ers || ia.ers.carga >= minimoParaAtacar(p);
-      if (querPassar && chega && foraDaFreada && (comBateria || molhado || lento)) {
+      // (2026-11-16, Catar: "fiquei numa velocidade bem reduzida na frente e parecia um safety car, ninguém me ultrapassava") um carro da frente bem mais
+      // lento do que o robô andaria sozinho (`preso`: 12 u/s ou mais abaixo do ritmo livre) se passa sem bateria: esperar carga atrás dele só fazia a fila
+      if (querPassar && chega && foraDaFreada && (comBateria || molhado || lento || preso)) {
         // O lado leva em conta a sequência de curvas; em Mônaco também pode disputar por fora quando a faixa está livre.
         const lados = ordemDaPassagem(pf, i, alvo.latOutro, MARG, baseLat, dentro);
         const folgaFora = lento || dFreio === Infinity || tAlcance < tFreio * estilo.antec * 0.8;

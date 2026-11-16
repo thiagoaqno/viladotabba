@@ -7,6 +7,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { temDesenho, folhaDaEquipe, corDoNumero, numPosDe, carbonoDe, texturaDasLetrasDoPneu, texturaDosDigitos, logosProntos, FAIXAS, aroDaRoda,
   LIV_VERT_DECL, LIV_VERT_MAIN, LIV_FRAG_DECL, LIV_FRAG_MAIN, aplicarVerniz, limitarBrilhoCarro, texturaDoHalo, aplicarHalo, texturaDoCockpit, aplicarCockpit, SOL_FRAG_DECL, SOL_FRAG_MAIN, PNEU_VERT_DECL, PNEU_VERT_MAIN, PNEU_FRAG_DECL, PNEU_FRAG_MAIN } from "./f1-pintura.js";
+import { lerHalo } from "./f1-capacetes.js";
 import { construir2026 } from "./f1-2026.js";
 import { construir2022 } from "./f1-2022.js";
 import { texturaUV, temPinturaUV } from "./f1-uv.js";
@@ -48,7 +49,7 @@ export const f1Pronto = Promise.all([carga(atual, false).pronto, carga(atual, tr
 // f1-pintura.js) o corpo ganha, no lugar das duas cores, a folha de pintura da equipe projetada pela posição de cada ponto
 // (o carbono da máscara continua preto) e o número do piloto; a folha é uma só por equipe e vem do cache.
 // `novo` (o carro de 2026, f1-2026.js): `base` é o material do carbono (sem textura) e `numPos` onde ficam os números; sem equipe, a cor principal em tudo
-function pintura(base, cor1, cor2, equipe, numero, fundo = false, novo = false, numPos = null, alta = false) {
+function pintura(base, cor1, cor2, equipe, numero, fundo = false, novo = false, numPos = null, alta = false, cromo = false) {
   // o corpo é físico (MeshPhysicalMaterial) para ter a camada de verniz (clearcoat) de dia; o verniz em si é ligado por aplicarVerniz (acabamento acetinado de dia) (f1-pintura.js)
   let m;
   if (base.isMeshPhysicalMaterial) m = base.clone();
@@ -75,10 +76,10 @@ function pintura(base, cor1, cor2, equipe, numero, fundo = false, novo = false, 
     sh.fragmentShader = "uniform vec3 cor1;\nuniform vec3 cor2;\n" + sh.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
       { vec3 mk = diffuseColor.rgb; diffuseColor.rgb = cor1 * mk.r + cor2 * mk.g + vec3(0.012) * mk.b; }`);
   };
-  const halo = novo && liv ? texturaDoHalo(equipe) : null, cockpit = novo && liv ? texturaDoCockpit(equipe) : null;
-  m.onBeforeCompile = (sh) => { montar(sh); if (halo) aplicarHalo(sh, halo); if (cockpit) aplicarCockpit(sh, cockpit); aplicarVerniz(sh); };
+  const halo = novo && liv ? texturaDoHalo(equipe, cromo ? lerHalo() : null) : null, /* (o carro do jogador leva os patrocínios do halo que ele escolheu) */ cockpit = novo && liv ? texturaDoCockpit(equipe) : null;
+  m.onBeforeCompile = (sh) => { montar(sh); if (halo) aplicarHalo(sh, halo); if (cockpit) aplicarCockpit(sh, cockpit); aplicarVerniz(sh, cromo); };
   if (fundo) { m.metalness = 0; m.metalnessMap = null; } // o painel pintado não é metal (sem reflexo, o metal ficaria cinza)
-  m.customProgramCacheKey = () => (novo ? (liv ? "f1-novo-livery" : "f1-novo-solido") : liv ? (fundo ? "f1-livery-fundo" : "f1-livery") : "f1-pintura") + "-verniz" + (halo ? "-halo" : "") + (cockpit ? "-cockpit" : "");
+  m.customProgramCacheKey = () => (novo ? (liv ? "f1-novo-livery" : "f1-novo-solido") : liv ? (fundo ? "f1-livery-fundo" : "f1-livery") : "f1-pintura") + "-verniz" + (halo ? "-halo" : "") + (cockpit ? "-cockpit" : "") + (cromo ? "-cromo" : ""); // (o cromado do carro do jogador é outro programa)
   if (liv) setNumero(m, numero);
   return m;
 }
@@ -123,7 +124,7 @@ function montarCorpoNovo(k) {
   const dupla = (m) => { m.side = THREE.DoubleSide; return m; };
   const carbono = () => dupla(new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.62, metalness: 0 })); // (carbono acetinado: com menos que isso ele espelha o céu e o assoalho fica claro)
   const mat = {
-    corpo: () => M("corpo", () => pintura(carbono(), k.cores[0], k.cores[1], k.equipe, num, false, true, D.numPos, !k.leve)), // (o carro do jogador e o da garagem levam a folha em 2×; os outros, a de 1×)
+    corpo: () => M("corpo", () => pintura(carbono(), k.cores[0], k.cores[1], k.equipe, num, false, true, D.numPos, !k.leve, !!k.volanteVivo)), // (o carro do jogador e o da garagem levam a folha em 2×; os outros, a de 1×)
     detalhes: () => M("detalhes", () => { const m = D.mats[D.nomes?.detalhes || "sauber_detail"].clone(); m.metalness = Math.min(m.metalness, 0.2); m.roughness = Math.max(m.roughness, 0.6); m.color.multiplyScalar(0.3); return m; }), // (o assoalho do arquivo é claro e brilhante: no carro de verdade é carbono escuro)
     mecanica: () => M("mecanica", () => { const m = D.mats[D.nomes?.mecanica || "generics"].clone(); m.metalness = Math.min(m.metalness, 0.4); return m; }),
     miudezas: () => M("miudezas", () => dupla(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.25 }))),

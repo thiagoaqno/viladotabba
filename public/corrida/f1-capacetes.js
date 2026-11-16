@@ -291,7 +291,13 @@ export const MARCAS_CAPACETE = { hp: "HP", shell: "Shell", vpower: "V-Power", un
   mastercard: "Mastercard", dropbox: "Dropbox", microsoft: "Microsoft", cashapp: "Cash App", ford: "Ford", gulf: "Gulf", aneis: "Anéis da Audi", eni: "eni", gr: "GR",
   moneygram: "MoneyGram", stake: "Stake", kick: "KICK", orlen: "Orlen", alphatauri: "AlphaTauri", alfaromeo: "Alfa Romeo", trevo: "Quadrifoglio", santander: "Santander",
   chrome: "Chrome", palmangels: "Palm Angels", estrela: "Estrela da Mercedes", gota: "Gota da Petronas", syntium: "Petronas Syntium", gate: "Gate", carlyle: "Carlyle",
-  att: "AT&T", tagheuer: "TAG Heuer", tudor: "Tudor" };
+  att: "AT&T", tagheuer: "TAG Heuer", tudor: "Tudor",
+  // (2026-11-16, as imagens do Thiago)
+  aramco: "Aramco", aws: "AWS", dhl: "DHL", heineken: "Heineken", lenovo: "Lenovo", lvmh: "LVMH", msc: "MSC Cruises", pirellicaixa: "Pirelli (caixa)", qatar: "Qatar Airways",
+  salesforce: "Salesforce", allwyn: "Allwyn", amex: "American Express", barilla: "Barilla", cryptocom: "Crypto.com", globant: "Globant", lasvegas: "Las Vegas",
+  liquimoly: "Liqui Moly", louisvuitton: "Louis Vuitton", marsh: "Marsh", moethennessy: "Moët Hennessy",
+  nestle: "Nestlé", paramount: "Paramount+", pepsico: "PepsiCo", pwc: "PwC", standardchartered: "Standard Chartered", mcdonalds: "McDonald's", tmobile: "T-Mobile",
+  aggreko: "Aggreko", fever: "Fever", flexjet: "Flexjet", puma: "Puma", tata: "Tata Communications", fanatec: "Fanatec", betway: "Betway", fanduel: "FanDuel" };
 // os lugares do patrocínio na folha: [x, y, largura, altura] (largura e altura medidas no equador; mais perto do topo ou do queixo a folha
 // encolhe na volta, e a marca é esticada em 1/sen(ângulo) para continuar com a mesma cara). Os lados são dois (256 e 0/512, a costura).
 export const LUGARES_PATROCINIO = { testa: "Testa", faixa: "Faixa do visor", lados: "Lados", nuca: "Nuca", queixo: "Queixo" };

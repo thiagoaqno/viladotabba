@@ -407,7 +407,14 @@ module.exports = function attachCorrida(io) {
     }
     // regras de F1: o resultado do GP, com os pontos oficiais (quem fez menos de 90% das voltas é NC e não pontua)
     if (room.config.regras === "f1") {
-      room.resultado = F1.classificacaoFinal(room.order.map((id) => { const p = room.players[id]; const bonus = bonusDoBox(room, p); return { id, laps: p.laps, finish: p.finish, dnf: !!p.dnf, acrescimo: (p.acrescimo || 0) - bonus, prog: p.pos ? p.pos.prog : 0, best: p.best, dsq: !!p.dsq }; }), room.config.voltas)
+      // (2026-11-16, Las Vegas: "eu ganhei do Verstappen, mas o jogo deu a vitória para ele") um robô com chegada ESTIMADA ainda estava na pista atrás
+      // de quem cruzou a linha de verdade: nem a estimativa nem o bônus do box (os engenheiros, por parada) o põem na frente de um carro que já tinha chegado
+      const finalDe = (p) => p.finish + (p.acrescimo || 0) - bonusDoBox(room, p);
+      const chegaram = room.order.map((id) => room.players[id]).filter((p) => p.finish != null && !p.dnf && !p.estimado);
+      let piso = chegaram.length ? Math.max(...chegaram.map(finalDe)) : -Infinity;
+      const estimados = room.order.map((id) => room.players[id]).filter((p) => p.finish != null && !p.dnf && p.estimado).sort((x, y) => finalDe(x) - finalDe(y));
+      const ajuste = new Map(); for (const p of estimados) { const f = finalDe(p); if (f <= piso) { ajuste.set(p.id, piso + 0.1 - f); piso += 0.1; } else piso = f; }
+      room.resultado = F1.classificacaoFinal(room.order.map((id) => { const p = room.players[id]; const bonus = bonusDoBox(room, p); return { id, laps: p.laps, finish: p.finish, dnf: !!p.dnf, acrescimo: (p.acrescimo || 0) - bonus + (ajuste.get(id) || 0), prog: p.pos ? p.pos.prog : 0, best: p.best, dsq: !!p.dsq }; }), room.config.voltas)
         .map((r) => { const p = room.players[r.id]; return { ...r, voltas: p.laps, grid: p.grid, paradas: (p.paradas || []).length + (p.consertos || []).length, compostos: p.compostos || [], estimado: !!p.estimado, penal: p.penal || 0, sg: p.sgFeitos || 0, dano: p.dano || 0, batidas: p.batidas || 0, melhor: p.best }; });
       const v = room.resultado[0]; if (v) log(room, `🏆 ${nameOf(room, v.id)} venceu o GP e leva ${v.pontos} pontos.`);
       // a análise do GP (posição, tempo e setores de cada volta, pits e safety car: corrida-analise.js) para a tela do resultado de qualquer sala;

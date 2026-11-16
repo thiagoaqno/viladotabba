@@ -68,11 +68,17 @@ export function montarTempo() {
 // Segue os setores (12 checkpoints, 4 por setor) e o desgaste por volta do pneu. Guardado em `race.hudT` (zera sozinho a cada corrida).
 function seguir(m, pneu) {
   const T = race.hudT || (race.hudT = { sector: race.sector, lapIni: race.startAt, t: [null, null, null], cor: ["off", "off", "off"], melhor: [null, null, null], desgIni: pneu ? pneu.desgaste : 0, comp: pneu && pneu.composto, taxa: null });
+  if (race.quali && T.sessao !== race.startAt) { T.sessao = race.startAt; T.qAberta = false; T.lapIni = race.startAt; } // (cada Q começa com o relógio parado)
   if (pneu) { // pneu novo (box): recomeça a medida
     if (pneu.composto !== T.comp || pneu.desgaste < T.desgIni - 0.02) { T.comp = pneu.composto; T.desgIni = pneu.desgaste; T.taxa = null; }
   }
   if (race.sector === T.sector) return T;
-  const s = race.sector, antes = T.sector; T.sector = s; if (!m || !m.started) return T;
+  const s = race.sector, antes = T.sector; T.sector = s;
+  // (2026-11-16, o Thiago: "a volta só começa a contar quando passar da linha, principalmente no qualify") na classificação o relógio da volta
+  // fica parado na saída do box e abre quando o carro cruza a linha (como o servidor: corrida-f1-classificacao.js aoSetor); cada linha depois
+  // fecha uma volta e abre a seguinte
+  if (race.quali && s === 0 && antes === 11) { T.qAberta = true; T.lapIni = race.cpT; T.t = [null, null, null]; T.cor = ["off", "off", "off"]; return T; }
+  if (!m || !m.started) return T;
   const t = race.cpT, voltasFeitas = (race.voltaLocal || 0) - (s === 0 ? 1 : 0), valido = voltasFeitas >= 1; // a volta de largada não serve de comparação
   const fim = (k, soFar) => { const tempo = (t - T.lapIni) / 1000 - soFar; T.t[k] = tempo; T.cor[k] = M().corDoSetor(tempo, T.melhor[k], valido); if (valido && (!(T.melhor[k] > 0) || tempo < T.melhor[k])) T.melhor[k] = tempo; };
   if (s === 4 && antes === 3) { T.cor[1] = T.cor[2] = "off"; T.t[1] = T.t[2] = null; fim(0, 0); }
@@ -90,7 +96,8 @@ export function atualizarTempo(m, st, now) {
   const pos = m ? st.findIndex((r) => r.id === m.id) + 1 : 0, ini = T.lapIni;
   const p = $("htPos"); const html = m ? `${pos}<small>/${st.length}</small>` : "—"; if (p._h !== html) { p._h = html; p.innerHTML = html; }
   // o relógio NUNCA depende de `started` para andar (era o que o deixava em 0:00.000 até a linha e o reiniciava lá): ver relogioDaVolta
-  const rel = M().relogioDaVolta({ now, startAt: race.startAt, lapIni: ini, started: !!(m && m.started), finish: m ? m.finish : null, last: m ? m.last : null });
+  const rel = race.quali ? { corrida: Math.max(0, (now - race.startAt) / 1000), volta: T.qAberta && ini != null ? Math.max(0, (now - ini) / 1000) : 0, parado: !T.qAberta } // (classificação: zero até a linha)
+    : M().relogioDaVolta({ now, startAt: race.startAt, lapIni: ini, started: !!(m && m.started), finish: m ? m.finish : null, last: m ? m.last : null });
   set($("htVolta"), "t", M().tempoVolta(rel.volta)); set($("htBest"), "t", M().tempoVolta(m && m.best)); set($("htCorrida"), "t", M().tempoCorrida(rel.corrida));
   race.hudRelogio = rel; // (a página Tempos do MFD lê daqui)
   const barras = $("hTempo").querySelectorAll(".ht-set i"), cur = m && m.started ? M().setorAtual(race.sector) : -1;

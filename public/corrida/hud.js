@@ -9,6 +9,8 @@ import { clima } from "./clima.js";
 import { set, montarCentro, atualizarCentro, montarTempo, atualizarTempo, estrategia, minimapaF1, minimapaPertoF1, desenharBanner, montarCrono, desenharCrono } from "./hud-painel.js";
 import { montarMfd, atualizarMfd, acoes } from "./mfd.js";
 import { atualizarMenuBox } from "./box-menu.js";
+import { tocarCinematica } from "./cinematica.js";
+const cine = { chave: null, tocando: false };
 import { htmlResultado, aposResultado, resultadoMudou, limparResultado } from "./resultado-gp.js";
 
 // o cartão do rádio do engenheiro (como na TV: "SOBRENOME RADIO", o número e a equipe), por cima do velocímetro enquanto ele fala
@@ -591,7 +593,20 @@ export function renderResults() {
   const el = $("results");
   if (!E.S || E.S.phase !== "results") { el.classList.add("hidden"); limparResultado(); return; }
   const m = me(), isHost = m && E.S.host === m.id, rows = standings();
-  if (E.S.config.regras === "f1" && E.S.resultado) return resultadoGP(el, m, isHost);
+  if (E.S.config.regras === "f1" && E.S.resultado) {
+    // a cinemática da chegada (cinematica.js) antes da tela de resultado, uma vez por corrida: a posição e depois o tempo total
+    const chave = E.S.startAt + ":" + (m && m.id);
+    if (cine.chave !== chave) {
+      cine.chave = chave; const r = m && E.S.resultado.find((x) => x.id === m.id);
+      if (r && race?.kart) {
+        const textos = [r.dnf ? "ABANDONO" : r.dsq ? "DESCLASSIFICADO" : r.nc ? "NÃO CLASSIFICADO" : "P" + r.pos]; if (r.tempo != null) { const t = r.tempo, hh = Math.floor(t / 3600), mm = Math.floor((t % 3600) / 60), ss = (t % 60).toFixed(3).padStart(6, "0"); textos.push(hh ? `${hh}:${String(mm).padStart(2, "0")}:${ss}` : `${mm}:${ss}`); }
+        cine.tocando = true; el.classList.add("hidden");
+        tocarCinematica(race.kart, textos, () => { cine.tocando = false; renderResults(); });
+      }
+    }
+    if (cine.tocando) return;
+    return resultadoGP(el, m, isHost);
+  }
   el.classList.remove("hidden");
   const html = `<div class="placa"><div class="chk"></div><div class="in"><h2 style="font-size:28px;margin-bottom:10px">🏆 Resultado · ${h(PISTAS[E.S.config.pista].name)}</h2>
     <table>${rows.map((r, i) => `<tr><td>${r.done != null ? i + 1 + "º" : "—"}</td><td>${r.p.pawn} <b style="color:${r.p.color}">${h(r.p.name)}</b>${E.S.config.regras === "f1" ? ` <small class="muted">${h(r.p.pneuAtual || r.p.pneu)} · ${r.p.paradas}P</small>` : ""}</td><td class="num">${r.done != null ? fmt(r.done) : "não terminou"}${r.p.acrescimo ? ` <small class="muted">(+${r.p.acrescimo} s)</small>` : ""}</td><td class="num muted">${r.p.best != null ? "melhor " + fmt(r.p.best) : ""}</td></tr>`).join("")}</table>

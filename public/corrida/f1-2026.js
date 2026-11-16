@@ -187,7 +187,10 @@ export function construir2026(raiz, tam, leve) {
       if (sv > 3.7 && y > 0.48 && ny < 0) m = 1;            // menos embaixo da asa traseira: é o que se vê do carro da frente (a folha tem a vista dela)
       if (y < 0.1 && sv > 1.15 && sv < 4.05) m = 0;         // o assoalho, entre os eixos
       if (noVolante(p.getX(i), y, p.getZ(i))) m = 0;
-      if (tinta && !(sv > 2.15 && sv < 3.85 && y > 0.42)) m *= tinta.getX(i); // tampa externa pode receber a pintura da equipe
+      // tampa externa pode receber a pintura da equipe; (2026-11-16, o print do Thiago: "por que ainda não dá para ver o patrocinador na asa?") a asa traseira
+      // também: ela começa onde a tampa acaba (s 3,85) e ficava com o carbono do modelo, sem a vista R da pintura (o CrowdStrike da Mercedes, o ETIHAD da McLaren...)
+      const asaTraseira = sv > 3.7 && y > 0.48;
+      if (tinta && !(sv > 2.15 && sv < 3.85 && y > 0.42) && !asaTraseira) m *= tinta.getX(i);
       M[i] = m;
     }
     if (tinta) g.deleteAttribute("color");

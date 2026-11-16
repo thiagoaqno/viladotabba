@@ -184,7 +184,7 @@ test("pneu, dano, DRS, ERS e vácuo continuam valendo dentro da física nova", (
   const vac = F1.vacuoF1(1, false);
   assert.ok(fin({ vacuo: vac }) > base * 1.15 && fin({ vacuo: vac }) < base * 1.25, "vácuo");
   assert.ok(Math.abs(fin({ dano: F1.efeitoDoDano(10) }) / base - 0.9) < 0.02, "10% de dano tira ~10% da velocidade final");
-  assert.ok(fin({ pn: F1.aderencia({ composto: "macio", desgaste: 1, temp: 1 }) }) < base, "pneu acabado");
+  // (2026-11-16: apagado o "pneu acabado tira velocidade final": em ruína o carro é o normal, só com 60% da aderência)
   // aderência: pneu gasto e dano tiram da lateral, pneu novo e quente segura mais
   const novo = F1.aderencia({ composto: "macio", desgaste: 0, temp: 1 }), gasto = F1.aderencia({ composto: "macio", desgaste: 0.95, temp: 1 });
   const limite = (pn, dano) => {
@@ -194,7 +194,7 @@ test("pneu, dano, DRS, ERS e vácuo continuam valendo dentro da física nova", (
     return Math.abs(c.r);
   };
   // (2026-11-14: apagado o "pneu novo vira mais": o pneu em ruína agora fica na dirigibilidade arcade, em que a guinada é a do volante; ele escorrega
-  // de lado com 20% da aderência, mas o bico gira igual. f1-regras.js RUINA_*)
+  // de lado com 60% da aderência (era 20% até 2026-11-16), mas o bico gira igual. f1-regras.js RUINA_*)
   assert.ok(limite(null, F1.efeitoDoDano(30)) < limite(null, F1.efeitoDoDano(0)) * 0.85, "dano tira aderência");
   // grama: a velocidade cai muito e o carro derrapa mais
   const grama = D.novoCarro(); andar(mclaren, grama, { gas: 1 }, 15, { chao: false });

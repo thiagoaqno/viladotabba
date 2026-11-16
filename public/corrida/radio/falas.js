@@ -184,6 +184,15 @@ const NOVAS_CARREIRA = {
   memfoco: ["Você disse que o foco é você. Então é com você agora.", "A equipe apostou em você, como você pediu. Mostre resultado.", "O foco da equipe é você hoje. Responda na pista."],
 };
 for (const [q, textos] of Object.entries(MAIS_2026_11_16)) if (SITUACOES[q]) SITUACOES[q].push(...textos);
+// (2026-11-16, a rivalidade) o rival da temporada na pista (corrida-robos.js rivalNaPista, corrida.js anotarRixa, hud.js na largada)
+Object.assign(SITUACOES, {
+  rivalfrente: ["O seu rival está logo à frente. É ele que temos que pegar.", "Olha quem está na sua frente: o rival do campeonato.", "Rival à frente, menos de um segundo. Vá buscar.", "É o nosso rival ali na frente. Pressione.", "O rival está ao alcance. Essa disputa vale muito."],
+  rivalatras: ["O seu rival está colado atrás. Defenda.", "Atenção, o rival está no seu retrovisor.", "Ele está vindo. O rival está logo atrás de você.", "Proteja a posição. É o rival do campeonato atrás.", "O rival está pressionando. Sem erros agora."],
+  rivalpassou: ["Passou o rival! Isso vale muito no campeonato.", "Grande manobra! O rival ficou para trás.", "Na frente do rival agora. Abra distância.", "É isso! Passamos o nosso rival.", "Rival superado. Agora segure ele."],
+  rivalperdeu: ["O rival passou. Fique no vácuo e responda.", "Ele passou. Não deixe o rival fugir.", "Perdemos a posição para o rival. Vamos devolver.", "O rival está na frente de novo. Paciência e ataque.", "Ele passou. Essa briga ainda não acabou."],
+  rivalbatida: ["Contato com o rival! Confere o carro.", "Vocês dois se tocaram. Isso vai dar o que falar.", "Batida com o rival. Mantenha a cabeça fria.", "Encostou no rival. Cuidado com a punição.", "Toque com o rival. A rixa continua."],
+  rivalrixa: ["Lembre-se: hoje tem o nosso rival na pista. Vocês já se pegaram antes.", "O rival vai vir com tudo hoje, depois do que aconteceu entre vocês.", "Cuidado com o rival. A rixa entre vocês está quente.", "A imprensa está de olho no duelo com o rival. Corrida limpa e forte."],
+});
 Object.assign(SITUACOES, NOVAS_CARREIRA);
 
 // situações que passam na frente do intervalo mínimo entre falas

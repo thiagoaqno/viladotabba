@@ -122,6 +122,7 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
           let gravado = null; // as ultrapassagens e o replay (corrida-gravacao.js): extras, como a análise
           try { gravado = require("./corrida-gravacao.js").paraSave(room, chave); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); }
           try { analise = require("./corrida-analise.js").resumo(room, chave); if (gravado) analise.ultrapassagens = gravado.ultrapassagens; } catch (e) { console.warn("Temporada F1: análise do GP não salva:", e.message); }
+          if (room.rixa) { (analise ||= {}).rixa = { id: room.rixa.id, n: room.rixa.n, culpaSua: room.rixa.culpaSua, culpaDele: room.rixa.culpaDele }; } // (a rivalidade: paddock.js aoResultado)
           Regras.registrarResultado(fresco.dados, linhas, analise);
           if (gravado && gravado.replay) { try { bd.guardarReplayCorrida("solo:" + fresco.id, ano, indice, gravado.replay); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); } }
           if (bd.salvarTemporadaCorrida(fresco.id, fresco.dados, indice)) {

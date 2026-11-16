@@ -344,6 +344,14 @@ function prazoDeChegada(room, prazoNormal = 60000) { return prazoNormal; }
 function gauss(r) { return Math.sqrt(-2 * Math.log(1 - r())) * Math.cos(2 * Math.PI * r()); }
 // `janela` ({ startAt, durMs }, opcional): a sessão, para achar a água na pista na hora da volta do robô (clima.js do jogo: com
 // chuva a classificação usa o pneu de chuva se a pista abre com água, o mesmo de quem joga).
+// (2026-11-16, o Thiago: "os bots são os goats do qualify") A volta do qualify é calculada pelo limite do traçado; na corrida o robô pilota pela
+// física e anda mais devagar (trânsito, pneu, as batidas: em Baku, 99 toques em 5 voltas com 10 robôs). O fator de cada pista é medido por
+// ferramentas/quali-fator.js (a melhor volta pilotada sobre a calculada) e fica em public/corrida/quali-fator.json; sem medição, 1.
+let FATOR_QUALI = null;
+function fatorDoQuali(pista) {
+  if (FATOR_QUALI == null) { try { FATOR_QUALI = require("./public/corrida/quali-fator.json"); } catch { FATOR_QUALI = {}; } }
+  const f = Number(FATOR_QUALI[pista] ?? FATOR_QUALI[T.baseDe(pista)]); return Number.isFinite(f) ? Math.max(0.96, Math.min(1.08, f)) : 1;
+}
 function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
   const pf = perfil(room.config.pista, p.spec || p.car, tracadoId), nivel = nivelDe(room, p, tracadoId, nBots, pf);
   const r = F1.sorteio(`quali:${room.semente}:${sessao}:${p.id}`), sigma = p.piloto ? Pilotos.ruidoDaVolta(p.piloto.constancia) : 0.012;
@@ -353,7 +361,7 @@ function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
     const abre = F1.climaEm(room.clima, janela.startAt).agua, agua = Math.round(F1.climaEm(room.clima, janela.startAt + em * janela.durMs).agua * 10) / 10;
     ader = F1.aderencia({ composto: F1.compostoDaClassificacao(abre), desgaste: 0.03, temp: 0.8 }, agua);
   }
-  const tempo = tempoDaVolta(pf, nivel, ader) * (1 + ruido * sigma);
+  const tempo = tempoDaVolta(pf, nivel, ader) * (1 + ruido * sigma) * fatorDoQuali(room.config.pista);
   const final = room.config.regras === "f1" && (room.referenciaF1 || referenciaF1(room)).proteger
     ? Math.max(tempo, (room.referenciaF1 || referenciaF1(room)).recorde * 1.015) : tempo;
   return { tempo: Math.round(final * 1000) / 1000, em };
@@ -464,6 +472,25 @@ function aquecerNiveis(room, fila, nBots) {
   };
   setImmediate(um);
 }
+// (2026-11-16, o Thiago: "ficou travando na largada da corrida de Baku") A mesma conta de aquecerNiveis, ADIANTADA: chamada quando o último Q fecha
+// (corrida-f1-classificacao.js), na tela do resultado, onde ninguém pilota. Um robô por vez (setImmediate); deixa prontos o perfil, a tabela de
+// tempos e o perfil do nível de cada um (os caches de perfil, tabelaF1 e perfilF1), e a largada só reaproveita. Medido em Baku: 140 a 200 ms por robô.
+function preaquecerNiveis(room) {
+  if (room.config.regras !== "f1") return;
+  const bots = room.order.filter((id) => room.players[id] && room.players[id].bot), vez = room.preaquecendo = {};
+  let i = -1;
+  const um = () => {
+    if (room.preaquecendo !== vez || room.phase !== "quali") return;
+    try {
+      if (i < 0) { ritmoDosRobos(room); i = 0; return setImmediate(um); }
+      if (i >= bots.length) return;
+      const p = room.players[bots[i]], tracadoId = i++;
+      if (p) { const pf = perfil(room.config.pista, p.spec || p.car, tracadoId); perfilF1(pf, nivelDe(room, p, tracadoId, bots.length, pf)); }
+    } catch (e) { console.warn("Corrida: o aquecimento dos robôs falhou", e.message); return; }
+    setImmediate(um);
+  };
+  setImmediate(um);
+}
 // O jeito de pilotar de um robô (regras de F1): `dentro` (de -1, abre as curvas, a 1, fecha por dentro), `lado` (o quanto
 // anda para um lado da linha), `look` (quantos pontos antes da curva ele começa a frear: 2 freia tarde, 5 cedo) e `erroK`
 // (o quanto erra: o nível e a constância do piloto contam). Os erros saem de um sorteio da semente, como o resto do GP.
@@ -517,7 +544,7 @@ const ATAQUE_PERTO_MONACO = L_CARRO * 2.5; // Mônaco: só começa a ultrapassar
 let MARG_PARADO = 28; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 26
 const ARRANQUE_INI_MS = 2000, ARRANQUE_RAMPA_MS = 4000, ARRANQUE_SEM_ULT_MS = 3500; // a largada: a reserva de espaço à frente volta ao normal entre 2 s e 6 s, e sem ultrapassagem nos primeiros 3,5 s
 // (2026-11: mais agressivos depois dos carros parelhos: emparelham mais cedo, mais perto de lado, e o difícil defende mais)
-const ESPERA_VAGA_MS = 2500, FECHA_MANOBRA = 20, ERS_ATAQUE = 0.35, ERS_DEFESA = 0.6; // (a defesa só com sobra: defendendo sempre, a bateria de quem ataca e a de quem defende se anulavam e o pelotão virava trem) // FECHA_MANOBRA: u/s acima do alvo que o robô mantém, meio de lado, para emparelhar (~15 km/h)
+const ESPERA_VAGA_MS = 2500, FECHA_MANOBRA = 20, ERS_ATAQUE = 0, ERS_DEFESA = 0.6; // (2026-11-16, o Thiago: "eles frequentemente zeram a bateria, é normal": no ataque gasta até zerar; era 0,35) (a defesa só com sobra: defendendo sempre, a bateria de quem ataca e a de quem defende se anulavam e o pelotão virava trem) // FECHA_MANOBRA: u/s acima do alvo que o robô mantém, meio de lado, para emparelhar (~15 km/h)
 const _x = 0; // quanto tempo o robô espera, ainda atrás do alvo, o lado escolhido voltar a caber (transito)
 const TRANSITO_NIVEL = { facil: { margem: 40, antec: 0.95, defende: 0.2 }, medio: { margem: 32, antec: 1.3, defende: 0.55 }, dificil: { margem: 30, antec: 1.5, defende: 0.65 } };
 // Formula GP: a escala real troca os números acima pelos de antes de #665 (pistas.js chama na troca de escala)
@@ -662,7 +689,11 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       const tAlcance = Math.max(0.9, (alvo.frente - L_CARRO * 0.5) / Math.max(fecha, 10)), tFreio = dFreio / Math.max(ia.v, 30);
       const chega = lento || dFreio === Infinity || tAlcance < tFreio * estilo.antec || curvaDisputavel, foraDaFreada = lento || dFreio > 30 || curvaDisputavel;
       const querPassar = monaco ? (fecha > estilo.diferencaMinima * 0.5 || (ia.v < 12 && alvo.ov < 12)) : ((fecha > estilo.diferencaMinima && ia.v > 30) || (preso && (ia.v > 30 || lento)) || (ia.v < 12 && alvo.ov < 12));
-      if (querPassar && chega && foraDaFreada) {
+      // (2026-11-16, o Thiago: "eles só entram no modo ultrapassagem se tiverem bateria, exceto na garoa e na chuva") sem ERS_MANOBRA de bateria o
+      // robô não parte para a manobra: fica atrás guardando energia. Na garoa e na chuva a bateria não conta (passa quando quiser), e um carro quase
+      // parado à frente sempre pode ser passado.
+      const molhado = room.clima ? F1.climaEm(room.clima, now).agua > 0.1 : false, comBateria = !ia.ers || ia.ers.carga >= ERS_MANOBRA;
+      if (querPassar && chega && foraDaFreada && (comBateria || molhado || lento)) {
         // O lado leva em conta a sequência de curvas; em Mônaco também pode disputar por fora quando a faixa está livre.
         const lados = ordemDaPassagem(pf, i, alvo.latOutro, MARG, baseLat, dentro);
         const folgaFora = lento || dFreio === Infinity || tAlcance < tFreio * estilo.antec * 0.8;
@@ -819,7 +850,18 @@ function passoNoBox(room, p, ia, pf, dt, emit) {
 // pilotosNoGrid, `relacao`): PARCEIRO, logo à frente e com você colado (menos de ~35 m), tira o pé por 4 s para você passar (uma vez por volta);
 // logo atrás de você com outro carro colado nele, ele segura (a defesa do perfil já é dele) e o rádio avisa. TENSO, à frente e com você colado,
 // não abre: o rádio diz que ele recusou a ordem. Nada disso na largada, sob safety car ou depois da bandeirada.
-const PERTO_EQUIPE = 30; // pontos de pista (6 u cada, ~37 m)
+const PERTO_EQUIPE = 30;
+// (2026-11-16, as estratégias de bateria do Thiago) lift and coast: abaixo de LIFT_CARGA, a LIFT_PONTOS pontos de uma freada forte; o bônus de
+// ultrapassagem: cruzou a linha a menos de 1 s do carro da frente, +BONUS_ULTRAPASSAGEM de bateria (0,5 MJ da janela de 4 MJ) na volta seguinte
+const LIFT_CARGA = 0.25, LIFT_PONTOS = 20, BONUS_ULTRAPASSAGEM = 0.125;
+function bonusDeUltrapassagem(room, p, ia, car) {
+  if (!car.ers || ia.bonusVolta === p.laps) return; ia.bonusVolta = p.laps;
+  let frente = Infinity; for (const o of Object.values(room.players)) { if (o === p || !o.pos || o.finish != null || o.dnf) continue; const d = o.pos.prog - car.prog; if (d > 0 && d < frente) frente = d; }
+  if (frente * STEP / Math.max(car.v, 1) < 1) car.ers.carga = Math.min(1, car.ers.carga + BONUS_ULTRAPASSAGEM);
+}
+const ERS_MANOBRA = +(process.env.ROBO_ERS_MANOBRA ?? 0.3); // a bateria mínima para partir para uma ultrapassagem (fora da chuva)
+// a margem de cada piloto no limite de aderência das curvas: MARGEM_BASE para todos, mais MARGEM_POR_PONTO por ponto de constância abaixo de 95
+const MARGEM_BASE = +(process.env.ROBO_MARGEM_BASE ?? 0.006), MARGEM_POR_PONTO = +(process.env.ROBO_MARGEM_PONTO ?? 0.0004); // pontos de pista (6 u cada, ~37 m)
 function companheiroNaPista(room, p, ia, now, emit) {
   const rel = p.piloto && p.piloto.relacao; if (!rel || room.phase !== "race" || now < room.startAt + 15000 || room.direcao?.safety || !p.pos) return;
   const h = Object.values(room.players).find((q) => !q.bot && q.equipe === p.equipe); if (!h || !h.pos || h.finish != null || h.dnf || p.finish != null) return;
@@ -831,6 +873,19 @@ function companheiroNaPista(room, p, ia, now, emit) {
     const atras = Object.values(room.players).some((o) => o !== p && o !== h && o.pos && !o.finish && p.pos.prog - o.pos.prog > 0 && p.pos.prog - o.pos.prog < PERTO_EQUIPE);
     if (atras) { ia.segurouDito = true; avisar("compsegura"); }
   }
+}
+// (2026-11-16, a rivalidade) O rival da temporada (regras.js pilotosNoGrid, `rival` e `rixa`) perto de você (a menos de ~37 m, nos dois
+// sentidos) aperta o ritmo: +1,2% no alvo de velocidade, mais 0,4% por batida entre vocês nos GPs de antes (até 3). O rádio acompanha o duelo:
+// colado atrás de você ou logo à frente (no máximo uma vez a cada 3 voltas) e quando um passa o outro (a troca de lado, com 8 s de folga).
+function rivalNaPista(room, p, ia, now, emit) {
+  if (!p.piloto || !p.piloto.rival || room.phase !== "race" || now < room.startAt + 15000 || room.direcao?.safety || !p.pos || p.finish != null) return false;
+  const h = Object.values(room.players).find((q) => !q.bot && q.pos && q.finish == null && !q.dnf); if (!h) return false;
+  const d = p.pos.prog - h.pos.prog, avisar = (sit) => emit && emit("radio:equipe", { para: h.id, sit });
+  const perto = Math.abs(d) < PERTO_EQUIPE, lado = d > 0 ? 1 : -1, volta = h.laps || 0;
+  if (perto && ia.ladoRival && lado !== ia.ladoRival && now - (ia.trocaRival || 0) > 8000) { ia.trocaRival = now; avisar(lado < 0 ? "rivalpassou" : "rivalperdeu"); }
+  else if (perto && volta - (ia.voltaRival ?? -9) >= 3) { ia.voltaRival = volta; avisar(lado < 0 ? "rivalatras" : "rivalfrente"); }
+  if (Math.abs(d) < PERTO_EQUIPE * 2) ia.ladoRival = lado;
+  return perto;
 }
 // O robô está preso? Parado (menos de V_PRESO) por T_PRESO segundos, ou sem andar nem T_SEM_ANDAR pontos de pista em 6 s (rodando no
 // lugar, de lado no muro, na brita). Não conta no box, sob bandeira, antes de a corrida ficar de pé nem com o carro quebrado.
@@ -987,8 +1042,10 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const latAdiante = novo && !ia.ult ? latLivre : (j) => { const margemExtra = T.baseDe(room.config.pista) === "monaco" ? (ia.ult ? ALEM_MONACO : 8) : 0; const limite = Math.min(margemExtra ? tr.W / 2 - 9 : limiteAtual, pf.teto ? pf.teto[j] + margemExtra : Infinity); return entre(linhaEm(j, car.prog + (j - i + n) % n) * saidaGrid + ia.lat0 * (1 - saidaGrid) + ia.desvio, limite); };
   const vac = F1.vacuoF1(F1.vacuoPermitido(car.v, room.phase === "quali") ? tf.draft : 0, curva);
   const reta = alvo >= topo * 0.97;
-  const escalaCurva = Math.sqrt((novo ? pneu.rel : pneu.grip) * dano.grip * vac.aderencia) * cautelaPneu * cautela;
-  if (!reta) alvo *= escalaCurva; // só as curvas dependem da aderência (no molhado, mais a cautela do pneu na água: cautelaPneu)
+  // (2026-11-16, o Thiago: "cada piloto ter sua margem pra não derrapar, exceto caso de erro") o piloto mais constante deixa menos sobra (o erro, erroK, vem por cima)
+  const margemPiloto = 1 - (MARGEM_BASE + Math.max(0, 95 - (p.piloto ? p.piloto.constancia : 85)) * MARGEM_POR_PONTO);
+  const escalaCurva = Math.sqrt((novo ? pneu.rel : pneu.grip) * dano.grip * vac.aderencia) * cautelaPneu * cautela * margemPiloto;
+  if (!reta) alvo *= escalaCurva;
   const drs = !!car.drsAtivo && !room.direcao?.safety && !room.direcao?.amarelo;
   const ganhoReta = (1 + (drs ? F1.DRS_GANHO * (spec.drs ?? 1) : 0)) * (1 + vac.final);
   if (reta) alvo *= ganhoReta;
@@ -1012,6 +1069,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   if (p.quebrou) { alvo = Math.min(alvo, spec.vmax * F1Equipes.EMERGENCIA); tetoPiloto = Math.min(tetoPiloto, spec.vmax * F1Equipes.EMERGENCIA); }
   if (p.incidenteAte > now) { alvo = Math.min(alvo, spec.vmax * 0.24); tetoPiloto = Math.min(tetoPiloto, spec.vmax * 0.24); }
   companheiroNaPista(room, p, ia, now, emit);
+  if (rivalNaPista(room, p, ia, now, emit)) { const k = 1.012 + 0.004 * Math.min(3, p.piloto.rixa || 0); alvo *= k; } // o rival aperta o ritmo perto de você (mais com rixa)
   if (ia.cedendoAte > now) { alvo *= 0.9; tetoPiloto = Math.min(tetoPiloto, spec.vmax * 0.85); } // abrindo passagem para quem joga: tira o pé por uns segundos
   const relBox = tr.corredor ? (i - tr.corredor.i0 + n) % n : Infinity;
   // (só pesa a parada perto da entrada do corredor; nos 2 s antes de entrar o robô que vai parar já é fantasma: ninguém bate nele)
@@ -1036,7 +1094,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   let ritmoDaVolta = 1, erroK = 1;
   if (novo) {
     const volta = p.laps || 0;
-    if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; }
+    if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; if (volta > 0) bonusDeUltrapassagem(room, p, ia, car); }
     ritmoDaVolta = ia.ritmoDaVolta;
     if (ia.erroAte > now) erroK = ia.erroK;
     else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * ({ facil: 1.4, medio: 1, dificil: 0.7 }[room.config.nivel] || 1)) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
@@ -1065,6 +1123,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
       const noPiloto = jeitoP.entradaK * ritmoDaVolta * erroK; // o jeito do piloto, o ritmo desta volta e o erro de agora
       Piloto.comandos(car, tr, spec, latAdiante, (j) => { const v = fis[j]; return Math.min(tetoReta, (v >= topo * 0.97 ? tetoReta : v * escalaCurva * ataque * noPiloto) * medoK); }, ent, ctx, jeitoP);
       if (ent.gas && car.patina > PAT) ent.gas *= 0.6; // a traseira já está no limite: alivia o pé em vez de cortar
+      // (2026-11-16, "lift and coast") com pouca bateria e sem disputa, tira o pé ~0,6 s antes da freada (a velocidade do traçado ~LIFT_PONTOS pontos à
+      // frente bem abaixo da de agora): o carro rola e o MGU-K recarrega (F1 carregarErs, semGas), sem gastar freio
+      if (car.ers && car.ers.carga < LIFT_CARGA && !ia.ult && !tf.encontrou && !amb.safety && ent.gas > 0 && !ent.brake && fis[(i + LIFT_PONTOS) % n] < car.v * 0.8) ent.gas = 0;
     } else {
     Sim.pilotoAutomatico(car, tr, spec, alvo, latAdiante, ent, chicaneLivre ? 1.15 : 1);
     if (chicaneLivre && car.v < alvo * 1.20) ent.brake = 0;
@@ -1222,4 +1283,4 @@ function passo(room, dt, setor, emit) {
 }
 function possivel(pista, spec) { return perfilF1(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0), 1); }
 possivel.topo = (pista, spec) => topoDe(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0));
-module.exports = { tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };
+module.exports = { preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };

@@ -385,7 +385,12 @@ module.exports = function attachCorrida(io) {
       room.finishOrder.push(id);
     }
   }
+  function aprenderAgora(room, nome) {
+    const pista = room.config.pista, t = T.PISTAS[pista];
+    if (Robos.aprender(pista, bd.melhoresTracadosCorrida(pista))) { log(room, `🤖 Os robôs aprenderam a volta de ${nome} em ${t.name}.`); broadcast(room); }
+  }
   function endRace(room) { T.usarEscala(room.config.pista); Anos.usarAno(room.config.ano);
+    if (room.aprenderPendente) { const a = room.aprenderPendente; room.aprenderPendente = null; setImmediate(() => { try { aprenderAgora(room, a.nome); } catch (e) { console.warn("Corrida: os robôs não aprenderam a volta", e.message); } }); }
     if (room.phase !== "race") return;
     clearTimeout(room.endTimer);
     clearInterval(room.itemTimer); clearInterval(room.botTimer); clearInterval(room.f1Timer); clearInterval(room.humanosTimer);
@@ -538,12 +543,25 @@ module.exports = function attachCorrida(io) {
   // uma batida (de um humano ou de um robô): a punição e o dano ficam com a direção de prova; com a perda total de quem
   // ainda corria, a corrida pode ter acabado para todos
   function aplicarBatida(room, p, forca, tipo, quando = Date.now(), chave = tipo) {
+    if (room.temporada && String(chave).startsWith("carro:")) anotarRixa(room, p, room.players[String(chave).slice(6)], quando);
     const b = Direcao.bater(room, p, forca, tipo, quando, (s) => log(room, s), chave);
     if (!b) return false;
     if (p.dnf && !room.order.some((id) => { const q = room.players[id]; return q.finish == null && !q.dnf && (q.sockets.size || q.bot); })) endRace(room);
     return true;
   }
 
+  // (2026-11-16, a rivalidade) batida entre você e o rival da temporada: conta uma por par a cada 3 s (os dois carros avisam a mesma), com quem
+  // causou (corrida-contato.js impactoDe); vai na análise do GP (corrida-temporada.js) e o Paddock guarda a rixa (paddock.js aoResultado). O
+  // rádio avisa na hora.
+  function anotarRixa(room, p, o, quando) {
+    if (!p || !o) return;
+    const rival = p.bot && p.piloto && p.piloto.rival ? p : o.bot && o.piloto && o.piloto.rival ? o : null, eu = rival === p ? o : p;
+    if (!rival || !eu || eu.bot) return;
+    const r = room.rixa || (room.rixa = { id: rival.piloto.id, n: 0, culpaSua: 0, culpaDele: 0, t: 0 }); if (quando - r.t < 3000) return;
+    const i = Contato.impactoDe(room, eu.id, rival.id); r.t = quando; r.n++;
+    if (i && i.culpado === eu.id) r.culpaSua++; else if (i && i.culpado === rival.id) r.culpaDele++;
+    nsp.to(room.code).emit("radio:equipe", { para: eu.id, sit: "rivalbatida" });
+  }
   // O que a transmissão de TV mostra do campeonato (só em temporada): os 10 primeiros pilotos (mais os humanos que ficaram
   // de fora) e as 11 equipes, com os pontos de antes deste GP. `tab` é o `tabelas` da temporada (solo ou em grupo); no 1º GP
   // ninguém tem ponto e a tabela fica de fora (`vazia`). Só nome, equipe e pontos viajam: o resto da tabela fica no servidor.
@@ -874,7 +892,9 @@ module.exports = function attachCorrida(io) {
       let nova = 0;
       try { nova = bd.salvarVoltaCorrida(pista, tempo, me.car, me.name, s); } catch (e) { console.warn("Corrida: volta não guardada", e.message); }
       // As cinco voltas mais rápidas da pista alimentam os traçados da próxima largada.
-      if (nova > 0 && Robos.aprender(pista, bd.melhoresTracadosCorrida(pista))) { log(room, `🤖 Os robôs aprenderam a volta de ${me.name} em ${t.name}.`); broadcast(room); }
+      // (2026-11-16) aprender joga fora a conta de ritmo da pista, e refazer custa 140 a 200 ms por robô (Baku, 21 robôs: segundos de servidor parado,
+      // os outros carros pulando na tela). No meio do qualify ou da corrida fica para depois da bandeirada (endRace).
+      if (nova > 0) { if (room.phase === "race" || room.phase === "quali") room.aprenderPendente = { nome: me.name }; else aprenderAgora(room, me.name); }
     });
 
     // o relógio: o navegador pergunta a hora do servidor várias vezes e fica com a resposta de menor ida e volta (pose.js, criarRelogio)

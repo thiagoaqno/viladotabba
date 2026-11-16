@@ -370,6 +370,7 @@ function aoResultado(s, resultado, meta) {
   if (plano === "arriscar") { if (cumpriu) { p.diretoria = lim(p.diretoria + 3, -20, 20); ef.torcida += 3; notas.push("o risco valeu a pena"); } else if (!bem(eu)) { p.diretoria = lim(p.diretoria - 4, -20, 20); notas.push("o risco custou o carro"); } }
   else if (plano === "seguro") { if (cumpriu) { p.diretoria = lim(p.diretoria + 1, -20, 20); notas.push("a corrida segura deu certo"); } else { ef.patrocinador -= 2; notas.push("a corrida segura ficou longe da meta"); } }
   ef.torcida += bem(eu) ? Math.min(8, Math.round(((PONTOS[eu.pos - 1] || 0) + (eu.voltaRapida ? 1 : 0)) / 3)) - 1 : -3;
+  duelo(s, resultado, eu, ef, notas); // (a rivalidade: antes de aplicar, para entrar na conta e nas notas do fim de semana)
   aplicar(s, ef);
   anotar(s, "Fim de semana", `GP de ${s.calendario[resultado.gp]?.nome || resultado.pista}: ${bem(eu) ? `você em ${eu.pos}º` : "você não terminou"}${comp ? `, ${Pilotos.PILOTOS.find((x) => x.id === s.piloto2)?.nome || "o companheiro"} ${bem(comp) ? `em ${comp.pos}º` : "fora"}` : ""}${notas.length ? ` (${notas.join("; ")})` : ""}.`, ef);
   // (2026-11-15) com a moral e a lealdade lá embaixo, o companheiro assina com uma rival e vai embora sem pedir: outro piloto assume o carro
@@ -386,6 +387,26 @@ function aoResultado(s, resultado, meta) {
   // o patrocinador nos extremos muda a verba por GP
   if (p.patrocinador >= 80 && s.patrocinio < 12) { s.patrocinio++; p.patrocinador = 62; anotar(s, "Patrocinador", `O patrocinador gostou e aumentou a verba para ${s.patrocinio} milhões por GP.`); }
   else if (p.patrocinador <= 20 && s.patrocinio > 3) { s.patrocinio--; p.patrocinador = 42; anotar(s, "Patrocinador", `O patrocinador cortou a verba para ${s.patrocinio} milhões por GP.`); }
+}
+// (2026-11-16, a rivalidade) O duelo com o rival da temporada (regras.js imersao) depois de cada GP: na frente dele, a torcida sobe 3; atrás, cai 1.
+// As batidas entre vocês (a análise do GP, `rixa`, de corrida.js anotarRixa) somam na rixa (p.rixas[id]): a torcida gosta do drama (+2), a diretoria
+// não gosta de você causar (−2 por batida sua). Com a rixa, o rival aperta mais na pista (corrida-robos.js rivalNaPista) e vira notícia.
+function duelo(s, resultado, eu, ef, notas) {
+  const p = garantir(s); if (!p.rixas || typeof p.rixas !== "object") p.rixas = {};
+  const im = (() => { try { return Reg().imersao(s); } catch { return null; } })(), id = im && im.rival && im.rival.id; if (!id) return;
+  const ele = resultado.linhas.find((l) => l.piloto === id), nome = Pilotos.PILOTOS.find((x) => x.id === id)?.nome || "o rival";
+  if (bem(eu) && bem(ele)) {
+    if (eu.pos < ele.pos) { ef.torcida += 3; notas.push(`você ficou na frente de ${nome}`); }
+    else { ef.torcida -= 1; notas.push(`${nome} ficou na sua frente`); }
+  }
+  const rx = resultado.analise && resultado.analise.rixa;
+  if (rx && rx.id === id && rx.n > 0) {
+    p.rixas[id] = (p.rixas[id] || 0) + rx.n; ef.torcida += 2;
+    if (rx.culpaSua) p.diretoria = lim(p.diretoria - 2 * rx.culpaSua, -20, 20);
+    const texto = rx.culpaSua > rx.culpaDele ? `${nome} reclamou de você depois das batidas no GP. A rixa esquentou.` : rx.culpaDele > rx.culpaSua ? `Você reclamou de ${nome} depois das batidas no GP. A rixa esquentou.` : `Você e ${nome} se tocaram de novo. A rixa esquentou.`;
+    anotar(s, "Rival", texto);
+    (p.noticias ||= []).push({ ano: s.ano, gp: s.gp, t: `Rixa: você e ${nome}`, x: texto, eq: s.equipe, quem: "Rival" });
+  }
 }
 // (2026-11-16, o Thiago: "ser recompensado por adquirir certas porcentagens nos relacionamentos") Os MARCOS: passou da faixa, a recompensa
 // sai uma vez por temporada (p.marcos guarda `ano:id`), com uma linha no mural e uma notícia. Cada um muda algo de verdade:

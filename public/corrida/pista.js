@@ -301,6 +301,16 @@ function buildWorld(tr) {
   const kerbM = new THREE.MeshStandardMaterial({ map: kerbT, roughness: 0.92, envMapIntensity: 0.3, side: THREE.DoubleSide, emissive: id === "tokyo" ? 0x0a3a44 : 0 });
   if (gp?.chao) KIT.chaoGP(tr, add, gp.chao, { gridSpot }); // margem, zebras só nas curvas e as marcas da rua (kit/chao.js)
   else { ribbon(W / 2, W / 2 + 7, 0.6, kerbM, 28); ribbon(-W / 2 - 7, -W / 2, 0.6, kerbM, 28); }
+  // (2026-11-16, o Thiago: "embaixo de toda zebra e toda pista, um talude texturizado para evitar coisas transparentes: embaixo da zebra
+  // cinza como brita, embaixo da pista cinza como rocha") onde a pista passa acima do terreno, em vez de um vão aparece o barranco:
+  // a rocha desce da beira do asfalto e a brita desce em rampa da beira de fora da zebra, os dois até bem abaixo do chão
+  const pedra = (base, a, b, qtd) => canvasTex(64, 64, (x, w, hh, rr) => { x.fillStyle = base; x.fillRect(0, 0, w, hh); for (let i = 0; i < qtd; i++) { x.fillStyle = rr() < 0.5 ? a : b; const s = 1 + rr() * 3; x.fillRect(rr() * w, rr() * hh, s, s); } });
+  const rocha = new THREE.MeshStandardMaterial({ map: pedra("#6d6b68", "#55524f", "#8a8784", 500), roughness: 1, envMapIntensity: 0.2, side: THREE.DoubleSide });
+  const britaT = new THREE.MeshStandardMaterial({ map: pedra("#8e8c88", "#6e6c69", "#b2b0ab", 1400), roughness: 1, envMapIntensity: 0.2, side: THREE.DoubleSide });
+  for (const s of [-1, 1]) {
+    ribbon(s * W / 2, s * W / 2, 0.39, rocha, 20, -14, 2); // a rocha: a parede embaixo da beira do asfalto (escondida pela zebra onde tem)
+    ribbon(s * (W / 2 + 7), s * (W / 2 + 13), 0.55, britaT, 20, -14, 2); // a brita: a rampa embaixo da beira de fora da zebra
+  }
   if (gp?.escape) KIT.escapeGP(tr, add, gp.escape); // brita e asfalto de escape listrado só onde o GP diz (kit/escape.js)
   if ((id === "interlagos" || id === "laguna") && !gp?.escape) { // área de escape de brita
     const brita = new THREE.MeshStandardMaterial({ map: canvasTex(64, 64, (x, w, hh, rr) => { x.fillStyle = "#c9b37a"; x.fillRect(0, 0, w, hh); for (let i = 0; i < 600; i++) { x.fillStyle = rr() < 0.5 ? "#b39c66" : "#ddc893"; x.fillRect(rr() * w, rr() * hh, 2, 2); } }), roughness: 1, side: THREE.DoubleSide });

@@ -389,8 +389,11 @@ function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
     ader = F1.aderencia({ composto: F1.compostoDaClassificacao(abre), desgaste: 0.03, temp: 0.8 }, agua);
   }
   const tempo = tempoDaVolta(pf, nivel, ader) * (1 + ruido * sigma) * fatorDoQuali(room.config.pista);
-  const final = room.config.regras === "f1" && (room.referenciaF1 || referenciaF1(room)).proteger
-    ? Math.max(tempo, (room.referenciaF1 || referenciaF1(room)).recorde * 1.015) : tempo;
+  // o recorde de quem joga protegido: nenhum robô abaixo de recorde + 1,5%. (2026-11-16, o Thiago: "todos os pilotos fizeram exatamente o mesmo tempo
+  // no Q1") Era um corte em cada tempo (Math.max com o piso): com os robôs mais rápidos, todos caíam abaixo e iam para o MESMO número. Agora escala
+  // todos juntos: a volta ideal (a do carro de referência, com o fator da pista) vai para o piso e cada um mantém a sua diferença.
+  const ref = room.config.regras === "f1" ? room.referenciaF1 || referenciaF1(room) : null;
+  const final = ref && ref.proteger ? tempo * Math.max(1, (ref.recorde * 1.015) / (ref.ideal * fatorDoQuali(room.config.pista))) : tempo;
   return { tempo: Math.round(final * 1000) / 1000, em };
 }
 // quanto dura uma sessão de classificação, em segundos: dá para uma volta de saída e duas lançadas de um carro médio

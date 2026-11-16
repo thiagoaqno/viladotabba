@@ -337,10 +337,16 @@ function patrocinioNoLugar(x, id, [cx, cy, w, h], fundo, c3) {
 // as propriedades do material do casco em cada acabamento (o verniz por cima, como o capacete de verdade)
 // (MeshPhysicalMaterial: todas as chaves vêm sempre, para trocar de um acabamento para outro sem sobrar nada do anterior; `relevo` é a textura
 // de relevo do casco: a trama do carbono ou os flocos, f1-piloto.js aplicarAcabamento)
-// (2026-11-15, o Thiago: "o capacete tá muito reflexivo, coloca ele acetinado independente do material") todo casco sai acetinado: meio brilho,
-// sem metal nem furta-cor. O acabamento escolhido só muda a textura (a trama do carbono, os flocos), que continua no relevo e na pintura.
+// (2026-11-15 o casco saía acetinado em qualquer acabamento; desfeito em 2026-11-16, a pedido do Thiago)
 export function acabamentoDoCasco(a) {
-  return { roughness: 0.5, metalness: 0.04, clearcoat: 0.35, clearcoatRoughness: 0.45, iridescence: 0, iridescenceIOR: 1.3, sheen: 0, relevo: a === "carbono" ? "carbono" : a === "flocos" ? "flocos" : null };
+  // (2026-11-16, o Thiago: "coloca novamente o material original no capacete, metálico etc., e não só acetinado") cada acabamento volta a ter o seu
+  // material; quem quer o casco sem reflexo escolhe o Acetinado ou o Fosco
+  const base = { roughness: 0.28, metalness: 0.08, clearcoat: 1, clearcoatRoughness: 0.08, iridescence: 0, iridescenceIOR: 1.3, sheen: 0, relevo: null };
+  return { ...base, ...({ fosco: { roughness: 0.72, metalness: 0.02, clearcoat: 0, clearcoatRoughness: 0.6 }, acetinado: { roughness: 0.48, metalness: 0.06, clearcoat: 0.45, clearcoatRoughness: 0.4 },
+    metal: { roughness: 0.32, metalness: 0.55 }, perola: { roughness: 0.3, metalness: 0.12, clearcoatRoughness: 0.05, iridescence: 0.6, iridescenceIOR: 1.5, sheen: 0.4 },
+    camaleao: { roughness: 0.24, metalness: 0.6, clearcoatRoughness: 0.04, iridescence: 1, iridescenceIOR: 2 },
+    flocos: { roughness: 0.36, metalness: 0.62, clearcoatRoughness: 0.03, relevo: "flocos" }, carbono: { roughness: 0.34, metalness: 0.18, clearcoatRoughness: 0.04, relevo: "carbono" },
+    cromo: { roughness: 0.12, metalness: 0.92, clearcoatRoughness: 0.03 } }[a] || {}) };
 }
 // as folhas 512x256 do relevo (feitas uma vez): o carbono é a sarja 2x2 (quadros de 4 px com a fibra deitada ou em pé, mais clara no meio do
 // fio) e os flocos, um ruído de pontos. O carbono também é a cor do casco (pintarFolha), com um tanto da cor 1 por cima.

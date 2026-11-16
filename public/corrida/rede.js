@@ -98,12 +98,13 @@ socket.on("snap", (buf) => { // pacote binário: { t, c: [[id, x, y, z, a, v, pr
   if (!buf || !race) return;
   let d; try { d = Pose.Snap.decodificar(buf); } catch { return; }
   const eu = E.ME && E.ME.id, Tc = tempoReal() - PASSO_MS; // (Tc: a hora do servidor em que o desenho está agora)
+  if (DIAG.on) { const t = performance.now(); if (DIAG.ultPacote) DIAG.intervalos.push(t - DIAG.ultPacote); DIAG.ultPacote = t; }
   for (const r of d.c) {
     if (r[0] === eu) { race.progServidor = r[6]; continue; } // (o meu progresso oficial é o do servidor: a torre usa o mesmo número para todos)
     let gh = race.ghosts.get(r[0]);
     if (!gh) { gh = { x: r[1], y: r[2], z: r[3], a: r[4], v: r[5], prog: r[6], idx: nearest(race.tr, r[1], r[2], 0), buf: [], mod: new Pose.Outro() }; race.ghosts.set(r[0], gh); }
     if (!gh.mod) continue;
-    gh.mod.receber({ t: d.t - r[7], x: r[1], y: r[2], z: r[3], a: r[4], vx: r[8], vy: r[9], r: r[10] }, Tc);
+    if (gh.mod.receber({ t: d.t - r[7], x: r[1], y: r[2], z: r[3], a: r[4], vx: r[8], vy: r[9], r: r[10] }, Tc) && DIAG.on) { DIAG.idades.push(Tc - (d.t - r[7])); if (gh.mod.ultTam != null) DIAG.correcoes.push(gh.mod.ultTam); }
     gh.prog = r[6];
   }
 });
@@ -154,6 +155,7 @@ function horaDoQuadro(dt, tQuadro) {
   return Number.isFinite(tQuadro) ? performance.timeOrigin + tQuadro + offDesenho - PASSO_MS : tempoReal() - PASSO_MS;
 }
 export function updateGhosts(dt, tQuadro) {
+  if (DIAG.on) DIAG.quadros.push(dt * 1000);
   const k = 1 - Math.exp(-dt * 30), rt = sNow() - ATRASO, Sm = window.Sim, T = horaDoQuadro(dt, tQuadro);
   for (const gh of race.ghosts.values()) {
     if (gh.mod) { // regras de F1
@@ -169,3 +171,33 @@ export function updateGhosts(dt, tQuadro) {
     gh.idx = nearest(race.tr, gh.x, gh.y, gh.idx || 0);
   }
 }
+
+// ---------- o painel de diagnóstico da rede (F9) ----------
+// (2026-11-16, o Thiago: "a linha dos bots ainda é meio travosa, mesmo jogando localmente, como se eu estivesse lagado") Medido no Node, o caminho
+// dos robôs e a conta do desenho (pose.js) ficam a ~4 cm da verdade e o servidor gasta ~2 ms por tique com 21 robôs; o tranco é do que acontece
+// no PC de quem joga. F9 liga este painel: o intervalo entre os pacotes de posição, o atraso deles, o tamanho das correções dos outros carros,
+// o erro do meu carro corrigido pelo servidor e o tempo de cada quadro, de 2 em 2 s. O print dele diz onde mexer.
+const DIAG = { on: false, intervalos: [], idades: [], correcoes: [], quadros: [], ultPacote: 0, el: null, timer: 0, saltos0: 0 };
+const U_CM = 20.83; // cm por unidade (1 u = 0,2083 m)
+function resumo(v, k = 1) { if (!v.length) return "—"; const s = [...v].sort((a, b) => a - b), m = s[s.length >> 1], p = s[Math.floor(s.length * 0.95)], x = s[s.length - 1]; return `${(m * k).toFixed(1)} · ${(p * k).toFixed(1)} · ${(x * k).toFixed(1)}`; }
+function pintarDiag() {
+  const net = race && race.net, fps = DIAG.quadros.length ? 1000 / (DIAG.quadros.reduce((a, b) => a + b, 0) / DIAG.quadros.length) : 0;
+  const lentos = DIAG.quadros.filter((q) => q > 25).length;
+  DIAG.el.textContent = [
+    "DIAGNÓSTICO (F9) · mediana · 95% · pior, últimos 2 s",
+    `quadros/s: ${fps.toFixed(0)}  quadro (ms): ${resumo(DIAG.quadros)}  acima de 25 ms: ${lentos}`,
+    `pacotes: ${DIAG.intervalos.length + (DIAG.intervalos.length ? 1 : 0)} em 2 s  intervalo (ms): ${resumo(DIAG.intervalos)}`,
+    `atraso das posições (ms): ${resumo(DIAG.idades)}`,
+    `correção dos outros carros (cm): ${resumo(DIAG.correcoes, U_CM)}`,
+    `meu carro: erro do servidor ${net && Number.isFinite(net.erro) ? (net.erro * U_CM).toFixed(0) + " cm" : "—"}  saltos: ${net ? (net.saltos || 0) - DIAG.saltos0 : 0}`,
+    `relógio: ida e volta ${Number.isFinite(relogioF1.rtt) ? relogioF1.rtt.toFixed(0) : "—"} ms`,
+  ].join(String.fromCharCode(10));
+  DIAG.intervalos = []; DIAG.idades = []; DIAG.correcoes = []; DIAG.quadros = []; if (net) DIAG.saltos0 = net.saltos || 0;
+}
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "F9") return; e.preventDefault();
+  DIAG.on = !DIAG.on;
+  if (!DIAG.el) { DIAG.el = document.createElement("pre"); DIAG.el.style.cssText = "position:fixed;left:12px;top:56px;z-index:9999;margin:0;padding:8px 10px;background:#000c;color:#d6ffd6;font:12px/1.45 ui-monospace,Consolas,monospace;border-radius:6px;pointer-events:none;white-space:pre"; document.body.appendChild(DIAG.el); }
+  DIAG.el.style.display = DIAG.on ? "block" : "none"; clearInterval(DIAG.timer);
+  if (DIAG.on) { DIAG.el.textContent = "DIAGNÓSTICO (F9): medindo…"; DIAG.ultPacote = 0; DIAG.saltos0 = race && race.net ? race.net.saltos || 0 : 0; DIAG.timer = setInterval(pintarDiag, 2000); }
+});

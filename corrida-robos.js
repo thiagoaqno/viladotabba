@@ -424,11 +424,31 @@ function largar(room) {
       const tr = Sim.criarPista(t, room.config.pista);
       const car = Sim.novo(tr, { grid: p.grid, f1: true, pneu: p.ia.pneu, box: true });
       car.ers = p.ia.ers;
+      car.acerto = acertoDoRobo(room.config.pista, room.config.nivel, p.id); // (o mesmo acerto que quem joga usa: sim.js, extraDoAcerto)
       p.ia.sim = car;
       p.pos = { x: car.x, y: car.y, z: car.z, a: car.a, v: 0, prog: car.prog, at: Date.now() };
     } else posicionar(p, pf, 0);
   }
   if (emPedacos) aquecerNiveis(room, fila, bots.length);
+}
+// O acerto do robô (2026-11-15, o Thiago: "os bots precisam poder usar o acerto também"): parte do acerto ideal medido da pista
+// (acerto-ideal.json, ferramentas/acerto-ideal.js: asa e altura) e deduz o resto dele, como um engenheiro faria. Pista de reta (pouca asa):
+// câmbio mais longo e suspensão mais macia; pista de curva (muita asa): câmbio mais curto e suspensão mais dura para segurar a carga. Um
+// pouco de cambagem e o resto no meio, sem exagero no desgaste. O nível da sala diz o quanto o robô chega perto disso: difícil 100%,
+// médio 75%, fácil 40% (o resto fica no acerto padrão), e cada piloto erra um pouco a asa (±0,05, fixo por piloto e sala).
+let IDEAIS_AC = null;
+const PERTO_DO_IDEAL = { facil: 0.4, medio: 0.75, dificil: 1 };
+function acertoDoRobo(pista, nivel, id) {
+  if (IDEAIS_AC == null) { try { IDEAIS_AC = require("./public/corrida/acerto-ideal.json"); } catch { IDEAIS_AC = {}; } }
+  const id0 = IDEAIS_AC[pista] || IDEAIS_AC[T.baseDe ? T.baseDe(pista) : pista], P = Sim.ACERTO_PADRAO;
+  if (!id0 || !Number.isFinite(id0.asa)) return null;
+  const asa = id0.asa, curva = asa - 0.5; // −0,5 (reta) a +0,5 (curva)
+  let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const ideal = { asa: Math.max(0, Math.min(1, asa + ((h % 11) - 5) * 0.01)), altura: Number.isFinite(id0.altura) ? id0.altura : 0.5,
+    cambio: 0.5 - curva * 0.4, freio: 0.5, diferencial: 0.5, cambagem: 0.6, pressao: 0.5, rigidez: 0.5 + curva * 0.4 };
+  const k = PERTO_DO_IDEAL[nivel] ?? PERTO_DO_IDEAL.medio, o = {};
+  for (const c of Object.keys(P)) o[c] = P[c] + ((ideal[c] ?? P[c]) - P[c]) * k;
+  return o;
 }
 // o nível de cada robô, um por vez (setImmediate entre eles: o servidor atende os outros eventos no meio). A primeira tarefa é o ritmo da sala.
 function aquecerNiveis(room, fila, nBots) {

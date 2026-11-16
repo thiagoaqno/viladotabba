@@ -20,6 +20,7 @@ O resumo dos sistemas fica no `CLAUDE.md`; o mapa antigo e detalhado, em `docs/m
 | Como os bots evoluem as peças | `public/corrida/temporada/regras.js` | `desenvolvimentoRivais`: o ritmo (atraso por faixa: grandes 0, meio 1/4, pequenas 1/2 temporada) e `prioridadeDaPeca` + `PESO_PECA` (onde vai cada ponto). Sem sorteio |
 | Pontos de evolução por temporada | `f1-equipes.js` | `BONUS_POR_TEMPORADA`, `BONUS_MAX`; o preço para quem joga em `custoDoDesenvolvimento` (regras.js) |
 | Acerto (asa, altura, câmbio, freio, diferencial, cambagem, pressão, rigidez) | `public/corrida/sim.js` | `ACERTO_PADRAO` e a função logo abaixo (cada ajuste vai até ±4–8%; a aderência somada fica travada em ±6%). Tela: `temporada/central-acerto.js` |
+| Acerto dos bots | `corrida-robos.js` | `acertoDoRobo`: parte de `acerto-ideal.json`; `PERTO_DO_IDEAL` por nível (fácil 40%, médio 75%, difícil 100%) |
 | Pilotagem dos bots, ultrapassagem, box | `corrida-robos.js` | `transito`, ERS, box; a linha de corrida em `corrida-linha.js` / `corrida-linhas-f1.json` |
 | Nível dos bots (fácil/médio/difícil) | `temporada/regras.js` + `corrida-robos.js` | `NIVEIS`, `mudarNivel` |
 | Ritmo/personalidade dos pilotos | `public/corrida/f1-pilotos-2026.js`, `temporada/paddock.js` | `ritmo`; a moral muda até ±2 (`ajusteDeRitmo`) |
@@ -37,5 +38,5 @@ O resumo dos sistemas fica no `CLAUDE.md`; o mapa antigo e detalhado, em `docs/m
 ## Antes de fechar um update
 1. `node --check arquivo.js` (os de `public/corrida/` são módulos: `node --input-type=module --check < arquivo.js`).
 2. Mudou a física ou as regras? Procure o número nos `tests/` (`grep -rn "valor" tests/`) e atualize o esperado.
-3. Mudou algo que só os humanos têm (acerto, peças)? Confira se os bots têm o mesmo ou se a vantagem fica pequena (os bots não usam acerto).
+3. Mudou algo que os humanos têm (acerto, peças)? Confira se os bots acompanham: peças em `desenvolvimentoRivais`, acerto em `acertoDoRobo` (corrida-robos.js).
 4. Entrada no `novidades.json` se a galera vai notar.

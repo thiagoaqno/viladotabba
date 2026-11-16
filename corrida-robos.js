@@ -318,7 +318,8 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0 }, FOLGA_F1_ANTIGA = { ...FOLGA_F1 }, FOLGA_F1_REAL = { facil: 0.13, medio: 0.08, dificil: 0 }; // (Formula GP: os de antes de #665, afinados na escala real) // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
+const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: +(process.env.ROBO_FOLGA_DIFICIL ?? 0.025) }, // (2026-11-16, o Thiago: "os bots no difícil estão insanos": era 0, o mesmo ritmo-alvo do médio)
+  FOLGA_F1_ANTIGA = { ...FOLGA_F1 }, FOLGA_F1_REAL = { facil: 0.13, medio: 0.08, dificil: 0 }; // (Formula GP: os de antes de #665, afinados na escala real) // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
 // por nível, a fração do limite das curvas e da frenagem que o robô usa, por cima do nível que dá o ideal. 1 é o limite do pneu:
 // o perfil (Piloto.perfilDoNivel) para nele, então acima de 1 não muda nada.
 // (2026-11-11, #692 tinha posto o difícil em 1,2: sem o teto, isso era grip que o pneu não tem, e o robô rodava. Medido em Mônaco,
@@ -1171,7 +1172,10 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
       if (ent.gas && car.patina > PAT) ent.gas *= 0.6; // a traseira já está no limite: alivia o pé em vez de cortar
       // (2026-11-16, "lift and coast") com pouca bateria e sem disputa, tira o pé ~0,6 s antes da freada (a velocidade do traçado ~LIFT_PONTOS pontos à
       // frente bem abaixo da de agora): o carro rola e o MGU-K recarrega (F1 carregarErs, semGas), sem gastar freio
-      if (car.ers && car.ers.carga < LIFT_CARGA && !ia.ult && !tf.encontrou && !amb.safety && ent.gas > 0 && !ent.brake && fis[(i + LIFT_PONTOS) % n] < car.v * 0.8) ent.gas = 0;
+      // (2026-11-16, o Thiago: "ultrapassar sem ficar esperando atrás do jogador" e "andar só no embalo do carro") seguindo alguém sem os ERS_MANOBRA de
+      // bateria para atacar, ele também tira o pé antes da freada: recarrega mais rápido, junta a bateria e parte para a manobra em vez de ficar atrás
+      const querCarga = !tf.encontrou ? car.ers && car.ers.carga < LIFT_CARGA : !process.env.ROBO_SEM_EMBALO && car.ers && car.ers.carga < ERS_MANOBRA;
+      if (querCarga && !ia.ult && !amb.safety && ent.gas > 0 && !ent.brake && fis[(i + LIFT_PONTOS) % n] < car.v * 0.8) ent.gas = 0;
     } else {
     Sim.pilotoAutomatico(car, tr, spec, alvo, latAdiante, ent, chicaneLivre ? 1.15 : 1);
     if (chicaneLivre && car.v < alvo * 1.20) ent.brake = 0;

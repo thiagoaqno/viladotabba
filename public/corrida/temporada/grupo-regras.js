@@ -148,7 +148,7 @@ const ORDEM_IGUAL = (a, b) => Equipes.ORDEM.every((k) => a[k] === b[k]);
 function desenvolver(sala, pid) {
   ativa(sala);
   const eq = equipeDa(sala, pid), t = sala.equipes[eq];
-  const limite = Solo.limiteDoAno(sala.ano); // (até BONUS_POR_TEMPORADA pontos por temporada, hoje 2, que se acumulam: temporada/regras.js)
+  const limite = Solo.limiteDoAno(sala.ano); // (até 4 pontos por temporada, que se acumulam: temporada/regras.js)
   if (t.bonus >= limite) throw Error(t.bonus >= Equipes.BONUS_MAX ? "O carro atingiu o limite de desenvolvimento." : "O carro já evoluiu tudo o que dava nesta temporada.");
   const custo = Solo.custoDoDesenvolvimento(t.bonus, sala.ano); gastar(t, custo); t.bonus++;
   anotar(sala, pid, t, `desenvolveu o carro (+1 ponto, ${t.bonus}/${limite})`, custo);

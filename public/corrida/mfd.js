@@ -85,7 +85,7 @@ const HTML = {
     <section class="m3-card m3-prox" data-r="pxCard"><header><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M10 2.5h4"/></svg><b data-r="pxTit">PRÓXIMO PNEU</b></header>
       <div class="m3-prox-c"><svg class="m3-pneu" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="57" class="borracha"/><circle cx="60" cy="60" r="44" class="flanco"/><circle cx="60" cy="60" r="40" class="faixa" data-r="pxFaixa"/><circle cx="60" cy="60" r="30" class="aro"/><g class="raios">${Array.from({ length: 10 }, (_, i) => `<line x1="60" y1="60" x2="${(60 + 28 * Math.cos(i * Math.PI / 5)).toFixed(1)}" y2="${(60 + 28 * Math.sin(i * Math.PI / 5)).toFixed(1)}"/>`).join("")}</g><circle cx="60" cy="60" r="8" class="cubo"/></svg>
         <div class="m3-prox-t"><b class="m3-chip" data-r="pxChip">MÉDIO</b><strong data-r="pxPct">—</strong><small data-r="pxSub">RESTANTES</small></div></div>
-      <p class="m3-nota" data-r="pxMot"></p><i class="m3-tempo"><i data-r="pxBar"></i></i></section>
+      <i class="m3-tempo"><i data-r="pxBar"></i></i></section>
   </div>`,
   jogos: `<div class="m3">
     <section class="m3-card m3-jogos"><header><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg><b>JOGOS DE PNEU</b></header>
@@ -422,15 +422,14 @@ function atualizarSugestao(ctx, agora) {
   const d = dadosDaSugestao(ctx), r = d ? d.EB.gerirSugestao(sugEst, d.EB.sugerirBox(d.e), { agora, volta: d.e.voltaAtual }) : { est: sugEst, mostrar: false, restante: 0, sug: null };
   sugEst = r.est;
   if (r.mostrar && r.sug) {
-    if (!sugVisivel) { sugVisivel = true; abrir(true); mfd.pagina = "box"; paginaVista = null; /* (2026-11-16, o Thiago: o cartão novo do Próximo pneu substitui o antigo) */ try { if (window.Radio) window.Radio.dizer("box" + r.sug.composto, { reserva: "box" }); } catch (e) {} } // abre sozinho e o engenheiro fala junto, com o nome do pneu
+    if (!sugVisivel) { sugVisivel = true; abrir(true); try { if (window.Radio) window.Radio.dizer("box" + r.sug.composto, { reserva: "box" }); } catch (e) {} } // abre sozinho e o engenheiro fala junto, com o nome do pneu
     sugAtual = r.sug; mexeu(); // enquanto o cartão está na tela o painel não recolhe
     const F = F1U(), tipo = F.PNEUS[r.sug.composto], R = refs.mfd;
-    R.sug.hidden = true; set(R.sgLetra, "t", window.HudTorre.LETRA[r.sug.composto] || "M"); set(R.sgLetra, "style", `--c:${tipo.cor}`); set(R.sgNome, "t", tipo.nome.toUpperCase());
+    R.sug.hidden = false; set(R.sgLetra, "t", window.HudTorre.LETRA[r.sug.composto] || "M"); set(R.sgLetra, "style", `--c:${tipo.cor}`); set(R.sgNome, "t", tipo.nome.toUpperCase());
     set(R.sgMotivo, "t", r.sug.motivo + (r.sug.stopGo && ctx.m && ctx.m.stopGo ? " · cumpre o stop-and-go junto" : ""));
     sugRestante = r.restante; set(R.sgCont, "t", Math.ceil(r.restante / 1000)); set(R.sgBarra, "w", Math.round((r.restante / 10000) * 100) + "%");
     const k = teclasDe("confirmar")[0], b = botoesDe("confirmar")[0];
     set(R.sgDica, "t", [k ? nomeDaTecla(k) : "", b != null ? nomeDoBotao(b) + " no controle" : ""].filter(Boolean).join(" · ") + " confirma");
-    sugTexto = r.sug.motivo + " · " + [k ? nomeDaTecla(k) : "", b != null ? nomeDoBotao(b) : ""].filter(Boolean).join(" ou ") + " confirma";
   } else if (sugVisivel) { sugVisivel = false; sugAtual = null; if (refs.mfd && refs.mfd.sug) refs.mfd.sug.hidden = true; }
 }
 // Enter / A / o botão confirmar: pede o box com o composto sugerido (o box.js cuida do stop-and-go junto) e marca a sugestão como atendida
@@ -479,7 +478,7 @@ function temperaturas() {
   return { ar, pista: pista_, estado, icone: estado === "Seco" ? (noite ? LUA_ICONE : SOL_ICONE) : CHUVA_ICONE };
 }
 const htm = (el, v) => { if (el && el._h !== v) { el._h = v; el.innerHTML = v; } }; // (o ícone em SVG: só reescreve quando muda)
-let sugRestante = 0, sugTexto = ""; // (o tempo que falta para aceitar a sugestão de box, em ms: a barra do Próximo pneu)
+let sugRestante = 0; // (o tempo que falta para aceitar a sugestão de box, em ms: a barra do Próximo pneu)
 let mapaPista = null, mapaEsc = null;
 function mapaDoResumo(r, idLider) {
   const tr = race.tr; if (!tr || !r.mpP) return;
@@ -545,7 +544,7 @@ const ATU = {
     const c = sug ? sug.composto : B.pedido && F.PNEUS[B.pedido] ? B.pedido : proximo(), tp = F.PNEUS[c] || F.PNEUS[F.COMPOSTO_PADRAO];
     set(r.pxTit, "t", B.fase ? "NO BOX" : sug ? "BOX SUGERIDO" : B.pedido ? "BOX PEDIDO" : "PRÓXIMO PNEU");
     set(r.pxChip, "t", tp.nome.toUpperCase()); set(r.pxChip, "style", `--c:${tp.cor}`); set(r.pxFaixa, "style", `stroke:${tp.cor}`);
-    set(r.pxPct, "t", e.vida + "%"); set(r.pxSub, "t", "RESTANTES"); set(r.pxMot, "t", sug ? sugTexto : "");
+    set(r.pxPct, "t", e.vida + "%"); set(r.pxSub, "t", "RESTANTES");
     set(r.pxBar, "w", sug ? Math.round(Math.max(0, Math.min(1, sugRestante / 10000)) * 100) + "%" : "0%"); set(r.pxCard, "c", "m3-card m3-prox" + (sug ? " sugestao" : "") + (e.nivel === "fim" ? " alerta" : ""));
   },
   jogos(ctx, r) {

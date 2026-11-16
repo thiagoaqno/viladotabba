@@ -322,15 +322,6 @@ function corEmbaixo(x, cx, cy, w, h) {
   const n = d.length / 4, hex = (v) => Math.round(v / n).toString(16).padStart(2, "0"); return "#" + hex(r) + hex(g) + hex(b);
 }
 // uma marca (ou um selo da galera) num lugar: a placa (se tiver), a marca cabendo nela e esticada na volta da cabeça
-// (2026-11-16, o Thiago: "o halo todo devia poder ter patrocinadores, os mesmos do capacete, e eu escolher a posição") os cinco lugares do halo,
-// da perna esquerda à direita; a escolha fica neste navegador e vale só para o carro do jogador (f1-pintura.js texturaDoHalo). Lugar vazio
-// mantém a marca da equipe; "tirar" deixa o lugar liso.
-export const LUGARES_HALO = ["Halo · perna esquerda", "Halo · lado esquerdo", "Halo · topo", "Halo · lado direito", "Halo · perna direita"];
-const CHAVE_HALO = "corrida:halo";
-export function lerHalo() { try { const h = JSON.parse(localStorage.getItem(CHAVE_HALO)); return h && Array.isArray(h.lugares) ? h : { lugares: [], fundo: "escuro" }; } catch { return { lugares: [], fundo: "escuro" }; } }
-export function gravarHalo(h) { try { localStorage.setItem(CHAVE_HALO, JSON.stringify(h)); } catch { /* sem armazenamento */ } }
-// uma marca num lugar do halo (a folha do halo tem 256 de altura e o meio em y = 128, onde a conta de esticar dá 1)
-export function patrocinioNoHalo(x, id, cx, w, h, fundo) { patrocinioNoLugar(x, id, [cx, 128, w, h], fundo === "auto" ? "escuro" : fundo, "#101114"); }
 function patrocinioNoLugar(x, id, [cx, cy, w, h], fundo, c3) {
   const estica = Math.min(2, 1 / Math.max(0.3, Math.sin(Math.PI * cy / 256)));
   x.save(); x.translate(cx, cy); x.scale(estica, 1);

@@ -10,7 +10,7 @@
 const MAX_NIVEL = 8;
 // O desenvolvimento da carreira (temporada/regras.js): cada equipe soma até BONUS_POR_TEMPORADA pontos de orçamento por temporada, que ficam de
 // uma temporada para a outra, até BONUS_MAX (2026-11-13: era +4 para sempre, e da 2ª temporada em diante ninguém evoluía mais)
-const BONUS_POR_TEMPORADA = 2, BONUS_MAX = 16; // (2026-11-16, o Thiago: "a progressão tá muito rápida: fácil upar no começo e batemos no limite cedo": eram 4 por temporada, até 24; vale para todos)
+const BONUS_POR_TEMPORADA = 4, BONUS_MAX = 24;
 const EMERGENCIA = 0.35; // carro quebrado: anda no modo de emergência, com essa fração da velocidade final (e metade da aceleração)
 const ORDEM = ["motor", "aero", "chassi", "freios", "suspensao", "confiab"];
 // o que cada peça faz (os textos da tela de montagem); `bom` e `custa` são as contas resumidas

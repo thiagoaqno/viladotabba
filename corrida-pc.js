@@ -68,6 +68,13 @@ function attach(app) {
   let online = false, ultimoAviso = "", pendente = null;
   // ao abrir, com internet: confere se o site tem arquivos novos, SEM baixar (corrida-pc-atualizar.js); o jogo pergunta antes
   const conferindo = SITE ? Atualizar.conferir(SITE).then((p) => { pendente = p; }).catch((e) => console.warn("Atualização:", e.message)) : Promise.resolve();
+  // (2026-11-16, o Thiago: "em Vegas, toda vez que bate dá uma travadinha") o jogo no programa conta aqui cada quadro que travou e o que mudou
+  // nele (shader novo, batida, câmera): vai para o servidor.log junto com o laço do servidor, para medir antes de mexer
+  app.post("/api/corrida/pc/travada", require("express").json({ limit: "4kb" }), (req, res) => {
+    const d = req.body || {}, t = (v) => String(v ?? "").slice(0, 300);
+    console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC (tela): quadro de ${Math.round(+d.ms || 0)} ms · ${t(d.pista)} · ${t(d.fase)} · ${t(d.oque)}`);
+    res.json({ ok: true });
+  });
   app.get("/corrida/pc.js", async (req, res) => {
     await Promise.race([conferindo, new Promise((ok) => setTimeout(ok, 4000))]); // (a primeira página espera a conferência, até 4 s)
     const atualizacao = pendente && (pendente.grande ? { grande: true, link: pendente.link, notas: pendente.notas } : { n: pendente.arquivos.length, mb: Math.max(0.1, Math.round(pendente.bytes / 1e5) / 10), reabrir: pendente.servidor, notas: pendente.notas });

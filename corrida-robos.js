@@ -544,7 +544,7 @@ const ATAQUE_PERTO_MONACO = L_CARRO * 2.5; // Mônaco: só começa a ultrapassar
 let MARG_PARADO = 28; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 26
 const ARRANQUE_INI_MS = 2000, ARRANQUE_RAMPA_MS = 4000, ARRANQUE_SEM_ULT_MS = 3500; // a largada: a reserva de espaço à frente volta ao normal entre 2 s e 6 s, e sem ultrapassagem nos primeiros 3,5 s
 // (2026-11: mais agressivos depois dos carros parelhos: emparelham mais cedo, mais perto de lado, e o difícil defende mais)
-const ESPERA_VAGA_MS = 2500, FECHA_MANOBRA = 20, ERS_ATAQUE = 0.35, ERS_DEFESA = 0.6; // (a defesa só com sobra: defendendo sempre, a bateria de quem ataca e a de quem defende se anulavam e o pelotão virava trem) // FECHA_MANOBRA: u/s acima do alvo que o robô mantém, meio de lado, para emparelhar (~15 km/h)
+const ESPERA_VAGA_MS = 2500, FECHA_MANOBRA = 20, ERS_ATAQUE = 0, ERS_DEFESA = 0.6; // (2026-11-16, o Thiago: "eles frequentemente zeram a bateria, é normal": no ataque gasta até zerar; era 0,35) (a defesa só com sobra: defendendo sempre, a bateria de quem ataca e a de quem defende se anulavam e o pelotão virava trem) // FECHA_MANOBRA: u/s acima do alvo que o robô mantém, meio de lado, para emparelhar (~15 km/h)
 const _x = 0; // quanto tempo o robô espera, ainda atrás do alvo, o lado escolhido voltar a caber (transito)
 const TRANSITO_NIVEL = { facil: { margem: 40, antec: 0.95, defende: 0.2 }, medio: { margem: 32, antec: 1.3, defende: 0.55 }, dificil: { margem: 30, antec: 1.5, defende: 0.65 } };
 // Formula GP: a escala real troca os números acima pelos de antes de #665 (pistas.js chama na troca de escala)
@@ -851,6 +851,14 @@ function passoNoBox(room, p, ia, pf, dt, emit) {
 // logo atrás de você com outro carro colado nele, ele segura (a defesa do perfil já é dele) e o rádio avisa. TENSO, à frente e com você colado,
 // não abre: o rádio diz que ele recusou a ordem. Nada disso na largada, sob safety car ou depois da bandeirada.
 const PERTO_EQUIPE = 30;
+// (2026-11-16, as estratégias de bateria do Thiago) lift and coast: abaixo de LIFT_CARGA, a LIFT_PONTOS pontos de uma freada forte; o bônus de
+// ultrapassagem: cruzou a linha a menos de 1 s do carro da frente, +BONUS_ULTRAPASSAGEM de bateria (0,5 MJ da janela de 4 MJ) na volta seguinte
+const LIFT_CARGA = 0.25, LIFT_PONTOS = 20, BONUS_ULTRAPASSAGEM = 0.125;
+function bonusDeUltrapassagem(room, p, ia, car) {
+  if (!car.ers || ia.bonusVolta === p.laps) return; ia.bonusVolta = p.laps;
+  let frente = Infinity; for (const o of Object.values(room.players)) { if (o === p || !o.pos || o.finish != null || o.dnf) continue; const d = o.pos.prog - car.prog; if (d > 0 && d < frente) frente = d; }
+  if (frente * STEP / Math.max(car.v, 1) < 1) car.ers.carga = Math.min(1, car.ers.carga + BONUS_ULTRAPASSAGEM);
+}
 const ERS_MANOBRA = +(process.env.ROBO_ERS_MANOBRA ?? 0.3); // a bateria mínima para partir para uma ultrapassagem (fora da chuva)
 // a margem de cada piloto no limite de aderência das curvas: MARGEM_BASE para todos, mais MARGEM_POR_PONTO por ponto de constância abaixo de 95
 const MARGEM_BASE = +(process.env.ROBO_MARGEM_BASE ?? 0.006), MARGEM_POR_PONTO = +(process.env.ROBO_MARGEM_PONTO ?? 0.0004); // pontos de pista (6 u cada, ~37 m)
@@ -1037,7 +1045,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   // (2026-11-16, o Thiago: "cada piloto ter sua margem pra não derrapar, exceto caso de erro") o piloto mais constante deixa menos sobra (o erro, erroK, vem por cima)
   const margemPiloto = 1 - (MARGEM_BASE + Math.max(0, 95 - (p.piloto ? p.piloto.constancia : 85)) * MARGEM_POR_PONTO);
   const escalaCurva = Math.sqrt((novo ? pneu.rel : pneu.grip) * dano.grip * vac.aderencia) * cautelaPneu * cautela * margemPiloto;
-  if (!reta) alvo *= escalaCurva; // só as curvas dependem da aderência (no molhado, mais a cautela do pneu na água: cautelaPneu)
+  if (!reta) alvo *= escalaCurva;
   const drs = !!car.drsAtivo && !room.direcao?.safety && !room.direcao?.amarelo;
   const ganhoReta = (1 + (drs ? F1.DRS_GANHO * (spec.drs ?? 1) : 0)) * (1 + vac.final);
   if (reta) alvo *= ganhoReta;
@@ -1086,7 +1094,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   let ritmoDaVolta = 1, erroK = 1;
   if (novo) {
     const volta = p.laps || 0;
-    if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; }
+    if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; if (volta > 0) bonusDeUltrapassagem(room, p, ia, car); }
     ritmoDaVolta = ia.ritmoDaVolta;
     if (ia.erroAte > now) erroK = ia.erroK;
     else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * ({ facil: 1.4, medio: 1, dificil: 0.7 }[room.config.nivel] || 1)) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
@@ -1115,6 +1123,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
       const noPiloto = jeitoP.entradaK * ritmoDaVolta * erroK; // o jeito do piloto, o ritmo desta volta e o erro de agora
       Piloto.comandos(car, tr, spec, latAdiante, (j) => { const v = fis[j]; return Math.min(tetoReta, (v >= topo * 0.97 ? tetoReta : v * escalaCurva * ataque * noPiloto) * medoK); }, ent, ctx, jeitoP);
       if (ent.gas && car.patina > PAT) ent.gas *= 0.6; // a traseira já está no limite: alivia o pé em vez de cortar
+      // (2026-11-16, "lift and coast") com pouca bateria e sem disputa, tira o pé ~0,6 s antes da freada (a velocidade do traçado ~LIFT_PONTOS pontos à
+      // frente bem abaixo da de agora): o carro rola e o MGU-K recarrega (F1 carregarErs, semGas), sem gastar freio
+      if (car.ers && car.ers.carga < LIFT_CARGA && !ia.ult && !tf.encontrou && !amb.safety && ent.gas > 0 && !ent.brake && fis[(i + LIFT_PONTOS) % n] < car.v * 0.8) ent.gas = 0;
     } else {
     Sim.pilotoAutomatico(car, tr, spec, alvo, latAdiante, ent, chicaneLivre ? 1.15 : 1);
     if (chicaneLivre && car.v < alvo * 1.20) ent.brake = 0;

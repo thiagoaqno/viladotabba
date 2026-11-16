@@ -8,6 +8,7 @@
 // (f1-piloto.js) ocupa y de 98 a 127 e x = 384 ± 94, então esse pedaço fica só com o casco por baixo; a faixa do patrocínio entra logo acima.
 // `cores`: [casco, segunda cor, terceira cor (filetes, detalhes)].
 import { desenharMarca } from "./f1-marcas.js";
+import { ESTILOS } from "./f1-capacetes-estilos.js";
 
 export const CAPACETES = {
   norris: { cores: ["#c4f31a", "#101114", "#d9ae2e"], desenho: "faixa" },       // verde-neon e preto, uma estrelinha dourada
@@ -270,10 +271,12 @@ const DESENHOS = {
 // { desenho, cores: [casco, segunda, detalhe], viseira, bandeira (sigla de gp-info.js BANDEIRAS), nome }; o servidor confere com `limparCapacete` (corrida.js, a mesma regra)
 // (2026-11-16) as 12 da grade do Thiago, nesta ordem, no lugar das antigas. Os desenhos antigos continuam em DESENHOS (um capacete guardado
 // com eles ainda pinta igual), mas não aparecem mais na escolha.
-export const DESENHOS_CAPACETE = { degrade: "Degradê", stripe: "Stripe", audi: "Audi", linhas: "Linhas", blocos: "Blocos", topografico: "Topográfico",
+// (2026-11-16) os 16 estilos da imagem do Thiago vêm primeiro (f1-capacetes-estilos.js), cada um com as suas cores de fábrica (CORES_DO_ESTILO)
+export const DESENHOS_CAPACETE = { ...Object.fromEntries(Object.entries(ESTILOS).map(([k, e]) => [k, e.nome])), degrade: "Degradê", stripe: "Stripe", audi: "Audi", linhas: "Linhas", blocos: "Blocos", topografico: "Topográfico",
   xadrez: "Checker", triangulos: "Triângulos", minimalista: "Minimalista", faixas: "Faixas", geometrico: "Geométrico", pinceladas: "Pinceladas" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
 // o "Padrão" (as 4 variações de cada desenho), o acabamento do casco e os patrocínios (selos inventados, sem marca de verdade); a lista do servidor
 // é a mesma (corrida.js, limparCapacete)
+export const CORES_DO_ESTILO = (id) => ESTILOS[id] ? { cores: ESTILOS[id].cores.slice(), viseira: ESTILOS[id].viseira } : null;
 export const VARIANTES = ["Original", "Detalhe trocado", "Cores trocadas", "Espelhado"];
 export const ACABAMENTOS = { brilho: "Brilhante", fosco: "Fosco", acetinado: "Acetinado", metal: "Metálico", perola: "Perolado", camaleao: "Camaleão",
   flocos: "Flocos de metal", carbono: "Fibra de carbono", cromo: "Cromado" }; // (2026-11-15: acetinado, perolado, camaleão, flocos e carbono)
@@ -406,7 +409,7 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   const carbono = extra && extra.acabamento === "carbono" && folhaDeRelevo("carbono");
   if (carbono) { x.drawImage(carbono, 0, 0); x.globalAlpha = 0.2; x.fillStyle = c1; x.fillRect(0, 0, 512, 256); x.globalAlpha = 1; } // (o casco de carbono, puxado para a cor 1)
   x.save(); if (v === 3) { x.translate(512, 0); x.scale(-1, 1); } // (o "Padrão" espelhado: o desenho vira de lado)
-  (DESENHOS[desenho] || DESENHOS.generico)(x, base);
+  if (ESTILOS[desenho]) ESTILOS[desenho].pintar(x, base); else (DESENHOS[desenho] || DESENHOS.generico)(x, base);
   x.restore();
   x.fillStyle = c3; x.fillRect(282, 74, 204, 11); // a faixa estreita do patrocínio / nome acima da viseira (só cor; um pouco acima do lábio da viseira)
   // as duas entradas de ar do queixo, logo abaixo da viseira (2026-11-13, pela imagem do Thiago): fendas escuras inclinadas para fora

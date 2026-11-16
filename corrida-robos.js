@@ -51,6 +51,13 @@ const CACHE = new Map();
 // meio dos vizinhos (o caminho mais reto possível), sem passar da beira. O resultado abre antes da curva, encosta
 // por dentro no ápice e volta a abrir na saída. Devolve o deslocamento lateral de cada ponto (lat) e a curvatura dele.
 const LINHAS = new Map();
+const ESTREITO_BASE = +(process.env.ROBO_ESTREITO_BASE ?? 0.4), ESTREITO_K = +(process.env.ROBO_ESTREITO_K ?? 0.5);
+let CORRECOES = null;
+function correcaoDaLinha(pista) {
+  if (process.env.ROBO_SEM_CORRECAO) return null;
+  if (CORRECOES == null) { try { CORRECOES = JSON.parse(require("fs").readFileSync(path.join(__dirname, "public", "corrida", "linha-correcao.json"), "utf8")); } catch { CORRECOES = {}; } }
+  return CORRECOES[pista] || null;
+}
 const FOLGA_TETO = +(process.env.ROBO_FOLGA_TETO ?? 3); // até onde a linha pode passar do teto do muro (o teto já desconta a folgaLinha de 6 u)
 // o maior deslocamento do centro do carro que cabe entre as barreiras explícitas de uma pista (`muros` em pistas.js, Baku: a Cidade Velha é estreita); Infinity onde a pista é a de sempre
 function tetoDoMuro(t, pts) {
@@ -86,7 +93,10 @@ function tracado(pista, f1 = false, linhaPronta = null) {
     const lim = (i) => teto[i] + FOLGA_TETO; let mexeu = 0;
     for (let i = 0; i < n; i++) { const l = lat[(i + 2) % n], m = lim(i); if (Math.abs(l) > m) { lat[(i + 2) % n] = Math.sign(l) * m; mexeu++; } }
     if (mexeu) for (let r = 0; r < 4; r++) { const c = Float64Array.from(lat); for (let i = 0; i < n; i++) { const v = (c[(i - 1 + n) % n] + 2 * c[i] + c[(i + 1) % n]) / 4, m = lim((i - 2 + n) % n); lat[i] = Math.max(-m, Math.min(m, v)); } }
-  }
+  }  // (2026-11-16) a correção medida pelo caminho real do carro (ferramentas/linha-muro.js, public/corrida/linha-correcao.json): onde o robô, mirando
+  // longe, cortava a curva por dentro do muro, a linha vem empurrada para o meio na medida do excesso. A mira não muda (é ela que dá o ritmo).
+  if (f1) { const c = correcaoDaLinha(pista); if (c && c.n === n) for (const [i, d] of c.d) lat[i] += d; }
+
   pos();
   const k = new Float64Array(n), sinal = new Float64Array(n); // sinal: +1 se a curva vai para o lado de lat positivo, -1 para o outro
   for (let i = 0; i < n; i++) { // curvatura do traçado: quanto a direção vira por unidade andada
@@ -236,6 +246,14 @@ function perfilF1(pf, f) {
   if (!v && pf.linha.hi) { // pistas de GP: o ritmo do piloto novo (corrida-piloto.js), com os limites de verdade do carro
     const lat = Float64Array.from({ length: pf.n }, (_, i) => pf.lat[(i + 2) % pf.n]);
     v = Piloto.perfilDoNivel(pf.pts, lat, pf.c, aderRef(), q, pf.t.janelaRitmo);
+    // (2026-11-16) o teto de velocidade entre as barreiras (o mesmo de baixo, de antes) não valia na linha de F1: no castelo de Baku (44% da volta, a pista
+    // com ~19 u de folga para cada lado) o robô entrava a ~220 u/s, não fazia a chicane e raspava o muro mesmo com a linha corrigida. ESTREITO_BASE e
+    // ESTREITO_K: a fração da velocidade máxima onde a folga do muro (pf.teto) vai a zero e o quanto ela sobe até `tetoMuro` (30 u). Mônaco tem a sua conta.
+    if (pf.teto && pf.t.muros && T.baseDe(pf.pista) !== "monaco") {
+      const n = pf.n, vmax = pf.c.vmax, lim = pf.t.tetoMuro ?? 30; let mexeu = false; v = Array.from(v);
+      for (let i = 0; i < n; i++) if (pf.teto[i] < lim) { const cap = vmax * (ESTREITO_BASE + ESTREITO_K * Math.max(0, pf.teto[i]) / lim); if (cap < v[i]) { v[i] = cap; mexeu = true; } }
+      if (mexeu) for (let volta = 0; volta < 2; volta++) for (let i = n - 1; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[(i + 1) % n] ** 2 + 2 * pf.c.brake * 0.72 * STEP));
+    }
     if (mapa.size >= 30) mapa.delete(mapa.keys().next().value);
     mapa.set(q, v);
   }

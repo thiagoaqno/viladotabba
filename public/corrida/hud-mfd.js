@@ -6,7 +6,9 @@
 const PAGINAS = [
   { id: "resumo", nome: "RESUMO", quando: (c) => !!c.eu && !!c.pneu }, // (2026-11-16, o MFD novo: o painel vivo, lido num olhar; mfd.js HTML.resumo)
   // (2026-11-16) a página Pneus saiu: era redundante (o Resumo mostra o pneu e o Box o detalhe, os jogos e o próximo)
-  { id: "box", nome: "BOX", quando: (c) => !!c.box }, // logo ao lado de Pneus: a parada nasce do desgaste
+  { id: "box", nome: "PRÓXIMO PNEU", quando: (c) => !!c.box }, // logo ao lado de Pneus: a parada nasce do desgaste
+  { id: "jogos", nome: "JOGOS DE PNEU", quando: (c) => !!c.box },
+  { id: "condicoes", nome: "CONDIÇÕES", quando: (c) => !!c.eu },
   { id: "danos", nome: "DANOS", quando: (c) => !!c.eu },
   { id: "ers", nome: "ERS", quando: (c) => !!c.ers },
   { id: "tempos", nome: "TEMPOS", quando: (c) => !!c.eu },

@@ -29,6 +29,8 @@ const CARRO = (cls) => `<svg class="mp-carro ${cls}" viewBox="0 0 90 120" aria-h
 // os ícones das abas (como no jogo: um por página)
 const ICONE = {
   resumo: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+  jogos: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/>',
+  condicoes: '<path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z"/>',
   pneus: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>', danos: '<path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/>',
   ers: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>', box: '<path d="M4 21V4M4 5h13l-2 4 2 4H4"/>', tempos: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 2.5h5"/>',
   classificacao: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>', ajustes: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
@@ -42,9 +44,9 @@ const HTML = {
   // embaixo, o carro da frente, a diferença para ele e o carro de trás. Cada bloco leva à sua página.
   resumo: `<div class="rs3">
     <div class="rs3-l">
-      <button type="button" class="rs3-c rs3-pn" data-ir="box" title="Pneus e box"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" class="tr"/><circle cx="22" cy="22" r="18" class="vl" data-r="rpAnel"/></svg><b data-r="rpL">M</b><em data-r="rpV">—</em></button>
+      <button type="button" class="rs3-c rs3-pn" data-ir="box" title="Pneus e box"><span class="rs3-anel"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" class="tr"/><circle cx="22" cy="22" r="18" class="vl" data-r="rpAnel"/></svg><b data-r="rpL">M</b></span><em data-r="rpV">—</em></button>
       <button type="button" class="rs3-c rs3-dn" data-ir="danos" title="Danos"><svg class="rs3-carro" viewBox="0 0 30 46" aria-hidden="true"><rect x="6" y="1" width="18" height="4" rx="1" class="asa"/><path d="M15 3 L18 15 L19 33 L21 42 L9 42 L11 33 L12 15 Z" class="corpo" data-r="rdCorpo"/><rect x="1" y="9" width="6" height="9" rx="2" class="rd"/><rect x="23" y="9" width="6" height="9" rx="2" class="rd"/><rect x="1" y="30" width="6" height="9" rx="2" class="rd"/><rect x="23" y="30" width="6" height="9" rx="2" class="rd"/></svg><span><strong data-r="rdT">100%</strong><i class="rs3-b"><i data-r="rdB"></i></i></span></button>
-      <div class="rs3-c rs3-cl"><span class="rs3-ic" data-r="rlI">☀</span><strong data-r="rlT">Seca</strong></div>
+      <button type="button" class="rs3-c rs3-cl" data-ir="box" title="Condições"><span class="rs3-ic" data-r="rlI"></span><strong data-r="rlT">—</strong></button>
       <div class="rs3-c rs3-mp"><svg viewBox="0 0 120 60" aria-hidden="true"><path class="pista" data-r="mpP"/><g data-r="mpCh"><rect width="5" height="5" fill="#fff"/><rect x="2.5" width="2.5" height="2.5" fill="#111"/><rect y="2.5" width="2.5" height="2.5" fill="#111"/></g><circle r="3" class="lid" data-r="mpL"/><circle r="3.6" class="eu" data-r="mpE"/></svg></div>
     </div>
     <button type="button" class="rs3-pe" data-ir="tempos" title="Tempos"><span><b data-r="frP">—</b><i></i><em data-r="frN"></em></span><span class="rs3-gap" data-r="gap">—</span><span><b data-r="trP">—</b><i></i><em data-r="trN"></em></span></button>
@@ -54,18 +56,32 @@ const HTML = {
   // só o essencial, grande: o pneu de agora com a vida, quantas voltas ainda aguenta e o próximo pneu (B abre o Box)
   pneus: `<div class="mp mp-pneus2"><div class="pn2-topo"><div class="anel anel-g" data-r="a0"><b></b></div><div class="pn2-txt"><div class="mp-comp"><b class="mp-bola" data-r="pLetra">M</b><span data-r="pNome">Médio</span></div><strong class="pn2-voltas" data-r="pVoltas">—</strong><span class="pn2-sub" data-r="pTempT"></span></div></div>
     <div class="pn2-prox"><span>PRÓXIMO PNEU</span><b data-r="pProx">—</b><kbd>B</kbd></div><p class="mp-nota" data-r="pNota"></p></div>`,
-  danos: `<div class="mp mp-dupla">${CARRO("dn")}<b class="mp-centro" data-r="dPct">0%</b><div class="mp-dados">
-    <div class="mp-barra"><span>Dano</span><div><i data-r="dBarra"></i></div><b data-r="dT">0%</b></div>
-    <div class="mp-barra"><span>Desempenho</span><div><i data-r="dDes"></i></div><b data-r="dDesT">100%</b></div>
-    <p class="mp-nota" data-r="dBatida">Sem batidas</p><p class="mp-nota mp-fraca">Com 100% de dano o carro está destruído (perda total).</p></div></div>`,
+  danos: `<div class="m3"><section class="m3-card m3-dano" data-r="dnCard"><header><span class="m3-alerta" data-r="dnAl">!</span><b>DANOS DO CARRO</b></header>
+    <div class="m3-dano-c"><svg class="m3-carro" viewBox="0 0 200 70" aria-hidden="true" data-r="dnSil"><path d="M8 35h18M174 35h18"/><rect x="2" y="12" width="12" height="46" rx="2"/><rect x="186" y="16" width="12" height="38" rx="2"/><path d="M26 35 L44 26 L70 24 L84 18 L120 18 L142 24 L168 28 L176 35 L168 42 L142 46 L120 52 L84 52 L70 46 L44 44 Z"/><path d="M90 28 Q100 22 110 28 Q100 34 90 28"/><rect x="34" y="6" width="22" height="12" rx="3"/><rect x="34" y="52" width="22" height="12" rx="3"/><rect x="146" y="5" width="24" height="13" rx="3"/><rect x="146" y="52" width="24" height="13" rx="3"/></svg>
+      <div class="m3-dano-t"><strong data-r="dnPct">100%</strong><i class="m3-barra"><i data-r="dnBar"></i></i><small data-r="dnSub">sem danos</small></div></div></section></div>`,
   ers: `<div class="mp mp-ers"><div class="mp-grande"><span>BATERIA</span><b data-r="eBat">0%</b></div>
     <div class="mp-barra"><span>Carga</span><div><i data-r="eBatB"></i></div><b data-r="eEst">—</b></div>
     <div class="mp-barra"><span>Recarga da volta</span><div><i data-r="eRecB"></i></div><b data-r="eRecT">0%</b></div>
     <div class="mp-par"><span>Modo</span><b data-r="eModo">—</b></div><div class="mp-par"><span>DRS</span><b data-r="eDrs">—</b></div>
     <div class="mp-par"><span>Combustível</span><b>não medido no jogo</b></div></div>`,
-  box: `<div class="mp mp-box"><div class="bx-atual" data-r="bAtual"><b class="mp-bola" data-r="bAtL">M</b><span><strong data-r="bAtT">—</strong><em data-r="bAtS"></em></span><i class="rs3-b"><i data-r="bAtB"></i></i></div><div class="mp-janela"><small>JANELA DE BOX</small><b data-r="bJan">—</b><em data-r="bSub"></em></div>
-    <div class="bx-linha" role="group" aria-label="Escolher o pneu da parada">${["macio", "medio", "duro", "chuva", "intermediario"].map((c, i) => `<button type="button" class="bx-btn" aria-label="${F().PNEUS[c].nome}" data-c="${c}" data-r="bx${c}"><kbd>${i + 1}</kbd><i class="bx-pn"></i><b>${["MACIO", "MÉDIO", "DURO", "CHUVA", "INTER."][i]}</b><span></span></button>`).join("")}</div>
-    <p class="mp-nota bx-info" data-r="bInfo"></p><p class="mp-nota mp-fraca" data-r="bDica"><kbd>1</kbd>–<kbd>5</kbd> escolhe e pede · <kbd>B</kbd> ou <kbd>Enter</kbd> pede o selecionado · <kbd>6</kbd> cancela</p></div>`,
+  // (2026-11-16, as imagens do Thiago) três cartões: o PRÓXIMO PNEU (o desenho do pneu na cor do composto, a etiqueta e quanto resta do pneu de agora; a
+  // barra embaixo é o tempo para aceitar a sugestão de box), os JOGOS DE PNEU (cada anel escolhe e pede: 1 a 5) e as CONDIÇÕES DA CORRIDA.
+  // (2026-11-16, o Thiago: "eram para ser 3 abas, uma para cada") o Próximo pneu, os Jogos de pneu e as Condições, cada um na sua aba
+  box: `<div class="m3">
+    <section class="m3-card m3-prox" data-r="pxCard"><header><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M10 2.5h4"/></svg><b data-r="pxTit">PRÓXIMO PNEU</b></header>
+      <div class="m3-prox-c"><svg class="m3-pneu" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="57" class="borracha"/><circle cx="60" cy="60" r="44" class="flanco"/><circle cx="60" cy="60" r="40" class="faixa" data-r="pxFaixa"/><circle cx="60" cy="60" r="30" class="aro"/><g class="raios">${Array.from({ length: 10 }, (_, i) => `<line x1="60" y1="60" x2="${(60 + 28 * Math.cos(i * Math.PI / 5)).toFixed(1)}" y2="${(60 + 28 * Math.sin(i * Math.PI / 5)).toFixed(1)}"/>`).join("")}</g><circle cx="60" cy="60" r="8" class="cubo"/></svg>
+        <div class="m3-prox-t"><b class="m3-chip" data-r="pxChip">MÉDIO</b><strong data-r="pxPct">—</strong><small data-r="pxSub">RESTANTES</small></div></div>
+      <i class="m3-tempo"><i data-r="pxBar"></i></i></section>
+  </div>`,
+  jogos: `<div class="m3">
+    <section class="m3-card m3-jogos"><header><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></svg><b>JOGOS DE PNEU</b></header>
+      <div class="m3-jg">${["duro", "medio", "macio", "intermediario", "chuva"].map((c, i) => `<button type="button" class="bx-btn m3-jg-i" data-c="${c}" data-r="bx${c}" aria-label="${F().PNEUS[c].nome}: pedir"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/></svg><span></span><kbd>${[3, 2, 1, 5, 4][i]}</kbd></button>`).join("")}</div>
+      <p class="m3-nota" data-r="bInfo"></p></section>
+  </div>`,
+  condicoes: `<div class="m3">
+    <section class="m3-card m3-cond"><header><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z"/><circle cx="17" cy="6" r="2" stroke="#ffd23f"/><path d="M17 1.5v1M21 6h1M20.2 2.8l-.7.7" stroke="#ffd23f"/></svg><b>CONDIÇÕES DA CORRIDA</b></header>
+      <div class="m3-cond-g"><div><strong data-r="cdAr">—</strong><small>AR</small></div><div><strong data-r="cdPista">—</strong><small>PISTA</small></div><div><span class="m3-cond-ic" data-r="cdIco"></span><small data-r="cdEst">—</small></div></div></section>
+  </div>`,
   tempos: `<div class="mp mp-tempos"><div class="mp-par"><span>Volta atual</span><b data-r="tAtual">0:00.000</b></div><div class="mp-par"><span>Corrida</span><b data-r="tCorrida">0:00.0</b></div><div class="mp-par"><span>Última volta</span><b data-r="tUlt">—:--.---</b></div><div class="mp-par"><span>Melhor volta</span><b data-r="tMelhor">—:--.---</b></div>
     <div class="mp-par"><span>Volta mais rápida</span><b class="roxo" data-r="tVR">—</b></div>
     <div class="mp-par frente"><span>Carro da frente</span><b data-r="tFrente">—</b></div><div class="mp-par tras"><span>Carro de trás</span><b data-r="tTras">—</b></div></div>`,
@@ -374,7 +390,7 @@ function listaDePaginas(ctx) {
 // Quando a hora chega (a 1 volta da janela, pneu no fim, chuva chegando ou parando, falta o 2º composto, stop-and-go no prazo) o MFD abre sozinho com
 // "BOX SUGERIDO: <composto>" e 10 s de contagem; Enter (ou A, ou o botão confirmar da tela Controles) pede a parada com aquele composto. Sem confirmar, some
 // e só volta se a situação mudar (nada de spam).
-let sugEst = null, sugAtual = null, sugVisivel = false;
+let sugEst = null, sugAtual = null, sugVisivel = false; // (sugRestante fica junto de temperaturas, mais acima)
 function dadosDaSugestao(ctx) {
   const m = ctx.m, B = race.box, EB = window.EstrategiaBox, F = F1U();
   if (!EB || !m || !B || !race.pneu || E.S.phase !== "race" || m.finish != null || !m.started) return null;
@@ -394,7 +410,7 @@ function atualizarSugestao(ctx, agora) {
     const F = F1U(), tipo = F.PNEUS[r.sug.composto], R = refs.mfd;
     R.sug.hidden = false; set(R.sgLetra, "t", window.HudTorre.LETRA[r.sug.composto] || "M"); set(R.sgLetra, "style", `--c:${tipo.cor}`); set(R.sgNome, "t", tipo.nome.toUpperCase());
     set(R.sgMotivo, "t", r.sug.motivo + (r.sug.stopGo && ctx.m && ctx.m.stopGo ? " · cumpre o stop-and-go junto" : ""));
-    set(R.sgCont, "t", Math.ceil(r.restante / 1000)); set(R.sgBarra, "w", Math.round((r.restante / 10000) * 100) + "%");
+    sugRestante = r.restante; set(R.sgCont, "t", Math.ceil(r.restante / 1000)); set(R.sgBarra, "w", Math.round((r.restante / 10000) * 100) + "%");
     const k = teclasDe("confirmar")[0], b = botoesDe("confirmar")[0];
     set(R.sgDica, "t", [k ? nomeDaTecla(k) : "", b != null ? nomeDoBotao(b) + " no controle" : ""].filter(Boolean).join(" · ") + " confirma");
   } else if (sugVisivel) { sugVisivel = false; sugAtual = null; if (refs.mfd && refs.mfd.sug) refs.mfd.sug.hidden = true; }
@@ -429,6 +445,22 @@ export function atualizarMfd(ctx) {
 }
 
 const F1U = () => window.F1Regras;
+// (2026-11-16, o Thiago: "temperatura inventada") o jogo não mede a temperatura do ar nem da pista: um número de enfeite, coerente e fixo no GP. Sai do
+// clima típico de cada pista, cai à noite e com a chuva, varia ±2 pela semente do GP; o asfalto no sol esquenta até 10 °C acima do ar.
+const AR_DA_PISTA = { bahrein: 30, catar: 31, abudhabi: 30, singapura: 30, miami: 29, jeddah: 29, austin: 27, madri: 27, monza: 27, hungaroring: 28, barcelona: 26, interlagos: 25, baku: 24, monaco: 22, mexico: 22, xangai: 22, montreal: 23, redbullring: 23, suzuka: 21, melbourne: 21, spa: 19, silverstone: 19, zandvoort: 18, lasvegas: 16 };
+const SOL_ICONE = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#ffd23f"/><g stroke="#ffd23f" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></g></svg>';
+const CHUVA_ICONE = '<svg viewBox="0 0 24 24" fill="none" stroke="#cfd6e0" stroke-width="1.6" stroke-linecap="round"><path d="M7 15h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 15z"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3" stroke="#5fc8ff"/></svg>';
+const LUA_ICONE = '<svg viewBox="0 0 24 24"><path d="M15 3a8 8 0 1 0 6 13 7 7 0 0 1-6-13z" fill="#dfe6f2"/></svg>';
+function temperaturas() {
+  const S = E.S, pista = S.config.pista, noite = S.config.hora === "noite", agua = clima.agua || 0, chuva = clima.chuva || 0;
+  let h = 0; for (const ch of String(S.semente ?? pista)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const ar = Math.round((AR_DA_PISTA[pista] ?? 24) - (noite ? 5 : 0) - Math.min(1, chuva + agua) * 5 + ((h % 5) - 2));
+  const pista_ = Math.round(ar + (noite ? 2 : 10 * (1 - Math.min(1, agua * 2))));
+  const estado = agua > 0.45 ? "Chuva" : agua > 0.15 ? "Molhado" : chuva > 0.05 ? "Garoa" : "Seco";
+  return { ar, pista: pista_, estado, icone: estado === "Seco" ? (noite ? LUA_ICONE : SOL_ICONE) : CHUVA_ICONE };
+}
+const htm = (el, v) => { if (el && el._h !== v) { el._h = v; el.innerHTML = v; } }; // (o ícone em SVG: só reescreve quando muda)
+let sugRestante = 0; // (o tempo que falta para aceitar a sugestão de box, em ms: a barra do Próximo pneu)
 let mapaPista = null, mapaEsc = null;
 function mapaDoResumo(r, idLider) {
   const tr = race.tr; if (!tr || !r.mpP) return;
@@ -448,23 +480,18 @@ const ATU = {
   resumo(ctx, r) {
     const m = ctx.m, pn = race.pneu, F = F1U(), M_ = M(); if (!m || !pn) return;
     const e = M_.estadoDoPneu(pn, F), tipo = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], COR = { bom: "#2ee08a", medio: "#ffb02e", baixo: "#ff6a3d", fim: "#ff3d4a" };
-    // o pneu: o anel é a vida, na cor do composto; embaixo, voltas nele / voltas que ele aguenta (o stint começa quando o pneu troca)
     if (r._pneu !== pn) { r._pneu = pn; r._volta0 = m.laps || 0; }
     const noPneu = Math.max(0, (m.laps || 0) - r._volta0), v = ctx.tp, aguenta = v && v.voltas < 90 ? Math.max(0, Math.floor(v.voltas)) : null;
     set(r.rpL, "t", window.HudTorre.LETRA[pn.composto] || "M"); set(r.rpL, "style", `color:${tipo.cor}`);
     set(r.rpAnel, "style", `stroke:${tipo.cor};stroke-dasharray:${(e.vida / 100 * 113).toFixed(1)} 113`);
     set(r.rpV, "t", aguenta == null ? `${e.vida}%` : `${noPneu}/${noPneu + aguenta}`); set(r.rpV, "c", e.nivel === "fim" || e.nivel === "baixo" ? "alerta" : "");
-    // o carro
     const dano = Math.max(0, Math.min(100, m.dano || 0)), cond = Math.round(100 - dano), nv = cond > 66 ? "bom" : cond > 33 ? "medio" : "fim";
-    set(r.rdT, "t", cond + "%"); set(r.rdB, "w", cond + "%"); set(r.rdB, "bg", COR[nv]); set(r.rdCorpo, "style", `fill:${cond > 66 ? "#3a3f4b" : COR[nv]}`);
-    // a pista
-    const agua = clima.agua || 0, est = agua > 0.45 ? "Chuva" : agua > 0.15 ? "Molhada" : clima.chuva > 0.05 ? "Garoa" : "Seca";
-    set(r.rlI, "t", est === "Seca" ? "☀" : est === "Garoa" ? "🌦" : "🌧"); set(r.rlT, "t", est);
-    // embaixo: o da frente, a diferença e o de trás
+    set(r.rdT, "t", cond + "%"); set(r.rdB, "w", cond + "%"); set(r.rdB, "bg", cond > 66 ? "#fff" : COR[nv]); set(r.rdCorpo, "style", `fill:${cond > 66 ? "#3a3f4b" : COR[nv]}`);
+    const tc = temperaturas(); htm(r.rlI, tc.icone); set(r.rlT, "t", tc.ar + "°C");
     const pos = ctx.st.findIndex((x) => x.id === m.id), sig = (x) => (x ? x.p.sigla || String(x.p.name || "").slice(0, 3).toUpperCase() : ""), i = ctx.int || {};
     const fr = pos > 0 ? ctx.st[pos - 1] : null, tr = pos >= 0 && pos < ctx.st.length - 1 ? ctx.st[pos + 1] : null;
     set(r.frP, "t", fr ? String(pos) : "—"); set(r.frN, "t", sig(fr)); set(r.trP, "t", tr ? String(pos + 2) : "—"); set(r.trN, "t", sig(tr));
-    set(r.gap, "t", i.frente ? "−" + M_.intervalo(i.frente.seg) + "s" : pos === 0 ? "LÍDER" : "—");
+    set(r.gap, "t", i.frente ? "+" + M_.intervalo(i.frente.seg) + "s" : pos === 0 ? "LÍDER" : "—");
     mapaDoResumo(r, ctx.st[0] && ctx.st[0].id !== m.id ? ctx.st[0].id : null);
   },
   pneus(ctx, r) {
@@ -480,10 +507,10 @@ const ATU = {
     set(r.pNota, "t", e.nivel === "fim" ? "Passou do limite: faça a parada." : v && v.medida ? "(no seu ritmo)" : "");
   },
   danos(ctx, r) {
-    const m = ctx.m; if (!m) return; const d = Math.round(m.dano || 0), des = Math.round(F1U().efeitoDoDano(m.dano || 0).final * 100), nivel = d >= 66 ? "fim" : d >= 33 ? "medio" : "bom";
-    set(r.dPct, "t", d + "%"); set(r.dT, "t", d + "%"); set(r.dBarra, "w", Math.min(100, d) + "%"); set(r.dBarra, "c", d >= 66 ? "baixo" : d >= 33 ? "medio" : "bom");
-    set(r.dDes, "w", des + "%"); set(r.dDesT, "t", des + "%"); corRodas(r, "neutra"); set(r.corpo, "c", "mp-corpo " + nivel); set(r.asaT, "c", "mp-asa " + nivel);
-    const b = m.ultimaBatida; set(r.dBatida, "t", b ? `Última batida: ${b.nivel === "media" ? "média" : b.nivel} (+${Math.round(b.dano)}%)` : "Sem batidas");
+    const m = ctx.m; if (!m) return; const dano = Math.max(0, Math.min(100, m.dano || 0)), cond = Math.round(100 - dano), des = Math.round(F1U().efeitoDoDano(dano).final * 100), b = m.ultimaBatida;
+    set(r.dnPct, "t", cond + "%"); set(r.dnBar, "w", cond + "%"); set(r.dnBar, "c", cond > 66 ? "" : cond > 33 ? "medio" : "baixo");
+    set(r.dnSub, "t", dano < 1 ? "sem danos" : `${des}% do desempenho${b ? ` · última batida ${b.nivel === "media" ? "média" : b.nivel}` : ""}`);
+    set(r.dnCard, "c", "m3-card m3-dano" + (dano >= 33 ? " alerta" : "")); set(r.dnAl, "c", "m3-alerta" + (dano >= 1 ? " on" : ""));
   },
   ers(ctx, r) {
     const ers = race.ers; if (!ers) return; const F = F1U(), carga = pc(ers.carga), m = ctx.modoErs;
@@ -493,26 +520,30 @@ const ATU = {
     const pronto = !!ctx.m && ctx.m.drsZona >= 0; set(r.eDrs, "t", race.drsAtivo ? "Aberto" : pronto ? "Disponível na zona" : "Indisponível");
   },
   box(ctx, r) {
-    const m = ctx.m, F = F1U(), B = race.box; if (!m || !B) return;
-    if (race.pneu && r.bAtT) { // (2026-11-16) o pneu de agora, que era a página Pneus: o composto, a vida, a temperatura e quanto ele aguenta
-      const pn = race.pneu, e = M().estadoDoPneu(pn, F), tp = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], v = ctx.tp, n = v ? Math.max(0, Math.floor(v.voltas)) : null;
-      set(r.bAtL, "t", window.HudTorre.LETRA[pn.composto] || "M"); set(r.bAtL, "style", `--c:${tp.cor}`);
-      set(r.bAtT, "t", e.nivel === "fim" ? "No limite: faça a parada" : n == null || v.voltas >= 90 ? `${tp.nome} · ${e.vida}% de vida` : `${tp.nome} · aguenta ~${n} volta${n === 1 ? "" : "s"}`);
-      set(r.bAtS, "t", `vida ${e.vida}% · temperatura ${e.temp.toLowerCase()}`); set(r.bAtB, "w", e.vida + "%"); set(r.bAtB, "bg", { bom: "#2ee08a", medio: "#ffb02e", baixo: "#ff6a3d", fim: "#ff3d4a" }[e.nivel]);
+    const m = ctx.m, F = F1U(), B = race.box; if (!m || !B || !race.pneu) return;
+    const pn = race.pneu, e = M().estadoDoPneu(pn, F), sug = sugVisivel && sugAtual ? sugAtual : null;
+    // o próximo pneu: o sugerido (com a barra do tempo para aceitar), o pedido ou o que o box colocaria; o número é o que resta do pneu de agora
+    const c = sug ? sug.composto : B.pedido && F.PNEUS[B.pedido] ? B.pedido : proximo(), tp = F.PNEUS[c] || F.PNEUS[F.COMPOSTO_PADRAO];
+    set(r.pxTit, "t", B.fase ? "NO BOX" : sug ? "BOX SUGERIDO" : B.pedido ? "BOX PEDIDO" : "PRÓXIMO PNEU");
+    set(r.pxChip, "t", tp.nome.toUpperCase()); set(r.pxChip, "style", `--c:${tp.cor}`); set(r.pxFaixa, "style", `stroke:${tp.cor}`);
+    set(r.pxPct, "t", e.vida + "%"); set(r.pxSub, "t", "RESTANTES");
+    set(r.pxBar, "w", sug ? Math.round(Math.max(0, Math.min(1, sugRestante / 10000)) * 100) + "%" : "0%"); set(r.pxCard, "c", "m3-card m3-prox" + (sug ? " sugestao" : "") + (e.nivel === "fim" ? " alerta" : ""));
+  },
+  jogos(ctx, r) {
+    const m = ctx.m, F = F1U(), B = race.box; if (!m || !B || !race.pneu) return; const pn = race.pneu;
+    // os jogos: a quantidade de cada composto; o anel cheio se sobra jogo, apagado sem jogo, marcado no pedido e no atual
+    const jogos = jogosDe(m), atual = pn.composto;
+    for (const k of ["macio", "medio", "duro", "chuva", "intermediario"]) {
+      const bt = r["bx" + k], n = jogos[k] ?? 0;
+      set(bt, "c", "bx-btn m3-jg-i" + (B.pedido === k ? " pedido" : "") + (n <= 0 && !(m.stopGo && k === atual) ? " esgotado" : "") + (k === atual ? " atual" : ""));
+      set(bt, "style", `--c:${F.PNEUS[k].cor}`); set(bt.querySelector("span"), "t", String(n));
     }
     const j = ctx.janela;
-    if (B.fase) { set(r.bJan, "t", "NO BOX"); set(r.bSub, "t", ""); }
-    else if (!j) { set(r.bJan, "t", "—"); set(r.bSub, "t", ""); }
-    else if (!j.precisa) { set(r.bJan, "t", "SEM PARADA"); set(r.bSub, "t", j.motivo); }
-    else { set(r.bJan, "t", j.abre === j.fecha ? `VOLTA ${j.abre}` : `VOLTA ${j.abre} – ${j.fecha}`); set(r.bSub, "t", j.motivo || "janela estimada pelo desgaste"); }
-    const jogos = jogosDe(m), sel = B.pedido || proximo(), atual = race.pneu ? race.pneu.composto : null;
-    for (const c of ["macio", "medio", "duro", "chuva", "intermediario"]) {
-      const bt = r["bx" + c], n = jogos[c];
-      set(bt, "c", "bx-btn" + (B.pedido === c ? " pedido" : sel === c ? " sel" : "") + (n <= 0 && !(m.stopGo && c === atual) ? " esgotado" : "") + (c === atual ? " atual" : ""));
-      set(bt, "style", `--c:${F.PNEUS[c].cor}`); set(bt.querySelector("span"), "t", n <= 0 ? "esgotado" : n + (n === 1 ? " jogo" : " jogos"));
-    }
-    set(r.bInfo, "t", [B.pedido ? `PEDIDO: ${nomeDoPedido(B.pedido)}` : "Sem pedido", ctx.retorno ? `volta em ${ctx.retorno}º (est.)` : "", ctx.perda != null ? `troca ~${ctx.perda.toFixed(0)} s` : ""].filter(Boolean).join(" · "));
-    set(r.bDica, "d", B.fase ? "none" : "");
+    set(r.bInfo, "t", B.fase ? "Parada em andamento" : [j && j.precisa ? (j.abre === j.fecha ? `Janela na volta ${j.abre}` : `Janela nas voltas ${j.abre}–${j.fecha}`) : j ? "Sem parada prevista" : "", ctx.perda != null ? `troca ~${ctx.perda.toFixed(0)} s` : ""].filter(Boolean).join(" · "));
+  },
+  condicoes(ctx, r) {
+    // as condições
+    const tc = temperaturas(); set(r.cdAr, "t", tc.ar + "°C"); set(r.cdPista, "t", tc.pista + "°C"); htm(r.cdIco, tc.icone); set(r.cdEst, "t", tc.estado.toUpperCase());
   },
   tempos(ctx, r) {
     const m = ctx.m, M_ = M(); if (!m) return;

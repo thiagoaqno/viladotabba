@@ -17,6 +17,10 @@ const aguardadosDe = (room) => { const q = room.quali; if (!q) return []; const 
 // o Q1 espera os humanos conectados carregarem a pista (o navegador manda `carregou` depois do aquecimento: jogo.js), no máximo CARGA_MAX_MS:
 // sem isso a sessão abria com os navegadores ainda montando a pista e compilando, e cada um começava num momento
 const CARGA_MAX_MS = 40000;
+// (2026-11-15, o Thiago: "na tela de loading já está começando o qualify") os 40 s contavam desde o começo, e um PC que demora mais para preparar
+// a pista (os modelos, a compilação) via o Q1 abrir com a tela de carregamento ainda na frente. Agora os 40 s só contam DEPOIS que o primeiro
+// humano fica pronto (ninguém segura os outros); antes disso, a espera vai até CARGA_ABSOLUTA_MS (para uma sala esquecida não ficar presa).
+const CARGA_ABSOLUTA_MS = 180000;
 const humanosAtivos = (room) => room.quali.ativos.map((id) => room.players[id]).filter((p) => p && !p.bot && p.sockets.size);
 
 // A tabela da sessão agora: cada um com o melhor tempo e a hora em que o fez. Os robôs "cruzam a linha" em momentos
@@ -55,8 +59,8 @@ function iniciar(room, deps) {
   deps.log(room, `⏱️ Classificação: ${room.quali.sessoes.map((k, i) => `Q${i + 1} (${k} carros)`).join(", ")}.`);
   if (!room.order.some((id) => { const p = room.players[id]; return p && !p.bot && p.sockets && p.sockets.size; })) return abrirSessao(room, deps);
   // espera todos carregarem (a sala fica no "intervalo": ninguém anda, os robôs não saem); quem não chegar em CARGA_MAX_MS não segura os outros
-  const q = room.quali; q.carga = { prontos: new Set() }; q.pausaAte = Date.now() + CARGA_MAX_MS;
-  q.proxima = setTimeout(() => { if (room.quali === q && q.carga) { q.carga = null; abrirSessao(room, deps); } }, CARGA_MAX_MS);
+  const q = room.quali; q.carga = { prontos: new Set() }; q.pausaAte = Date.now() + CARGA_ABSOLUTA_MS;
+  q.proxima = setTimeout(() => { if (room.quali === q && q.carga) { q.carga = null; abrirSessao(room, deps); } }, CARGA_ABSOLUTA_MS);
   deps.broadcast(room);
 }
 // um humano carregou a pista (o `carregou` do navegador); com todos os conectados prontos, o Q1 abre já
@@ -64,7 +68,13 @@ function carregou(room, id, deps) {
   const q = room.quali; if (!q || !q.carga) return;
   q.carga.prontos.add(id);
   const falta = room.order.some((x) => { const p = room.players[x]; return p && !p.bot && p.sockets && p.sockets.size && !q.carga.prontos.has(x); });
-  if (falta) return deps.broadcast(room);
+  if (falta) {
+    if (q.carga.prontos.size === 1) { // o primeiro pronto: dali, quem demorar mais de CARGA_MAX_MS não segura os outros
+      clearTimeout(q.proxima); q.pausaAte = Date.now() + CARGA_MAX_MS;
+      q.proxima = setTimeout(() => { if (room.quali === q && q.carga) { q.carga = null; abrirSessao(room, deps); } }, CARGA_MAX_MS);
+    }
+    return deps.broadcast(room);
+  }
   clearTimeout(q.proxima); q.carga = null; abrirSessao(room, deps);
 }
 function abrirSessao(room, deps) {

@@ -415,3 +415,127 @@ button.rs3-c:focus-visible,button.rs3-pe:focus-visible{outline:2px solid var(--e
 .bx-atual>span{display:flex;flex-direction:column;min-width:0;line-height:1.2}.bx-atual strong{font-size:13px}.bx-atual em{font-style:normal;font-size:10.5px;color:#ffffff99}
 .bx-atual>.rs3-b{position:absolute;left:0;right:0;bottom:0;border-radius:0}
 @media (prefers-reduced-motion:reduce){.rs3-pn .vl,.rs3-b>i{transition:none}}
+
+/* ===== (2026-11-16, as imagens do Thiago, aba a aba) o MFD v3: um painel de vidro escuro de cantos bem redondos; o topo com a marca, um divisor e as
+   abas em ícones com o sublinhado vermelho na ativa; cada página em cartões (ícone + título em caixa alta). Este bloco vem por último e manda. ===== */
+#race:is(.f1hud,.f1mfd) #hMfd{--eq:#e10600;width:440px;height:auto;max-height:calc(100vh - 140px);border-radius:22px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(28,31,38,.86),rgba(16,18,23,.9));border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 50px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-family:"Barlow","Titillium Web",system-ui,sans-serif}
+#race:is(.f1hud,.f1mfd) #hMfd .mfd-topo{height:62px;padding:0 16px 0 20px;gap:0;background:none;border-bottom:1px solid rgba(255,255,255,.1)}
+#hMfd .mfd-topo::after{display:none}
+#hMfd .mfd-marca{width:50px;height:18px;margin-right:16px;background:var(--eq);clip-path:polygon(22% 0,100% 0,90% 30%,38% 30%,33% 45%,82% 45%,72% 75%,26% 75%,18% 100%,0 100%);box-shadow:none}
+#hMfd .mfd-nome{display:none}
+#hMfd .mfd-abas{flex:1;justify-content:space-around;align-items:stretch;height:100%;padding-left:14px;border-left:1px solid rgba(255,255,255,.14);margin:14px 0;height:auto}
+#hMfd .mfd-abas button{min-width:40px;height:auto;padding:0;color:rgba(255,255,255,.62);background:none;border:0;border-radius:8px;transition:color .15s,background .15s}
+#hMfd .mfd-abas button svg{width:22px;height:22px;stroke-width:1.8}
+#hMfd .mfd-abas button span,#hMfd .mfd-abas button:hover span,#hMfd .mfd-abas button.on span{display:none}
+#hMfd .mfd-abas button:hover{color:#fff;background:rgba(255,255,255,.06)}
+#hMfd .mfd-abas button.on{color:#fff;background:none}
+#hMfd .mfd-abas button::after,#hMfd .mfd-abas button.on::after{display:none}
+#hMfd .mfd-abas button.on::before{content:"";position:absolute;left:4px;right:4px;bottom:-15px;height:4px;border-radius:3px;background:#e10600}
+#hMfd .mfd-abas button.sec{margin-left:0;border-left:0}
+#hMfd .mfd-pos,#hMfd .mfd-x{display:none}
+#hMfd .mfd-corpo,#hMfd .mfd-pg{padding:0}
+#hMfd .mfd-dicas{display:none}
+#hMfd .mfd-pg>.mp:not(.rs3){background:none;border:0;padding:0}
+/* o Resumo em faixa */
+#hMfd .rs3{margin:0}
+#hMfd .rs3-l{display:grid;grid-template-columns:1fr 1.45fr 1fr 1.35fr;align-items:center;min-height:118px;padding:6px 8px}
+#hMfd .rs3-c{flex-direction:column;justify-content:center;gap:6px;padding:10px 4px;border-radius:12px}
+#hMfd .rs3-c+.rs3-c::before{top:22%;bottom:22%;background:rgba(255,255,255,.14)}
+#hMfd .rs3-pn{width:auto}
+#hMfd .rs3-anel{position:relative;display:grid;place-items:center;width:52px;height:52px}
+#hMfd .rs3-anel svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#hMfd .rs3-pn .tr{stroke:rgba(255,255,255,.18);stroke-width:4.5}#hMfd .rs3-pn .vl{stroke-width:4.5}
+#hMfd .rs3-pn b{position:static;height:auto;font-size:22px;font-weight:800}
+#hMfd .rs3-pn em{font-size:17px;font-weight:700;color:#fff}
+#hMfd .rs3-dn{flex-direction:row;gap:12px}
+#hMfd .rs3-carro{width:28px;height:44px}
+#hMfd .rs3-dn strong{font-size:22px;font-weight:700}
+#hMfd .rs3-dn>span{min-width:62px;gap:7px}
+#hMfd .rs3-b{height:5px;border-radius:3px;background:rgba(255,255,255,.18)}
+#hMfd .rs3-cl strong{font-size:18px;font-weight:700}
+#hMfd .rs3-ic{display:block;width:34px;height:34px}#hMfd .rs3-ic svg,#hMfd .m3-cond-ic svg{width:100%;height:100%;display:block}
+#hMfd .rs3-mp svg{max-width:130px}
+#hMfd .rs3-mp .pista{stroke:#f2f4f7;stroke-width:2.6}
+#hMfd .rs3-pe{margin:0;padding:12px 20px;border-top:1px solid rgba(255,255,255,.12);border-radius:0;grid-template-columns:1fr 1fr 1fr}
+#hMfd .rs3-pe>span{position:relative;justify-content:center}
+#hMfd .rs3-pe>span+span::before{content:"";position:absolute;left:0;top:10%;bottom:10%;width:1px;background:rgba(255,255,255,.14)}
+#hMfd .rs3-pe b{font-size:21px}#hMfd .rs3-pe em{font-size:17px}
+#hMfd .rs3-pe span>i{width:3px;height:18px;background:#e10600}
+#hMfd .rs3-gap{font-size:17px;color:rgba(255,255,255,.62)}
+/* os cartões das outras páginas */
+.m3{display:flex;flex-direction:column;gap:10px;padding:12px}
+.m3-card{position:relative;padding:14px 16px 16px;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12)}
+.m3-card header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.m3-card header svg{width:24px;height:24px;flex:none;color:rgba(255,255,255,.8)}
+.m3-card header b{font-size:14px;font-weight:700;letter-spacing:.04em}
+.m3-alerta{display:grid;place-items:center;width:24px;height:22px;flex:none;font-size:14px;font-weight:900;color:#fff;background:#e5242b;clip-path:polygon(50% 0,100% 100%,0 100%);padding-top:5px;opacity:.45}
+.m3-alerta.on{opacity:1}
+.m3-card.alerta{border-color:rgba(255,61,74,.55);animation:m3Pulso 1.8s ease-in-out infinite}
+@keyframes m3Pulso{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 2px rgba(255,61,74,.25),0 0 18px rgba(255,61,74,.2)}}
+/* próximo pneu */
+.m3-prox-c{display:flex;align-items:center;gap:18px}
+.m3-pneu{width:118px;height:118px;flex:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.5))}
+.m3-pneu .borracha{fill:#1a1b1f;stroke:#2a2c31;stroke-width:2}.m3-pneu .flanco{fill:#111215}.m3-pneu .faixa{fill:none;stroke-width:5}
+.m3-pneu .aro{fill:#0b0c0e;stroke:#3a3d44;stroke-width:2}.m3-pneu .raios line{stroke:#2c2f35;stroke-width:3}.m3-pneu .cubo{fill:#2a2d33}
+.m3-prox-t{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.m3-chip{padding:5px 16px;border-radius:9px;font-size:16px;font-weight:800;letter-spacing:.04em;color:#111;background:var(--c,#ffd100)}
+.m3-prox-t strong{font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.m3-prox-t small{font-size:13px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.7)}
+.m3-tempo{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.08)}
+.m3-tempo>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb000,#ffd23f);transition:width .25s linear}
+.m3-prox.sugestao{border-color:rgba(255,210,63,.45)}
+/* jogos de pneu */
+.m3-jg{display:flex;justify-content:space-between;padding:0 6px}
+.m3-jg-i{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 6px;font:inherit;color:#fff;background:none;border:0;border-radius:10px;cursor:pointer;transition:background .15s,opacity .15s}
+.m3-jg-i:hover{background:rgba(255,255,255,.07)}
+.m3-jg-i svg{width:40px;height:40px}.m3-jg-i circle{fill:none;stroke:var(--c,#fff);stroke-width:4.5}
+.m3-jg-i span{font-size:17px;font-weight:700;line-height:1}
+.m3-jg-i kbd{position:absolute;top:0;right:0;font:700 9px/1 inherit;color:rgba(255,255,255,.45);background:none;border:0;padding:0}
+.m3-jg-i.esgotado{opacity:.3}.m3-jg-i.atual::after{content:"";position:absolute;bottom:-4px;width:5px;height:5px;border-radius:50%;background:var(--c,#fff)}
+.m3-jg-i.pedido{background:rgba(255,255,255,.12);outline:2px solid var(--c,#fff)}
+.m3-jg-i:focus-visible{outline:2px solid #fff}
+.m3-nota{margin:10px 0 0;font-size:12px;color:rgba(255,255,255,.62);text-align:center}.m3-nota:empty{display:none}
+/* condições */
+.m3-cond-g{display:grid;grid-template-columns:repeat(3,1fr)}
+.m3-cond-g>div{display:flex;flex-direction:column;align-items:center;gap:6px}
+.m3-cond-g>div+div{border-left:1px solid rgba(255,255,255,.14)}
+.m3-cond-g strong{font-size:26px;font-weight:700;line-height:1.1}.m3-cond-g>div:nth-child(2) strong{color:rgba(255,255,255,.82)}
+.m3-cond-g small{font-size:12px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.62)}
+.m3-cond-ic{display:block;width:30px;height:30px}
+/* danos */
+.m3-dano-c{display:flex;align-items:center;gap:20px}
+.m3-carro{width:55%;flex:none}.m3-carro *{fill:none;stroke:rgba(255,255,255,.6);stroke-width:1.6;stroke-linejoin:round}
+.m3-dano-t{flex:1;display:flex;flex-direction:column;gap:8px}
+.m3-dano-t strong{font-size:36px;font-weight:700;line-height:1}
+.m3-barra{display:block;height:6px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden}
+.m3-barra>i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#fff 80%,#e5242b);transition:width .6s ease}
+.m3-barra>i.medio{background:#ffb02e}.m3-barra>i.baixo{background:#ff3d4a}
+.m3-dano-t small{font-size:12px;color:rgba(255,255,255,.62)}
+@media (prefers-reduced-motion:reduce){.m3-card.alerta{animation:none}.m3-barra>i,.m3-tempo>i{transition:none}}
+@media (max-width:700px){#race:is(.f1hud,.f1mfd) #hMfd{width:min(440px,calc(100vw - 16px))}.m3-pneu{width:86px;height:86px}.m3-prox-t strong{font-size:34px}}
+#hMfd .rs3-carro{width:34px;height:54px}#hMfd .rs3-carro .corpo{fill:#c8ccd4;stroke:none}#hMfd .rs3-carro .asa{fill:#9aa0aa}#hMfd .rs3-carro .rd{fill:#6c717b}
+.m3-jg-i kbd{display:none}
+#hMfd .mfd-abas button.on{box-shadow:none}
+.m3-jg-i.atual::after{left:50%;bottom:-6px;transform:translateX(-50%)}
+.m3-jg-i.atual::after{display:none}.m3-jg-i.atual span{padding-bottom:3px;border-bottom:2px solid var(--c,#fff)}
+.m3-jg{align-items:flex-start}
+#hMfd .m3-jg-i{min-height:0;justify-content:flex-start;padding:4px 6px;background:none;border:0;border-radius:10px}#hMfd .m3-jg-i.atual::after{display:none}
+/* (2026-11-16, o Thiago: "deixa todas as abas do mesmo tamanho, para o MFD não ficar variando") a altura é fixa; a aba mais curta fica centralizada, a mais longa rola por dentro */
+#race:is(.f1hud,.f1mfd) #hMfd{height:296px;max-height:none}
+#hMfd .mfd-corpo{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#hMfd .mfd-pg{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;overflow-y:auto}
+#hMfd .mfd-pg[hidden]{display:none}
+#hMfd .rs3{flex:1;justify-content:space-between}
+#hMfd .rs3{justify-content:flex-start}#hMfd .rs3-l{flex:1}
+/* (2026-11-16) a aba Pedidos (o Caps Lock): a única maior; os pedidos em duas colunas, cada um com o que dizer */
+#race:is(.f1hud,.f1mfd) #hMfd.grande{height:min(520px,calc(100vh - 140px))}
+.m3-ped{gap:10px}
+.m3-ped-t{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 4px}
+.m3-ped-t b{font-size:14px;font-weight:700;letter-spacing:.04em}.m3-ped-t small{font-size:11px;color:rgba(255,255,255,.55)}
+.m3-ped-g{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.m3-ped-i{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;text-align:left;font:inherit;color:#fff;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:12px;cursor:pointer;transition:background .15s,border-color .15s}
+.m3-ped-i:hover{background:rgba(255,255,255,.12);border-color:#e10600}
+.m3-ped-i:focus-visible{outline:2px solid #e10600;outline-offset:1px}
+.m3-ped-i b{font-size:13px;font-weight:700}.m3-ped-i small{font-size:11px;color:rgba(255,255,255,.6)}

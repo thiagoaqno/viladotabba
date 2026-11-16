@@ -31,7 +31,7 @@ import { renderer, scene, cam, sun, TAM_SOMBRA } from "./cena.js";
 import { clima } from "./clima.js";
 import { varrerLuzPostes, LUZ } from "./kit/luz-postes.js";
 import { E, toast } from "./estado.js";
-import { VERNIZ, TETO_CARRO } from "./f1-pintura.js";
+import { VERNIZ, METAL, TETO_CARRO } from "./f1-pintura.js";
 import { qualidade, aoMudar, pixelRatioDe, rebaixar, restaurar, graficos } from "./qualidade.js";
 
 // ---------- os ajustes de cada qualidade (mexa aqui para afinar) ----------
@@ -299,8 +299,9 @@ export function desenhar(forca) {
   quadroDinamico(performance.now());
   const q = efetivaPos(); if (q !== atual) aplicarQualidade();
   { // o verniz da pintura dos carros (f1-pintura.js): só de dia e só com o pós (Média e Alta); sobe e desce devagar na virada
-    const t = performance.now(), alvo = q === "baixa" || ehNoite() ? 0 : 1;
-    VERNIZ.value += (alvo - VERNIZ.value) * lim((t - ultVerniz) / 1000 * 1.5); ultVerniz = t;
+    // (2026-11-16, o teste do Thiago: na Média, de dia, a pintura metálica no lugar do acetinado: f1-pintura.js METAL)
+    const t = performance.now(), dia = q !== "baixa" && !ehNoite(), alvo = dia && q !== "media" ? 1 : 0, alvoMetal = dia && q === "media" ? 1 : 0, k = lim((t - ultVerniz) / 1000 * 1.5);
+    VERNIZ.value += (alvo - VERNIZ.value) * k; METAL.value += (alvoMetal - METAL.value) * k; ultVerniz = t;
   }
   if (performance.now() - ultLuzPostes > 1500) { ultLuzPostes = performance.now(); varrerLuzPostes(scene); } // materiais novos (um carro que entrou) ganham a luz dos postes
   if (q === "baixa") { renderer.render(scene, cam); return; }
@@ -364,7 +365,7 @@ export function comecarMedida() {
   if (desfazerNaLargada) { desfazerNaLargada(); desfazerNaLargada = null; }
   if (pendente && !parou) { const passo = baixar(); conferir = { fps: pendente.fps, n: 0, desfazer: passo.desfazer, aviso: pendente.alta }; console.info("Corrida: qualidade reduzida na largada (" + passo.nome + "; a corrida anterior ficou em " + pendente.fps.toFixed(0) + " qps)"); }
   pendente = null;
-  inicio = performance.now(); quadros = 0; desde = inicio; ruins = 0; ultCor = inicio; N = ehNoite() ? 1 : 0; VERNIZ.value = qualidade() === "baixa" || N ? 0 : 1; R = lim(clima.chuva); W = lim(clima.agua); ultVarredura = 0; }
+  inicio = performance.now(); quadros = 0; desde = inicio; ruins = 0; ultCor = inicio; N = ehNoite() ? 1 : 0; VERNIZ.value = qualidade() === "baixa" || qualidade() === "media" || N ? 0 : 1; METAL.value = qualidade() === "media" && !N ? 1 : 0; R = lim(clima.chuva); W = lim(clima.agua); ultVarredura = 0; }
 // o passo de baixar: devolve como desfazer
 function baixar() {
   if (qualidade() === "alta") { rebaixar("media"); return { desfazer: () => restaurar("alta"), nome: "Alta → Média" }; }

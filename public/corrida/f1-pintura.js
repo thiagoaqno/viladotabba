@@ -164,7 +164,7 @@ DESENHOS.mclaren = {
       }
       marca(c, "hilton", 1.22, 0, 0.04, { giro: DE_FRENTE, tinta: PRETO }); // (de 0,25 a 1,15 o bico leva o atlas do nariz: texturaDoCockpit)
       marca(c, "allwyn", 2.25, 0, 0.05, f); marca(c, "gemini", 3.0, 0, 0.08, f);
-      marca(c, "etihad", 4.12, 0, 0.08, { giro: DE_FRENTE, tinta: PRETO });
+      marca(c, "etihad", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: PRETO }); // (a asa traseira é lida por quem vem atrás: -DE_FRENTE, como nas outras equipes)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.55, 0, 0.55, 0.15, PRETO); ret(c, -0.16, 0.8, 0.16, 1.1, PETROLEO); });
     vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.8, 0.78, 0.8, 1.1, PRETO); marca(c, "etihad", 0, 0.9, 0.09); });
@@ -283,7 +283,7 @@ DESENHOS.mercedes = {
       marca(c, "estrela", 0.12, 0, 0.075, { giro: DE_FRENTE, tinta: PRETO }); // a ponta do bico (o resto do bico é o atlas do nariz, f1-pintura texturaDoCockpit)
       marca(c, "syntium", 1.2, 0, 0.05, { giro: DE_FRENTE, tinta: PRETO });
       for (const l of [-1, 1]) { marca(c, "teamviewer", 0.2, l * 0.47, 0.045, f); marca(c, "syntium", 0.4, l * 0.45, 0.04, f); }
-      marca(c, "petronas", 4.12, 0, 0.09, f);
+      marca(c, "petronas", 4.12, 0, 0.09, { giro: -DE_FRENTE }); // (lida por quem vem atrás)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.2, 0.15, 0.2, 0.5, PRATA); ret(c, -0.2, 0.15, 0.2, 0.17, VERDE); });
     vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); marca(c, "crowdstrike", 0, 0.85, 0.08); });
@@ -332,7 +332,7 @@ DESENHOS["red-bull"] = {
       for (const l of [-1, 1]) { letreiro(c, "Red Bull", 0.16, l * 0.47, 0.1, VERM, "#ffffff", DE_FRENTE); marca(c, "visa", 0.42, l * 0.46, 0.05, f); }
       marca(c, "visa", 0.82, 0, 0.03, f); marca(c, "att", 0.88, 0, 0.026, f); marca(c, "tagheuer", 1.22, 0, 0.075, f);
       marca(c, "oracle", 2.0, 0.42, 0.04, { giro: DE_FRENTE }); marca(c, "oracle", 2.0, -0.42, 0.04, { giro: DE_FRENTE });
-      marca(c, "gate", 4.12, 0, 0.09, f);
+      marca(c, "gate", 4.12, 0, 0.09, { ...f, giro: -DE_FRENTE }); // (lida por quem vem atrás)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.14, 0.1, 0.14, 0.4, AMAR); });
     vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); touros(c, -0.45, 0.42, 0.45, 0.76); ret(c, -0.8, 0.8, 0.8, 1.1, CARB); marca(c, "oracle", 0, 0.9, 0.08); });
@@ -1290,6 +1290,10 @@ export const SOL_FRAG_MAIN = `
 // deixa um brilho suave do céu nas curvas da carenagem (onde o ângulo é raso) e não deixa o painel chapado. Os brilhos diretos do sol têm teto:
 // o carro reflete um pouco, não brilha (nada daqui chega ao limiar do bloom).
 export const VERNIZ = { value: 1 };
+// (2026-11-16, o Thiago: "coloca o carro metálico no médio pra gente ver uma coisa") um TESTE: na qualidade Média, de dia, a pintura sai metálica
+// (metalness METAL_TINTA, rugosidade METAL_ASPERO) no lugar do acetinado; pos.js escreve 0 ou 1 aqui, devagar, como o VERNIZ
+export const METAL = { value: 0 };
+const METAL_TINTA = 0.6, METAL_ASPERO = 0.3;
 // Limita a luz refletida pela carroceria antes do bloom, inclusive a soma da luz difusa,
 // dos reflexos e do ambiente. A emissão fica livre para as luzes que devem brilhar.
 export const TETO_CARRO = { value: 0 };
@@ -1310,7 +1314,7 @@ if (tetoCarro > 0.0) {
   m.customProgramCacheKey = function () { return (chave ? chave.call(this) : '') + '|teto-carro'; };
   m.needsUpdate = true;
 }
-const VERNIZ_DECL = "uniform float uVerniz;\n";
+const VERNIZ_DECL = "uniform float uVerniz;\nuniform float uMetal;\n";
 const VERNIZ_ASPERO = 0.64;    // a rugosidade da pintura de dia vira (no máximo) isso: acetinado
 const VERNIZ_CAMADA = 0.14;    // a força da camada de verniz (baixa)
 const VERNIZ_CAMADA_ASP = 0.5;// a rugosidade dela: alta, o reflexo do céu sai macio e não espelhado
@@ -1320,7 +1324,7 @@ const VERNIZ_CEU = 1.2;        // quanto a camada amplia o reflexo do céu
 const VERNIZ_TETO_SOL = 0.03;  // o brilho direto do sol na camada não passa disso
 const VERNIZ_TETO_BASE = 0.14;  // e o da tinta por baixo, de dia
 export function aplicarVerniz(sh) {
-  sh.uniforms.uVerniz = VERNIZ;
+  sh.uniforms.uVerniz = VERNIZ; sh.uniforms.uMetal = METAL;
   sh.fragmentShader = VERNIZ_DECL + sh.fragmentShader
     .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
 #ifdef NOVO
@@ -1328,7 +1332,15 @@ export function aplicarVerniz(sh) {
 #else
   float vern = uVerniz;
 #endif
-  roughnessFactor = mix(roughnessFactor, max(roughnessFactor, ${VERNIZ_ASPERO.toFixed(2)}), vern);`)
+  roughnessFactor = mix(roughnessFactor, max(roughnessFactor, ${VERNIZ_ASPERO.toFixed(2)}), vern);
+#ifdef NOVO
+  float metalTinta = uMetal * vMc;
+#else
+  float metalTinta = uMetal;
+#endif
+  roughnessFactor = mix(roughnessFactor, ${METAL_ASPERO.toFixed(2)}, metalTinta);`)
+    .replace("#include <metalnessmap_fragment>", `#include <metalnessmap_fragment>
+  metalnessFactor = mix(metalnessFactor, ${METAL_TINTA.toFixed(2)}, metalTinta);`)
     .replace("#include <lights_physical_fragment>", `#include <lights_physical_fragment>
 #ifdef USE_CLEARCOAT
   material.clearcoat *= vern * ${VERNIZ_CAMADA.toFixed(2)};

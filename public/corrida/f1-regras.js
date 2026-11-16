@@ -136,7 +136,7 @@ function drsHabilitado({ volta, intervalo, amarela, safety }) {
 // antes (0,0333/s); teto por volta 8,5/4 = 2,125 janelas, e o orçamento do automático é o mesmo teto. O ganho de potência (ERS_POTENCIA) não é da regra.
 const ERS_MAX_RECARGA = 2.125, ERS_GASTO = 0.0875, ERS_GASTO_SUAVE = 0.0625, ERS_PISO_AUTO = 0.2, ERS_PISO_OVERTAKE = 0.05, ERS_ORCAMENTO_AUTO = 2.125;
 const ERS_RECARGA_FREIO = 0.0875, ERS_RECARGA_ALIVIO = 0.0333;
-const ersNovo = () => ({ carga: 0.65, recarga: 0, volta: 0 });
+const ersNovo = () => ({ carga: 1, recarga: 0, volta: 0 }); // (2026-11-16, as estratégias do Thiago: "reserva na largada", a bateria cheia para a arrancada e a primeira curva; era 0,65)
 function carregarErs(ers, dt, freando, semGas, volta) {
   if (volta !== ers.volta) { ers.volta = volta; ers.recarga = 0; ers.suave = 0; }
   const ganho = Math.min(Math.max(0, ERS_MAX_RECARGA - ers.recarga), Math.max(0, 1 - ers.carga), Math.max(0, dt) * (freando ? ERS_RECARGA_FREIO : semGas ? ERS_RECARGA_ALIVIO : 0));

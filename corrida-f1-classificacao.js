@@ -120,6 +120,7 @@ function fechar(room, deps) {
   if (!ultima) deps.log(room, `🔴 ${q.nome} acabou. Eliminados: ${f.eliminados.map((x) => nome(x.id)).join(", ")}.`);
   else {
     q.grid = F1.gridDaClassificacao(q.fechadas);
+    try { Robos.preaquecerNiveis(room); } catch (e) { /* um extra: a largada faz a conta se faltar */ }
     deps.log(room, `🏁 ${q.nome} acabou. Pole: ${nome(f.ordem[0].id)} (${tempo(f.ordem[0])}).`);
   }
   deps.broadcast(room);

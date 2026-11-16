@@ -137,12 +137,23 @@ export function quadroCamera(R, o) {
   else perseguicao(ctx);
   if (o.olharTras && src) {
     const fx = Math.cos(src.a), fy = Math.sin(src.a);
-    cam.position.set(src.x + fx * 48, (src.z || 0) + 20, src.y + fy * 48);
-    cam.lookAt(src.x - fx * 100, (src.z || 0) + 8, src.y - fy * 100);
+    if (mode === "cockpit" || mode === "onboard" || mode === "bico") {
+      // (2026-11-16, a referência do Thiago) em primeira pessoa, olhar para trás é virar a cabeça: a câmera fica na cabeça do piloto, um pouco acima do
+      // capacete (OLHO_TRAS_ACIMA, para não ver o lado de dentro dele), e mira para trás quase na horizontal: a tampa do motor e a asa traseira enchem a
+      // metade de baixo da tela e a pista aparece atrás, por cima da asa. (Antes era a câmera de fora, à frente do bico, vendo o carro inteiro.)
+      const fo = (kart.eye.u - o.spec.L / 2) * KS, eh = kart.eye.h * KS + OLHO_TRAS_ACIMA, z0 = src.z || 0;
+      cam.position.set(src.x + fx * fo, z0 + eh, src.y + fy * fo);
+      cam.lookAt(src.x - fx * 160, z0 + eh - OLHO_TRAS_DESCE, src.y - fy * 160);
+      cam.fov = OLHO_TRAS_FOV; cam.updateProjectionMatrix();
+    } else {
+      cam.position.set(src.x + fx * 48, (src.z || 0) + 20, src.y + fy * 48);
+      cam.lookAt(src.x - fx * 100, (src.z || 0) + 8, src.y - fy * 100);
+    }
   }
   return mode;
 }
 
+const OLHO_TRAS_ACIMA = 4, OLHO_TRAS_DESCE = 9, OLHO_TRAS_FOV = 62; // (u, u e graus) a câmera de olhar para trás em primeira pessoa: acima do capacete, o quanto mira para baixo a 160 u, o campo de visão
 // o quanto do tremor de velocidade vale (0 a 1): abaixo de 200 km/h quase nada, só uma vibração bem leve; acima, sobe até o de antes, que chega inteiro
 // em 280 km/h. A velocidade em km/h é `v * 0.75` (v em u/s). Batidas (`R.shake`) e fora da pista não passam por aqui.
 const TREME_DE = 200, TREME_ATE = 280; // km/h

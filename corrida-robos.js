@@ -1027,6 +1027,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     const q = tr.pts[car.idx], lado = tf.bloqPos && !tf.bloqNeg ? -1 : tf.bloqNeg && !tf.bloqPos ? 1 : 0, lat = lado * Math.min(maxLat, 40);
     car.x += q.nx * lat; car.y += q.ny * lat; car.sp = { x: car.x, y: car.y };
     ia.desvio = 0; ia.ult = null; ia.erro = null; ia.recuperacoes = (ia.recuperacoes || 0) + 1;
+    // (2026-11-16, o Thiago: o robô travava, voltava e quem vinha atrás batia nele e levava a batida) recolocado, fica fantasma por 2 s, como
+    // o parado de corrida-parados.js: sem colisão nos dois sentidos enquanto ganha velocidade
+    p.fantAte = Math.max(p.fantAte || 0, Date.now() + 2000); room.fantMudou = true;
   }
   for (let s = 0, passos = Math.round(dt / Sim.PASSO); s < passos; s++) {
     ev.length = 0;

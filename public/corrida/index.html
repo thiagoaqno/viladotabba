@@ -433,5 +433,6 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
 <script defer src="/corrida/gpu-aviso.js"></script>
 <script src="/corrida/barra.js"></script>
 <script type="module" src="/corrida/jogo.js" onerror="falhaPreparoCorrida()"></script>
+<script type="module">if (new URLSearchParams(location.search).has("editor")) import("/corrida/editor/editor.js"); // o editor de cenário das pistas (corrida-editor.js)</script>
 </body>
 </html>

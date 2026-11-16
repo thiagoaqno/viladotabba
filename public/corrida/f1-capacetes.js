@@ -84,9 +84,14 @@ const DESENHOS = {
     for (const cx of LADOS) fita(x, cx, c2, 92, 40);
   },
   // dois blocos de cor: a parte de cima no casco, a de baixo na cor 2, com a divisão inclinada e um filete de cor 3, e o topo de cor 3
+  // um bloco grande de cor 3 cortado em diagonal na lateral e a cor 2 embaixo, em blocos
   blocos(x, [c1, c2, c3]) {
-    poli(x, [[0, 176], [512, 122], [512, 256], [0, 256]], c2); x.strokeStyle = c3; x.lineWidth = 8; x.beginPath(); x.moveTo(0, 170); x.lineTo(512, 116); x.stroke();
-    calota(x, c3, 48);
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-128), 200], [X(-40), 120], [X(128), 70], [X(128), 150], [X(0), 200]], c3);
+      poli(x, [[X(-128), 256], [X(-128), 214], [X(0), 214], [X(128), 160], [X(128), 256]], c2);
+      poli(x, [[X(-90), 256], [X(-60), 228], [X(40), 228], [X(20), 256]], c1);
+    }
   },
   // "asas" de cor 2 de cada lado da viseira, o topo de cor 2 e a faixa de cor 3 no queixo
   asas(x, [c1, c2, c3]) {
@@ -96,11 +101,14 @@ const DESENHOS = {
     x.fillStyle = c3; x.fillRect(0, 232, 512, 24);
   },
   // o topo com recortes triangulares e fitas de pontas em triângulo nos lados (um desenho mais "quebrado")
+  // triângulos grandes de cor 2 e 3 encaixados na parte de trás e de baixo
   triangulos(x, [c1, c2, c3]) {
-    calota(x, c2, 60);
-    for (let i = 0; i < 16; i++) { const a = i * 32; poli(x, [[a, 60], [a + 32, 60], [a + 16, 84]], c3); }
-    for (const cx of LADOS) { const d = cx === 256 ? -1 : 1; poli(x, [[cx - d * 110, 220], [cx + d * 10, 120], [cx + d * 40, 226]], c2); poli(x, [[cx - d * 40, 232], [cx + d * 90, 150], [cx + d * 120, 236]], c3); }
-    x.fillStyle = c2; x.fillRect(0, 232, 512, 24);
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-60), 256], [X(128), 256], [X(128), 90]], c2);
+      poli(x, [[X(10), 256], [X(90), 256], [X(128), 150], [X(70), 190]], c3);
+      poli(x, [[X(-128), 256], [X(-60), 256], [X(-20), 200]], c2);
+    }
   },
   // ---------- os desenhos novos (2026-11-14: "mais visuais de capacetes e mais bonitos") ----------
   // chamas de cor 2 subindo do queixo pelos lados, com a ponta de cor 3, e o topo limpo
@@ -119,11 +127,10 @@ const DESENHOS = {
     calota(x, c2, 36);
   },
   // o casco em degradê da cor 1 para a cor 2 de cima para baixo, com uma linha fina de cor 3 em volta
-  degrade(x, [c1, c2, c3]) {
-    const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, c1); g.addColorStop(0.45, c1); g.addColorStop(1, c2);
-    x.fillStyle = g; x.fillRect(0, 0, 512, 256);
-    x.fillStyle = c3; x.fillRect(0, 186, 512, 6); x.fillRect(0, 198, 512, 3);
-    calota(x, c2, 26);
+  // (2026-11-16, a grade do Thiago) o casco na cor 1 em cima, descendo em degradê até a cor 2 no queixo
+  degrade(x, [c1, c2]) {
+    const g = x.createLinearGradient(0, 70, 0, 256); g.addColorStop(0, c1); g.addColorStop(1, c2);
+    x.fillStyle = g; x.fillRect(0, 0, 512, 256); calota(x, c1, 70);
   },
   // um raio de cor 2 contornado de cor 3 em cada lado, do topo ao queixo
   raio(x, [c1, c2, c3]) {
@@ -135,12 +142,16 @@ const DESENHOS = {
     }
   },
   // uma faixa quadriculada (a bandeirada) em volta da cabeça, entre dois filetes de cor 3, e o topo de cor 2
-  xadrez(x, [c1, c2, c3]) {
-    calota(x, c2, 54, c3);
-    const y0 = 168, q = 16;
-    for (let i = 0; i < 512 / q; i++) for (let j = 0; j < 3; j++) { x.fillStyle = (i + j) % 2 ? "#101114" : "#f4f4f4"; x.fillRect(i * q, y0 + j * q, q, q); }
-    x.fillStyle = c3; x.fillRect(0, y0 - 6, 512, 6); x.fillRect(0, y0 + 3 * q, 512, 6);
-    x.fillStyle = c2; x.fillRect(0, y0 + 3 * q + 6, 512, 256);
+  // a bandeira quadriculada de cor 2 subindo pela parte de trás, os quadrados crescendo para a nuca
+  xadrez(x, [c1, c2]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      for (let i = 0; i < 6; i++) for (let j = 0; j < 9; j++) {
+        if ((i + j) % 2) continue;
+        const q = 14 + i * 3, u = 10 + i * 22, y = 256 - (j + 1) * q - i * 10;
+        if (y < 40) continue; x.fillStyle = c2; x.fillRect(Math.min(X(u), X(u + q)), y, q, q);
+      }
+    }
   },
   // estrelas de cor 3 espalhadas sobre o topo de cor 2 (que desce em arco pelos lados)
   estrelas(x, [c1, c2, c3]) {
@@ -158,10 +169,13 @@ const DESENHOS = {
     calota(x, c3, 30);
   },
   // facetas geométricas (triângulos grandes de cor 2 e cor 3) nos lados, como um casco lapidado
+  // um triângulo grande de cor 2 tomando a parte de baixo e de trás, com uma quina de cor 3
   geometrico(x, [c1, c2, c3]) {
-    let s = 11; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 18; i++) { const a = r() * 512, b = 60 + r() * 196; poli(x, [[a, b], [a + 40 + r() * 70, b - 30 - r() * 50], [a + 20 + r() * 90, b + 20 + r() * 40]], i % 3 ? c2 : c3); }
-    calota(x, c2, 48, c3);
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-80), 256], [X(128), 256], [X(128), 110], [X(40), 150]], c2);
+      poli(x, [[X(-128), 256], [X(-80), 256], [X(-40), 210]], c3);
+    }
   },
   // lâminas: cunhas compridas e afiadas de cor 2 e cor 3 saindo da frente para trás, como os capacetes da TV
   laminas(x, [c1, c2, c3]) {
@@ -195,13 +209,69 @@ const DESENHOS = {
     }
     calota(x, c2, 40, c3);
   },
+  // (2026-11-16, as propostas do Thiago) uma lâmina de cor 2 que corta a lateral do queixo até a nuca, com um traço fino de cor 3 junto
+  stripe(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-120), 250], [X(-70), 250], [X(110), 120], [X(80), 120]], c2);
+      poli(x, [[X(-40), 250], [X(-24), 250], [X(124), 146], [X(116), 146]], c3);
+    }
+  },
+  // o casco escuro com dois filetes finos e curvos de cor 2 e 3 correndo pela lateral
+  linhas(x, [c1, c2, c3]) {
+    for (const cx of LADOS) { filete(x, cx, c2, 70); filete(x, cx, c3, 96); }
+    x.fillStyle = c2; x.fillRect(0, 244, 512, 4);
+  },
+  // curvas de nível em cor 2 sobre o casco (o mesmo desenho em todo capacete com essas cores)
+  topografico(x, [c1, c2]) {
+    x.strokeStyle = c2; x.lineWidth = 2; x.globalAlpha = 0.85;
+    for (let k = 0; k < 22; k++) {
+      x.beginPath();
+      for (let i = 0; i <= 64; i++) { const u = i * 8, y = 20 + k * 11 + Math.sin(u / 37 + k * 0.7) * 7 + Math.sin(u / 13 + k * 1.9) * 3; i ? x.lineTo(u, y) : x.moveTo(u, y); }
+      x.stroke();
+    }
+    x.globalAlpha = 1;
+  },
+  // quase tudo da cor do casco: um filete reto de cor 2 na lateral e o queixo de cor 3
+  minimalista(x, [c1, c2, c3]) {
+    for (const cx of LADOS) { const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v; poli(x, [[X(-128), 214], [X(-128), 220], [X(130), 150], [X(130), 144]], c2); }
+    x.fillStyle = c3; x.fillRect(0, 238, 512, 18);
+  },
+  // faixas largas paralelas de cor 2 e 3, inclinadas, cobrindo a metade de baixo
+  faixas(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-128), 256], [X(-40), 256], [X(128), 110], [X(128), 70]], c3);
+      poli(x, [[X(-20), 256], [X(30), 256], [X(128), 170], [X(128), 128]], c2);
+      poli(x, [[X(50), 256], [X(70), 256], [X(128), 206], [X(128), 190]], c2);
+    }
+  },
+  // pinceladas soltas de cor 2 na parte de trás e de baixo (o mesmo desenho em todo capacete)
+  pinceladas(x, [c1, c2]) {
+    let s = 7; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    x.fillStyle = c2;
+    for (let k = 0; k < 90; k++) {
+      const u = r() * 512, y = 150 + r() * 106, w = 30 + r() * 70, h = 3 + r() * 9, a = -0.5 + r() * 0.25;
+      x.save(); x.translate(u, y); x.rotate(a); x.globalAlpha = 0.6 + r() * 0.4; x.fillRect(-w / 2, -h / 2, w, h); x.restore();
+    }
+    x.globalAlpha = 1;
+  },
+  // (o "Audi" da grade do Thiago) um painel de cor 3 na lateral, recortado em diagonal, com a ponta de cor 2 embaixo
+  audi(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-20), 256], [X(128), 256], [X(128), 60], [X(60), 60], [X(10), 180]], c3);
+      poli(x, [[X(-128), 256], [X(-20), 256], [X(10), 210], [X(-110), 230]], c2);
+    }
+  },
 };
 
 // ---------- o capacete de quem joga (mods.capacete; editor na Garagem da sala, menus.js) ----------
 // { desenho, cores: [casco, segunda, detalhe], viseira, bandeira (sigla de gp-info.js BANDEIRAS), nome }; o servidor confere com `limparCapacete` (corrida.js, a mesma regra)
-export const DESENHOS_CAPACETE = { faixa: "Faixa", bandas: "Bandas", blocos: "Blocos", cruz: "Cruz", topo: "Topo", asas: "Asas", triangulos: "Triângulos", generico: "Clássico",
-  chamas: "Chamas", onda: "Onda", degrade: "Degradê", raio: "Raio", xadrez: "Xadrez", estrelas: "Estrelas", listras: "Listras", geometrico: "Geométrico",
-  laminas: "Lâminas", garras: "Garras", corte: "Corte", velocidade: "Velocidade" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
+// (2026-11-16) as 12 da grade do Thiago, nesta ordem, no lugar das antigas. Os desenhos antigos continuam em DESENHOS (um capacete guardado
+// com eles ainda pinta igual), mas não aparecem mais na escolha.
+export const DESENHOS_CAPACETE = { degrade: "Degradê", stripe: "Stripe", audi: "Audi", linhas: "Linhas", blocos: "Blocos", topografico: "Topográfico",
+  xadrez: "Checker", triangulos: "Triângulos", minimalista: "Minimalista", faixas: "Faixas", geometrico: "Geométrico", pinceladas: "Pinceladas" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
 // o "Padrão" (as 4 variações de cada desenho), o acabamento do casco e os patrocínios (selos inventados, sem marca de verdade); a lista do servidor
 // é a mesma (corrida.js, limparCapacete)
 export const VARIANTES = ["Original", "Detalhe trocado", "Cores trocadas", "Espelhado"];
@@ -301,7 +371,7 @@ function selo(x, id, cx, cy, w, h) {
   x.fillStyle = s[2]; x.font = `900 ${Math.round(h * 0.62)}px Arial, sans-serif`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(s[0], cx, cy + 1, w - 8);
 }
 export const VISEIRAS = { "#090b10": "Escura", "#c9ccd2": "Espelhada", "#d4a017": "Dourada", "#1e6fd9": "Azul", "#d8142c": "Vermelha", "#7a2fd0": "Roxa", "#1fa64a": "Verde", "#f07c1a": "Laranja" };
-export const CAPACETE_PADRAO = { desenho: "faixa", cores: ["#f4f4f4", "#e10600", "#101114"], viseira: "#090b10", bandeira: "BR", nome: "" };
+export const CAPACETE_PADRAO = { desenho: "stripe", cores: ["#f4f4f4", "#e10600", "#101114"], viseira: "#090b10", bandeira: "BR", nome: "" };
 // as bandeiras (o SVG de gp-info.js) viram imagem uma vez; quem pinta antes de ela chegar é avisado para repintar
 const BAND = new Map();
 export function bandeiraImg(sigla, aoChegar) {

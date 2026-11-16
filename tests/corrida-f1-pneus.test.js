@@ -23,7 +23,7 @@ const voltasAtePenhasco = (marcas) => marcas.find((m) => m.desgaste >= F1.PENHAS
 
 test("pneus: a vida é em voltas e o macio é o mais rápido novo", () => {
   const vida = Object.fromEntries(F1.SECOS.map((c) => [c, voltasAtePenhasco(rodar(c, { slip: 15, voltas: 10 }).marcas)]));
-  for (const [c, esperada] of Object.entries({ macio: 2.8, medio: 3.8, duro: 4.8 })) {
+  for (const [c, esperada] of Object.entries({ macio: 2.95, medio: 3.95, duro: 4.95 })) {
     assert.ok(Math.abs(vida[c] - esperada * 0.76 / 0.85) < 0.02, `${c} ${vida[c]}`);
   }
   const g = (c) => F1.aderencia({ composto: c, desgaste: 0, temp: 1 });

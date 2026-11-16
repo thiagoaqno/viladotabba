@@ -117,11 +117,19 @@ function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipe
   const rodadas = Math.max(0, (ano - 1) * tamanho + gp), ideal = pista ? asaIdeal(pista) : null;
   for (const [id, equipe] of Object.entries(Equipes.EQUIPES)) {
     if (humanos.has(id)) continue;
-    const r = gerador(`desenvolvimento:${base}:${id}`), atraso = Math.floor(r() * tamanho);
+    // (2026-11-15, o Thiago: "não deve ser aleatório, tem que fazer sentido") quem tem mais dinheiro evolui antes: as 3 grandes no ritmo
+    // cheio, as do meio com 1/4 de temporada de atraso, as pequenas com meia temporada. As peças seguem a conta de prioridadeDaPeca.
+    const atraso = Math.floor(tamanho * [0, 0.25, 0.5][faixaDe(id)]);
     const pontos = Math.min(Equipes.BONUS_MAX, Math.floor((rodadas * Equipes.BONUS_POR_TEMPORADA + atraso) / tamanho));
-    const ordem = embaralhar(["motor", "aero", "chassi", "freios", "suspensao"], r);
     const m = { ...equipe.padrao }, limite = equipe.orcamento + pontos; // (2026-11-15: os níveis altos custam mais; o rival gasta do mesmo jeito que você)
-    for (let k = 0, falhas = 0; falhas < ordem.length && k < 200; k++) { const p = ordem[k % ordem.length]; if (m[p] < Equipes.MAX_NIVEL && Equipes.custoDaMontagem({ ...m, [p]: m[p] + 1 }) <= limite) { m[p]++; falhas = 0; } else falhas++; }
+    for (let k = 0; k < 200; k++) {
+      let melhor = null, nota = Infinity;
+      for (const p of Equipes.ORDEM) {
+        if (m[p] >= Equipes.MAX_NIVEL || Equipes.custoDaMontagem({ ...m, [p]: m[p] + 1 }) > limite) continue;
+        const v = prioridadeDaPeca(m, p, equipe.padrao); if (v < nota) { nota = v; melhor = p; }
+      }
+      if (!melhor) break; m[melhor]++;
+    }
     if (ideal != null) ajustarParaPista(m, ideal);
     montagens[id] = m; bonus[id] = pontos;
     const faixa = faixaDe(id), nivel = Math.min(2, (faixa === 0 ? 1 : 0) + Math.floor((rodadas + atraso) / tamanho));
@@ -129,6 +137,17 @@ function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipe
     bonusBox[id] = engenheiros[id].mecanico * 0.5 + engenheiros[id].estrategista * 0.25;
   }
   return { montagens, bonus, engenheiros, bonusBox };
+}
+// Onde o rival põe o próximo ponto (a menor nota ganha): no nível mais baixo e mais barato, puxado para o forte da equipe (a Ferrari
+// cuida do motor, a Red Bull da asa) e para o que mais dá tempo de volta (motor e asa, depois chassi e suspensão). Nunca passa das
+// travas de specDaMontagem: a asa só rende até a suspensão + 4 e o motor até a confiabilidade + 4; quando a peça bate na trava, sobe a
+// que segura ela (o rival não joga ponto fora como antes, quando a confiabilidade nem entrava na lista).
+const PESO_PECA = { motor: 0.6, aero: 0.6, chassi: 0.3, suspensao: 0.3, freios: 0.2, confiab: 0.1 };
+function prioridadeDaPeca(m, p, padrao) {
+  if (p === "aero" && m.aero >= m.suspensao + 4) return Infinity;
+  if (p === "motor" && m.motor >= m.confiab + 4) return Infinity;
+  const trava = (p === "suspensao" && m.aero >= m.suspensao + 3) || (p === "confiab" && m.motor >= m.confiab + 3) ? 1 : 0;
+  return m[p] + 1.5 * (Equipes.custoDoNivel(m[p] + 1) - 1) - 0.5 * ((padrao[p] || 0) - 3) - PESO_PECA[p] - trava;
 }
 // o acerto ideal de asa da pista (0 a 1), medido por ferramentas/acerto-ideal.js; null se a pista não tem medição
 let IDEAIS = null;

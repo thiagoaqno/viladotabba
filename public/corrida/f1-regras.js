@@ -8,18 +8,18 @@
 // ---------- os pneus ----------
 // Três compostos secos e o de chuva. `pico` é a aderência lateral do pneu novo e quente sobre o grip do carro (1,35 é a referência
 // original da dirigibilidade); `vida` é quantas VOLTAS ele dura, pilotado limpo, até o penhasco (não depende do tamanho da corrida:
-// o macio dura 2,8 voltas em qualquer GP); `aquece` é o quanto esquenta rápido e `perdaAntes` o que perde de
+// o macio dura 2,95 voltas em qualquer GP; 2026-11-15, o Thiago: todas as vidas terminam em ,95); `aquece` é o quanto esquenta rápido e `perdaAntes` o que perde de
 // aderência até o fim da vida. As cores são as da Pirelli. Os números saem da calibração de `tests/corrida-f1-estrategia.test.js`
 // (o simulador de stint com a física do carro: ver `ferramentas/pneus-fisica.js`).
 // `molhado` é quanto da aderência sobra com a pista encharcada (água 1; seco é 1 e no meio interpola): os secos ficam com a
 // metade e o de chuva com 90%. O de chuva no seco tem o `pico` do duro, mas `derrete` (o desgaste vai a ×2,8) e `esquenta` (a
 // temperatura passa de 1, até +0,4, e a aderência cai até 25%) quando a pista está seca: dura 2 a 3 voltas.
 const PNEUS = {
-  macio: { nome: "Macio", cor: "#e8202a", pico: 1.40, vida: 2.8, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
-  medio: { nome: "Médio", cor: "#ffd100", pico: 1.36, vida: 3.8, aquece: 1.1, perdaAntes: 0.03, molhado: 0.5 },
-  duro: { nome: "Duro", cor: "#f4f4f4", pico: 1.32, vida: 4.8, aquece: 0.85, perdaAntes: 0.02, molhado: 0.5 },
-  chuva: { nome: "Chuva", cor: "#1e7fd6", pico: 1.126, vida: 7, aquece: 0.5, perdaAntes: 0.02, molhado: 0.9, derrete: 2.8, esquenta: 0.4 },
-  intermediario: { nome: "Intermediário", cor: "#39c85a", pico: 1.126, vida: 5.5, aquece: 0.5, perdaAntes: 0.02, molhado: 1, derrete: 2, esquenta: 0.4 },
+  macio: { nome: "Macio", cor: "#e8202a", pico: 1.40, vida: 2.95, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
+  medio: { nome: "Médio", cor: "#ffd100", pico: 1.36, vida: 3.95, aquece: 1.1, perdaAntes: 0.03, molhado: 0.5 },
+  duro: { nome: "Duro", cor: "#f4f4f4", pico: 1.32, vida: 4.95, aquece: 0.85, perdaAntes: 0.02, molhado: 0.5 },
+  chuva: { nome: "Chuva", cor: "#1e7fd6", pico: 1.126, vida: 7.95, aquece: 0.5, perdaAntes: 0.02, molhado: 0.9, derrete: 2.8, esquenta: 0.4 },
+  intermediario: { nome: "Intermediário", cor: "#39c85a", pico: 1.126, vida: 5.95, aquece: 0.5, perdaAntes: 0.02, molhado: 1, derrete: 2, esquenta: 0.4 },
 };
 const SECOS = ["macio", "medio", "duro"]; // os compostos de pista seca (a estratégia e a tabela de ritmo só conhecem estes)
 const COMPOSTO_PADRAO = "medio";

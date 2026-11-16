@@ -122,9 +122,11 @@ function semEconomiaDeEnergia() {
 }
 // o laço vigiado: um tique a cada 50 ms; atrasou mais de 150 ms, uma linha no servidor.log (%LOCALAPPDATA%\CorridaDaGalera), no máximo uma a cada 2 s
 function vigiarLaco() {
-  let ant = Date.now(), ultimoLog = 0, pior = 0, n = 0;
+  let ant = Date.now(), ultimoLog = 0, pior = 0, n = 0, piorMin = 0, ultimoMin = Date.now();
   setInterval(() => {
-    const agora = Date.now(), atraso = agora - ant - 50; ant = agora;
+    const agora = Date.now(), atraso = agora - ant - 50; ant = agora; piorMin = Math.max(piorMin, atraso);
+    // (2026-11-16, o Thiago: "corri até 11:55 e o log parou às 11:50") o silêncio não prova nada: uma linha por minuto com corrida rodando, mesmo sem travada
+    if (agora - ultimoMin >= 60000) { const f = (() => { try { return require("./corrida.js").faseAgora?.(); } catch { return null; } })(); if (f) console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: tudo certo no último minuto, o pior atraso foi ${Math.max(0, piorMin)} ms · ${f}`); ultimoMin = agora; piorMin = 0; }
     if (atraso > 150) { n++; pior = Math.max(pior, atraso); if (agora - ultimoLog > 2000) { ultimoLog = agora; console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: o laço atrasou ${atraso} ms (${n} vezes, o pior ${pior} ms) · ${(() => { try { return require("./corrida.js").faseAgora?.() || "fora de corrida"; } catch { return "?"; } })()}`); } }
   }, 50).unref();
 }

@@ -122,8 +122,16 @@ function tocar(buf, fim) {
   if (!aberturas.length) bip(c, 950, 0.07, 0.04, x.destino, ini + buf.duration + 0.05); // e um bipe mais grave
   s.onended = () => { if (x.abafar) x.abafar(false); avisarFala(false, 0); fim(); }; return true;
 }
+// (2026-11-16, o Thiago: "com o delay, às vezes ele fala de ultrapassagens que aconteceram há muito tempo") Cada fala vence: a de acontecimento
+// (ultrapassagem, rival, companheiro, batida, DRS, box, volta rápida) em VALIDADE_FATO; as outras (meio da corrida, penúltima volta, plano, memória,
+// largada) em VALIDADE_SITUACAO. Fala vencida sai da fila sem tocar. As urgentes (box, safety car) não vencem.
+const VALIDADE_FATO = 5000, VALIDADE_SITUACAO = 20000;
+const FATO = /^(ganhou|perdeu|rival|comp|boxrapido|boxlento|dano|drs|voltarapida|amarela|spot|punicao|pneu$)/;
+function vencida(f, agora) { if (F.URGENTES.includes(f.quando)) return false; return agora - (f.em || agora) > (FATO.test(f.quando || "") ? VALIDADE_FATO : VALIDADE_SITUACAO); }
 function proximo() {
-  clearTimeout(timerFila); if (tocando || !fila.length) return;
+  clearTimeout(timerFila);
+  { const agora = Date.now(); for (let i = fila.length - 1; i >= 0; i--) if (vencida(fila[i], agora)) fila.splice(i, 1); }
+  if (tocando || !fila.length) return;
   const agora = Date.now(), f = fila[0], urgente = F.URGENTES.includes(f.quando);
   if (!urgente && agora - ultimaFala < INTERVALO) { timerFila = espera(proximo, INTERVALO - (agora - ultimaFala) + 20); return; }
   fila.shift(); ultimaFala = agora; ultimoId = f.id; porSituacao[f.quando] = agora;
@@ -162,7 +170,7 @@ function frase(partes, quando, op = {}) {
     const agora = Date.now();
     if (!op.forcar && agora - (porSituacao[quando] || -Infinity) < (ESPERA_SIT[quando] || ESPERA)) return null;
     if (fila.length && !op.forcar) return null;
-    const f = { id: partes.join("+"), partes: partes.filter(Boolean), quando }; porSituacao[quando] = agora;
+    const f = { id: partes.join("+"), partes: partes.filter(Boolean), quando, em: agora }; porSituacao[quando] = agora;
     if (op.forcar) fila.unshift(f); else fila.push(f);
     proximo(); return f;
   } catch { return null; }
@@ -182,7 +190,7 @@ function dizer(situacao, op = {}) {
     const agora = Date.now(), urgente = F.URGENTES.includes(situacao);
     if (!op.forcar && agora - (porSituacao[situacao] || -Infinity) < (ESPERA_SIT[situacao] || ESPERA)) return null;
     if (!urgente && fila.length && !op.forcar) return null; // não acumula fala velha; pedidos do piloto são explícitos
-    const e = escolher(situacao, ultimoId); if (!e) return null; const f = op.reserva ? { ...e, reserva: op.reserva } : e;
+    const e = escolher(situacao, ultimoId); if (!e) return null; const f = { ...e, em: agora, ...(op.reserva ? { reserva: op.reserva } : {}) };
     ultimoId = f.id; porSituacao[situacao] = agora;
     if (urgente || op.forcar) fila.unshift(f); else fila.push(f);
     proximo(); return f;

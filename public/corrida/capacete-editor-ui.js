@@ -5,11 +5,7 @@
 // no meio (no Desenho, a grade de miniaturas em 3D com as suas cores, 12 por página) e o capacete grande à direita (arrastar gira), com as
 // cores principais e o "Padrão" (as 4 variações do desenho) embaixo. Sem WebGL, a prévia volta a ser a folha aberta e a grade fica em texto.
 import { pintarFolha, DESENHOS_CAPACETE, VISEIRAS, CAPACETE_PADRAO, VARIANTES, ACABAMENTOS, PATROCINIOS, MARCAS_CAPACETE, LUGARES_PATROCINIO, FUNDOS_PATROCINIO,
-<<<<<<< HEAD
-  patrociniosDe, extraDoCapacete, miniaturaDoPatrocinio, LUGARES_HALO, lerHalo, gravarHalo } from "./f1-capacetes.js";
-=======
-  patrociniosDe, extraDoCapacete, CORES_DO_ESTILO, miniaturaDoPatrocinio } from "./f1-capacetes.js";
->>>>>>> 8d5d1679 (16 estilos de capacete com cores de fábrica)
+  patrociniosDe, extraDoCapacete, CORES_DO_ESTILO, miniaturaDoPatrocinio, LUGARES_HALO, lerHalo, gravarHalo } from "./f1-capacetes.js";
 import { previaDoCapacete } from "./capacete-3d.js";
 
 export const CHAVE_CAPACETE = "corrida:capacete";

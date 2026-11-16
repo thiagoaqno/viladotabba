@@ -69,6 +69,12 @@
     window.CapaceteCarreira = { montar(lugar) { if (!caixa) { caixa = document.createElement("section"); caixa.className = "cx-card cx-capacete cp-cartao"; montarEditorCapacete(caixa, { sub: "vai para a pista na próxima corrida" }); } else caixa._capacete.redesenhar(); lugar.replaceWith(caixa); } };
     window.dispatchEvent(new Event("capacete:pronto"));
   </script>
+  <script type="module">
+    // o halo do carro na aba Carro (central.js marca o lugar com data-halo-lugar e chama window.HaloCarreira.montar)
+    import { montarHalo } from "/corrida/halo-editor-ui.js";
+    window.HaloCarreira = { montar: montarHalo };
+    const hl = document.querySelector("[data-halo-lugar]"); if (hl) montarHalo(hl, hl.dataset.eq); // (se a aba já abriu antes deste módulo chegar)
+  </script>
   <script src="/carreira/musica.js"></script>
   <script defer src="/corrida/gpu-aviso.js"></script>
 </body>

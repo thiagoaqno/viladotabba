@@ -15,7 +15,7 @@ let aba = "central", attr = "aero", tabela = "pilotos", garagem = null, modGarag
 for (const tipo of ["pointerdown", "keydown", "input"]) document.addEventListener(tipo, () => { ultimaInteracao = performance.now(); }, { passive: true });
 const salvo = (() => { try { return localStorage.getItem("corrida:temporada:aba"); } catch { return null; } })();
 // (2026-11-15) Desenvolvimento e Acerto viraram a aba Carro, com duas partes: as peças (a temporada) e o acerto (o próximo GP)
-let carroSub = (() => { try { return localStorage.getItem("corrida:temporada:carro") === "acerto" ? "acerto" : "pecas"; } catch { return "pecas"; } })();
+let carroSub = (() => { try { const v = localStorage.getItem("corrida:temporada:carro"); return v === "acerto" || v === "halo" ? v : "pecas"; } catch { return "pecas"; } })();
 if (salvo === "desenvolvimento" || salvo === "acerto") { aba = "carro"; carroSub = salvo === "acerto" ? "acerto" : "pecas"; }
 if (ABAS.some((a) => a[0] === salvo)) aba = salvo;
 const naGaragem = () => aba === "carro" && carroSub === "pecas"; // (a garagem 3D com os rótulos das peças)
@@ -184,12 +184,12 @@ function carro(c) {
   const { s } = c, E = Eq(), ficha = E.ficha(E.specDaEquipe(s.equipe, s.montagem)), nota = notaDe(s.equipe, s.montagem), est = E.ESTILOS[E.estilo(s.montagem)];
   const gp = c.prox ? c.prox.nome : null;
   const fichaHTML = ficha.map((f) => `<div class="cr-f" title="${h(f.rotulo)}: ${f.nota} de 10"><small>${h(f.rotulo)}</small><i><u style="width:${f.nota * 10}%"></u></i><b>${f.nota}</b></div>`).join("");
-  const partes = [["pecas", "Peças", ""], ["acerto", "Acerto", gp || ""]];
+  const partes = [["pecas", "Peças", ""], ["acerto", "Acerto", gp || ""], ["halo", "Halo", "patrocínios"]]; // (2026-11-16: o halo do carro, halo-editor-ui.js)
   return `<div class="cr">
     <header class="cr-topo"><div class="cr-tit"><small class="cx-rot">Temporada ${dois(s.ano)} · ${h(c.eq.nome)}</small><h2>Seu carro</h2><p><b>Nota ${nota}</b> · ${h(est.nome)}</p></div>
       <div class="cr-ficha">${fichaHTML}</div></header>
     <nav class="cr-partes" role="tablist" aria-label="Partes do carro">${partes.map(([k, t, sub]) => `<button type="button" role="tab" class="${carroSub === k ? "on" : ""}" aria-selected="${carroSub === k}" data-cx-carro="${k}"><b>${t}</b>${sub ? `<small>${h(sub)}</small>` : ""}</button>`).join("")}</nav>
-    <div class="cr-corpo">${carroSub === "acerto" ? (root.CentralAcerto ? root.CentralAcerto.html(c) : "") : desenvolvimento(c)}</div>
+    <div class="cr-corpo">${carroSub === "acerto" ? (root.CentralAcerto ? root.CentralAcerto.html(c) : "") : carroSub === "halo" ? `<section class="cx-card" data-halo-lugar data-eq="${h(c.s.equipe)}"></section>` : desenvolvimento(c)}</div>
   </div>`;
 }
 // ---------- as peças (o Desenvolvimento de antes) ----------
@@ -271,7 +271,7 @@ function html(c) {
     ${codigoHTML}<main class="cx-corpo" role="tabpanel">${corpo}</main>
     <footer class="cx-pe"><div class="cx-dicas"><span class="gp"><kbd class="r">A</kbd> Selecionar</span><span class="gp"><kbd class="r">B</kbd> Voltar</span><span class="gp"><kbd>LB</kbd><kbd>RB</kbd> Trocar aba</span><span class="kb"><kbd>Q</kbd><kbd>E</kbd> Trocar aba</span><span class="kb"><kbd>Esc</kbd> Voltar</span><button type="button" class="cx-msg" data-cx-msg><kbd class="r gp">Y</kbd><kbd class="kb">M</kbd> Mensagens · ${c.nMensagens}</button></div><div class="cx-salvo"><svg class="cx-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4.600 4.600L19 7"/></svg>Salvo</div></footer></div>`;
 }
-function depois(c) { entradaEq = null; document.body.classList.remove("cx-entrada"); tema(c.s.equipe); ligarFundo(c.s.equipe); requestAnimationFrame(posicionarRotulos); root.Radio?.desenharBotoes?.(); root.CentralAnalise?.ligarGraficos(); capaceteNaAba(); }
+function depois(c) { { const hl = document.querySelector("[data-halo-lugar]"); if (hl) root.HaloCarreira?.montar(hl, c.s.equipe); } entradaEq = null; document.body.classList.remove("cx-entrada"); tema(c.s.equipe); ligarFundo(c.s.equipe); requestAnimationFrame(posicionarRotulos); root.Radio?.desenharBotoes?.(); root.CentralAnalise?.ligarGraficos(); capaceteNaAba(); }
 // a aba Capacete: o editor (o módulo de temporada/index.html) entra no lugar marcado; se o módulo ainda não chegou, entra quando chegar
 function capaceteNaAba() {
   const lugar = document.querySelector("[data-cx-capacete]"); if (!lugar) return;
@@ -314,7 +314,7 @@ function clique(alvo, render) {
   if (alvo.hasAttribute("data-cx-config")) { document.querySelector(".cx-menu[open]")?.removeAttribute("open"); root.ConfigCarreira?.abrir(); return true; } // (as configurações de som: config-carreira.js)
   if (alvo.hasAttribute("data-cx-tema")) { escuro = !escuro; try { localStorage.setItem(CHAVE_TEMA, escuro ? "escuro" : "claro"); } catch {} aplicarTema(); return true; }
   if (alvo.dataset.cxAba) { trocarAba(alvo.dataset.cxAba, render); return true; }
-  if (alvo.dataset.cxCarro) { carroSub = alvo.dataset.cxCarro === "acerto" ? "acerto" : "pecas"; try { localStorage.setItem("corrida:temporada:carro", carroSub); } catch {} render(); if (garagem) garagem.vista(vistaAgora()); requestAnimationFrame(posicionarRotulos); return true; }
+  if (alvo.dataset.cxCarro) { carroSub = ["acerto", "halo"].includes(alvo.dataset.cxCarro) ? alvo.dataset.cxCarro : "pecas"; try { localStorage.setItem("corrida:temporada:carro", carroSub); } catch {} render(); if (garagem) garagem.vista(vistaAgora()); requestAnimationFrame(posicionarRotulos); return true; }
   if (alvo.dataset.cxTabela) { tabela = alvo.dataset.cxTabela; if (aba !== "classif") return (trocarAba("classif", render), true); render(); return true; }
   if (alvo.dataset.cxAttr) { attr = alvo.dataset.cxAttr; render(); document.querySelector(`.cx-dv-abas [data-cx-attr="${attr}"]`)?.focus({ preventScroll: true }); return true; }
   if (alvo.dataset.gp != null && alvo.classList.contains("cx-gp")) { abrirGP(+alvo.dataset.gp); return true; }

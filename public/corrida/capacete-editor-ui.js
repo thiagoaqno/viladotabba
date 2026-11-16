@@ -5,7 +5,7 @@
 // no meio (no Desenho, a grade de miniaturas em 3D com as suas cores, 12 por página) e o capacete grande à direita (arrastar gira), com as
 // cores principais e o "Padrão" (as 4 variações do desenho) embaixo. Sem WebGL, a prévia volta a ser a folha aberta e a grade fica em texto.
 import { pintarFolha, DESENHOS_CAPACETE, VISEIRAS, CAPACETE_PADRAO, VARIANTES, ACABAMENTOS, PATROCINIOS, MARCAS_CAPACETE, LUGARES_PATROCINIO, FUNDOS_PATROCINIO,
-  patrociniosDe, extraDoCapacete, miniaturaDoPatrocinio, LUGARES_HALO, lerHalo, gravarHalo } from "./f1-capacetes.js";
+  patrociniosDe, extraDoCapacete, CORES_DO_ESTILO, miniaturaDoPatrocinio, LUGARES_HALO, lerHalo, gravarHalo } from "./f1-capacetes.js";
 import { previaDoCapacete } from "./capacete-3d.js";
 
 export const CHAVE_CAPACETE = "corrida:capacete";
@@ -14,7 +14,7 @@ const PAISES = { BR: "Brasil", AR: "Argentina", PT: "Portugal", ES: "Espanha", I
   AT: "Áustria", CH: "Suíça", FI: "Finlândia", DK: "Dinamarca", HU: "Hungria", MC: "Mônaco", US: "Estados Unidos", CA: "Canadá", MX: "México", CO: "Colômbia",
   JP: "Japão", CN: "China", AU: "Austrália", SG: "Singapura", AZ: "Azerbaijão", BH: "Bahrein", SA: "Arábia Saudita", QA: "Catar", AE: "Emirados Árabes" };
 const PALETA = ["#ffffff", "#101114", "#e10600", "#9aa1ad", "#1e3fd0", "#f6c90e", "#1fa64a", "#f47600", "#7a2fd0", "#00d2be", "#ff5fa8", "#8a5a2b"];
-const POR_PAGINA = 12;
+const POR_PAGINA = 16; // (2026-11-16: a grade de 4x4 da imagem do Thiago)
 const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const svg = (d) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ABAS = [
@@ -74,7 +74,7 @@ export function montarEditorCapacete(el, op = {}) {
     const lista = painel.querySelector(".cp2-marcas"), rolagem = lista ? lista.scrollTop : 0; // (a lista de marcas volta para onde estava)
     el.querySelectorAll("[data-cp-aba]").forEach((b) => { const on = b.dataset.cpAba === aba; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
     if (aba === "desenho") {
-      const da = desenhos.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA), imgs = fotosDe(da.map((d) => [`d:${d}:${atual.variante}`, capCom({ desenho: d })]));
+      const da = desenhos.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA), imgs = fotosDe(da.map((d) => { const fab = CORES_DO_ESTILO(d); return fab ? [`e:${d}`, capCom({ desenho: d, ...fab, variante: 0 })] : [`d:${d}:${atual.variante}`, capCom({ desenho: d })]; })); // (os estilos novos aparecem com as cores de fábrica)
       painel.innerHTML = `<header class="cp2-ph"><h4>Desenho</h4><span class="cp2-pag"><button type="button" data-cp-pag="-1" aria-label="Página anterior" ${pagina ? "" : "disabled"}>${SETA_E}</button>${pagina + 1} / ${paginas}<button type="button" data-cp-pag="1" aria-label="Próxima página" ${pagina < paginas - 1 ? "" : "disabled"}>${SETA_D}</button></span></header>
         <div class="cp2-grade">${da.map((d, i) => `<button type="button" class="cp2-mini ${atual.desenho === d ? "on" : ""}" data-cp-desenho="${d}" title="${h(DESENHOS_CAPACETE[d])}" aria-pressed="${atual.desenho === d}">${imgs[i] ? `<img src="${imgs[i]}" alt="">` : `<span class="cp2-mini-txt">${h(DESENHOS_CAPACETE[d])}</span>`}<small>${h(DESENHOS_CAPACETE[d])}</small>${atual.desenho === d ? `<i class="cp2-ok">${CHECK}</i>` : ""}</button>`).join("")}</div>`;
     } else if (aba === "cores") {
@@ -118,7 +118,7 @@ export function montarEditorCapacete(el, op = {}) {
     const d = b.dataset;
     if (d.cpAba) { aba = d.cpAba; return desenharPainel(); }
     if (d.cpPag) { pagina = Math.max(0, Math.min(paginas - 1, pagina + Number(d.cpPag))); return desenharPainel(); }
-    if (d.cpDesenho) { atual.desenho = d.cpDesenho; return mudar(); }
+    if (d.cpDesenho) { atual.desenho = d.cpDesenho; const fab = CORES_DO_ESTILO(d.cpDesenho); if (fab) { atual.cores = fab.cores; atual.viseira = fab.viseira; atual.variante = 0; } return mudar(); } // (cada estilo novo chega com as cores dele)
     if (d.cpCor != null) { atual.cores[+d.cpCor] = d.c; slot = +d.cpCor; return mudar(); }
     if (d.cpRapida) { atual.cores[slot] = d.cpRapida; return mudar(); }
     if (d.cpVariante != null) { atual.variante = +d.cpVariante; return mudar(); }

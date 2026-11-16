@@ -739,7 +739,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       // (2026-11-16, o Thiago: "eles só entram no modo ultrapassagem se tiverem bateria, exceto na garoa e na chuva") sem ERS_MANOBRA de bateria o
       // robô não parte para a manobra: fica atrás guardando energia. Na garoa e na chuva a bateria não conta (passa quando quiser), e um carro quase
       // parado à frente sempre pode ser passado.
-      const molhado = room.clima ? F1.climaEm(room.clima, now).agua > 0.1 : false, comBateria = !ia.ers || ia.ers.carga >= ERS_MANOBRA;
+      const molhado = room.clima ? F1.climaEm(room.clima, now).agua > 0.1 : false, comBateria = !ia.ers || ia.ers.carga >= minimoParaAtacar(p);
       if (querPassar && chega && foraDaFreada && (comBateria || molhado || lento)) {
         // O lado leva em conta a sequência de curvas; em Mônaco também pode disputar por fora quando a faixa está livre.
         const lados = ordemDaPassagem(pf, i, alvo.latOutro, MARG, baseLat, dentro);
@@ -906,7 +906,10 @@ function bonusDeUltrapassagem(room, p, ia, car) {
   let frente = Infinity; for (const o of Object.values(room.players)) { if (o === p || !o.pos || o.finish != null || o.dnf) continue; const d = o.pos.prog - car.prog; if (d > 0 && d < frente) frente = d; }
   if (frente * STEP / Math.max(car.v, 1) < 1) car.ers.carga = Math.min(1, car.ers.carga + BONUS_ULTRAPASSAGEM);
 }
-const ERS_MANOBRA = +(process.env.ROBO_ERS_MANOBRA ?? 0.3); // a bateria mínima para partir para uma ultrapassagem (fora da chuva)
+const ERS_MANOBRA = +(process.env.ROBO_ERS_MANOBRA ?? 0.3);
+// (2026-11-16, o Thiago: "os pilotos têm diferentes perfis e carros") o mínimo de bateria para partir para a ultrapassagem é de cada piloto, pelo perfil de
+// ataque (corrida-estilos.js, 0 a 1, com a pressão do campeonato): o mais agressivo (1) parte com 18%, o do meio (0,5) com 30%, o mais cauteloso (0) espera 42%
+const minimoParaAtacar = (p) => { const a = p && p.piloto ? Estilos.dePiloto(p.piloto).ataque : 0.5; return ERS_MANOBRA * (1.4 - 0.8 * Math.max(0, Math.min(1, Number.isFinite(a) ? a : 0.5))); }; // a bateria mínima para partir para uma ultrapassagem (fora da chuva)
 // a margem de cada piloto no limite de aderência das curvas: MARGEM_BASE para todos, mais MARGEM_POR_PONTO por ponto de constância abaixo de 95
 const MARGEM_BASE = +(process.env.ROBO_MARGEM_BASE ?? 0.006), MARGEM_POR_PONTO = +(process.env.ROBO_MARGEM_PONTO ?? 0.0004); // pontos de pista (6 u cada, ~37 m)
 function companheiroNaPista(room, p, ia, now, emit) {
@@ -1174,7 +1177,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
       // frente bem abaixo da de agora): o carro rola e o MGU-K recarrega (F1 carregarErs, semGas), sem gastar freio
       // (2026-11-16, o Thiago: "ultrapassar sem ficar esperando atrás do jogador" e "andar só no embalo do carro") seguindo alguém sem os ERS_MANOBRA de
       // bateria para atacar, ele também tira o pé antes da freada: recarrega mais rápido, junta a bateria e parte para a manobra em vez de ficar atrás
-      const querCarga = !tf.encontrou ? car.ers && car.ers.carga < LIFT_CARGA : !process.env.ROBO_SEM_EMBALO && car.ers && car.ers.carga < ERS_MANOBRA;
+      const querCarga = !tf.encontrou ? car.ers && car.ers.carga < LIFT_CARGA : !process.env.ROBO_SEM_EMBALO && car.ers && car.ers.carga < minimoParaAtacar(p);
       if (querCarga && !ia.ult && !amb.safety && ent.gas > 0 && !ent.brake && fis[(i + LIFT_PONTOS) % n] < car.v * 0.8) ent.gas = 0;
     } else {
     Sim.pilotoAutomatico(car, tr, spec, alvo, latAdiante, ent, chicaneLivre ? 1.15 : 1);
@@ -1193,7 +1196,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     const cargaErs = car.ers ? car.ers.carga : 0, pertoDaFrente = tf.atras != null && tf.atras < L_CARRO * 3, coladoAtras = !!tf.tras && tf.tras.gap < L_CARRO * 2.5;
     // (2026-11-16, o Thiago: "eles nunca me ultrapassam, ficam travados atrás de mim") colado atrás e sem manobra, gastava a bateria em toda reta (até zerar) e
     // nunca juntava ERS_MANOBRA para partir para a ultrapassagem. Agora guarda até ter ERS_MANOBRA; na manobra (ia.ult) gasta até zerar.
-    ent.ers = (!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > (process.env.ROBO_PERSEGUE_ANTIGO ? ERS_ATAQUE : ERS_MANOBRA) && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA)));
+    ent.ers = (!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > (process.env.ROBO_PERSEGUE_ANTIGO ? ERS_ATAQUE : minimoParaAtacar(p)) && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA)));
     ent.pedido = proxima;
     Sim.passo(car, ent, amb, tr, ev);
     // a batida deste passo: a mesma dos humanos (corrida-contato.js), com os outros carros na hora do passo; o robô também troca momento

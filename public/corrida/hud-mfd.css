@@ -522,3 +522,10 @@ button.rs3-c:focus-visible,button.rs3-pe:focus-visible{outline:2px solid var(--e
 .m3-jg-i.atual::after{display:none}.m3-jg-i.atual span{padding-bottom:3px;border-bottom:2px solid var(--c,#fff)}
 .m3-jg{align-items:flex-start}
 #hMfd .m3-jg-i{min-height:0;justify-content:flex-start;padding:4px 6px;background:none;border:0;border-radius:10px}#hMfd .m3-jg-i.atual::after{display:none}
+/* (2026-11-16, o Thiago: "deixa todas as abas do mesmo tamanho, para o MFD não ficar variando") a altura é fixa; a aba mais curta fica centralizada, a mais longa rola por dentro */
+#race:is(.f1hud,.f1mfd) #hMfd{height:296px;max-height:none}
+#hMfd .mfd-corpo{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#hMfd .mfd-pg{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;overflow-y:auto}
+#hMfd .mfd-pg[hidden]{display:none}
+#hMfd .rs3{flex:1;justify-content:space-between}
+#hMfd .rs3{justify-content:flex-start}#hMfd .rs3-l{flex:1}

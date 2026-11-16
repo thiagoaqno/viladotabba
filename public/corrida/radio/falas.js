@@ -127,6 +127,64 @@ NOVAS.boxduro.push("Copiado. Duro na próxima parada. Box nesta volta.", "Pode v
 NOVAS.boxintermediario.push("Copiado. Intermediário na próxima parada. Box nesta volta.", "Pode vir. Os intermediários estão prontos.", "Box, box. Intermediários esperando.");
 NOVAS.boxchuva.push("Copiado. Pneu de chuva na próxima parada. Box nesta volta.", "Pode vir. Os de chuva estão prontos.", "Box, box. Pneus de chuva esperando.");
 for (const [q, textos] of Object.entries(NOVAS)) SITUACOES[q] = textos;
+// (2026-11-16, o Thiago: "eu quero muito mais áudios com variantes") Mais frases para as situações que já existem (entram no FIM de cada lista,
+// então os mp3 de antes continuam com o mesmo número) e as situações novas da carreira: o companheiro na pista, a escolha de risco antes da
+// largada, o box pelos mecânicos e a memória do que foi dito no Paddock. O GERAR-VOZES-CORRIDA.bat (opção 2, "só as que faltam") gera só estas.
+const MAIS_2026_11_16 = {
+  largada: ["Luzes apagadas. Vamos lá.", "Largada boa. Respire e encontre o ritmo.", "Primeira volta é para sobreviver. Calma.", "Boa reação. Agora segure a posição.", "Largamos. Atenção aos carros dos lados.", "Saímos bem. Cuidado com os pneus frios.", "Tudo limpo na largada. Vamos construir a corrida."],
+  voltarapida: ["Volta mais rápida. O carro está voando.", "Roxo no cronômetro. Excelente volta.", "Essa foi a mais rápida da pista até agora.", "Volta rápida. É isso, continue assim.", "Tempo impressionante. Volta mais rápida para nós.", "Belíssima volta. Ninguém foi tão rápido hoje."],
+  ganhou: ["Ultrapassagem feita. Muito bem.", "Boa! Mais uma posição.", "Passou limpo. Agora abra distância.", "Ganhou a posição. O próximo está ao alcance.", "Manobra perfeita. Siga atacando.", "Posição ganha. O ritmo está bom.", "Boa leitura. Ganhamos mais uma."],
+  perdeu: ["Ele passou. Responda na próxima reta.", "Perdemos a posição. Fique no vácuo dele.", "Não lute demais agora. Proteja o carro.", "Posição perdida. Ainda tem corrida pela frente.", "Ele estava mais rápido nessa. Vamos devolver.", "Calma. Ele vai gastar os pneus primeiro.", "Perdemos uma. Mantenha a cabeça fria."],
+  pneu: ["Os pneus estão acabando. Cuidado na frenagem.", "Aderência caindo rápido. Pense no box.", "Os traseiros estão sofrendo. Seja gentil na tração.", "Os pneus pedem socorro. Fique atento.", "O desgaste está alto. Vamos ter que parar em breve.", "Cuidado. Os pneus estão no fim da vida."],
+  box: ["Box, box. Agora.", "Box nesta volta, confirmado.", "Venha para os boxes. Estamos prontos.", "Box, box. Garagem preparada.", "Esta volta. Box, box, box."],
+  safety: ["Safety car. Tire o pé e siga o delta.", "Safety car na pista. Mantenha a temperatura dos pneus.", "Neutralizada. Ninguém ultrapassa agora.", "Safety car. Vamos pensar na estratégia.", "Safety car acionado. Fique atrás e espere a relargada."],
+  amarela: ["Amarela. Tire o pé.", "Bandeira amarela. Nada de ultrapassagem.", "Cuidado, amarela no setor.", "Incidente à frente. Reduza e fique atento.", "Amarela agora. Paciência."],
+  dano: ["O carro está danificado. Leve com cuidado.", "Temos dano. Vamos ver se dá para continuar.", "Dano confirmado. Evite as zebras.", "O carro perdeu rendimento com a batida.", "Estrago no carro. Pilote com cuidado."],
+  ultima: ["Última volta. Sem erros agora.", "Última. Traga para casa.", "Bandeira branca. Última volta, vamos.", "Última volta. Tudo o que temos.", "Uma volta. Concentração total."],
+  vitoria: ["Vitória! Que corrida!", "Ganhamos! A equipe inteira está pulando aqui.", "P1! Você foi perfeito hoje.", "Vencemos! Que trabalho incrível.", "Vitória! Leva a bandeira para casa."],
+  podio: ["Pódio! Belo trabalho hoje.", "No pódio! A equipe está orgulhosa.", "Pódio garantido. Que corrida.", "Terminamos no pódio. Muito bem.", "Pódio! Pontos de ouro para a equipe."],
+  pontos: ["Pontos na conta. Bom trabalho.", "Somamos pontos. Isso conta no fim do ano.", "Nos pontos. Foi uma corrida sólida.", "Pontuamos. Seguimos crescendo.", "Bons pontos. A equipe agradece."],
+  foradospontos: ["Ficamos fora dos pontos. Vamos melhorar.", "Não pontuamos hoje. Vamos estudar os dados.", "Dia difícil. Cabeça erguida para a próxima.", "Sem pontos. Vamos entender onde perdemos tempo.", "Hoje não deu. A próxima é nossa."],
+  chuvachegando: ["Chuva a uma volta. Fique pronto para o box.", "A chuva está chegando. Pense no pneu certo.", "Nuvens carregadas. Chuva na próxima volta.", "Chuva vindo aí. Cuidado com a aderência."],
+  chuvaparando: ["A chuva parou. A pista vai secar.", "Pista secando. Prepare-se para o pneu seco.", "Sem chuva agora. A linha seca vai aparecer.", "Chuva acabando. Fique de olho no box."],
+  boasvindas: ["Rádio ok. Bom fim de semana para nós.", "Ouvindo bem. O carro está pronto.", "Tudo pronto aqui. Vamos com tudo.", "Rádio funcionando. Boa sorte hoje."],
+  classboa: ["Grande volta. Largamos bem posicionados.", "Classificação muito boa. Orgulho da equipe.", "Excelente. Agora é transformar em pontos.", "Boa posição de largada. Bom trabalho."],
+  classruim: ["Não foi a classificação que queríamos. A corrida é amanhã.", "Largada de trás. Vamos de estratégia.", "Classificação difícil. Muita coisa pode acontecer.", "Grid ruim, mas a corrida é longa."],
+  drs: ["DRS aberto. Ataque.", "Asa móvel liberada. Vá para cima.", "DRS disponível. Aproveite a reta.", "Pode abrir o DRS."],
+  punicao: ["Recebemos uma punição. Mantenha a calma.", "Punição confirmada. Vamos recuperar na pista.", "Os comissários nos puniram. Siga pilotando.", "Temos uma punição. Foco no ritmo."],
+  abandono: ["Temos que parar o carro. Sinto muito.", "Fim de corrida para nós. Traga o carro para os boxes.", "Abandono. Não foi culpa sua.", "Vamos ter que abandonar. Desculpe."],
+  penultimaboa: ["Penúltima volta. Que corrida, continue assim.", "Faltam duas. A equipe inteira está de pé.", "Duas voltas. Resultado excelente, traga para casa."],
+  penultimaok: ["Penúltima volta. Dentro do plano. Sem riscos.", "Faltam duas. Corrida correta. Mantenha.", "Duas voltas. Estamos onde queríamos."],
+  penultimaruim: ["Penúltima volta. Ainda dá para ganhar alguma coisa.", "Faltam duas. Não desista, qualquer posição conta.", "Duas voltas. Ataque se aparecer chance."],
+  meioultimatook: ["Metade da corrida. O alvo da diretoria está garantido por enquanto.", "Meio da prova. Do jeito que está, o ultimato está cumprido.", "Metade feita. Continue assim e a diretoria fica satisfeita."],
+  meioultimatoruim: ["Metade da corrida. A diretoria está esperando mais. Vamos atacar.", "Meio da prova. Estamos abaixo do alvo do ultimato.", "Metade feita. Precisamos de posições para salvar o contrato."],
+  meiopromessaok: ["Metade da corrida. A marca vai ficar feliz com isso.", "Meio da prova. Cumprindo o que prometemos.", "Metade feita. Patrocinador sorrindo, continue."],
+  meiopromessaruim: ["Metade da corrida. A promessa à marca está escapando.", "Meio da prova. O patrocinador quer a meta. Vamos subir.", "Metade feita. Ainda dá tempo de cumprir a promessa."],
+  meiocompanheirotenso: ["O seu companheiro está nervoso hoje. Cuidado com ele.", "O clima na garagem não está bom. Ele vai correr para ele mesmo.", "Atenção: o seu companheiro não vai abrir espaço."],
+  meiocompanheirofiel: ["O seu companheiro está do seu lado hoje.", "Ele sabe que você está mais rápido. Vai ajudar.", "Bom clima na garagem. Ele corre pela equipe."],
+  meioataque: ["Metade da prova. Mantenha o ataque.", "Meio da corrida. Ataque, como combinamos.", "Metade feita. Pressão nos carros da frente."],
+  meiolimpa: ["Metade da prova. Corrida limpa, como combinamos.", "Meio da corrida. Cuide do carro e dos pneus.", "Metade feita. Sem riscos, carro inteiro no fim."],
+  meiotorcida: ["As arquibancadas estão gritando seu nome.", "A torcida está enorme hoje. Dê um show.", "Metade da corrida. O público está com você."],
+  meiopatrocinio: ["O patrocinador está de olho. Boa hora para brilhar.", "A marca está acompanhando cada volta.", "Metade da corrida. O patrocinador adora o que vê."],
+};
+const NOVAS_CARREIRA = {
+  // o companheiro na pista (corrida-robos.js, a ordem de equipe pela relação: paddock.js)
+  compabre: ["O seu companheiro vai te deixar passar nesta volta.", "Pedimos para ele abrir. Ele vai dar passagem.", "Ele sabe que você está mais rápido. Vai abrir na próxima reta.", "Ordem de equipe: ele te deixa passar.", "O seu companheiro vai facilitar. Pode vir."],
+  compsegura: ["O seu companheiro está segurando quem vem atrás de você.", "Ele está fazendo o trabalho de equipe. Segurando o carro de trás.", "Bom trabalho dele. Está protegendo a sua posição.", "O seu companheiro está tampando o carro de trás para você."],
+  compbriga: ["Pedimos para ele abrir, mas ele recusou.", "O seu companheiro não vai obedecer. Você vai ter que passar na pista.", "Ele ignorou a ordem de equipe. Cuidado com ele.", "Sem ajuda do seu companheiro hoje. Ele vai brigar.", "O clima está ruim. Ele não vai te deixar passar."],
+  // a escolha de risco antes da largada (Central: arriscar ou jogar seguro)
+  riscoarriscar: ["Plano agressivo confirmado. Vamos com tudo hoje.", "Hoje é para arriscar. Os pneus vão sofrer, mas vamos atacar.", "Modo ataque. Mais ritmo, mais desgaste. Você escolheu, vamos.", "Corrida de risco. Cada posição importa hoje."],
+  riscoseguro: ["Plano conservador. Vamos levar o carro até o fim.", "Hoje é jogar seguro. Pneus e carro inteiros.", "Sem riscos. Ritmo constante e pontos no fim.", "Corrida controlada. Paciência é a nossa arma hoje."],
+  // o box pelos mecânicos (o aumento ou a saída do chefe dos mecânicos)
+  boxrapido: ["Parada muito rápida! Ótimo trabalho dos mecânicos.", "Que pit stop! Os mecânicos foram perfeitos.", "Parada excelente. Ganhamos tempo no box.", "Parada relâmpago. A equipe voou."],
+  boxlento: ["Parada lenta. Perdemos tempo no box.", "Problema na parada. Desculpe, perdemos segundos.", "Pit stop ruim. Os mecânicos vão rever isso.", "Demoramos no box. Vamos recuperar na pista."],
+  // a memória do Paddock (o que você disse antes volta na corrida)
+  memcarro: ["Você disse que o problema era o carro. Hoje ele está te deixando na mão mesmo.", "Lembra quando você culpou o carro? Pois é, ele está sofrendo hoje.", "O carro está mostrando os problemas que você apontou."],
+  memequipe: ["Você defendeu a equipe na imprensa. A garagem está dando tudo hoje.", "A equipe não esqueceu que você nos defendeu. Estamos com você.", "Depois do que você disse por nós, a garagem está motivada."],
+  memfoco: ["Você disse que o foco é você. Então é com você agora.", "A equipe apostou em você, como você pediu. Mostre resultado.", "O foco da equipe é você hoje. Responda na pista."],
+};
+for (const [q, textos] of Object.entries(MAIS_2026_11_16)) if (SITUACOES[q]) SITUACOES[q].push(...textos);
+Object.assign(SITUACOES, NOVAS_CARREIRA);
 
 // situações que passam na frente do intervalo mínimo entre falas
 const URGENTES = ["box", "boxmacio", "boxmedio", "boxduro", "boxintermediario", "boxchuva", "safety", "spotesq", "spotdir", "spotlivre"];

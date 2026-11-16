@@ -234,7 +234,7 @@ function montarAmbiente(R) {
   AMB.safety = !!(d && d.safety); AMB.setorAmarelo = d && d.amarelo ? d.amarelo.setor : -1; AMB.ersAuto = S.config.ers !== "manual";
   AMB.voltas = S.config.voltas; AMB.laps = m.laps || 0; AMB.paradas = m.paradas || 0; AMB.semente = S.semente; AMB.id = m.id; AMB.grid = m.grid; AMB.equipe = m.equipe || null;
   AMB.boxOcupado = window.Sim.garagemOcupada(Object.values(S.players || {}), m, (o) => o.boxFase); // a fila do box da equipe (o servidor usa a mesma conta)
-  AMB.finish = m.finish; AMB.dnf = !!m.dnf; AMB.quali = S.phase === "quali"; AMB.fantasma = m.finish != null; AMB.f1 = true;
+  AMB.finish = m.finish; AMB.dnf = !!m.dnf; AMB.quali = S.phase === "quali"; AMB.fantasma = m.finish != null; AMB.f1 = true; AMB.plano = m.plano || null; // (o servidor usa a mesma conta)
   AMB.jogos = m.jogos || null; // (os jogos de pneu: a recomendação do menu do box)
   AMB.stopGo = m.stopGo ? m.stopGo.s : 0; // stop-and-go pendente: a próxima visita ao box é só ele (o servidor usa a mesma conta)
   AMB.agua = atualizarClima().agua; // a água na pista agora (o servidor usa a mesma conta, pelo mesmo relógio)

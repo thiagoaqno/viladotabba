@@ -79,6 +79,19 @@ const EVENTOS = {
       { id: "aumento", rotulo: "Dar um aumento a ele", efeito: { moral: 10, lealdade: 8 }, acao: "aumentoComp" },
     ],
   },
+  // (2026-11-16, o Thiago: "decisões que impactam diretamente no carro") o plano do domingo, em todo GP: arriscar dá 2% de aderência e gasta
+  // 20% mais pneu; jogar seguro tira 1,5% de aderência e poupa 20% do pneu (sim.js PLANO, no seu carro). A conta vem no fim do GP (aoResultado).
+  plano: {
+    quem: "Engenheiros", fase: "domingo",
+    quando: (c) => !!c.proximo,
+    titulo: () => "O plano para a corrida",
+    texto: () => "Os engenheiros querem saber como você vai correr: arriscar dá mais aderência e gasta mais pneu; jogar seguro poupa o pneu e o carro.",
+    opcoes: [
+      { id: "arriscar", rotulo: "Arriscar: +2% de aderência, pneu gasta 20% mais", efeito: { torcida: 2 } },
+      { id: "seguro", rotulo: "Jogar seguro: −1,5% de aderência, pneu gasta 20% menos", efeito: { diretoria: 1 } },
+      { id: "normal", rotulo: "Sem plano especial", efeito: {} },
+    ],
+  },
   instrucao: {
     quem: "Engenheiros", fase: "sexta",
     quando: (c) => !!c.proximo,
@@ -213,10 +226,11 @@ function acontecimentos(s) {
   garantir(s);
   if (!s.calendario || s.gp >= s.tamanho) return [];
   const c = contexto(s), base = `${s.ano}:${s.gp}`;
-  const candidatos = Object.keys(EVENTOS).filter((id) => s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s));
+  const candidatos = Object.keys(EVENTOS).filter((id) => id !== "plano" && (s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s)));
   const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r(), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   const decididos = embaralhados.filter((id) => s.paddock.decisoes[`${base}:${id}`]), resto = embaralhados.filter((id) => !s.paddock.decisoes[`${base}:${id}`]);
-  return [...decididos, ...resto].slice(0, 2).map((id) => {
+  const comPlano = [...[...decididos, ...resto].slice(0, 2), ...(EVENTOS.plano.quando(c, s) || s.paddock.decisoes[`${base}:plano`] ? ["plano"] : [])]; // (o plano do domingo vem sempre, fora dos dois sorteados)
+  return comPlano.map((id) => {
     const e = EVENTOS[id], escolha = s.paddock.decisoes[`${base}:${id}`] || null, fixo = escolha && s.paddock.textos && s.paddock.textos[`${base}:${id}`]; // (decidido: o texto da hora da decisão, mesmo que o companheiro tenha mudado)
     return { id, quem: e.quem, fase: e.fase, titulo: fixo ? fixo.titulo : e.titulo(c, s), texto: fixo ? fixo.texto : e.texto(c, s), escolha, resultado: fixo ? fixo.resultado : null, opcoes: e.opcoes.filter((o) => !o.pode || o.pode(s)).map((o) => ({ id: o.id, rotulo: o.rotulo, efeito: o.efeito, consequencia: o.acao ? previaDaAcao(s, o.acao) : null })) };
   });
@@ -352,6 +366,9 @@ function aoResultado(s, resultado, meta) {
     if (passou) { p.diretoria = lim(p.diretoria + 8, -20, 20); notas.push("o ultimato foi cumprido"); }
     else { p.demitido = { ano: resultado.ano }; s.paddock.ultimaMudanca = { ano: s.ano, gp: s.gp, quem: "Diretoria", texto: "Você foi demitido: a equipe não renova o seu contrato. No fim do ano, você vai para a equipe mais fraca que fizer proposta." }; anotar(s, "Diretoria", "O ultimato não foi cumprido: você foi demitido. A equipe não renova o seu contrato no fim do ano."); }
   }
+  const plano = p.decisoes[`${resultado.ano}:${resultado.gp}:plano`];
+  if (plano === "arriscar") { if (cumpriu) { p.diretoria = lim(p.diretoria + 3, -20, 20); ef.torcida += 3; notas.push("o risco valeu a pena"); } else if (!bem(eu)) { p.diretoria = lim(p.diretoria - 4, -20, 20); notas.push("o risco custou o carro"); } }
+  else if (plano === "seguro") { if (cumpriu) { p.diretoria = lim(p.diretoria + 1, -20, 20); notas.push("a corrida segura deu certo"); } else { ef.patrocinador -= 2; notas.push("a corrida segura ficou longe da meta"); } }
   ef.torcida += bem(eu) ? Math.min(8, Math.round(((PONTOS[eu.pos - 1] || 0) + (eu.voltaRapida ? 1 : 0)) / 3)) - 1 : -3;
   aplicar(s, ef);
   anotar(s, "Fim de semana", `GP de ${s.calendario[resultado.gp]?.nome || resultado.pista}: ${bem(eu) ? `você em ${eu.pos}º` : "você não terminou"}${comp ? `, ${Pilotos.PILOTOS.find((x) => x.id === s.piloto2)?.nome || "o companheiro"} ${bem(comp) ? `em ${comp.pos}º` : "fora"}` : ""}${notas.length ? ` (${notas.join("; ")})` : ""}.`, ef);
@@ -365,9 +382,34 @@ function aoResultado(s, resultado, meta) {
       (p.noticias ||= []).push({ ano: s.ano, gp: s.gp, t: `${antigo.nome} deixa a ${nomeEq(s.equipe)}`, x: `${novo.nome} assume o segundo carro a partir do próximo GP.`, eq: s.equipe, quem: "Piloto" });
     }
   }
+  marcos(s);
   // o patrocinador nos extremos muda a verba por GP
   if (p.patrocinador >= 80 && s.patrocinio < 12) { s.patrocinio++; p.patrocinador = 62; anotar(s, "Patrocinador", `O patrocinador gostou e aumentou a verba para ${s.patrocinio} milhões por GP.`); }
   else if (p.patrocinador <= 20 && s.patrocinio > 3) { s.patrocinio--; p.patrocinador = 42; anotar(s, "Patrocinador", `O patrocinador cortou a verba para ${s.patrocinio} milhões por GP.`); }
+}
+// (2026-11-16, o Thiago: "ser recompensado por adquirir certas porcentagens nos relacionamentos") Os MARCOS: passou da faixa, a recompensa
+// sai uma vez por temporada (p.marcos guarda `ano:id`), com uma linha no mural e uma notícia. Cada um muda algo de verdade:
+//  - companheiro parceiro (moral 85+ e lealdade 75+): ele passa os dados do simulador e o PRÓXIMO desenvolvimento do carro sai de graça (regras.js desenvolver);
+//  - torcida 85+: a loja vende camisas e entram 2 milhões no caixa;
+//  - diretoria 15+: o conselho libera 3 milhões para o carro;
+//  - patrocinador 95+: um bônus de 3 milhões de uma vez (fora do aumento da verba por GP, que já existe nos 80);
+//  - e o lado ruim: torcida 15 ou menos, a loja encalha e sai 1 milhão do caixa.
+const MARCOS = [
+  { id: "parceiro", quando: (p) => p.moral >= 85 && p.lealdade >= 75, faz: (s, p) => { p.desenvolvimentoGratis = true; }, texto: (s, nome) => `${nome} virou parceiro de verdade: passou os dados do simulador e o próximo desenvolvimento do carro sai de graça.`, quem: "Piloto" },
+  { id: "torcida", quando: (p) => p.torcida >= 85, faz: (s) => { s.caixa += 2; }, texto: () => "A torcida está em festa: as camisas da equipe esgotaram e entraram 2 milhões no caixa.", quem: "Torcida" },
+  { id: "diretoria", quando: (p) => p.diretoria >= 15, faz: (s) => { s.caixa += 3; }, texto: () => "A diretoria confia no seu trabalho e liberou 3 milhões a mais para o carro.", quem: "Diretoria" },
+  { id: "patrocinador", quando: (p) => p.patrocinador >= 95, faz: (s) => { s.caixa += 3; }, texto: () => "O patrocinador está encantado e pagou um bônus de 3 milhões.", quem: "Patrocinador" },
+  { id: "torcidaRuim", quando: (p) => p.torcida <= 15, faz: (s) => { s.caixa = Math.max(0, s.caixa - 1); }, texto: () => "A torcida sumiu das arquibancadas: a loja encalhou e saiu 1 milhão do caixa.", quem: "Torcida" },
+];
+function marcos(s) {
+  const p = garantir(s); if (!p.marcos || typeof p.marcos !== "object") p.marcos = {};
+  const nome = Pilotos.PILOTOS.find((x) => x.id === s.piloto2)?.nome || "Seu companheiro";
+  for (const m of MARCOS) {
+    const chave = `${s.ano}:${m.id}`; if (p.marcos[chave] || !m.quando(p)) continue;
+    p.marcos[chave] = true; m.faz(s, p);
+    const texto = m.texto(s, nome); anotar(s, m.quem, texto);
+    (p.noticias ||= []).push({ ano: s.ano, gp: s.gp, t: texto.split(":")[0], x: texto, eq: s.equipe, quem: m.quem });
+  }
 }
 // A virada do ano (regras.js proximaTemporada): os números voltam um pouco para o meio, e o mural guarda a virada.
 function novaTemporada(s) {
@@ -377,7 +419,7 @@ function novaTemporada(s) {
   for (const k of Object.keys(p.decisoes)) if (Number(k.split(":")[0]) < s.ano - 1) delete p.decisoes[k];
 }
 const salarios = (s) => (s.paddock ? (s.paddock.salarioComp || 0) + (s.paddock.salarioStaff || 0) : 0);
-const api = { personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
+const api = { MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Paddock = api;
 })(typeof window !== "undefined" ? window : globalThis);

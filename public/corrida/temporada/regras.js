@@ -100,7 +100,9 @@ const limiteDoAno = (ano) => Math.min(Equipes.BONUS_MAX, Equipes.BONUS_POR_TEMPO
 const custoDoDesenvolvimento = (bonus, ano) => 12 + Math.max(0, bonus - (limiteDoAno(ano) - Equipes.BONUS_POR_TEMPORADA)) * 6;
 function desenvolver(s) {
   if (s.bonus >= limiteDoAno(s.ano)) throw Error(s.bonus >= Equipes.BONUS_MAX ? "O carro atingiu o limite de desenvolvimento." : "O carro já evoluiu tudo o que dava nesta temporada.");
-  gastar(s, custoDoDesenvolvimento(s.bonus, s.ano)); s.bonus++; return s;
+  if (s.paddock && s.paddock.desenvolvimentoGratis) s.paddock.desenvolvimentoGratis = false; // (o marco do companheiro parceiro: paddock.js MARCOS)
+  else gastar(s, custoDoDesenvolvimento(s.bonus, s.ano));
+  s.bonus++; return s;
 }
 // Equipes controladas pelo jogo desenvolvem o carro durante a temporada. A semente original e o GP
 // determinam os pontos: saves antigos funcionam e reabrir o mesmo GP nunca muda a montagem.
@@ -174,7 +176,9 @@ function pilotosNoGrid(s) {
   }
   const ritmo = companheiro.ritmo + (s.paddock ? Paddock.ajusteDeRitmo(s) : 0); // (a moral do Paddock: ±2 pontos de ritmo nos extremos)
   const pers = s.paddock ? Paddock.personalidade(s, companheiro) : null; // (a confiança, a experiência e a agressividade: paddock.js)
-  return [{ ...companheiro, equipe: s.equipe, ritmo, ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais].slice(0, 21);
+  // (2026-11-16) a relação vai para a pista (corrida-robos.js, companheiroNaPista): parceiro abre passagem e segura quem vem atrás; tenso não obedece
+  const pd = s.paddock, relacao = pd ? (pd.moral >= 75 && pd.lealdade >= 65 ? "parceiro" : pd.moral <= 30 ? "tenso" : null) : null;
+  return [{ ...companheiro, equipe: s.equipe, ritmo, ...(relacao ? { relacao } : {}), ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais].slice(0, 21);
 }
 // Metas dependem da força inicial da equipe, não do resultado que acabou de acontecer.
 function metas(s) {

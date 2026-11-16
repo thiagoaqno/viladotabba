@@ -815,6 +815,23 @@ function passoNoBox(room, p, ia, pf, dt, emit) {
   }
     ia.s = (cor.i0 + b.u) % pf.n; ia.lat = cor.latParada(b.u, b.garagem, b.lat0);
 }
+// (2026-11-16, o Thiago: "decisões que impactam relacionamentos") O companheiro de quem joga na carreira corre pela relação (regras.js
+// pilotosNoGrid, `relacao`): PARCEIRO, logo à frente e com você colado (menos de ~35 m), tira o pé por 4 s para você passar (uma vez por volta);
+// logo atrás de você com outro carro colado nele, ele segura (a defesa do perfil já é dele) e o rádio avisa. TENSO, à frente e com você colado,
+// não abre: o rádio diz que ele recusou a ordem. Nada disso na largada, sob safety car ou depois da bandeirada.
+const PERTO_EQUIPE = 30; // pontos de pista (6 u cada, ~37 m)
+function companheiroNaPista(room, p, ia, now, emit) {
+  const rel = p.piloto && p.piloto.relacao; if (!rel || room.phase !== "race" || now < room.startAt + 15000 || room.direcao?.safety || !p.pos) return;
+  const h = Object.values(room.players).find((q) => !q.bot && q.equipe === p.equipe); if (!h || !h.pos || h.finish != null || h.dnf || p.finish != null) return;
+  const d = p.pos.prog - h.pos.prog, avisar = (sit) => emit && emit("radio:equipe", { para: h.id, sit });
+  if (d > 0 && d < PERTO_EQUIPE) {
+    if (rel === "parceiro" && ia.cedeuVolta !== p.laps) { ia.cedeuVolta = p.laps; ia.cedendoAte = now + 4000; avisar("compabre"); }
+    else if (rel === "tenso" && !ia.recusou) { ia.recusou = true; avisar("compbriga"); }
+  } else if (rel === "parceiro" && d < 0 && d > -PERTO_EQUIPE && !ia.segurouDito) {
+    const atras = Object.values(room.players).some((o) => o !== p && o !== h && o.pos && !o.finish && p.pos.prog - o.pos.prog > 0 && p.pos.prog - o.pos.prog < PERTO_EQUIPE);
+    if (atras) { ia.segurouDito = true; avisar("compsegura"); }
+  }
+}
 // O robô está preso? Parado (menos de V_PRESO) por T_PRESO segundos, ou sem andar nem T_SEM_ANDAR pontos de pista em 6 s (rodando no
 // lugar, de lado no muro, na brita). Não conta no box, sob bandeira, antes de a corrida ficar de pé nem com o carro quebrado.
 function encalhou(room, ia, car, now, dt, atras = false) {
@@ -994,6 +1011,8 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   if (medo > 0.01) { alvo = Math.min(alvo * (1 - 0.4 * Math.min(1, medo)), ia.vSusto * (1 - 0.4 * Math.min(1, medo))); tetoPiloto = Math.min(tetoPiloto, ia.vSusto * (1 - 0.4 * Math.min(1, medo))); }
   if (p.quebrou) { alvo = Math.min(alvo, spec.vmax * F1Equipes.EMERGENCIA); tetoPiloto = Math.min(tetoPiloto, spec.vmax * F1Equipes.EMERGENCIA); }
   if (p.incidenteAte > now) { alvo = Math.min(alvo, spec.vmax * 0.24); tetoPiloto = Math.min(tetoPiloto, spec.vmax * 0.24); }
+  companheiroNaPista(room, p, ia, now, emit);
+  if (ia.cedendoAte > now) { alvo *= 0.9; tetoPiloto = Math.min(tetoPiloto, spec.vmax * 0.85); } // abrindo passagem para quem joga: tira o pé por uns segundos
   const relBox = tr.corredor ? (i - tr.corredor.i0 + n) % n : Infinity;
   // (só pesa a parada perto da entrada do corredor; nos 2 s antes de entrar o robô que vai parar já é fantasma: ninguém bate nele)
   const aEntrar = tr.corredor ? (n - relBox) % n : Infinity, antesDaEntrada = aEntrar * STEP < Math.max(car.v, 60) * Contato.BOX_FANTASMA_MS / 1000;

@@ -142,51 +142,7 @@ const voltaDe = (t, room, p, segundos) => {
   assert.equal(Quali.aoSetor(room, p, 0), true);
 };
 
-test('a classificação com um humano: três sessões, eliminações e o grid de 20 que vai para a largada', (t) => {
-  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'], now: 1_000_000 });
-  const room = salaDe(['h']), grids = [], deps = depsDe(grids), h = room.players.h;
-  Quali.iniciar(room, deps);
-  Quali.carregou(room, "h", deps); // (o Q1 espera quem joga carregar a pista: o navegador manda `carregou` depois do aquecimento, #666)
-  const q = room.quali;
-  assert.deepEqual(q.sessoes, [20, 15, 10]); assert.equal(q.ativos.length, 20);
-  // antes de abrir o relógio, a volta não conta
-  assert.equal(Quali.aoSetor(room, h, 0), false);
-  avanca(t, Quali.CONTAGEM_MS + 200);
-  // setor fora da ordem não vale; volta mais rápida que a mínima é atalho
-  assert.equal(Quali.aoSetor(room, h, 5), false);
-  assert.equal(Quali.aoSetor(room, h, 0), true);
-  for (let s = 1; s < T.SECTORS; s++) Quali.aoSetor(room, h, s);
-  avanca(t, 5000); assert.equal(Quali.aoSetor(room, h, 0), false, 'atalho: volta de 5 s');
-  for (let s = 1; s < T.SECTORS; s++) Quali.aoSetor(room, h, s); // a corrente recomeça, mas a volta segue aberta desde a primeira passagem
-  avanca(t, (T.PISTAS.monaco.minLap + 1) * 1000);
-  assert.equal(Quali.aoSetor(room, h, 0), true);
-  assert.ok(Math.abs(h.qMelhor - (T.PISTAS.monaco.minLap + 6)) < 0.5);
-  const publico = Quali.publico(room);
-  assert.ok(publico.tabela.some((x) => x.id === 'h'));
-  Quali.pronto(room, h); Quali.verificarFim(room, deps);
-  assert.equal(q.fechadas.length, 1); assert.ok(q.pausaAte);
-  const q1 = q.fechadas[0];
-  assert.equal(q1.eliminados.length, 5); assert.equal(q1.passam.length, 15);
-  assert.ok(Math.max(...q1.passam.map((x) => x.tempo ?? Infinity).filter(Number.isFinite)) <= Math.min(...q1.eliminados.map((x) => x.tempo ?? Infinity)));
-  // Q2 e Q3: só quem passou corre, e quem fica de fora vira o fim do grid
-  for (const esperados of [15, 10]) {
-    avanca(t, Quali.INTERVALO_MS + 10);
-    assert.equal(q.ativos.length, esperados);
-    if (q.ativos.includes('h')) { avanca(t, Quali.CONTAGEM_MS + 200); voltaDe(t, room, h, T.PISTAS.monaco.minLap + 1); Quali.pronto(room, h); Quali.verificarFim(room, deps); }
-    else { avanca(t, 30000); } // o humano caiu: a sessão só mostra a tabela e fecha sozinha
-  }
-  assert.equal(q.fechadas.length, 3);
-  assert.ok(q.grid && q.grid.length === 20 && new Set(q.grid).size === 20);
-  assert.deepEqual(q.grid.slice(15), q.fechadas[0].eliminados.map((x) => x.id));
-  assert.deepEqual(q.grid.slice(10, 15), q.fechadas[1].eliminados.map((x) => x.id));
-  assert.equal(grids.length, 0, 'a corrida espera a confirmação no grid');
-  avanca(t, Quali.INTERVALO_MS + 10);
-  assert.equal(grids.length, 0, 'o intervalo não larga a corrida automaticamente');
-  assert.deepEqual(Quali.publico(room).confirmados, []);
-  Quali.confirmarLargada(room, h, deps);
-  assert.equal(grids.length, 1); assert.deepEqual(grids[0], q.grid);
-  Quali.cancelar(room);
-});
+// (2026-11-16: apagado o teste "a classificação com um humano: três sessões…", que quebrou na main com a espera do carregamento e o box liberado no Q; pedido do Thiago)
 
 test('a classificação só de robôs fecha sozinha, com o tempo fixo pela semente', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'], now: 2_000_000 });

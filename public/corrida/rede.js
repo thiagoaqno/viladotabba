@@ -109,6 +109,11 @@ socket.on("snap", (buf) => { // pacote binário: { t, c: [[id, x, y, z, a, v, pr
   }
 });
 socket.on("quali:volta", voltaDaClassificacao);
+// (2026-11-16) o rádio que o servidor manda para mim: o companheiro na pista e a parada no box (corrida-robos.js e corrida.js)
+socket.on("radio:equipe", (d) => {
+  if (!d || !E.ME || d.para !== E.ME.id || !window.Radio) return;
+  const f = window.Radio.dizer(String(d.sit || ""), { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000);
+});
 socket.on("ack", reconciliar); // o estado verdadeiro do meu carro (fisica.js)
 socket.on("connect", reenviarEntradas);
 // O relógio: pergunta a hora do servidor (seis vezes na primeira meia segunda, depois a cada 2 s) e fica com as respostas de menor ida e volta.

@@ -44,15 +44,4 @@ function solo(pista, voltas = 3) {
   } finally { Date.now = agora; Math.random = aleatorio; Robos.usarFonte(() => null); }
 }
 
-test("nas curvas de Interlagos o robô difícil anda a 90% ou mais da velocidade de quem joga", { timeout: 120000 }, () => {
-  const r = solo("interlagos"), n = r.pf.n, topo = Math.max(...volta.amostras.map((a) => a[4]));
-  const vu = new Float64Array(n), cont = new Float64Array(n);
-  for (const a of volta.amostras) { vu[a[5]] += a[4]; cont[a[5]]++; }
-  let soma = 0, k = 0;
-  for (let i = 0; i < n; i++) {
-    if (!cont[i] || !r.vPorIdx[i] || r.pf.kf[i] < 1 / 600 || vu[i] / cont[i] > topo * 0.93) continue; // só as curvas de verdade (o usuário abaixo de 93% da máxima)
-    soma += Math.min(1.1, r.vPorIdx[i] / (vu[i] / cont[i])); k++;
-  }
-  assert.ok(k > 300, `poucos pontos de curva: ${k}`);
-  assert.ok(soma / k >= 0.9, `velocidade de curva do robô: ${(100 * soma / k).toFixed(1)}% da do usuário`);
-});
+// (2026-11-16: apagado o teste "nas curvas de Interlagos o robô difícil anda a 90%…", que quebrou na main com o acerto dos robôs por pista; pedido do Thiago)

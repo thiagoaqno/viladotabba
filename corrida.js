@@ -431,6 +431,10 @@ module.exports = function attachCorrida(io) {
     if (!p || ((!d.stopGo || d.troca) && !F1.PNEUS[d.composto])) return;
     // O serviço dos boxes recupera 90% do dano existente, também na visita de stop-and-go.
     p.dano = Math.max(0, (p.dano || 0) * 0.1);
+    if (room.phase === "quali") { // (2026-11-16) na classificação o box só troca o pneu: não conta como parada da corrida nem na regra dos compostos
+      if (F1.PNEUS[d.composto]) { log(room, `🔧 ${p.name} foi aos boxes na classificação (${F1.PNEUS[d.composto].nome}).`); }
+      return;
+    }
     if (d.manter && !d.stopGo) { // "não trocar" (menu do box, ou o robô avariado com o pneu bom): parou só para consertar o carro; não gasta jogo de
       // composto (não entra em `paradas`, que é a regra dos pneus), mas fica anotado à parte para a análise contar todas as idas ao box
       const tempo = Math.round((d.tempo || 0) * 10) / 10; (p.consertos ||= []).push({ volta: d.volta, tempo });

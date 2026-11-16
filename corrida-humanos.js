@@ -40,7 +40,7 @@ const pistaDe = (room) => Sim.criarPista(T.PISTAS[room.config.pista], room.confi
 function criarSim(room, p, serie, tick0, agora) {
   const tr = pistaDe(room), quali = room.phase === "quali";
   // (na classificação o pneu depende da água na pista quando a sessão abre: `serie` é a hora de abertura, `room.startAt`)
-  const c = Sim.novo(tr, { grid: p.grid || 0, f1: true, pneu: Sim.pneuDaLargada(room.phase, p.pneu, F1.climaEm(room.clima, serie).agua), box: !quali, tick: tick0 });
+  const c = Sim.novo(tr, { grid: p.grid || 0, f1: true, pneu: Sim.pneuDaLargada(room.phase, p.pneu, F1.climaEm(room.clima, serie).agua), box: true, tick: tick0 });
   return { serie, tr, c, fila: new Map(), tfim: new Map(), tReal: 0, inicio: agora, k0: tick0, ancora: agora - tick0 * PASSO_MS, ultimoAgora: agora, ultimoAck: 0, ultimoRegistro: 0, mudou: true, eventos: [], avisos: [], pos: null };
 }
 const TT_PASSADO_MS = 1500, TT_FUTURO_MS = 8; // a hora do passo: no máximo 1,5 s antes da chegada do pacote e nunca depois dela (com folga de 8 ms para o relógio do navegador)
@@ -123,7 +123,7 @@ function andar(room, agora, h) {
       amb.fantasma = p.finish != null; amb.finish = p.finish; amb.dnf = !!p.dnf;
       // com o pedido de box feito e a menos de 2 s da entrada do corredor, o carro já é fantasma (ninguém bate em quem está entrando)
       const cor = S.tr.corredor;
-      if (cor && ent.pedido && !p.box && !c.air && amb.finish == null && (amb.laps || 0) + 1 < (amb.voltas || 1) && !amb.quali && (S.tr.n - ((c.idx - cor.i0 + S.tr.n) % S.tr.n)) % S.tr.n * 6 < Math.max(c.v, 60) * Contato.BOX_FANTASMA_MS / 1000) p.boxFant = Math.max(p.boxFant || 0, t + 250);
+      if (cor && ent.pedido && !p.box && !c.air && amb.finish == null && (amb.quali || (amb.laps || 0) + 1 < (amb.voltas || 1)) && (S.tr.n - ((c.idx - cor.i0 + S.tr.n) % S.tr.n)) % S.tr.n * 6 < Math.max(c.v, 60) * Contato.BOX_FANTASMA_MS / 1000) p.boxFant = Math.max(p.boxFant || 0, t + 250);
       Sim.passo(c, ent, amb, S.tr, ev);
       // a batida deste passo (sob safety car o pelotão se comprime: sem batida; na classificação cada um faz a sua volta)
       const k = c.tick - 1; // (o passo que acabou de andar)

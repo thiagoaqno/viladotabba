@@ -510,7 +510,11 @@ function culpaEntre(vAx, vAy, vBx, vBy, nx, ny) {
 }
 function circulos(x, y, a, L, W) { const fx = Math.cos(a), fy = Math.sin(a), r = W * 0.45, d = Math.max(0, L / 2 - r); return [-d, 0, d].map((u) => [x + fx * u, y + fy * u, r]); }
 // o tamanho (u) de cada carro, o mesmo de CARS3 em carros.js (metros do modelo × KS = 10)
-const DIMENSOES = { equilibrado: [44, 26], foguete: [48, 25], formiga: [41, 26], drifteiro: [44, 25], tanque: [46, 29] };
+// (2026-11-16, o Thiago: "verificar a hitbox dos carros") A largura de colisão era a do kart antigo (2,6 m na escala 10: 26 u), mas o carro desenhado
+// é o F1 (f1.js, escalado só pelo comprimento): medido no carro.glb de 2026, a largura é 36% do comprimento (o F1 de verdade: 1,9 m em 5,5 m), ~16 u
+// num carro de 44. A hitbox ficava ~5 u mais larga de cada lado do que o carro na tela ("toque sem encostar"). O muro já batia certo (muroFolga 8,
+// meia largura do carro desenhado). Os robôs seguem planejando a manobra com a folga de antes (corrida-robos.js W_CARRO).
+const DIMENSOES = { equilibrado: [44, 16], foguete: [48, 17], formiga: [41, 15], drifteiro: [44, 16], tanque: [46, 17] };
 // Formula GP: o carro de verdade (5,5 m × 1,9 m, metros × 4,8), o de antes de #665
 const DIMENSOES_REAIS = { equilibrado: [26.4, 9.1], foguete: [28.8, 8.9], formiga: [24.5, 9.1], drifteiro: [26.4, 8.9], tanque: [27.6, 10.1] };
 const dimensoes = (car) => { const D_ = escalaReal() ? DIMENSOES_REAIS : DIMENSOES; return D_[car] || D_.equilibrado; };

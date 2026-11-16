@@ -1,5 +1,10 @@
 [
   {
+    "id": "2026-11-16-hitbox",
+    "data": "2026-11-16",
+    "itens": [
+      "Batida entre carros só quando os carros encostam de verdade: a área de colisão era bem mais larga que o carro desenhado (os toques entre carros caíram pela metade)",
+      "Robôs quase não raspam mais os muros de Baku e Mônaco (−93% de toques no muro) e ficaram até mais rápidos lá: a linha deles agora é corrigida pelo caminho que o carro faz de verdade"
     "id": "2026-11-16-mfd-compacto",
     "data": "2026-11-16",
     "itens": [

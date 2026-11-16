@@ -347,7 +347,6 @@
 /* ===== (2026-11-16) o MFD novo: o painel vivo (página Resumo) e a casca, pelo conceito do Thiago. A cor é a da equipe (--equipe), os cartões
    respondem ao mouse (sobem e acendem a borda) e a seleção fica clara (a aba ativa com a barra da equipe; o cartão focado com contorno). ===== */
 #race:is(.f1hud,.f1mfd) #hMfd{--eq:var(--equipe,#e10600);border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#10131bf2,#07080cf7);border:1px solid #ffffff1c;box-shadow:0 12px 40px #000b;transition:width .25s ease,height .25s ease}
-#race:is(.f1hud,.f1mfd) #hMfd.largo{width:min(820px,calc(100vw - 28px));height:auto;max-height:calc(100vh - 120px)}
 #hMfd .mfd-topo{height:42px;gap:10px;padding:0 10px 0 12px;background:linear-gradient(90deg,#181c25,#10131b);border-bottom:1px solid #ffffff14;position:relative}
 #hMfd .mfd-topo::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,var(--eq),transparent 70%)}
 #hMfd .mfd-marca{width:22px;height:14px;flex:none;background:var(--eq);clip-path:polygon(28% 0,100% 0,72% 100%,0 100%);box-shadow:0 0 10px var(--eq)}
@@ -368,75 +367,10 @@
 #hMfd .mfd-volta b{font-size:16px;color:#fff;margin-left:4px}
 #hMfd:not(.largo) .mfd-pos,#hMfd:not(.largo) .mfd-abas button span{display:none}
 
-/* o Resumo */
-.rs{display:grid;grid-template-columns:1fr 1.05fr 1fr;gap:10px;padding:12px}
-.rs-col{display:flex;flex-direction:column;gap:10px;min-width:0}
-.rs-card{display:block;width:100%;text-align:left;font:inherit;color:inherit;padding:10px 12px 12px;border-radius:12px;background:linear-gradient(160deg,#ffffff0d,#ffffff05);border:1px solid #ffffff14;position:relative;overflow:hidden;transition:transform .15s ease,border-color .15s,box-shadow .15s,background .15s}
-button.rs-card{cursor:pointer}
-button.rs-card:hover{transform:translateY(-2px);border-color:var(--eq);box-shadow:0 6px 18px #0008,0 0 0 1px var(--eq) inset;background:linear-gradient(160deg,#ffffff14,#ffffff07)}
-button.rs-card:active{transform:translateY(0)}
-button.rs-card:focus-visible{outline:2px solid var(--eq);outline-offset:2px}
-.rs-card header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.rs-card header b{font-size:11px;font-weight:700;letter-spacing:.14em;color:#ffffffc8}
-.rs-ico{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1px solid #ffffff40;font-size:11px;color:#ffffffc0}
-.rs-ico.alerta{border:0;color:#ff3d4a;font-size:13px}
-.rs-card.alerta{border-color:#ff3d4a88;animation:rsPulso 1.8s ease-in-out infinite}
-@keyframes rsPulso{0%,100%{box-shadow:0 0 0 0 #ff3d4a00}50%{box-shadow:0 0 0 3px #ff3d4a33,0 0 18px #ff3d4a33}}
-.rs-pneu-corpo{display:flex;align-items:center;gap:12px}
-.rs-roda{width:64px;height:64px;flex:none}
-.rs-roda .rs-borracha{fill:#15171c;stroke:#2a2d35;stroke-width:4}.rs-roda .rs-faixa{fill:none;stroke-width:4;transition:stroke .3s}.rs-roda .rs-cubo{fill:#2b2f38;stroke:#ffffff30}
-.rs-pneu-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
-.rs-chip{align-self:flex-start;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:.08em;color:#0a0c12;background:var(--c,#ffd100)}
-.rs-pneu-txt strong{font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
-.rs-pneu-txt strong small{font-size:13px;font-weight:600;color:#ffffffb0}
-.rs-pneu-txt em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.08em;color:#ffffff90;text-transform:uppercase}
-.rs-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff10}
-.rs-prog>i{display:block;height:100%;width:0;transition:width .6s ease,background .3s}
-.rs-jg{display:flex;justify-content:space-between;gap:4px}
-.rs-jg-i{position:relative;display:grid;place-items:center;width:38px;height:38px;transition:opacity .2s}
-.rs-jg-i svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.rs-jg-i .tr{fill:none;stroke:#ffffff14;stroke-width:4}.rs-jg-i .vl{fill:none;stroke:var(--c,#fff);stroke-width:4;stroke-linecap:round;transition:stroke-dasharray .6s ease}
-.rs-jg-i b{font-size:14px;font-weight:700}
-.rs-jg-i.vazio{opacity:.32}.rs-jg-i.atual::after{content:"";position:absolute;bottom:-6px;width:6px;height:6px;border-radius:50%;background:var(--c,#fff)}
-.rs-meio{position:relative;display:grid;place-items:center;min-height:240px}
-.rs-anel{position:absolute;width:min(230px,100%);height:auto;transform:rotate(-90deg)}
-.rs-anel .tr{fill:none;stroke:#ffffff0f;stroke-width:5}.rs-anel .vl{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dasharray .8s ease,stroke .3s}
-.rs-carro{position:relative;width:96px;height:160px;filter:drop-shadow(0 8px 14px #000a)}
-.rs-carro .asa{fill:#1c1f27;stroke:#ffffff26}.rs-carro .corpo{fill:#1a1d24;stroke:var(--eq);stroke-width:1.6}.rs-carro .roda{fill:#2ee08a;stroke:#0008;transition:fill .4s}
-.rs-tp{position:absolute;display:flex;flex-direction:column;gap:2px;width:64px;font-variant-numeric:tabular-nums}
-.rs-tp b{font-size:16px;font-weight:700}.rs-tp small{font-size:10px;font-weight:700;letter-spacing:.08em;color:#ffffff90;text-transform:uppercase}
-.rs-tp>i{display:block;height:3px;border-radius:2px;background:#ffffff14;overflow:hidden}.rs-tp>i>i{display:block;height:100%;width:0;transition:width .6s ease,background .3s}
-.rs-tp0{left:4%;top:16%}.rs-tp1{right:4%;top:16%;text-align:right}.rs-tp2{left:4%;bottom:16%}.rs-tp3{right:4%;bottom:16%;text-align:right}
-.rs-cond{position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center}
-.rs-cond small{display:block;font-size:9px;font-weight:700;letter-spacing:.16em;color:#ffffff80}.rs-cond b{font-size:14px}
-.rs-dano-corpo{display:flex;align-items:center;gap:10px}
-.rs-dano-corpo svg{width:44%;flex:none}.rs-dano-corpo .sil{fill:none;stroke-width:2.5;stroke-linejoin:round;transition:stroke .3s}
-.rs-dano-corpo .sil.bom{stroke:#c9d1db}.rs-dano-corpo .sil.medio{stroke:#ffb02e}.rs-dano-corpo .sil.baixo{stroke:#ff3d4a}
-.rs-dano-corpo div{flex:1;min-width:0}.rs-dano-corpo strong{font-size:28px;font-weight:700;line-height:1}
-.rs-barra{display:block;height:5px;margin:6px 0 4px;border-radius:3px;background:#ffffff14;overflow:hidden}
-.rs-barra>i{display:block;height:100%;width:0;border-radius:3px;transition:width .6s ease;background:#2ee08a}.rs-barra>i.medio{background:#ffb02e}.rs-barra>i.baixo{background:#ff3d4a}
-.rs-dano-corpo em{font-style:normal;font-size:11px;color:#ffffff90}
-.rs-clima-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.rs-clima-corpo>div{display:flex;flex-direction:column;gap:3px;padding-left:8px;border-left:1px solid #ffffff14}.rs-clima-corpo>div:first-child{border:0;padding:0}
-.rs-clima-corpo span{font-size:20px;line-height:1}.rs-clima-corpo small{font-size:9px;font-weight:700;letter-spacing:.12em;color:#ffffff80}.rs-clima-corpo b{font-size:14px}
-.rs-rodape{grid-column:1/-1;display:grid;grid-template-columns:1.2fr .8fr .8fr 1.3fr;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff12}
-.rs-rodape small{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;color:#ffffff88;margin-bottom:4px}
-.rs-rodape>div+div{padding-left:10px;border-left:1px solid #ffffff14}
-.rs-lider>div{display:flex;align-items:center;gap:10px}.rs-num{font-size:30px;font-weight:700;line-height:1;padding-right:10px;border-right:2px solid var(--eq)}
-.rs-lider strong{display:block;font-size:15px}.rs-lider em,.rs-gap em{font-style:normal;font-size:11px;color:#ffffff90}.rs-lider img{height:22px;margin-left:auto}
-.rs-gap strong{display:block;font-size:20px;font-variant-numeric:tabular-nums}.rs-gap.frente strong{color:#2ee08a}.rs-gap.tras strong{color:#ffb02e}
-.rs-mapa{display:flex;align-items:center;gap:8px}.rs-mapa svg{width:62%;height:auto}.rs-mapa em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.1em;color:#ffffff90}
-.rs-mapa .pista{fill:none;stroke:#ffffffb0;stroke-width:2.2;stroke-linejoin:round}.rs-mapa .eu{fill:var(--eq);stroke:#fff;stroke-width:1.5}.rs-mapa .lid{fill:#ffd23f;stroke:#000;stroke-width:1}
-@media (prefers-reduced-motion:reduce){.rs-card.alerta{animation:none}.rs-card,.rs-prog>i,.rs-barra>i,.rs-anel .vl,.rs-jg-i .vl{transition:none}}
-@media (max-width:760px){
-  .rs{grid-template-columns:1fr 1fr}.rs-meio{display:none}.rs-rodape{grid-template-columns:1fr 1fr}.rs-rodape>div:nth-child(3){border:0;padding:0}.rs-mapa{display:none}
-  #hMfd .mfd-pos{display:none}
-}
 
 /* ===== (2026-11-16, o print do Thiago: "o MFD ocupa muito da minha tela") o Resumo compacto (~560 px, do tamanho de antes na altura) e as abas
    consertadas: o estilo antigo punha uma barra (::after) em toda aba e zerava a fonte; a aba ativa não repete o nome (ele já está no título). ===== */
 #race:is(.f1hud,.f1mfd) #hMfd{background:linear-gradient(160deg,#10131bd9,#07080ce6)}
-#race:is(.f1hud,.f1mfd) #hMfd.largo{width:min(560px,calc(100vw - 28px))}
 #hMfd .mfd-topo{height:34px;gap:8px;padding:0 8px 0 10px}
 #hMfd .mfd-marca{width:16px;height:10px}
 #hMfd .mfd-nome{font-size:11px;letter-spacing:.14em}
@@ -448,28 +382,19 @@ button.rs-card:focus-visible{outline:2px solid var(--eq);outline-offset:2px}
 #hMfd .mfd-abas button:hover span{display:inline;font-size:10px}
 #hMfd .mfd-pos{gap:8px}#hMfd .mfd-pos b{font-size:14px}#hMfd .mfd-pos small{font-size:10px}
 #hMfd .mfd-volta{font-size:9px;padding-left:8px}#hMfd .mfd-volta b{font-size:13px}
-.rs{grid-template-columns:1fr .78fr 1fr;gap:6px;padding:8px}
-.rs-col{gap:6px}
-.rs-card{padding:6px 8px 8px;border-radius:9px}
-.rs-card header{gap:6px;margin-bottom:4px}
-.rs-card header b{font-size:9px;letter-spacing:.12em}
-.rs-ico{width:15px;height:15px;font-size:9px}
-.rs-pneu-corpo{gap:8px}
-.rs-roda{width:38px;height:38px}
-.rs-chip{padding:2px 6px;font-size:9px;border-radius:4px}
-.rs-pneu-txt{gap:2px}.rs-pneu-txt strong{font-size:20px}.rs-pneu-txt strong small{font-size:10px}.rs-pneu-txt em{font-size:8.5px}
-.rs-jg-i{width:26px;height:26px}.rs-jg-i b{font-size:11px}.rs-jg-i.atual::after{bottom:-5px;width:4px;height:4px}
-.rs-meio{min-height:150px}
-.rs-anel{width:min(138px,100%)}
-.rs-carro{width:52px;height:88px}
-.rs-tp{width:38px;gap:1px}.rs-tp b{font-size:11px}.rs-tp small{font-size:7.5px}
-.rs-tp0{left:0;top:10%}.rs-tp1{right:0;top:10%}.rs-tp2{left:0;bottom:16%}.rs-tp3{right:0;bottom:16%}
-.rs-cond small{font-size:7px}.rs-cond b{font-size:11px}
-.rs-dano-corpo{gap:6px}.rs-dano-corpo svg{width:36%}.rs-dano-corpo strong{font-size:19px}.rs-barra{height:4px;margin:4px 0 3px}.rs-dano-corpo em{font-size:9px}
-.rs-clima-corpo{gap:4px}.rs-clima-corpo>div{padding-left:6px;gap:2px}.rs-clima-corpo span{font-size:14px}.rs-clima-corpo small{font-size:7px}.rs-clima-corpo b{font-size:11px}
-.rs-rodape{gap:6px;padding:6px 8px;border-radius:9px}
-.rs-rodape small{font-size:7.5px;margin-bottom:2px}
-.rs-rodape>div+div{padding-left:6px}
-.rs-num{font-size:20px;padding-right:6px}.rs-lider>div{gap:6px}.rs-lider strong{font-size:12px}.rs-lider em,.rs-gap em{font-size:9px}.rs-lider img{height:16px}
-.rs-gap strong{font-size:14px}
-.rs-mapa svg{width:58%}.rs-mapa em{font-size:8px}
+
+/* (2026-11-16) o Resumo pequeno: quatro linhas no tamanho normal do MFD; cada uma leva para a sua página (hover e foco na cor da equipe) */
+.rs2{display:flex;flex-direction:column;gap:5px;padding:2px 0}
+.rs2-l{position:relative;display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px 8px;text-align:left;font:inherit;color:inherit;background:#ffffff08;border:1px solid #ffffff12;border-radius:8px;overflow:hidden;transition:border-color .15s,background .15s}
+button.rs2-l{cursor:pointer}button.rs2-l:hover{border-color:var(--eq,#e10600);background:#ffffff12}button.rs2-l:focus-visible{outline:2px solid var(--eq,#e10600);outline-offset:1px}
+.rs2-l>span{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.rs2-l strong{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}.rs2-l em{font-style:normal;font-size:10.5px;color:#ffffff99;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs2-l small{font-size:8.5px;font-weight:700;letter-spacing:.12em;color:#ffffff80}
+.rs2-ic{display:grid;place-items:center;width:22px;height:22px;flex:none;font-size:14px}
+.rs2-l .mp-bola{flex:none}
+.rs2-b{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff10}.rs2-b>i{display:block;height:100%;width:0;transition:width .6s ease,background .3s}
+.rs2-gaps{justify-content:space-between}.rs2-gaps>span{flex:1}.rs2-gaps>span+span{padding-left:9px;border-left:1px solid #ffffff14}
+.rs2-gaps .fr{color:#2ee08a}.rs2-gaps .tr{color:#ffb02e}
+.rs2-l.alerta{border-color:#ff3d4a88;animation:rs2Pulso 1.8s ease-in-out infinite}
+@keyframes rs2Pulso{0%,100%{box-shadow:0 0 0 0 #ff3d4a00}50%{box-shadow:0 0 0 2px #ff3d4a33}}
+@media (prefers-reduced-motion:reduce){.rs2-l.alerta{animation:none}.rs2-b>i{transition:none}}

@@ -125,7 +125,7 @@ function vigiarLaco() {
   let ant = Date.now(), ultimoLog = 0, pior = 0, n = 0;
   setInterval(() => {
     const agora = Date.now(), atraso = agora - ant - 50; ant = agora;
-    if (atraso > 150) { n++; pior = Math.max(pior, atraso); if (agora - ultimoLog > 2000) { ultimoLog = agora; console.log(`Corrida PC: o laço atrasou ${atraso} ms (${n} vezes, o pior ${pior} ms)${(() => { try { return require("./corrida.js").emCorrida?.() ? " durante a corrida" : ""; } catch { return ""; } })()}`); } }
+    if (atraso > 150) { n++; pior = Math.max(pior, atraso); if (agora - ultimoLog > 2000) { ultimoLog = agora; console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: o laço atrasou ${atraso} ms (${n} vezes, o pior ${pior} ms) · ${(() => { try { return require("./corrida.js").faseAgora?.() || "fora de corrida"; } catch { return "?"; } })()}`); } }
   }, 50).unref();
 }
 

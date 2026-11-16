@@ -76,6 +76,9 @@ function limparCapacete(c) {
 module.exports = function attachCorrida(io) {
   const nsp = io.of("/corrida");
   const rooms = new Map();
+  // (2026-11-16) o que a sala está fazendo agora, para a vigia do laço no servidor.log do programa (corrida-pc.js): a fase, se o qualify está no
+  // intervalo e os segundos desde a largada (ou a abertura da sessão)
+  module.exports.faseAgora = () => { for (const r of rooms.values()) if (r.phase === "race" || r.phase === "quali") { const q = r.quali, s = r.startAt ? Math.round((Date.now() - r.startAt) / 1000) : null; return r.phase === "quali" ? (q && q.carga ? "qualify, carregando" : q && q.pausaAte ? `qualify, intervalo depois do ${q.nome}` : `qualify ${q ? q.nome : ""}, ${s} s de sessão`) : `corrida, ${s} s depois da largada`; } return null; };
   module.exports.emCorrida = () => { for (const r of rooms.values()) if (r.phase === "race" || r.phase === "quali") return true; return false; }; // (corrida-pc.js: os envios ao site esperam a bandeirada)
   require("./lobby.js").registrar("corrida", rooms, { max: MAX_PLAYERS }); // aparece na lista de salas da Vila
 

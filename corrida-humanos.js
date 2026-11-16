@@ -189,12 +189,13 @@ function snap(room, agora = Date.now()) {
 // O que cada piloto recebe, a cada pacote (~30 ms, 33 por segundo): quem está perto (menos de RAIO_PERTO) vem em todo pacote (33/s), quem está
 // a meia distância em um de cada dois (17/s) e o resto em um de cada quatro (8/s); o meu próprio registro só serve para a torre (o
 // progresso oficial) e vem em um de cada quatro. `n` conta os pacotes. Quem só assiste (sem carro) recebe todos em todo pacote.
+const LOCAL = !!process.env.CORRIDA_SITE; // (2026-11-16) no programa de PC todo carro vem em todo pacote: os de longe vinham 8 vezes por segundo e travavam no radar
 const RAIO_PERTO = 650, RAIO_MEDIO = 1800; // u (uns 135 m e 375 m)
 function snapPara(lista, id, n) {
   const eu = id ? lista.find((r) => r[0] === id) : null, out = [];
   for (const r of lista) {
     if (eu && r === eu) { if (n % 4 === 0) out.push(r); continue; }
-    const d = eu ? Math.hypot(r[1] - eu[1], r[2] - eu[2]) : 0, cada = d < RAIO_PERTO ? 1 : d < RAIO_MEDIO ? 2 : 4;
+    const d = eu ? Math.hypot(r[1] - eu[1], r[2] - eu[2]) : 0, cada = LOCAL || d < RAIO_PERTO ? 1 : d < RAIO_MEDIO ? 2 : 4;
     if (n % cada === 0) out.push(r);
   }
   return out;

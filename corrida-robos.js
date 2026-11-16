@@ -18,6 +18,7 @@ const Pilotos = require("./public/corrida/f1-pilotos-2026.js"); // as equipes e 
 const { SKINS } = require("./public/pelada/campo.js");
 
 const NOMES = ["Faísca", "Pistão", "Graxa", "Biela", "Vácuo", "Turbo", "Chicane"];
+const DIFICIL_ANTIGO = !!process.env.ROBO_DIFICIL_ANTIGO; // (só para medir o de antes)
 const NIVEIS = { facil: 0.80, medio: 0.87, dificil: 0.93 }; // modo clássico: fração da velocidade do traçado
 // Com voltas guardadas: o tempo de volta que o robô mira, em relação ao ritmo de quem joga (a média das cinco
 // melhores voltas de cada um). No médio, um pouco mais lento que essa média; no difícil, um pouco mais rápido.
@@ -475,7 +476,7 @@ function largar(room) {
 // pouco de cambagem e o resto no meio, sem exagero no desgaste. O nível da sala diz o quanto o robô chega perto disso: difícil 100%,
 // médio 75%, fácil 40% (o resto fica no acerto padrão), e cada piloto erra um pouco a asa (±0,05, fixo por piloto e sala).
 let IDEAIS_AC = null;
-const PERTO_DO_IDEAL = { facil: 0.4, medio: 0.75, dificil: 1 };
+const PERTO_DO_IDEAL = { facil: 0.4, medio: 0.75, dificil: DIFICIL_ANTIGO ? 1 : 0.9 }; // (2026-11-16, o Thiago: "o difícil está insano": era 1)
 function acertoDoRobo(pista, nivel, id) {
   if (IDEAIS_AC == null) { try { IDEAIS_AC = require("./public/corrida/acerto-ideal.json"); } catch { IDEAIS_AC = {}; } }
   const id0 = IDEAIS_AC[pista] || IDEAIS_AC[T.baseDe ? T.baseDe(pista) : pista], P = Sim.ACERTO_PADRAO;
@@ -1142,7 +1143,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; if (volta > 0) bonusDeUltrapassagem(room, p, ia, car); }
     ritmoDaVolta = ia.ritmoDaVolta;
     if (ia.erroAte > now) erroK = ia.erroK;
-    else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * ({ facil: 1.4, medio: 1, dificil: 0.7 }[room.config.nivel] || 1)) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
+    else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * ({ facil: 1.4, medio: 1, dificil: DIFICIL_ANTIGO ? 0.7 : 0.85 }[room.config.nivel] || 1)) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
   }
   if (encalhou(room, ia, car, now, dt, tf.atras < 140)) { // preso (parado, rodado, de lado no muro ou sem andar): o "↺ Pista" do robô, do lado livre
     Sim.voltarParaPista(car, tr, ev);
@@ -1186,7 +1187,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     // a bateria como na F1: na manobra; para CRIAR a diferença de velocidade, numa reta, perto do carro da frente; e para DEFENDER, numa reta, com
     // alguém colado atrás. Sempre guardando um pouco (ERS_ATAQUE e ERS_DEFESA: a carga mínima para gastar em cada caso)
     const cargaErs = car.ers ? car.ers.carga : 0, pertoDaFrente = tf.atras != null && tf.atras < L_CARRO * 3, coladoAtras = !!tf.tras && tf.tras.gap < L_CARRO * 2.5;
-    ent.ers = (!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > ERS_ATAQUE && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA)));
+    // (2026-11-16, o Thiago: "eles nunca me ultrapassam, ficam travados atrás de mim") colado atrás e sem manobra, gastava a bateria em toda reta (até zerar) e
+    // nunca juntava ERS_MANOBRA para partir para a ultrapassagem. Agora guarda até ter ERS_MANOBRA; na manobra (ia.ult) gasta até zerar.
+    ent.ers = (!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > (process.env.ROBO_PERSEGUE_ANTIGO ? ERS_ATAQUE : ERS_MANOBRA) && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA)));
     ent.pedido = proxima;
     Sim.passo(car, ent, amb, tr, ev);
     // a batida deste passo: a mesma dos humanos (corrida-contato.js), com os outros carros na hora do passo; o robô também troca momento

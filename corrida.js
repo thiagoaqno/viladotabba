@@ -186,7 +186,7 @@ module.exports = function attachCorrida(io) {
   // Um laço por sala (a cada 10 ms) anda cada carro humano com as entradas que o piloto já mandou e, a cada 30 ms, manda a
   // posição dos carros (`snap`, binário: pose.js, Snap): quem está perto de você 33 vezes por segundo, o resto menos (corrida-humanos.js,
   // snapPara). Os ganchos levam o que a física viu (checkpoint, batida, box) para as regras da sala.
-  const SNAP_TIQUES = 3; // a cada 3 voltas do laço de 10 ms
+  const SNAP_TIQUES = process.env.CORRIDA_SITE ? 1 : 3; // a cada 3 voltas do laço de 10 ms (no programa de PC, em toda volta: o servidor está no próprio PC, não há internet para poupar, e menos tempo entre pacotes é menos previsão errada na tela)
   function enviarSnaps(room, n) {
     const agora = Date.now(), lista = Humanos.snap(room, agora), donos = [];
     if (!lista.length) return;

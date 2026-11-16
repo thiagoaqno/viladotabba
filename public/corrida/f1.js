@@ -88,7 +88,8 @@ const TOM_PNEU = { macio: -0.06, medio: 0, duro: 0.05, chuva: -0.02, intermediar
 // o pneu: faixa e acabamento mudam por uniform, sem carregar textura nem recompilar
 function pneuMat(base, composto, depois = "map_fragment") {
   const m = base.clone();
-  m.roughness = 0.92; m.metalness = 0;
+  // (2026-11-16, o Thiago: "muda o material dos pneus para acetinado: reflexivos como eram, mas não muito") de 0,92 (fosco) para meio brilho
+  m.roughness = 0.55; m.metalness = 0; m.envMapIntensity = 0.45;
   m.userData.faixa = { faixa: { value: new THREE.Color(FAIXAS[composto] || "#ffffff") }, faixaOn: { value: FAIXAS[composto] ? 1 : 0 }, pneuChuva: { value: (composto === "chuva" || composto === "intermediario") ? 1 : 0 }, pneuTom: { value: TOM_PNEU[composto] || 0 }, pneuLetras: { value: texturaDasLetrasDoPneu() } };
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, m.userData.faixa);

@@ -47,6 +47,8 @@ function renderizar() {
   const prox = s.calendario[s.gp], ativo = estado.ativo, previsao = terminou ? null : G.previsaoDoGP(s.semente, s.ano, s.gp);
   const ultimo = s.resultados.filter((r) => r.ano === s.ano).at(-1);
   const im = Regras.imersao(s); try { localStorage.setItem("corrida:objetivoGP", JSON.stringify({ gp: im.meta.gp, em: Date.now() })); } catch { /* sem armazenamento */ }
+  // (2026-11-16) o Paddock deste GP para as falas da metade da corrida (hud.js, meioDaCorrida): o ultimato, a promessa e o clima da equipe
+  try { const p = s.paddock || {}; localStorage.setItem("corrida:paddockGP", JSON.stringify({ em: Date.now(), meta: im.meta.gp, ultimato: p.ultimato && p.ultimato.gp === s.gp && p.ultimato.ano === s.ano ? p.ultimato.alvo : null, promessa: !!(p.promessa && p.promessa.gp === s.gp && p.promessa.ano === s.ano), moral: p.moral, lealdade: p.lealdade, agressividade: p.agressividade, torcida: p.torcida, patrocinador: p.patrocinador })); } catch { /* sem armazenamento */ }
   const rival = im.rival && piloto(im.rival.id), eu = ultimo?.linhas.find((r) => r.piloto === "voce");
   const resultadoTexto = eu ? (eu.dnf ? "abandonou" : eu.nc ? "não foi classificado" : `terminou em ${eu.pos}º`) : "";
   const cumpriu = eu && !eu.dnf && !eu.nc && eu.pos <= (ultimo.objetivoGP || im.meta.gp);

@@ -71,14 +71,7 @@ function corrida({ pista = "interlagos", nivel = "medio", robos = 8, voltas = 2,
   } finally { Date.now = agora; Math.random = aleatorio; Robos.usarFonte(() => null); }
 }
 
-test("trânsito: oito robôs em duas voltas quase não se tocam (nenhuma batida forte) em nenhum nível", { timeout: 300000 }, () => {
-  for (const nivel of ["facil", "medio", "dificil"]) {
-    const r = corrida({ nivel });
-    assert.ok(r.room.order.every((id) => r.room.players[id].finish != null), `${nivel}: todos terminam`);
-    const fortes = r.contatos.filter((c) => c.forca >= F1.BATIDA_MEDIA);
-    assert.ok(fortes.length <= 2 && r.contatos.length <= 14, `${nivel}: ${r.contatos.length} contatos, ${fortes.length} fortes`);
-  }
-});
+// (2026-11-16: apagado o teste "trânsito: oito robôs em duas voltas…", que quebrou na main com o acerto dos robôs por pista; pedido do Thiago)
 
 test("robô que passa da bandeirada segue rodando como fantasma (antes parava na linha de chegada)", { timeout: 120000 }, () => {
   const r = corrida({ robos: 3, voltas: 1, depois: 8 });

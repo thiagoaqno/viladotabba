@@ -285,6 +285,22 @@ function balancoDaCorrida() {
     : pos <= 3 ? "penultimaboa" : pos <= Math.ceil(total / 2) ? "penultimaok" : "penultimaruim";
   radioF1(sit, { forcar: true });
 }
+// (2026-11-16, o Thiago: "falas na metade da corrida de acordo com as nossas decisões") Na volta do meio, o engenheiro fala do que o Paddock da
+// carreira decidiu (sede.js guarda em corrida:paddockGP ao abrir a Central): primeiro o ultimato e a promessa ao patrocinador (contra a posição
+// de agora), depois o companheiro (moral e lealdade), a ordem de corrida (agressividade) e a torcida e o patrocinador nos extremos. Uma fala só,
+// e o texto aparece também na tela (as falas novas só tocam depois de gerar o áudio: GERAR-VOZES-CORRIDA.bat).
+function meioDaCorrida() {
+  let p = null; try { p = JSON.parse(localStorage.getItem("corrida:paddockGP")); } catch { /* sem armazenamento */ }
+  if (!p || Date.now() - p.em > 3 * 60 * 60 * 1000) return;
+  const pos = race.minhaPos;
+  const sit = p.ultimato && pos >= 1 ? (pos <= p.ultimato ? "meioultimatook" : "meioultimatoruim")
+    : p.promessa && pos >= 1 && p.meta ? (pos <= p.meta ? "meiopromessaok" : "meiopromessaruim")
+    : p.moral <= 30 ? "meiocompanheirotenso" : p.moral >= 75 && p.lealdade >= 65 ? "meiocompanheirofiel"
+    : p.agressividade >= 70 ? "meioataque" : p.agressividade <= 30 ? "meiolimpa"
+    : p.torcida >= 75 ? "meiotorcida" : p.patrocinador >= 75 ? "meiopatrocinio" : null;
+  if (!sit || !window.Radio || !E.S || E.S.config.regras !== "f1") return;
+  const f = window.Radio.dizer(sit, { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 7000);
+}
 // O engenheiro diz o objetivo desta corrida na largada (na carreira: sede.js e grupo.js guardam a meta do GP ao abrir a Central).
 function objetivoDaCorrida() {
   if (race.objetivoDito) return; race.objetivoDito = true;
@@ -541,7 +557,7 @@ function pneuHud(c, pn, x, y) {
 export function checkMyLap(old) {
   const m = me(), o = old && E.ME && old.players.find((p) => p.id === E.ME.id);
   if (!m || !o || !race) return;
-  if (m.laps > o.laps) { lapDone(m); if (m.finish != null) Sound.finish(); else { Sound.lap(); race.lastLapMsg = sNow(); if (m.laps === E.S.config.voltas - 1 && E.S.config.voltas > 1) radioF1("ultima"); else if (m.laps === E.S.config.voltas - 2 && E.S.config.voltas > 3) balancoDaCorrida(); } }
+  if (m.laps > o.laps) { lapDone(m); if (m.finish != null) Sound.finish(); else { Sound.lap(); race.lastLapMsg = sNow(); if (m.laps === E.S.config.voltas - 1 && E.S.config.voltas > 1) radioF1("ultima"); else if (E.S.config.voltas >= 5 && m.laps === Math.floor(E.S.config.voltas / 2)) meioDaCorrida(); else if (m.laps === E.S.config.voltas - 2 && E.S.config.voltas > 3) balancoDaCorrida(); } }
 }
 // a tela do GP (regras de F1): o pódio, e a tabela com tempo ou diferença, grid, paradas, penalidades e os pontos oficiais
 function resultadoGP(el, m, isHost) {

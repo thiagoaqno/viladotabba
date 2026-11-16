@@ -365,9 +365,34 @@ function aoResultado(s, resultado, meta) {
       (p.noticias ||= []).push({ ano: s.ano, gp: s.gp, t: `${antigo.nome} deixa a ${nomeEq(s.equipe)}`, x: `${novo.nome} assume o segundo carro a partir do próximo GP.`, eq: s.equipe, quem: "Piloto" });
     }
   }
+  marcos(s);
   // o patrocinador nos extremos muda a verba por GP
   if (p.patrocinador >= 80 && s.patrocinio < 12) { s.patrocinio++; p.patrocinador = 62; anotar(s, "Patrocinador", `O patrocinador gostou e aumentou a verba para ${s.patrocinio} milhões por GP.`); }
   else if (p.patrocinador <= 20 && s.patrocinio > 3) { s.patrocinio--; p.patrocinador = 42; anotar(s, "Patrocinador", `O patrocinador cortou a verba para ${s.patrocinio} milhões por GP.`); }
+}
+// (2026-11-16, o Thiago: "ser recompensado por adquirir certas porcentagens nos relacionamentos") Os MARCOS: passou da faixa, a recompensa
+// sai uma vez por temporada (p.marcos guarda `ano:id`), com uma linha no mural e uma notícia. Cada um muda algo de verdade:
+//  - companheiro parceiro (moral 85+ e lealdade 75+): ele passa os dados do simulador e o PRÓXIMO desenvolvimento do carro sai de graça (regras.js desenvolver);
+//  - torcida 85+: a loja vende camisas e entram 2 milhões no caixa;
+//  - diretoria 15+: o conselho libera 3 milhões para o carro;
+//  - patrocinador 95+: um bônus de 3 milhões de uma vez (fora do aumento da verba por GP, que já existe nos 80);
+//  - e o lado ruim: torcida 15 ou menos, a loja encalha e sai 1 milhão do caixa.
+const MARCOS = [
+  { id: "parceiro", quando: (p) => p.moral >= 85 && p.lealdade >= 75, faz: (s, p) => { p.desenvolvimentoGratis = true; }, texto: (s, nome) => `${nome} virou parceiro de verdade: passou os dados do simulador e o próximo desenvolvimento do carro sai de graça.`, quem: "Piloto" },
+  { id: "torcida", quando: (p) => p.torcida >= 85, faz: (s) => { s.caixa += 2; }, texto: () => "A torcida está em festa: as camisas da equipe esgotaram e entraram 2 milhões no caixa.", quem: "Torcida" },
+  { id: "diretoria", quando: (p) => p.diretoria >= 15, faz: (s) => { s.caixa += 3; }, texto: () => "A diretoria confia no seu trabalho e liberou 3 milhões a mais para o carro.", quem: "Diretoria" },
+  { id: "patrocinador", quando: (p) => p.patrocinador >= 95, faz: (s) => { s.caixa += 3; }, texto: () => "O patrocinador está encantado e pagou um bônus de 3 milhões.", quem: "Patrocinador" },
+  { id: "torcidaRuim", quando: (p) => p.torcida <= 15, faz: (s) => { s.caixa = Math.max(0, s.caixa - 1); }, texto: () => "A torcida sumiu das arquibancadas: a loja encalhou e saiu 1 milhão do caixa.", quem: "Torcida" },
+];
+function marcos(s) {
+  const p = garantir(s); if (!p.marcos || typeof p.marcos !== "object") p.marcos = {};
+  const nome = Pilotos.PILOTOS.find((x) => x.id === s.piloto2)?.nome || "Seu companheiro";
+  for (const m of MARCOS) {
+    const chave = `${s.ano}:${m.id}`; if (p.marcos[chave] || !m.quando(p)) continue;
+    p.marcos[chave] = true; m.faz(s, p);
+    const texto = m.texto(s, nome); anotar(s, m.quem, texto);
+    (p.noticias ||= []).push({ ano: s.ano, gp: s.gp, t: texto.split(":")[0], x: texto, eq: s.equipe, quem: m.quem });
+  }
 }
 // A virada do ano (regras.js proximaTemporada): os números voltam um pouco para o meio, e o mural guarda a virada.
 function novaTemporada(s) {
@@ -377,7 +402,7 @@ function novaTemporada(s) {
   for (const k of Object.keys(p.decisoes)) if (Number(k.split(":")[0]) < s.ano - 1) delete p.decisoes[k];
 }
 const salarios = (s) => (s.paddock ? (s.paddock.salarioComp || 0) + (s.paddock.salarioStaff || 0) : 0);
-const api = { personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
+const api = { MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Paddock = api;
 })(typeof window !== "undefined" ? window : globalThis);

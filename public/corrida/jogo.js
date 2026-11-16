@@ -330,6 +330,22 @@ function loop(t) {
   draw(dt);
   medirQuadro();
   hud();
+  contarTravada(real);
+}
+// (2026-11-16) no programa de PC, cada quadro de mais de 70 ms vai para o servidor.log com o que aconteceu nele: shaders novos (renderer.info),
+// batida, safety car, câmera, quantos carros na tela. Medida para achar a travadinha da batida antes de mexer no carro.
+let progAntes = 0, geoAntes = 0, texAntes = 0, travadaEnviada = 0;
+function contarTravada(real) {
+  const info = renderer.info, prog = info.programs ? info.programs.length : 0, geo = info.memory.geometries, tex = info.memory.textures;
+  const ms = real * 1000;
+  if (ms > 70 && window.CORRIDA_PC?.pc && performance.now() - travadaEnviada > 1500 && race) {
+    travadaEnviada = performance.now();
+    const oque = [prog > progAntes ? `${prog - progAntes} shader(s) novo(s)` : "", geo !== geoAntes ? `geometrias ${geoAntes}→${geo}` : "", tex !== texAntes ? `texturas ${texAntes}→${tex}` : "",
+      (race.batidaT || 0) > sNow() - 1500 ? "batida agora" : "", (race.hitT || 0) > 0 ? "impacto" : "", race.shake > 0.05 ? "tremendo" : "", `câmera ${camEstado.modo || camMode}`,
+      `${info.render.calls} desenhos`, `${Math.round(info.render.triangles / 1000)} mil triângulos`, document.hidden ? "janela escondida" : ""].filter(Boolean).join(", ");
+    fetch("/api/corrida/pc/travada", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ms, pista: race.tr?.pistaId || race.tr?.id, fase: E.S?.phase, oque }) }).catch(() => {});
+  }
+  progAntes = prog; geoAntes = geo; texAntes = tex;
 }
 
 // O kart sente o relevo: mede o chão embaixo do bico, da traseira e dos dois lados e inclina junto (sobe o bico na

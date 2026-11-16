@@ -56,7 +56,7 @@ const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "
 const int = (v, d) => { const n = parseInt(v); return Number.isFinite(n) ? n : d; };
 const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : NaN);
 // o capacete de quem joga (mods.capacete; f1-capacetes.js): só o que o editor oferece, e o nome curto e sem símbolos
-const DESENHOS_CAPACETE = ["faixa", "bandas", "blocos", "cruz", "topo", "asas", "triangulos", "generico", "chamas", "onda", "degrade", "raio", "xadrez", "estrelas", "listras", "geometrico", "laminas", "garras", "corte", "velocidade"], HEX = /^#[0-9a-f]{6}$/i;
+const DESENHOS_CAPACETE = ["faixa", "bandas", "blocos", "cruz", "topo", "asas", "triangulos", "generico", "chamas", "onda", "degrade", "raio", "xadrez", "estrelas", "listras", "geometrico", "laminas", "garras", "corte", "velocidade", "stripe", "linhas", "topografico", "minimalista", "faixas", "pinceladas", "painel"], HEX = /^#[0-9a-f]{6}$/i;
 function limparCapacete(c) {
   if (!c || typeof c !== "object") return null;
   const cores = Array.isArray(c.cores) ? c.cores.slice(0, 3) : [];

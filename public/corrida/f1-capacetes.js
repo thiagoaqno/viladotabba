@@ -195,13 +195,69 @@ const DESENHOS = {
     }
     calota(x, c2, 40, c3);
   },
+  // (2026-11-16, as propostas do Thiago) uma lâmina de cor 2 que corta a lateral do queixo até a nuca, com um traço fino de cor 3 junto
+  stripe(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-120), 250], [X(-70), 250], [X(110), 120], [X(80), 120]], c2);
+      poli(x, [[X(-40), 250], [X(-24), 250], [X(124), 146], [X(116), 146]], c3);
+    }
+  },
+  // o casco escuro com dois filetes finos e curvos de cor 2 e 3 correndo pela lateral
+  linhas(x, [c1, c2, c3]) {
+    for (const cx of LADOS) { filete(x, cx, c2, 70); filete(x, cx, c3, 96); }
+    x.fillStyle = c2; x.fillRect(0, 244, 512, 4);
+  },
+  // curvas de nível em cor 2 sobre o casco (o mesmo desenho em todo capacete com essas cores)
+  topografico(x, [c1, c2]) {
+    x.strokeStyle = c2; x.lineWidth = 2; x.globalAlpha = 0.85;
+    for (let k = 0; k < 22; k++) {
+      x.beginPath();
+      for (let i = 0; i <= 64; i++) { const u = i * 8, y = 20 + k * 11 + Math.sin(u / 37 + k * 0.7) * 7 + Math.sin(u / 13 + k * 1.9) * 3; i ? x.lineTo(u, y) : x.moveTo(u, y); }
+      x.stroke();
+    }
+    x.globalAlpha = 1;
+  },
+  // quase tudo da cor do casco: um filete reto de cor 2 na lateral e o queixo de cor 3
+  minimalista(x, [c1, c2, c3]) {
+    for (const cx of LADOS) { const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v; poli(x, [[X(-128), 214], [X(-128), 220], [X(130), 150], [X(130), 144]], c2); }
+    x.fillStyle = c3; x.fillRect(0, 238, 512, 18);
+  },
+  // faixas largas paralelas de cor 2 e 3, inclinadas, cobrindo a metade de baixo
+  faixas(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-128), 256], [X(-40), 256], [X(128), 110], [X(128), 70]], c3);
+      poli(x, [[X(-20), 256], [X(30), 256], [X(128), 170], [X(128), 128]], c2);
+      poli(x, [[X(50), 256], [X(70), 256], [X(128), 206], [X(128), 190]], c2);
+    }
+  },
+  // pinceladas soltas de cor 2 na parte de trás e de baixo (o mesmo desenho em todo capacete)
+  pinceladas(x, [c1, c2]) {
+    let s = 7; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    x.fillStyle = c2;
+    for (let k = 0; k < 90; k++) {
+      const u = r() * 512, y = 150 + r() * 106, w = 30 + r() * 70, h = 3 + r() * 9, a = -0.5 + r() * 0.25;
+      x.save(); x.translate(u, y); x.rotate(a); x.globalAlpha = 0.6 + r() * 0.4; x.fillRect(-w / 2, -h / 2, w, h); x.restore();
+    }
+    x.globalAlpha = 1;
+  },
+  // um painel de cor 3 na lateral, recortado em diagonal, com a ponta de cor 2 embaixo
+  painel(x, [c1, c2, c3]) {
+    for (const cx of LADOS) {
+      const d = cx === 256 ? -1 : 1, X = (v) => cx + d * v;
+      poli(x, [[X(-20), 256], [X(128), 256], [X(128), 60], [X(60), 60], [X(10), 180]], c3);
+      poli(x, [[X(-128), 256], [X(-20), 256], [X(10), 210], [X(-110), 230]], c2);
+    }
+  },
 };
 
 // ---------- o capacete de quem joga (mods.capacete; editor na Garagem da sala, menus.js) ----------
 // { desenho, cores: [casco, segunda, detalhe], viseira, bandeira (sigla de gp-info.js BANDEIRAS), nome }; o servidor confere com `limparCapacete` (corrida.js, a mesma regra)
 export const DESENHOS_CAPACETE = { faixa: "Faixa", bandas: "Bandas", blocos: "Blocos", cruz: "Cruz", topo: "Topo", asas: "Asas", triangulos: "Triângulos", generico: "Clássico",
   chamas: "Chamas", onda: "Onda", degrade: "Degradê", raio: "Raio", xadrez: "Xadrez", estrelas: "Estrelas", listras: "Listras", geometrico: "Geométrico",
-  laminas: "Lâminas", garras: "Garras", corte: "Corte", velocidade: "Velocidade" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
+  laminas: "Lâminas", garras: "Garras", corte: "Corte", velocidade: "Velocidade",
+  stripe: "Stripe", linhas: "Linhas", topografico: "Topográfico", minimalista: "Minimalista", faixas: "Faixas", pinceladas: "Pinceladas", painel: "Painel" }; // (a lista do servidor: corrida.js, DESENHOS_CAPACETE)
 // o "Padrão" (as 4 variações de cada desenho), o acabamento do casco e os patrocínios (selos inventados, sem marca de verdade); a lista do servidor
 // é a mesma (corrida.js, limparCapacete)
 export const VARIANTES = ["Original", "Detalhe trocado", "Cores trocadas", "Espelhado"];

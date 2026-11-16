@@ -318,7 +318,7 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0.01 }, // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil, não desfazer completamente") os 2,5% de folga no médio e no difícil foram desfeitos no mesmo dia: o difícil insano era só em Baku, pelo ajuste do qualify de lá; nas outras pistas o Thiago passou a fazer a pole sempre)
+const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0.005 }, // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil"; depois do Catar: "tira só mais meio por cento, não quero que virem lendas") os 2,5% de folga no médio e no difícil foram desfeitos no mesmo dia: o difícil insano era só em Baku, pelo ajuste do qualify de lá; nas outras pistas o Thiago passou a fazer a pole sempre)
   FOLGA_F1_ANTIGA = { ...FOLGA_F1 }, FOLGA_F1_REAL = { facil: 0.13, medio: 0.08, dificil: 0 }; // (Formula GP: os de antes de #665, afinados na escala real) // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
 // por nível, a fração do limite das curvas e da frenagem que o robô usa, por cima do nível que dá o ideal. 1 é o limite do pneu:
 // o perfil (Piloto.perfilDoNivel) para nele, então acima de 1 não muda nada.
@@ -740,9 +740,13 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       // robô não parte para a manobra: fica atrás guardando energia. Na garoa e na chuva a bateria não conta (passa quando quiser), e um carro quase
       // parado à frente sempre pode ser passado.
       const molhado = room.clima ? F1.climaEm(room.clima, now).agua > 0.1 : false, comBateria = !ia.ers || ia.ers.carga >= minimoParaAtacar(p);
-      // (2026-11-16, Catar: "fiquei numa velocidade bem reduzida na frente e parecia um safety car, ninguém me ultrapassava") um carro da frente bem mais
-      // lento do que o robô andaria sozinho (`preso`: 12 u/s ou mais abaixo do ritmo livre) se passa sem bateria: esperar carga atrás dele só fazia a fila
-      if (querPassar && chega && foraDaFreada && (comBateria || molhado || lento || preso)) {
+      // (2026-11-16, Catar: "parecia um safety car, ninguém me ultrapassava"; "esperar a bateria é estratégia, mas gosto dos bots agressivos que
+      // tentam passar, não em toda curva") esperar carga é o plano, mas cada piloto tem PACIÊNCIA: colado atrás do mesmo carro por mais que ela,
+      // tenta mesmo sem bateria. O mais agressivo (ataque 1) espera ~4 s, o do meio ~9 s, o mais cauteloso ~14 s. Um carro bem mais lento (`preso`) passa logo.
+      const seg = ia.seguindo && ia.seguindo.id === alvo.o.id && alvo.frente < L_CARRO * 3 ? ia.seguindo : (ia.seguindo = { id: alvo.o.id, desde: now });
+      const ataqueP = p.piloto ? Estilos.dePiloto(p.piloto).ataque : 0.5, paciencia = 4000 + 10000 * (1 - Math.max(0, Math.min(1, Number.isFinite(ataqueP) ? ataqueP : 0.5)));
+      const cansou = alvo.frente < L_CARRO * 3 && now - seg.desde > paciencia;
+      if (querPassar && chega && foraDaFreada && (comBateria || molhado || lento || preso || cansou)) {
         // O lado leva em conta a sequência de curvas; em Mônaco também pode disputar por fora quando a faixa está livre.
         const lados = ordemDaPassagem(pf, i, alvo.latOutro, MARG, baseLat, dentro);
         const folgaFora = lento || dFreio === Infinity || tAlcance < tFreio * estilo.antec * 0.8;

@@ -62,6 +62,7 @@ function iniciar(room, deps) {
   const q = room.quali; q.carga = { prontos: new Set() }; q.pausaAte = Date.now() + CARGA_ABSOLUTA_MS;
   q.proxima = setTimeout(() => { if (room.quali === q && q.carga) { q.carga = null; abrirSessao(room, deps); } }, CARGA_ABSOLUTA_MS);
   deps.broadcast(room);
+  try { Robos.preaquecerQuali(room); } catch (e) { /* um extra: o Q1 faz a conta se faltar */ }
 }
 // um humano carregou a pista (o `carregou` do navegador); com todos os conectados prontos, o Q1 abre já
 function carregou(room, id, deps) {

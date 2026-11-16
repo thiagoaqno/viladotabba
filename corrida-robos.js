@@ -502,6 +502,21 @@ function aquecerNiveis(room, fila, nBots) {
 // (2026-11-16, o Thiago: "ficou travando na largada da corrida de Baku") A mesma conta de aquecerNiveis, ADIANTADA: chamada quando o último Q fecha
 // (corrida-f1-classificacao.js), na tela do resultado, onde ninguém pilota. Um robô por vez (setImmediate); deixa prontos o perfil, a tabela de
 // tempos e o perfil do nível de cada um (os caches de perfil, tabelaF1 e perfilF1), e a largada só reaproveita. Medido em Baku: 140 a 200 ms por robô.
+// (2026-11-16, o servidor.log do Thiago: "o laço atrasou 8713 ms") Abrir o Q1 calculava, de uma vez, a volta lançada dos 21 robôs: ~225 ms por robô em
+// Baku (medido: 4,9 s no total; o Q2, com a conta já guardada, 1 ms). Esta faz a mesma conta ANTES, na tela de carregamento do qualify
+// (corrida-f1-classificacao.js iniciar), um robô por vez (setImmediate): na abertura do Q1 os caches (o perfil e a tabela de tempos de cada carro) já
+// estão prontos. O resultado é jogado fora: a volta de verdade sai em abrirSessao, com a semente da sessão.
+function preaquecerQuali(room) {
+  if (room.config.regras !== "f1" || !room.quali) return;
+  const q = room.quali, bots = room.order.filter((id) => room.players[id] && room.players[id].bot);
+  let i = 0;
+  const um = () => {
+    if (room.quali !== q || !q.carga || i >= bots.length) return;
+    try { const k = i++; const p = room.players[bots[k]]; if (p) voltaLancada(room, p, 0, k, bots.length); } catch (e) { console.warn("Corrida: o aquecimento do qualify falhou", e.message); return; }
+    setImmediate(um);
+  };
+  setImmediate(um);
+}
 function preaquecerNiveis(room) {
   if (room.config.regras !== "f1") return;
   const bots = room.order.filter((id) => room.players[id] && room.players[id].bot), vez = room.preaquecendo = {};
@@ -1310,4 +1325,4 @@ function passo(room, dt, setor, emit) {
 }
 function possivel(pista, spec) { return perfilF1(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0), 1); }
 possivel.topo = (pista, spec) => topoDe(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0));
-module.exports = { preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };
+module.exports = { preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };

@@ -12,8 +12,17 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 static class Corrida {
+  // (2026-11-16) o servidor roda escondido: fora da economia de energia do Windows (os timers atrasavam e os carros "teleportavam") e um pouco acima da
+  // prioridade normal. ProcessPowerThrottling = 4; ControlMask 5 = velocidade de execução (1) + resolução de timer (4); StateMask 0 = desligados.
+  [StructLayout(LayoutKind.Sequential)] struct Economia { public uint Versao; public uint Controle; public uint Estado; }
+  [DllImport("kernel32.dll")] static extern bool SetProcessInformation(IntPtr h, int classe, ref Economia info, int tamanho);
+  static void SemEconomia(Process p) {
+    try { p.PriorityClass = ProcessPriorityClass.AboveNormal; } catch { }
+    try { var e = new Economia { Versao = 1, Controle = 5, Estado = 0 }; if (!SetProcessInformation(p.Handle, 4, ref e, Marshal.SizeOf(typeof(Economia)))) { e.Controle = 1; SetProcessInformation(p.Handle, 4, ref e, Marshal.SizeOf(typeof(Economia))); } } catch { } // (o timer só existe no Windows 11)
+  }
   const int PORTA = 31517;
   // A janela do jogo é o motor do Chromium (o mesmo de um programa em Electron), num perfil só do jogo: sem abas, sem extensões, sem
   // nada da navegação do dia a dia. As chaves: a placa de vídeo FORTE nos notebooks com duas (sem ela, o Edge desenha na integrada:
@@ -41,7 +50,7 @@ static class Corrida {
       p.EnvironmentVariables["DB_PATH"] = Path.Combine(dados, "galera.db");
       p.EnvironmentVariables["CORRIDA_SITE"] = site;
       try {
-        servidor = Process.Start(p);
+        servidor = Process.Start(p); SemEconomia(servidor);
         var log = new StreamWriter(Path.Combine(dados, "servidor.log"), false) { AutoFlush = true };
         servidor.OutputDataReceived += (s, e) => { if (e.Data != null) lock (log) log.WriteLine(e.Data); };
         servidor.ErrorDataReceived += (s, e) => { if (e.Data != null) lock (log) log.WriteLine(e.Data); };

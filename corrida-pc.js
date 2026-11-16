@@ -99,7 +99,34 @@ function attach(app) {
     if (!recordes.length && !setores.length) return;
     await fetch(SITE + "/api/corrida/recordes-offline", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ recordes, setores }), signal: AbortSignal.timeout(10000) });
   }
-  conferir(); setInterval(conferir, 60000).unref();
+  // (2026-11-16, o Thiago: "guarda tudo localmente e, quando a corrida acabar, aí ele manda") Ler todos os recordes do banco e mandar ao site roda no
+  // mesmo processo que move os robôs: no meio da corrida (ou do qualify) a conferência espera e tenta de novo a cada 5 s, até a bandeirada.
+  const emCorrida = () => { try { return !!require("./corrida.js").emCorrida?.(); } catch { return false; } };
+  let esperando = null;
+  const conferirFora = () => { if (!emCorrida()) { conferir(); return; } if (!esperando) esperando = setInterval(() => { if (!emCorrida()) { clearInterval(esperando); esperando = null; conferir(); } }, 5000).unref(); };
+  conferirFora(); setInterval(conferirFora, 60000).unref();
+  semEconomiaDeEnergia(); vigiarLaco();
+}
+// (2026-11-16, os carros travando e "teleportando" só no aplicativo, ~500 ms; no servidor do terminal, não) No aplicativo o servidor roda ESCONDIDO,
+// sem janela, e o Windows pode pôr esse processo na economia de energia (power throttling/EcoQoS): os timers atrasam e o pedido de timer preciso é
+// ignorado. O servidor sobe a própria prioridade e pede, uma vez, para sair dessa economia (SetProcessInformation, ProcessPowerThrottling, com o
+// controle de velocidade e o de timer desligados). O lançador novo (desktop/Corrida.cs) faz o mesmo; isto cobre os programas já instalados.
+function semEconomiaDeEnergia() {
+  if (process.platform !== "win32") return;
+  try { const os = require("os"); os.setPriority(0, os.constants.priority.PRIORITY_ABOVE_NORMAL); } catch (e) { console.warn("Corrida PC: prioridade não mudou:", e.message); }
+  const ps = `Add-Type -TypeDefinition 'using System;using System.Runtime.InteropServices;public static class P{[StructLayout(LayoutKind.Sequential)]public struct S{public uint V;public uint C;public uint St;}[DllImport("kernel32.dll")]public static extern IntPtr OpenProcess(uint a,bool b,int p);[DllImport("kernel32.dll")]public static extern bool SetProcessInformation(IntPtr h,int c,ref S s,int n);}';$h=[P]::OpenProcess(0x0200,$false,${process.pid});$s=New-Object P+S;$s.V=1;$s.C=5;$s.St=0;$ok=[P]::SetProcessInformation($h,4,[ref]$s,12);if(-not $ok){$s.C=1;$ok=[P]::SetProcessInformation($h,4,[ref]$s,12);'so a velocidade (Windows 10): '+$ok}else{'velocidade e timer: '+$ok}`; // (a opção do timer só existe no Windows 11: sem ela, só a velocidade)
+  try {
+    const f = require("child_process").spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps], { windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+    let saida = ""; f.stdout.on("data", (d) => { saida += d; }); f.on("close", () => console.log("Corrida PC: fora da economia de energia do Windows:", saida.trim() || "sem resposta")); f.on("error", () => {});
+  } catch (e) { console.warn("Corrida PC: economia de energia não mudou:", e.message); }
+}
+// o laço vigiado: um tique a cada 50 ms; atrasou mais de 150 ms, uma linha no servidor.log (%LOCALAPPDATA%\CorridaDaGalera), no máximo uma a cada 2 s
+function vigiarLaco() {
+  let ant = Date.now(), ultimoLog = 0, pior = 0, n = 0;
+  setInterval(() => {
+    const agora = Date.now(), atraso = agora - ant - 50; ant = agora;
+    if (atraso > 150) { n++; pior = Math.max(pior, atraso); if (agora - ultimoLog > 2000) { ultimoLog = agora; console.log(`Corrida PC: o laço atrasou ${atraso} ms (${n} vezes, o pior ${pior} ms)${(() => { try { return require("./corrida.js").emCorrida?.() ? " durante a corrida" : ""; } catch { return ""; } })()}`); } }
+  }, 50).unref();
 }
 
 // A CARREIRA SOLO no programa roda no PC (sem ping nos GPs). Na primeira vez, o save que está no site vem para o banco do PC com o mesmo

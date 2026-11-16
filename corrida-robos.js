@@ -344,6 +344,14 @@ function prazoDeChegada(room, prazoNormal = 60000) { return prazoNormal; }
 function gauss(r) { return Math.sqrt(-2 * Math.log(1 - r())) * Math.cos(2 * Math.PI * r()); }
 // `janela` ({ startAt, durMs }, opcional): a sessão, para achar a água na pista na hora da volta do robô (clima.js do jogo: com
 // chuva a classificação usa o pneu de chuva se a pista abre com água, o mesmo de quem joga).
+// (2026-11-16, o Thiago: "os bots são os goats do qualify") A volta do qualify é calculada pelo limite do traçado; na corrida o robô pilota pela
+// física e anda mais devagar (trânsito, pneu, as batidas: em Baku, 99 toques em 5 voltas com 10 robôs). O fator de cada pista é medido por
+// ferramentas/quali-fator.js (a melhor volta pilotada sobre a calculada) e fica em public/corrida/quali-fator.json; sem medição, 1.
+let FATOR_QUALI = null;
+function fatorDoQuali(pista) {
+  if (FATOR_QUALI == null) { try { FATOR_QUALI = require("./public/corrida/quali-fator.json"); } catch { FATOR_QUALI = {}; } }
+  const f = Number(FATOR_QUALI[pista] ?? FATOR_QUALI[T.baseDe(pista)]); return Number.isFinite(f) ? Math.max(0.96, Math.min(1.08, f)) : 1;
+}
 function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
   const pf = perfil(room.config.pista, p.spec || p.car, tracadoId), nivel = nivelDe(room, p, tracadoId, nBots, pf);
   const r = F1.sorteio(`quali:${room.semente}:${sessao}:${p.id}`), sigma = p.piloto ? Pilotos.ruidoDaVolta(p.piloto.constancia) : 0.012;
@@ -353,7 +361,7 @@ function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
     const abre = F1.climaEm(room.clima, janela.startAt).agua, agua = Math.round(F1.climaEm(room.clima, janela.startAt + em * janela.durMs).agua * 10) / 10;
     ader = F1.aderencia({ composto: F1.compostoDaClassificacao(abre), desgaste: 0.03, temp: 0.8 }, agua);
   }
-  const tempo = tempoDaVolta(pf, nivel, ader) * (1 + ruido * sigma);
+  const tempo = tempoDaVolta(pf, nivel, ader) * (1 + ruido * sigma) * fatorDoQuali(room.config.pista);
   const final = room.config.regras === "f1" && (room.referenciaF1 || referenciaF1(room)).proteger
     ? Math.max(tempo, (room.referenciaF1 || referenciaF1(room)).recorde * 1.015) : tempo;
   return { tempo: Math.round(final * 1000) / 1000, em };
@@ -460,6 +468,25 @@ function aquecerNiveis(room, fila, nBots) {
     if (i >= fila.length) return;
     const p = room.players[fila[i++]], ia = p && p.ia;
     if (ia && ia.nivel == null) { ia.nivel = nivelDe(room, p, ia.tracadoId, nBots, ia.perfil); perfilF1(ia.perfil, ia.nivel); } // (o perfil do nível dele também fica pronto)
+    setImmediate(um);
+  };
+  setImmediate(um);
+}
+// (2026-11-16, o Thiago: "ficou travando na largada da corrida de Baku") A mesma conta de aquecerNiveis, ADIANTADA: chamada quando o último Q fecha
+// (corrida-f1-classificacao.js), na tela do resultado, onde ninguém pilota. Um robô por vez (setImmediate); deixa prontos o perfil, a tabela de
+// tempos e o perfil do nível de cada um (os caches de perfil, tabelaF1 e perfilF1), e a largada só reaproveita. Medido em Baku: 140 a 200 ms por robô.
+function preaquecerNiveis(room) {
+  if (room.config.regras !== "f1") return;
+  const bots = room.order.filter((id) => room.players[id] && room.players[id].bot), vez = room.preaquecendo = {};
+  let i = -1;
+  const um = () => {
+    if (room.preaquecendo !== vez || room.phase !== "quali") return;
+    try {
+      if (i < 0) { ritmoDosRobos(room); i = 0; return setImmediate(um); }
+      if (i >= bots.length) return;
+      const p = room.players[bots[i]], tracadoId = i++;
+      if (p) { const pf = perfil(room.config.pista, p.spec || p.car, tracadoId); perfilF1(pf, nivelDe(room, p, tracadoId, bots.length, pf)); }
+    } catch (e) { console.warn("Corrida: o aquecimento dos robôs falhou", e.message); return; }
     setImmediate(um);
   };
   setImmediate(um);
@@ -1236,4 +1263,4 @@ function passo(room, dt, setor, emit) {
 }
 function possivel(pista, spec) { return perfilF1(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0), 1); }
 possivel.topo = (pista, spec) => topoDe(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0));
-module.exports = { tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };
+module.exports = { preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };

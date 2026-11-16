@@ -385,7 +385,12 @@ module.exports = function attachCorrida(io) {
       room.finishOrder.push(id);
     }
   }
+  function aprenderAgora(room, nome) {
+    const pista = room.config.pista, t = T.PISTAS[pista];
+    if (Robos.aprender(pista, bd.melhoresTracadosCorrida(pista))) { log(room, `🤖 Os robôs aprenderam a volta de ${nome} em ${t.name}.`); broadcast(room); }
+  }
   function endRace(room) { T.usarEscala(room.config.pista); Anos.usarAno(room.config.ano);
+    if (room.aprenderPendente) { const a = room.aprenderPendente; room.aprenderPendente = null; setImmediate(() => { try { aprenderAgora(room, a.nome); } catch (e) { console.warn("Corrida: os robôs não aprenderam a volta", e.message); } }); }
     if (room.phase !== "race") return;
     clearTimeout(room.endTimer);
     clearInterval(room.itemTimer); clearInterval(room.botTimer); clearInterval(room.f1Timer); clearInterval(room.humanosTimer);
@@ -887,7 +892,9 @@ module.exports = function attachCorrida(io) {
       let nova = 0;
       try { nova = bd.salvarVoltaCorrida(pista, tempo, me.car, me.name, s); } catch (e) { console.warn("Corrida: volta não guardada", e.message); }
       // As cinco voltas mais rápidas da pista alimentam os traçados da próxima largada.
-      if (nova > 0 && Robos.aprender(pista, bd.melhoresTracadosCorrida(pista))) { log(room, `🤖 Os robôs aprenderam a volta de ${me.name} em ${t.name}.`); broadcast(room); }
+      // (2026-11-16) aprender joga fora a conta de ritmo da pista, e refazer custa 140 a 200 ms por robô (Baku, 21 robôs: segundos de servidor parado,
+      // os outros carros pulando na tela). No meio do qualify ou da corrida fica para depois da bandeirada (endRace).
+      if (nova > 0) { if (room.phase === "race" || room.phase === "quali") room.aprenderPendente = { nome: me.name }; else aprenderAgora(room, me.name); }
     });
 
     // o relógio: o navegador pergunta a hora do servidor várias vezes e fica com a resposta de menor ida e volta (pose.js, criarRelogio)

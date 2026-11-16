@@ -32,7 +32,7 @@ const COMPOSTO_PADRAO = "medio";
 const PENHASCO = 0.8, PERDA_FIM = 0.215, FINAL_FIM = 0.04;
 // O pneu EM RUÍNA (passou do penhasco), pedido do Thiago em 2026-11-14: continua com a mesma dirigibilidade (a arcade, não a física intermediária de
 // antes), mas com RUINA_GRIP da aderência que tinha no penhasco, RUINA_ACEL da aceleração (a tração e a potência) e RUINA_FINAL da velocidade máxima.
-const RUINA_GRIP = 0.2, RUINA_ACEL = 0.6, RUINA_FINAL = 0.6;
+const RUINA_GRIP = 0.6, RUINA_ACEL = 1, RUINA_FINAL = 1; // (2026-11-16, o Thiago: "tem que ser o carro normal só que com 60% do grip, apenas"; era 0,2 de aderência e 0,6 de aceleração e de final)
 // Pneu frio (saindo do box ou na largada) segura FRIO do normal e fica bom aos poucos: a temperatura vai de TEMP_SAIDA a
 // TEMP_BOA em alguns segundos (mais rápido no macio, mais devagar no duro).
 const TEMP_SAIDA = 0.6, TEMP_BOA = 0.75, FRIO = 0.72, AQUECE = 0.12;

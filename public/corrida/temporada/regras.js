@@ -176,7 +176,9 @@ function pilotosNoGrid(s) {
   }
   const ritmo = companheiro.ritmo + (s.paddock ? Paddock.ajusteDeRitmo(s) : 0); // (a moral do Paddock: ±2 pontos de ritmo nos extremos)
   const pers = s.paddock ? Paddock.personalidade(s, companheiro) : null; // (a confiança, a experiência e a agressividade: paddock.js)
-  return [{ ...companheiro, equipe: s.equipe, ritmo, ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais].slice(0, 21);
+  // (2026-11-16) a relação vai para a pista (corrida-robos.js, companheiroNaPista): parceiro abre passagem e segura quem vem atrás; tenso não obedece
+  const pd = s.paddock, relacao = pd ? (pd.moral >= 75 && pd.lealdade >= 65 ? "parceiro" : pd.moral <= 30 ? "tenso" : null) : null;
+  return [{ ...companheiro, equipe: s.equipe, ritmo, ...(relacao ? { relacao } : {}), ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais].slice(0, 21);
 }
 // Metas dependem da força inicial da equipe, não do resultado que acabou de acontecer.
 function metas(s) {

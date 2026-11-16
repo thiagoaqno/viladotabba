@@ -268,6 +268,8 @@ function passo(c, ent, amb, tr, ev) {
   amb2.chao = estrada; amb2.superficie = superficie; amb2.subida = (h1 - h0) / 10; amb2.ar = c.air; amb2.manual = !!amb.manual; amb2.marchaManual = ent.marcha || c.marcha;
   amb2.pn = pn; amb2.dano = dano; amb2.drs = drs; amb2.ers = ersAtivo; amb2.vacuo = vac; amb2.curva = curva;
   amb2.extra = c.acerto ? extraDoAcerto(c.acerto, Math.abs(c.v || 0), amb2.extraAc || (amb2.extraAc = {})) : null; // o acerto do carro (asa e altura)
+  const plano = !amb.quali && PLANO[amb.plano]; // (2026-11-16) o plano da corrida da carreira (paddock.js, "plano"): aderência contra desgaste
+  if (plano) { const b = amb2.extra, e = amb2.planoEx || (amb2.planoEx = {}); for (const k in e) delete e[k]; if (b) Object.assign(e, b); e.grip = (e.grip || 1) * plano.grip; e.desgaste = (e.desgaste || 1) * plano.desgaste; amb2.extra = e; }
   // SEM teto de velocidade (pedido do Thiago, 2026-11-10): a velocidade final sai da potência contra o arrasto (dinamica.js). O teto fixo
   // (spec.vmax × TETO_VELOCIDADE) escondia o arrasto da asa (a asa cheia ganhava em quase toda pista) e o ganho de DRS, ERS e vácuo na reta.
   amb2.tetoV = Infinity;
@@ -722,6 +724,7 @@ function reconciliar(c, st, tr, ctx) {
 //   cambagem (pouca 0 · muita 1): a aderência na curva contra a frenagem e a tração em linha reta e o desgaste (até ±4% e +12% de desgaste);
 //   pressão dos pneus (baixa 0 · alta 1): baixa agarra mais e gasta mais; alta gasta menos e agarra menos (até ±4% e ±15% de desgaste);
 //   rigidez da suspensão (macia 0 · dura 1): dura segura a plataforma da asa (mais carga) e sofre nas zebras e lombadas (menos aderência mecânica).
+const PLANO = { arriscar: { grip: 1.02, desgaste: 1.2 }, seguro: { grip: 0.985, desgaste: 0.8 } };
 const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5, cambagem: 0.5, pressao: 0.5, rigidez: 0.5 });
 const meio = (v) => (Number.isFinite(v) ? v : 0.5) - 0.5; // −0,5 a +0,5
 const alturaParada = (a) => 0.025 + a.altura * 0.05;

@@ -41,6 +41,13 @@ function tabela(rows, tipo, meu, rival = null) {
   if (rival && !lista.some((x) => x?.id === rival)) lista.push(rows.find((x) => x.id === rival));
   return `<table class="placar"><thead><tr><th>Pos.</th><th>${tipo}</th><th>Pontos</th></tr></thead><tbody>${lista.filter(Boolean).map((r) => `<tr class="${r.id === meu ? "eu" : r.id === rival ? "rival" : ""}"><td>${rows.indexOf(r) + 1}</td><td><i class="faixa" style="--c:${h(equipe(r.equipe || r.id)?.cor || "#fff")}"></i><b>${h(r.nome)}</b>${r.id === rival ? ' <small class="rival-selo">RIVAL</small>' : ""}</td><td><b>${r.pontos}</b></td></tr>`).join("")}</tbody></table>`;
 }
+// (2026-11-16) a memória do Paddock para a volta 2 (hud.js memoriaDoPaddock): a decisão mais recente, até 3 GPs atrás, que o engenheiro lembra
+const MEMORIA = { "imprensaCritica:carro": "memcarro", "imprensaCritica:defender": "memequipe", "segundoCockpit:foco": "memfoco" };
+function memoriaDe(s) {
+  const d = (s.paddock && s.paddock.decisoes) || {};
+  for (let k = 0; k <= 3; k++) { const gp = s.gp - k; if (gp < 0) break; for (const [chave, sit] of Object.entries(MEMORIA)) { const [ev, op] = chave.split(":"); if (d[`${s.ano}:${gp}:${ev}`] === op) return sit; } }
+  return null;
+}
 function renderizar() {
   if (!estado?.dados) return telaInicial();
   const G = window.F1Garagem, s = estado.dados, eq = equipe(s.equipe), t = estado.tabelas || Regras.tabelas(s), terminou = s.gp >= s.tamanho;
@@ -48,7 +55,7 @@ function renderizar() {
   const ultimo = s.resultados.filter((r) => r.ano === s.ano).at(-1);
   const im = Regras.imersao(s); try { localStorage.setItem("corrida:objetivoGP", JSON.stringify({ gp: im.meta.gp, em: Date.now() })); } catch { /* sem armazenamento */ }
   // (2026-11-16) o Paddock deste GP para as falas da metade da corrida (hud.js, meioDaCorrida): o ultimato, a promessa e o clima da equipe
-  try { const p = s.paddock || {}; localStorage.setItem("corrida:paddockGP", JSON.stringify({ em: Date.now(), meta: im.meta.gp, ultimato: p.ultimato && p.ultimato.gp === s.gp && p.ultimato.ano === s.ano ? p.ultimato.alvo : null, promessa: !!(p.promessa && p.promessa.gp === s.gp && p.promessa.ano === s.ano), moral: p.moral, lealdade: p.lealdade, agressividade: p.agressividade, torcida: p.torcida, patrocinador: p.patrocinador })); } catch { /* sem armazenamento */ }
+  try { const p = s.paddock || {}; localStorage.setItem("corrida:paddockGP", JSON.stringify({ em: Date.now(), meta: im.meta.gp, ultimato: p.ultimato && p.ultimato.gp === s.gp && p.ultimato.ano === s.ano ? p.ultimato.alvo : null, promessa: !!(p.promessa && p.promessa.gp === s.gp && p.promessa.ano === s.ano), plano: (p.decisoes || {})[`${s.ano}:${s.gp}:plano`] || null, memoria: memoriaDe(s), moral: p.moral, lealdade: p.lealdade, agressividade: p.agressividade, torcida: p.torcida, patrocinador: p.patrocinador })); } catch { /* sem armazenamento */ }
   const rival = im.rival && piloto(im.rival.id), eu = ultimo?.linhas.find((r) => r.piloto === "voce");
   const resultadoTexto = eu ? (eu.dnf ? "abandonou" : eu.nc ? "não foi classificado" : `terminou em ${eu.pos}º`) : "";
   const cumpriu = eu && !eu.dnf && !eu.nc && eu.pos <= (ultimo.objetivoGP || im.meta.gp);

@@ -79,6 +79,19 @@ const EVENTOS = {
       { id: "aumento", rotulo: "Dar um aumento a ele", efeito: { moral: 10, lealdade: 8 }, acao: "aumentoComp" },
     ],
   },
+  // (2026-11-16, o Thiago: "decisões que impactam diretamente no carro") o plano do domingo, em todo GP: arriscar dá 2% de aderência e gasta
+  // 20% mais pneu; jogar seguro tira 1,5% de aderência e poupa 20% do pneu (sim.js PLANO, no seu carro). A conta vem no fim do GP (aoResultado).
+  plano: {
+    quem: "Engenheiros", fase: "domingo",
+    quando: (c) => !!c.proximo,
+    titulo: () => "O plano para a corrida",
+    texto: () => "Os engenheiros querem saber como você vai correr: arriscar dá mais aderência e gasta mais pneu; jogar seguro poupa o pneu e o carro.",
+    opcoes: [
+      { id: "arriscar", rotulo: "Arriscar: +2% de aderência, pneu gasta 20% mais", efeito: { torcida: 2 } },
+      { id: "seguro", rotulo: "Jogar seguro: −1,5% de aderência, pneu gasta 20% menos", efeito: { diretoria: 1 } },
+      { id: "normal", rotulo: "Sem plano especial", efeito: {} },
+    ],
+  },
   instrucao: {
     quem: "Engenheiros", fase: "sexta",
     quando: (c) => !!c.proximo,
@@ -213,10 +226,11 @@ function acontecimentos(s) {
   garantir(s);
   if (!s.calendario || s.gp >= s.tamanho) return [];
   const c = contexto(s), base = `${s.ano}:${s.gp}`;
-  const candidatos = Object.keys(EVENTOS).filter((id) => s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s));
+  const candidatos = Object.keys(EVENTOS).filter((id) => id !== "plano" && (s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s)));
   const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r(), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   const decididos = embaralhados.filter((id) => s.paddock.decisoes[`${base}:${id}`]), resto = embaralhados.filter((id) => !s.paddock.decisoes[`${base}:${id}`]);
-  return [...decididos, ...resto].slice(0, 2).map((id) => {
+  const comPlano = [...[...decididos, ...resto].slice(0, 2), ...(EVENTOS.plano.quando(c, s) || s.paddock.decisoes[`${base}:plano`] ? ["plano"] : [])]; // (o plano do domingo vem sempre, fora dos dois sorteados)
+  return comPlano.map((id) => {
     const e = EVENTOS[id], escolha = s.paddock.decisoes[`${base}:${id}`] || null, fixo = escolha && s.paddock.textos && s.paddock.textos[`${base}:${id}`]; // (decidido: o texto da hora da decisão, mesmo que o companheiro tenha mudado)
     return { id, quem: e.quem, fase: e.fase, titulo: fixo ? fixo.titulo : e.titulo(c, s), texto: fixo ? fixo.texto : e.texto(c, s), escolha, resultado: fixo ? fixo.resultado : null, opcoes: e.opcoes.filter((o) => !o.pode || o.pode(s)).map((o) => ({ id: o.id, rotulo: o.rotulo, efeito: o.efeito, consequencia: o.acao ? previaDaAcao(s, o.acao) : null })) };
   });
@@ -352,6 +366,9 @@ function aoResultado(s, resultado, meta) {
     if (passou) { p.diretoria = lim(p.diretoria + 8, -20, 20); notas.push("o ultimato foi cumprido"); }
     else { p.demitido = { ano: resultado.ano }; s.paddock.ultimaMudanca = { ano: s.ano, gp: s.gp, quem: "Diretoria", texto: "Você foi demitido: a equipe não renova o seu contrato. No fim do ano, você vai para a equipe mais fraca que fizer proposta." }; anotar(s, "Diretoria", "O ultimato não foi cumprido: você foi demitido. A equipe não renova o seu contrato no fim do ano."); }
   }
+  const plano = p.decisoes[`${resultado.ano}:${resultado.gp}:plano`];
+  if (plano === "arriscar") { if (cumpriu) { p.diretoria = lim(p.diretoria + 3, -20, 20); ef.torcida += 3; notas.push("o risco valeu a pena"); } else if (!bem(eu)) { p.diretoria = lim(p.diretoria - 4, -20, 20); notas.push("o risco custou o carro"); } }
+  else if (plano === "seguro") { if (cumpriu) { p.diretoria = lim(p.diretoria + 1, -20, 20); notas.push("a corrida segura deu certo"); } else { ef.patrocinador -= 2; notas.push("a corrida segura ficou longe da meta"); } }
   ef.torcida += bem(eu) ? Math.min(8, Math.round(((PONTOS[eu.pos - 1] || 0) + (eu.voltaRapida ? 1 : 0)) / 3)) - 1 : -3;
   aplicar(s, ef);
   anotar(s, "Fim de semana", `GP de ${s.calendario[resultado.gp]?.nome || resultado.pista}: ${bem(eu) ? `você em ${eu.pos}º` : "você não terminou"}${comp ? `, ${Pilotos.PILOTOS.find((x) => x.id === s.piloto2)?.nome || "o companheiro"} ${bem(comp) ? `em ${comp.pos}º` : "fora"}` : ""}${notas.length ? ` (${notas.join("; ")})` : ""}.`, ef);

@@ -21,6 +21,11 @@ O resumo dos sistemas fica no `CLAUDE.md`; o mapa antigo e detalhado, em `docs/m
 | Pontos de evolução por temporada | `f1-equipes.js` | `BONUS_POR_TEMPORADA`, `BONUS_MAX`; o preço para quem joga em `custoDoDesenvolvimento` (regras.js) |
 | Acerto (asa, altura, câmbio, freio, diferencial, cambagem, pressão, rigidez) | `public/corrida/sim.js` | `ACERTO_PADRAO` e a função logo abaixo (cada ajuste vai até ±4–8%; a aderência somada fica travada em ±6%). Tela: `temporada/central-acerto.js` |
 | Acerto dos bots | `corrida-robos.js` | `acertoDoRobo`: parte de `acerto-ideal.json`; `PERTO_DO_IDEAL` por nível (fácil 40%, médio 75%, difícil 100%) |
+| Paddock da carreira (decisões, marcos, plano) | `temporada/paddock.js` | `EVENTOS` (o `plano` vem em todo GP), `MARCOS` (recompensas por faixa), `aoResultado` (as consequências) |
+| O plano na física (arriscar/seguro) | `sim.js` | `PLANO` (aderência e desgaste); o humano leva `plano` no jogador (corrida.js abrirGP) |
+| Companheiro na pista pela relação | `corrida-robos.js` | `companheiroNaPista`; a relação sai de `pilotosNoGrid` (regras.js) |
+| Falas da carreira na corrida | `hud.js` | `meioDaCorrida`, `memoriaDoPaddock`, o plano na largada; `sede.js` guarda `corrida:paddockGP`; o servidor manda `radio:equipe` (rede.js) |
+| Frases do rádio | `radio/falas.js` | Variantes novas vão no FIM da lista (o número dos mp3 não muda); gerar com `GERAR-VOZES-CORRIDA.bat` |
 | Pilotagem dos bots, ultrapassagem, box | `corrida-robos.js` | `transito`, ERS, box; a linha de corrida em `corrida-linha.js` / `corrida-linhas-f1.json` |
 | Nível dos bots (fácil/médio/difícil) | `temporada/regras.js` + `corrida-robos.js` | `NIVEIS`, `mudarNivel` |
 | Ritmo/personalidade dos pilotos | `public/corrida/f1-pilotos-2026.js`, `temporada/paddock.js` | `ritmo`; a moral muda até ±2 (`ajusteDeRitmo`) |

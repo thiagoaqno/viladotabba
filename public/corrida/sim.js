@@ -222,7 +222,7 @@ function pilotoLinha(c, tr, spec, vAlvo, latAlvo, saida = {}, op = PILOTO_LINHA)
 //   amarela (o setor atual está sob bandeira amarela), safety, ersAuto (false = o ERS é pelo comando), voltas (da corrida),
 //   laps (as voltas que já completei), paradas (quantas já fiz), semente, id, grid, finish (já recebi a bandeirada?),
 //   segurar (o carro fica parado: antes da largada), dnf (perda total), outros (os carros em volta, para o vácuo),
-//   quali (classificação: sem box), f1 (regras de F1: pneu, DRS, ERS), agua (a água na pista, 0 a 1: F1.climaEm)
+//   quali (classificação: com box desde 2026-11-16), f1 (regras de F1: pneu, DRS, ERS), agua (a água na pista, 0 a 1: F1.climaEm)
 // ev (opcional): lista onde o passo põe o que aconteceu: { t: "muro"|"bump"|"setor"|"box"|"pouso"|"respawn", ... }
 const SAIDA = {}, ENT_AUTO = {};
 function passo(c, ent, amb, tr, ev) {
@@ -375,7 +375,7 @@ function passoBox(c, ent, amb, tr, p, ev) {
   const B = c.box, cor = B.cor, spec = amb.spec, dt = PASSO, vlim = F1.LIMITADOR * spec.vmax;
   if (!B.fase) {
     B.pedido = ent.pedido || null;
-    if (amb.finish != null || c.air || amb.quali) return false;
+    if (amb.finish != null || c.air) return false; // (2026-11-16: a classificação também tem box, para trocar o pneu)
     const rel = (c.idx - cor.i0 + tr.n) % tr.n;
     const q = tr.pts[c.idx], lado = (c.x - q.x) * q.nx + (c.y - q.y) * q.ny;
     // Entrar pela rampa, apontando para o corredor, equivale a pedir para escolher na garagem.
@@ -383,7 +383,7 @@ function passoBox(c, ent, amb, tr, p, ev) {
     const paraFora = (c.vx * q.nx + c.vy * q.ny) * cor.lado;
     const direto = !B.pedido && tr.mostrarBoxes !== false && rel < F1.RAMPA && lado * cor.lado >= tr.W / 2 - 8 && paraFora > 2 && c.v > 0;
     if (direto) B.pedido = "decidir";
-    if (!B.pedido || (!direto && rel > 8) || (!direto && (amb.laps || 0) + 1 >= (amb.voltas || 1))) return false;
+    if (!B.pedido || (!direto && rel > 8) || (!direto && !amb.quali && (amb.laps || 0) + 1 >= (amb.voltas || 1))) return false;
     const n = (amb.paradas || 0) + 1;
     // com um stop-and-go pendente (`amb.stopGo`: os segundos parado) a visita começa com ele: fica parado esses segundos SEM mexer no pneu e, se o
     // composto pedido é outro (`troca`), a equipe troca o pneu em seguida, na mesma parada, com o tempo normal da troca somado

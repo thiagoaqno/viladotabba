@@ -269,7 +269,7 @@ function aplicarAsfalto(w, d = 0) {
   for (const a of asfaltos) {
     if (a.u) { a.u.uAgua.value = w; a.u.uDif.value = d; if (a.bump != null) a.m.bumpScale = a.bump * (1 - 0.5 * w); continue; }
     a.m.color.copy(a.cor).multiplyScalar(1 - (a.zebra ? 0.28 : 0.42) * w);
-    a.m.roughness = a.rug + ((a.zebra ? 0.22 : 0.16) - a.rug) * w;
+    a.m.roughness = a.rug + ((a.zebra ? 0.55 : 0.16) - a.rug) * w;
     if (a.bump != null) a.m.bumpScale = a.bump * (1 - 0.5 * w);
   }
 }

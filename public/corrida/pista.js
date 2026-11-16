@@ -291,14 +291,14 @@ function buildWorld(tr) {
   if (gp?.asfalto) {
     const asfalto = asfaltoGP();
     ribbon(-W / 2, W / 2, 0.4, asfalto, 80, 0.4, W / 80);
-    const tinta = M(0xe2e0d7, { roughness: 0.95, side: THREE.DoubleSide });
+    const tinta = M(0xe2e0d7, { roughness: 0.96, envMapIntensity: 0.3, side: THREE.DoubleSide });
     for (const lado of [-1, 1]) ribbon(lado * (W / 2 - 2.6), lado * (W / 2 - 1.2), 0.49, tinta, 80);
     borrachaGP(tr, add);
   } else ribbon(-W / 2, W / 2, 0.4, arco ? new THREE.MeshStandardMaterial({ map: arco, emissive: 0xffffff, emissiveMap: arco, emissiveIntensity: 0.55, roughness: 0.4, side: THREE.DoubleSide, transparent: true, opacity: 0.92 }) : Object.assign(new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.85, side: THREE.DoubleSide }), { userData: { asfalto: true } }), 256); // asfalto: o clima molha (clima-visual.js)
   // A pista não recebe balizadores genéricos junto ao asfalto.
   tr.cones = [];
   const kerbT = canvasTex(32, 64, (x, w, hh) => { x.fillStyle = look.kerb[0]; x.fillRect(0, 0, w, hh / 2); x.fillStyle = look.kerb[1]; x.fillRect(0, hh / 2, w, hh / 2); });
-  const kerbM = new THREE.MeshStandardMaterial({ map: kerbT, roughness: 0.6, side: THREE.DoubleSide, emissive: id === "tokyo" ? 0x0a3a44 : 0 });
+  const kerbM = new THREE.MeshStandardMaterial({ map: kerbT, roughness: 0.92, envMapIntensity: 0.3, side: THREE.DoubleSide, emissive: id === "tokyo" ? 0x0a3a44 : 0 });
   if (gp?.chao) KIT.chaoGP(tr, add, gp.chao, { gridSpot }); // margem, zebras só nas curvas e as marcas da rua (kit/chao.js)
   else { ribbon(W / 2, W / 2 + 7, 0.6, kerbM, 28); ribbon(-W / 2 - 7, -W / 2, 0.6, kerbM, 28); }
   if (gp?.escape) KIT.escapeGP(tr, add, gp.escape); // brita e asfalto de escape listrado só onde o GP diz (kit/escape.js)

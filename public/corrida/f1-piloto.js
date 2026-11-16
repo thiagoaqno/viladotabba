@@ -259,7 +259,7 @@ export const materialDoCapacete = (c1, c2, numero, cap, proprio = null) => {
     let t = null; const pintar = () => { pintarFolha(cv.getContext("2d"), cores, desenho, numero, extra, () => { pintar(); if (t) t.needsUpdate = true; }); }; pintar(); // (a bandeira que chega depois repinta)
     t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     // (o de quem joga leva o acabamento escolhido, com verniz e relevo; o dos robôs continua o simples)
-    m = proprio ? aplicarAcabamento(new THREE.MeshPhysicalMaterial({ map: t }), proprio.acabamento) : new THREE.MeshStandardMaterial({ map: t, roughness: 0.3, metalness: 0.12 }); CAPACETES.set(k, m);
+    m = proprio ? aplicarAcabamento(new THREE.MeshPhysicalMaterial({ map: t }), proprio.acabamento) : new THREE.MeshStandardMaterial({ map: t, roughness: 0.5, metalness: 0.04 }); CAPACETES.set(k, m); // (acetinado, como o de quem joga)
   }
   return m;
 };

@@ -30,7 +30,7 @@ function tabela(room, agora = Date.now()) {
   return F1.ordenarClassificacao(q.ativos.map((id) => {
     const p = room.players[id];
     if (p && p.bot) { const r = q.robos[id], quando = q.startAt + r.em * q.durMs; return agora >= quando ? { id, tempo: r.tempo, quando } : { id, tempo: null, quando: null }; }
-    return { id, tempo: p && p.qMelhor != null ? p.qMelhor : null, quando: p && p.qQuando != null ? p.qQuando : null };
+    return { id, tempo: p && p.qMelhor != null ? p.qMelhor : null, quando: p && p.qQuando != null ? p.qQuando : null, voltas: (p && p.qVoltas) || 0, setores: (p && p.qMelhorSet) || null };
   }));
 }
 // o que vai no estado público da sala
@@ -41,7 +41,7 @@ function publico(room) {
     aguardados: aguardadosDe(room),
     pronto: q.ativos.filter((id) => room.players[id] && room.players[id].qPronto), grid: q.grid,
     tabela: tabela(room).filter((x) => x.tempo != null).map((x) => ({ id: x.id, tempo: x.tempo })),
-    fechadas: q.fechadas.map((f, i) => ({ nome: nomeDe(i), ordem: f.ordem.map((x) => ({ id: x.id, tempo: x.tempo })), eliminados: f.eliminados.map((x) => x.id) })) };
+    fechadas: q.fechadas.map((f, i) => ({ nome: nomeDe(i), ordem: f.ordem.map((x) => ({ id: x.id, tempo: x.tempo, ...(x.voltas ? { voltas: x.voltas } : {}), ...(x.setores ? { setores: x.setores } : {}) })), eliminados: f.eliminados.map((x) => x.id) })) };
 }
 function cancelar(room) {
   const q = room.quali; if (!q) return;
@@ -90,7 +90,7 @@ function abrirSessao(room, deps) {
   let g = 0;
   for (const id of q.ativos) {
     const p = room.players[id];
-    Object.assign(p, { sector: T.SECTORS - 1, qIni: null, qMelhor: null, qQuando: null, qFim: false, qPronto: false, pos: null });
+    Object.assign(p, { sector: T.SECTORS - 1, qIni: null, qMelhor: null, qQuando: null, qVoltas: 0, qSet: null, qMelhorSet: null, qFim: false, qPronto: false, pos: null });
     if (!p.bot) p.grid = g++; // cada um na sua fila do grid, só para sair de um lugar diferente (na classificação não tem batida)
     else q.robos[id] = Robos.voltaLancada(room, p, q.i, bots.indexOf(id), bots.length, { startAt: q.startAt, durMs: q.durMs });
   }
@@ -150,12 +150,15 @@ function aoSetor(room, p, s, quando) { // (`quando`: a hora do passo da física 
   if (!q || q.pausaAte || !q.ativos.includes(p.id) || agora < q.startAt || p.qFim) return false;
   if (s !== (p.sector + 1) % T.SECTORS) return false;
   p.sector = s;
-  if (s !== 0) return true;
+  if (s !== 0) { if (p.qIni != null) (p.qSet ||= [])[s - 1] = agora; return true; } // (a hora de cada setor da volta aberta)
   if (p.qIni == null) { if (agora > q.fimAt) p.qFim = true; else p.qIni = agora; return true; }
   const volta = (agora - p.qIni) / 1000;
   if (volta < T.PISTAS[room.config.pista].minLap) return false; // atalho: não conta, mas o setor segue o do navegador
+  p.qVoltas = (p.qVoltas || 0) + 1;
+  const marcas = [p.qIni, ...(p.qSet || []).slice(0, T.SECTORS - 1), agora], setores = marcas.every(Number.isFinite) && marcas.length === T.SECTORS + 1 ? [0, 1, 2].map((k) => Math.round(marcas[(k + 1) * T.SECTORS / 3] - marcas[k * T.SECTORS / 3]) / 1000) : null; // (os 12 marcos viram os 3 setores da TV)
+  p.qSet = null;
   p.qUltima = { id: (p.qSequencia = (p.qSequencia || 0) + 1), inicio: p.qIni, fim: agora, tempo: volta, sessao: q.startAt };
-  if (p.qMelhor == null || volta < p.qMelhor) { p.qMelhor = volta; p.qQuando = agora; }
+  if (p.qMelhor == null || volta < p.qMelhor) { p.qMelhor = volta; p.qQuando = agora; p.qMelhorSet = setores; }
   if (agora > q.fimAt) p.qFim = true; else p.qIni = agora;
   return true;
 }

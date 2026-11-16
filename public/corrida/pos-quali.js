@@ -40,11 +40,40 @@ function cartao(id, i, T, q) {
 function tabela(q, T, linhas, m) {
   const n = q.fechadas.length, cab = q.fechadas.map((_, i) => `<th>Q${i + 1}</th>`).join("");
   const melhor = q.fechadas.map((f) => Math.min(...f.ordem.map((x) => x.tempo).filter((t) => t != null)));
-  return `<table class="pq-tab"><thead><tr><th></th><th></th><th>Piloto</th>${cab}</tr></thead><tbody>${linhas.map((r, i) => {
+  // (2026-11-16, o Thiago: "faltam dados de cada resultado") a diferença para o 1º e para o da frente, na última sessão de cada um, e as voltas
+  const ultimaDe = (id) => { const tt = T[id] || []; for (let k = n - 1; k >= 0; k--) if (tt[k] != null) return k; return -1; };
+  const voltasDe = (id, k) => (k >= 0 ? (q.fechadas[k].ordem.find((x) => x.id === id) || {}).voltas : null);
+  const dif = (v) => (v == null || !Number.isFinite(v) ? "—" : v < 0.0005 ? "" : `+${v.toFixed(3)}`);
+  const extra = linhas.map((r, i) => {
+    const k = ultimaDe(r.id), t = k >= 0 ? T[r.id][k] : null, ant = i > 0 ? linhas[i - 1] : null, ka = ant ? ultimaDe(ant.id) : -1;
+    return { d: t != null ? dif(t - melhor[k]) : "—", i: i === 0 || t == null ? (i === 0 ? "" : "—") : ka === k ? dif(t - T[ant.id][k]) : "—", v: voltasDe(r.id, k) };
+  });
+  return `<table class="pq-tab"><thead><tr><th></th><th></th><th>Piloto</th>${cab}<th title="Diferença para o primeiro da sessão">Dif.</th><th title="Diferença para o carro da frente">Int.</th><th title="Voltas cronometradas na sessão">Voltas</th></tr></thead><tbody>${linhas.map((r, i) => {
     const p = P(r.id), eq = eqDe(p), tt = T[r.id] || [];
     return `<tr class="${r.fora ? "fora" : ""} ${m && r.id === m.id ? "eu" : ""} ${i === 9 && linhas.length > 10 ? "corte" : ""}" style="--c:${corOk(eq ? eq.cor : p && p.color)};--j:${i}"><td class="p">${i + 1}</td><td class="l">${logo(p)}</td><td class="n"><b>${h(sobrenome(p).toUpperCase())}</b>${p && !p.bot ? `<small>${h(p.name)}</small>` : ""}</td>
-      ${Array.from({ length: n }, (_, k) => { const t = tt[k]; return `<td class="t ${t != null && t === melhor[k] ? "melhor" : ""}">${t == null ? (k < n && q.fechadas[k].ordem.some((x) => x.id === r.id) ? "sem tempo" : "—") : tempo3(t)}</td>`; }).join("")}</tr>`;
+      ${Array.from({ length: n }, (_, k) => { const t = tt[k]; return `<td class="t ${t != null && t === melhor[k] ? "melhor" : ""}">${t == null ? (k < n && q.fechadas[k].ordem.some((x) => x.id === r.id) ? "sem tempo" : "—") : tempo3(t)}</td>`; }).join("")}<td class="t dif">${extra[i].d}</td><td class="t dif">${extra[i].i}</td><td class="t">${extra[i].v || "—"}</td></tr>`;
   }).join("")}</tbody></table>`;
+}
+// o quadro "Sua sessão": a posição, a melhor volta e os 3 setores dela (o melhor setor da sessão em roxo, como na TV), as voltas e a folga
+// para o corte (quem passa para o próximo Q). Só para quem correu a sessão.
+function minhaSessao(q, m) {
+  if (!m) return "";
+  let k = -1; for (let i = q.fechadas.length - 1; i >= 0; i--) if (q.fechadas[i].ordem.some((x) => x.id === m.id)) { k = i; break; }
+  if (k < 0) return "";
+  const f = q.fechadas[k], ordem = f.ordem, pos = ordem.findIndex((x) => x.id === m.id), eu = ordem[pos], com = ordem.filter((x) => x.tempo != null);
+  const melhorS = [0, 1, 2].map((j) => Math.min(...ordem.map((x) => (x.setores ? x.setores[j] : Infinity))));
+  const setores = eu.setores ? eu.setores.map((v, j) => `<span class="${v <= melhorS[j] ? "roxo" : ""}"><small>S${j + 1}</small><b>${v.toFixed(3)}</b></span>`).join("") : `<span><small>Setores</small><b>—</b></span>`;
+  // fora: quanto faltou para o último que passou; passou: a folga sobre o primeiro que caiu
+  const passa = ordem.length - f.eliminados.length, fora = f.eliminados.includes(m.id), ref = fora ? ordem[passa - 1] : ordem[passa];
+  const folga = f.eliminados.length && passa > 0 && ref && ref.tempo != null && eu.tempo != null
+    ? `<span><small>${fora ? "Faltou para passar" : "Folga para o corte"}</small><b>${Math.abs(ref.tempo - eu.tempo).toFixed(3)} s</b></span>` : "";
+  const pole = com[0];
+  return `<section class="pq-eu"><h4>Sua sessão · ${h(f.nome || `Q${k + 1}`)}</h4><div class="pq-eu-dados">
+    <span><small>Posição</small><b>${pos + 1}º de ${ordem.length}</b></span>
+    <span><small>Melhor volta</small><b>${tempo3(eu.tempo)}</b></span>
+    ${pole && eu.tempo != null && pole.id !== m.id ? `<span><small>Para o 1º</small><b>+${(eu.tempo - pole.tempo).toFixed(3)}</b></span>` : ""}
+    <span><small>Voltas</small><b>${eu.voltas || 0}</b></span>${folga}</div>
+    <div class="pq-eu-setores">${setores}</div></section>`;
 }
 function ajustesHTML(q, S, m, confirmado, ultima) {
   const montagem = S.temporada && S.montagens && m && S.montagens[m.equipe];
@@ -79,7 +108,7 @@ export function renderQuali() {
   const proximo = ultima ? "Ir para a largada" : `Largar para o Q${q.fechadas.length + 1}`;
   const esquerda = ultima ? `<div class="pq-podio">${[1, 0, 2].filter((i) => q.grid[i]).map((i) => cartao(q.grid[i], i, T, q)).join("")}</div>` : `<div class="pq-aviso"><b>${f.eliminados.length} ${f.eliminados.length === 1 ? "piloto ficou" : "pilotos ficaram"} pelo caminho</b><span>Os eliminados largam do fim do grid, na ordem do tempo. Os outros seguem para o Q${q.fechadas.length + 1}.</span></div>`;
   const corpo = vista === "ajustes" && m ? ajustesHTML(q, S, m, confirmado, ultima)
-    : `<div class="pq-meio ${ultima ? "final" : ""}">${esquerda}<section class="pq-classif"><h3>${ultima ? "Classificação · grid de largada" : `Classificação · ${f.nome}`}</h3>${tabela(q, T, linhas, m)}</section></div>`;
+    : `<div class="pq-meio ${ultima ? "final" : ""}">${esquerda}<section class="pq-classif"><h3>${ultima ? "Classificação · grid de largada" : `Classificação · ${f.nome}`}</h3>${tabela(q, T, linhas, m)}${minhaSessao(q, m)}</section></div>`;
   el.innerHTML = `<div class="pq">
     <header class="pq-topo"><span class="pq-marca">${IC.bandeira}</span><h2>${h(titulo)}</h2><span class="pq-gp">${h(pista ? pista.name : "")}</span></header>
     ${corpo}

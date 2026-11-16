@@ -76,6 +76,7 @@ function limparCapacete(c) {
 module.exports = function attachCorrida(io) {
   const nsp = io.of("/corrida");
   const rooms = new Map();
+  module.exports.emCorrida = () => { for (const r of rooms.values()) if (r.phase === "race" || r.phase === "quali") return true; return false; }; // (corrida-pc.js: os envios ao site esperam a bandeirada)
   require("./lobby.js").registrar("corrida", rooms, { max: MAX_PLAYERS }); // aparece na lista de salas da Vila
 
   // regras "f1" (planos/temporada-f1.md): pneus que gastam; sem caixas e sem a ajuda do pelotão

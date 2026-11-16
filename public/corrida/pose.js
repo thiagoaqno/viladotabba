@@ -120,10 +120,10 @@ Outro.prototype.receber = function (am, Tc) {
   const cor = this.cor;
   if (!n) { cor.length = 0; return true; }
   const nv = this.base(Tc, TMP2);
-  if (Math.hypot(TMP.x - nv.x, TMP.y - nv.y) > SALTO_U) { cor.length = 0; return true; } // saltou de verdade
+  if (Math.hypot(TMP.x - nv.x, TMP.y - nv.y) > SALTO_U) { cor.length = 0; this.ultTam = SALTO_U; return true; } // saltou de verdade
   const d = [TMP.x - nv.x, TMP.y - nv.y, wrap(TMP.a - nv.a), TMP.vx - nv.vx, TMP.vy - nv.vy, TMP.r - nv.r, TMP.ax - nv.ax, TMP.ay - nv.ay, TMP.ra - nv.ra];
   const tam = Math.max(Math.hypot(d[0], d[1]), BRACO * Math.abs(d[2]), 1e-3); // (o tamanho da correção: o maior desvio de um ponto do carro, o centro ou o bico)
-  const w = clamp(CFG.vc / (0.27 * tam), CFG.wmin, CFG.wmax);
+  const w = clamp(CFG.vc / (0.27 * tam), CFG.wmin, CFG.wmax); this.ultTam = tam; // (o tamanho, para o painel de diagnóstico F9: rede.js)
   for (let j = cor.length - 1; j >= 0; j--) if ((Tc - cor[j].t0) * w0(cor[j]) > 10000) cor.splice(j, 1); // (já se apagou)
   if (cor.length >= MAX_CORR) cor.shift();
   cor.push({ t0: Tc, w, d });

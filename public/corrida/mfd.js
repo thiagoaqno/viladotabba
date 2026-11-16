@@ -37,14 +37,17 @@ const ICONE = {
 const icone = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONE[id] || ""}</svg>`;
 const linhasDe = (id) => `<div class="mr-lista" data-linhas="${id}"></div>`;
 const HTML = {
-  // (2026-11-16, o Thiago: "o MFD grande ficou feio: um resumo bem menor, só com o essencial") quatro linhas, lidas num olhar, no tamanho normal do MFD:
-  // o pneu (composto, vida e quantas voltas aguenta, ou "box em X voltas" com a janela), a condição do carro, o carro da frente e o de trás, e a pista.
-  // O resto mora nas páginas próprias (Pneus, Box, Danos, Tempos); cada linha leva para a sua página.
-  resumo: `<div class="mp rs2">
-    <button type="button" class="rs2-l" data-ir="box" data-r="rPn"><b class="mp-bola" data-r="rPnL">M</b><span><strong data-r="rPnT">—</strong><em data-r="rPnS"></em></span><i class="rs2-b"><i data-r="rPnB"></i></i></button>
-    <button type="button" class="rs2-l" data-ir="danos" data-r="rDn"><b class="rs2-ic">🔧</b><span><strong data-r="rDnT">—</strong><em data-r="rDnS">condição do carro</em></span><i class="rs2-b"><i data-r="rDnB"></i></i></button>
-    <button type="button" class="rs2-l rs2-gaps" data-ir="tempos"><span><small>À FRENTE</small><strong class="fr" data-r="rFr">—</strong><em data-r="rFrN"></em></span><span><small>ATRÁS</small><strong class="tr" data-r="rTr">—</strong><em data-r="rTrN"></em></span></button>
-    <div class="rs2-l rs2-pista"><b class="rs2-ic" data-r="rClI">☀</b><span><strong data-r="rClT">Seco</strong><em data-r="rClS"></em></span></div>
+  // (2026-11-16, a imagem do Thiago: "o MFD resumo e minimalista") uma faixa: o pneu (anel da vida com a letra; voltas nele / voltas que aguenta), o carro
+  // (condição), a pista (o estado; o jogo não mede a temperatura) e o mini mapa (você na cor da equipe, o líder em amarelo, a chegada quadriculada);
+  // embaixo, o carro da frente, a diferença para ele e o carro de trás. Cada bloco leva à sua página.
+  resumo: `<div class="rs3">
+    <div class="rs3-l">
+      <button type="button" class="rs3-c rs3-pn" data-ir="box" title="Pneus e box"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" class="tr"/><circle cx="22" cy="22" r="18" class="vl" data-r="rpAnel"/></svg><b data-r="rpL">M</b><em data-r="rpV">—</em></button>
+      <button type="button" class="rs3-c rs3-dn" data-ir="danos" title="Danos"><svg class="rs3-carro" viewBox="0 0 30 46" aria-hidden="true"><rect x="6" y="1" width="18" height="4" rx="1" class="asa"/><path d="M15 3 L18 15 L19 33 L21 42 L9 42 L11 33 L12 15 Z" class="corpo" data-r="rdCorpo"/><rect x="1" y="9" width="6" height="9" rx="2" class="rd"/><rect x="23" y="9" width="6" height="9" rx="2" class="rd"/><rect x="1" y="30" width="6" height="9" rx="2" class="rd"/><rect x="23" y="30" width="6" height="9" rx="2" class="rd"/></svg><span><strong data-r="rdT">100%</strong><i class="rs3-b"><i data-r="rdB"></i></i></span></button>
+      <div class="rs3-c rs3-cl"><span class="rs3-ic" data-r="rlI">☀</span><strong data-r="rlT">Seca</strong></div>
+      <div class="rs3-c rs3-mp"><svg viewBox="0 0 120 60" aria-hidden="true"><path class="pista" data-r="mpP"/><g data-r="mpCh"><rect width="5" height="5" fill="#fff"/><rect x="2.5" width="2.5" height="2.5" fill="#111"/><rect y="2.5" width="2.5" height="2.5" fill="#111"/></g><circle r="3" class="lid" data-r="mpL"/><circle r="3.6" class="eu" data-r="mpE"/></svg></div>
+    </div>
+    <button type="button" class="rs3-pe" data-ir="tempos" title="Tempos"><span><b data-r="frP">—</b><i></i><em data-r="frN"></em></span><span class="rs3-gap" data-r="gap">—</span><span><b data-r="trP">—</b><i></i><em data-r="trN"></em></span></button>
   </div>`,
   // como a página de pneus do jogo da EA (F1 24): o carro no meio com as 4 rodas coloridas pela temperatura e um anel de desgaste em cada canto
   // (o jogo daqui mede UM conjunto de pneus, então os quatro anéis mostram o mesmo valor); embaixo o composto, a temperatura e a previsão
@@ -60,7 +63,7 @@ const HTML = {
     <div class="mp-barra"><span>Recarga da volta</span><div><i data-r="eRecB"></i></div><b data-r="eRecT">0%</b></div>
     <div class="mp-par"><span>Modo</span><b data-r="eModo">—</b></div><div class="mp-par"><span>DRS</span><b data-r="eDrs">—</b></div>
     <div class="mp-par"><span>Combustível</span><b>não medido no jogo</b></div></div>`,
-  box: `<div class="mp mp-box"><div class="mp-janela"><small>JANELA DE BOX</small><b data-r="bJan">—</b><em data-r="bSub"></em></div>
+  box: `<div class="mp mp-box"><div class="bx-atual" data-r="bAtual"><b class="mp-bola" data-r="bAtL">M</b><span><strong data-r="bAtT">—</strong><em data-r="bAtS"></em></span><i class="rs3-b"><i data-r="bAtB"></i></i></div><div class="mp-janela"><small>JANELA DE BOX</small><b data-r="bJan">—</b><em data-r="bSub"></em></div>
     <div class="bx-linha" role="group" aria-label="Escolher o pneu da parada">${["macio", "medio", "duro", "chuva", "intermediario"].map((c, i) => `<button type="button" class="bx-btn" aria-label="${F().PNEUS[c].nome}" data-c="${c}" data-r="bx${c}"><kbd>${i + 1}</kbd><i class="bx-pn"></i><b>${["MACIO", "MÉDIO", "DURO", "CHUVA", "INTER."][i]}</b><span></span></button>`).join("")}</div>
     <p class="mp-nota bx-info" data-r="bInfo"></p><p class="mp-nota mp-fraca" data-r="bDica"><kbd>1</kbd>–<kbd>5</kbd> escolhe e pede · <kbd>B</kbd> ou <kbd>Enter</kbd> pede o selecionado · <kbd>6</kbd> cancela</p></div>`,
   tempos: `<div class="mp mp-tempos"><div class="mp-par"><span>Volta atual</span><b data-r="tAtual">0:00.000</b></div><div class="mp-par"><span>Corrida</span><b data-r="tCorrida">0:00.0</b></div><div class="mp-par"><span>Última volta</span><b data-r="tUlt">—:--.---</b></div><div class="mp-par"><span>Melhor volta</span><b data-r="tMelhor">—:--.---</b></div>
@@ -426,33 +429,43 @@ export function atualizarMfd(ctx) {
 }
 
 const F1U = () => window.F1Regras;
+let mapaPista = null, mapaEsc = null;
+function mapaDoResumo(r, idLider) {
+  const tr = race.tr; if (!tr || !r.mpP) return;
+  if (mapaPista !== tr) {
+    mapaPista = tr; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const p of tr.pts) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+    const k = Math.min(112 / (x1 - x0 || 1), 52 / (y1 - y0 || 1)), ox = (120 - (x1 - x0) * k) / 2, oy = (60 - (y1 - y0) * k) / 2;
+    mapaEsc = (x, y) => [ox + (x - x0) * k, oy + (y - y0) * k];
+    const passo = Math.max(1, Math.floor(tr.n / 200)); let d = ""; for (let i = 0; i < tr.n; i += passo) { const [a, b] = mapaEsc(tr.pts[i].x, tr.pts[i].y); d += (i ? "L" : "M") + a.toFixed(1) + " " + b.toFixed(1); }
+    r.mpP.setAttribute("d", d + "Z"); const [cx, cy] = mapaEsc(tr.pts[0].x, tr.pts[0].y); r.mpCh.setAttribute("transform", `translate(${(cx - 2.5).toFixed(1)} ${(cy - 2.5).toFixed(1)})`);
+  }
+  const c = race.car; if (c) { const [a, b] = mapaEsc(c.x, c.y); r.mpE.setAttribute("cx", a.toFixed(1)); r.mpE.setAttribute("cy", b.toFixed(1)); }
+  const g = idLider && race.ghosts.get(idLider); r.mpL.style.display = g ? "" : "none"; if (g) { const [a, b] = mapaEsc(g.x, g.y); r.mpL.setAttribute("cx", a.toFixed(1)); r.mpL.setAttribute("cy", b.toFixed(1)); }
+}
 const pc = (v) => Math.round(Math.max(0, Math.min(1, v)) * 100);
 const corRodas = (r, nivel) => { for (const k of ["w0", "w1", "w2", "w3"]) set(r[k], "c", "mp-roda " + nivel); };
 const ATU = {
   resumo(ctx, r) {
     const m = ctx.m, pn = race.pneu, F = F1U(), M_ = M(); if (!m || !pn) return;
-    const e = M_.estadoDoPneu(pn, F), tipo = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], B = race.box, j = ctx.janela, volta = Math.min(E.S.config.voltas, (m.laps || 0) + 1);
-    const COR = { bom: "#2ee08a", medio: "#ffb02e", baixo: "#ff6a3d", fim: "#ff3d4a" };
-    // o pneu: no box / box pedido / a janela chegando / quanto ele aguenta
-    let txt, sub = `${tipo.nome} · ${e.vida}% · ${e.temp.toLowerCase()}`, alerta = e.nivel === "fim";
-    if (B && B.fase) txt = "No box";
-    else if (B && B.pedido) { txt = "Box pedido"; alerta = true; }
-    else if (j && j.precisa && Number.isFinite(j.abre)) { const f = Math.max(0, j.abre - volta); txt = f === 0 ? "Box agora" : `Box em ${f} volta${f === 1 ? "" : "s"}`; alerta = alerta || f <= 1; }
-    else { const v = ctx.tp, n = v ? Math.max(0, Math.floor(v.voltas)) : null; txt = e.nivel === "fim" ? "No limite" : n == null || v.voltas >= 90 ? `${e.vida}% de vida` : `Aguenta ~${n} volta${n === 1 ? "" : "s"}`; }
-    set(r.rPnL, "t", window.HudTorre.LETRA[pn.composto] || "M"); set(r.rPnL, "style", `--c:${tipo.cor}`); set(r.rPnT, "t", txt); set(r.rPnS, "t", sub);
-    set(r.rPnB, "w", e.vida + "%"); set(r.rPnB, "bg", COR[e.nivel]); set(r.rPn, "c", "rs2-l" + (alerta ? " alerta" : ""));
+    const e = M_.estadoDoPneu(pn, F), tipo = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], COR = { bom: "#2ee08a", medio: "#ffb02e", baixo: "#ff6a3d", fim: "#ff3d4a" };
+    // o pneu: o anel é a vida, na cor do composto; embaixo, voltas nele / voltas que ele aguenta (o stint começa quando o pneu troca)
+    if (r._pneu !== pn) { r._pneu = pn; r._volta0 = m.laps || 0; }
+    const noPneu = Math.max(0, (m.laps || 0) - r._volta0), v = ctx.tp, aguenta = v && v.voltas < 90 ? Math.max(0, Math.floor(v.voltas)) : null;
+    set(r.rpL, "t", window.HudTorre.LETRA[pn.composto] || "M"); set(r.rpL, "style", `color:${tipo.cor}`);
+    set(r.rpAnel, "style", `stroke:${tipo.cor};stroke-dasharray:${(e.vida / 100 * 113).toFixed(1)} 113`);
+    set(r.rpV, "t", aguenta == null ? `${e.vida}%` : `${noPneu}/${noPneu + aguenta}`); set(r.rpV, "c", e.nivel === "fim" || e.nivel === "baixo" ? "alerta" : "");
     // o carro
     const dano = Math.max(0, Math.min(100, m.dano || 0)), cond = Math.round(100 - dano), nv = cond > 66 ? "bom" : cond > 33 ? "medio" : "fim";
-    set(r.rDnT, "t", `Carro ${cond}%`); set(r.rDnS, "t", dano < 1 ? "sem danos" : `${Math.round(F.efeitoDoDano(dano).final * 100)}% do desempenho`); set(r.rDnB, "w", cond + "%"); set(r.rDnB, "bg", COR[nv]); set(r.rDn, "c", "rs2-l" + (dano >= 33 ? " alerta" : ""));
-    // a frente e atrás
-    const nome = (id) => { const x = ctx.st.find((y) => y.id === id); return x ? (x.p.sigla || String(x.p.name || "").slice(0, 3).toUpperCase()) : ""; }, i = ctx.int || {};
-    set(r.rFr, "t", i.frente ? M_.intervalo(i.frente.seg, "-") + " s" : "—"); set(r.rFrN, "t", i.frente ? nome(i.frente.id) : "");
-    set(r.rTr, "t", i.tras ? M_.intervalo(i.tras.seg, "+") + " s" : "—"); set(r.rTrN, "t", i.tras ? nome(i.tras.id) : "");
+    set(r.rdT, "t", cond + "%"); set(r.rdB, "w", cond + "%"); set(r.rdB, "bg", COR[nv]); set(r.rdCorpo, "style", `fill:${cond > 66 ? "#3a3f4b" : COR[nv]}`);
     // a pista
-    const agua = clima.agua || 0, estado = agua > 0.45 ? "Chuva" : agua > 0.15 ? "Pista molhada" : clima.chuva > 0.05 ? "Garoa" : "Pista seca";
-    const S = E.S, mud = S.clima && S.clima.chove && F.proximaMudanca && clima.t >= 0 ? F.proximaMudanca(S.clima, clima.t) : null;
-    set(r.rClI, "t", estado === "Pista seca" ? "☀" : estado === "Garoa" ? "🌦" : "🌧"); set(r.rClT, "t", estado);
-    set(r.rClS, "t", [agua > 0.02 ? `água ${Math.round(agua * 100)}%` : "", mud ? (mud.tipo === "comeca" ? "chuva chegando" : "chuva parando") : ""].filter(Boolean).join(" · "));
+    const agua = clima.agua || 0, est = agua > 0.45 ? "Chuva" : agua > 0.15 ? "Molhada" : clima.chuva > 0.05 ? "Garoa" : "Seca";
+    set(r.rlI, "t", est === "Seca" ? "☀" : est === "Garoa" ? "🌦" : "🌧"); set(r.rlT, "t", est);
+    // embaixo: o da frente, a diferença e o de trás
+    const pos = ctx.st.findIndex((x) => x.id === m.id), sig = (x) => (x ? x.p.sigla || String(x.p.name || "").slice(0, 3).toUpperCase() : ""), i = ctx.int || {};
+    const fr = pos > 0 ? ctx.st[pos - 1] : null, tr = pos >= 0 && pos < ctx.st.length - 1 ? ctx.st[pos + 1] : null;
+    set(r.frP, "t", fr ? String(pos) : "—"); set(r.frN, "t", sig(fr)); set(r.trP, "t", tr ? String(pos + 2) : "—"); set(r.trN, "t", sig(tr));
+    set(r.gap, "t", i.frente ? "−" + M_.intervalo(i.frente.seg) + "s" : pos === 0 ? "LÍDER" : "—");
+    mapaDoResumo(r, ctx.st[0] && ctx.st[0].id !== m.id ? ctx.st[0].id : null);
   },
   pneus(ctx, r) {
     const pn = race.pneu; if (!pn) return;
@@ -481,6 +494,12 @@ const ATU = {
   },
   box(ctx, r) {
     const m = ctx.m, F = F1U(), B = race.box; if (!m || !B) return;
+    if (race.pneu && r.bAtT) { // (2026-11-16) o pneu de agora, que era a página Pneus: o composto, a vida, a temperatura e quanto ele aguenta
+      const pn = race.pneu, e = M().estadoDoPneu(pn, F), tp = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], v = ctx.tp, n = v ? Math.max(0, Math.floor(v.voltas)) : null;
+      set(r.bAtL, "t", window.HudTorre.LETRA[pn.composto] || "M"); set(r.bAtL, "style", `--c:${tp.cor}`);
+      set(r.bAtT, "t", e.nivel === "fim" ? "No limite: faça a parada" : n == null || v.voltas >= 90 ? `${tp.nome} · ${e.vida}% de vida` : `${tp.nome} · aguenta ~${n} volta${n === 1 ? "" : "s"}`);
+      set(r.bAtS, "t", `vida ${e.vida}% · temperatura ${e.temp.toLowerCase()}`); set(r.bAtB, "w", e.vida + "%"); set(r.bAtB, "bg", { bom: "#2ee08a", medio: "#ffb02e", baixo: "#ff6a3d", fim: "#ff3d4a" }[e.nivel]);
+    }
     const j = ctx.janela;
     if (B.fase) { set(r.bJan, "t", "NO BOX"); set(r.bSub, "t", ""); }
     else if (!j) { set(r.bJan, "t", "—"); set(r.bSub, "t", ""); }

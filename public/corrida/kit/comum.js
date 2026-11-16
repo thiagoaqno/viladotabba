@@ -25,7 +25,7 @@ export function tira(tr, l, i0, i1, l0, l1, y0, y1, v0 = 0, v1 = 1, u0 = 0, u1 =
   }
 }
 // tinta no asfalto: por cima do asfalto e da borracha, sem brigar com eles na profundidade
-export const tinta = (map, o = {}) => new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, roughness: 0.92, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, ...o });
+export const tinta = (map, o = {}) => new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, roughness: 0.96, envMapIntensity: 0.3, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, ...o });
 // tinta gasta: falhas e pontinhos de asfalto aparecendo por baixo
 export function gastar(x, w, hh, rr, quanto = 0.18) {
   x.globalCompositeOperation = "destination-out";

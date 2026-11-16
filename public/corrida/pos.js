@@ -39,7 +39,7 @@ const AJUSTE = {
   //          amostras do serrilhado · bloom: força, raio, limiar de claridade (linear, antes do ajuste de tons) e a faixa de entrada
   //          · foco (desfoque do que está longe): pontos por pixel e o raio máximo, em fração da altura da imagem (0,0022 = ~2,4 px em 1080p)
   media: { amostras: 2, meia: true, bloom: { forca: 0.4, raio: 0.5, limiar: 1.1, faixa: 0.6 }, foco: { pontos: 8, raio: 0.0022 } },
-  alta: { amostras: 4, meia: false, bloom: { forca: 0.6, raio: 0.6, limiar: 1.0, faixa: 0.6 }, foco: { pontos: 12, raio: 0.0026 } },
+  alta: { amostras: 4, meia: true, bloom: { forca: 0.6, raio: 0.6, limiar: 1.0, faixa: 0.6 }, foco: { pontos: 12, raio: 0.0026 } },
 };
 const FOCO_PERTO = 650, FOCO_LONGE = 2600; // a distância da câmera (u) em que o desfoque começa e em que chega ao máximo (o céu vale o máximo)
 const CLARO_LUZ = 1.6; // as luzes "sem ajuste de tons" (toneMapped: false) passam a valer essa claridade no pós (o bloom pega acima de 1)
@@ -133,6 +133,16 @@ const FOCO = {
     }`,
 };
 
+// O passe leve que ficou no lugar do desfoque de profundidade (2026-11-15, pedido do Thiago: os filtros pesavam e deixavam o jogo mais feio):
+// só troca pixel inválido (NaN/infinito) por preto e limita o brilho antes do bloom. Sem textura de profundidade e sem desenhar os carros de novo.
+const LIMPA = {
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse; varying vec2 vUv;
+    void main() { vec4 c = texture2D(tDiffuse, vUv); if (any(isnan(c)) || any(isinf(c))) c = vec4(0.0, 0.0, 0.0, 1.0); gl_FragColor = clamp(c, 0.0, 64.0); }`,
+};
+
 // ---------- a fila de passes de cada qualidade (montada na primeira vez que a qualidade é usada) ----------
 const tam = new THREE.Vector2(), corLimpeza = new THREE.Color();
 const feitos = {}; // { media: {composer, grade, radial, foco, w, h, pr}, alta: {...} }
@@ -144,54 +154,18 @@ function montar(q) {
   const cfg = AJUSTE[q], composer = new EffectComposer(renderer);
   const amostras = ok16() ? cfg.amostras : 0; // sem alvo de 16 bits com amostras o quadro sairia preto: aí fica sem suavização
   composer.renderTarget1.samples = composer.renderTarget2.samples = amostras;
-  // a cena sai com uma textura de profundidade (nos dois alvos: o composer troca de um para o outro) para o desfoque de profundidade
-  composer.renderTarget1.depthTexture = new THREE.DepthTexture(2, 2); composer.renderTarget2.depthTexture = new THREE.DepthTexture(2, 2);
-  const mascara = new THREE.WebGLRenderTarget(2, 2);
-  mascara.depthTexture = new THREE.DepthTexture(2, 2);
-  const luzesDe = { n: -1 }; // (quantos filhos a cena tinha quando as luzes foram para a camada 1: pista nova, confere de novo)
-  const materialCarro = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, side: THREE.DoubleSide });
-  const cena = new RenderPass(scene, cam), desenhaCena = cena.render.bind(cena);
-  const foco = new ShaderPass({ ...FOCO, defines: { TAPS: cfg.foco.pontos } });
-  foco.uniforms.raio.value = cfg.foco.raio; foco.uniforms.near.value = cam.near; foco.uniforms.far.value = cam.far;
-  cena.render = function (rd, escrita, leitura, ...resto) {
-    desenhaCena(rd, escrita, leitura, ...resto);
-    foco.uniforms.tDepth.value = leitura.depthTexture;
-    foco.uniforms.tCarDepth.value = mascara.depthTexture;
-    // Renderiza só os carros numa camada separada; a profundidade preserva oclusões pelo cenário.
-    // as luzes também na camada 1: sem elas, o desenho da máscara (só a camada 1) via ZERO luzes, o Three.js tomava como mudança de iluminação
-    // e, no quadro seguinte, reavaliava o shader de TODOS os materiais da cena (getProgram/getParameters: ~24% do quadro, medido em Monza)
-    if (scene.children.length !== luzesDe.n) { luzesDe.n = scene.children.length; scene.traverse((o) => { if (o.isLight) o.layers.enable(1); }); }
-    // a máscara só precisa da SILHUETA do carro (carroceria, flap, rodas e capacete): eram ~12 peças por carro e 268 chamadas por quadro com 21 robôs
-    // (medido em Monza, RTX 2060). A lista de peças fica guardada no carro (sem percorrer a árvore a cada quadro) e é refeita a cada 2 s; o carro bem
-    // longe (LOD 2 de carros.js) fica de fora: lá ele já está no desfoque. O que não se vê daqui também (recorte.js).
-    quadroMascara++;
-    for (const raiz of scene.children) {
-      const u = raiz.userData; if (!u.carroVinheta) continue;
-      if (!u.mascara || quadroMascara - u.mascaraQ > 120) { u.mascara = []; u.mascaraQ = quadroMascara; raiz.traverse((o) => { if (!o.isMesh) return; if (SILHUETA.has(o.name)) u.mascara.push(o); else o.layers.disable(1); }); }
-      const fora = u.lod === 2;
-      for (const o of u.mascara) { if (!fora && !o.userData.recortado && o.visible) o.layers.enable(1); else o.layers.disable(1); }
-    }
-    const alvo = rd.getRenderTarget(), fundo = scene.background, anterior = scene.overrideMaterial, camadas = cam.layers.mask;
-    const cor = rd.getClearColor(corLimpeza), alfa = rd.getClearAlpha(), sombra = rd.shadowMap.autoUpdate;
-    try {
-      scene.background = null; scene.overrideMaterial = materialCarro; cam.layers.set(1); rd.shadowMap.autoUpdate = false;
-      rd.setRenderTarget(mascara); rd.setClearColor(0x000000, 0); rd.clear(); rd.render(scene, cam);
-    } finally {
-      scene.background = fundo; scene.overrideMaterial = anterior; cam.layers.mask = camadas; rd.shadowMap.autoUpdate = sombra;
-      rd.setClearColor(cor, alfa); rd.setRenderTarget(alvo);
-    }
-  };
+  const cena = new RenderPass(scene, cam);
+  const foco = new ShaderPass(LIMPA);
   composer.addPass(cena);
-  composer.addPass(foco); // logo depois da cena, antes de qualquer passe mexer na profundidade
-  let radial = null;
-  if (q === "alta") { radial = new ShaderPass(RADIAL); composer.addPass(radial); }
+  composer.addPass(foco);
+  const radial = null; // (o desfoque de velocidade da Alta saiu: pesava e borrava a tela)
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), cfg.bloom.forca, cfg.bloom.raio, cfg.bloom.limiar);
   bloom.highPassUniforms.smoothWidth.value = cfg.bloom.faixa;
   if (cfg.meia) { const set = bloom.setSize.bind(bloom); bloom.setSize = (w, h) => set(Math.max(2, w >> 1), Math.max(2, h >> 1)); } // bloom barato: metade da resolução
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   const grade = new ShaderPass(GRADE); composer.addPass(grade);
-  return { composer, grade, radial, foco, mascara, w: 0, h: 0, pr: 0 };
+  return { composer, grade, radial, foco, w: 0, h: 0, pr: 0 };
 }
 function pronto(q) {
   const f = feitos[q] || (feitos[q] = montar(q)), pr = renderer.getPixelRatio();
@@ -199,12 +173,9 @@ function pronto(q) {
   if (f.w !== tam.x || f.h !== tam.y || f.pr !== pr) {
     f.w = tam.x; f.h = tam.y; f.pr = pr;
     f.composer.setPixelRatio(pr); f.composer.setSize(tam.x, tam.y);
-    f.mascara.setSize(Math.max(1, Math.floor(tam.x * pr)), Math.max(1, Math.floor(tam.y * pr)));
     f.grade.uniforms.aspecto.value = tam.x / Math.max(1, tam.y);
     if (f.radial) f.radial.uniforms.aspecto.value = tam.x / Math.max(1, tam.y);
-    f.foco.uniforms.aspecto.value = tam.x / Math.max(1, tam.y);
   }
-  f.foco.uniforms.near.value = cam.near; f.foco.uniforms.far.value = cam.far;
   return f;
 }
 

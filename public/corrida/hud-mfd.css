@@ -432,3 +432,44 @@ button.rs-card:focus-visible{outline:2px solid var(--eq);outline-offset:2px}
   .rs{grid-template-columns:1fr 1fr}.rs-meio{display:none}.rs-rodape{grid-template-columns:1fr 1fr}.rs-rodape>div:nth-child(3){border:0;padding:0}.rs-mapa{display:none}
   #hMfd .mfd-pos{display:none}
 }
+
+/* ===== (2026-11-16, o print do Thiago: "o MFD ocupa muito da minha tela") o Resumo compacto (~560 px, do tamanho de antes na altura) e as abas
+   consertadas: o estilo antigo punha uma barra (::after) em toda aba e zerava a fonte; a aba ativa não repete o nome (ele já está no título). ===== */
+#race:is(.f1hud,.f1mfd) #hMfd{background:linear-gradient(160deg,#10131bd9,#07080ce6)}
+#race:is(.f1hud,.f1mfd) #hMfd.largo{width:min(560px,calc(100vw - 28px))}
+#hMfd .mfd-topo{height:34px;gap:8px;padding:0 8px 0 10px}
+#hMfd .mfd-marca{width:16px;height:10px}
+#hMfd .mfd-nome{font-size:11px;letter-spacing:.14em}
+#hMfd .mfd-abas button{min-width:28px;padding:0 6px;width:auto;font-size:11px}
+#hMfd .mfd-abas button::after{display:none}
+#hMfd .mfd-abas button.on::after{display:block;content:"";position:absolute;top:auto;transform:none;left:6px;right:6px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--eq);box-shadow:0 0 8px var(--eq)}
+#hMfd .mfd-abas button svg{width:15px;height:15px}
+#hMfd .mfd-abas button.on span{display:none}
+#hMfd .mfd-abas button:hover span{display:inline;font-size:10px}
+#hMfd .mfd-pos{gap:8px}#hMfd .mfd-pos b{font-size:14px}#hMfd .mfd-pos small{font-size:10px}
+#hMfd .mfd-volta{font-size:9px;padding-left:8px}#hMfd .mfd-volta b{font-size:13px}
+.rs{grid-template-columns:1fr .78fr 1fr;gap:6px;padding:8px}
+.rs-col{gap:6px}
+.rs-card{padding:6px 8px 8px;border-radius:9px}
+.rs-card header{gap:6px;margin-bottom:4px}
+.rs-card header b{font-size:9px;letter-spacing:.12em}
+.rs-ico{width:15px;height:15px;font-size:9px}
+.rs-pneu-corpo{gap:8px}
+.rs-roda{width:38px;height:38px}
+.rs-chip{padding:2px 6px;font-size:9px;border-radius:4px}
+.rs-pneu-txt{gap:2px}.rs-pneu-txt strong{font-size:20px}.rs-pneu-txt strong small{font-size:10px}.rs-pneu-txt em{font-size:8.5px}
+.rs-jg-i{width:26px;height:26px}.rs-jg-i b{font-size:11px}.rs-jg-i.atual::after{bottom:-5px;width:4px;height:4px}
+.rs-meio{min-height:150px}
+.rs-anel{width:min(138px,100%)}
+.rs-carro{width:52px;height:88px}
+.rs-tp{width:38px;gap:1px}.rs-tp b{font-size:11px}.rs-tp small{font-size:7.5px}
+.rs-tp0{left:0;top:10%}.rs-tp1{right:0;top:10%}.rs-tp2{left:0;bottom:16%}.rs-tp3{right:0;bottom:16%}
+.rs-cond small{font-size:7px}.rs-cond b{font-size:11px}
+.rs-dano-corpo{gap:6px}.rs-dano-corpo svg{width:36%}.rs-dano-corpo strong{font-size:19px}.rs-barra{height:4px;margin:4px 0 3px}.rs-dano-corpo em{font-size:9px}
+.rs-clima-corpo{gap:4px}.rs-clima-corpo>div{padding-left:6px;gap:2px}.rs-clima-corpo span{font-size:14px}.rs-clima-corpo small{font-size:7px}.rs-clima-corpo b{font-size:11px}
+.rs-rodape{gap:6px;padding:6px 8px;border-radius:9px}
+.rs-rodape small{font-size:7.5px;margin-bottom:2px}
+.rs-rodape>div+div{padding-left:6px}
+.rs-num{font-size:20px;padding-right:6px}.rs-lider>div{gap:6px}.rs-lider strong{font-size:12px}.rs-lider em,.rs-gap em{font-size:9px}.rs-lider img{height:16px}
+.rs-gap strong{font-size:14px}
+.rs-mapa svg{width:58%}.rs-mapa em{font-size:8px}

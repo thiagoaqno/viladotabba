@@ -689,7 +689,11 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       const tAlcance = Math.max(0.9, (alvo.frente - L_CARRO * 0.5) / Math.max(fecha, 10)), tFreio = dFreio / Math.max(ia.v, 30);
       const chega = lento || dFreio === Infinity || tAlcance < tFreio * estilo.antec || curvaDisputavel, foraDaFreada = lento || dFreio > 30 || curvaDisputavel;
       const querPassar = monaco ? (fecha > estilo.diferencaMinima * 0.5 || (ia.v < 12 && alvo.ov < 12)) : ((fecha > estilo.diferencaMinima && ia.v > 30) || (preso && (ia.v > 30 || lento)) || (ia.v < 12 && alvo.ov < 12));
-      if (querPassar && chega && foraDaFreada) {
+      // (2026-11-16, o Thiago: "eles só entram no modo ultrapassagem se tiverem bateria, exceto na garoa e na chuva") sem ERS_MANOBRA de bateria o
+      // robô não parte para a manobra: fica atrás guardando energia. Na garoa e na chuva a bateria não conta (passa quando quiser), e um carro quase
+      // parado à frente sempre pode ser passado.
+      const molhado = room.clima ? F1.climaEm(room.clima, now).agua > 0.1 : false, comBateria = !ia.ers || ia.ers.carga >= ERS_MANOBRA;
+      if (querPassar && chega && foraDaFreada && (comBateria || molhado || lento)) {
         // O lado leva em conta a sequência de curvas; em Mônaco também pode disputar por fora quando a faixa está livre.
         const lados = ordemDaPassagem(pf, i, alvo.latOutro, MARG, baseLat, dentro);
         const folgaFora = lento || dFreio === Infinity || tAlcance < tFreio * estilo.antec * 0.8;
@@ -846,7 +850,10 @@ function passoNoBox(room, p, ia, pf, dt, emit) {
 // pilotosNoGrid, `relacao`): PARCEIRO, logo à frente e com você colado (menos de ~35 m), tira o pé por 4 s para você passar (uma vez por volta);
 // logo atrás de você com outro carro colado nele, ele segura (a defesa do perfil já é dele) e o rádio avisa. TENSO, à frente e com você colado,
 // não abre: o rádio diz que ele recusou a ordem. Nada disso na largada, sob safety car ou depois da bandeirada.
-const PERTO_EQUIPE = 30; // pontos de pista (6 u cada, ~37 m)
+const PERTO_EQUIPE = 30;
+const ERS_MANOBRA = +(process.env.ROBO_ERS_MANOBRA ?? 0.3); // a bateria mínima para partir para uma ultrapassagem (fora da chuva)
+// a margem de cada piloto no limite de aderência das curvas: MARGEM_BASE para todos, mais MARGEM_POR_PONTO por ponto de constância abaixo de 95
+const MARGEM_BASE = +(process.env.ROBO_MARGEM_BASE ?? 0.006), MARGEM_POR_PONTO = +(process.env.ROBO_MARGEM_PONTO ?? 0.0004); // pontos de pista (6 u cada, ~37 m)
 function companheiroNaPista(room, p, ia, now, emit) {
   const rel = p.piloto && p.piloto.relacao; if (!rel || room.phase !== "race" || now < room.startAt + 15000 || room.direcao?.safety || !p.pos) return;
   const h = Object.values(room.players).find((q) => !q.bot && q.equipe === p.equipe); if (!h || !h.pos || h.finish != null || h.dnf || p.finish != null) return;
@@ -1027,7 +1034,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const latAdiante = novo && !ia.ult ? latLivre : (j) => { const margemExtra = T.baseDe(room.config.pista) === "monaco" ? (ia.ult ? ALEM_MONACO : 8) : 0; const limite = Math.min(margemExtra ? tr.W / 2 - 9 : limiteAtual, pf.teto ? pf.teto[j] + margemExtra : Infinity); return entre(linhaEm(j, car.prog + (j - i + n) % n) * saidaGrid + ia.lat0 * (1 - saidaGrid) + ia.desvio, limite); };
   const vac = F1.vacuoF1(F1.vacuoPermitido(car.v, room.phase === "quali") ? tf.draft : 0, curva);
   const reta = alvo >= topo * 0.97;
-  const escalaCurva = Math.sqrt((novo ? pneu.rel : pneu.grip) * dano.grip * vac.aderencia) * cautelaPneu * cautela;
+  // (2026-11-16, o Thiago: "cada piloto ter sua margem pra não derrapar, exceto caso de erro") o piloto mais constante deixa menos sobra (o erro, erroK, vem por cima)
+  const margemPiloto = 1 - (MARGEM_BASE + Math.max(0, 95 - (p.piloto ? p.piloto.constancia : 85)) * MARGEM_POR_PONTO);
+  const escalaCurva = Math.sqrt((novo ? pneu.rel : pneu.grip) * dano.grip * vac.aderencia) * cautelaPneu * cautela * margemPiloto;
   if (!reta) alvo *= escalaCurva; // só as curvas dependem da aderência (no molhado, mais a cautela do pneu na água: cautelaPneu)
   const drs = !!car.drsAtivo && !room.direcao?.safety && !room.direcao?.amarelo;
   const ganhoReta = (1 + (drs ? F1.DRS_GANHO * (spec.drs ?? 1) : 0)) * (1 + vac.final);

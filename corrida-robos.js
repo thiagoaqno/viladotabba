@@ -51,6 +51,7 @@ const CACHE = new Map();
 // meio dos vizinhos (o caminho mais reto possível), sem passar da beira. O resultado abre antes da curva, encosta
 // por dentro no ápice e volta a abrir na saída. Devolve o deslocamento lateral de cada ponto (lat) e a curvatura dele.
 const LINHAS = new Map();
+const FOLGA_TETO = +(process.env.ROBO_FOLGA_TETO ?? 3); // até onde a linha pode passar do teto do muro (o teto já desconta a folgaLinha de 6 u)
 // o maior deslocamento do centro do carro que cabe entre as barreiras explícitas de uma pista (`muros` em pistas.js, Baku: a Cidade Velha é estreita); Infinity onde a pista é a de sempre
 function tetoDoMuro(t, pts) {
   const n = pts.length, teto = new Float64Array(n).fill(Infinity); if (!t.muros) return teto;
@@ -78,6 +79,14 @@ function tracado(pista, f1 = false, linhaPronta = null) {
   // Em Mônaco a linha otimizada precisa caber no mesmo limite que o volante usa, evitando cortar o S em cima do muro.
   // (Quem lê usa lat[(i + 2) % n]: guardada assim para o ponto i receber exatamente a linha de i.)
   if (f1) { const nova = linhaPronta || Piloto.linhaDaPista(pista, t, pts, F1Equipes.specDaEquipe("mclaren"), aderRef()); for (let i = 0; i < n; i++) lat[(i + 2) % n] = nova[i]; }
+  // (2026-11-16) a linha pronta (corrida-linhas-f1.json) foi feita sem o limite das barreiras em alguns trechos: em Mônaco, a 65% da volta, ela passava
+  // a 31 u do meio onde o centro do carro só cabe até ~26 (o teto, que já desconta muroFolga e folgaLinha, mais folgaLinha de volta), ou seja, dentro
+  // do muro: 78 dos 92 toques no muro da pista eram ali. Presa ao teto mais FOLGA_TETO (e suavizada para não virar quina):
+  if (f1 && Number.isFinite(Math.min(...teto))) {
+    const lim = (i) => teto[i] + FOLGA_TETO; let mexeu = 0;
+    for (let i = 0; i < n; i++) { const l = lat[(i + 2) % n], m = lim(i); if (Math.abs(l) > m) { lat[(i + 2) % n] = Math.sign(l) * m; mexeu++; } }
+    if (mexeu) for (let r = 0; r < 4; r++) { const c = Float64Array.from(lat); for (let i = 0; i < n; i++) { const v = (c[(i - 1 + n) % n] + 2 * c[i] + c[(i + 1) % n]) / 4, m = lim((i - 2 + n) % n); lat[i] = Math.max(-m, Math.min(m, v)); } }
+  }
   pos();
   const k = new Float64Array(n), sinal = new Float64Array(n); // sinal: +1 se a curva vai para o lado de lat positivo, -1 para o outro
   for (let i = 0; i < n; i++) { // curvatura do traçado: quanto a direção vira por unidade andada

@@ -569,6 +569,9 @@ function pneuHud(c, pn, x, y) {
 export function checkMyLap(old) {
   const m = me(), o = old && E.ME && old.players.find((p) => p.id === E.ME.id);
   if (!m || !o || !race) return;
+  // (2026-11-16, o Thiago: "meu carro no meio da corrida limitou a 122 km/h") a quebra (corrida.js verificarFalhas, pela peça Confiabilidade) só aparecia numa
+  // linha do registro: agora o aviso é grande, o engenheiro fala e diz o porquê
+  if (m.quebrou && !o.quebrou) { toast("🔧 O seu carro quebrou: modo de emergência, 35% da velocidade até o fim. A chance de quebra vem da peça Confiabilidade.", 9000); radioF1("dano", { forcar: true }); }
   if (m.laps > o.laps) { lapDone(m); if (m.finish != null) Sound.finish(); else { Sound.lap(); race.lastLapMsg = sNow(); if (m.laps === E.S.config.voltas - 1 && E.S.config.voltas > 1) radioF1("ultima"); else if (E.S.config.voltas >= 5 && m.laps === Math.floor(E.S.config.voltas / 2)) meioDaCorrida(); else if (E.S.config.voltas >= 4 && m.laps === 2) memoriaDoPaddock(); else if (m.laps === E.S.config.voltas - 2 && E.S.config.voltas > 3) balancoDaCorrida(); } }
 }
 // a tela do GP (regras de F1): o pódio, e a tabela com tempo ou diferença, grid, paradas, penalidades e os pontos oficiais

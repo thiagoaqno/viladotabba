@@ -1,28 +1,22 @@
-# Análise: sem os insights do engenheiro, e a Telemetria animada
+# Carreira: as configurações de som dentro da Central (solo e com os amigos) e o carro antigo do grupo destravado
 
-O Thiago, com um print da Visão geral: "tira esses insights, ficaram feios e mal colocados"; e "em análise, na telemetria deve ser mais animado".
+O Thiago: "a aba de configurações deve ficar dentro da carreira/sala em grupo também, não só no lobby da corrida, pra poder mudar o som".
 
-## Os insights saíram
+## As configurações na Central (`temporada/config-carreira.js`, `central.js`, `central-abas.css`)
 
-O quadro "Insights do engenheiro" da Visão geral (#756) saiu inteiro: a função em `central-analise-geral.js` e o CSS em `central-abas.css`.
+- **Onde fica:** um item novo, "Configurações · Som e volume", no menu da engrenagem da Central. Ele abre uma tela com o som do jogo ligado ou desligado, o volume geral, a voz do engenheiro e o mixer: motor, efeitos, ambiente, rádio do engenheiro, narrador e música. Vale na carreira solo e na carreira com os amigos, que usam a mesma Central.
+- **Por que outra tela:** a tela Configurações do lobby (`configuracoes.js`) depende do jogo inteiro (o socket da corrida, as pistas, o relógio), que a página da carreira não carrega. Esta é leve e mexe nos mesmos valores guardados no navegador: `corrida:sound`, `corrida:volume`, `corrida:mixer` e `corrida:radio`.
+- **Quando vale:**
+  - **na hora:** a música (`MusicaCarreira`) e a voz do engenheiro (`Radio.silenciar`);
+  - **na próxima corrida:** o resto, que é lido quando o jogo abre.
+- **O que fica no lobby:** gráficos e controles continuam na engrenagem do menu da Corrida, e a tela avisa isso.
 
-## A Telemetria animada (`temporada/central-telemetria.js`, `central-abas.css`)
+## O carro antigo da carreira em grupo
 
-- **A volta toca sozinha.** Os dois carros andam no mapa ao mesmo tempo: o seu na cor da equipe, o do outro piloto em cinza. Cada um anda na própria melhor volta, no tempo de verdade do replay, 3× mais rápido. Dá para ver quem está na frente em cada ponto da pista.
-- **O cursor corre no gráfico da velocidade,** junto do seu carro.
-- **O placar ao vivo:** o tempo da volta, a velocidade dos dois, a diferença no mesmo ponto da pista (verde quando você ganha, vermelho quando perde) e os seus pedais (acelerador e freio) subindo e descendo.
-- **O mouse no gráfico** pausa e leva a volta até o ponto apontado. O botão toca e pausa.
-- **Ao abrir a aba:**
-  - os quadros entram um depois do outro;
-  - o traçado colorido se desenha na ordem da volta;
-  - as linhas da velocidade e do desgaste se desenham;
-  - as faixas da estratégia crescem da esquerda.
-- **Movimento reduzido:** com ele ligado no sistema, nada disso anima.
+O conserto do #758 (a montagem acima do orçamento pode ficar mais barata) não chegava na carreira com os amigos: `grupo-regras.js` não passava a montagem de agora para a conferência. Agora passa. Esse commit tinha ido para o branch do #759 depois do merge e ficou de fora da `main`.
 
-## Prints
+## Conferido
 
-Tirados com o servidor de teste e o Playwright, a 1600×900, com um GP simulado só na página (dois carros e um replay inventado para desenhar a tela), em dois momentos da volta: o mapa se desenhando, e os dois carros e o cursor andando. A diferença sai 0,00 s porque os dois carros simulados fazem a mesma volta. Nada foi visto com um GP corrido de verdade.
-
-Entrada no topo de `novidades.json`. Conferido com `node --check` e `JSON.parse`.
+`node --check`. Print da tela aberta na Central, numa carreira de teste (`C:\Users\thiag\Downloads\lts\prints\config\`). Não testei se o volume mexido aqui chega à corrida jogando.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -261,7 +261,7 @@ function html(c) {
   // a dificuldade dos robôs, mudável no meio da carreira (vale a partir do próximo GP); na temporada com os amigos, só o anfitrião muda
   const NIV = [["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]];
   const nivelHTML = c.mudarNivel ? `<label class="cx-tema" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>Dificuldade dos robôs</span><select data-cx-nivel aria-label="Dificuldade dos robôs">${NIV.map(([v, n]) => `<option value="${v}" ${(s.nivel || "medio") === v ? "selected" : ""}>${n}</option>`).join("")}</select></label>` : "";
-  const ajustes = `${nivelHTML}<button type="button" class="cx-tema" data-cx-tema aria-pressed="${escuro}"><span>Modo escuro</span><b>${escuro ? "Ligado" : "Desligado"}</b></button><p class="cx-menu-caixa"><span>Caixa</span><b>${h(c.dinheiro(s.caixa))}</b></p>`;
+  const ajustes = `<button type="button" class="cx-tema" data-cx-config><span>Configurações</span><b>Som e volume</b></button>${nivelHTML}<button type="button" class="cx-tema" data-cx-tema aria-pressed="${escuro}"><span>Modo escuro</span><b>${escuro ? "Ligado" : "Desligado"}</b></button><p class="cx-menu-caixa"><span>Caixa</span><b>${h(c.dinheiro(s.caixa))}</b></p>`;
   return `<div class="cx ${c.grupo ? "cx-grupo" : ""}" data-aba="${h(aba)}">
     <header class="cx-topo"><div class="cx-faixa"><a class="cx-faixa-logo" href="/corrida/" title="Voltar ao menu da Corrida">${marca(s.equipe)}</a><i class="cx-barrinha" aria-hidden="true"></i><h1>${h(eq.nome)}</h1></div>
       <div class="cx-conta">${BR}<i class="cx-barrinha" aria-hidden="true"></i><b>${h(s.nome)}</b>${(() => { const nova = root.Stories ? root.Stories.preparar(c) : -1; // com notícia nova, o perfil ganha o anel roxo dos stories e abre eles
@@ -311,6 +311,7 @@ function clique(alvo, render) {
     return true;
   }
   if (root.CentralAnalise?.clique(alvo, render) || root.CentralContrato?.clique(alvo, render) || root.CentralAcerto?.clique(alvo, render) || root.CentralPaddock?.clique(alvo, render)) return true;
+  if (alvo.hasAttribute("data-cx-config")) { document.querySelector(".cx-menu[open]")?.removeAttribute("open"); root.ConfigCarreira?.abrir(); return true; } // (as configurações de som: config-carreira.js)
   if (alvo.hasAttribute("data-cx-tema")) { escuro = !escuro; try { localStorage.setItem(CHAVE_TEMA, escuro ? "escuro" : "claro"); } catch {} aplicarTema(); return true; }
   if (alvo.dataset.cxAba) { trocarAba(alvo.dataset.cxAba, render); return true; }
   if (alvo.dataset.cxCarro) { carroSub = alvo.dataset.cxCarro === "acerto" ? "acerto" : "pecas"; try { localStorage.setItem("corrida:temporada:carro", carroSub); } catch {} render(); if (garagem) garagem.vista(vistaAgora()); requestAnimationFrame(posicionarRotulos); return true; }

@@ -29,7 +29,10 @@ static class Corrida {
   // medido num i7-10750H com Intel UHD + RTX 2060, 2026-11-11) e o jogo sem desacelerar quando a janela perde o foco. As de desenho que
   // tinham vindo junto (--enable-zero-copy, --enable-gpu-rasterization, --ignore-gpu-blocklist, CalculateNativeWinOcclusion) PIORAVAM:
   // na mesma corrida rápida de 21 robôs, 38 quadros/s com elas e 64 sem elas (Edge, RTX 2060).
-  const string OTIMIZADO = " --force_high_performance_gpu --disable-extensions --disable-background-timer-throttling --disable-renderer-backgrounding";
+  // (2026-11-16) o perfil do Edge do programa (%LOCALAPPDATA%\CorridaDaGalera\janela) tinha ~670 MB, ~400 deles do Edge baixando os componentes dele
+  // (component_crx_cache 207 MB, ProvenanceData 169 MB, extração de entidades, cupons): o jogo não usa nada disso. Sem atualização de componentes, rede
+  // de fundo, sincronização e as compras/coleções do Edge.
+  const string OTIMIZADO = " --force_high_performance_gpu --disable-extensions --disable-background-timer-throttling --disable-renderer-backgrounding --disable-component-update --disable-background-networking --disable-sync --disable-features=msEdgeShopping,msEntityExtraction,EdgeCollections,msUndersideButton";
   [STAThread]
   static void Main() {
     string pasta = AppDomain.CurrentDomain.BaseDirectory;

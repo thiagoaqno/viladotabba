@@ -178,7 +178,11 @@ function pilotosNoGrid(s) {
   const pers = s.paddock ? Paddock.personalidade(s, companheiro) : null; // (a confiança, a experiência e a agressividade: paddock.js)
   // (2026-11-16) a relação vai para a pista (corrida-robos.js, companheiroNaPista): parceiro abre passagem e segura quem vem atrás; tenso não obedece
   const pd = s.paddock, relacao = pd ? (pd.moral >= 75 && pd.lealdade >= 65 ? "parceiro" : pd.moral <= 30 ? "tenso" : null) : null;
-  return [{ ...companheiro, equipe: s.equipe, ritmo, ...(relacao ? { relacao } : {}), ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais].slice(0, 21);
+  // (2026-11-16, a rivalidade) o rival da temporada (imersao: com quem você mais disputou posição no ano) vai marcado, com a rixa (as batidas
+  // entre vocês nos GPs de antes, paddock.js): corrida-robos.js rivalNaPista
+  const rivalId = (() => { try { return imersao(s).rival?.id || null; } catch { return null; } })(), rixa = (pd && pd.rixas && pd.rixas[rivalId]) || 0;
+  const marcar = (r) => (r.id === rivalId ? { ...r, rival: true, ...(rixa ? { rixa } : {}) } : r);
+  return [{ ...companheiro, equipe: s.equipe, ritmo, ...(relacao ? { relacao } : {}), ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais.map(marcar)].slice(0, 21);
 }
 // Metas dependem da força inicial da equipe, não do resultado que acabou de acontecer.
 function metas(s) {

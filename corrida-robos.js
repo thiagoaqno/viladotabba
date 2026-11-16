@@ -832,6 +832,19 @@ function companheiroNaPista(room, p, ia, now, emit) {
     if (atras) { ia.segurouDito = true; avisar("compsegura"); }
   }
 }
+// (2026-11-16, a rivalidade) O rival da temporada (regras.js pilotosNoGrid, `rival` e `rixa`) perto de você (a menos de ~37 m, nos dois
+// sentidos) aperta o ritmo: +1,2% no alvo de velocidade, mais 0,4% por batida entre vocês nos GPs de antes (até 3). O rádio acompanha o duelo:
+// colado atrás de você ou logo à frente (no máximo uma vez a cada 3 voltas) e quando um passa o outro (a troca de lado, com 8 s de folga).
+function rivalNaPista(room, p, ia, now, emit) {
+  if (!p.piloto || !p.piloto.rival || room.phase !== "race" || now < room.startAt + 15000 || room.direcao?.safety || !p.pos || p.finish != null) return false;
+  const h = Object.values(room.players).find((q) => !q.bot && q.pos && q.finish == null && !q.dnf); if (!h) return false;
+  const d = p.pos.prog - h.pos.prog, avisar = (sit) => emit && emit("radio:equipe", { para: h.id, sit });
+  const perto = Math.abs(d) < PERTO_EQUIPE, lado = d > 0 ? 1 : -1, volta = h.laps || 0;
+  if (perto && ia.ladoRival && lado !== ia.ladoRival && now - (ia.trocaRival || 0) > 8000) { ia.trocaRival = now; avisar(lado < 0 ? "rivalpassou" : "rivalperdeu"); }
+  else if (perto && volta - (ia.voltaRival ?? -9) >= 3) { ia.voltaRival = volta; avisar(lado < 0 ? "rivalatras" : "rivalfrente"); }
+  if (Math.abs(d) < PERTO_EQUIPE * 2) ia.ladoRival = lado;
+  return perto;
+}
 // O robô está preso? Parado (menos de V_PRESO) por T_PRESO segundos, ou sem andar nem T_SEM_ANDAR pontos de pista em 6 s (rodando no
 // lugar, de lado no muro, na brita). Não conta no box, sob bandeira, antes de a corrida ficar de pé nem com o carro quebrado.
 function encalhou(room, ia, car, now, dt, atras = false) {
@@ -1012,6 +1025,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   if (p.quebrou) { alvo = Math.min(alvo, spec.vmax * F1Equipes.EMERGENCIA); tetoPiloto = Math.min(tetoPiloto, spec.vmax * F1Equipes.EMERGENCIA); }
   if (p.incidenteAte > now) { alvo = Math.min(alvo, spec.vmax * 0.24); tetoPiloto = Math.min(tetoPiloto, spec.vmax * 0.24); }
   companheiroNaPista(room, p, ia, now, emit);
+  if (rivalNaPista(room, p, ia, now, emit)) { const k = 1.012 + 0.004 * Math.min(3, p.piloto.rixa || 0); alvo *= k; } // o rival aperta o ritmo perto de você (mais com rixa)
   if (ia.cedendoAte > now) { alvo *= 0.9; tetoPiloto = Math.min(tetoPiloto, spec.vmax * 0.85); } // abrindo passagem para quem joga: tira o pé por uns segundos
   const relBox = tr.corredor ? (i - tr.corredor.i0 + n) % n : Infinity;
   // (só pesa a parada perto da entrada do corredor; nos 2 s antes de entrar o robô que vai parar já é fantasma: ninguém bate nele)

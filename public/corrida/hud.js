@@ -313,6 +313,7 @@ function objetivoDaCorrida() {
   if (race.objetivoDito) return; race.objetivoDito = true;
   { // (2026-11-16) o plano da corrida que você escolheu no Paddock (sede.js: corrida:paddockGP)
     let p = null; try { p = JSON.parse(localStorage.getItem("corrida:paddockGP")); } catch { /* sem armazenamento */ }
+    if (p && Date.now() - p.em <= 3 * 60 * 60 * 1000 && p.rixa > 0) setTimeout(() => { const f = window.Radio?.dizer("rivalrixa", { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 20000); // (a rivalidade: as batidas de antes)
     if (p && Date.now() - p.em <= 3 * 60 * 60 * 1000 && (p.plano === "arriscar" || p.plano === "seguro")) setTimeout(() => { const f = window.Radio?.dizer(p.plano === "arriscar" ? "riscoarriscar" : "riscoseguro", { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 9000);
   }
   let o = null; try { o = JSON.parse(localStorage.getItem("corrida:objetivoGP")); } catch { /* sem armazenamento */ }

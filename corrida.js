@@ -538,12 +538,25 @@ module.exports = function attachCorrida(io) {
   // uma batida (de um humano ou de um robô): a punição e o dano ficam com a direção de prova; com a perda total de quem
   // ainda corria, a corrida pode ter acabado para todos
   function aplicarBatida(room, p, forca, tipo, quando = Date.now(), chave = tipo) {
+    if (room.temporada && String(chave).startsWith("carro:")) anotarRixa(room, p, room.players[String(chave).slice(6)], quando);
     const b = Direcao.bater(room, p, forca, tipo, quando, (s) => log(room, s), chave);
     if (!b) return false;
     if (p.dnf && !room.order.some((id) => { const q = room.players[id]; return q.finish == null && !q.dnf && (q.sockets.size || q.bot); })) endRace(room);
     return true;
   }
 
+  // (2026-11-16, a rivalidade) batida entre você e o rival da temporada: conta uma por par a cada 3 s (os dois carros avisam a mesma), com quem
+  // causou (corrida-contato.js impactoDe); vai na análise do GP (corrida-temporada.js) e o Paddock guarda a rixa (paddock.js aoResultado). O
+  // rádio avisa na hora.
+  function anotarRixa(room, p, o, quando) {
+    if (!p || !o) return;
+    const rival = p.bot && p.piloto && p.piloto.rival ? p : o.bot && o.piloto && o.piloto.rival ? o : null, eu = rival === p ? o : p;
+    if (!rival || !eu || eu.bot) return;
+    const r = room.rixa || (room.rixa = { id: rival.piloto.id, n: 0, culpaSua: 0, culpaDele: 0, t: 0 }); if (quando - r.t < 3000) return;
+    const i = Contato.impactoDe(room, eu.id, rival.id); r.t = quando; r.n++;
+    if (i && i.culpado === eu.id) r.culpaSua++; else if (i && i.culpado === rival.id) r.culpaDele++;
+    nsp.to(room.code).emit("radio:equipe", { para: eu.id, sit: "rivalbatida" });
+  }
   // O que a transmissão de TV mostra do campeonato (só em temporada): os 10 primeiros pilotos (mais os humanos que ficaram
   // de fora) e as 11 equipes, com os pontos de antes deste GP. `tab` é o `tabelas` da temporada (solo ou em grupo); no 1º GP
   // ninguém tem ponto e a tabela fica de fora (`vazia`). Só nome, equipe e pontos viajam: o resto da tabela fica no servidor.

@@ -1,5 +1,13 @@
 [
   {
+    "id": "editor-assets-trechos-2026-11-17",
+    "data": "2026-11-17",
+    "itens": [
+      "Editor: \"Adicionar asset\" com filtros (Arquibancadas, Automóveis, Contenção, Paddock, Vegetação, Geral) e peças novas low poly: arquibancadas de cadeiras retas e curvas, tenda arredondada, mureta com alambrado, zebra, prédio dos boxes",
+      "Editor: desenhar trecho de pista de cenário pelo eixo (reta com 2 cliques, curva com 3)"
+    ]
+  },
+  {
     "id": "monaco-escapes-2026-11-17",
     "data": "2026-11-17",
     "itens": [

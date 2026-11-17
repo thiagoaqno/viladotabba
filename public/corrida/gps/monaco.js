@@ -25,6 +25,9 @@ export const GP_MONACO = {
   chao: {
     margem: "sarjeta",
     amarelas: [F.trechos.nouvelleChicane, F.trechos.piscine], // Nouvelle Chicane e Piscine
+    // (2026-11-17, as fotos do Thiago) as zebras DENTRO da pista, como nas de verdade: o carro passa por cima ou desvia, e o gradil recua atrás
+    // (`muros` de pistas.js). [f0, f1, lado ("dentro" = o de dentro da curva, "fora", 1 ou -1), largura]
+    zebrasDentro: [[0.633, 0.642, "dentro", 9], [0.641, 0.648, "fora", 8], [0.766, 0.776, "dentro", 9], [0.772, 0.781, "dentro", 9], [0.817, 0.826, "dentro", 9], [0.824, 0.833, "dentro", 9], [0.882, 0.892, "dentro", 8]],
     faixasPedestre: F.faixas,
     tracejado: F.tracejado, // a linha do meio da rua: a Avenue d'Ostende, a Boulevard Albert 1er e o cais
     sc: [[BOXES.sai, "SC 2"], [BOXES.entra, "SC 1"]],

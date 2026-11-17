@@ -14,6 +14,7 @@ import { renderer, scene, cam } from "../cena.js";
 import { buildTrack, useTrack } from "../pista.js";
 import { PISTAS } from "../estado.js";
 import { criarCraft } from "./craft.js";
+import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista } from "../cenario-pista.js";
 
 const M_PARA_U = 4.8; // 1 metro ≈ 4,8 unidades do jogo (dinamica.js: 1 u = 0,2083 m): um asset em metros entra no tamanho certo
@@ -128,7 +129,7 @@ function chaoEm(x, z) { raio.set(new THREE.Vector3(x, 5000, z), new THREE.Vector
 function noChao(o) { const b = new THREE.Box3().setFromObject(o); o.position.y += chaoEm(o.position.x, o.position.z) - b.min.y; }
 
 // ---------- os itens ----------
-let selecionado = null, assetEscolhido = null;
+let selecionado = null, assetEscolhido = null, placaMarca = "pirelli", placaFundo = "#101114"; // ("*placa": o próximo clique no chão põe uma placa)
 // as peças que a pista já tinha e foram mexidas: chave -> ajuste (salvo em `ajustes`)
 const ajustes = new Map(ajustesDaPista(tr).map((a) => [a.chave, a]));
 const ehItem = (o) => !!o?.userData.item;
@@ -147,7 +148,8 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   if (noCenario && !assetEscolhido) { let o = noCenario.object; while (o.parent !== cenario) o = o.parent; return selecionar(o); }
   if (!assetEscolhido) { if (comShift()) return; const peca = raio.intersectObjects(solidos(), false)[0]; return selecionar(peca ? pecaDe(peca.object) : null); }
   const hit = raio.intersectObjects(solidos(), false)[0]; if (!hit) return;
-  const o = await colocar({ asset: assetEscolhido, x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry: 0, rz: 0, s: M_PARA_U });
+  const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry: 0, rz: 0 };
+  const o = await colocar(assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: 60, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o); }
 });
 addEventListener("keydown", (e) => {
@@ -177,6 +179,7 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <div class="lin"><label>Textura máx. <select id="edTex"><option>2048</option><option selected>1024</option><option>512</option><option>256</option></select></label></div>
   <canvas id="edPrev"></canvas><div id="edConv"><small>Escolha um original para ver antes e depois.</small></div>
   <h3>Assets leves (para colocar)</h3><div id="edLeves" class="lst"></div>
+  <h3>Placa de patrocínio</h3><div id="edPlaca"></div>
   <h3>Item selecionado</h3><div id="edItem"><small>Clique num item do cenário.</small></div>`;
 const $ = (id) => document.getElementById(id);
 $("edPista").onchange = (e) => { location.search = "?editor=" + e.target.value; };
@@ -192,6 +195,16 @@ function desenharOriginais() {
   $("edOrig").innerHTML = assets.originais.length ? assets.originais.map((a) => `<button data-orig="${h(a.nome)}"><span>${h(a.nome)}</span><small>${a.kb} KB</small></button>`).join("") : "<small>Ponha os .glb em assets-originais/ e recarregue.</small>";
   for (const b of $("edOrig").querySelectorAll("[data-orig]")) b.onclick = () => converter(b.dataset.orig);
 }
+const marcasDaPlaca = () => [...Object.keys(PATROCINIOS).filter(Boolean), ...Object.keys(MARCAS_CAPACETE).sort((a, b) => MARCAS_CAPACETE[a].localeCompare(MARCAS_CAPACETE[b], "pt"))];
+const nomeDaMarca = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || id;
+const opcoesDeMarca = (atual) => marcasDaPlaca().map((id) => `<option value="${id}" ${id === atual ? "selected" : ""}>${h(nomeDaMarca(id))}</option>`).join("");
+function desenharPlaca() {
+  $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
+    <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">Pôr placa (clique no chão)</button></div>`;
+  $("edPlMarca").onchange = (e) => { placaMarca = e.target.value; desenharPlaca(); };
+  $("edPlFundo").onchange = (e) => { placaFundo = e.target.value; };
+  $("edPlPor").onclick = () => { assetEscolhido = assetEscolhido === "*placa" ? null : "*placa"; desenharPlaca(); desenharAssets(); };
+}
 function desenharAssets() {
   $("edLeves").innerHTML = assets.leves.length ? assets.leves.map((a) => `<button data-leve="${h(a.nome)}" class="${assetEscolhido === a.nome ? "on" : ""}"><span>${h(a.nome)}</span><small>${a.kb} KB</small></button>`).join("") : "<small>Converta um original primeiro.</small>";
   for (const b of $("edLeves").querySelectorAll("[data-leve]")) b.onclick = () => { assetEscolhido = assetEscolhido === b.dataset.leve ? null : b.dataset.leve; desenharAssets(); };
@@ -203,7 +216,10 @@ function desenharItem(soNumeros = false) {
   const it = o.userData.item, n = (k, v, passo) => `<label>${k} <input type="number" step="${passo}" data-c="${k}" value="${(+v).toFixed(passo < 1 ? 2 : 0)}"></label>`;
   const deg = (r) => (r * 180) / Math.PI;
   if (soNumeros && el.querySelector("[data-c]")) { for (const [k, v] of [["x", o.position.x], ["y", o.position.y], ["z", o.position.z], ["giro", deg(o.rotation.y)], ["escala", o.scale.x]]) { const i = el.querySelector(`[data-c="${k}"]`); if (i && document.activeElement !== i) i.value = (+v).toFixed(k === "escala" ? 2 : 0); } return; }
-  el.innerHTML = `<div class="lin"><b>${h(it.asset)}</b></div>
+  const placa = it.tipo === "placa";
+  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.asset)}</b></div>
+    ${placa ? `<div class="lin"><select data-pl="marca">${opcoesDeMarca(it.marca)}</select><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>
+    <div class="lin"><label>Largura <input type="number" step="5" data-pl="w" value="${it.w || 60}"></label><label>Altura dos postes <input type="number" step="1" data-pl="alto" value="${it.alto ?? 14}"></label></div>` : ""}
     <div class="lin">${n("x", o.position.x, 1)}${n("y", o.position.y, 1)}${n("z", o.position.z, 1)}</div>
     <div class="lin">${n("giro", deg(o.rotation.y), 5)}${n("escala", o.scale.x, 0.1)}</div>
     <div class="lin"><label>Cor <input type="color" data-cor value="${it.cor || "#ffffff"}"></label><button data-semcor>Cor original</button></div>
@@ -213,6 +229,7 @@ function desenharItem(soNumeros = false) {
     if (i.dataset.c === "giro") o.rotation.y = (v * Math.PI) / 180; else if (i.dataset.c === "escala") o.scale.setScalar(Math.max(0.01, v)); else o.position[i.dataset.c] = v;
     guardarItem(o);
   };
+  for (const c of el.querySelectorAll("[data-pl]")) c.onchange = () => { const v = c.type === "number" ? Math.max(1, +c.value || 1) : c.value; refazerItem(o, { [c.dataset.pl]: v }); };
   el.querySelector("[data-cor]").onchange = (e) => trocarCor(o, e.target.value);
   el.querySelector("[data-semcor]").onclick = () => trocarCor(o, null);
   for (const b of el.querySelectorAll("[data-a]")) b.onclick = () => dispatchEvent(new KeyboardEvent("keydown", { key: b.dataset.a === "del" ? "Delete" : b.dataset.a }));
@@ -237,6 +254,11 @@ function desenharPeca(o, soNumeros) {
   el.querySelector("[data-p=pai]").onclick = () => { if (o.parent && o.parent !== tr.grp) selecionar(o.parent); };
   el.querySelector("[data-p=esconder]").onclick = () => { const a = estado(o); o.visible = false; guardarPeca(o); registrar({ tipo: "mexer", o, antes: a, depois: estado(o) }); selecionar(null); };
   el.querySelector("[data-p=voltar]").onclick = () => { const or = o.userData.original; if (or) { o.position.fromArray(or.p); o.rotation.set(or.r[0], or.r[1], or.r[2]); o.scale.fromArray(or.s); o.visible = or.v; } ajustes.delete(chaveDe(tr, o)); desenharItem(); };
+}
+// refaz um item com dados novos (a placa com outra marca, fundo ou tamanho), no mesmo lugar
+async function refazerItem(o, mudar) {
+  guardarItem(o); const it = { ...o.userData.item, ...mudar };
+  const novo = await colocar(it); if (!novo) return; cenario.remove(o); selecionar(novo);
 }
 async function trocarCor(o, cor) {
   const it = { ...o.userData.item, cor: cor || undefined }; guardarItem(o); Object.assign(it, { x: o.position.x, y: o.position.y, z: o.position.z, rx: o.rotation.x, ry: o.rotation.y, rz: o.rotation.z, s: o.scale.x });
@@ -348,3 +370,4 @@ addEventListener("keydown", (e) => {
   setTimeout(marcarModo, 0);
 });
 marcarModo();
+desenharPlaca(); // (a seção da placa de patrocínio)

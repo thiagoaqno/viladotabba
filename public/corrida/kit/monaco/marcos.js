@@ -59,12 +59,16 @@ function janela(g, x, y, z, w, h, frontao) {
 }
 function casino(tr, add, b, praca, ponto, hAt) {
   // a planta do OpenStreetMap junta o Casino, o átrio e o teatro numa peça só (150 m): a fachada vai no ponto do marco, virada para a praça
-  const g = new THREE.Group(), dx = praca[0] - ponto[0], dz = praca[1] - ponto[1]; g.position.set(ponto[0], (hAt ? hAt(ponto[0], ponto[1]) : b.topo) - 1, ponto[1]); /* (no nível da praça: atrás o terreno desce para o mar, e o embasamento vai até lá) */ g.rotation.y = Math.atan2(dx, dz); g.name = "monaco-casino"; add(g); g.translateX(-65); // (medido no editor: a pista passa colada no lado +x; o Casino desliza 65 para o lado livre)
+  // (2026-11-16, o print do Thiago: "o cassino está mal posicionado e devia ser maior; tem um retângulo onde parece que deveria ser o lugar dele")
+  // o Casino vai no retângulo da planta dele (o prédio da planta não é mais desenhado), com a frente para a praça e do tamanho que a planta deixa
+  const q = quadro(b, praca), esc = Math.max(1, Math.min(1.7, q.w / 320, q.d / 170));
+  const fx = Math.sin(q.phi), fz = Math.cos(q.phi), frenteX = q.cx + fx * q.d / 2, frenteZ = q.cz + fz * q.d / 2; // (o meio da frente: a altura da praça)
+  const g = new THREE.Group(); g.position.set(q.cx, (hAt ? hAt(frenteX, frenteZ) : b.topo) - 1, q.cz); g.rotation.y = q.phi; g.scale.setScalar(esc); g.name = "monaco-casino"; add(g);
   const w = 300, d = 140, F = d / 2, CORN = 82, TX = w / 2 - 26, TZ = F - 22; // F: a face da frente; TX/TZ: o centro das torres
   // o corpo, o embasamento, a cornija entre os andares e a do topo
   caixa(g, CREME, w, CORN, d, 0, CORN / 2, 0);
   caixa(g, PEDRA_CLARA, w + 4, 8, d + 4, 0, 4, 0);
-  { const fundo = Math.max(0, (g.position.y - b.baixo) + 6); if (fundo > 8) caixa(g, PEDRA, w - 4, fundo, d - 4, 0, -fundo / 2, -2); } // o embasamento até o chão mais baixo da planta (o lado do mar)
+  { const fundo = Math.max(0, (g.position.y - b.baixo) / esc + 6); if (fundo > 8) caixa(g, PEDRA, w - 4, fundo, d - 4, 0, -fundo / 2, -2); } // o embasamento até o chão mais baixo da planta (o lado do mar)
   caixa(g, PEDRA, w + 6, 3, d + 6, 0, 40, 0);
   caixa(g, PEDRA, w + 10, 5, d + 10, 0, CORN, 0);
   // o corpo central, um pouco à frente, com as pilastras
@@ -115,7 +119,7 @@ function casino(tr, add, b, praca, ponto, hAt) {
   for (const [x, z, l] of [[-70, F + 72, 70], [70, F + 72, 70], [0, F + 120, 120]]) caixa(fr, FLORES, l, 3, 8, x, 2, z);
   caixa(fr, PEDRA_CLARA, 26, 5, 16, 80, 3.5, F + 100); caixa(fr, PEDRA, 16, 3, 10, 80, 7.5, F + 100);
   const espelho = new THREE.Mesh(new THREE.SphereGeometry(13, 10, 8), ESPELHO); espelho.scale.set(1, 0.85, 0.35); espelho.rotation.y = -0.4; espelho.position.set(80, 21, F + 100); espelho.castShadow = true; espelho.name = "monaco-marco"; fr.add(espelho);
-  tr.reservado.push([ponto[0], ponto[1], 170]);
+  tr.reservado.push([q.cx, q.cz, 170 * esc]);
 }
 // ---- o Hôtel de Paris (1864): mansarda de ardósia, cúpula de canto, o toldo vermelho e as bandeiras
 function hotelDeParis(tr, add, b, praca) {

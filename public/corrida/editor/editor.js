@@ -13,6 +13,7 @@ import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { renderer, scene, cam } from "../cena.js";
 import { buildTrack, useTrack } from "../pista.js";
 import { PISTAS } from "../estado.js";
+import { criarCraft } from "./craft.js";
 import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista } from "../cenario-pista.js";
 
 const M_PARA_U = 4.8; // 1 metro ≈ 4,8 unidades do jogo (dinamica.js: 1 u = 0,2083 m): um asset em metros entra no tamanho certo
@@ -49,8 +50,9 @@ const t = PISTAS[pista], meio = (t?.world || 1600) / 2;
 cam.near = 1; cam.far = 40000; cam.position.set(meio, 900, meio + 900); cam.updateProjectionMatrix();
 const orbita = new OrbitControls(cam, renderer.domElement); orbita.target.set(meio, 0, meio); orbita.maxDistance = 20000; orbita.update();
 const gizmo = new TransformControls(cam, renderer.domElement); scene.add(gizmo.getHelper ? gizmo.getHelper() : gizmo);
-gizmo.addEventListener("dragging-changed", (e) => { orbita.enabled = !e.value; if (!e.value) { guardarItem(selecionado); desenharItem(); } });
-gizmo.addEventListener("objectChange", () => desenharItem(true));
+gizmo.addEventListener("dragging-changed", (e) => { orbita.enabled = !e.value; if (!e.value) { if (craft?.ativo()) return craft.mudou(); guardarItem(selecionado); desenharItem(); } });
+gizmo.addEventListener("objectChange", () => { if (!craft?.ativo()) desenharItem(true); });
+let craft = null; // (o modo Craft, craft.js: criado no fim, depois do painel)
 function ajustar() { renderer.setSize(innerWidth, innerHeight, false); renderer.domElement.style.width = innerWidth + "px"; renderer.domElement.style.height = innerHeight + "px"; cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
 ajustar(); addEventListener("resize", ajustar);
 // (2026-11-16, o Thiago: "tá difícil andar por essa Mônaco; segurando Shift, o WASD devia andar") Shift + WASD anda no plano da câmera, Q e Z sobem e descem;
@@ -92,6 +94,7 @@ renderer.domElement.addEventListener("pointerdown", (e) => { renderer.domElement
 renderer.domElement.addEventListener("pointerup", async (e) => {
   const [x0, y0] = renderer.domElement._xy || [0, 0]; if (Math.hypot(e.clientX - x0, e.clientY - y0) > 4 || gizmo.dragging) return; // (arrastou a câmera ou o gizmo)
   const p = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); raio.setFromCamera(p, cam);
+  if (craft?.ativo()) { if (!comShift()) craft.clique(); return; } // (no Craft o clique escolhe as peças da obra)
   const noCenario = raio.intersectObjects(cenario.children, true)[0];
   if (noCenario && !assetEscolhido) { let o = noCenario.object; while (o.parent !== cenario) o = o.parent; return selecionar(o); }
   if (!assetEscolhido) { if (comShift()) return; const peca = raio.intersectObjects(solidos(), false)[0]; return selecionar(peca ? pecaDe(peca.object) : null); }
@@ -103,6 +106,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase();
   if (k === "w") gizmo.setMode("translate"); else if (k === "e") gizmo.setMode("rotate"); else if (k === "r") gizmo.setMode("scale");
+  else if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
   else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); }
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { selecionado.visible = false; guardarPeca(selecionado); } selecionar(null); } // (a peça da pista só fica escondida)
@@ -113,7 +117,7 @@ addEventListener("keydown", async (e) => {
 // ---------- o painel ----------
 let assets = { originais: [], leves: [] }, aviso = "";
 painel.innerHTML = `<h2>Editor de cenário</h2>
-  <div class="lin"><select id="edPista">${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === pista ? "selected" : ""}>${h(PISTAS[id].name || id)}</option>`).join("")}</select><button id="edSalvar">Salvar</button></div>
+  <div class="lin"><select id="edPista">${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === pista ? "selected" : ""}>${h(PISTAS[id].name || id)}</option>`).join("")}</select><button id="edSalvar">Salvar</button><button id="edCraftBt">Craft</button></div>
   <div id="edAviso"></div>
   <h3>Converter (assets-originais/)</h3><div id="edOrig" class="lst"></div>
   <div class="lin"><label>Triângulos <input id="edFrac" type="range" min="5" max="100" value="30"> <b id="edFracV">30%</b></label></div>
@@ -256,3 +260,11 @@ async function converter(nome) {
   } catch (e) { el.innerHTML = `<small class="erro">Não converteu: ${h(e.message)}</small>`; }
 }
 recarregarAssets();
+// ---------- o Craft (craft.js): montar coisas novas com as formas e os materiais do jogo ----------
+craft = criarCraft({ scene, cam, gizmo, orbita, raio, api, avisar, recarregarAssets, M_PARA_U, chaoEm, painel });
+$("edCraftBt").onclick = () => {
+  selecionar(null); const on = craft.alternar(); $("edCraftBt").classList.toggle("on", on);
+  for (const id of ["edOrig", "edLeves", "edItem", "edConv", "edPrev"]) { const el = $(id); if (el) el.style.display = on ? "none" : ""; }
+  for (const t of painel.querySelectorAll("h3:not(#edCraft h3)")) t.style.display = on ? "none" : "";
+  for (const l of painel.querySelectorAll(":scope > .lin")) if (!l.contains($("edSalvar"))) l.style.display = on ? "none" : "";
+};

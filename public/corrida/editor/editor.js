@@ -164,11 +164,11 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   if (!assetEscolhido) { if (comShift()) return; const peca = raio.intersectObjects(solidos(), false)[0]; return selecionar(peca ? pecaDe(peca.object) : null); }
   const hit = raio.intersectObjects(solidos(), false)[0]; if (!hit) return;
   const ry = Math.atan2(cam.position.x - hit.point.x, cam.position.z - hit.point.z); // (a frente do item virada para quem está olhando)
+  // (2026-11-16, o Thiago: "tem que aparecer grande a placa no chão quando eu clicar") a largura da placa nova acompanha a distância da câmera:
+  // de 60 (de perto) a 400 (vendo a pista de cima), em passos de 5; depois a largura muda no painel
   const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry, rz: 0 };
-  const o = await colocar(assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: 60, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
+  const o = await colocar(assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o);
-    // (2026-11-16, o Thiago: "acho que eu só não sei colocar a placa") de longe a placa é um pontinho: a câmera chega perto dela
-    if (o.userData.item.tipo === "placa" && cam.position.distanceTo(o.position) > 400) vista("focar");
   }
 });
 addEventListener("keydown", (e) => {
@@ -218,7 +218,7 @@ const opcoesDeMarca = (atual) => marcasDaPlaca().map((id) => `<option value="${i
 function desenharPlaca() {
   $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
     <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">${assetEscolhido === "*placa" ? "Clique no chão… (Esc sai)" : "Pôr placa"}</button></div>
-    <small>1. escolha a marca e o fundo · 2. clique em Pôr placa · 3. clique no chão (pode pôr várias; Esc para) · a placa nasce virada para você</small>`;
+    <small>1. escolha a marca e o fundo · 2. clique em Pôr placa · 3. clique no chão (pode pôr várias; Esc para) · a placa nasce virada para você e grande o bastante para ver daí</small>`;
   $("edPlMarca").onchange = (e) => { placaMarca = e.target.value; desenharPlaca(); };
   $("edPlFundo").onchange = (e) => { placaFundo = e.target.value; };
   $("edPlPor").onclick = () => { assetEscolhido = assetEscolhido === "*placa" ? null : "*placa"; desenharPlaca(); desenharAssets(); };

@@ -14,3 +14,15 @@ Pela imagem do Thiago (sem a aba de código). Nada foi refeito: as seções que 
 Novo arquivo: `public/corrida/editor/layout.js`. No `editor.js`, só o import e a chamada no fim.
 
 Conferido só com `node --check`.
+
+## Terreno com pincéis (aba Terreno)
+
+- Pincéis **Subir, Baixar, Suavizar, Nivelar, Platô e Ruído**, com **raio, força e queda** (e `[` `]` para o raio). Um anel azul mostra onde o pincel está.
+- Com o pincel ligado, arrastar com o botão esquerdo pinta; Shift + WASD, o botão direito e a roda continuam navegando. Esc desliga.
+- Cada pincelada entra no Ctrl+Z (e no Histórico) guardando só as células que mudaram. Botão para zerar o relevo.
+- Só os vértices do chão perto do pincel são mexidos, sem refazer a pista.
+- O relevo vai no `cenario/<pista>.json` (`relevo: { cel, d }`, só as células mexidas) e o `pista.js` soma ao chão no jogo. Pista sem relevo salvo: nada muda. No editor, os pedaços lisos do chão não são juntados (para o pincel ter vértices em toda parte).
+
+Novo: `public/corrida/editor/terreno.js`. Mexidos: `cenario-pista.js` (lê o relevo), `pista.js` (soma o relevo ao chão), `editor.js`, `layout.js`.
+
+Erosão e pintura de material no chão ainda não.

@@ -225,3 +225,14 @@ export async function carregarCenario(tr) {
   return g;
 }
 export const ajustesDaPista = (tr) => (dadosDe.get(tr.pistaId || tr.id)?.ajustes || []).slice();
+// (2026-11-17, o Thiago: o TERRENO do editor com pincéis) o relevo pintado no editor: { relevo: { cel, d: { "ix,iz": dh } } } no cenario/<pista>.json,
+// a diferença de altura numa grade de `cel` unidades (só as células mexidas). O pista.js soma ao chão de cada pista que tem relevo salvo;
+// sem dado, nada muda. relevoDoEditor(id) devolve (x, z) -> dh (bilinear) ou null.
+export function relevoDeDados(r) {
+  if (!r || !r.d || !Object.keys(r.d).length) return null;
+  const cel = +r.cel || 12, d = r.d, v = (i, j) => d[i + "," + j] || 0;
+  return (x, z) => { const fx = x / cel, fz = z / cel, i = Math.floor(fx), j = Math.floor(fz), u = fx - i, w = fz - j;
+    return (v(i, j) * (1 - u) + v(i + 1, j) * u) * (1 - w) + (v(i, j + 1) * (1 - u) + v(i + 1, j + 1) * u) * w; };
+}
+export const relevoDoEditor = (id) => relevoDeDados(dadosDe.get(id)?.relevo);
+export const dadosDoRelevo = (id) => dadosDe.get(id)?.relevo || null;

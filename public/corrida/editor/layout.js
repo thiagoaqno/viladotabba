@@ -7,7 +7,7 @@ import { renderer, scene, sun, hemi } from "../cena.js";
 
 const ICONES = { Todos: "▦", Arquibancadas: "🏟", Automóveis: "🚗", Contenção: "▥", Paddock: "🏭", Vegetação: "🌳", Geral: "◇" };
 // em que aba vai cada seção do painel antigo (pelo id do bloco que vem depois do título)
-const ABA_DA_SECAO = { edBib: "assets", edLeves: "assets", edDe: "assets", edZebra: "pista", edLinha: "pista", edTrecho: "pista", edEsc: "pista", edPlaca: "pista", edOrig: "cena", edItem: "inspetor" };
+const ABA_DA_SECAO = { edBib: "assets", edLeves: "assets", edDe: "assets", edZebra: "pista", edLinha: "pista", edTrecho: "pista", edEsc: "pista", edPlaca: "pista", edOrig: "cena", edItem: "inspetor", edTerreno: "terreno" };
 
 export function montarLayout({ vigiarPainel, painel, barra, ajuda, pista, nomePista, cenario, selecionar, escolhido, pilha, refeitos, desfazer, refazer, tr }) {
   const css = document.createElement("style");
@@ -21,7 +21,7 @@ export function montarLayout({ vigiarPainel, painel, barra, ajuda, pista, nomePi
 #edBarra [data-barra=desfazer],#edBarra [data-barra=refazer],#edBarra [data-barra=craft]{display:none}
 #ed{left:0!important;top:52px!important;bottom:30px!important;width:300px!important;border-radius:0!important;border:0!important;border-right:1px solid var(--ts-ln)!important;background:var(--ts-pn)!important;padding:0!important;box-shadow:none!important;backdrop-filter:none!important;display:flex;flex-direction:column}
 #ed > :not(#tsAbas):not(.tsAba):not(#edCraft){display:none!important}#edCraft:not([hidden]){display:block;overflow:auto;padding:12px 14px;flex:1}#ed:has(#edCraft:not([hidden])) .tsAba{display:none!important}
-#tsAbas{display:flex;border-bottom:1px solid var(--ts-ln);flex:none}#tsAbas button{flex:1;background:transparent!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;padding:13px 4px!important;color:var(--ts-mu)!important;font-weight:700}#tsAbas button.on{color:#fff!important;border-bottom-color:var(--ts-ac)!important}
+#tsAbas{display:flex;border-bottom:1px solid var(--ts-ln);flex:none}#tsAbas button{flex:1;background:transparent!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;padding:13px 2px!important;font-size:13px!important;color:var(--ts-mu)!important;font-weight:700}#tsAbas button.on{color:#fff!important;border-bottom-color:var(--ts-ac)!important}
 .tsAba{display:none;overflow:auto;padding:12px 14px;flex:1}.tsAba.on{display:block}
 #edBib > .lin:first-child{flex-direction:column;align-items:stretch;gap:2px}#edBib > .lin:first-child button{text-align:left;background:transparent!important;border:0!important;padding:9px 10px!important;font-weight:500!important;font-size:14px}#edBib > .lin:first-child button.on{background:#26324a!important;color:#fff}
 #edBib > .lin:nth-child(2){order:-1}#ed .edBibG{grid-template-columns:repeat(3,1fr)}#ed .edBibG button{background:#20252d!important;border:1px solid var(--ts-ln)!important}#ed .edBibG button.on{border-color:var(--ts-ac)!important;background:#26324a!important}
@@ -53,7 +53,7 @@ export function montarLayout({ vigiarPainel, painel, barra, ajuda, pista, nomePi
 
   // ---------- as abas da esquerda: as seções antigas são movidas para elas ----------
   const abas = document.createElement("div"); abas.id = "tsAbas";
-  const NOMES = { assets: "Assets", pista: "Pista", cena: "Cena", amb: "Ambiente" };
+  const NOMES = { assets: "Assets", terreno: "Terreno", pista: "Pista", cena: "Cena", amb: "Ambiente" };
   abas.innerHTML = Object.entries(NOMES).map(([k, n]) => `<button type="button" data-aba="${k}">${n}</button>`).join("");
   const conteudo = {}; for (const k of Object.keys(NOMES)) { const d = document.createElement("div"); d.className = "tsAba"; d.dataset.aba = k; conteudo[k] = d; }
   const dir = document.createElement("div"); dir.id = "tsDir";
@@ -117,7 +117,7 @@ export function montarLayout({ vigiarPainel, painel, barra, ajuda, pista, nomePi
   $("tsNev").onchange = nevoa; $("tsNevD").oninput = nevoa;
 
   // ---------- Histórico: os passos do Ctrl+Z ----------
-  const NOME_PASSO = { mexer: "Mexeu", por: "Pôs", tirar: "Tirou" };
+  const NOME_PASSO = { mexer: "Mexeu", por: "Pôs", tirar: "Tirou", terreno: "Pincel" };
   function desenharHist() {
     const el = $("tsHist"), linha = (p, fut) => `<div class="${fut ? "fut" : ""}">${NOME_PASSO[p.tipo] || p.tipo} · ${String(p.o?.userData?.item ? nomeDe(p.o) : p.o?.name || "peça").replace(/[<&]/g, "")}</div>`;
     el.innerHTML = (pilha.length || refeitos.length) ? [...refeitos].map((p) => linha(p, true)).join("") + [...pilha].reverse().map((p) => linha(p, false)).join("") : "<small>Nada feito ainda.</small>";

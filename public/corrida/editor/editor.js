@@ -17,7 +17,7 @@ import { criarCraft } from "./craft.js";
 import { criarComandos } from "./comandos.js";
 import { KITS, montarKit } from "../biblioteca.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
-import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista } from "../cenario-pista.js";
+import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, PADROES_ESCAPE } from "../cenario-pista.js";
 
 const M_PARA_U = 4.8; // 1 metro ≈ 4,8 unidades do jogo (dinamica.js: 1 u = 0,2083 m): um asset em metros entra no tamanho certo
 const pista = new URLSearchParams(location.search).get("editor") || "interlagos";
@@ -157,6 +157,7 @@ function chaoEm(x, z) { raio.set(new THREE.Vector3(x, 5000, z), new THREE.Vector
 function noChao(o) { const b = new THREE.Box3().setFromObject(o); o.position.y += chaoEm(o.position.x, o.position.z) - b.min.y; }
 
 // ---------- os itens ----------
+let escapeA = null, escapeLarg = 60, escapeDe = 7, escapePadrao = "laranja", escapeMarca = ""; // (a área de escape: o primeiro clique e as escolhas)
 const varios = new Set(); // (a seleção de vários itens: Ctrl+clique)
 let selecionado = null, assetEscolhido = null, placaMarca = "pirelli", placaFundo = "#101114"; // ("*placa": o próximo clique no chão põe uma placa)
 // as peças que a pista já tinha e foram mexidas: chave -> ajuste (salvo em `ajustes`)
@@ -167,7 +168,7 @@ function guardarPeca(o) { if (!o || ehItem(o)) return; const k = chaveDe(tr, o);
 function pecaDe(m) { let o = m; while (o.parent && o.parent !== tr.grp && o.parent.children.length <= 40) o = o.parent; return o; }
 const guardarItem = (o) => { if (!o) return; if (!ehItem(o)) return guardarPeca(o); const it = o.userData.item; Object.assign(it, { x: +o.position.x.toFixed(2), y: +o.position.y.toFixed(2), z: +o.position.z.toFixed(2), rx: +o.rotation.x.toFixed(4), ry: +o.rotation.y.toFixed(4), rz: +o.rotation.z.toFixed(4), s: +o.scale.x.toFixed(3) }); };
 function selecionar(o) { if (o && !ehItem(o) && !o.userData.original) o.userData.original = { p: o.position.toArray(), r: [o.rotation.x, o.rotation.y, o.rotation.z], s: o.scale.toArray(), v: o.visible }; selecionado = o; if (o) { if (o.userData.pino) gizmo.detach(); else gizmo.attach(o); } else gizmo.detach(); /* (PN: travado, sem gizmo) */ desenharItem(); }
-async function colocar(it) { const o = await montarItem(it); if (!o) return null; cenario.add(o); return o; }
+async function colocar(it) { const o = await montarItem(it, tr); if (!o) return null; cenario.add(o); return o; }
 renderer.domElement.addEventListener("pointerdown", (e) => { renderer.domElement._xy = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener("pointerup", async (e) => {
   const [x0, y0] = renderer.domElement._xy || [0, 0]; if (Math.hypot(e.clientX - x0, e.clientY - y0) > 4 || gizmo.dragging) return; // (arrastou a câmera ou o gizmo)
@@ -187,6 +188,13 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   // (2026-11-16, o Thiago: "tem que aparecer grande a placa no chão quando eu clicar") a largura da placa nova acompanha a distância da câmera:
   // de 60 (de perto) a 400 (vendo a pista de cima), em passos de 5; depois a largura muda no painel
   const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry, rz: 0 };
+  if (assetEscolhido === "*escape") {
+    const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i], lat = (hit.point.x - p.x) * p.nx + (hit.point.z - p.y) * p.ny;
+    if (!escapeA) { escapeA = { i, lado: lat >= 0 ? 1 : -1 }; avisar("Área de escape: agora clique onde ela termina (do mesmo lado)."); return; }
+    const a = escapeA; escapeA = null; let i0 = a.i, i1 = i; const n = tr.n, fwd = (i1 - i0 + n) % n; if (fwd > n / 2) [i0, i1] = [i1, i0];
+    const o2 = await colocar({ tipo: "escape", i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + escapeDe), largura: escapeLarg, padrao: escapePadrao, marca: escapeMarca || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
+    if (o2) { selecionar(o2); avisar("Área de escape pronta. Clique em mais dois pontos para outra (Esc para)."); } return;
+  }
   if (assetEscolhido?.startsWith("*de:")) { const nome = await assetDaPeca(assetEscolhido.slice(4)); if (!nome) return; const o2 = await colocar({ asset: nome, ...base, s: M_PARA_U }); if (o2) { noChao(o2); guardarItem(o2); selecionar(o2); } return; }
   const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o);
@@ -201,7 +209,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); } // (Esc solta a placa e o asset escolhidos)
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });
@@ -218,6 +226,7 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <h3>Assets leves (para colocar)</h3><div id="edLeves" class="lst"></div>
   <h3>Biblioteca (pronto para pôr)</h3><div id="edBib"></div>
   <h3>Peças das outras pistas</h3><div id="edDe"></div>
+  <h3>Área de escape</h3><div id="edEsc"></div>
   <h3>Placa de patrocínio</h3><div id="edPlaca"></div>
   <h3>Item selecionado</h3><div id="edItem"><small>Clique num item do cenário.</small></div>`;
 const $ = (id) => document.getElementById(id);
@@ -299,6 +308,18 @@ async function assetDaPeca(k) {
   const c = p.o.clone(true); c.position.set(0, 0, 0); c.rotation.set(0, 0, 0); c.scale.multiplyScalar(1 / M_PARA_U); /* (mantém a escala que a peça tinha na pista dela) */ c.updateMatrixWorld(true);
   try { const bin = await new GLTFExporter().parseAsync(c, { binary: true }); await api("asset/" + encodeURIComponent(nome), { method: "POST", headers: { "content-type": "application/octet-stream" }, body: bin }); await recarregarAssets(); avisar(`Pronto: assets/${nome}.glb`); return (assetsDe[k] = nome); }
   catch (e) { avisar("Não gravou: " + e.message, true); return null; }
+}
+function desenharEscape() {
+  $("edEsc").innerHTML = `<div class="lin"><label>Padrão <select id="edEscP">${Object.entries(PADROES_ESCAPE).map(([k, n]) => `<option value="${k}" ${k === escapePadrao ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div>
+    <div class="lin"><label>Largura <input type="number" id="edEscL" step="5" value="${escapeLarg}"></label><label>Depois da zebra <input type="number" id="edEscD" step="1" value="${escapeDe}"></label></div>
+    ${escapePadrao === "laranja" ? `<div class="lin"><label>Marca <select id="edEscM"><option value="">GALERA</option>${opcoesDeMarca(escapeMarca)}</select></label></div>` : ""}
+    <div class="lin"><button id="edEscBt" class="${assetEscolhido === "*escape" ? "on" : ""}">${assetEscolhido === "*escape" ? (escapeA ? "Clique onde termina…" : "Clique onde começa…") : "Desenhar área de escape"}</button></div>
+    <small>Clique na beira da pista onde a área começa e depois onde termina, do lado em que ela fica. Ela segue a curva sozinha.</small>`;
+  $("edEscP").onchange = (e) => { escapePadrao = e.target.value; desenharEscape(); };
+  $("edEscL").onchange = (e) => { escapeLarg = Math.max(4, +e.target.value || 60); };
+  $("edEscD").onchange = (e) => { escapeDe = +e.target.value || 0; };
+  if ($("edEscM")) $("edEscM").onchange = (e) => { escapeMarca = e.target.value; };
+  $("edEscBt").onclick = () => { escapeA = null; assetEscolhido = assetEscolhido === "*escape" ? null : "*escape"; desenharEscape(); desenharBiblioteca(); desenharPlaca(); desenharAssets(); };
 }
 function desenharPlaca() {
   $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
@@ -473,7 +494,7 @@ addEventListener("keydown", (e) => {
   setTimeout(marcarModo, 0);
 });
 marcarModo();
-desenharPlaca(); desenharBiblioteca(); desenharDe(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
+desenharPlaca(); desenharBiblioteca(); desenharDe(); desenharEscape(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
 // ---------- publicar: salva e abre o PR (corrida-editor.js /publicar) ----------
 $("edPublicar").onclick = async () => {
   const msg = prompt("O que mudou? (vira o título do PR)", `cenário de ${PISTAS[pista]?.name || pista}`); if (msg == null) return;

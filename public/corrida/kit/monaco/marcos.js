@@ -46,7 +46,7 @@ function noPredio(tr, add, b, alvo) {
 // ---- o Casino de Monte-Carlo (Charles Garnier, 1863): fachada creme, duas torres com cúpulas de cobre, a escada e o toldo de ferro e vidro
 function casino(tr, add, b, praca, ponto) {
   // a planta do OpenStreetMap junta o Casino, o átrio e o teatro numa peça só (150 m): a fachada de 72 m vai no ponto do marco, virada para a praça
-  const g = new THREE.Group(), dx = praca[0] - ponto[0], dz = praca[1] - ponto[1]; g.position.set(ponto[0], b.topo, ponto[1]); g.rotation.y = Math.atan2(dx, dz); add(g);
+  const g = new THREE.Group(), dx = praca[0] - ponto[0], dz = praca[1] - ponto[1]; g.position.set(ponto[0], b.topo, ponto[1]); g.rotation.y = Math.atan2(dx, dz); g.name = "monaco-casino"; add(g);
   const w = 300, d = 150, solo = b.baixo - b.topo;
   caixa(g, COBRE, w * 0.9, 14, d * 0.86, 0, 7, 0); // a mansarda de cobre
   caixa(g, PEDRA, w * 0.94, 3, d * 0.92, 0, 1.5, 0); // a cornija
@@ -80,8 +80,14 @@ function cafeDeParis(tr, add, ponto, praca, hAt) {
 }
 // ---- o Hermitage (1900): a cúpula de vidro e ferro e o telhado de ardósia
 function hermitage(tr, add, b, praca) {
-  const { g, w, d } = noPredio(tr, add, b, praca);
-  caixa(g, ARDOSIA, w * 0.92, 14, d * 0.88, 0, 7, 0); cilindro(g, FERRO, 22, 10, 0, 16, 0, 20); cupula(g, VIDRO, 22, 0, 20, 0); cilindro(g, OURO, 1.2, 14, 0, 50, 0, 6);
+  const { g } = noPredio(tr, add, b, praca);
+  // (2026-11-16, o print do Thiago no editor: "uma laje" sobrando para fora do prédio) o telhado de ardósia era uma caixa do retângulo que
+  // envolve a planta; a planta do Hermitage é irregular e a caixa passava muito das paredes. Agora é a própria planta (b.P), um pouco recuada
+  const cx = b.P.reduce((s2, q) => s2 + q[0], 0) / b.P.length, cz = b.P.reduce((s2, q) => s2 + q[1], 0) / b.P.length;
+  const forma = new THREE.Shape(b.P.map(([x, z]) => new THREE.Vector2(cx + (x - cx) * 0.96, -(cz + (z - cz) * 0.96))));
+  const telhado = new THREE.Mesh(new THREE.ExtrudeGeometry(forma, { depth: 14, bevelEnabled: false }).rotateX(-Math.PI / 2), ARDOSIA);
+  telhado.position.y = b.topo; telhado.castShadow = telhado.receiveShadow = true; telhado.name = "monaco-hermitage-telhado"; add(telhado);
+  cilindro(g, FERRO, 22, 10, 0, 16, 0, 20); cupula(g, VIDRO, 22, 0, 20, 0); cilindro(g, OURO, 1.2, 14, 0, 50, 0, 6);
 }
 // ---- o Fairmont (o antigo Loews): o hotel de terraços em degraus sobre o túnel, com o toldo da entrada
 function fairmont(tr, add, b, alvo) {

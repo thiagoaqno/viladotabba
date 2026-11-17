@@ -21,6 +21,11 @@ function attach(app) {
     if (!nomeOk(req.params.nome) || !req.body?.length) return res.status(400).json({ erro: "nome ou arquivo inválido" });
     fs.writeFileSync(path.join(LEVES, req.params.nome + ".glb"), req.body); res.json({ ok: true, kb: Math.round(req.body.length / 1024) });
   });
+  // uma peça da pista exportada pelo editor (o Casino, um prédio...): vai para assets-originais/, para editar no Blender e converter de volta
+  app.post("/api/corrida/editor/original/:nome", express.raw({ type: "*/*", limit: "60mb" }), (req, res) => {
+    if (!nomeOk(req.params.nome) || !req.body?.length) return res.status(400).json({ erro: "nome ou arquivo inválido" });
+    fs.writeFileSync(path.join(ORIG, req.params.nome + ".glb"), req.body); res.json({ ok: true, kb: Math.round(req.body.length / 1024) });
+  });
   app.post("/api/corrida/editor/cenario/:pista", express.json({ limit: "4mb" }), (req, res) => {
     const c = req.body; if (!nomeOk(req.params.pista) || !c || !Array.isArray(c.itens)) return res.status(400).json({ erro: "cenário inválido" });
     fs.writeFileSync(path.join(CENARIO, req.params.pista + ".json"), JSON.stringify(c, null, 1) + "\n");

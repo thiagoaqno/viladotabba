@@ -1,12 +1,20 @@
 // O cenário feito no editor de pistas (corrida-editor.js, editor/editor.js): public/corrida/cenario/<pista>.json diz que asset (os .glb leves de
-// public/corrida/assets/) vai onde, girado e em que escala. Entra no grupo da pista por cima do cenário em código; sem arquivo, nada muda.
-// Formato: { pista, itens: [{ asset, x, y, z, rx, ry, rz, s, cor? }] } em coordenadas do 3D (y para cima; o x e o z são os x e y do traçado).
+// public/corrida/assets/) vai onde, girado e em que escala, e o que mudou nas peças que a pista já tinha. Sem arquivo, nada muda.
+// Formato: { pista, itens: [{ asset, x, y, z, rx, ry, rz, s, cor? }], ajustes: [{ chave, x, y, z, rx, ry, rz, sx, sy, sz, oculto? }] }
+//   itens: em coordenadas do 3D (y para cima; o x e o z são os x e y do traçado), num grupo por cima do cenário em código;
+//   ajustes: uma peça do cenário em código achada pela `chave` (o caminho de índices dos filhos a partir de tr.grp, sempre o mesmo para o
+//   mesmo código), com a posição, o giro e a escala dela no grupo dela (ou escondida). Valem ANTES de juntar as malhas (pista.js).
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), modelos = new Map();
-let indice = null;
+// os arquivos chegam logo que a página abre (a pista é montada sem esperar a rede: os ajustes precisam estar prontos até lá)
+const dadosDe = new Map();
+const pronto = fetch("/corrida/cenario/index.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : [])).catch(() => [])
+  .then((ids) => Promise.all((Array.isArray(ids) ? ids : []).map((id) => fetch(`/corrida/cenario/${id}.json`, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) dadosDe.set(id, d); }).catch(() => {}))));
+export const cenarioPronto = pronto;
+
 export function modeloDoAsset(nome) {
   if (!modelos.has(nome)) modelos.set(nome, loader.loadAsync(`/corrida/assets/${nome}.glb`).then((g) => g.scene).catch((e) => { console.warn("Cenário: asset não carregou", nome, e); return null; }));
   return modelos.get(nome);
@@ -20,17 +28,29 @@ export async function montarItem(it) {
   o.userData.item = it; o.name = `cenario-${it.asset}`;
   return o;
 }
+// ---- as peças que a pista já tinha ----
+export function chaveDe(tr, o) { const k = []; for (let p = o; p && p !== tr.grp; p = p.parent) { if (!p.parent) return null; k.unshift(p.parent.children.indexOf(p)); } return k.join("/"); }
+export function pecaDaChave(tr, chave) { let o = tr.grp; for (const i of String(chave).split("/")) { o = o?.children[+i]; if (!o) return null; } return o; }
+export function aplicarAjuste(o, a) {
+  if (!o || !a) return;
+  if (!o.userData.original) o.userData.original = { p: o.position.toArray(), r: [o.rotation.x, o.rotation.y, o.rotation.z], s: o.scale.toArray(), v: o.visible };
+  if (a.x != null) o.position.set(+a.x, +a.y, +a.z);
+  if (a.rx != null) o.rotation.set(+a.rx, +a.ry, +a.rz);
+  if (a.sx != null) o.scale.set(+a.sx, +a.sy, +a.sz);
+  o.visible = !a.oculto;
+}
+export function aplicarAjustes(tr) {
+  const d = dadosDe.get(tr.pistaId || tr.id); if (!d || !Array.isArray(d.ajustes)) return;
+  for (const a of d.ajustes) aplicarAjuste(pecaDaChave(tr, a.chave), a);
+}
 export async function carregarCenario(tr) {
-  const id = tr.pistaId || tr.id;
   if (tr.cenarioEditor) return tr.cenarioEditor;
   const g = new THREE.Group(); g.name = "cenario-editor"; tr.cenarioEditor = g; tr.grp.add(g);
-  let dados = null;
-  try {
-    indice ||= fetch("/corrida/cenario/index.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : [])).catch(() => []); // (as pistas que têm cenário: sem um 404 em cada pista)
-    if ((await indice).includes(id)) { const r = await fetch(`/corrida/cenario/${id}.json`, { cache: "no-cache" }); if (r.ok) dados = await r.json(); }
-  } catch { /* sem cenário do editor */ }
+  await pronto;
+  const dados = dadosDe.get(tr.pistaId || tr.id);
   if (!dados || !Array.isArray(dados.itens)) return g;
   const objs = await Promise.all(dados.itens.map(montarItem));
   for (const o of objs) if (o) g.add(o);
   return g;
 }
+export const ajustesDaPista = (tr) => (dadosDe.get(tr.pistaId || tr.id)?.ajustes || []).slice();

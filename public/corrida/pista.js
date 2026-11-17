@@ -31,7 +31,7 @@ import { boxesGP } from "./kit/corredor-boxes.js";
 import { parque } from "./kit/parque.js";
 import { fundirEstaticos } from "./kit/fundir.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { carregarCenario } from "./cenario-pista.js";
+import { carregarCenario, aplicarAjustes } from "./cenario-pista.js";
 
 // ---------- temas das pistas: cores, chão, enfeites e o horizonte ----------
 export const THEMES = {
@@ -640,7 +640,9 @@ function buildWorld(tr) {
   // juntar as malhas paradas por material e região (kit/fundir.js): de 900 chamadas de desenho em Mônaco para umas 300. O que as
   // animações movem é descoberto rodando a vida da pista por alguns segundos em 24 pontos da volta.
   // Em Interlagos, regiões menores cortam mais árvores e sombras fora da câmera; nas demais o tamanho antigo evita excesso de chamadas.
-  fundirEstaticos(tr, { celulaInst: tr.id === "interlagos" ? 1200 : 2400, simular: () => { for (let k = 0; k < 24; k++) { const p = pts[Math.floor((k / 24) * n)], foco = { x: p.x, y: p.y, z: p.h, a: Math.atan2(p.ty, p.tx) }; for (let s = 0; s < 6; s++) animarVida(tr, 0.08, foco); } } });
+  // o editor de cenário: as peças que ele mexeu (cenario/<pista>.json `ajustes`) mudam antes de juntar; aberto no editor, não junta (cada peça fica clicável)
+  aplicarAjustes(tr);
+  if (!window.__editorCenario) fundirEstaticos(tr, { celulaInst: tr.id === "interlagos" ? 1200 : 2400, simular: () => { for (let k = 0; k < 24; k++) { const p = pts[Math.floor((k / 24) * n)], foco = { x: p.x, y: p.y, z: p.h, a: Math.atan2(p.ty, p.tx) }; for (let s = 0; s < 6; s++) animarVida(tr, 0.08, foco); } } });
 }
 // Los Angeles: placa "GALERA" no morro (estilo Hollywood) e placa verde da freeway em cima da pista
 function landmarksLA(tr, add, r) {

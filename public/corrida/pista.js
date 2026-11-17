@@ -641,6 +641,9 @@ function buildWorld(tr) {
   // animações movem é descoberto rodando a vida da pista por alguns segundos em 24 pontos da volta.
   // Em Interlagos, regiões menores cortam mais árvores e sombras fora da câmera; nas demais o tamanho antigo evita excesso de chamadas.
   // o editor de cenário: as peças que ele mexeu (cenario/<pista>.json `ajustes`) mudam antes de juntar; aberto no editor, não junta (cada peça fica clicável)
+  // (2026-11-17) o que uma pista acrescenta DEPOIS de tudo (`tr.depois`): entra no fim do grupo, então as peças de antes mantêm as chaves
+  // que o editor de cenário guardou (cenario/<pista>.json `ajustes`), e um paredão ou pilar novo não desloca o que o Thiago já mexeu
+  for (const f of tr.depois || []) f(); tr.depois = null;
   aplicarAjustes(tr);
   if (!window.__editorCenario) fundirEstaticos(tr, { celulaInst: tr.id === "interlagos" ? 1200 : 2400, simular: () => { for (let k = 0; k < 24; k++) { const p = pts[Math.floor((k / 24) * n)], foco = { x: p.x, y: p.y, z: p.h, a: Math.atan2(p.ty, p.tx) }; for (let s = 0; s < 6; s++) animarVida(tr, 0.08, foco); } } });
 }

@@ -199,4 +199,32 @@ export function muroDeArrimo(tr, add) {
     const m = add(new THREE.Mesh(g, pedra)); m.castShadow = m.receiveShadow = true; m.name = "monaco-arrimo"; total += i1 - i0;
   }
   tr.arrimoMonaco = { trechos: trechos.map((t) => ({ lado: t.lado, de: +(t.i0 / n).toFixed(3), ate: +(t.i1 / n).toFixed(3) })), pontos: total };
+  // (2026-11-17, o print do Thiago: "na saída do grampo tem um muro de arrimo que deveria ter algo embaixo; queria um paredão de pedra") o
+  // PAREDÃO: na beira da pista de cima, onde outro trecho passa mais baixo ali do lado (o grampo e o Mirabeau), a pedra desce do nível da pista
+  // de cima até o chão da de baixo. Vai no fim do grupo (`tr.depois`, pista.js), sem deslocar as chaves dos ajustes do editor.
+  (tr.depois ||= []).push(() => {
+    const vs = [], uv = [], idx = []; let base = 0, pontos = 0;
+    for (const lado of [1, -1]) {
+      const fundo = new Array(n).fill(null);
+      for (let i = Math.floor(0.355 * n); i <= Math.floor(0.435 * n); i++) {
+        const p = pts[i], x = p.x + p.nx * lado * (L + 3), z = p.y + p.ny * lado * (L + 3); let melhor = null;
+        for (let j = 0; j < n; j++) { const dj = Math.min(Math.abs(j - i), n - Math.abs(j - i)); if (dj < 40) continue; const q = pts[j], d = Math.hypot(q.x - x, q.y - z); if (d > 170 || p.h - q.h < 10 || p.h - q.h > 160) continue; if (!melhor || d < melhor.d) melhor = { d, h: q.h }; }
+        if (melhor) fundo[i] = melhor.h;
+      }
+      const liso = fundo.map((h, i) => { if (h == null) return null; let s = 0, k = 0; for (let d = -3; d <= 3; d++) { const v = fundo[(i + d + n) % n]; if (v != null) { s += v; k++; } } return s / k; });
+      for (let i = 0; i < n; i++) {
+        if (liso[i] == null || liso[i - 1] != null) continue; let j = i; while (j + 1 < n && liso[j + 1] != null) j++;
+        if (j - i < 4) continue;
+        for (let k = i; k <= j; k++) {
+          const p = pts[k], x = p.x + p.nx * lado * (L + 3), z = p.y + p.ny * lado * (L + 3), baixo = liso[k] - 4, d = (k - i) * 6;
+          vs.push(x, baixo, z, x, p.h - 0.4, z); uv.push(0, d / 70, (p.h - baixo) / 40, d / 70);
+          if (k < j) { const q = base + (k - i) * 2; idx.push(q, q + 2, q + 1, q + 1, q + 2, q + 3); }
+        }
+        base += (j - i + 1) * 2; pontos += j - i + 1;
+      }
+    }
+    if (!idx.length) return;
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+    const m = add(new THREE.Mesh(g, pedra)); m.castShadow = m.receiveShadow = true; m.name = "monaco-paredao"; tr.paredaoMonaco = { pontos };
+  });
 }

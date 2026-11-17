@@ -81,7 +81,7 @@ export function criarCraft(ed) {
   const $ = (s) => painel.querySelector(s);
   function novaObra() {
     if (obra) scene.remove(obra);
-    obra = new THREE.Group(); obra.name = "craft-obra";
+    obra = new THREE.Group(); obra.name = "craft-obra"; ed.vigiar?.(obra);
     const alvo = orbita.target; obra.position.set(alvo.x, chaoEm(alvo.x, alvo.z), alvo.z); scene.add(obra); escolher(null);
   }
   function escolher(m) { sel = m; if (m) gizmo.attach(m); else gizmo.detach(); desenhar(); }
@@ -156,6 +156,8 @@ export function criarCraft(ed) {
   return {
     ativo: () => ativo,
     selecionada: () => sel,
+    medirPeca: (m) => medir(m), // (o Ctrl+Z mudou a escala: a textura acompanha)
+    soltar: (m) => { if (sel === m) escolher(null); },
     alternar() { ativo = !ativo; painel.hidden = !ativo; if (ativo) { if (!obra) novaObra(); else scene.add(obra); desenhar(); } else { gizmo.detach(); sel = null; } return ativo; },
     // o clique na tela com o Craft ligado: escolhe uma peça da obra (ou solta)
     clique() { const hit = obra && raio.intersectObjects(obra.children, false)[0]; escolher(hit ? hit.object : null); return true; },

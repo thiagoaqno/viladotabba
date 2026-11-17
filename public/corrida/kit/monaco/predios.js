@@ -112,6 +112,7 @@ export function predios(tr, add, lista) {
   const cel = new Map(), pegar = (b) => { const q = Math.floor(b.cx / CELULA) + "," + Math.floor(b.cz / CELULA); if (!cel.has(q)) cel.set(q, { par: new Malha(), tel: new Malha() }); return cel.get(q); };
   let paredes = 0, telhados = 0;
   for (const b of lista) {
+    if (b.semCorpo) continue; // (um marco desenha o prédio inteiro: o Casino)
     const { par, tel } = pegar(b), P = b.P, n = P.length, y0 = b.baixo - 3, y1 = b.topo, sementeB = hash(b.id + 11);
     const cor = PAREDES[b.cor];
     // as paredes: um painel por lado, com a fachada repetida pelo tamanho de verdade (janelas de 3,5 m, andares de 3,1 m)

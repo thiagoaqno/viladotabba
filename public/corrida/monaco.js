@@ -88,6 +88,7 @@ export function cenarioMonaco(tr, ctx) {
   tunel(tr, add);
   fairmontSobreOTunel(tr, add); // o hotel Fairmont, largo e curvo, sobre a entrada do túnel
   pontePortier(tr, add, hAt, predioEm); // o viaduto da Boulevard du Larvotto, por cima da pista logo antes do Portier (antes das árvores e da vida: reserva o lugar)
+  { const c = lista.find((q) => q.esp === 1); if (c) c.semCorpo = true; } // (o Casino, kit/monaco/marcos.js, é o corpo inteiro: o prédio genérico da planta não é desenhado)
   predios(tr, add, lista);
   marcosMonaco(tr, add, lista, hAt);
   porto(tr, add, ctx);

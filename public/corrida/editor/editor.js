@@ -46,7 +46,7 @@ document.head.appendChild(css);
 const painel = document.createElement("div"); painel.id = "ed"; document.body.appendChild(painel);
 // a barra do topo: o modo do gizmo, as vistas e o Craft
 const barra = document.createElement("div"); barra.id = "edBarra";
-barra.innerHTML = [["mover", "✥", "Mover · W"], ["girar", "⟳", "Girar · E"], ["escala", "⤡", "Escala · R"], 0, ["cima", "⬒", "De cima · 1"], ["lado", "◧", "De lado · 2"], ["frente", "▣", "De frente · 3"], ["v3d", "◈", "3D · 4"], ["focar", "◎", "Focar · F"], 0, ["craft", "⚒", "Craft"]]
+barra.innerHTML = [["mover", "✥", "Mover · W"], ["girar", "⟳", "Girar · E"], ["escala", "⤡", "Escala · R"], 0, ["cima", "⬒", "De cima · 1"], ["lado", "◧", "De lado · 2"], ["frente", "▣", "De frente · 3"], ["v3d", "◈", "3D · 4"], ["focar", "◎", "Focar · F"], 0, ["craft", "⚒", "Craft"], 0, ["desfazer", "↶", "Desfazer · Ctrl+Z"], ["refazer", "↷", "Refazer · Ctrl+Y"]]
   .map((b) => (b ? `<button type="button" data-barra="${b[0]}" title="${b[2]}"><b>${b[1]}</b><small>${b[2].split(" · ")[0]}</small></button>` : "<i></i>")).join("");
 document.body.appendChild(barra);
 const ajuda = document.createElement("div"); ajuda.id = "edAjuda"; ajuda.textContent = "1 de cima · 2 de lado · 3 de frente · 4 em 3D · F foca no escolhido · Shift + WASD anda (Q/Z sobe e desce) · W mover · E girar · R escala · G no chão · D duplica · Del apaga/esconde · Esc solta · clique escolhe uma peça; com um asset escolhido, coloca"; document.body.appendChild(ajuda);
@@ -64,6 +64,43 @@ const gizmo = new TransformControls(cam, renderer.domElement); scene.add(gizmo.g
 gizmo.addEventListener("dragging-changed", (e) => { orbita.enabled = !e.value; if (!e.value) { if (craft?.ativo()) return craft.mudou(); guardarItem(selecionado); desenharItem(); } });
 gizmo.addEventListener("objectChange", () => { if (!craft?.ativo()) desenharItem(true); });
 let craft = null; // (o modo Craft, craft.js: criado no fim, depois do painel)
+// ---------- Ctrl+Z / Ctrl+Y (2026-11-16, o Thiago) ----------
+// cada mudança vira um passo: mexer (posição, giro, escala e se aparece: antes e depois), pôr (um item ou peça nova num grupo) ou tirar.
+// Desfazer aplica o "antes"; refazer, o "depois". Depois de cada passo, o item, a peça da pista ou a peça do Craft é guardada de novo.
+const pilha = [], refeitos = []; let desfazendo = false;
+const estado = (o) => ({ p: o.position.toArray(), r: [o.rotation.x, o.rotation.y, o.rotation.z], s: o.scale.toArray(), v: o.visible });
+const iguais = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+function pora(o, e) { o.position.fromArray(e.p); o.rotation.set(e.r[0], e.r[1], e.r[2]); o.scale.fromArray(e.s); o.visible = e.v; }
+function registrar(passo) { if (desfazendo) return; pilha.push(passo); if (pilha.length > 200) pilha.shift(); refeitos.length = 0; }
+function depoisDoPasso(o) { if (o.userData.peca) craft?.medirPeca(o); else guardarItem(o); if (o === selecionado || o === craft?.selecionada()) desenharItem(); }
+function aplicarPasso(passo, voltar) {
+  desfazendo = true;
+  try {
+    if (passo.tipo === "mexer") { pora(passo.o, voltar ? passo.antes : passo.depois); depoisDoPasso(passo.o); }
+    else if ((passo.tipo === "por") === voltar) { passo.pai.remove(passo.o); if (selecionado === passo.o) selecionar(null); if (passo.o.userData.peca) craft?.soltar(passo.o); }
+    else passo.pai.add(passo.o);
+  } finally { desfazendo = false; }
+}
+function desfazer() { const p = pilha.pop(); if (!p) return avisar("Nada para desfazer."); aplicarPasso(p, true); refeitos.push(p); avisar(`Desfeito (${pilha.length} passos atrás)`); }
+function refazer() { const p = refeitos.pop(); if (!p) return avisar("Nada para refazer."); aplicarPasso(p, false); pilha.push(p); avisar("Refeito"); }
+// pôr e tirar: os grupos avisam (Object3D: childadded / childremoved)
+function vigiar(g) { g.addEventListener("childadded", (e) => registrar({ tipo: "por", o: e.child, pai: g })); g.addEventListener("childremoved", (e) => registrar({ tipo: "tirar", o: e.child, pai: g })); }
+// mexer pelo gizmo: o estado no começo do arrasto e no fim
+let antesDoArrasto = null;
+gizmo.addEventListener("mouseDown", () => { if (gizmo.object) antesDoArrasto = estado(gizmo.object); });
+gizmo.addEventListener("mouseUp", () => { const o = gizmo.object; if (o && antesDoArrasto) { const d = estado(o); if (!iguais(antesDoArrasto, d)) registrar({ tipo: "mexer", o, antes: antesDoArrasto, depois: d }); } antesDoArrasto = null; });
+// mexer pelos números e botões do painel: o estado do escolhido antes e logo depois de cada mudança
+function vigiarPainel(el) {
+  const marca = () => { const o = craft?.ativo() ? craft.selecionada() : selecionado; if (!o) return; const a = estado(o); setTimeout(() => { if (o.parent) { const d = estado(o); if (!iguais(a, d)) registrar({ tipo: "mexer", o, antes: a, depois: d }); } }, 0); };
+  el.addEventListener("change", marca, true); el.addEventListener("click", (e) => { if (e.target.closest("button")) marca(); }, true);
+}
+// ---------- o escolhido em destaque: uma caixa amarela em volta (e as caixas da obra do Craft, mais fracas) ----------
+const destaque = new THREE.Box3Helper(new THREE.Box3(), 0xffd23f); destaque.material.depthTest = false; destaque.renderOrder = 999; destaque.visible = false; scene.add(destaque);
+function atualizarDestaque() {
+  const o = craft?.ativo() ? craft.selecionada() : selecionado;
+  destaque.visible = !!(o && o.parent); if (!destaque.visible) return;
+  destaque.box.setFromObject(o); if (destaque.box.isEmpty()) destaque.visible = false;
+}
 function ajustar() { renderer.setSize(innerWidth, innerHeight, false); renderer.domElement.style.width = innerWidth + "px"; renderer.domElement.style.height = innerHeight + "px"; cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
 ajustar(); addEventListener("resize", ajustar);
 // (2026-11-16, o Thiago: "tá difícil andar por essa Mônaco; segurando Shift, o WASD devia andar") Shift + WASD anda no plano da câmera, Q e Z sobem e descem;
@@ -80,7 +117,7 @@ renderer.setAnimationLoop(() => {
     if (tecla.has("KeyQ")) m.y += 1; if (tecla.has("KeyZ")) m.y -= 1;
     if (m.lengthSq()) { m.normalize().multiplyScalar(v); cam.position.add(m); orbita.target.add(m); }
   }
-  renderer.render(scene, cam); prevRender?.();
+  atualizarDestaque(); renderer.render(scene, cam); prevRender?.();
 });
 
 // ---------- o chão: um raio de cima para baixo em tudo da pista, menos o próprio cenário do editor ----------
@@ -113,6 +150,11 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   const o = await colocar({ asset: assetEscolhido, x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry: 0, rz: 0, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o); }
 });
+addEventListener("keydown", (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.target.closest?.("input,select")) return;
+  const k = e.key.toLowerCase();
+  if (k === "z" && !e.shiftKey) { e.preventDefault(); desfazer(); } else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); refazer(); }
+});
 addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase();
@@ -120,7 +162,7 @@ addEventListener("keydown", async (e) => {
   else if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
   else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); }
   else if (!selecionado) return;
-  else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { selecionado.visible = false; guardarPeca(selecionado); } selecionar(null); } // (a peça da pista só fica escondida)
+  else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
   else if (k === "g") { noChao(selecionado); guardarItem(selecionado); desenharItem(); }
   else if (k === "d" && ehItem(selecionado)) { const it = { ...selecionado.userData.item, x: selecionado.userData.item.x + 30 }; const o = await colocar(it); if (o) { noChao(o); guardarItem(o); selecionar(o); } }
 });
@@ -193,7 +235,7 @@ function desenharPeca(o, soNumeros) {
     catch (e) { avisar("Não exportou: " + e.message, true); }
   };
   el.querySelector("[data-p=pai]").onclick = () => { if (o.parent && o.parent !== tr.grp) selecionar(o.parent); };
-  el.querySelector("[data-p=esconder]").onclick = () => { o.visible = false; guardarPeca(o); selecionar(null); };
+  el.querySelector("[data-p=esconder]").onclick = () => { const a = estado(o); o.visible = false; guardarPeca(o); registrar({ tipo: "mexer", o, antes: a, depois: estado(o) }); selecionar(null); };
   el.querySelector("[data-p=voltar]").onclick = () => { const or = o.userData.original; if (or) { o.position.fromArray(or.p); o.rotation.set(or.r[0], or.r[1], or.r[2]); o.scale.fromArray(or.s); o.visible = or.v; } ajustes.delete(chaveDe(tr, o)); desenharItem(); };
 }
 async function trocarCor(o, cor) {
@@ -272,7 +314,8 @@ async function converter(nome) {
 }
 recarregarAssets();
 // ---------- o Craft (craft.js): montar coisas novas com as formas e os materiais do jogo ----------
-craft = criarCraft({ scene, cam, gizmo, orbita, raio, api, avisar, recarregarAssets, M_PARA_U, chaoEm, painel });
+vigiar(cenario); vigiarPainel(painel);
+craft = criarCraft({ scene, cam, gizmo, orbita, raio, api, avisar, recarregarAssets, M_PARA_U, chaoEm, painel, vigiar });
 $("edCraftBt").onclick = () => {
   selecionar(null); const on = craft.alternar(); $("edCraftBt").classList.toggle("on", on);
   for (const id of ["edOrig", "edLeves", "edItem", "edConv", "edPrev"]) { const el = $(id); if (el) el.style.display = on ? "none" : ""; }
@@ -296,7 +339,7 @@ function vista(tipo) {
 barra.onclick = (e) => {
   const b = e.target.closest("[data-barra]"); if (!b) return; const k = b.dataset.barra;
   if (k === "mover") gizmo.setMode("translate"); else if (k === "girar") gizmo.setMode("rotate"); else if (k === "escala") gizmo.setMode("scale");
-  else if (k === "craft") $("edCraftBt").click(); else vista(k);
+  else if (k === "craft") $("edCraftBt").click(); else if (k === "desfazer") desfazer(); else if (k === "refazer") refazer(); else vista(k);
   marcarModo();
 };
 addEventListener("keydown", (e) => {

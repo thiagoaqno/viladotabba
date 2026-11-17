@@ -144,19 +144,29 @@ function moduloPneus(compr) {
   for (let i = 0; i < n; i++) for (const s of [-1, 1]) { const t = new THREE.Mesh(geoPneu, borr); t.rotation.x = Math.PI / 2; t.position.set(s * 0.36 * UM, h + 0.05 * UM, (i - (n - 1) / 2) * (compr / n)); g.add(t); }
   return g;
 }
-function montarLinha(it) {
-  const pts = Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2] ? it.pts : null; if (!pts) return null;
-  const modelo = it.modelo || "pneus", esp = Math.max(0.5, +it.espaco || 4) * UM, alt = Math.max(0.3, +it.altura || 3) * UM, g = new THREE.Group(), lista = pontosCada(pts, esp);
+// (2026-11-17, o Thiago: "escolher o lado da pista e de onde até onde vai") a linha na BEIRA da pista: { beira: { i0, i1, lado, de } } segue o
+// traçado do ponto i0 ao i1 (pode dar a volta), do lado escolhido, a `de` unidades do centro, na altura da pista. Os pontos são absolutos (o item fica em 0).
+function pontosDaBeira(tr, b, passo) {
+  const { pts, n } = tr, lado = b.lado < 0 ? -1 : 1, de = +b.de || tr.W / 2 + 20; let i0 = Math.round(+b.i0) || 0, i1 = Math.round(+b.i1) || 0; if (i1 < i0) i1 += n; if (i1 - i0 > n) i1 = i0 + n;
+  const eixo = []; for (let i = i0; i <= i1; i++) { const p = pts[((i % n) + n) % n]; eixo.push({ x: p.x + p.nx * de * lado, z: p.y + p.ny * de * lado, y: p.h }); }
+  const out = []; let falta = 0;
+  for (let i = 1; i < eixo.length; i++) { const a = eixo[i - 1], c = eixo[i], d = Math.hypot(c.x - a.x, c.z - a.z) || 1e-6, ang = Math.atan2(c.x - a.x, c.z - a.z); let t = falta;
+    while (t <= d) { const u = t / d; out.push({ x: a.x + (c.x - a.x) * u, z: a.z + (c.z - a.z) * u, y: a.y + (c.y - a.y) * u, ang }); t += passo; } falta = t - d; }
+  return out;
+}
+function montarLinha(it, tr) {
+  const beira = it.beira && tr ? it.beira : null, pts = Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2] ? it.pts : null; if (!pts && !beira) return null;
+  const modelo = it.modelo || "pneus", esp = Math.max(0.5, +it.espaco || 4) * UM, alt = Math.max(0.3, +it.altura || 3) * UM, g = new THREE.Group(), lista = beira ? pontosDaBeira(tr, beira, esp) : pontosCada(pts, esp);
   if (modelo === "cerca") {
     const tela = new THREE.MeshStandardMaterial({ color: 0x9aa3ab, roughness: 0.5, metalness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }), poste = ML(0xb8bdc3, { metalness: 0.5, roughness: 0.4 });
     const base = it.mureta ? 1.1 * UM : 0, muro = ML(0xd9dad6, { roughness: 0.9 });
     for (let i = 0; i < lista.length; i++) {
-      const p = lista[i], c = new THREE.Mesh(new THREE.CylinderGeometry(0.07 * UM, 0.07 * UM, alt, 6), poste); c.position.set(p.x, base + alt / 2, p.z); c.castShadow = true; g.add(c);
-      const topo = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * UM, 0.06 * UM, 0.9 * UM, 6), poste); topo.position.set(p.x, base + alt + 0.3 * UM, p.z); topo.rotation.set(0, 0, 0); topo.rotateOnWorldAxis(new THREE.Vector3(Math.cos(p.ang), 0, -Math.sin(p.ang)), 0.6); g.add(topo);
+      const p = lista[i], c = new THREE.Mesh(new THREE.CylinderGeometry(0.07 * UM, 0.07 * UM, alt, 6), poste); c.position.set(p.x, (p.y || 0) + base + alt / 2, p.z); c.castShadow = true; g.add(c);
+      const topo = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * UM, 0.06 * UM, 0.9 * UM, 6), poste); topo.position.set(p.x, (p.y || 0) + base + alt + 0.3 * UM, p.z); topo.rotation.set(0, 0, 0); topo.rotateOnWorldAxis(new THREE.Vector3(Math.cos(p.ang), 0, -Math.sin(p.ang)), 0.6); g.add(topo);
       const q = lista[i + 1]; if (!q) continue;
-      const d = Math.hypot(q.x - p.x, q.z - p.z), a = Math.atan2(q.x - p.x, q.z - p.z), mx = (p.x + q.x) / 2, mz = (p.z + q.z) / 2;
-      const pl = new THREE.Mesh(new THREE.PlaneGeometry(d, alt), tela); pl.position.set(mx, base + alt / 2, mz); pl.rotation.y = a - Math.PI / 2; g.add(pl);
-      if (base) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.6 * UM, base, d + 0.05 * UM), muro); m.position.set(mx, base / 2, mz); m.rotation.y = a; m.castShadow = m.receiveShadow = true; g.add(m); }
+      const d = Math.hypot(q.x - p.x, q.z - p.z), a = Math.atan2(q.x - p.x, q.z - p.z), mx = (p.x + q.x) / 2, mz = (p.z + q.z) / 2, my = ((p.y || 0) + (q.y || 0)) / 2;
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(d, alt), tela); pl.position.set(mx, my + base + alt / 2, mz); pl.rotation.y = a - Math.PI / 2; g.add(pl);
+      if (base) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.6 * UM, base, d + 0.05 * UM), muro); m.position.set(mx, my + base / 2, mz); m.rotation.y = a; m.castShadow = m.receiveShadow = true; g.add(m); }
     }
     return g;
   }
@@ -165,7 +175,7 @@ function montarLinha(it) {
     if (modelo === "pneus") o = moduloPneus(Math.max(0.5 * UM, esp - 0.1 * UM));
     else if (modelo === "pilares") { o = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * UM, 0.35 * UM, alt, 10), ML(0xc9cbce)); c.position.y = alt / 2; c.castShadow = c.receiveShadow = true; o.add(c); }
     else if (modelo.startsWith("kit:")) { o = montarKit(modelo.slice(4)); if (o) o.rotation.y = Math.PI / 2; } // (as peças da biblioteca têm a frente para +z: de lado, ficam ao longo da linha)
-    if (!o) continue; const h = new THREE.Group(); h.add(o); h.position.set(p.x, 0, p.z); h.rotation.y = p.ang; g.add(h);
+    if (!o) continue; const h = new THREE.Group(); h.add(o); h.position.set(p.x, p.y || 0, p.z); h.rotation.y = p.ang; g.add(h);
   }
   return g;
 }
@@ -230,7 +240,7 @@ function montarArea(it, tr) {
 }
 export async function montarItem(it, tr = null) {
   if (it.tipo === "area") { const o = montarArea(it, tr); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "area-" + (it.material || ""); return o; }
-  if (it.tipo === "linha") { const o = montarLinha(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "linha-" + (it.modelo || ""); return o; }
+  if (it.tipo === "linha") { const o = montarLinha(it, tr); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "linha-" + (it.modelo || ""); return o; }
   if (it.tipo === "trecho") { const o = montarTrecho(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "trecho"; return o; }
   if (it.tipo === "escape") return montarEscape(it, tr);
   // (2026-11-16, o Thiago: "deve ser possível agrupar e desagrupar itens") um GRUPO: os itens dentro dele com posição relativa a ele

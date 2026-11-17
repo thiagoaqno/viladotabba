@@ -2,6 +2,7 @@
 // código, sem baixar modelo, para pôr com um clique (editor/editor.js) e montar no jogo pelo cenario/<pista>.json ({ tipo: "kit", kit: <id> }).
 // Tudo em unidades do jogo (1 m ≈ 4,8 u), apoiado em y = 0 e com a frente para +z. Materiais compartilhados por peça (o fundir.js junta).
 import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const U = 4.8; // unidades por metro
 const mats = new Map();
@@ -311,4 +312,111 @@ KITS.bandeiras = { nome: "Fileira de bandeiras", grupo: "Público", montar() {
   const g = new THREE.Group(), cores = [0xd62828, 0xf2f2f2, 0x2a5bd6, 0x2e9e4f, 0xf2c230, 0x111111], h = 9 * U;
   for (let k = 0; k < 6; k++) { const x = (k - 2.5) * 4 * U; cil(g, BRANCO, 0.07 * U, h, x, h / 2, 0, 6); const b = new THREE.Mesh(new THREE.PlaneGeometry(2 * U, 1.3 * U), new THREE.MeshStandardMaterial({ color: cores[k], side: THREE.DoubleSide })); b.position.set(x + 1 * U, h - 0.8 * U, 0); b.castShadow = true; g.add(b); }
   return g; } };
+// ---------- (2026-11-17, a imagem do Thiago: a pista low poly com a arquibancada curva de cadeiras amarelas) ----------
+// as peças no estilo da imagem: arquibancadas de cadeiras (reta, curva, com toldo), a tenda arredondada, a mureta de concreto com alambrado,
+// a zebra, o prédio dos boxes com camarote e a árvore de copa larga. As cadeiras e os degraus vão juntados numa malha por material (são centenas).
+function juntar(g, mat, geos) { if (!geos.length) return null; const m = new THREE.Mesh(mergeGeometries(geos, false), mat); m.castShadow = m.receiveShadow = true; g.add(m); for (const x of geos) x.dispose(); return m; }
+const _o = new THREE.Object3D();
+function geoEm(geo, x, y, z, ry = 0, rx = 0) { _o.position.set(x, y, z); _o.rotation.set(rx, ry, 0); _o.updateMatrix(); return geo.applyMatrix4(_o.matrix); }
+const CONCRETO = M(0xb9bcc0), CADEIRA = M(0xf2c230, { roughness: 0.55 }), GRADIL = M(0xdfe3e7, { metalness: 0.5, roughness: 0.35 });
+// a arquibancada de cadeiras: `fileiras` degraus que sobem para trás, numa reta de `largura` m ou num arco de `angulo` graus com raio `raio` m
+// (a frente para +z; o centro do arco fica na frente). `base`: a altura da primeira fileira, em cima de pilares.
+function arquibancadaCadeiras({ largura = 40, raio = 0, angulo = 0, fileiras = 10, base = 3, cor = CADEIRA, pilares = true }) {
+  const g = new THREE.Group(), fun = 0.85 * U, alt = 0.45 * U, b = base * U, R = raio * U, A = (angulo * Math.PI) / 180;
+  const degraus = [], cad = [], encostos = [], trilhos = [], pil = [];
+  // a posição e o giro de um ponto a `s` (de -1 a 1 ao longo da fileira) na fileira k (k = 0 é a da frente)
+  const ponto = (s, k) => { if (!R) return { x: (s * largura * U) / 2, z: -k * fun, ry: 0 }; const r = R + k * fun, a = (s * A) / 2; return { x: r * Math.sin(a), z: R - r * Math.cos(a), ry: -a }; };
+  const compr = (k) => (R ? (R + k * fun) * A : largura * U);
+  for (let k = 0; k < fileiras; k++) {
+    const L = compr(k), segs = Math.max(1, Math.ceil(L / (4 * U))), y = b + k * alt;
+    for (let i = 0; i < segs; i++) { const p = ponto(((i + 0.5) / segs) * 2 - 1, k); degraus.push(geoEm(new THREE.BoxGeometry(L / segs + 0.05 * U, 0.25 * U, fun), p.x, y - 0.12 * U, p.z, p.ry)); }
+    const n = Math.max(1, Math.floor(L / (0.55 * U)));
+    for (let i = 0; i < n; i++) { const p = ponto(((i + 0.5) / n) * 2 - 1, k);
+      cad.push(geoEm(new THREE.BoxGeometry(0.45 * U, 0.08 * U, 0.4 * U), p.x, y + 0.42 * U, p.z, p.ry));
+      const tras = ponto(((i + 0.5) / n) * 2 - 1, k + 0.3); encostos.push(geoEm(new THREE.BoxGeometry(0.45 * U, 0.45 * U, 0.07 * U), tras.x, y + 0.66 * U, tras.z, tras.ry, -0.15)); }
+  }
+  // o gradil da frente e o de trás (barras finas), e a parede de trás
+  const yTopo = b + fileiras * alt;
+  for (const [k, y] of [[-0.45, b + 0.9 * U], [fileiras - 0.4, yTopo + 1 * U]]) { const L = compr(Math.max(0, k)), segs = Math.max(1, Math.ceil(L / (3 * U)));
+    for (let i = 0; i < segs; i++) { const s = ((i + 0.5) / segs) * 2 - 1, p = ponto(s, k); trilhos.push(geoEm(new THREE.BoxGeometry(L / segs, 0.06 * U, 0.06 * U), p.x, y, p.z, p.ry)); const p2 = ponto((i / segs) * 2 - 1, k); trilhos.push(geoEm(new THREE.BoxGeometry(0.05 * U, 1 * U, 0.05 * U), p2.x, y - 0.5 * U, p2.z, p2.ry)); } }
+  { const L = compr(fileiras), segs = Math.max(1, Math.ceil(L / (4 * U))); for (let i = 0; i < segs; i++) { const p = ponto(((i + 0.5) / segs) * 2 - 1, fileiras - 0.4); degraus.push(geoEm(new THREE.BoxGeometry(L / segs + 0.05 * U, 0.6 * U, 0.15 * U), p.x, yTopo + 0.3 * U, p.z, p.ry)); } }
+  // embaixo: a laje inclinada (a "barriga") e os pilares até o chão, na frente e atrás, a cada 5 m
+  if (b > 0 && pilares) { const L = compr(0), n = Math.max(2, Math.round(L / (5 * U)) + 1);
+    for (let i = 0; i < n; i++) { const s = (i / (n - 1)) * 2 - 1;
+      for (const [k, hgt] of [[0, b - 0.25 * U], [fileiras - 1, b + (fileiras - 1) * alt - 0.25 * U]]) { const p = ponto(s * 0.98, k); pil.push(geoEm(new THREE.CylinderGeometry(0.22 * U, 0.22 * U, hgt, 8), p.x, hgt / 2, p.z)); }
+      const p0 = ponto(s * 0.98, 0), p1 = ponto(s * 0.98, fileiras - 1), dz = Math.hypot(p1.x - p0.x, p1.z - p0.z), dy = (fileiras - 1) * alt;
+      pil.push(geoEm(new THREE.BoxGeometry(0.3 * U, 0.4 * U, Math.hypot(dz, dy)), (p0.x + p1.x) / 2, b - 0.45 * U + dy / 2, (p0.z + p1.z) / 2, p0.ry, Math.atan2(dy, dz))); }
+  } else if (b > 0) { const L = compr(0), segs = Math.max(1, Math.ceil(L / (4 * U))); for (let i = 0; i < segs; i++) { const p = ponto(((i + 0.5) / segs) * 2 - 1, -0.5); degraus.push(geoEm(new THREE.BoxGeometry(L / segs + 0.05 * U, b, 0.2 * U), p.x, b / 2, p.z, p.ry)); } }
+  juntar(g, CONCRETO, degraus); juntar(g, cor, cad); juntar(g, cor, encostos); juntar(g, GRADIL, trilhos); juntar(g, CINZA, pil);
+  g.userData.ponto = ponto; g.userData.yTopo = yTopo; return g;
+}
+const F = (filtro, k) => Object.assign(k, { filtro });
+KITS.arqCadeirasCurva = F("Arquibancadas", { nome: "Arquibancada curva de cadeiras", grupo: "Público", montar: () => arquibancadaCadeiras({ raio: 28, angulo: 75, fileiras: 12, base: 4 }) });
+KITS.arqCadeirasCurvaBaixa = F("Arquibancadas", { nome: "Arquibancada curva baixa", grupo: "Público", montar: () => arquibancadaCadeiras({ raio: 20, angulo: 60, fileiras: 6, base: 1.2, pilares: false }) });
+KITS.arqCadeirasReta = F("Arquibancadas", { nome: "Arquibancada reta de cadeiras", grupo: "Público", montar: () => arquibancadaCadeiras({ largura: 40, fileiras: 12, base: 4 }) });
+KITS.arqCadeirasBaixa = F("Arquibancadas", { nome: "Arquibancada baixa de cadeiras", grupo: "Público", montar: () => arquibancadaCadeiras({ largura: 24, fileiras: 6, base: 1, pilares: false }) });
+// a arquibancada com toldo branco (as do fundo da imagem): cadeiras, pilares atrás e a lona curva por cima
+KITS.arqCadeirasToldo = F("Arquibancadas", { nome: "Arquibancada com toldo", grupo: "Público", montar() {
+  const fil = 8, g = arquibancadaCadeiras({ largura: 20, fileiras: fil, base: 1, pilares: false }), w = 20 * U, prof = fil * 0.85 * U, topo = g.userData.yTopo + 3 * U;
+  for (const x of [-w / 2, 0, w / 2]) cil(g, ESCURO, 0.15 * U, topo, x, topo / 2, -prof, 8);
+  const lona = malha(g, new THREE.CylinderGeometry(prof * 0.62, prof * 0.62, w + U, 16, 1, true, 0, Math.PI), M(0xf7f7f5, { side: THREE.DoubleSide, emissive: 0xffffff, emissiveIntensity: 0.12 }), 0, topo, -prof / 2);
+  lona.rotation.set(0, 0, Math.PI / 2); lona.scale.set(0.35, 1, 1);
+  return g; } });
+// a tenda branca arredondada (as da frente da imagem): o teto em meia-cana com costelas, sobre muretas baixas
+function tendaTunel(compr, larg) {
+  const g = new THREE.Group(), L = compr * U, W = larg * U, lona = M(0xfafaf8, { side: THREE.DoubleSide, emissive: 0xffffff, emissiveIntensity: 0.15, roughness: 0.6 });
+  const teto = malha(g, new THREE.CylinderGeometry(W / 2, W / 2, L, 20, 1, true, -Math.PI / 2, Math.PI), lona, 0, 1.4 * U, 0); teto.rotation.x = Math.PI / 2; teto.scale.set(1, 1, 0.55);
+  for (const s of [-1, 1]) caixa(g, BRANCO, 0.25 * U, 1.4 * U, L, s * W / 2, 0.7 * U, 0);
+  for (let k = 0; k <= Math.round(compr / 4); k++) { const z = -L / 2 + (k * L) / Math.round(compr / 4), c = malha(g, new THREE.TorusGeometry(W / 2, 0.08 * U, 4, 20, Math.PI), M(0xd8dadd, { metalness: 0.4 }), 0, 1.4 * U, z); c.scale.set(1, 0.55, 1); }
+  caixa(g, M(0x6f747b), W * 0.6, 1.3 * U, 0.1 * U, 0, 0.65 * U, L / 2);
+  return g;
+}
+KITS.tendaTunel = F("Paddock", { nome: "Tenda arredondada", grupo: "Paddock", montar: () => tendaTunel(16, 9) });
+KITS.tendaTunelLonga = F("Paddock", { nome: "Tenda arredondada longa", grupo: "Paddock", montar: () => tendaTunel(36, 10) });
+// a mureta de concreto (o "muro de Mônaco") com e sem o alambrado em cima, 10 m
+function mureta(comAlambrado) {
+  const g = new THREE.Group(), w = 10 * U, h = 1.1 * U, base = M(0xe4e5e2, { roughness: 0.85 });
+  caixa(g, base, w, h, 0.6 * U, 0, h / 2, 0); caixa(g, base, w, 0.12 * U, 0.75 * U, 0, h, 0);
+  caixa(g, VERMELHO, w, 0.25 * U, 0.02 * U, 0, 0.2 * U, 0.31 * U);
+  if (comAlambrado) { const ht = 3.2 * U, tela = new THREE.MeshStandardMaterial({ color: 0x9aa3ab, roughness: 0.5, metalness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide });
+    malha(g, new THREE.PlaneGeometry(w, ht), tela, 0, h + ht / 2, -0.15 * U);
+    for (let x = -w / 2; x <= w / 2 + 1; x += 2.5 * U) { cil(g, ESCURO, 0.06 * U, ht, x, h + ht / 2, -0.15 * U, 6); const b = caixa(g, ESCURO, 0.06 * U, 0.06 * U, 0.8 * U, x, h + ht, 0.15 * U); b.rotation.x = -0.6; } }
+  return g;
+}
+KITS.mureta = F("Contenção", { nome: "Mureta de concreto", grupo: "Pista", montar: () => mureta(false) });
+KITS.muretaAlambrado = F("Contenção", { nome: "Mureta com alambrado", grupo: "Pista", montar: () => mureta(true) });
+// a zebra solta (10 m, vermelha e branca), para enfeitar uma curva de cenário
+KITS.zebra = F("Contenção", { nome: "Zebra (10 m)", grupo: "Pista", montar() {
+  const g = new THREE.Group(); for (let k = 0; k < 10; k++) caixa(g, k % 2 ? BRANCO : VERMELHO, 1 * U, 0.08 * U, 1.2 * U, (k - 4.5) * U, 0.04 * U, 0); return g; } });
+// o bloco de concreto (a barreira New Jersey) de 4 m
+KITS.newJersey = F("Contenção", { nome: "Barreira de concreto", grupo: "Pista", montar() {
+  const g = new THREE.Group(), s = new THREE.Shape([[-0.3, 0], [0.3, 0], [0.15, 0.25], [0.1, 0.8], [-0.1, 0.8], [-0.15, 0.25]].map(([x, y]) => new THREE.Vector2(x * U, y * U)));
+  const geo = new THREE.ExtrudeGeometry(s, { depth: 4 * U, bevelEnabled: false }); geo.translate(0, 0, -2 * U); const m = malha(g, geo, M(0xd9dad6, { roughness: 0.9 })); m.rotation.y = Math.PI / 2; return g; } });
+// o prédio dos boxes: as portas de garagem no térreo, o camarote de vidro em cima, a laje saltada e as bandeiras do teto
+KITS.predioBoxes = F("Paddock", { nome: "Prédio dos boxes com camarote", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), n = 6, mod = 6 * U, w = n * mod, d = 14 * U, h1 = 5 * U, h2 = 4 * U, parede = M(0xeef0f2), porta = M(0x3a3f47, { metalness: 0.3 });
+  caixa(g, parede, w, h1, d, 0, h1 / 2, 0);
+  for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * mod; caixa(g, porta, mod - 1 * U, h1 - 1 * U, 0.1 * U, x, (h1 - 1 * U) / 2, d / 2 + 0.05 * U); caixa(g, VIDRO, mod - 0.5 * U, h2 - 0.8 * U, 0.1 * U, x, h1 + h2 / 2, d / 2 - 1.95 * U); }
+  caixa(g, BRANCO, w + U, 0.4 * U, d + 3 * U, 0, h1 + 0.2 * U, 1.5 * U);
+  caixa(g, parede, w, h2, d - 4 * U, 0, h1 + h2 / 2, -2 * U);
+  caixa(g, BRANCO, w + 2 * U, 0.5 * U, d + 2 * U, 0, h1 + h2 + 0.25 * U, 0);
+  for (let i = 0; i < n * 2; i++) cil(g, GRADIL, 0.04 * U, 1 * U, (i - n + 0.5) * (mod / 2), h1 + 0.9 * U, d / 2 + 2.9 * U, 4);
+  caixa(g, GRADIL, w, 0.06 * U, 0.06 * U, 0, h1 + 1.4 * U, d / 2 + 2.9 * U);
+  return g; } });
+// a árvore de copa larga e chata (as da imagem)
+KITS.arvoreCopa = F("Vegetação", { nome: "Árvore de copa larga", grupo: "Natureza", montar() {
+  const g = new THREE.Group(), r = sorteio(11); cil(g, TRONCO, 0.3 * U, 4 * U, 0, 2 * U, 0, 6, 0.2 * U);
+  for (let k = 0; k < 5; k++) { const c = malha(g, new THREE.IcosahedronGeometry((1.8 + r() * 0.8) * U, 0), k % 2 ? VERDE : VERDE2, (r() - 0.5) * 3 * U, (4.4 + r() * 0.8) * U, (r() - 0.5) * 3 * U); c.scale.y = 0.45; } return g; } });
+KITS.gramado = F("Vegetação", { nome: "Gramado (20 × 20 m)", grupo: "Natureza", montar() { const g = new THREE.Group(); const m = malha(g, new THREE.PlaneGeometry(20 * U, 20 * U), M(0x3fa52c, { roughness: 0.95 }), 0, 0.3, 0); m.rotation.x = -Math.PI / 2; return g; } });
+KITS.van = F("Automóveis", { nome: "Van", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), C = M(0xe9e9e6, { roughness: 0.4 }), V = M(0x1f2a33, { roughness: 0.1, metalness: 0.4 }), P = M(0x1d1f22, { roughness: 0.95 });
+  caixa(g, C, 2 * U, 2.1 * U, 5.2 * U, 0, 1.45 * U, 0); caixa(g, V, 1.9 * U, 0.7 * U, 0.1 * U, 0, 1.9 * U, 2.6 * U); for (const s of [-1, 1]) caixa(g, V, 0.05 * U, 0.6 * U, 1.2 * U, s * 1.01 * U, 1.9 * U, 1.7 * U);
+  for (const z of [-1.7, 1.7]) for (const s of [-1, 1]) { const r = cil(g, P, 0.36 * U, 0.25 * U, s * 0.9 * U, 0.36 * U, z * U, 12); r.rotation.z = Math.PI / 2; } return g; } });
+KITS.carroAmarelo = F("Automóveis", { nome: "Carro amarelo", grupo: "Paddock", montar: () => sedan(0xe0b021) });
+// os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.
+export const FILTROS = ["Arquibancadas", "Automóveis", "Contenção", "Paddock", "Vegetação", "Geral"];
+const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibancadas", pneus: "Contenção", tecpro: "Contenção", grade: "Contenção", guardrail: "Contenção", cone: "Contenção",
+  carroBranco: "Automóveis", carroVermelho: "Automóveis", carroAzul: "Automóveis", caminhaoBau: "Automóveis", caminhaoCinza: "Automóveis", caminhaoPrancha: "Automóveis", ambulancia: "Automóveis", telehandler: "Automóveis", iate: "Automóveis",
+  tenda: "Paddock", container: "Paddock", torreControle: "Paddock", hospitalidade: "Paddock", grua: "Paddock", heliponto: "Paddock" };
+export function filtroDoKit(id) { const k = KITS[id]; return k?.filtro || PELO_ID[id] || (k?.grupo === "Natureza" ? "Vegetação" : "Geral"); }
 export function montarKit(id) { const k = KITS[id]; if (!k) return null; const g = k.montar(); g.name = "kit-" + id; return g; }

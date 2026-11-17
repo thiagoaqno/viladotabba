@@ -81,7 +81,45 @@ function montarEscape(it, tr) {
   const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: texEscape.get(k), roughness: 0.9, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
   m.receiveShadow = true; m.userData.item = it; m.name = "escape"; return m;
 }
+// (2026-11-17, o Thiago: "construir pistas desenhando o eixo, com curva clicando no início, no fim e onde quero a curva; só cenário") o TRECHO:
+// uma faixa de asfalto que segue o eixo A → B, curvando para passar pelo ponto M (a curva de Bézier quadrática cujo meio é M), com as linhas
+// brancas da beira e, se pedir, as zebras. Não é pista de andar: é só enfeite. Os pontos são relativos à posição do item (o A), para o gizmo mover.
+// { tipo: "trecho", pts: [[ax, az], [mx, mz], [bx, bz]] (M = null numa reta), largura, zebra, x, y, z, ry, s }
+const texTrecho = new Map();
+function texDoTrecho(tipo) {
+  if (texTrecho.has(tipo)) return texTrecho.get(tipo);
+  const c = document.createElement("canvas"); c.width = 128; c.height = 128; const x = c.getContext("2d");
+  if (tipo === "asfalto") { x.fillStyle = "#3b3e44"; x.fillRect(0, 0, 128, 128); for (let i = 0; i < 400; i++) { x.fillStyle = Math.random() < 0.5 ? "#00000022" : "#ffffff10"; x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2); } x.fillStyle = "#f4f4f4"; x.fillRect(3, 0, 5, 128); x.fillRect(120, 0, 5, 128); }
+  else { x.fillStyle = "#d62828"; x.fillRect(0, 0, 128, 64); x.fillStyle = "#f4f4f4"; x.fillRect(0, 64, 128, 64); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; texTrecho.set(tipo, t); return t;
+}
+export function eixoDoTrecho(pts, passo = 4) {
+  const [a, m, b] = pts, A = new THREE.Vector2(a[0], a[1]), B = new THREE.Vector2(b[0], b[1]);
+  // o controle da Bézier para ela passar por M no meio: C = 2M − (A + B)/2
+  const C = m ? new THREE.Vector2(2 * m[0] - (a[0] + b[0]) / 2, 2 * m[1] - (a[1] + b[1]) / 2) : A.clone().add(B).multiplyScalar(0.5);
+  const curva = new THREE.QuadraticBezierCurve(A, C, B), n = Math.max(2, Math.ceil(curva.getLength() / passo));
+  return curva.getSpacedPoints(n);
+}
+function faixa(eixo, de, ate, y, tex, vPorU) {
+  const vs = [], uv = [], idx = []; let acc = 0;
+  for (let i = 0; i < eixo.length; i++) {
+    const p = eixo[i], q = eixo[Math.min(i + 1, eixo.length - 1)], o = eixo[Math.max(i - 1, 0)], tx = q.x - o.x, tz = q.y - o.y, l = Math.hypot(tx, tz) || 1, nx = -tz / l, nz = tx / l;
+    if (i) acc += p.distanceTo(eixo[i - 1]);
+    vs.push(p.x + nx * de, y, p.y + nz * de, p.x + nx * ate, y, p.y + nz * ate); uv.push(0, acc * vPorU, 1, acc * vPorU);
+    if (i < eixo.length - 1) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })); m.receiveShadow = true; return m;
+}
+function montarTrecho(it) {
+  const pts = Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2] ? it.pts : null; if (!pts) return null;
+  const W = Math.max(4, +it.largura || 60), eixo = eixoDoTrecho(pts), g = new THREE.Group();
+  g.add(faixa(eixo, -W / 2, W / 2, 0.5, texDoTrecho("asfalto"), 1 / W));
+  if (it.zebra) for (const s of [-1, 1]) g.add(faixa(eixo, s * W / 2, s * (W / 2 + 7), 0.55, texDoTrecho("zebra"), 1 / 14));
+  return g;
+}
 export async function montarItem(it, tr = null) {
+  if (it.tipo === "trecho") { const o = montarTrecho(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "trecho"; return o; }
   if (it.tipo === "escape") return montarEscape(it, tr);
   // (2026-11-16, o Thiago: "deve ser possível agrupar e desagrupar itens") um GRUPO: os itens dentro dele com posição relativa a ele
   if (it.tipo === "grupo") { const g = new THREE.Group(); for (const o of await Promise.all((it.itens || []).map((x) => montarItem(x, tr)))) if (o) g.add(o); g.position.set(+it.x || 0, +it.y || 0, +it.z || 0); g.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); g.scale.setScalar(+it.s || 1); g.userData.item = it; g.name = "grupo"; return g; }

@@ -25,6 +25,19 @@ let prevRender = null; // (a prévia do conversor, desenhada junto com a cena)
 const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const api = (u, op) => fetch("/api/corrida/editor/" + u, op).then(async (r) => { const j = await r.json().catch(() => ({})); if (!r.ok) throw Error(j.erro || r.statusText); return j; });
 
+// ---------- no site: só entra quem fez login pelo GitHub (corrida-editor-online.js) ----------
+{
+  const r = await fetch("/api/corrida/editor/eu").catch(() => null);
+  if (!r || !r.ok) {
+    const j = r ? await r.json().catch(() => ({})) : {};
+    const t = document.createElement("div");
+    t.style.cssText = "position:fixed;inset:0;z-index:99;display:grid;place-items:center;background:#0d1016;color:#e8ecf2;font:15px Barlow,system-ui,sans-serif";
+    t.innerHTML = j.entrar ? `<div style="text-align:center"><h2 style="margin:0 0 12px">Editor de cenário</h2><a href="${j.entrar}?pista=${encodeURIComponent(pista)}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#24292f;color:#fff;text-decoration:none;font-weight:700">Entrar com GitHub</a><p style="opacity:.6;margin-top:12px">Só a conta do dono do site.</p></div>`
+      : `<div style="text-align:center;max-width:420px"><h2>Editor de cenário</h2><p>O editor não está ligado neste servidor. No PC, abra pelo editor-de-pistas.bat.</p></div>`;
+    document.body.appendChild(t);
+    throw Error("editor: sem login");
+  }
+}
 // ---------- a tela: só o 3D e o painel ----------
 for (const id of ["home", "lobby", "bar"]) document.getElementById(id)?.classList.add("hidden");
 document.getElementById("race")?.classList.remove("hidden");

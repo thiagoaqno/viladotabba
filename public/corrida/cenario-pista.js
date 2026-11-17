@@ -34,9 +34,37 @@ function montarPlaca(it) {
   for (const sx of [-1, 1]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, alto + hgt / 2, 8), poste); p.position.set(sx * w * 0.38, (alto + hgt / 2) / 2, -0.8); p.castShadow = true; g.add(p); }
   return g;
 }
-export async function montarItem(it) {
+// (2026-11-17, o Thiago: "tem que facilitar de eu criar áreas de escape assim") a ÁREA DE ESCAPE: uma faixa que segue a beira da pista do
+// ponto i0 ao i1 (pode dar a volta), de um lado, a partir de `de` (por padrão, depois da zebra) com a `largura` pedida, no padrão escolhido
+// (o laranja com as marcas carimbadas, o asfalto, o listrado vermelho e branco ou a brita). { tipo: "escape", i0, i1, lado, de, largura, padrao, marca }
+const PADROES = {
+  laranja: (x, w, h, marca) => { x.fillStyle = "#c8601c"; x.fillRect(0, 0, w, h); for (let i = 0; i < 500; i++) { x.fillStyle = Math.random() < 0.5 ? "#00000010" : "#ffffff10"; x.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
+    x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.strokeStyle = "#ffffff"; x.lineWidth = 6; x.strokeRect(-90, -34, 180, 68); if (marca) { x.restore(); x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.translate(-w / 2, -h / 2); patrocinioEm(x, marca, w / 2, h / 2, 150, 54); } else { x.fillStyle = "#fff"; x.font = "900 40px Arial"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("GALERA", 0, 2, 160); } x.restore(); },
+  asfalto: (x, w, h) => { x.fillStyle = "#3a3d42"; x.fillRect(0, 0, w, h); for (let i = 0; i < 1500; i++) { x.fillStyle = Math.random() < 0.5 ? "#00000030" : "#ffffff14"; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } },
+  listrado: (x, w, h) => { x.fillStyle = "#f2f2f2"; x.fillRect(0, 0, w, h); x.fillStyle = "#c62828"; for (let k = -w; k < w * 2; k += 64) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 32, 0); x.lineTo(k + 32 - h, h); x.lineTo(k - h, h); x.fill(); } },
+  brita: (x, w, h) => { x.fillStyle = "#b9ab8a"; x.fillRect(0, 0, w, h); for (let i = 0; i < 2500; i++) { x.fillStyle = Math.random() < 0.5 ? "#8f8468" : "#d6cbb0"; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } },
+};
+export const PADROES_ESCAPE = { laranja: "Laranja com marcas", asfalto: "Asfalto", listrado: "Listrado vermelho e branco", brita: "Brita" };
+const texEscape = new Map();
+function montarEscape(it, tr) {
+  if (!tr) return null;
+  const { pts, n, W } = tr, lado = it.lado < 0 ? -1 : 1, de = +it.de || W / 2 + 7, larg = Math.max(4, +it.largura || 40), padrao = PADROES[it.padrao] ? it.padrao : "laranja";
+  const k = padrao + ":" + (it.marca || ""); if (!texEscape.has(k)) { const c = document.createElement("canvas"); c.width = 256; c.height = 256; PADROES[padrao](c.getContext("2d"), 256, 256, it.marca); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; texEscape.set(k, t); }
+  let i0 = Math.round(+it.i0) || 0, i1 = Math.round(+it.i1) || 0; if (i1 < i0) i1 += n; if (i1 - i0 > n) i1 = i0 + n;
+  const vs = [], uv = [], idx = [];
+  for (let i = i0; i <= i1; i++) {
+    const p = pts[((i % n) + n) % n], v = ((i - i0) * 6) / larg; // (6 unidades por ponto do traçado: a textura repete a cada `largura`)
+    for (const [l, u] of [[de, 0], [de + larg, 1]]) vs.push(p.x + p.nx * l * lado, p.h + 0.46, p.y + p.ny * l * lado), uv.push(u, v);
+    if (i < i1) { const a = (i - i0) * 2; if (lado > 0) idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); else idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: texEscape.get(k), roughness: 0.9, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+  m.receiveShadow = true; m.userData.item = it; m.name = "escape"; return m;
+}
+export async function montarItem(it, tr = null) {
+  if (it.tipo === "escape") return montarEscape(it, tr);
   // (2026-11-16, o Thiago: "deve ser possível agrupar e desagrupar itens") um GRUPO: os itens dentro dele com posição relativa a ele
-  if (it.tipo === "grupo") { const g = new THREE.Group(); for (const o of await Promise.all((it.itens || []).map(montarItem))) if (o) g.add(o); g.position.set(+it.x || 0, +it.y || 0, +it.z || 0); g.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); g.scale.setScalar(+it.s || 1); g.userData.item = it; g.name = "grupo"; return g; }
+  if (it.tipo === "grupo") { const g = new THREE.Group(); for (const o of await Promise.all((it.itens || []).map((x) => montarItem(x, tr)))) if (o) g.add(o); g.position.set(+it.x || 0, +it.y || 0, +it.z || 0); g.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); g.scale.setScalar(+it.s || 1); g.userData.item = it; g.name = "grupo"; return g; }
   // uma peça pronta da biblioteca (biblioteca.js), com a cor do item tingindo os materiais dela
   if (it.tipo === "kit") { const o = montarKit(it.kit); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); if (it.cor) o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color?.multiply(new THREE.Color(it.cor)); } }); o.userData.item = it; return o; }
   if (it.tipo === "placa") { const o = montarPlaca(it); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = `placa-${it.marca || ""}`; return o; }
@@ -68,7 +96,7 @@ export async function carregarCenario(tr) {
   await pronto;
   const dados = dadosDe.get(tr.pistaId || tr.id);
   if (!dados || !Array.isArray(dados.itens)) return g;
-  const objs = await Promise.all(dados.itens.map(montarItem));
+  const objs = await Promise.all(dados.itens.map((it) => montarItem(it, tr)));
   for (const o of objs) if (o) g.add(o);
   return g;
 }

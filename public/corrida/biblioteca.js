@@ -3,6 +3,7 @@
 // Tudo em unidades do jogo (1 m ≈ 4,8 u), apoiado em y = 0 e com a frente para +z. Materiais compartilhados por peça (o fundir.js junta).
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { patrocinioEm } from "./f1-capacetes.js";
 
 const U = 4.8; // unidades por metro
 const mats = new Map();
@@ -413,6 +414,102 @@ KITS.van = F("Automóveis", { nome: "Van", grupo: "Paddock", montar() {
   caixa(g, C, 2 * U, 2.1 * U, 5.2 * U, 0, 1.45 * U, 0); caixa(g, V, 1.9 * U, 0.7 * U, 0.1 * U, 0, 1.9 * U, 2.6 * U); for (const s of [-1, 1]) caixa(g, V, 0.05 * U, 0.6 * U, 1.2 * U, s * 1.01 * U, 1.9 * U, 1.7 * U);
   for (const z of [-1.7, 1.7]) for (const s of [-1, 1]) { const r = cil(g, P, 0.36 * U, 0.25 * U, s * 0.9 * U, 0.36 * U, z * U, 12); r.rotation.z = Math.PI / 2; } return g; } });
 KITS.carroAmarelo = F("Automóveis", { nome: "Carro amarelo", grupo: "Paddock", montar: () => sedan(0xe0b021) });
+// ---------- (2026-11-17, as imagens do Thiago: um kit geral de autódromo) ----------
+// barreiras em módulos (pneus coloridos, Tecpro, SAFER, guard-rail triplo, fardos de palha), os prédios do box (garagem, torre de controle,
+// prédio dos boxes com terraço), a arquibancada de cobertura em balanço com mastros, as luzes (tripé, poste com bandeira de patrocínio,
+// poste solar), o pórtico de treliça com a faixa, a grade com placas de patrocínio, o gazebo, a cabine e o grid da largada.
+// Os módulos de barreira têm o comprimento ao longo de x (a Linha de itens os enfileira).
+const corM = (c) => M(c, { roughness: 0.7 });
+function paredePneus(cor, compr = 4) {
+  const g = new THREE.Group(), L = compr * U, h = 0.9 * U, C = corM(cor), borr = M(0x1d1f22, { roughness: 0.95 }), pneu = new THREE.TorusGeometry(0.3 * U, 0.14 * U, 6, 12);
+  caixa(g, C, L, h, 1.5 * U, 0, h / 2, 0); const n = Math.floor(L / (0.7 * U));
+  for (let i = 0; i < n; i++) for (const s of [-1, 1]) { const t = malha(g, pneu, cor === 0x1d1f22 ? M(0x2a2c30) : C, (i - (n - 1) / 2) * (L / n), h + 0.06 * U, s * 0.36 * U); t.rotation.x = Math.PI / 2; malha(g, new THREE.CircleGeometry(0.17 * U, 10), borr, (i - (n - 1) / 2) * (L / n), h + 0.13 * U, s * 0.36 * U).rotation.x = -Math.PI / 2; }
+  return g;
+}
+for (const [id, nome, cor] of [["pneusVermelho", "vermelhos", 0xd8321e], ["pneusBranco", "brancos", 0xf2f2f0], ["pneusVerde", "verdes", 0x2fae3c], ["pneusAmarelo", "amarelos", 0xf2c230], ["pneusPreto", "pretos", 0x1d1f22]])
+  KITS[id] = F("Contenção", { nome: `Parede de pneus ${nome}`, grupo: "Pista", montar: () => paredePneus(cor) });
+KITS.tecproModulo = F("Contenção", { nome: "Tecpro (módulos)", grupo: "Pista", montar() {
+  const g = new THREE.Group(), cinza = M(0xc9cdd2, { roughness: 0.8 }), verm = M(0xd62828, { roughness: 0.7 });
+  for (let i = 0; i < 4; i++) { const x = (i - 1.5) * 1.25 * U; for (let k = 0; k < 2; k++) caixa(g, cinza, 1.2 * U, 0.55 * U, 1.1 * U, x, 0.28 * U + k * 0.56 * U, 0); if (i % 2) for (let k = 0; k < 2; k++) caixa(g, verm, 1.1 * U, 0.3 * U, 0.6 * U, x, 1.27 * U + k * 0.31 * U, 0.25 * U); }
+  return g; } });
+KITS.safer = F("Contenção", { nome: "Muro SAFER", grupo: "Pista", montar() {
+  const g = new THREE.Group(), C = M(0xe7e8e6, { roughness: 0.85 }), L = 8 * U; caixa(g, C, L, 1.2 * U, 0.5 * U, 0, 0.6 * U, 0); for (let k = 0; k < 4; k++) caixa(g, M(0xbfc2c4), L, 0.04 * U, 0.52 * U, 0, (0.2 + k * 0.25) * U, 0);
+  for (let i = 0; i < 8; i++) caixa(g, C, 0.25 * U, 0.35 * U, 0.6 * U, (i - 3.5) * U, 1.37 * U, 0); return g; } });
+KITS.guardrailTriplo = F("Contenção", { nome: "Guard-rail triplo", grupo: "Pista", montar() {
+  const g = new THREE.Group(), w = 8 * U, aco = M(0xc7ccd1, { metalness: 0.6, roughness: 0.35 }); for (const y of [0.5, 0.85, 1.2]) caixa(g, aco, w, 0.3 * U, 0.1 * U, 0, y * U, 0.15 * U);
+  for (let x = -w / 2; x <= w / 2; x += 2 * U) caixa(g, ESCURO, 0.14 * U, 1.4 * U, 0.14 * U, x, 0.7 * U, -0.05 * U); return g; } });
+KITS.fardos = F("Contenção", { nome: "Fardos de palha", grupo: "Pista", montar() { const g = new THREE.Group(), P = M(0xc8a25a, { roughness: 1 }); for (const x of [-0.65, 0.65]) caixa(g, P, 1.2 * U, 0.6 * U, 0.6 * U, x * U, 0.3 * U, 0); return g; } });
+KITS.muroConcretoTela = F("Contenção", { nome: "Muro de concreto com tela alta", grupo: "Pista", montar() {
+  const g = new THREE.Group(), w = 6 * U, C = M(0xdfe0dc, { roughness: 0.9 }); caixa(g, C, w, 1.2 * U, 0.5 * U, 0, 0.6 * U, 0); caixa(g, M(0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.3 }), w, 0.06 * U, 0.52 * U, 0, 1.2 * U, 0);
+  const ht = 3 * U, tela = new THREE.MeshStandardMaterial({ color: 0x3a3f46, roughness: 0.5, metalness: 0.4, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false });
+  malha(g, new THREE.PlaneGeometry(w, ht), tela, 0, 1.2 * U + ht / 2, 0); for (const x of [-w / 2, w / 2]) cil(g, ESCURO, 0.06 * U, ht, x, 1.2 * U + ht / 2, 0, 6); return g; } });
+// os prédios do box
+const PAREDE_BOX = M(0xeeeeec, { roughness: 0.8 }), PORTA_BOX = M(0xd8321e, { roughness: 0.6 });
+function portaGaragem(g, x, z, w, h) { caixa(g, PORTA_BOX, w, h, 0.1 * U, x, h / 2, z); for (let k = 0; k < 4; k++) caixa(g, M(0x1d1f22), w * 0.12, 0.25 * U, 0.12 * U, x + (k - 1.5) * w * 0.22, h * 0.7, z); }
+KITS.garagemBox = F("Paddock", { nome: "Garagem do box", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), w = 9 * U, d = 12 * U, h = 5 * U; caixa(g, PAREDE_BOX, w, h, d, 0, h / 2, 0); caixa(g, M(0xdadbd8), w + 0.4 * U, 0.4 * U, d + 0.4 * U, 0, h + 0.2 * U, 0); portaGaragem(g, 0, d / 2 + 0.05 * U, w * 0.75, h * 0.7); return g; } });
+KITS.torreBox = F("Paddock", { nome: "Torre de controle do box", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), w = 24 * U, d = 14 * U, h1 = 5 * U, h2 = 11 * U, V = M(0x1f2a33, { roughness: 0.15, metalness: 0.4 }), R = M(0xd8321e);
+  caixa(g, PAREDE_BOX, w, h1 + h2, d, 0, (h1 + h2) / 2, 0); for (let i = 0; i < 3; i++) portaGaragem(g, (i - 1.5) * 5 * U, d / 2 + 0.05 * U, 4 * U, 3.5 * U);
+  for (const x of [-w / 2 + 4.5 * U, w / 2 - 3.5 * U]) { caixa(g, R, (x < 0 ? 8 : 6) * U, h2 - U, 0.2 * U, x, h1 + h2 / 2, d / 2 + 0.1 * U); caixa(g, V, (x < 0 ? 7.4 : 5.4) * U, h2 - 1.6 * U, 0.25 * U, x, h1 + h2 / 2, d / 2 + 0.12 * U);
+    for (let k = 1; k < 4; k++) caixa(g, R, (x < 0 ? 7.4 : 5.4) * U, 0.15 * U, 0.3 * U, x, h1 + 0.5 * U + k * (h2 - U) / 4, d / 2 + 0.14 * U); }
+  for (const x of [-1.2, 1.2]) caixa(g, V, 2 * U, 2 * U, 0.25 * U, x * U + 1 * U, h1 + h2 - 3 * U, d / 2 + 0.12 * U);
+  caixa(g, M(0xd9dadb), w + 0.5 * U, 0.4 * U, d + 0.5 * U, 0, h1 + h2 + 0.2 * U, 0); for (let i = 0; i < 6; i++) caixa(g, M(0xa9adb2, { metalness: 0.4 }), 1.5 * U, 1 * U, 1 * U, (i - 2.5) * 3 * U, h1 + h2 + 0.9 * U, -2 * U);
+  return g; } });
+KITS.predioBoxesTerraco = F("Paddock", { nome: "Prédio dos boxes com terraço", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), n = 8, mod = 5 * U, w = n * mod, d = 12 * U, h1 = 4 * U, h2 = 4 * U, V = M(0x1f2a33, { roughness: 0.15, metalness: 0.4 });
+  caixa(g, PAREDE_BOX, w, h1, d, 0, h1 / 2, 0); for (let i = 0; i < n; i++) caixa(g, PORTA_BOX, mod * 0.8, 0.9 * U, 0.12 * U, (i - (n - 1) / 2) * mod, h1 - 0.8 * U, d / 2 + 0.06 * U);
+  caixa(g, PAREDE_BOX, w, h2, d * 0.6, 0, h1 + h2 / 2, -d * 0.2); caixa(g, V, w - U, h2 * 0.7, 0.2 * U, 0, h1 + h2 / 2, d * 0.1 + 0.1 * U); caixa(g, PORTA_BOX, 4 * U, h1 + h2, d, -w / 2 + 2 * U, (h1 + h2) / 2, 0.01 * U);
+  const teto = caixa(g, M(0xb4b7bb, { metalness: 0.3 }), w + 2 * U, 0.3 * U, d + 3 * U, 0, h1 + h2 + 0.8 * U, 1 * U); teto.rotation.x = 0.06;
+  for (let i = 0; i <= n; i += 2) cil(g, ESCURO, 0.15 * U, h2 + 0.8 * U, (i - n / 2) * mod, h1 + (h2 + 0.8 * U) / 2, d / 2 + 1.5 * U, 6);
+  caixa(g, GRADIL, w, 0.06 * U, 0.06 * U, 0, h1 + 1.1 * U, d / 2 + 0.3 * U); return g; } });
+// a arquibancada de cobertura em balanço: dois lances de cadeiras brancas com as escadas azuis, a cobertura presa por mastros e cabos
+KITS.arqCobertaMastros = F("Arquibancadas", { nome: "Arquibancada coberta com mastros", grupo: "Público", montar() {
+  const g = arquibancadaCadeiras({ largura: 36, fileiras: 14, base: 2, pilares: false, cor: M(0xf2f2f0, { roughness: 0.6 }) }), w = 36 * U, prof = 14 * 0.85 * U, topo = g.userData.yTopo + 4 * U;
+  for (const x of [-w / 3, 0, w / 3]) caixa(g, M(0x6fa8dc), 1.2 * U, 0.1 * U, prof, x, g.userData.yTopo / 2 + 0.5 * U, -prof / 2).rotation.x = Math.atan2(14 * 0.45, 14 * 0.85);
+  caixa(g, CONCRETO, w, topo, 0.6 * U, 0, topo / 2, -prof - 0.3 * U);
+  const cob = caixa(g, M(0xc4c7ca, { metalness: 0.3 }), w + U, 0.35 * U, prof + 3 * U, 0, topo, -prof / 2 + 1.5 * U); cob.rotation.x = 0.07;
+  for (const x of [-w / 2, -w / 6, w / 6, w / 2]) { cil(g, GRADIL, 0.15 * U, 6 * U, x, topo + 3 * U, -prof, 6); for (const z of [-prof * 0.1, -prof - 2 * U]) { const a = new THREE.Vector3(x, topo + 6 * U, -prof), b = new THREE.Vector3(x, topo, z), l = a.distanceTo(b); const c = cil(g, ESCURO, 0.03 * U, l, x, (a.y + b.y) / 2, (a.z + b.z) / 2, 4); c.rotation.x = Math.atan2(b.z - a.z, a.y - b.y); } }
+  return g; } });
+KITS.arqDuasCamadas = F("Arquibancadas", { nome: "Arquibancada de dois andares", grupo: "Público", montar() {
+  const g = new THREE.Group(), baixo = arquibancadaCadeiras({ largura: 30, fileiras: 8, base: 1, pilares: false, cor: M(0x3346c8, { roughness: 0.6 }) }), cima = arquibancadaCadeiras({ largura: 30, fileiras: 10, base: 0, pilares: false, cor: M(0xf2f2f0, { roughness: 0.6 }) });
+  g.add(baixo); cima.position.set(0, baixo.userData.yTopo + 3 * U, -8 * 0.85 * U - 2 * U); g.add(cima);
+  caixa(g, CONCRETO, 30 * U, baixo.userData.yTopo + 3 * U, 2 * U, 0, (baixo.userData.yTopo + 3 * U) / 2, -8 * 0.85 * U - U);
+  const ct = cima.position.y + cima.userData.yTopo + 3 * U; caixa(g, M(0x3a3d42), 31 * U, 0.4 * U, 12 * U, 0, ct, cima.position.z - 3 * U); for (const x of [-15, 0, 15]) cil(g, ESCURO, 0.2 * U, ct - cima.position.y, x * U, cima.position.y + (ct - cima.position.y) / 2, cima.position.z - 10 * 0.85 * U, 8);
+  return g; } });
+// as luzes
+const POSTE = M(0x3a3e44, { metalness: 0.5, roughness: 0.45 }), REFL = new THREE.MeshStandardMaterial({ color: 0xf4f6e8, emissive: 0xfff6d0, emissiveIntensity: 0.9 });
+function tripe(g, h) { for (let k = 0; k < 3; k++) { const a = (k / 3) * Math.PI * 2, p = cil(g, POSTE, 0.06 * U, 2.6 * U, Math.cos(a) * 0.9 * U, 1.1 * U, Math.sin(a) * 0.9 * U, 5); p.rotation.set(Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4); } cil(g, POSTE, 0.1 * U, h, 0, h / 2, 0, 8); }
+function refletor(g, x, y, z) { caixa(g, POSTE, 1.2 * U, 0.9 * U, 0.3 * U, x, y, z); caixa(g, REFL, 1 * U, 0.7 * U, 0.05 * U, x, y, z + 0.16 * U); }
+KITS.luzTripe = F("Geral", { nome: "Refletor no tripé", grupo: "Pista", montar() { const g = new THREE.Group(), h = 6 * U; tripe(g, h); refletor(g, 0, h + 0.4 * U, 0); return g; } });
+KITS.luzTripe4 = F("Geral", { nome: "Torre de 4 refletores", grupo: "Pista", montar() { const g = new THREE.Group(), h = 7 * U; tripe(g, h); caixa(g, POSTE, 2.4 * U, 0.12 * U, 0.12 * U, 0, h, 0); for (const x of [-0.75, 0.75]) for (const y of [0.1, 1.1]) refletor(g, x * U, h + y * U, 0.1 * U); return g; } });
+KITS.posteSolar = F("Geral", { nome: "Poste solar", grupo: "Pista", montar() { const g = new THREE.Group(), h = 8 * U; cil(g, POSTE, 0.12 * U, h, 0, h / 2, 0, 8); const p = caixa(g, M(0x22324a, { metalness: 0.5, roughness: 0.2 }), 0.8 * U, 0.08 * U, 3.5 * U, 0, h + 0.3 * U, 1.2 * U); p.rotation.x = -0.15; return g; } });
+const texBandeira = (marca) => texCanvas("bandeira-" + marca, 128, 256, (x, w, hh) => { x.fillStyle = "#f4f4f2"; x.fillRect(0, 0, w, hh); x.save(); x.translate(w / 2, hh / 2); x.rotate(-Math.PI / 2); x.translate(-w / 2, -hh / 2); patrocinioEm(x, marca, w / 2, hh / 2, hh * 0.9, w * 0.8); x.restore(); });
+function posteBandeira(marca) {
+  const g = new THREE.Group(), h = 7 * U; cil(g, POSTE, 0.14 * U, h, 0, h / 2, 0, 8, 0.1 * U); const b = caixa(g, POSTE, 0.08 * U, 0.08 * U, 2 * U, 0, h - 0.2 * U, 1 * U); b.rotation.x = -0.25;
+  malha(g, new THREE.SphereGeometry(0.5 * U, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), POSTE, 0, h - 0.6 * U, 2 * U); malha(g, new THREE.SphereGeometry(0.42 * U, 12, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M(0xf6e7c0, { emissive: 0xffe9b0, emissiveIntensity: 0.7 }), 0, h - 0.6 * U, 2 * U);
+  if (marca) { const t = texBandeira(marca); malha(g, new THREE.BoxGeometry(1.1 * U, 2.4 * U, 0.04 * U), [POSTE, POSTE, POSTE, POSTE, new THREE.MeshStandardMaterial({ map: t }), new THREE.MeshStandardMaterial({ map: t })], 0, h * 0.5, 0.65 * U).rotation.y = Math.PI / 2; }
+  return g;
+}
+KITS.posteLampiao = F("Geral", { nome: "Poste de lampião", grupo: "Pista", montar: () => posteBandeira(null) });
+for (const [id, marca] of [["posteBandeiraPneus", "pneus"], ["posteBandeiraEnergia", "energia"], ["posteBandeiraGalera", "galera"], ["posteBandeiraVila", "vila"]])
+  KITS[id] = F("Geral", { nome: "Poste com bandeira (" + marca + ")", grupo: "Pista", montar: () => posteBandeira(marca) });
+// o pórtico de treliça com a faixa "seu patrocínio aqui" e a grade com placas
+const texFaixa = (marca) => texCanvas("faixa-" + marca, 512, 64, (x, w, hh) => { const gr = x.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "#111"); gr.addColorStop(0.5, "#2a2a2a"); gr.addColorStop(1, "#111"); x.fillStyle = gr; x.fillRect(0, 0, w, hh); patrocinioEm(x, marca, w / 2, hh / 2, w * 0.6, hh * 0.8); });
+function trelica(g, x, h) { for (const dx of [-0.4, 0.4]) for (const dz of [-0.4, 0.4]) cil(g, GRADIL, 0.05 * U, h, x + dx * U, h / 2, dz * U, 5); for (let y = 0; y < h; y += 1.2 * U) caixa(g, GRADIL, 0.9 * U, 0.05 * U, 0.9 * U, x, y, 0); }
+KITS.porticoTrelica = F("Geral", { nome: "Pórtico de treliça com faixa", grupo: "Pista", montar() {
+  const g = new THREE.Group(), w = 16 * U, h = 5 * U; trelica(g, -w / 2, h); trelica(g, w / 2, h); caixa(g, GRADIL, w + U, 0.9 * U, 0.9 * U, 0, h + 0.45 * U, 0);
+  const t = texFaixa("galera"); malha(g, new THREE.BoxGeometry(w * 0.9, 1.4 * U, 0.1 * U), [POSTE, POSTE, POSTE, POSTE, new THREE.MeshStandardMaterial({ map: t }), new THREE.MeshStandardMaterial({ map: t })], 0, h - 0.8 * U, 0.5 * U); return g; } });
+KITS.gradePlacas = F("Contenção", { nome: "Grade com placa de patrocínio", grupo: "Pista", montar() {
+  const g = new THREE.Group(), w = 6 * U, h = 1.1 * U; for (const x of [-w / 2, 0, w / 2]) cil(g, GRADIL, 0.04 * U, h, x, h / 2, 0, 5); caixa(g, GRADIL, w, 0.05 * U, 0.05 * U, 0, h, 0);
+  const t = texFaixa("pneus"); malha(g, new THREE.BoxGeometry(w, 0.8 * U, 0.04 * U), [POSTE, POSTE, POSTE, POSTE, new THREE.MeshStandardMaterial({ map: t }), new THREE.MeshStandardMaterial({ map: t })], 0, 0.6 * U, 0.05 * U); return g; } });
+KITS.gazebo = F("Paddock", { nome: "Gazebo branco", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), w = 3 * U, h = 2.2 * U, L = M(0xfafaf8, { side: THREE.DoubleSide }); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) cil(g, GRADIL, 0.04 * U, h, x * w / 2, h / 2, z * w / 2, 5);
+  const t = malha(g, new THREE.ConeGeometry(w * 0.72, 1.2 * U, 4, 1, true), L, 0, h + 0.6 * U, 0); t.rotation.y = Math.PI / 4; for (let k = 0; k < 4; k++) { const a = (k / 4) * Math.PI * 2, b = caixa(g, L, w, 0.3 * U, 0.03 * U, Math.sin(a) * w / 2, h - 0.15 * U, Math.cos(a) * w / 2); b.rotation.y = a; } return g; } });
+KITS.cabineBranca = F("Geral", { nome: "Cabine de bandeirinha", grupo: "Pista", montar() { const g = new THREE.Group(); caixa(g, BRANCO, 1.4 * U, 2.2 * U, 1.2 * U, 0, 1.1 * U, 0); caixa(g, M(0x1d1f22), 1.1 * U, 1.3 * U, 0.05 * U, 0, 1.2 * U, 0.6 * U); for (const [k, c] of [0xd62828, 0xf2c230, 0x2fae3c].entries()) caixa(g, M(c), 0.2 * U, 0.6 * U, 0.04 * U, (k - 1) * 0.3 * U, 1.2 * U, 0.62 * U); return g; } });
+KITS.gridLargada = F("Geral", { nome: "Posições do grid (2)", grupo: "Pista", montar() {
+  const g = new THREE.Group(), t = texCanvas("grid", 128, 256, (x, w, hh) => { x.clearRect(0, 0, w, hh); x.strokeStyle = "#f4f4f2"; x.lineWidth = 8; x.beginPath(); x.moveTo(8, 60); x.lineTo(8, 8); x.lineTo(w - 8, 8); x.lineTo(w - 8, 60); x.stroke(); });
+  const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }); for (const [x, z] of [[-1, 0], [1, -1.6]]) { const p = malha(g, new THREE.PlaneGeometry(2.4 * U, 4.8 * U), m, x * 2.2 * U, 0.08 * U, z * 4.8 * U); p.rotation.x = -Math.PI / 2; } return g; } });
 // os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.
 export const FILTROS = ["Arquibancadas", "Automóveis", "Contenção", "Paddock", "Vegetação", "Geral"];
 const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibancadas", pneus: "Contenção", tecpro: "Contenção", grade: "Contenção", guardrail: "Contenção", cone: "Contenção",

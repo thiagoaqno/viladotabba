@@ -19,7 +19,7 @@ import { montarLayout } from "./layout.js";
 import { criarTerreno } from "./terreno.js";
 import { KITS, montarKit, FILTROS, filtroDoKit } from "../biblioteca.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
-import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, PADROES_ESCAPE } from "../cenario-pista.js";
+import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, PADROES_ESCAPE, MATERIAIS_AREA } from "../cenario-pista.js";
 
 const M_PARA_U = 4.8; // 1 metro ≈ 4,8 unidades do jogo (dinamica.js: 1 u = 0,2083 m): um asset em metros entra no tamanho certo
 const pista = new URLSearchParams(location.search).get("editor") || "interlagos";
@@ -191,6 +191,11 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     }
     varios.clear(); return selecionar(o); }
   if (!assetEscolhido) { if (comShift()) return; const peca = raio.intersectObjects(solidos(), false)[0]; return selecionar(peca ? pecaDe(peca.object) : null); }
+  if (assetEscolhido === "*area") { // (a área: cada clique é um canto; perto do primeiro, fecha)
+    const h0 = raio.intersectObjects(solidos(), false)[0], pt = h0 ? h0.point : raio.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3()); if (!pt) return;
+    if (areaPts.length > 2 && pt.distanceTo(areaPts[0]) < Math.max(10, cam.position.distanceTo(pt) * 0.03)) return fecharArea();
+    areaPts.push(pt.clone()); marcarArea(); return desenharArea();
+  }
   if (assetEscolhido === "*trecho" || assetEscolhido === "*linha") { // (o eixo: início, fim e, com curva, o ponto por onde ela passa)
     const ln = assetEscolhido === "*linha", curva = ln ? linhaCurva : trechoCurva, redesenhar = () => (ln ? desenharLinha() : desenharTrecho());
     const h0 = raio.intersectObjects(solidos(), false)[0], pt = h0 ? h0.point : raio.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3()); if (!pt) return;
@@ -237,7 +242,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); desenharLinha(); desenharZebra(); terreno?.parar(); } // (Esc solta a placa e o asset escolhidos)
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); desenharLinha(); desenharZebra(); terreno?.parar(); areaPts = []; marcarArea(); desenharArea(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });
@@ -253,6 +258,7 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <canvas id="edPrev"></canvas><div id="edConv"><small>Escolha um original para ver antes e depois.</small></div>
   <h3>Assets leves (para colocar)</h3><div id="edLeves" class="lst"></div>
   <h3>Adicionar asset</h3><div id="edBib"></div>
+  <h3>Área no chão (polígono)</h3><div id="edArea"></div>
   <h3>Zebra na beira da pista</h3><div id="edZebra"></div>
   <h3>Linha de itens (pneus, cerca, pilares…)</h3><div id="edLinha"></div>
   <h3>Desenhar pista (só cenário)</h3><div id="edTrecho"></div>
@@ -300,6 +306,40 @@ function desenharBiblioteca() {
   for (const b of $("edBib").querySelectorAll("[data-filtro]")) b.onclick = () => { filtroBib = b.dataset.filtro; desenharBiblioteca(); };
   $("edBibBusca").oninput = (e) => { buscaBib = e.target.value.trim().toLowerCase(); const pos = e.target.selectionStart; desenharBiblioteca(); const i = $("edBibBusca"); i.focus(); i.setSelectionRange(pos, pos); };
 }
+// ---------- a área (cenario-pista.js, tipo "area"): clique nos cantos do polígono; fecha clicando no primeiro, com Enter ou no botão ----------
+let areaPts = [], areaMaterial = "grama", areaEspalhar = "", areaEsp = 8;
+const marcasArea = new THREE.Group(); scene.add(marcasArea);
+function marcarArea() {
+  marcasArea.clear(); if (!areaPts.length) return;
+  for (const [k, p] of areaPts.entries()) { const m = new THREE.Mesh(new THREE.SphereGeometry(k ? 4 : 7, 12, 8), new THREE.MeshBasicMaterial({ color: k ? 0xffd23f : 0x3ddc84, depthTest: false })); m.renderOrder = 999; m.position.copy(p).y += 3; marcasArea.add(m); }
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([...areaPts, ...(areaPts.length > 2 ? [areaPts[0]] : [])].map((p) => p.clone().setY(p.y + 3))), new THREE.LineBasicMaterial({ color: 0xffd23f, depthTest: false })); l.renderOrder = 999; marcasArea.add(l);
+}
+async function fecharArea() {
+  if (areaPts.length < 3) return avisar("A área precisa de pelo menos 3 cantos.", true);
+  const A = areaPts[0], pts = areaPts.map((p) => [+(p.x - A.x).toFixed(2), +(p.z - A.z).toFixed(2)]);
+  const o = await colocar({ tipo: "area", pts, material: areaMaterial, espalhar: areaEspalhar || undefined, espaco: areaEspalhar ? areaEsp : undefined, x: A.x, y: Math.min(...areaPts.map((p) => p.y)), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
+  areaPts = []; marcarArea(); if (o) { guardarItem(o); avisar("Área pronta. Clique para começar outra (Esc para)."); } desenharArea();
+}
+function desenharArea() {
+  const on = assetEscolhido === "*area", el = $("edArea"); if (!el) return;
+  const kits = Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${areaEspalhar === id ? "selected" : ""}>${h(k.nome)}</option>`).join("");
+  el.innerHTML = `<div class="lin"><button id="edArBt" class="ferr ${on ? "on" : ""}">${on ? (areaPts.length ? `${areaPts.length} cantos: clique no próximo ou no primeiro para fechar` : "Clique no primeiro canto… (Esc sai)") : "⬠ Desenhar área (polígono)"}</button></div>
+    ${on && areaPts.length > 2 ? `<div class="lin"><button id="edArFim">Fechar a área (Enter)</button><button id="edArVolta">Tirar o último canto</button></div>` : ""}
+    <div class="lin"><label>Preencher <select id="edArMat">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === areaMaterial ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div>
+    <div class="lin"><label>Espalhar <select id="edArKit"><option value="">Nada</option>${kits}</select></label></div>
+    ${areaEspalhar ? `<div class="lin"><label>Um a cada (m) <input type="number" id="edArEsp" step="1" value="${areaEsp}"></label></div>` : ""}
+    <small>Clique nos cantos da área no chão. Ela segue o relevo. Escolha o que cobre o chão e, se quiser, uma peça para espalhar dentro (árvores, arbustos, pedras…).</small>`;
+  $("edArBt").onclick = () => { areaPts = []; marcarArea(); assetEscolhido = on ? null : "*area"; desenharArea(); desenharTrecho(); desenharLinha(); desenharZebra(); desenharBiblioteca(); };
+  if ($("edArFim")) $("edArFim").onclick = fecharArea;
+  if ($("edArVolta")) $("edArVolta").onclick = () => { areaPts.pop(); marcarArea(); desenharArea(); };
+  $("edArMat").onchange = (e) => { areaMaterial = e.target.value; };
+  $("edArKit").onchange = (e) => { areaEspalhar = e.target.value; desenharArea(); };
+  if ($("edArEsp")) $("edArEsp").onchange = (e) => { areaEsp = Math.max(1, +e.target.value || 8); };
+}
+addEventListener("keydown", (e) => {
+  if (assetEscolhido !== "*area" || e.target.closest?.("input,select")) return;
+  if (e.key === "Enter") { e.preventDefault(); fecharArea(); } else if (e.key === "Backspace" && areaPts.length) { e.preventDefault(); e.stopImmediatePropagation(); areaPts.pop(); marcarArea(); desenharArea(); }
+}, true);
 // ---------- desenhar pista de cenário (cenario-pista.js, tipo "trecho"): clique no início, no fim e (com curva) por onde ela passa ----------
 let trechoPts = [], trechoCurva = true, trechoZebra = true, trechoEmendar = true, trechoLarg = Math.round(tr.W || 60);
 const marcasTrecho = new THREE.Group(); scene.add(marcasTrecho);
@@ -430,7 +470,8 @@ function desenharItem(soNumeros = false) {
   const deg = (r) => (r * 180) / Math.PI;
   if (soNumeros && el.querySelector("[data-c]")) { for (const [k, v] of [["x", o.position.x], ["y", o.position.y], ["z", o.position.z], ["giro", deg(o.rotation.y)], ["escala", o.scale.x]]) { const i = el.querySelector(`[data-c="${k}"]`); if (i && document.activeElement !== i) i.value = (+v).toFixed(k === "escala" ? 2 : 0); } return; }
   const placa = it.tipo === "placa";
-  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "linha" ? "Linha de " + (it.modelo || "").replace("kit:", "") : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
+  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "linha" ? "Linha de " + (it.modelo || "").replace("kit:", "") : it.tipo === "area" ? "Área · " + (MATERIAIS_AREA[it.material] || "") : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
+    ${it.tipo === "area" ? `<div class="lin"><label>Preencher <select data-pl="material">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === it.material ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div><div class="lin"><label>Espalhar <select data-pl="espalhar"><option value="">Nada</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${id === it.espalhar ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label><label>A cada (m) <input type="number" step="1" data-pl="espaco" value="${it.espaco || 8}"></label></div>` : ""}
     ${it.tipo === "linha" ? `<div class="lin"><label>Espaço (m) <input type="number" step="0.5" data-pl="espaco" value="${it.espaco || 4}"></label><label>Altura (m) <input type="number" step="0.5" data-pl="altura" value="${it.altura || 3}"></label></div>` : ""}
     ${it.tipo === "trecho" ? `<div class="lin"><label>Largura <input type="number" step="5" data-pl="largura" value="${it.largura || 60}"></label><button data-trz>${it.zebra ? "Tirar zebras" : "Pôr zebras"}</button></div>` : ""}
     ${placa ? `<div class="lin"><select data-pl="marca">${opcoesDeMarca(it.marca)}</select><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>
@@ -586,7 +627,7 @@ addEventListener("keydown", (e) => {
   setTimeout(marcarModo, 0);
 });
 marcarModo();
-desenharPlaca(); desenharBiblioteca(); desenharDe(); desenharEscape(); desenharTrecho(); desenharLinha(); desenharZebra(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
+desenharPlaca(); desenharBiblioteca(); desenharDe(); desenharEscape(); desenharTrecho(); desenharLinha(); desenharZebra(); desenharArea(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
 // ---------- publicar: salva e abre o PR (corrida-editor.js /publicar) ----------
 $("edPublicar").onclick = async () => {
   const msg = prompt("O que mudou? (vira o título do PR)", `cenário de ${PISTAS[pista]?.name || pista}`); if (msg == null) return;

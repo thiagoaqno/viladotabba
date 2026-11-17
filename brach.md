@@ -26,3 +26,11 @@ Conferido só com `node --check`.
 Novo: `public/corrida/editor/terreno.js`. Mexidos: `cenario-pista.js` (lê o relevo), `pista.js` (soma o relevo ao chão), `editor.js`, `layout.js`.
 
 Erosão e pintura de material no chão ainda não.
+
+## Área no chão (polígono), na aba Terreno
+
+- Clique nos cantos do polígono no chão; fecha clicando no primeiro canto, com Enter ou no botão. Backspace tira o último canto, Esc cancela.
+- **Preencher** com grama, mato baixo, terra, brita, areia, asfalto, concreto, água ou nada; a cobertura segue o relevo (lido da grade do chão, sem raio).
+- **Espalhar** qualquer peça da biblioteca dentro dela, uma a cada N metros, com giro e tamanho sorteados (sempre os mesmos para a mesma área).
+- No Inspetor dá para trocar o preenchimento, a peça e o espaçamento depois.
+- Salvo como `{ tipo: "area", pts, material, espalhar, espaco }` no `cenario/<pista>.json`.

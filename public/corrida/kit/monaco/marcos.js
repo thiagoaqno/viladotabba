@@ -57,6 +57,11 @@ function janela(g, x, y, z, w, h, frontao) {
   caixa(g, PEDRA, w + 4, h + 4, 1, x, y, z); caixa(g, JANELA_M, w, h, 1.2, x, y, z + 0.3); caixa(g, PEDRA, w * 0.12, h, 1.4, x, y, z + 0.5); // a moldura, o vidro escuro e o caixilho do meio
   if (frontao) caixa(g, PEDRA, w + 8, 2.2, 2.4, x, y + h / 2 + 3.5, z + 0.8); // a cornija da janela
 }
+// a área do Casino no chão (o retângulo dele, já na escala e no lugar de `casino`): quem tem um canto dentro dela não é desenhado (monaco.js)
+export function dentroDoCasino(b) {
+  const praca = D.marcos.praca || D.marcos.casino, q = quadro(b, praca), esc = Math.max(1, Math.min(1.7, q.w / 320, q.d / 170)), c = Math.cos(q.phi), s = Math.sin(q.phi);
+  return (x, z) => { const dx = x - q.cx, dz = z - q.cz, lx = (dx * c - dz * s) / esc, lz = (dx * s + dz * c) / esc; return Math.abs(lx) < 165 && lz > -80 && lz < 110; }; // (do fundo à marquise, com folga)
+}
 function casino(tr, add, b, praca, ponto, hAt) {
   // a planta do OpenStreetMap junta o Casino, o átrio e o teatro numa peça só (150 m): a fachada vai no ponto do marco, virada para a praça
   // (2026-11-16, o print do Thiago: "o cassino está mal posicionado e devia ser maior; tem um retângulo onde parece que deveria ser o lugar dele")
@@ -195,7 +200,7 @@ const ESP = { casino: 1, hotelDeParis: 2, cafeDeParis: 3, opera: 4, fairmont: 5,
 export function marcosMonaco(tr, addBase, lista, hAt) {
   grupos.length = 0; const add = (g) => { if (g.isGroup) grupos.push(g); return addBase(g); };
   const m = D.marcos, praca = m.praca || m.casino, feitos = [], { pts, n } = tr, noTraco = (f) => { const p = pts[Math.floor(f * n) % n]; return [p.x, p.y]; };
-  const dono = (nome) => lista.find((q) => q.esp === ESP[nome]);
+  const dono = (nome) => lista.find((q) => q.esp === ESP[nome] && (nome === "casino" || !q.semCorpo)); // (um prédio engolido pelo Casino não recebe marco)
   let b;
   if ((b = dono("casino")) && m.casino) { casino(tr, add, b, praca, m.casino, hAt); feitos.push("casino"); }
   // o bloco do Café de Paris na planta é o do Hôtel de Paris (os dois dividem a esquina da praça): a mansarda de ardósia e a cúpula vão nele

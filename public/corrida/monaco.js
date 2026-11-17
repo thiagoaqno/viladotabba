@@ -7,7 +7,7 @@ import { sinalDaCurva } from "./kit/comum.js";
 import { arquibancadas } from "./kit/arquibancadas.js";
 import { D, fundoMonaco, aguaMonaco, orlaMonaco, relevoMonaco, afastarMuro, NIVEL_DO_MAR } from "./kit/monaco/mundo.js";
 import { lerPredios, indiceDePredios, predios, adensarRua } from "./kit/monaco/predios.js";
-import { marcosMonaco } from "./kit/monaco/marcos.js";
+import { marcosMonaco, dentroDoCasino } from "./kit/monaco/marcos.js";
 import { mar, porto, piscinas, atracados } from "./kit/monaco/agua.js";
 import { escapesMonaco, noEscape } from "./kit/monaco/escapes.js";
 import { arcoSainteDevote, predioAnthonyNoghes } from "./kit/monaco/pontos.js";
@@ -88,7 +88,12 @@ export function cenarioMonaco(tr, ctx) {
   tunel(tr, add);
   fairmontSobreOTunel(tr, add); // o hotel Fairmont, largo e curvo, sobre a entrada do túnel
   pontePortier(tr, add, hAt, predioEm); // o viaduto da Boulevard du Larvotto, por cima da pista logo antes do Portier (antes das árvores e da vida: reserva o lugar)
-  { const c = lista.find((q) => q.esp === 1); if (c) c.semCorpo = true; } // (o Casino, kit/monaco/marcos.js, é o corpo inteiro: o prédio genérico da planta não é desenhado)
+  { // (o Casino, kit/monaco/marcos.js, é o corpo inteiro: o prédio genérico da planta não é desenhado; e, desde que ficou 1,6× maior
+  // (2026-11-16, o print do Thiago: "faltou apagar essa parte da frente"), os prédios que caíam dentro dele também não: a planta dele
+  // (o retângulo dele, kit/monaco/marcos.js dentroDoCasino) marca quem sai, e um marco que ia num deles (o Hôtel de Paris) não é montado)
+    const c = lista.find((q) => q.esp === 1);
+    if (c) { c.semCorpo = true; const dentro = dentroDoCasino(c); for (const q of lista) if (q !== c && (dentro(q.cx, q.cz) || q.P.some(([x, z]) => dentro(x, z)))) q.semCorpo = true; }
+  }
   predios(tr, add, lista);
   marcosMonaco(tr, add, lista, hAt);
   porto(tr, add, ctx);

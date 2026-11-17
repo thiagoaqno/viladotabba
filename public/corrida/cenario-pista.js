@@ -24,6 +24,19 @@ export function modeloDoAsset(nome) {
 // uma cópia do asset para um item (a cor, quando tem, multiplica a do material: cada item ganha o seu)
 // (2026-11-16, o Thiago: "uma opção de adicionar placa e escolher o patrocinador e a escala") a placa de patrocínio: o painel 4 × 1 com a marca
 // (as mesmas do capacete e do halo, f1-marcas.js) no fundo da cor escolhida, em dois postes. { tipo: "placa", marca, fundo, w (largura), s }
+// (2026-11-17, o Thiago: "um pórtico genérico com espaço para patrocínio") o PÓRTICO: dois pilares, a viga por cima da pista com a faixa
+// do patrocínio nas duas faces e as luzes da largada embaixo. { tipo: "portico", marca, fundo, w (o vão), alto (a altura livre) }
+function montarPortico(it) {
+  const w = +it.w || 150, alto = +it.alto || 32, hv = Math.max(10, w * 0.09), c = document.createElement("canvas"); c.width = 2048; c.height = Math.round(2048 * hv / w);
+  const x = c.getContext("2d"); x.fillStyle = it.fundo || "#101114"; x.fillRect(0, 0, c.width, c.height); if (it.marca) for (const cx of [c.width * 0.25, c.width * 0.75]) patrocinioEm(x, it.marca, cx, c.height / 2, c.width * 0.42, c.height * 0.8);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  const g = new THREE.Group(), estr = new THREE.MeshStandardMaterial({ color: 0xd8dadd, roughness: 0.5, metalness: 0.4 }), faixa = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 });
+  for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(4, alto + hv, 4), estr); p.position.set(s * (w / 2 + 2), (alto + hv) / 2, 0); p.castShadow = true; g.add(p); }
+  const viga = new THREE.Mesh(new THREE.BoxGeometry(w + 8, hv, 3), [estr, estr, estr, estr, faixa, faixa]); viga.position.y = alto + hv / 2; viga.castShadow = true; g.add(viga);
+  const luz = new THREE.MeshStandardMaterial({ color: 0x330000, emissive: 0xff1a1a, emissiveIntensity: 0.4 });
+  for (let k = 0; k < 5; k++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.6, 12), luz); l.rotation.x = Math.PI / 2; l.position.set((k - 2) * 5, alto - 2, 1.8); g.add(l); }
+  return g;
+}
 function montarPlaca(it) {
   const w = +it.w || 60, hgt = w / 4, c = document.createElement("canvas"); c.width = 1024; c.height = 256;
   const x = c.getContext("2d"); x.fillStyle = it.fundo || "#101114"; x.fillRect(0, 0, 1024, 256); if (it.marca) patrocinioEm(x, it.marca, 512, 128, 940, 230);
@@ -38,18 +51,25 @@ function montarPlaca(it) {
 // ponto i0 ao i1 (pode dar a volta), de um lado, a partir de `de` (por padrão, depois da zebra) com a `largura` pedida, no padrão escolhido
 // (o laranja com as marcas carimbadas, o asfalto, o listrado vermelho e branco ou a brita). { tipo: "escape", i0, i1, lado, de, largura, padrao, marca }
 const PADROES = {
-  laranja: (x, w, h, marca) => { x.fillStyle = "#c8601c"; x.fillRect(0, 0, w, h); for (let i = 0; i < 500; i++) { x.fillStyle = Math.random() < 0.5 ? "#00000010" : "#ffffff10"; x.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
+  laranja: (x, w, h, marca) => { if (marca === "-") { x.fillStyle = "#c8601c"; x.fillRect(0, 0, w, h); return; } x.fillStyle = "#c8601c"; x.fillRect(0, 0, w, h); for (let i = 0; i < 500; i++) { x.fillStyle = Math.random() < 0.5 ? "#00000010" : "#ffffff10"; x.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
     x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.strokeStyle = "#ffffff"; x.lineWidth = 6; x.strokeRect(-90, -34, 180, 68); if (marca) { x.restore(); x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.translate(-w / 2, -h / 2); patrocinioEm(x, marca, w / 2, h / 2, 150, 54); } else { x.fillStyle = "#fff"; x.font = "900 40px Arial"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("GALERA", 0, 2, 160); } x.restore(); },
   asfalto: (x, w, h) => { x.fillStyle = "#3a3d42"; x.fillRect(0, 0, w, h); for (let i = 0; i < 1500; i++) { x.fillStyle = Math.random() < 0.5 ? "#00000030" : "#ffffff14"; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } },
   listrado: (x, w, h) => { x.fillStyle = "#f2f2f2"; x.fillRect(0, 0, w, h); x.fillStyle = "#c62828"; for (let k = -w; k < w * 2; k += 64) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 32, 0); x.lineTo(k + 32 - h, h); x.lineTo(k - h, h); x.fill(); } },
   brita: (x, w, h) => { x.fillStyle = "#b9ab8a"; x.fillRect(0, 0, w, h); for (let i = 0; i < 2500; i++) { x.fillStyle = Math.random() < 0.5 ? "#8f8468" : "#d6cbb0"; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } },
 };
+// (2026-11-17, o Thiago: "áreas de escape com espaço para patrocínio") em qualquer padrão a marca vai carimbada no meio de cada repetição,
+// numa placa da cor escolhida (ou direto, sem placa)
+function carimbo(x, marca, fundo) {
+  x.save(); x.translate(128, 128); x.rotate(-Math.PI / 2);
+  if (fundo) { x.fillStyle = fundo; x.fillRect(-96, -40, 192, 80); }
+  x.translate(-128, -128); patrocinioEm(x, marca, 128, 128, 170, 62); x.restore();
+}
 export const PADROES_ESCAPE = { laranja: "Laranja com marcas", asfalto: "Asfalto", listrado: "Listrado vermelho e branco", brita: "Brita" };
 const texEscape = new Map();
 function montarEscape(it, tr) {
   if (!tr) return null;
   const { pts, n, W } = tr, lado = it.lado < 0 ? -1 : 1, de = +it.de || W / 2 + 7, larg = Math.max(4, +it.largura || 40), padrao = PADROES[it.padrao] ? it.padrao : "laranja";
-  const k = padrao + ":" + (it.marca || ""); if (!texEscape.has(k)) { const c = document.createElement("canvas"); c.width = 256; c.height = 256; PADROES[padrao](c.getContext("2d"), 256, 256, it.marca); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; texEscape.set(k, t); }
+  const k = padrao + ":" + (it.marca || "") + ":" + (it.fundoMarca || ""); if (!texEscape.has(k)) { const c = document.createElement("canvas"); c.width = 256; c.height = 256; PADROES[padrao](c.getContext("2d"), 256, 256, it.marca); if (padrao !== "laranja" && it.marca && it.marca !== "-") carimbo(c.getContext("2d"), it.marca, it.fundoMarca); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; texEscape.set(k, t); }
   let i0 = Math.round(+it.i0) || 0, i1 = Math.round(+it.i1) || 0; if (i1 < i0) i1 += n; if (i1 - i0 > n) i1 = i0 + n;
   const vs = [], uv = [], idx = [];
   for (let i = i0; i <= i1; i++) {
@@ -67,6 +87,7 @@ export async function montarItem(it, tr = null) {
   if (it.tipo === "grupo") { const g = new THREE.Group(); for (const o of await Promise.all((it.itens || []).map((x) => montarItem(x, tr)))) if (o) g.add(o); g.position.set(+it.x || 0, +it.y || 0, +it.z || 0); g.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); g.scale.setScalar(+it.s || 1); g.userData.item = it; g.name = "grupo"; return g; }
   // uma peça pronta da biblioteca (biblioteca.js), com a cor do item tingindo os materiais dela
   if (it.tipo === "kit") { const o = montarKit(it.kit); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); if (it.cor) o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color?.multiply(new THREE.Color(it.cor)); } }); o.userData.item = it; return o; }
+  if (it.tipo === "portico") { const o = montarPortico(it); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = `portico-${it.marca || ""}`; return o; }
   if (it.tipo === "placa") { const o = montarPlaca(it); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = `placa-${it.marca || ""}`; return o; }
   const base = await modeloDoAsset(it.asset); if (!base) return null;
   const o = base.clone(true);

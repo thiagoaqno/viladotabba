@@ -157,7 +157,7 @@ function chaoEm(x, z) { raio.set(new THREE.Vector3(x, 5000, z), new THREE.Vector
 function noChao(o) { const b = new THREE.Box3().setFromObject(o); o.position.y += chaoEm(o.position.x, o.position.z) - b.min.y; }
 
 // ---------- os itens ----------
-let escapeA = null, escapeLarg = 60, escapeDe = 7, escapePadrao = "laranja", escapeMarca = ""; // (a área de escape: o primeiro clique e as escolhas)
+let escapeA = null, escapeLarg = 60, escapeDe = 7, escapePadrao = "laranja", escapeMarca = "", escapeFundo = ""; // (a área de escape: o primeiro clique e as escolhas)
 const varios = new Set(); // (a seleção de vários itens: Ctrl+clique)
 let selecionado = null, assetEscolhido = null, placaMarca = "pirelli", placaFundo = "#101114"; // ("*placa": o próximo clique no chão põe uma placa)
 // as peças que a pista já tinha e foram mexidas: chave -> ajuste (salvo em `ajustes`)
@@ -192,10 +192,15 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i], lat = (hit.point.x - p.x) * p.nx + (hit.point.z - p.y) * p.ny;
     if (!escapeA) { escapeA = { i, lado: lat >= 0 ? 1 : -1 }; avisar("Área de escape: agora clique onde ela termina (do mesmo lado)."); return; }
     const a = escapeA; escapeA = null; let i0 = a.i, i1 = i; const n = tr.n, fwd = (i1 - i0 + n) % n; if (fwd > n / 2) [i0, i1] = [i1, i0];
-    const o2 = await colocar({ tipo: "escape", i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + escapeDe), largura: escapeLarg, padrao: escapePadrao, marca: escapeMarca || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
+    const o2 = await colocar({ tipo: "escape", i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + escapeDe), largura: escapeLarg, padrao: escapePadrao, marca: escapeMarca || undefined, fundoMarca: escapeFundo || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
     if (o2) { selecionar(o2); avisar("Área de escape pronta. Clique em mais dois pontos para outra (Esc para)."); } return;
   }
   if (assetEscolhido?.startsWith("*de:")) { const nome = await assetDaPeca(assetEscolhido.slice(4)); if (!nome) return; const o2 = await colocar({ asset: nome, ...base, s: M_PARA_U }); if (o2) { noChao(o2); guardarItem(o2); selecionar(o2); } return; }
+  if (assetEscolhido === "*portico") { // (o pórtico encaixa atravessado na pista: no centro dela, mais perto do clique, com o vão da largura dela)
+    const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i];
+    const o3 = await colocar({ tipo: "portico", marca: placaMarca, fundo: placaFundo, w: Math.round(tr.W + 20), alto: 32, x: p.x, y: p.h, z: p.y, rx: 0, ry: Math.atan2(p.tx, p.ty), rz: 0, s: 1 });
+    if (o3) { guardarItem(o3); selecionar(o3); } return;
+  }
   const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o);
   }
@@ -227,7 +232,7 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <h3>Biblioteca (pronto para pôr)</h3><div id="edBib"></div>
   <h3>Peças das outras pistas</h3><div id="edDe"></div>
   <h3>Área de escape</h3><div id="edEsc"></div>
-  <h3>Placa de patrocínio</h3><div id="edPlaca"></div>
+  <h3>Placa e pórtico de patrocínio</h3><div id="edPlaca"></div>
   <h3>Item selecionado</h3><div id="edItem"><small>Clique num item do cenário.</small></div>`;
 const $ = (id) => document.getElementById(id);
 $("edPista").onchange = (e) => { location.search = "?editor=" + e.target.value; };
@@ -312,22 +317,26 @@ async function assetDaPeca(k) {
 function desenharEscape() {
   $("edEsc").innerHTML = `<div class="lin"><label>Padrão <select id="edEscP">${Object.entries(PADROES_ESCAPE).map(([k, n]) => `<option value="${k}" ${k === escapePadrao ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div>
     <div class="lin"><label>Largura <input type="number" id="edEscL" step="5" value="${escapeLarg}"></label><label>Depois da zebra <input type="number" id="edEscD" step="1" value="${escapeDe}"></label></div>
-    ${escapePadrao === "laranja" ? `<div class="lin"><label>Marca <select id="edEscM"><option value="">GALERA</option>${opcoesDeMarca(escapeMarca)}</select></label></div>` : ""}
+    <div class="lin"><label>Marca <select id="edEscM"><option value="-" ${escapeMarca === "-" ? "selected" : ""}>Sem marca</option>${escapePadrao === "laranja" ? `<option value="" ${escapeMarca === "" ? "selected" : ""}>GALERA</option>` : ""}${opcoesDeMarca(escapeMarca)}</select></label>
+    ${escapePadrao !== "laranja" ? `<label>Placa <input type="color" id="edEscF" value="${escapeFundo || "#101114"}"></label><label><input type="checkbox" id="edEscSemF" ${escapeFundo ? "" : "checked"}> direto no chão</label>` : ""}</div>
     <div class="lin"><button id="edEscBt" class="${assetEscolhido === "*escape" ? "on" : ""}">${assetEscolhido === "*escape" ? (escapeA ? "Clique onde termina…" : "Clique onde começa…") : "Desenhar área de escape"}</button></div>
     <small>Clique na beira da pista onde a área começa e depois onde termina, do lado em que ela fica. Ela segue a curva sozinha.</small>`;
   $("edEscP").onchange = (e) => { escapePadrao = e.target.value; desenharEscape(); };
   $("edEscL").onchange = (e) => { escapeLarg = Math.max(4, +e.target.value || 60); };
   $("edEscD").onchange = (e) => { escapeDe = +e.target.value || 0; };
   if ($("edEscM")) $("edEscM").onchange = (e) => { escapeMarca = e.target.value; };
+  if ($("edEscF")) $("edEscF").onchange = (e) => { escapeFundo = e.target.value; desenharEscape(); };
+  if ($("edEscSemF")) $("edEscSemF").onchange = (e) => { escapeFundo = e.target.checked ? "" : "#101114"; desenharEscape(); };
   $("edEscBt").onclick = () => { escapeA = null; assetEscolhido = assetEscolhido === "*escape" ? null : "*escape"; desenharEscape(); desenharBiblioteca(); desenharPlaca(); desenharAssets(); };
 }
 function desenharPlaca() {
   $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
-    <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">${assetEscolhido === "*placa" ? "Clique no chão… (Esc sai)" : "Pôr placa"}</button></div>
-    <small>1. escolha a marca e o fundo · 2. clique em Pôr placa · 3. clique no chão (pode pôr várias; Esc para) · a placa nasce virada para você e grande o bastante para ver daí</small>`;
+    <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">${assetEscolhido === "*placa" ? "Clique no chão… (Esc sai)" : "Pôr placa"}</button><button id="edPtPor" class="${assetEscolhido === "*portico" ? "on" : ""}">${assetEscolhido === "*portico" ? "Clique no chão… (Esc sai)" : "Pôr pórtico"}</button></div>
+    <small>O pórtico encaixa sozinho atravessado na pista, no ponto mais perto do clique. 1. escolha a marca e o fundo · 2. clique em Pôr placa · 3. clique no chão (pode pôr várias; Esc para) · a placa nasce virada para você e grande o bastante para ver daí</small>`;
   $("edPlMarca").onchange = (e) => { placaMarca = e.target.value; desenharPlaca(); };
   $("edPlFundo").onchange = (e) => { placaFundo = e.target.value; };
   $("edPlPor").onclick = () => { assetEscolhido = assetEscolhido === "*placa" ? null : "*placa"; desenharPlaca(); desenharAssets(); desenharBiblioteca(); };
+  $("edPtPor").onclick = () => { assetEscolhido = assetEscolhido === "*portico" ? null : "*portico"; desenharPlaca(); desenharAssets(); desenharBiblioteca(); }; // (o pórtico: a mesma marca e o mesmo fundo, por cima da pista)
 }
 function desenharAssets() {
   $("edLeves").innerHTML = assets.leves.length ? assets.leves.map((a) => `<button data-leve="${h(a.nome)}" class="${assetEscolhido === a.nome ? "on" : ""}"><span>${h(a.nome)}</span><small>${a.kb} KB</small></button>`).join("") : "<small>Converta um original primeiro.</small>";

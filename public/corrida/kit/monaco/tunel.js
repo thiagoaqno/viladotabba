@@ -31,7 +31,21 @@ export function tunel(tr, add) {
     x.fillStyle = "#cfc3aa"; x.fillRect(w * 0.86, 0, w * 0.14, hh); x.fillStyle = "#8f8671"; x.fillRect(w * 0.86, 0, 2, hh); x.fillRect(w * 0.14, hh * 0.3, 2, hh * 0.7); // a viga de cima e a base
   }), color: 0xe3c295, roughness: 0.95, side: THREE.DoubleSide, emissive: 0x6a4524, emissiveIntensity: 0.5 });
   const esq = (() => { const p = pts[Math.floor((i0 + i1) / 2) % n]; return Math.sign(p.nx * p.ty - p.ny * p.tx) || 1; })(); // o sinal de `lat` do lado esquerdo de quem anda (esquerda = (ty, -tx))
-  faixa(tr, add, i0, i1, esq * (L + 1), esq * (L + 1), 0, TUNEL_ALTO, galeria, 32); faixa(tr, add, i0, i1, -esq * (L + 1), -esq * (L + 1), 0, TUNEL_ALTO, blocos, 32);
+  const galeriaPintada = faixa(tr, add, i0, i1, esq * (L + 1), esq * (L + 1), 0, TUNEL_ALTO, galeria, 32); faixa(tr, add, i0, i1, -esq * (L + 1), -esq * (L + 1), 0, TUNEL_ALTO, blocos, 32);
+  // (2026-11-17, o Thiago, com a foto do túnel de verdade: "tem que colocar uns pilares para ser igual é na vida real") a galeria do lado do mar
+  // vira de verdade: a parede pintada some e entram os pilares de concreto, a mureta baixa entre eles e a viga em cima, abertos para o porto.
+  // Vai no fim do grupo (`tr.depois`, pista.js) para não mexer nas chaves dos ajustes do editor
+  (tr.depois ||= []).push(() => {
+    galeriaPintada.visible = false;
+    const conc = M(0xd6cdb9, { roughness: 0.9 }), lat = esq * (L + 3), passo = 5;
+    for (let i = i0 + 2; i <= i1 - 2; i += passo) {
+      const p = pts[i % n], c = new THREE.Mesh(new THREE.BoxGeometry(6, TUNEL_ALTO, 5), conc);
+      c.position.set(p.x + p.nx * lat, p.h + TUNEL_ALTO / 2, p.y + p.ny * lat); c.rotation.y = Math.atan2(p.tx, p.ty); c.castShadow = c.receiveShadow = true; c.name = "monaco-tunel-pilar"; add(c);
+    }
+    faixa(tr, add, i0, i1, lat - 2.5, lat + 2.5, 7, 7, conc, 40).name = "monaco-tunel-mureta"; // o topo da mureta
+    faixa(tr, add, i0, i1, lat + 2.5, lat + 2.5, 0, 7, conc, 40).name = "monaco-tunel-mureta";
+    faixa(tr, add, i0, i1, lat, lat, TUNEL_ALTO - 7, TUNEL_ALTO, conc, 40).name = "monaco-tunel-viga"; // a viga de cima, por fora
+  });
   // o embasamento do túnel: as paredes descem 14 abaixo do asfalto (o terreno é mais baixo que a pista em volta e deixaria um vão por baixo)
   faixa(tr, add, i0, i1, esq * (L + 1), esq * (L + 1), -14, 0, galeria, 32); faixa(tr, add, i0, i1, -esq * (L + 1), -esq * (L + 1), -14, 0, blocos, 32);
   // as luminárias: pequenas, retangulares e âmbar, em fileiras ao longo das duas paredes, perto do teto (sem brilho exagerado: a imagem não estoura nem fica com neblina branca)

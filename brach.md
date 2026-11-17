@@ -1,7 +1,7 @@
-# Editor: adicionar asset com filtros + desenhar pista de cenário
+# Editor: zebra fácil, linha de itens e botões maiores
 
-- **Adicionar asset**: a biblioteca agora tem filtros por tipo de construção (Arquibancadas, Automóveis, Contenção, Paddock, Vegetação, Geral) e uma busca. Cada peça antiga caiu num filtro.
-- **Peças novas low poly** (no estilo da imagem): arquibancada curva de cadeiras amarelas sobre pilares (alta e baixa), arquibancada reta de cadeiras (alta e baixa), arquibancada com toldo, tenda arredondada (curta e longa), mureta de concreto (com e sem alambrado), barreira de concreto, zebra de 10 m, prédio dos boxes com camarote, árvore de copa larga, gramado, van e carro amarelo. As cadeiras e os degraus vão juntados numa malha por material.
-- **Desenhar pista (só cenário)**: reta com 2 cliques (início, fim) ou curva com 3 (início, fim e o ponto por onde ela passa). Tem largura, zebras e a opção de emendar o próximo trecho no fim do anterior. Fica salvo no cenario/<pista>.json como `{ tipo: "trecho" }`. Não é pista de andar.
+- **Zebra na beira da pista**: botão "Pôr zebra", dois cliques na beira (começo e fim, do mesmo lado) e ela segue a curva. Dá para escolher a largura e quanto ela entra na pista. Usa a área de escape com o padrão novo "Zebra".
+- **Linha de itens**: escolhe o item (pneus no módulo vermelho da imagem, cerca/alambrado, pilares ou qualquer peça da biblioteca), o espaço e a altura em metros, e define a linha com cliques (reta com 2, curva com 3). Os itens são distribuídos ao longo dela. A cerca tem postes no espaço, tela na altura escolhida e mureta embaixo opcional. Depois dá para mudar o espaço e a altura no painel do item.
+- **Painel**: botões maiores e mais visíveis, as ferramentas em destaque (azul, laranja quando ativa), barra de cima maior; a caixa da linha de comando sumiu.
 
 Conferido só com `node --check`.

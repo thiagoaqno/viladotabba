@@ -55,6 +55,7 @@ const PADROES = {
     x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.strokeStyle = "#ffffff"; x.lineWidth = 6; x.strokeRect(-90, -34, 180, 68); if (marca) { x.restore(); x.save(); x.translate(w / 2, h / 2); x.rotate(-Math.PI / 2); x.translate(-w / 2, -h / 2); patrocinioEm(x, marca, w / 2, h / 2, 150, 54); } else { x.fillStyle = "#fff"; x.font = "900 40px Arial"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("GALERA", 0, 2, 160); } x.restore(); },
   asfalto: (x, w, h) => { x.fillStyle = "#3a3d42"; x.fillRect(0, 0, w, h); for (let i = 0; i < 1500; i++) { x.fillStyle = Math.random() < 0.5 ? "#00000030" : "#ffffff14"; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } },
   listrado: (x, w, h) => { x.fillStyle = "#f2f2f2"; x.fillRect(0, 0, w, h); x.fillStyle = "#c62828"; for (let k = -w; k < w * 2; k += 64) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k + 32, 0); x.lineTo(k + 32 - h, h); x.lineTo(k - h, h); x.fill(); } },
+  zebra: (x, w, h) => { x.fillStyle = "#d62828"; x.fillRect(0, 0, w, h / 2); x.fillStyle = "#f4f4f4"; x.fillRect(0, h / 2, w, h / 2); x.fillStyle = "#00000018"; x.fillRect(0, 0, w * 0.12, h); },
   brita: (x, w, h) => { x.fillStyle = "#b9ab8a"; x.fillRect(0, 0, w, h); for (let i = 0; i < 2500; i++) { x.fillStyle = Math.random() < 0.5 ? "#8f8468" : "#d6cbb0"; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } },
 };
 // (2026-11-17, o Thiago: "áreas de escape com espaço para patrocínio") em qualquer padrão a marca vai carimbada no meio de cada repetição,
@@ -64,7 +65,7 @@ function carimbo(x, marca, fundo) {
   if (fundo) { x.fillStyle = fundo; x.fillRect(-96, -40, 192, 80); }
   x.translate(-128, -128); patrocinioEm(x, marca, 128, 128, 170, 62); x.restore();
 }
-export const PADROES_ESCAPE = { laranja: "Laranja com marcas", asfalto: "Asfalto", listrado: "Listrado vermelho e branco", brita: "Brita" };
+export const PADROES_ESCAPE = { laranja: "Laranja com marcas", asfalto: "Asfalto", listrado: "Listrado vermelho e branco", brita: "Brita", zebra: "Zebra" };
 const texEscape = new Map();
 function montarEscape(it, tr) {
   if (!tr) return null;
@@ -118,7 +119,57 @@ function montarTrecho(it) {
   if (it.zebra) for (const s of [-1, 1]) g.add(faixa(eixo, s * W / 2, s * (W / 2 + 7), 0.55, texDoTrecho("zebra"), 1 / 14));
   return g;
 }
+// (2026-11-17, o Thiago: "pneus, cerca e pilares, onde eu defino o espaçamento e ele distribui vários; na cerca, só a linha e a altura") a LINHA
+// DE ITENS: o mesmo eixo do trecho (reta ou curva por 3 pontos) com um modelo repetido a cada `espaco` metros, virado ao longo da linha.
+// { tipo: "linha", pts, modelo: "pneus" | "cerca" | "pilares" | "kit:<id>", espaco (m), altura (m), mureta (cerca com mureta embaixo) }
+const UM = 4.8, matsL = new Map();
+const ML = (cor, o = {}) => { const k = cor + JSON.stringify(o); if (!matsL.has(k)) matsL.set(k, new THREE.MeshStandardMaterial({ color: cor, roughness: 0.75, ...o })); return matsL.get(k); };
+function pontosCada(pts, passo) {
+  const eixo = eixoDoTrecho(pts, 1), out = []; let falta = 0;
+  for (let i = 1; i < eixo.length; i++) {
+    const a = eixo[i - 1], b = eixo[i], d = a.distanceTo(b), ang = Math.atan2(b.x - a.x, b.y - a.y); let t = falta;
+    while (t <= d) { out.push({ x: a.x + ((b.x - a.x) * t) / d, z: a.y + ((b.y - a.y) * t) / d, ang }); t += passo; }
+    falta = t - d;
+  }
+  const u = eixo[eixo.length - 1], v = eixo[eixo.length - 2]; if (!out.length || Math.hypot(out[out.length - 1].x - u.x, out[out.length - 1].z - u.y) > passo * 0.3) out.push({ x: u.x, z: u.y, ang: Math.atan2(u.x - v.x, u.y - v.y) });
+  return out;
+}
+// o módulo de pneus da imagem: a caixa com a lateral vermelha e duas fileiras de pneus por cima, `compr` u de comprimento (ao longo de z)
+const geoPneu = new THREE.TorusGeometry(0.3 * UM, 0.13 * UM, 6, 12);
+function moduloPneus(compr) {
+  const g = new THREE.Group(), w = 1.5 * UM, h = 0.9 * UM, lado = ML(0xd8321e), borr = ML(0x1d1f22, { roughness: 0.95 });
+  const cx = new THREE.Mesh(new THREE.BoxGeometry(w, h, compr), [lado, lado, borr, borr, lado, lado]); cx.position.y = h / 2; cx.castShadow = cx.receiveShadow = true; g.add(cx);
+  const n = Math.max(1, Math.floor(compr / (0.7 * UM)));
+  for (let i = 0; i < n; i++) for (const s of [-1, 1]) { const t = new THREE.Mesh(geoPneu, borr); t.rotation.x = Math.PI / 2; t.position.set(s * 0.36 * UM, h + 0.05 * UM, (i - (n - 1) / 2) * (compr / n)); g.add(t); }
+  return g;
+}
+function montarLinha(it) {
+  const pts = Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2] ? it.pts : null; if (!pts) return null;
+  const modelo = it.modelo || "pneus", esp = Math.max(0.5, +it.espaco || 4) * UM, alt = Math.max(0.3, +it.altura || 3) * UM, g = new THREE.Group(), lista = pontosCada(pts, esp);
+  if (modelo === "cerca") {
+    const tela = new THREE.MeshStandardMaterial({ color: 0x9aa3ab, roughness: 0.5, metalness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }), poste = ML(0xb8bdc3, { metalness: 0.5, roughness: 0.4 });
+    const base = it.mureta ? 1.1 * UM : 0, muro = ML(0xd9dad6, { roughness: 0.9 });
+    for (let i = 0; i < lista.length; i++) {
+      const p = lista[i], c = new THREE.Mesh(new THREE.CylinderGeometry(0.07 * UM, 0.07 * UM, alt, 6), poste); c.position.set(p.x, base + alt / 2, p.z); c.castShadow = true; g.add(c);
+      const topo = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * UM, 0.06 * UM, 0.9 * UM, 6), poste); topo.position.set(p.x, base + alt + 0.3 * UM, p.z); topo.rotation.set(0, 0, 0); topo.rotateOnWorldAxis(new THREE.Vector3(Math.cos(p.ang), 0, -Math.sin(p.ang)), 0.6); g.add(topo);
+      const q = lista[i + 1]; if (!q) continue;
+      const d = Math.hypot(q.x - p.x, q.z - p.z), a = Math.atan2(q.x - p.x, q.z - p.z), mx = (p.x + q.x) / 2, mz = (p.z + q.z) / 2;
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(d, alt), tela); pl.position.set(mx, base + alt / 2, mz); pl.rotation.y = a - Math.PI / 2; g.add(pl);
+      if (base) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.6 * UM, base, d + 0.05 * UM), muro); m.position.set(mx, base / 2, mz); m.rotation.y = a; m.castShadow = m.receiveShadow = true; g.add(m); }
+    }
+    return g;
+  }
+  for (const p of lista) {
+    let o;
+    if (modelo === "pneus") o = moduloPneus(Math.max(0.5 * UM, esp - 0.1 * UM));
+    else if (modelo === "pilares") { o = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * UM, 0.35 * UM, alt, 10), ML(0xc9cbce)); c.position.y = alt / 2; c.castShadow = c.receiveShadow = true; o.add(c); }
+    else if (modelo.startsWith("kit:")) { o = montarKit(modelo.slice(4)); if (o) o.rotation.y = Math.PI / 2; } // (as peças da biblioteca têm a frente para +z: de lado, ficam ao longo da linha)
+    if (!o) continue; const h = new THREE.Group(); h.add(o); h.position.set(p.x, 0, p.z); h.rotation.y = p.ang; g.add(h);
+  }
+  return g;
+}
 export async function montarItem(it, tr = null) {
+  if (it.tipo === "linha") { const o = montarLinha(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "linha-" + (it.modelo || ""); return o; }
   if (it.tipo === "trecho") { const o = montarTrecho(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "trecho"; return o; }
   if (it.tipo === "escape") return montarEscape(it, tr);
   // (2026-11-16, o Thiago: "deve ser possível agrupar e desagrupar itens") um GRUPO: os itens dentro dele com posição relativa a ele

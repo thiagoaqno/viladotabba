@@ -1,7 +1,6 @@
-# Editor: marca no chão
+# Editor: cor no que vai no chão
 
-Na seção Placa e pórtico (aba Pista): **Pôr marca no chão**, com a marca e o fundo escolhidos (ou "sem fundo", só o logo). Clique no chão: o logo nasce deitado, legível de onde a câmera olha, com a largura de acordo com a distância, e acompanha o relevo. No Inspetor: marca, fundo, largura, altura/largura (proporção) e tirar/pôr o fundo.
-
-Salvo como `{ tipo: "marcaChao", marca, fundo, w, prop }`.
+- Área (polígono): material novo **Cor lisa**, com a cor que você escolher; nos outros materiais, a opção **tingir a textura** com a cor.
+- No Inspetor, o campo **Cor** agora vale também para a área, o trecho de pista (tinge o asfalto) e a área de escape/zebra (tinge o padrão). "Cor original" volta ao normal.
 
 Conferido só com `node --check`.

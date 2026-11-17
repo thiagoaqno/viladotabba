@@ -80,7 +80,7 @@ function montarEscape(it, tr) {
     if (i < i1) { const a = (i - i0) * 2; if (lado > 0) idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); else idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
   }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(vs, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: texEscape.get(k), roughness: 0.9, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: it.cor || 0xffffff, map: texEscape.get(k), roughness: 0.9, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
   m.receiveShadow = true; m.userData.item = it; m.name = "escape"; return m;
 }
 // (2026-11-17, o Thiago: "construir pistas desenhando o eixo, com curva clicando no início, no fim e onde quero a curva; só cenário") o TRECHO:
@@ -116,7 +116,7 @@ function faixa(eixo, de, ate, y, tex, vPorU) {
 function montarTrecho(it) {
   const pts = Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2] ? it.pts : null; if (!pts) return null;
   const W = Math.max(4, +it.largura || 60), eixo = eixoDoTrecho(pts), g = new THREE.Group();
-  g.add(faixa(eixo, -W / 2, W / 2, 0.5, texDoTrecho("asfalto"), 1 / W));
+  g.add(faixa(eixo, -W / 2, W / 2, 0.5, texDoTrecho("asfalto"), 1 / W)); if (it.cor) g.children[0].material.color.set(it.cor); // (a cor do item tinge o asfalto)
   if (it.zebra) for (const s of [-1, 1]) g.add(faixa(eixo, s * W / 2, s * (W / 2 + 7), 0.55, texDoTrecho("zebra"), 1 / 14));
   return g;
 }
@@ -183,8 +183,9 @@ function montarLinha(it, tr) {
 // com um material (grama, asfalto, terra, brita, areia, concreto, água, mato) que acompanha o relevo, e, se pedir, cheio de uma peça da
 // biblioteca espalhada a cada `espaco` metros (árvores, arbustos, pedras, cones...). Os pontos são relativos à posição do item.
 // { tipo: "area", pts: [[x, z], ...], material, espalhar: "<id do kit>" | "", espaco (m), x, y, z }
-export const MATERIAIS_AREA = { grama: "Grama", mato: "Mato baixo", terra: "Terra", brita: "Brita", areia: "Areia", asfalto: "Asfalto", concreto: "Concreto", agua: "Água", nenhum: "Nenhum (só o que espalhar)" };
+export const MATERIAIS_AREA = { cor: "Cor lisa (escolha a cor)", grama: "Grama", mato: "Mato baixo", terra: "Terra", brita: "Brita", areia: "Areia", asfalto: "Asfalto", concreto: "Concreto", agua: "Água", nenhum: "Nenhum (só o que espalhar)" };
 const PINTA_AREA = {
+  cor: ["#f2f2f2", ["#e6e6e6", "#fafafa", "#ececec"], 900],
   grama: ["#4f8a34", ["#3f7a2a", "#62a043", "#57913a"], 3000], mato: ["#56702f", ["#405a22", "#6d8a3c", "#7a7a3a"], 4000], terra: ["#7a5a3c", ["#634830", "#8d6a48", "#6f5236"], 2500],
   brita: ["#b9ab8a", ["#8f8468", "#d6cbb0", "#a69a7c"], 5000], areia: ["#d8c497", ["#c9b383", "#e6d6ae", "#cdb98c"], 2500], asfalto: ["#3b3e44", ["#00000030", "#ffffff14", "#2f3237"], 2000],
   concreto: ["#b8b9b5", ["#a5a6a2", "#c9cac6", "#9c9d99"], 1500], agua: ["#2f6f8f", ["#3a82a6", "#28607c", "#4a93b5"], 600],
@@ -222,7 +223,7 @@ function montarArea(it, tr) {
     const p = geo.attributes.position, uv = new Float32Array(p.count * 2), lev = it.material === "agua" ? 0.3 : 0.6;
     for (let k = 0; k < p.count; k++) { const x = p.getX(k), z = -p.getY(k); p.setXYZ(k, x, yEm(x, z) + lev, z); uv[k * 2] = (x + ox) / 60; uv[k * 2 + 1] = (z + oz) / 60; }
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); geo.computeVertexNormals();
-    const agua = it.material === "agua", m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: texDaArea(it.material || "grama"), roughness: agua ? 0.15 : 0.95, metalness: agua ? 0.2 : 0, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    const agua = it.material === "agua", m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: it.cor || (it.material === "cor" ? "#3fa52c" : 0xffffff), map: texDaArea(it.material || "grama"), roughness: agua ? 0.15 : 0.95, metalness: agua ? 0.2 : 0, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
     m.receiveShadow = true; m.name = "area-chao"; g.add(m);
   }
   // o que espalhar: a peça a cada `espaco` m (com um tremor e um giro sorteados, sempre os mesmos para a mesma área)

@@ -172,7 +172,7 @@ addEventListener("keydown", async (e) => {
 // ---------- o painel ----------
 let assets = { originais: [], leves: [] }, aviso = "";
 painel.innerHTML = `<h2>Editor de cenário</h2>
-  <div class="lin"><select id="edPista">${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === pista ? "selected" : ""}>${h(PISTAS[id].name || id)}</option>`).join("")}</select><button id="edSalvar">Salvar</button><button id="edCraftBt">Craft</button></div>
+  <div class="lin"><select id="edPista">${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === pista ? "selected" : ""}>${h(PISTAS[id].name || id)}</option>`).join("")}</select><button id="edSalvar">Salvar</button><button id="edPublicar" title="Salva e manda o cenário e os assets para o GitHub num PR (o merge é seu)">Publicar (PR)</button><button id="edCraftBt">Craft</button></div>
   <div id="edAviso"></div>
   <h3>Converter (assets-originais/)</h3><div id="edOrig" class="lst"></div>
   <div class="lin"><label>Triângulos <input id="edFrac" type="range" min="5" max="100" value="30"> <b id="edFracV">30%</b></label></div>
@@ -371,3 +371,14 @@ addEventListener("keydown", (e) => {
 });
 marcarModo();
 desenharPlaca(); // (a seção da placa de patrocínio)
+// ---------- publicar: salva e abre o PR (corrida-editor.js /publicar) ----------
+$("edPublicar").onclick = async () => {
+  const msg = prompt("O que mudou? (vira o título do PR)", `cenário de ${PISTAS[pista]?.name || pista}`); if (msg == null) return;
+  $("edSalvar").click(); await new Promise((ok) => setTimeout(ok, 600));
+  avisar("Publicando… (branch, commit, push e PR)");
+  try {
+    const r = await api("publicar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mensagem: msg }) });
+    if (r.nada) return avisar("Nada novo para publicar: o GitHub já tem este cenário.");
+    $("edAviso").innerHTML = `<small class="ok">PR aberto (${r.arquivos} arquivos): <a href="${h(r.url)}" target="_blank" rel="noopener" style="color:#9cc2ff">${h(r.url)}</a></small>`;
+  } catch (e) { avisar("Não publicou: " + e.message, true); }
+};

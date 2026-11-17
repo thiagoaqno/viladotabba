@@ -40,6 +40,32 @@ function attach(app) {
     fs.writeFileSync(path.join(CENARIO, "index.json"), JSON.stringify(pistas) + "\n");
     res.json({ ok: true, itens: c.itens.length });
   });
+  // (2026-11-16, o Thiago: "quando ficar pronto local, vou precisar de você para o commit? precisamos de um jeito de fazer o commit pelo editor")
+  // PUBLICAR: o cenário e os assets leves vão para o GitHub num PR, sem mexer na pasta em que se trabalha. Num worktree temporário, novo e
+  // tirado da main do GitHub, entram só public/corrida/cenario/ e public/corrida/assets/ desta pasta; commit, push de um branch novo e o PR
+  // aberto pelo `gh` (que já está logado no PC). O merge continua sendo do Thiago. `seco`: faz tudo menos o push e o PR (para testar).
+  app.post("/api/corrida/editor/publicar", express.json({ limit: "16kb" }), async (req, res) => {
+    const { execFile } = require("child_process"), os = require("os");
+    const roda = (cmd, args, cwd = RAIZ) => new Promise((ok, falha) => execFile(cmd, args, { cwd, windowsHide: true, maxBuffer: 8 << 20 }, (e, out, err) => (e ? falha(Error((err || e.message).toString().trim().split("\n").slice(-3).join(" "))) : ok(out.toString().trim()))));
+    const texto = String(req.body?.mensagem || "").replace(/[\r\n]+/g, " ").slice(0, 120) || "cenário das pistas pelo editor", seco = !!req.body?.seco;
+    const quando = new Date(), carimbo = quando.toISOString().slice(0, 16).replace(/[-:T]/g, ""), branch = `cenario/editor-${carimbo}`;
+    const tmp = path.join(os.tmpdir(), "corrida-publicar-" + carimbo + "-" + process.pid);
+    try {
+      await roda("git", ["fetch", "-q", "origin", "main"]);
+      await roda("git", ["worktree", "add", "-q", "-B", branch, tmp, "origin/main"]);
+      for (const rel of ["public/corrida/cenario", "public/corrida/assets"]) { const de = path.join(RAIZ, rel), para = path.join(tmp, rel); fs.mkdirSync(para, { recursive: true }); for (const f of fs.readdirSync(de)) if (fs.statSync(path.join(de, f)).isFile()) fs.copyFileSync(path.join(de, f), path.join(para, f)); }
+      await roda("git", ["add", "-A", "public/corrida/cenario", "public/corrida/assets"], tmp);
+      const mudou = await roda("git", ["status", "--porcelain"], tmp);
+      if (!mudou) return res.json({ ok: true, nada: true });
+      await roda("git", ["commit", "-q", "-m", `Cenário pelo editor: ${texto}`], tmp);
+      const arquivos = mudou.split("\n").length;
+      if (seco) return res.json({ ok: true, seco: true, branch, arquivos });
+      await roda("git", ["push", "-q", "-u", "origin", branch], tmp);
+      const url = await roda("gh", ["pr", "create", "--base", "main", "--head", branch, "--title", `Cenário pelo editor: ${texto}`, "--body", `Feito no editor de cenário das pistas (${arquivos} arquivos em public/corrida/cenario e public/corrida/assets).`], tmp);
+      res.json({ ok: true, url, branch, arquivos });
+    } catch (e) { res.status(500).json({ erro: e.message }); }
+    finally { roda("git", ["worktree", "remove", "--force", tmp]).catch(() => {}).then(() => roda("git", ["branch", "-D", branch])).catch(() => {}); } // (o branch fica só no GitHub)
+  });
   console.log("Editor de pistas: aberto em http://localhost:" + (process.env.PORT || 3000) + "/corrida/?editor=interlagos");
 }
 module.exports = { attach };

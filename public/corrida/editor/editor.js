@@ -169,6 +169,7 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   // (2026-11-16, o Thiago: "tem que aparecer grande a placa no chão quando eu clicar") a largura da placa nova acompanha a distância da câmera:
   // de 60 (de perto) a 400 (vendo a pista de cima), em passos de 5; depois a largura muda no painel
   const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry, rz: 0 };
+  if (assetEscolhido?.startsWith("*de:")) { const nome = await assetDaPeca(assetEscolhido.slice(4)); if (!nome) return; const o2 = await colocar({ asset: nome, ...base, s: M_PARA_U }); if (o2) { noChao(o2); guardarItem(o2); selecionar(o2); } return; }
   const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o);
   }
@@ -182,7 +183,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); } // (Esc solta a placa e o asset escolhidos)
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });
@@ -198,6 +199,7 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <canvas id="edPrev"></canvas><div id="edConv"><small>Escolha um original para ver antes e depois.</small></div>
   <h3>Assets leves (para colocar)</h3><div id="edLeves" class="lst"></div>
   <h3>Biblioteca (pronto para pôr)</h3><div id="edBib"></div>
+  <h3>Peças das outras pistas</h3><div id="edDe"></div>
   <h3>Placa de patrocínio</h3><div id="edPlaca"></div>
   <h3>Item selecionado</h3><div id="edItem"><small>Clique num item do cenário.</small></div>`;
 const $ = (id) => document.getElementById(id);
@@ -233,6 +235,52 @@ function desenharBiblioteca() {
   $("edBib").innerHTML = Object.entries(grupos).map(([gr, ids]) => `<small>${h(gr)}</small><div class="edBibG">${ids.map((id) => `<button type="button" data-kit="${id}" class="${assetEscolhido === "*kit:" + id ? "on" : ""}" title="${h(KITS[id].nome)}"><img src="${fotoDoKit(id)}" alt=""><span>${h(KITS[id].nome)}</span></button>`).join("")}</div>`).join("")
     + `<small>${assetEscolhido?.startsWith("*kit:") ? "Clique no chão para pôr (pode pôr vários; Esc para)." : "Clique numa peça e depois no chão."}</small>`;
   for (const b of $("edBib").querySelectorAll("[data-kit]")) b.onclick = () => { const k = "*kit:" + b.dataset.kit; assetEscolhido = assetEscolhido === k ? null : k; desenharBiblioteca(); desenharAssets(); desenharPlaca(); };
+}
+// ---------- peças das outras pistas (2026-11-16, o Thiago: "a biblioteca deve ter item de todas as pistas") ----------
+// escolhe a pista; ela é montada aqui sem entrar na cena (sem juntar as malhas, como no editor) e as peças dela (os grupos e malhas com nome,
+// de um tamanho que dá para pôr) aparecem com miniatura. Pôr uma: ela é gravada como asset leve (assets/<pista>-<nome>.glb, em metros) e
+// entra como qualquer asset; a segunda vez já usa o arquivo.
+let dePista = null, pecasDe = [];
+const fotosDe = {};
+function fotoDaPeca(k, o) {
+  if (fotosDe[k]) return fotosDe[k];
+  const r = fotoDoKit.r || (fotoDoKit.r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })); r.setSize(96, 96); r.outputColorSpace = THREE.SRGBColorSpace;
+  const cena = new THREE.Scene(); cena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.4)); const d = new THREE.DirectionalLight(0xffffff, 2); d.position.set(3, 5, 4); cena.add(d);
+  const c0 = o.clone(true); c0.position.set(0, 0, 0); c0.updateMatrixWorld(true); cena.add(c0); const b = new THREE.Box3().setFromObject(c0), c = b.getCenter(new THREE.Vector3()), t = b.getSize(new THREE.Vector3()).length() || 1;
+  const cm = new THREE.PerspectiveCamera(35, 1, 0.1, 1e6); cm.position.set(c.x + t * 0.8, c.y + t * 0.5, c.z + t * 1.1); cm.lookAt(c);
+  r.setClearColor(0x1b2029, 1); r.render(cena, cm); return (fotosDe[k] = r.domElement.toDataURL("image/png"));
+}
+function lerPecas(id) {
+  const outra = buildTrack(id), lista = [], vistos = new Set(), caixa = new THREE.Box3(), tam = new THREE.Vector3();
+  outra.grp.updateMatrixWorld(true);
+  const olhar = (g, prof) => { for (const o of g.children) {
+    if (o === outra.cenarioEditor || !o.visible) continue;
+    caixa.setFromObject(o); if (caixa.isEmpty()) continue; caixa.getSize(tam); const diag = tam.length();
+    const util = (o.isGroup || o.isMesh) && o.name && diag > 12 && diag < 1500 && !/terreno|ceu|sky|faixa|chao|mar|agua|grama|relevo|predios|telhados|asfalto|muro/i.test(o.name);
+    const assinatura = o.name + ":" + Math.round(diag / 10);
+    if (util && !vistos.has(assinatura)) { vistos.add(assinatura); lista.push({ k: id + "|" + lista.length, nome: o.name.replace(/^[a-z]+-/, ""), o }); }
+    if (o.isGroup && prof < 2 && lista.length < 80) olhar(o, prof + 1);
+  } };
+  olhar(outra.grp, 0);
+  return lista.slice(0, 60);
+}
+function desenharDe() {
+  const el = $("edDe");
+  el.innerHTML = `<div class="lin"><select id="edDeSel"><option value="">Escolha a pista…</option>${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === dePista ? "selected" : ""}>${h(PISTAS[id].name || id)}</option>`).join("")}</select></div>
+    ${dePista ? `<div class="edBibG">${pecasDe.map((p) => `<button type="button" data-de="${h(p.k)}" class="${assetEscolhido === "*de:" + p.k ? "on" : ""}" title="${h(p.nome)}"><img src="${fotoDaPeca(p.k, p.o)}" alt=""><span>${h(p.nome)}</span></button>`).join("") || "<small>Nada para pegar nesta pista.</small>"}</div>` : "<small>As peças de cada pista (prédios, marcos, enfeites) para pôr nesta.</small>"}`;
+  $("edDeSel").onchange = (e) => { dePista = e.target.value || null; avisar(dePista ? "Montando a pista para ler as peças…" : ""); setTimeout(() => { pecasDe = dePista ? lerPecas(dePista) : []; desenharDe(); avisar(dePista ? `${pecasDe.length} peças de ${PISTAS[dePista].name}` : ""); }, 30); };
+  for (const b of el.querySelectorAll("[data-de]")) b.onclick = () => { const k = "*de:" + b.dataset.de; assetEscolhido = assetEscolhido === k ? null : k; desenharDe(); desenharBiblioteca(); desenharPlaca(); desenharAssets(); };
+}
+const assetsDe = {};
+async function assetDaPeca(k) {
+  if (assetsDe[k]) return assetsDe[k];
+  const p = pecasDe.find((q) => q.k === k); if (!p) return null;
+  const nome = (dePista + "-" + p.nome).toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 60);
+  if (assets.leves.some((a) => a.nome === nome)) return (assetsDe[k] = nome);
+  avisar(`Gravando ${nome}…`);
+  const c = p.o.clone(true); c.position.set(0, 0, 0); c.rotation.set(0, 0, 0); c.scale.multiplyScalar(1 / M_PARA_U); /* (mantém a escala que a peça tinha na pista dela) */ c.updateMatrixWorld(true);
+  try { const bin = await new GLTFExporter().parseAsync(c, { binary: true }); await api("asset/" + encodeURIComponent(nome), { method: "POST", headers: { "content-type": "application/octet-stream" }, body: bin }); await recarregarAssets(); avisar(`Pronto: assets/${nome}.glb`); return (assetsDe[k] = nome); }
+  catch (e) { avisar("Não gravou: " + e.message, true); return null; }
 }
 function desenharPlaca() {
   $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
@@ -407,7 +455,7 @@ addEventListener("keydown", (e) => {
   setTimeout(marcarModo, 0);
 });
 marcarModo();
-desenharPlaca(); desenharBiblioteca(); // (a placa de patrocínio e a biblioteca)
+desenharPlaca(); desenharBiblioteca(); desenharDe(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
 // ---------- publicar: salva e abre o PR (corrida-editor.js /publicar) ----------
 $("edPublicar").onclick = async () => {
   const msg = prompt("O que mudou? (vira o título do PR)", `cenário de ${PISTAS[pista]?.name || pista}`); if (msg == null) return;

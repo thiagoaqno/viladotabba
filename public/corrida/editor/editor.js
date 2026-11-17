@@ -15,6 +15,7 @@ import { buildTrack, useTrack } from "../pista.js";
 import { PISTAS } from "../estado.js";
 import { criarCraft } from "./craft.js";
 import { criarComandos } from "./comandos.js";
+import { montarLayout } from "./layout.js";
 import { KITS, montarKit, FILTROS, filtroDoKit } from "../biblioteca.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, PADROES_ESCAPE } from "../cenario-pista.js";
@@ -623,3 +624,6 @@ comandos = criarComandos({
     const c = await colocar(it); if (c) { c.scale.copy(o.scale); c.rotation.copy(o.rotation); guardarItem(c); if (escolher) selecionar(c); } return c;
   },
 });
+// ---------- o layout do TRACKSCAPE (layout.js): as mesmas seções, em abas, com o Inspetor à direita e a barra de status ----------
+montarLayout({ vigiarPainel, painel, barra, ajuda, pista, nomePista: PISTAS[pista]?.name || pista, cenario, tr, pilha, refeitos, desfazer, refazer,
+  selecionar: (o) => { if (!craft.ativo()) selecionar(o); }, escolhido: () => (craft.ativo() ? craft.selecionada() : selecionado) });

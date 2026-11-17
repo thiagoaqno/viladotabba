@@ -1,7 +1,16 @@
-# Editor: zebra fácil, linha de itens e botões maiores
+# Editor de pistas com o layout do TRACKSCAPE
 
-- **Zebra na beira da pista**: botão "Pôr zebra", dois cliques na beira (começo e fim, do mesmo lado) e ela segue a curva. Dá para escolher a largura e quanto ela entra na pista. Usa a área de escape com o padrão novo "Zebra".
-- **Linha de itens**: escolhe o item (pneus no módulo vermelho da imagem, cerca/alambrado, pilares ou qualquer peça da biblioteca), o espaço e a altura em metros, e define a linha com cliques (reta com 2, curva com 3). Os itens são distribuídos ao longo dela. A cerca tem postes no espaço, tela na altura escolhida e mureta embaixo opcional. Depois dá para mudar o espaço e a altura no painel do item.
-- **Painel**: botões maiores e mais visíveis, as ferramentas em destaque (azul, laranja quando ativa), barra de cima maior; a caixa da linha de comando sumiu.
+Pela imagem do Thiago (sem a aba de código). Nada foi refeito: as seções que o editor já tinha foram **movidas** para o layout novo, com os mesmos ids e eventos; câmera, seleção, gizmo, atalhos e Ctrl+Z continuam os mesmos.
+
+- **Barra do topo**: TRACKSCAPE, desfazer/refazer, Salvar, Publicar (PR), Craft, os modos do gizmo e as vistas, e a pista à direita.
+- **Esquerda, em abas**:
+  - *Assets*: busca, as categorias em lista com ícone e a grade de miniaturas; os assets leves e as peças das outras pistas.
+  - *Pista*: zebra, linha de itens, desenhar trecho, área de escape, placa e pórtico.
+  - *Cena*: a lista dos itens do cenário (clique escolhe) e o conversor de .glb.
+  - *Ambiente*: altura, direção e força do sol, luz ambiente, exposição e névoa, ao vivo (só no editor; o jogo usa a luz de cada pista).
+- **Direita**: Inspetor (o item escolhido) e Histórico (os passos do Ctrl+Z).
+- **Barra de status**: o aviso do editor, quantos itens e passos, e a pista.
+
+Novo arquivo: `public/corrida/editor/layout.js`. No `editor.js`, só o import e a chamada no fim.
 
 Conferido só com `node --check`.

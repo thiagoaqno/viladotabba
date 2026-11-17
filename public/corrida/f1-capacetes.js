@@ -339,6 +339,8 @@ const CHAVE_HALO = "corrida:halo";
 export function lerHalo() { try { const h = JSON.parse(localStorage.getItem(CHAVE_HALO)); return h && Array.isArray(h.lugares) ? h : { lugares: [], fundo: "escuro" }; } catch { return { lugares: [], fundo: "escuro" }; } }
 export function gravarHalo(h) { try { localStorage.setItem(CHAVE_HALO, JSON.stringify(h)); } catch { /* sem armazenamento */ } }
 // uma marca num lugar do halo (a folha do halo tem 256 de altura e o meio em y = 128, onde a conta de esticar dá 1)
+// uma marca numa placa qualquer (a placa de patrocínio do editor de cenário): centrada em (cx, cy), sem esticar, no fundo que já está pintado
+export function patrocinioEm(x, id, cx, cy, w, h) { patrocinioNoLugar(x, id, [cx, cy, w, h], "auto", "#101114"); }
 export function patrocinioNoHalo(x, id, cx, w, h, fundo) { patrocinioNoLugar(x, id, [cx, 128, w, h], fundo === "auto" ? "escuro" : fundo, "#101114"); }
 function patrocinioNoLugar(x, id, [cx, cy, w, h], fundo, c3) {
   const estica = Math.min(2, 1 / Math.max(0.3, Math.sin(Math.PI * cy / 256)));

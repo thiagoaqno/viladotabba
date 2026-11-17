@@ -33,6 +33,55 @@ function texturaFachada() {
   });
 }
 
+// (2026-11-16, o Thiago: "parece que só temos um tipo de prédio; precisamos de prédios mais alto padrão") mais três fachadas, cada uma com as
+// cores dela: o ALTO PADRÃO (pedra clara, janelões de caixilho bronze e varandas corridas de vidro), o VIDRO (pele de vidro com montantes, nas
+// torres) e a BELLE ÉPOQUE (pilastras, janelas em arco e cornijas, como os palácios da Riviera). A cor dos vértices continua multiplicando.
+function texturaLuxo() {
+  return canvasTex(256, 256, (x, w, hh, rr) => {
+    x.fillStyle = "#ffffff"; x.fillRect(0, 0, w, hh);
+    for (let i = 0; i < 500; i++) { x.fillStyle = rr() < 0.5 ? "#00000008" : "#ffffff20"; x.fillRect(rr() * w, rr() * hh, 4, 2); }
+    for (let a = 0; a < 4; a++) {
+      const y0 = a * 64;
+      x.fillStyle = "#d8d2c6"; x.fillRect(0, y0 + 56, w, 8); // a laje de pedra
+      for (let c = 0; c < 2; c++) { const x0 = c * 128; x.fillStyle = "#6b5a44"; x.fillRect(x0 + 10, y0 + 6, 108, 48); x.fillStyle = "#24303b"; x.fillRect(x0 + 13, y0 + 9, 102, 42); x.fillStyle = "#6b5a44"; for (let k = 1; k < 4; k++) x.fillRect(x0 + 13 + k * 25.5, y0 + 9, 3, 42); x.fillStyle = "#ffffff2e"; x.fillRect(x0 + 16, y0 + 11, 18, 38); }
+      x.fillStyle = "#9fb8c6aa"; x.fillRect(0, y0 + 40, w, 14); x.fillStyle = "#e8e4dc"; x.fillRect(0, y0 + 38, w, 3); // a varanda de vidro corrida com o corrimão
+    }
+  });
+}
+function texturaVidro() {
+  return canvasTex(256, 256, (x, w, hh, rr) => {
+    const g = x.createLinearGradient(0, 0, w, hh); g.addColorStop(0, "#5c7a92"); g.addColorStop(0.5, "#8fb0c6"); g.addColorStop(1, "#4d6a80"); x.fillStyle = g; x.fillRect(0, 0, w, hh);
+    for (let a = 0; a < 4; a++) for (let c = 0; c < 4; c++) { x.fillStyle = rr() < 0.25 ? "#ffffff1c" : "#00000010"; x.fillRect(c * 64 + 2, a * 64 + 2, 60, 58); }
+    x.fillStyle = "#c9d1d6"; for (let k = 0; k <= 4; k++) { x.fillRect(k * 64 - 2, 0, 4, hh); x.fillRect(0, k * 64 - 3, w, 6); } // os montantes e as faixas de laje
+    x.fillStyle = "#ffffff30"; for (let k = 0; k < 4; k++) x.fillRect(k * 64 + 8, 0, 6, hh); // o reflexo
+  });
+}
+function texturaBelle() {
+  return canvasTex(256, 256, (x, w, hh, rr) => {
+    x.fillStyle = "#ffffff"; x.fillRect(0, 0, w, hh);
+    for (let i = 0; i < 600; i++) { x.fillStyle = rr() < 0.5 ? "#0000000a" : "#ffffff22"; x.fillRect(rr() * w, rr() * hh, 3, 3); }
+    for (let a = 0; a < 4; a++) {
+      const y0 = a * 64; x.fillStyle = "#e7dcc4"; x.fillRect(0, y0 + 58, w, 6); x.fillStyle = "#00000016"; x.fillRect(0, y0 + 63, w, 1); // a cornija do andar
+      for (let c = 0; c < 4; c++) {
+        const x0 = c * 64; x.fillStyle = "#efe6d2"; x.fillRect(x0, y0, 6, 58); // a pilastra
+        x.fillStyle = "#e9e0cc"; x.beginPath(); x.moveTo(x0 + 18, y0 + 52); x.lineTo(x0 + 18, y0 + 22); x.arc(x0 + 35, y0 + 22, 17, Math.PI, 0); x.lineTo(x0 + 52, y0 + 52); x.fill(); // a moldura em arco
+        x.fillStyle = "#2a3540"; x.beginPath(); x.moveTo(x0 + 21, y0 + 50); x.lineTo(x0 + 21, y0 + 22); x.arc(x0 + 35, y0 + 22, 14, Math.PI, 0); x.lineTo(x0 + 49, y0 + 50); x.fill();
+        x.fillStyle = "#e9e0cc"; x.fillRect(x0 + 34, y0 + 10, 2, 40); x.fillStyle = "#ffffff30"; x.fillRect(x0 + 23, y0 + 24, 6, 24);
+        if (a > 0 && rr() < 0.5) { x.fillStyle = "#2c2f34"; x.fillRect(x0 + 14, y0 + 44, 42, 2); for (let k = 15; k < 56; k += 4) x.fillRect(x0 + k, y0 + 44, 1, 8); x.fillStyle = "#f1eadb"; x.fillRect(x0 + 13, y0 + 52, 44, 4); } // a sacada de ferro
+      }
+    }
+  });
+}
+// o estilo de cada prédio, pela altura (as torres ganham vidro ou alto padrão; a cidade baixa, a clássica ou a Belle Époque)
+const ESTILOS = ["classico", "luxo", "vidro", "belle"];
+const COR_ESTILO = { luxo: [[0.97, 0.95, 0.9], [0.92, 0.89, 0.83], [1, 0.98, 0.94], [0.86, 0.84, 0.8]], vidro: [[1, 1, 1], [0.92, 0.96, 1], [0.9, 0.93, 0.95]], belle: [[1, 0.93, 0.8], [0.98, 0.86, 0.72], [0.97, 0.9, 0.84], [1, 0.95, 0.88]] };
+function estiloDe(b) {
+  const r = hash(b.id + 21);
+  if (b.metros >= 30) return r < 0.5 ? 2 : 1;
+  if (b.metros >= 16) return r < 0.4 ? 1 : r < 0.6 ? 3 : 0;
+  return r < 0.3 ? 3 : 0;
+}
+
 const area2 = (P) => { let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - b[0] * a[1]; } return s; };
 const hash = (n) => { let h = (n * 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; return (h >>> 0) / 4294967296; };
 
@@ -109,11 +158,12 @@ export function indiceDePredios(lista) {
 }
 
 export function predios(tr, add, lista) {
-  const cel = new Map(), pegar = (b) => { const q = Math.floor(b.cx / CELULA) + "," + Math.floor(b.cz / CELULA); if (!cel.has(q)) cel.set(q, { par: new Malha(), tel: new Malha() }); return cel.get(q); };
+  const cel = new Map(), pegar = (b) => { const q = Math.floor(b.cx / CELULA) + "," + Math.floor(b.cz / CELULA); if (!cel.has(q)) cel.set(q, { pares: ESTILOS.map(() => new Malha()), tel: new Malha() }); return cel.get(q); };
   let paredes = 0, telhados = 0;
   for (const b of lista) {
-    const { par, tel } = pegar(b), P = b.P, n = P.length, y0 = b.baixo - 3, y1 = b.topo, sementeB = hash(b.id + 11);
-    const cor = PAREDES[b.cor];
+    if (b.semCorpo) continue; // (um marco desenha o prédio inteiro: o Casino)
+    const { pares, tel } = pegar(b), P = b.P, n = P.length, y0 = b.baixo - 3, y1 = b.topo, sementeB = hash(b.id + 11);
+    const est = estiloDe(b), par = pares[est], paleta = COR_ESTILO[ESTILOS[est]], cor = paleta ? paleta[b.cor % paleta.length] : PAREDES[b.cor];
     // as paredes: um painel por lado, com a fachada repetida pelo tamanho de verdade (janelas de 3,5 m, andares de 3,1 m)
     let u = sementeB * 4;
     for (let i = 0; i < n; i++) {
@@ -145,11 +195,12 @@ export function predios(tr, add, lista) {
     }
     telhados++;
   }
-  const matParede = new THREE.MeshStandardMaterial({ map: texturaFachada(), vertexColors: true, roughness: 0.85 }), matTelhado = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true });
+  const matParedes = [new THREE.MeshStandardMaterial({ map: texturaFachada(), vertexColors: true, roughness: 0.85 }), new THREE.MeshStandardMaterial({ map: texturaLuxo(), vertexColors: true, roughness: 0.6, metalness: 0.05 }),
+    new THREE.MeshStandardMaterial({ map: texturaVidro(), vertexColors: true, roughness: 0.18, metalness: 0.35 }), new THREE.MeshStandardMaterial({ map: texturaBelle(), vertexColors: true, roughness: 0.85 })], matTelhado = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true });
   let malhas = 0;
-  for (const { par, tel } of cel.values()) {
-    const gp = par.geometria(), gt = tel.geometria();
-    if (gp) { const m = add(new THREE.Mesh(gp, matParede)); m.castShadow = m.receiveShadow = true; m.name = "monaco-predios"; malhas++; }
+  for (const { pares, tel } of cel.values()) {
+    const gt = tel.geometria();
+    pares.forEach((par, k) => { const gp = par.geometria(); if (gp) { const m = add(new THREE.Mesh(gp, matParedes[k])); m.castShadow = m.receiveShadow = true; m.name = "monaco-predios-" + ESTILOS[k]; malhas++; } });
     if (gt) { gt.computeVertexNormals(); const m = add(new THREE.Mesh(gt, matTelhado)); m.castShadow = m.receiveShadow = true; m.name = "monaco-telhados"; malhas++; }
   }
   tr.prediosMonaco = { predios: lista.length, paredes, telhados, malhas };

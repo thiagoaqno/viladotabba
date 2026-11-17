@@ -31,6 +31,7 @@ import { boxesGP } from "./kit/corredor-boxes.js";
 import { parque } from "./kit/parque.js";
 import { fundirEstaticos } from "./kit/fundir.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { carregarCenario, aplicarAjustes } from "./cenario-pista.js";
 
 // ---------- temas das pistas: cores, chão, enfeites e o horizonte ----------
 export const THEMES = {
@@ -146,6 +147,7 @@ export function buildTrack(id) {
     const plano = tr.chao; tr.chao = (x, y) => Math.min(plano(x, y), tr.sobPonte(x, y));
   }
   buildWorld(tr); tr.comProps = !!PROPS.pronto;
+  carregarCenario(tr); // (o cenário do editor de pistas, cenario/<pista>.json: chega depois, sem segurar a pista)
   return (TRACKS[id] = tr);
 }
 // altura do chão: em cima da pista e um pouco para os lados é a altura da pista; mais longe, desce até o nível 0
@@ -638,7 +640,9 @@ function buildWorld(tr) {
   // juntar as malhas paradas por material e região (kit/fundir.js): de 900 chamadas de desenho em Mônaco para umas 300. O que as
   // animações movem é descoberto rodando a vida da pista por alguns segundos em 24 pontos da volta.
   // Em Interlagos, regiões menores cortam mais árvores e sombras fora da câmera; nas demais o tamanho antigo evita excesso de chamadas.
-  fundirEstaticos(tr, { celulaInst: tr.id === "interlagos" ? 1200 : 2400, simular: () => { for (let k = 0; k < 24; k++) { const p = pts[Math.floor((k / 24) * n)], foco = { x: p.x, y: p.y, z: p.h, a: Math.atan2(p.ty, p.tx) }; for (let s = 0; s < 6; s++) animarVida(tr, 0.08, foco); } } });
+  // o editor de cenário: as peças que ele mexeu (cenario/<pista>.json `ajustes`) mudam antes de juntar; aberto no editor, não junta (cada peça fica clicável)
+  aplicarAjustes(tr);
+  if (!window.__editorCenario) fundirEstaticos(tr, { celulaInst: tr.id === "interlagos" ? 1200 : 2400, simular: () => { for (let k = 0; k < 24; k++) { const p = pts[Math.floor((k / 24) * n)], foco = { x: p.x, y: p.y, z: p.h, a: Math.atan2(p.ty, p.tx) }; for (let s = 0; s < 6; s++) animarVida(tr, 0.08, foco); } } });
 }
 // Los Angeles: placa "GALERA" no morro (estilo Hollywood) e placa verde da freeway em cima da pista
 function landmarksLA(tr, add, r) {
@@ -706,4 +710,6 @@ export function useTrack(tr, hora = "dia", podeMudarLuz = () => true) {
 }
 
 // quando os enfeites do Kenney chegam, as pistas que já tinham sido montadas com formas simples são refeitas
-aoCarregar(() => { for (const tr of Object.values(TRACKS)) if (!tr.comProps) { for (const c of [...tr.grp.children]) { tr.grp.remove(c); c.traverse?.((o) => { o.geometry?.dispose?.(); }); } buildWorld(tr); tr.comProps = true; } });
+// (2026-11-16) o cenário do editor (cenario-pista.js) sobrevive a esta remontagem: antes ele saía junto com o resto e as placas e assets ficavam
+// fora da cena (no editor, a caixa de seleção aparecia sem nada dentro)
+aoCarregar(() => { for (const tr of Object.values(TRACKS)) if (!tr.comProps) { for (const c of [...tr.grp.children]) { if (c === tr.cenarioEditor) continue; tr.grp.remove(c); c.traverse?.((o) => { o.geometry?.dispose?.(); }); } if (tr.cenarioEditor) tr.grp.remove(tr.cenarioEditor); buildWorld(tr); if (tr.cenarioEditor) tr.grp.add(tr.cenarioEditor); tr.comProps = true; } });

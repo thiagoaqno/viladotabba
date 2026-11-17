@@ -61,7 +61,7 @@ require("./drag.js")(io); // Drag da Galera: o racha de até 4 pessoas (o resto 
 require("./proibida.js")(io); // Palavra Proibida da Galera: explicar palavras em dois times, canal /proibida
 require("./rumi.js")(io); // Rumi da Galera: o jogo de peças numeradas clássico, 2 a 4 com robôs, canal /rumi
 app.use(express.static(path.join(__dirname, "public")));
-require("./corrida-pc.js").attach(app); // o programa de PC: versão, recordes feitos sem internet, CORS e o /corrida/pc.js (antes das rotas /api/)
+require("./corrida-pc.js").attach(app); require("./corrida-editor.js").attach(app); // (o editor de cenário: só com CORRIDA_EDITOR=1, no próprio PC) // o programa de PC: versão, recordes feitos sem internet, CORS e o /corrida/pc.js (antes das rotas /api/)
 // Traçado calculado para a corrida: não inicia trabalho pesado em resposta a acessos externos.
 app.get("/api/corrida/linha/:pista", (req, res) => {
   const pistas = require("./public/corrida/pistas.js").PISTAS;

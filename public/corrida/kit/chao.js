@@ -39,6 +39,13 @@ export function chaoGP(tr, add, cfg, { gridSpot }) {
     if (k > 1 / z.fora) for (let j = i + 2; j <= i + 16; j++) marca[-dentro][(j + n) % n] = 1;
   }
   tr.zebras = new Uint8Array(n); // para as faíscas do assoalho (jogo.js): só onde tem zebra de verdade
+  // `zebrasDentro` (opção do GP, desligada por padrão): zebras pintadas DENTRO do asfalto, da borda para dentro (as chicanes de Mônaco)
+  for (const [f0, f1, ladoCfg, larg] of cfg.zebrasDentro || []) {
+    const a = Math.floor(f0 * n), b = Math.floor(f1 * n), meio = Math.floor(((a + b) / 2)) % n, d = sinalDaCurva(pts, n, meio);
+    const s = ladoCfg === "dentro" ? d : ladoCfg === "fora" ? -d : ladoCfg;
+    tira(tr, L.de(zebra), a, b, s * (meia - larg), s * meia, 0.62, 0.62, (a * 6) / 28, (b * 6) / 28);
+    for (let i = a; i <= b; i++) tr.zebras[i % n] = 1;
+  }
   for (const s of [-1, 1]) { // cada trecho seguido de zebra vira uma fita, cortada onde muda de cor
     const m = marca[s]; let a = -1, corA = false;
     for (let i = 0; i <= n; i++) {

@@ -97,8 +97,22 @@ export async function montarItem(it, tr = null) {
   return o;
 }
 // ---- as peças que a pista já tinha ----
-export function chaveDe(tr, o) { const k = []; for (let p = o; p && p !== tr.grp; p = p.parent) { if (!p.parent) return null; k.unshift(p.parent.children.indexOf(p)); } return k.join("/"); }
-export function pecaDaChave(tr, chave) { let o = tr.grp; for (const i of String(chave).split("/")) { o = o?.children[+i]; if (!o) return null; } return o; }
+// (2026-11-17) a chave é o NOME da peça e a ordem dela entre as irmãs de mesmo nome ("monaco-casino#0/monaco-casino-frente#0"): peças novas de
+// outro nome (um escape, um trecho de guard-rail a mais) não deslocam mais os ajustes, como a posição pura ("210/182") deslocava. A chave antiga,
+// só de números, ainda é lida.
+const passoDe = (o) => { const irmas = o.parent.children.filter((c) => c.name === o.name); return `${o.name}#${irmas.indexOf(o)}`; };
+export function chaveDe(tr, o) { const k = []; for (let p = o; p && p !== tr.grp; p = p.parent) { if (!p.parent) return null; k.unshift(passoDe(p)); } return k.join("/"); }
+export function pecaDaChave(tr, chave) {
+  let o = tr.grp;
+  for (const passo of String(chave).split("/")) {
+    if (!o) return null;
+    const h = passo.lastIndexOf("#");
+    if (h < 0) o = o.children[+passo]; // (a chave antiga)
+    else { const nome = passo.slice(0, h), k = +passo.slice(h + 1); o = o.children.filter((c) => c.name === nome)[k]; }
+    if (!o) return null;
+  }
+  return o;
+}
 export function aplicarAjuste(o, a) {
   if (!o || !a) return;
   if (!o.userData.original) o.userData.original = { p: o.position.toArray(), r: [o.rotation.x, o.rotation.y, o.rotation.z], s: o.scale.toArray(), v: o.visible };

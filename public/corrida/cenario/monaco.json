@@ -497,7 +497,7 @@
  ],
  "ajustes": [
   {
-   "chave": "275",
+   "chave": "monaco-canteiro#0",
    "x": 4144.01,
    "y": 4,
    "z": 927.19,
@@ -509,7 +509,7 @@
    "sz": 1
   },
   {
-   "chave": "181",
+   "chave": "monaco-telhados#14",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -522,7 +522,7 @@
    "oculto": true
   },
   {
-   "chave": "178",
+   "chave": "monaco-predios-classico#14",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -535,7 +535,7 @@
    "oculto": true
   },
   {
-   "chave": "6",
+   "chave": "monaco-terreno#6",
    "x": 2744,
    "y": 0,
    "z": 2744,
@@ -547,7 +547,7 @@
    "sz": 1
   },
   {
-   "chave": "180",
+   "chave": "monaco-predios-belle#14",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -560,7 +560,7 @@
    "oculto": true
   },
   {
-   "chave": "322",
+   "chave": "monaco-bandeira#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -573,7 +573,7 @@
    "oculto": true
   },
   {
-   "chave": "321",
+   "chave": "monaco-mastro#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -586,7 +586,7 @@
    "oculto": true
   },
   {
-   "chave": "320",
+   "chave": "monaco-sacada#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -598,7 +598,7 @@
    "sz": 1
   },
   {
-   "chave": "139",
+   "chave": "monaco-telhados#5",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -610,7 +610,7 @@
    "sz": 1
   },
   {
-   "chave": "138",
+   "chave": "monaco-predios-belle#5",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -622,7 +622,7 @@
    "sz": 1
   },
   {
-   "chave": "135",
+   "chave": "monaco-predios-classico#5",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -634,7 +634,7 @@
    "sz": 1
   },
   {
-   "chave": "210/182",
+   "chave": "monaco-casino#0/monaco-casino-frente#0",
    "x": 0,
    "y": 15.85,
    "z": 0,
@@ -646,7 +646,7 @@
    "sz": 1.4
   },
   {
-   "chave": "174",
+   "chave": "monaco-telhados#12",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -659,7 +659,7 @@
    "oculto": true
   },
   {
-   "chave": "170",
+   "chave": "monaco-predios-classico#12",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -672,7 +672,7 @@
    "oculto": true
   },
   {
-   "chave": "179",
+   "chave": "monaco-predios-luxo#13",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -685,7 +685,7 @@
    "oculto": true
   },
   {
-   "chave": "136",
+   "chave": "monaco-predios-luxo#5",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -697,7 +697,7 @@
    "sz": 1
   },
   {
-   "chave": "98",
+   "chave": "#19",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -710,7 +710,7 @@
    "oculto": true
   },
   {
-   "chave": "104",
+   "chave": "#23",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -722,7 +722,7 @@
    "sz": 1
   },
   {
-   "chave": "102",
+   "chave": "monaco-tunel-luz#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -735,7 +735,7 @@
    "oculto": true
   },
   {
-   "chave": "265",
+   "chave": "monaco-hospitalidade#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -748,7 +748,7 @@
    "oculto": true
   },
   {
-   "chave": "270",
+   "chave": "monaco-hospitalidade-letreiro#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -761,7 +761,7 @@
    "oculto": true
   },
   {
-   "chave": "266",
+   "chave": "monaco-hospitalidade-faixa#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -774,7 +774,7 @@
    "oculto": true
   },
   {
-   "chave": "267",
+   "chave": "monaco-hospitalidade-toldo#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -787,7 +787,7 @@
    "oculto": true
   },
   {
-   "chave": "269",
+   "chave": "monaco-tenda-apoio-teto#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -800,7 +800,7 @@
    "oculto": true
   },
   {
-   "chave": "268",
+   "chave": "monaco-tenda-apoio#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -813,7 +813,7 @@
    "oculto": true
   },
   {
-   "chave": "144",
+   "chave": "monaco-telhados#6",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -825,7 +825,7 @@
    "sz": 1
   },
   {
-   "chave": "142",
+   "chave": "monaco-predios-vidro#4",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -837,7 +837,7 @@
    "sz": 1
   },
   {
-   "chave": "17",
+   "chave": "monaco-faixa#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -849,7 +849,7 @@
    "sz": 1
   },
   {
-   "chave": "292",
+   "chave": "gp-cerca-tela#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -862,7 +862,7 @@
    "oculto": true
   },
   {
-   "chave": "295",
+   "chave": "monaco-ambiente-gp#1",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -875,7 +875,7 @@
    "oculto": true
   },
   {
-   "chave": "277",
+   "chave": "monaco-arrimo#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -888,7 +888,7 @@
    "oculto": true
   },
   {
-   "chave": "173",
+   "chave": "monaco-predios-belle#12",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -901,7 +901,7 @@
    "oculto": true
   },
   {
-   "chave": "297",
+   "chave": "monaco-ambiente-gp#3",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -914,7 +914,7 @@
    "oculto": true
   },
   {
-   "chave": "300",
+   "chave": "monaco-ambiente-gp#6",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -927,7 +927,7 @@
    "oculto": true
   },
   {
-   "chave": "325",
+   "chave": "monaco-posto#0",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -940,7 +940,7 @@
    "oculto": true
   },
   {
-   "chave": "299",
+   "chave": "monaco-ambiente-gp#5",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -953,7 +953,7 @@
    "oculto": true
   },
   {
-   "chave": "296",
+   "chave": "monaco-ambiente-gp#2",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -966,7 +966,7 @@
    "oculto": true
   },
   {
-   "chave": "313",
+   "chave": "#87",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -979,7 +979,7 @@
    "oculto": true
   },
   {
-   "chave": "312",
+   "chave": "#86",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -992,7 +992,7 @@
    "oculto": true
   },
   {
-   "chave": "171",
+   "chave": "monaco-predios-luxo#12",
    "x": 0,
    "y": 0,
    "z": 0,
@@ -1005,7 +1005,7 @@
    "oculto": true
   },
   {
-   "chave": "392",
+   "chave": "monaco-paredao#0",
    "x": 17,
    "y": 0,
    "z": 0,
@@ -1017,7 +1017,7 @@
    "sz": 1
   },
   {
-   "chave": "302",
+   "chave": "monaco-ambiente-gp#8",
    "x": 0,
    "y": 0,
    "z": 0,

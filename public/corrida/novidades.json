@@ -1,9 +1,9 @@
 [
   {
-    "id": "editor-kit-geral-2026-11-17",
+    "id": "editor-trackscape-2026-11-17",
     "data": "2026-11-17",
     "itens": [
-      "Editor: kit geral de autódromo: paredes de pneus coloridas, Tecpro, SAFER, guard-rail triplo, fardos, prédios do box, arquibancadas cobertas, refletores, postes com bandeira de patrocínio, pórtico de treliça, gazebo e grid"
+      "Editor de pistas com cara nova (TRACKSCAPE): barra no topo, abas Assets, Pista, Cena e Ambiente, Inspetor e Histórico à direita e barra de status"
     ]
   },
   {
@@ -774,6 +774,13 @@
       "Treino livre na carreira, com o acerto liberado durante a sessão",
       "Temporada com os amigos: começar uma nova e entrar numa equipe no meio da temporada",
       "9 capas novas na tela de carregamento"
+    ]
+  },
+  {
+    "id": "editor-kit-geral-2026-11-17",
+    "data": "2026-11-17",
+    "itens": [
+      "Editor: kit geral de autódromo: paredes de pneus coloridas, Tecpro, SAFER, guard-rail triplo, fardos, prédios do box, arquibancadas cobertas, refletores, postes com bandeira de patrocínio, pórtico de treliça, gazebo e grid"
     ]
   }
 ]

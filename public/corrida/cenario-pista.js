@@ -8,7 +8,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { patrocinioEm } from "./f1-capacetes.js";
-import { montarKit } from "./biblioteca.js";
+import { montarKit, KITS } from "./biblioteca.js";
+import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js";
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), modelos = new Map();
 // os arquivos chegam logo que a página abre (a pista é montada sem esperar a rede: os ajustes precisam estar prontos até lá)
@@ -168,7 +169,67 @@ function montarLinha(it) {
   }
   return g;
 }
+// (2026-11-17, o Thiago: "desenhar uma área no chão e preencher com o que eu quiser, um polígono") a ÁREA: um polígono no chão, coberto
+// com um material (grama, asfalto, terra, brita, areia, concreto, água, mato) que acompanha o relevo, e, se pedir, cheio de uma peça da
+// biblioteca espalhada a cada `espaco` metros (árvores, arbustos, pedras, cones...). Os pontos são relativos à posição do item.
+// { tipo: "area", pts: [[x, z], ...], material, espalhar: "<id do kit>" | "", espaco (m), x, y, z }
+export const MATERIAIS_AREA = { grama: "Grama", mato: "Mato baixo", terra: "Terra", brita: "Brita", areia: "Areia", asfalto: "Asfalto", concreto: "Concreto", agua: "Água", nenhum: "Nenhum (só o que espalhar)" };
+const PINTA_AREA = {
+  grama: ["#4f8a34", ["#3f7a2a", "#62a043", "#57913a"], 3000], mato: ["#56702f", ["#405a22", "#6d8a3c", "#7a7a3a"], 4000], terra: ["#7a5a3c", ["#634830", "#8d6a48", "#6f5236"], 2500],
+  brita: ["#b9ab8a", ["#8f8468", "#d6cbb0", "#a69a7c"], 5000], areia: ["#d8c497", ["#c9b383", "#e6d6ae", "#cdb98c"], 2500], asfalto: ["#3b3e44", ["#00000030", "#ffffff14", "#2f3237"], 2000],
+  concreto: ["#b8b9b5", ["#a5a6a2", "#c9cac6", "#9c9d99"], 1500], agua: ["#2f6f8f", ["#3a82a6", "#28607c", "#4a93b5"], 600],
+};
+const texArea = new Map();
+function texDaArea(m) {
+  if (!texArea.has(m)) { const [f, cs, n] = PINTA_AREA[m] || PINTA_AREA.grama, c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); x.fillStyle = f; x.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < n; i++) { x.fillStyle = cs[i % cs.length]; x.globalAlpha = 0.6; x.fillRect(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 2, 2 + Math.random() * 2); }
+    if (m === "concreto") { x.globalAlpha = 0.5; x.strokeStyle = "#8d8e8a"; x.lineWidth = 2; x.strokeRect(0, 0, 256, 256); }
+    x.globalAlpha = 1; const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; texArea.set(m, t); }
+  return texArea.get(m);
+}
+// a altura do chão em (x, z): lida da grade das malhas "<pista>-terreno" (bilinear), sem raio; sem malha por perto, devolve null
+function alturaDoChao(tr) {
+  if (tr._alturaChao !== undefined) return tr._alturaChao;
+  const nos = new Map(); let passo = 0, rx = 0, rz = 0;
+  tr.grp.traverse((o) => { if (!o.isMesh || !/-terreno$/.test(o.name)) return; const p = o.geometry.attributes.position, ox = o.position.x, oz = o.position.z;
+    if (!passo && p.count > 4) { passo = Math.abs(p.getX(1) - p.getX(0)); rx = p.getX(0) + ox; rz = p.getZ(0) + oz; }
+    o.userData._nos = { p, ox, oz }; });
+  if (!passo) return (tr._alturaChao = null);
+  tr.grp.traverse((o) => { const n = o.userData._nos; if (!n) return; for (let k = 0; k < n.p.count; k++) nos.set(Math.round((n.p.getX(k) + n.ox - rx) / passo) + "," + Math.round((n.p.getZ(k) + n.oz - rz) / passo), n.p.getY(k)); delete o.userData._nos; });
+  return (tr._alturaChao = (x, z) => {
+    const fx = (x - rx) / passo, fz = (z - rz) / passo, i = Math.floor(fx), j = Math.floor(fz), u = fx - i, w = fz - j, c = [nos.get(i + "," + j), nos.get(i + 1 + "," + j), nos.get(i + "," + (j + 1)), nos.get(i + 1 + "," + (j + 1))];
+    if (c.every((v) => v !== undefined)) return (c[0] * (1 - u) + c[1] * u) * (1 - w) + (c[2] * (1 - u) + c[3] * u) * w;
+    const ok = c.filter((v) => v !== undefined); return ok.length ? ok.reduce((a, b) => a + b, 0) / ok.length : null; });
+}
+const dentroDoPoligono = (x, z, pts) => { let d = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) d = !d; } return d; };
+function montarArea(it, tr) {
+  const pts = Array.isArray(it.pts) ? it.pts.filter((p) => Array.isArray(p) && p.length === 2) : []; if (pts.length < 3) return null;
+  const g = new THREE.Group(), ox = +it.x || 0, oy = +it.y || 0, oz = +it.z || 0, chao = tr ? alturaDoChao(tr) : null, yEm = (x, z) => { const h = chao ? chao(x + ox, z + oz) : null; return (h == null ? oy : h) - oy; };
+  if (it.material !== "nenhum") {
+    // a malha: o polígono dividido em triângulos pequenos (lado de ~10 u), cada vértice na altura do chão
+    const forma = new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z)));
+    let geo = new THREE.ShapeGeometry(forma); geo = new TessellateModifier(10, 8).modify(geo);
+    const p = geo.attributes.position, uv = new Float32Array(p.count * 2), lev = it.material === "agua" ? 0.3 : 0.6;
+    for (let k = 0; k < p.count; k++) { const x = p.getX(k), z = -p.getY(k); p.setXYZ(k, x, yEm(x, z) + lev, z); uv[k * 2] = (x + ox) / 60; uv[k * 2 + 1] = (z + oz) / 60; }
+    geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); geo.computeVertexNormals();
+    const agua = it.material === "agua", m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: texDaArea(it.material || "grama"), roughness: agua ? 0.15 : 0.95, metalness: agua ? 0.2 : 0, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    m.receiveShadow = true; m.name = "area-chao"; g.add(m);
+  }
+  // o que espalhar: a peça a cada `espaco` m (com um tremor e um giro sorteados, sempre os mesmos para a mesma área)
+  const kit = it.espalhar && KITS[it.espalhar] ? it.espalhar : null;
+  if (kit) {
+    const esp = Math.max(1, +it.espaco || 8) * 4.8, modelo = montarKit(kit); let s = 1234567 + pts.length * 7919 + Math.round(pts[1][0] * 13);
+    const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]); let n = 0;
+    for (let x = Math.min(...xs); x <= Math.max(...xs); x += esp) for (let z = Math.min(...zs); z <= Math.max(...zs); z += esp) {
+      const px = x + (rnd() - 0.5) * esp * 0.8, pz = z + (rnd() - 0.5) * esp * 0.8; if (!dentroDoPoligono(px, pz, pts) || n++ > 1500) continue;
+      const o = modelo.clone(); o.position.set(px, yEm(px, pz), pz); o.rotation.y = rnd() * Math.PI * 2; o.scale.setScalar(0.85 + rnd() * 0.3); g.add(o);
+    }
+  }
+  return g;
+}
 export async function montarItem(it, tr = null) {
+  if (it.tipo === "area") { const o = montarArea(it, tr); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "area-" + (it.material || ""); return o; }
   if (it.tipo === "linha") { const o = montarLinha(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "linha-" + (it.modelo || ""); return o; }
   if (it.tipo === "trecho") { const o = montarTrecho(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "trecho"; return o; }
   if (it.tipo === "escape") return montarEscape(it, tr);
@@ -225,3 +286,14 @@ export async function carregarCenario(tr) {
   return g;
 }
 export const ajustesDaPista = (tr) => (dadosDe.get(tr.pistaId || tr.id)?.ajustes || []).slice();
+// (2026-11-17, o Thiago: o TERRENO do editor com pincéis) o relevo pintado no editor: { relevo: { cel, d: { "ix,iz": dh } } } no cenario/<pista>.json,
+// a diferença de altura numa grade de `cel` unidades (só as células mexidas). O pista.js soma ao chão de cada pista que tem relevo salvo;
+// sem dado, nada muda. relevoDoEditor(id) devolve (x, z) -> dh (bilinear) ou null.
+export function relevoDeDados(r) {
+  if (!r || !r.d || !Object.keys(r.d).length) return null;
+  const cel = +r.cel || 12, d = r.d, v = (i, j) => d[i + "," + j] || 0;
+  return (x, z) => { const fx = x / cel, fz = z / cel, i = Math.floor(fx), j = Math.floor(fz), u = fx - i, w = fz - j;
+    return (v(i, j) * (1 - u) + v(i + 1, j) * u) * (1 - w) + (v(i, j + 1) * (1 - u) + v(i + 1, j + 1) * u) * w; };
+}
+export const relevoDoEditor = (id) => relevoDeDados(dadosDe.get(id)?.relevo);
+export const dadosDoRelevo = (id) => dadosDe.get(id)?.relevo || null;

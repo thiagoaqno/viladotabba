@@ -31,7 +31,7 @@ import { boxesGP } from "./kit/corredor-boxes.js";
 import { parque } from "./kit/parque.js";
 import { fundirEstaticos } from "./kit/fundir.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { carregarCenario, aplicarAjustes } from "./cenario-pista.js";
+import { carregarCenario, aplicarAjustes, relevoDoEditor } from "./cenario-pista.js";
 
 // ---------- temas das pistas: cores, chão, enfeites e o horizonte ----------
 export const THEMES = {
@@ -168,7 +168,7 @@ function emPedacos(geo, S, N) {
     for (let iy = y0; iy <= y1; iy++) for (let ix = x0; ix <= x1; ix++) { const k = iy * (S + 1) + ix; pos.push(P[k * 3], P[k * 3 + 1], P[k * 3 + 2]); nor.push(NO[k * 3], NO[k * 3 + 1], NO[k * 3 + 2]); uv.push(UV[k * 2], UV[k * 2 + 1]); if (CO) col.push(CO[k * 3], CO[k * 3 + 1], CO[k * 3 + 2]); }
     for (let iy = 0; iy < y1 - y0; iy++) for (let ix = 0; ix < x1 - x0; ix++) { const a = iy * w + ix, b = a + w, c = b + 1, d = a + 1; idx.push(a, b, d, b, c, d); }
     // pedaço liso (longe da pista, sem relevo): 4 vértices bastam, a luz e a textura saem iguais (junta-se tudo numa malha só, adiante)
-    const liso = pos.every((v, k) => k % 3 !== 1 || Math.abs(v - pos[1]) < 0.02) && nor.every((v, k) => k % 3 !== 1 || v > 0.9999);
+    const liso = !globalThis.__editorCenario && pos.every((v, k) => k % 3 !== 1 || Math.abs(v - pos[1]) < 0.02) && nor.every((v, k) => k % 3 !== 1 || v > 0.9999);
     if (liso) {
       const h = y1 - y0 + 1, cantos = [0, w - 1, (h - 1) * w, (h - 1) * w + w - 1], q = new THREE.BufferGeometry();
       q.setAttribute("position", new THREE.Float32BufferAttribute(cantos.flatMap((c) => pos.slice(c * 3, c * 3 + 3)), 3)); q.setAttribute("normal", new THREE.Float32BufferAttribute(cantos.flatMap((c) => nor.slice(c * 3, c * 3 + 3)), 3));
@@ -211,7 +211,7 @@ function buildWorld(tr) {
   tr.agua = [];
   // ---- chão em volta (malha com relevo) ----
   const S = gp?.terreno?.S ?? Math.min(380, Math.round(140 * K)), pad = 1400, size = WORLD + pad * 2, geo = new THREE.PlaneGeometry(size, size, S, S); geo.rotateX(-Math.PI / 2);
-  const pos = geo.attributes.position;
+  const pos = geo.attributes.position, relevoEd = relevoDoEditor(id); // (o relevo pintado no editor de pistas, cenario/<pista>.json: soma ao chão; sem ele, nada muda)
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i) + WORLD / 2, y = pos.getZ(i) + WORLD / 2;
     const longe = !tr.relevoGP && tr.distAprox(x, y) > W / 2 + t.flat + t.fall + WORLD / 96, bi = longe ? 0 : tr.indiceAt(x, y);
@@ -221,6 +221,7 @@ function buildWorld(tr) {
     if (id === "rio" && rioSea(x, y)) h = Math.min(h, -14); // o mar de Copacabana
     if (gp?.terreno?.altura) h = gp.terreno.altura(tr, x, y, h, lat); // o GP com água ou relevo próprio (Singapura: a baía e o rio afundam o chão)
     if (tr.sobPonte) h = Math.min(h, tr.sobPonte(x, y) - 4); // embaixo da ponte (Suzuka)
+    if (relevoEd) h += relevoEd(x, y);
     pos.setY(i, h);
   }
   geo.computeVertexNormals();

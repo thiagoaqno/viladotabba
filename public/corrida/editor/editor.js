@@ -40,6 +40,11 @@ const api = (u, op) => fetch("/api/corrida/editor/" + u, op).then(async (r) => {
 }
 // ---------- a tela: só o 3D e o painel ----------
 for (const id of ["home", "lobby", "bar"]) document.getElementById(id)?.classList.add("hidden");
+// (2026-11-16, o Thiago: "às vezes ele vai para a tela inicial do lobby com a interface aberta; o Esc fecha tudo") o jogo continua vivo por
+// baixo (a sala, o socket, o Esc dele) e às vezes mostra o menu ou esconde a corrida: no editor, a tela fica presa no 3D e no painel
+document.body.classList.add("modo-editor");
+{ const st = document.createElement("style"); st.textContent = `body.modo-editor #home,body.modo-editor #lobby,body.modo-editor #bar,body.modo-editor #results,body.modo-editor .modal,body.modo-editor dialog{display:none!important}
+body.modo-editor #race{display:block!important;visibility:visible!important}body.modo-editor #race>:not(canvas){display:none!important}body.modo-editor #screen{display:block!important}`; document.head.appendChild(st); }
 document.getElementById("race")?.classList.remove("hidden");
 for (const el of document.querySelectorAll("#race > :not(canvas)")) el.style.display = "none";
 const css = document.createElement("style");

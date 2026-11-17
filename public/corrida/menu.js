@@ -328,7 +328,7 @@ function voltar() {
 }
 const haModal = () => !$("modal").classList.contains("hidden") || document.querySelector("dialog[open]");
 function aoTeclar(e) {
-  if (!naTela || haModal()) return;
+  if (!naTela || haModal() || document.body.classList.contains("modo-editor")) return; // (no editor de cenário o menu não ouve as teclas: o Esc dele levava para a página inicial)
   if (e.key.startsWith("Arrow")) { if (mover(e.key)) e.preventDefault(); }
   else if (e.key === "Escape") { e.preventDefault(); voltar(); }
 }

@@ -49,7 +49,9 @@ export function criarComandos(ed) {
     for (const k of ["x", "y", "z"]) if (k !== eixo) o.position[k] = inicioArrasto[k];
   });
   // OSNAP: ao soltar o gizmo de mover, a peça assenta no chão
-  gizmo.addEventListener("mouseUp", () => { const o = gizmo.object; if (o && modos.osnap && gizmo.mode === "translate" && !o.userData.peca && ed.ehItem(o)) { ed.noChao(o); ed.guardar(o); } });
+  // (2026-11-16, o Thiago: "se eu ponho no chão e desço a barrinha, ele devia entrar no chão") só assenta quando o arrasto foi de lado: quem
+  // mexeu na altura (a seta verde) fica onde soltou, afundado ou no alto
+  gizmo.addEventListener("mouseUp", () => { const o = gizmo.object; if (o && modos.osnap && gizmo.mode === "translate" && !o.userData.peca && ed.ehItem(o) && inicioArrasto && Math.abs(o.position.y - inicioArrasto.y) < 0.01) { ed.noChao(o); ed.guardar(o); } });
 
   // ---------- ocultar / isolar (só no editor, nada é salvo) ----------
   const ocultos = new Set();

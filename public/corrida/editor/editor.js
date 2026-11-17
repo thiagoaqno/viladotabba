@@ -316,6 +316,7 @@ function desenharBiblioteca() {
   $("edBibBusca").oninput = (e) => { buscaBib = e.target.value.trim().toLowerCase(); const pos = e.target.selectionStart; desenharBiblioteca(); const i = $("edBibBusca"); i.focus(); i.setSelectionRange(pos, pos); };
 }
 // ---------- a área (cenario-pista.js, tipo "area"): clique nos cantos do polígono; fecha clicando no primeiro, com Enter ou no botão ----------
+let areaCor = "#3fa52c", areaComCor = false; // (a cor da área: tinge o material; na "cor lisa", é a cor dela)
 let areaPts = [], areaMaterial = "grama", areaEspalhar = "", areaEsp = 8;
 const marcasArea = new THREE.Group(); scene.add(marcasArea);
 function marcarArea() {
@@ -326,7 +327,7 @@ function marcarArea() {
 async function fecharArea() {
   if (areaPts.length < 3) return avisar("A área precisa de pelo menos 3 cantos.", true);
   const A = areaPts[0], pts = areaPts.map((p) => [+(p.x - A.x).toFixed(2), +(p.z - A.z).toFixed(2)]);
-  const o = await colocar({ tipo: "area", pts, material: areaMaterial, espalhar: areaEspalhar || undefined, espaco: areaEspalhar ? areaEsp : undefined, x: A.x, y: Math.min(...areaPts.map((p) => p.y)), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
+  const o = await colocar({ tipo: "area", pts, material: areaMaterial, cor: (areaComCor || areaMaterial === "cor") ? areaCor : undefined, espalhar: areaEspalhar || undefined, espaco: areaEspalhar ? areaEsp : undefined, x: A.x, y: Math.min(...areaPts.map((p) => p.y)), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
   areaPts = []; marcarArea(); if (o) { guardarItem(o); avisar("Área pronta. Clique para começar outra (Esc para)."); } desenharArea();
 }
 function desenharArea() {
@@ -334,6 +335,7 @@ function desenharArea() {
   const kits = Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${areaEspalhar === id ? "selected" : ""}>${h(k.nome)}</option>`).join("");
   el.innerHTML = `<div class="lin"><button id="edArBt" class="ferr ${on ? "on" : ""}">${on ? (areaPts.length ? `${areaPts.length} cantos: clique no próximo ou no primeiro para fechar` : "Clique no primeiro canto… (Esc sai)") : "⬠ Desenhar área (polígono)"}</button></div>
     ${on && areaPts.length > 2 ? `<div class="lin"><button id="edArFim">Fechar a área (Enter)</button><button id="edArVolta">Tirar o último canto</button></div>` : ""}
+    <div class="lin"><label>Cor <input type="color" id="edArCor" value="${areaCor}"></label>${areaMaterial === "cor" ? "" : `<label><input type="checkbox" id="edArComCor" ${areaComCor ? "checked" : ""}> tingir a textura</label>`}</div>
     <div class="lin"><label>Preencher <select id="edArMat">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === areaMaterial ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div>
     <div class="lin"><label>Espalhar <select id="edArKit"><option value="">Nada</option>${kits}</select></label></div>
     ${areaEspalhar ? `<div class="lin"><label>Um a cada (m) <input type="number" id="edArEsp" step="1" value="${areaEsp}"></label></div>` : ""}
@@ -341,7 +343,9 @@ function desenharArea() {
   $("edArBt").onclick = () => { areaPts = []; marcarArea(); assetEscolhido = on ? null : "*area"; desenharArea(); desenharTrecho(); desenharLinha(); desenharZebra(); desenharBiblioteca(); };
   if ($("edArFim")) $("edArFim").onclick = fecharArea;
   if ($("edArVolta")) $("edArVolta").onclick = () => { areaPts.pop(); marcarArea(); desenharArea(); };
-  $("edArMat").onchange = (e) => { areaMaterial = e.target.value; };
+  $("edArMat").onchange = (e) => { areaMaterial = e.target.value; desenharArea(); };
+  $("edArCor").oninput = (e) => { areaCor = e.target.value; if (areaMaterial !== "cor" && !areaComCor) { areaComCor = true; if ($("edArComCor")) $("edArComCor").checked = true; } };
+  if ($("edArComCor")) $("edArComCor").onchange = (e) => { areaComCor = e.target.checked; };
   $("edArKit").onchange = (e) => { areaEspalhar = e.target.value; desenharArea(); };
   if ($("edArEsp")) $("edArEsp").onchange = (e) => { areaEsp = Math.max(1, +e.target.value || 8); };
 }

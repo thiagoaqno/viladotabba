@@ -13,6 +13,7 @@ function attach(app) {
   if (process.env.CORRIDA_EDITOR !== "1") return;
   for (const d of [ORIG, TEXS, LEVES, CENARIO]) fs.mkdirSync(d, { recursive: true });
   app.use("/api/corrida/editor", (req, res, next) => (local(req) ? next() : res.status(403).json({ erro: "O editor só abre no próprio PC." })));
+  app.get("/api/corrida/editor/eu", (req, res) => res.json({ login: "local", online: false })); // (no PC não há login)
   const lista = (dir) => fs.readdirSync(dir).filter((f) => /\.glb$/i.test(f)).map((f) => ({ nome: f.replace(/\.glb$/i, ""), kb: Math.round(fs.statSync(path.join(dir, f)).size / 1024) }));
   app.get("/api/corrida/editor/assets", (req, res) => res.json({ originais: lista(ORIG), leves: lista(LEVES), texturas: fs.readdirSync(TEXS).filter((f) => /\.(png|jpe?g|webp)$/i.test(f)) }));
   // as texturas importadas no Craft (ficam no PC; dentro dos assets elas vão embutidas no .glb)

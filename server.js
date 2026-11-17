@@ -60,6 +60,7 @@ require("./cozinha.js")(io); // Cozinha da Galera: o Overcooked da galera, de 1 
 require("./drag.js")(io); // Drag da Galera: o racha de até 4 pessoas (o resto são rivais robôs), canal /drag
 require("./proibida.js")(io); // Palavra Proibida da Galera: explicar palavras em dois times, canal /proibida
 require("./rumi.js")(io); // Rumi da Galera: o jogo de peças numeradas clássico, 2 a 4 com robôs, canal /rumi
+require("./corrida-editor-online.js").attach(app); // (o editor de cenário no site, com login pelo GitHub: antes dos arquivos, para o rascunho valer)
 app.use(express.static(path.join(__dirname, "public")));
 require("./corrida-pc.js").attach(app); require("./corrida-editor.js").attach(app); // (o editor de cenário: só com CORRIDA_EDITOR=1, no próprio PC) // o programa de PC: versão, recordes feitos sem internet, CORS e o /corrida/pc.js (antes das rotas /api/)
 // Traçado calculado para a corrida: não inicia trabalho pesado em resposta a acessos externos.

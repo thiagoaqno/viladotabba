@@ -63,6 +63,10 @@ css.textContent = `
 #edBarra button{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:54px;background:transparent;color:#cfd7e4;border:1px solid transparent;border-radius:8px;padding:5px 8px;cursor:pointer;font:inherit}
 #edBarra button b{font-size:16px;line-height:1}#edBarra button small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8f9bb0}
 #edBarra button:hover{background:#252c3a;border-color:#3a4558}#edBarra button.on{background:#2f63e0;color:#fff}#edBarra button.on small{color:#dfe7ff}#edBarra i{width:1px;height:32px;background:#2e3542;margin:0 4px}
+#ed{width:380px;font-size:14px}#ed button{padding:9px 13px;font-weight:600;background:#263042;border-color:#3f4b61}#ed h3{font-size:13px;color:#cfe0ff}
+#ed .ferr{display:block;width:100%;padding:12px 14px!important;font-size:15px;background:#2b4c8c!important;border-color:#3f6bc4!important;color:#fff}#ed .ferr.on{background:#f2a51a!important;border-color:#f2a51a!important;color:#111}
+#edBarra button{min-width:66px;padding:8px 10px}#edBarra button b{font-size:20px}#edBarra button small{font-size:11px}
+#edCmd{display:none!important}
 #edAjuda{position:fixed;right:12px;bottom:12px;max-width:560px;background:rgba(18,21,27,.85);color:#cfd6e2;font:12px Barlow,system-ui,sans-serif;padding:8px 12px;border-radius:10px;z-index:50}`;
 document.head.appendChild(css);
 const painel = document.createElement("div"); painel.id = "ed"; document.body.appendChild(painel);
@@ -183,26 +187,31 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     }
     varios.clear(); return selecionar(o); }
   if (!assetEscolhido) { if (comShift()) return; const peca = raio.intersectObjects(solidos(), false)[0]; return selecionar(peca ? pecaDe(peca.object) : null); }
-  if (assetEscolhido === "*trecho") { // (o eixo: início, fim e, com curva, o ponto por onde ela passa)
+  if (assetEscolhido === "*trecho" || assetEscolhido === "*linha") { // (o eixo: início, fim e, com curva, o ponto por onde ela passa)
+    const ln = assetEscolhido === "*linha", curva = ln ? linhaCurva : trechoCurva, redesenhar = () => (ln ? desenharLinha() : desenharTrecho());
     const h0 = raio.intersectObjects(solidos(), false)[0], pt = h0 ? h0.point : raio.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3()); if (!pt) return;
     trechoPts.push(pt.clone()); marcarTrecho();
-    if (trechoPts.length < (trechoCurva ? 3 : 2)) { avisar(trechoPts.length === 1 ? "Trecho: agora clique onde ele termina." : "Trecho: agora clique por onde a curva passa."); return desenharTrecho(); }
-    const [A, B, Mm] = trechoPts, rel = (p) => [+(p.x - A.x).toFixed(2), +(p.z - A.z).toFixed(2)];
-    const o4 = await colocar({ tipo: "trecho", pts: [rel(A), Mm ? rel(Mm) : null, rel(B)], largura: trechoLarg, zebra: trechoZebra || undefined, x: A.x, y: Math.min(A.y, B.y), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
+    if (trechoPts.length < (curva ? 3 : 2)) { avisar(trechoPts.length === 1 ? "Agora clique onde termina." : "Agora clique por onde a curva passa."); return redesenhar(); }
+    const [A, B, Mm] = trechoPts, rel = (p) => [+(p.x - A.x).toFixed(2), +(p.z - A.z).toFixed(2)], pts = [rel(A), Mm ? rel(Mm) : null, rel(B)], pos = { x: A.x, y: Math.min(A.y, B.y), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 };
+    const o4 = await colocar(ln ? { tipo: "linha", pts, modelo: linhaModelo, espaco: linhaEsp, altura: linhaAlt, mureta: (linhaModelo === "cerca" && linhaMureta) || undefined, ...pos }
+      : { tipo: "trecho", pts, largura: trechoLarg, zebra: trechoZebra || undefined, ...pos });
     trechoPts = trechoEmendar ? [B.clone()] : []; marcarTrecho();
-    if (o4) { guardarItem(o4); avisar(trechoEmendar ? "Trecho pronto. O próximo começa no fim deste (Esc para)." : "Trecho pronto. Clique no início do próximo (Esc para)."); }
-    return desenharTrecho();
+    if (o4) { guardarItem(o4); avisar(trechoEmendar ? "Pronto. O próximo começa no fim deste (Esc para)." : "Pronto. Clique no início do próximo (Esc para)."); }
+    return redesenhar();
   }
   const hit = raio.intersectObjects(solidos(), false)[0]; if (!hit) return;
   const ry = Math.atan2(cam.position.x - hit.point.x, cam.position.z - hit.point.z); // (a frente do item virada para quem está olhando)
   // (2026-11-16, o Thiago: "tem que aparecer grande a placa no chão quando eu clicar") a largura da placa nova acompanha a distância da câmera:
   // de 60 (de perto) a 400 (vendo a pista de cima), em passos de 5; depois a largura muda no painel
   const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry, rz: 0 };
-  if (assetEscolhido === "*escape") {
+  if (assetEscolhido === "*escape" || assetEscolhido === "*zebra") {
+    const zb = assetEscolhido === "*zebra";
     const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i], lat = (hit.point.x - p.x) * p.nx + (hit.point.z - p.y) * p.ny;
-    if (!escapeA) { escapeA = { i, lado: lat >= 0 ? 1 : -1 }; avisar("Área de escape: agora clique onde ela termina (do mesmo lado)."); return; }
+    if (!escapeA) { escapeA = { i, lado: lat >= 0 ? 1 : -1 }; avisar(zb ? "Zebra: agora clique onde ela termina (do mesmo lado)." : "Área de escape: agora clique onde ela termina (do mesmo lado)."); if (zb) desenharZebra(); return; }
     const a = escapeA; escapeA = null; let i0 = a.i, i1 = i; const n = tr.n, fwd = (i1 - i0 + n) % n; if (fwd > n / 2) [i0, i1] = [i1, i0];
-    const o2 = await colocar({ tipo: "escape", i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + escapeDe), largura: escapeLarg, padrao: escapePadrao, marca: escapeMarca || undefined, fundoMarca: escapeFundo || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
+    const o2 = await colocar(zb ? { tipo: "escape", i0, i1, lado: a.lado, de: Math.round(tr.W / 2 - zebraDentro), largura: zebraLarg, padrao: "zebra", x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 }
+      : { tipo: "escape", i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + escapeDe), largura: escapeLarg, padrao: escapePadrao, marca: escapeMarca || undefined, fundoMarca: escapeFundo || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
+    if (zb) { if (o2) avisar("Zebra pronta. Clique em mais dois pontos para outra (Esc para)."); return desenharZebra(); }
     if (o2) { selecionar(o2); avisar("Área de escape pronta. Clique em mais dois pontos para outra (Esc para)."); } return;
   }
   if (assetEscolhido?.startsWith("*de:")) { const nome = await assetDaPeca(assetEscolhido.slice(4)); if (!nome) return; const o2 = await colocar({ asset: nome, ...base, s: M_PARA_U }); if (o2) { noChao(o2); guardarItem(o2); selecionar(o2); } return; }
@@ -224,7 +233,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); } // (Esc solta a placa e o asset escolhidos)
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); desenharLinha(); desenharZebra(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });
@@ -240,6 +249,8 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <canvas id="edPrev"></canvas><div id="edConv"><small>Escolha um original para ver antes e depois.</small></div>
   <h3>Assets leves (para colocar)</h3><div id="edLeves" class="lst"></div>
   <h3>Adicionar asset</h3><div id="edBib"></div>
+  <h3>Zebra na beira da pista</h3><div id="edZebra"></div>
+  <h3>Linha de itens (pneus, cerca, pilares…)</h3><div id="edLinha"></div>
   <h3>Desenhar pista (só cenário)</h3><div id="edTrecho"></div>
   <h3>Peças das outras pistas</h3><div id="edDe"></div>
   <h3>Área de escape</h3><div id="edEsc"></div>
@@ -292,13 +303,42 @@ function marcarTrecho() {
   marcasTrecho.clear();
   for (const [k, p] of trechoPts.entries()) { const m = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 8), new THREE.MeshBasicMaterial({ color: k === 0 ? 0x3ddc84 : k === 1 ? 0xff5252 : 0xffd23f, depthTest: false })); m.renderOrder = 999; m.position.copy(p).y += 3; marcasTrecho.add(m); }
 }
+// (2026-11-17, o Thiago: "facilitar a colocação de zebras") a zebra segue a beira da pista: dois cliques na beira, do lado em que ela fica
+let zebraLarg = 10, zebraDentro = 2;
+function desenharZebra() {
+  const on = assetEscolhido === "*zebra";
+  $("edZebra").innerHTML = `<div class="lin"><button id="edZbBt" class="ferr ${on ? "on" : ""}">${on ? (escapeA ? "Clique onde ela TERMINA… (Esc sai)" : "Clique onde ela COMEÇA… (Esc sai)") : "▰▱ Pôr zebra"}</button></div>
+    <div class="lin"><label>Largura <input type="number" id="edZbL" step="1" value="${zebraLarg}"></label><label>Entra na pista <input type="number" id="edZbD" step="1" value="${zebraDentro}"></label></div>
+    <small>Clique na beira da pista onde a zebra começa e depois onde termina, do mesmo lado. Ela segue a curva sozinha.</small>`;
+  $("edZbBt").onclick = () => { escapeA = null; assetEscolhido = on ? null : "*zebra"; desenharZebra(); desenharEscape(); desenharLinha(); desenharTrecho(); desenharBiblioteca(); };
+  $("edZbL").onchange = (e) => { zebraLarg = Math.max(2, +e.target.value || 10); };
+  $("edZbD").onchange = (e) => { zebraDentro = +e.target.value || 0; };
+}
+// a linha de itens: o modelo, o espaçamento e a altura (em metros); reta com 2 cliques, curva com 3
+let linhaModelo = "pneus", linhaEsp = 4, linhaAlt = 3, linhaCurva = false, linhaMureta = true;
+function desenharLinha() {
+  const on = assetEscolhido === "*linha", passo = ["Clique no INÍCIO…", "Clique no FIM…", "Clique por onde a CURVA passa…"][trechoPts.length] || "";
+  const kits = Object.entries(KITS).map(([id, k]) => `<option value="kit:${id}" ${linhaModelo === "kit:" + id ? "selected" : ""}>${h(k.nome)}</option>`).join("");
+  $("edLinha").innerHTML = `<div class="lin"><button id="edLnBt" class="ferr ${on ? "on" : ""}">${on ? passo + " (Esc sai)" : "⋯ Desenhar linha de itens"}</button></div>
+    <div class="lin"><label>Item <select id="edLnM"><option value="pneus" ${linhaModelo === "pneus" ? "selected" : ""}>Pneus (módulo vermelho)</option><option value="cerca" ${linhaModelo === "cerca" ? "selected" : ""}>Cerca (alambrado)</option><option value="pilares" ${linhaModelo === "pilares" ? "selected" : ""}>Pilares</option><optgroup label="Da biblioteca">${kits}</optgroup></select></label></div>
+    <div class="lin"><label>Espaço (m) <input type="number" id="edLnE" step="0.5" value="${linhaEsp}"></label><label>Altura (m) <input type="number" id="edLnA" step="0.5" value="${linhaAlt}"></label></div>
+    <div class="lin"><label><input type="radio" name="edLnT" value="reta" ${linhaCurva ? "" : "checked"}> Reta</label><label><input type="radio" name="edLnT" value="curva" ${linhaCurva ? "checked" : ""}> Curva</label>${linhaModelo === "cerca" ? `<label><input type="checkbox" id="edLnMu" ${linhaMureta ? "checked" : ""}> Mureta embaixo</label>` : ""}<label><input type="checkbox" id="edLnEm" ${trechoEmendar ? "checked" : ""}> Emendar</label></div>
+    <small>Defina a linha com os cliques: ele distribui os itens nela, um a cada "Espaço". Na cerca, os postes ficam no espaço e a tela tem a altura escolhida.</small>`;
+  $("edLnBt").onclick = () => { trechoPts = []; marcarTrecho(); assetEscolhido = on ? null : "*linha"; desenharLinha(); desenharTrecho(); desenharZebra(); desenharBiblioteca(); };
+  $("edLnM").onchange = (e) => { linhaModelo = e.target.value; if (linhaModelo === "cerca") linhaEsp = Math.max(linhaEsp, 3); desenharLinha(); };
+  $("edLnE").onchange = (e) => { linhaEsp = Math.max(0.5, +e.target.value || 4); };
+  $("edLnA").onchange = (e) => { linhaAlt = Math.max(0.3, +e.target.value || 3); };
+  for (const r of $("edLinha").querySelectorAll("[name=edLnT]")) r.onchange = () => { linhaCurva = r.value === "curva"; if (trechoPts.length > 2) trechoPts.length = 2; desenharLinha(); };
+  if ($("edLnMu")) $("edLnMu").onchange = (e) => { linhaMureta = e.target.checked; };
+  $("edLnEm").onchange = (e) => { trechoEmendar = e.target.checked; };
+}
 function desenharTrecho() {
   const on = assetEscolhido === "*trecho", passo = ["Clique no INÍCIO…", "Clique no FIM…", "Clique por onde a CURVA passa…"][trechoPts.length] || "";
-  $("edTrecho").innerHTML = `<div class="lin"><button id="edTrBt" class="${on ? "on" : ""}">${on ? passo + " (Esc sai)" : "Desenhar trecho"}</button></div>
+  $("edTrecho").innerHTML = `<div class="lin"><button id="edTrBt" class="ferr ${on ? "on" : ""}">${on ? passo + " (Esc sai)" : "Desenhar trecho"}</button></div>
     <div class="lin"><label><input type="radio" name="edTrT" value="reta" ${trechoCurva ? "" : "checked"}> Reta (2 cliques)</label><label><input type="radio" name="edTrT" value="curva" ${trechoCurva ? "checked" : ""}> Curva (3 cliques)</label></div>
     <div class="lin"><label>Largura <input type="number" id="edTrL" step="5" value="${trechoLarg}"></label><label><input type="checkbox" id="edTrZ" ${trechoZebra ? "checked" : ""}> Zebras</label><label><input type="checkbox" id="edTrE" ${trechoEmendar ? "checked" : ""}> Emendar</label></div>
     <small>Só enfeite: o carro não anda nele. Curva: início (verde), fim (vermelho) e o ponto por onde ela passa (amarelo). Com "Emendar", o próximo trecho começa onde este acabou.</small>`;
-  $("edTrBt").onclick = () => { trechoPts = []; marcarTrecho(); assetEscolhido = on ? null : "*trecho"; desenharTrecho(); desenharBiblioteca(); desenharPlaca(); desenharAssets(); };
+  $("edTrBt").onclick = () => { trechoPts = []; marcarTrecho(); assetEscolhido = on ? null : "*trecho"; desenharTrecho(); desenharLinha(); desenharZebra(); desenharBiblioteca(); desenharPlaca(); desenharAssets(); };
   for (const r of $("edTrecho").querySelectorAll("[name=edTrT]")) r.onchange = () => { trechoCurva = r.value === "curva"; if (trechoPts.length > 2) trechoPts.length = 2; desenharTrecho(); };
   $("edTrL").onchange = (e) => { trechoLarg = Math.max(4, +e.target.value || 60); };
   $("edTrZ").onchange = (e) => { trechoZebra = e.target.checked; };
@@ -386,7 +426,8 @@ function desenharItem(soNumeros = false) {
   const deg = (r) => (r * 180) / Math.PI;
   if (soNumeros && el.querySelector("[data-c]")) { for (const [k, v] of [["x", o.position.x], ["y", o.position.y], ["z", o.position.z], ["giro", deg(o.rotation.y)], ["escala", o.scale.x]]) { const i = el.querySelector(`[data-c="${k}"]`); if (i && document.activeElement !== i) i.value = (+v).toFixed(k === "escala" ? 2 : 0); } return; }
   const placa = it.tipo === "placa";
-  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
+  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "linha" ? "Linha de " + (it.modelo || "").replace("kit:", "") : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
+    ${it.tipo === "linha" ? `<div class="lin"><label>Espaço (m) <input type="number" step="0.5" data-pl="espaco" value="${it.espaco || 4}"></label><label>Altura (m) <input type="number" step="0.5" data-pl="altura" value="${it.altura || 3}"></label></div>` : ""}
     ${it.tipo === "trecho" ? `<div class="lin"><label>Largura <input type="number" step="5" data-pl="largura" value="${it.largura || 60}"></label><button data-trz>${it.zebra ? "Tirar zebras" : "Pôr zebras"}</button></div>` : ""}
     ${placa ? `<div class="lin"><select data-pl="marca">${opcoesDeMarca(it.marca)}</select><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>
     <div class="lin"><label>Largura <input type="number" step="5" data-pl="w" value="${it.w || 60}"></label><label>Altura dos postes <input type="number" step="1" data-pl="alto" value="${it.alto ?? 14}"></label></div>` : ""}
@@ -541,7 +582,7 @@ addEventListener("keydown", (e) => {
   setTimeout(marcarModo, 0);
 });
 marcarModo();
-desenharPlaca(); desenharBiblioteca(); desenharDe(); desenharEscape(); desenharTrecho(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
+desenharPlaca(); desenharBiblioteca(); desenharDe(); desenharEscape(); desenharTrecho(); desenharLinha(); desenharZebra(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
 // ---------- publicar: salva e abre o PR (corrida-editor.js /publicar) ----------
 $("edPublicar").onclick = async () => {
   const msg = prompt("O que mudou? (vira o título do PR)", `cenário de ${PISTAS[pista]?.name || pista}`); if (msg == null) return;

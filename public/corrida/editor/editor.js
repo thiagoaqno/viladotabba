@@ -166,6 +166,7 @@ function noChao(o) { const b = new THREE.Box3().setFromObject(o); o.position.y +
 // ---------- os itens ----------
 let escapeA = null, escapeLarg = 60, escapeDe = 7, escapePadrao = "laranja", escapeMarca = "", escapeFundo = ""; // (a área de escape: o primeiro clique e as escolhas)
 const varios = new Set(); // (a seleção de vários itens: Ctrl+clique)
+let placaSemFundo = false; // (a marca no chão: sem o fundo, só o logo)
 let selecionado = null, assetEscolhido = null, placaMarca = "pirelli", placaFundo = "#101114"; // ("*placa": o próximo clique no chão põe uma placa)
 // as peças que a pista já tinha e foram mexidas: chave -> ajuste (salvo em `ajustes`)
 const ajustes = new Map(ajustesDaPista(tr).map((a) => [a.chave, a]));
@@ -236,7 +237,7 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     const o3 = await colocar({ tipo: "portico", marca: placaMarca, fundo: placaFundo, w: Math.round(tr.W + 20), alto: 32, x: p.x, y: p.h, z: p.y, rx: 0, ry: Math.atan2(p.tx, p.ty), rz: 0, s: 1 });
     if (o3) { guardarItem(o3); selecionar(o3); } return;
   }
-  const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
+  const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: 1 } : assetEscolhido === "*marcaChao" ? { tipo: "marcaChao", marca: placaMarca, fundo: placaSemFundo ? "" : placaFundo, w: Math.round(Math.max(40, Math.min(600, cam.position.distanceTo(hit.point) * 0.25)) / 5) * 5, prop: 0.3, ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o);
   }
 });
@@ -481,11 +482,13 @@ function desenharEscape() {
 }
 function desenharPlaca() {
   $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
-    <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">${assetEscolhido === "*placa" ? "Clique no chão… (Esc sai)" : "Pôr placa"}</button><button id="edPtPor" class="${assetEscolhido === "*portico" ? "on" : ""}">${assetEscolhido === "*portico" ? "Clique no chão… (Esc sai)" : "Pôr pórtico"}</button></div>
+    <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">${assetEscolhido === "*placa" ? "Clique no chão… (Esc sai)" : "Pôr placa"}</button><button id="edMcPor" class="${assetEscolhido === "*marcaChao" ? "on" : ""}">${assetEscolhido === "*marcaChao" ? "Clique no chão… (Esc sai)" : "Pôr marca no chão"}</button><label><input type="checkbox" id="edMcSem" ${placaSemFundo ? "checked" : ""}> sem fundo</label><button id="edPtPor" class="${assetEscolhido === "*portico" ? "on" : ""}">${assetEscolhido === "*portico" ? "Clique no chão… (Esc sai)" : "Pôr pórtico"}</button></div>
     <small>O pórtico encaixa sozinho atravessado na pista, no ponto mais perto do clique. 1. escolha a marca e o fundo · 2. clique em Pôr placa · 3. clique no chão (pode pôr várias; Esc para) · a placa nasce virada para você e grande o bastante para ver daí</small>`;
   $("edPlMarca").onchange = (e) => { placaMarca = e.target.value; desenharPlaca(); };
   $("edPlFundo").onchange = (e) => { placaFundo = e.target.value; };
   $("edPlPor").onclick = () => { assetEscolhido = assetEscolhido === "*placa" ? null : "*placa"; desenharPlaca(); desenharAssets(); desenharBiblioteca(); };
+  $("edMcPor").onclick = () => { assetEscolhido = assetEscolhido === "*marcaChao" ? null : "*marcaChao"; desenharPlaca(); desenharAssets(); desenharBiblioteca(); };
+  $("edMcSem").onchange = (e) => { placaSemFundo = e.target.checked; };
   $("edPtPor").onclick = () => { assetEscolhido = assetEscolhido === "*portico" ? null : "*portico"; desenharPlaca(); desenharAssets(); desenharBiblioteca(); }; // (o pórtico: a mesma marca e o mesmo fundo, por cima da pista)
 }
 function desenharAssets() {
@@ -499,13 +502,13 @@ function desenharItem(soNumeros = false) {
   const it = o.userData.item, n = (k, v, passo) => `<label>${k} <input type="number" step="${passo}" data-c="${k}" value="${(+v).toFixed(passo < 1 ? 2 : 0)}"></label>`;
   const deg = (r) => (r * 180) / Math.PI;
   if (soNumeros && el.querySelector("[data-c]")) { for (const [k, v] of [["x", o.position.x], ["y", o.position.y], ["z", o.position.z], ["giro", deg(o.rotation.y)], ["escala", o.scale.x]]) { const i = el.querySelector(`[data-c="${k}"]`); if (i && document.activeElement !== i) i.value = (+v).toFixed(k === "escala" ? 2 : 0); } return; }
-  const placa = it.tipo === "placa";
-  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "linha" ? "Linha de " + (it.modelo || "").replace("kit:", "") : it.tipo === "area" ? "Área · " + (MATERIAIS_AREA[it.material] || "") : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
+  const placa = it.tipo === "placa" || it.tipo === "marcaChao";
+  el.innerHTML = `<div class="lin"><b>${h(placa ? (it.tipo === "marcaChao" ? "Marca no chão · " : "Placa · ") + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "linha" ? "Linha de " + (it.modelo || "").replace("kit:", "") : it.tipo === "area" ? "Área · " + (MATERIAIS_AREA[it.material] || "") : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
     ${it.tipo === "area" ? `<div class="lin"><label>Preencher <select data-pl="material">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === it.material ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div><div class="lin"><label>Espalhar <select data-pl="espalhar"><option value="">Nada</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${id === it.espalhar ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label><label>A cada (m) <input type="number" step="1" data-pl="espaco" value="${it.espaco || 8}"></label></div>` : ""}
     ${it.tipo === "linha" ? `<div class="lin"><label>Espaço (m) <input type="number" step="0.5" data-pl="espaco" value="${it.espaco || 4}"></label><label>Altura (m) <input type="number" step="0.5" data-pl="altura" value="${it.altura || 3}"></label></div>` : ""}
     ${it.tipo === "trecho" ? `<div class="lin"><label>Largura <input type="number" step="5" data-pl="largura" value="${it.largura || 60}"></label><button data-trz>${it.zebra ? "Tirar zebras" : "Pôr zebras"}</button></div>` : ""}
     ${placa ? `<div class="lin"><select data-pl="marca">${opcoesDeMarca(it.marca)}</select><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>
-    <div class="lin"><label>Largura <input type="number" step="5" data-pl="w" value="${it.w || 60}"></label><label>Altura dos postes <input type="number" step="1" data-pl="alto" value="${it.alto ?? 14}"></label></div>` : ""}
+    <div class="lin"><label>Largura <input type="number" step="5" data-pl="w" value="${it.w || 60}"></label>${it.tipo === "marcaChao" ? `<label>Altura/largura <input type="number" step="0.05" data-pl="prop" value="${it.prop || 0.3}"></label><button data-semfundo>${it.fundo ? "Tirar o fundo" : "Pôr fundo"}</button>` : ""}<label ${it.tipo === "marcaChao" ? "hidden" : ""}>Altura dos postes <input type="number" step="1" data-pl="alto" value="${it.alto ?? 14}"></label></div>` : ""}
     <div class="lin">${n("x", o.position.x, 1)}${n("y", o.position.y, 1)}${n("z", o.position.z, 1)}</div>
     <div class="lin">${n("giro", deg(o.rotation.y), 5)}${n("escala", o.scale.x, 0.1)}</div>
     <div class="lin"><label>Cor <input type="color" data-cor value="${it.cor || "#ffffff"}"></label><button data-semcor>Cor original</button></div>
@@ -515,7 +518,8 @@ function desenharItem(soNumeros = false) {
     if (i.dataset.c === "giro") o.rotation.y = (v * Math.PI) / 180; else if (i.dataset.c === "escala") o.scale.setScalar(Math.max(0.01, v)); else o.position[i.dataset.c] = v;
     guardarItem(o);
   };
-  for (const c of el.querySelectorAll("[data-pl]")) c.onchange = () => { const v = c.type === "number" ? Math.max(1, +c.value || 1) : c.value; refazerItem(o, { [c.dataset.pl]: v }); };
+  for (const c of el.querySelectorAll("[data-pl]")) c.onchange = () => { const v = c.dataset.pl === "prop" ? Math.max(0.05, +c.value || 0.3) : c.type === "number" ? Math.max(1, +c.value || 1) : c.value; refazerItem(o, { [c.dataset.pl]: v }); };
+  if (el.querySelector("[data-semfundo]")) el.querySelector("[data-semfundo]").onclick = () => refazerItem(o, { fundo: it.fundo ? "" : "#101114" });
   if (el.querySelector("[data-trz]")) el.querySelector("[data-trz]").onclick = () => refazerItem(o, { zebra: !it.zebra || undefined });
   el.querySelector("[data-cor]").onchange = (e) => trocarCor(o, e.target.value);
   el.querySelector("[data-semcor]").onclick = () => trocarCor(o, null);

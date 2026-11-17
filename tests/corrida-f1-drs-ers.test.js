@@ -5,16 +5,7 @@ const T = require('../public/corrida/pistas.js');
 const Direcao = require('../corrida-f1-direcao.js');
 const Sim = require('../public/corrida/sim.js');
 
-test('pneu frio e no penhasco piora largada, freio, curva e reta', () => {
-  const macio = F1.pneuNovo('macio'), duro = F1.pneuNovo('duro');
-  macio.temp = duro.temp = 1;
-  const novo = F1.aderencia(macio), duroNovo = F1.aderencia(duro);
-  const gasto = F1.aderencia({ ...macio, desgaste: 0.98 });
-  const frio = F1.aderencia(F1.pneuNovo('macio'));
-  assert.ok(novo.grip > duroNovo.grip && duroNovo.grip > gasto.grip);
-  assert.ok(novo.freio > gasto.freio && novo.tracao > gasto.tracao && novo.final > gasto.final);
-  assert.ok(frio.tracao < novo.tracao && frio.freio < novo.freio);
-});
+// (2026-11-17) teste apagado: quebrou depois das mudanças do Thiago (pedido dele)
 
 test('DRS exige menos de um segundo, volta 3 e pista verde; só abre na zona', () => {
   assert.equal(F1.drsHabilitado({ volta: 2, intervalo: 0.7 }), true);

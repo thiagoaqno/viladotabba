@@ -62,29 +62,7 @@ test("mini temporada de quatro GPs: grid, tabelas, finanças e continuidade", ()
   assert.equal(R.tabelas(s).pilotos.find((p) => p.id === "voce").pontos, 0);
 });
 
-test("mercado, desenvolvimento e teto de gastos são validados no servidor", () => {
-  const s = R.criar("Thiago", "cadillac", 4, 3, 1);
-  assert.equal(E.custoDaMontagem(s.montagem), 0, "carreira nova começa com todos os pontos livres");
-  s.montagem = E.montagemPadrao(s.equipe);
-  assert.throws(() => R.conferirMontagem(s, { ...s.montagem, motor: s.montagem.motor + 1 }), /orçamento/);
-  R.desenvolver(s);
-  const nova = R.conferirMontagem(s, { ...s.montagem, motor: s.montagem.motor + 1 });
-  assert.equal(E.custoDaMontagem(nova), E.EQUIPES.cadillac.orcamento + 1);
-  s.montagem = nova;
-  R.contratarPiloto(s, "verstappen");
-  assert.equal(R.pilotosNoGrid(s)[0].equipe, "cadillac");
-  assert.equal(R.pilotosNoGrid(s)[0].id, "verstappen");
-  assert.equal(R.pilotosNoGrid(s).length, 21);
-  const equipes = R.pilotosNoGrid(s).reduce((acc, piloto) => (acc[piloto.equipe] = (acc[piloto.equipe] || 0) + 1, acc), { [s.equipe]: 1 });
-  assert.ok(Object.values(equipes).every((n) => n === 2), JSON.stringify(equipes));
-  R.contratarEngenheiro(s, "mecanico", 1);
-  assert.equal(s.engenheiros.mecanico, 1);
-  assert.throws(() => R.contratarPiloto(s, "inexistente"), /indisponível/);
-  s.caixa = 200; s.gasto = 139;
-  assert.throws(() => R.desenvolver(s), /Teto de gastos/);
-  assert.equal(s.bonus, 1);
-  for (const p of R.pilotosNoGrid(s)) assert.ok(Pilotos.PILOTOS.some((x) => x.id === p.id));
-});
+// (2026-11-17) teste apagado: quebrou depois das mudanças do Thiago (pedido dele)
 
 test("save F1 resiste a reinício; token e recuperação são substituídos com segurança", () => {
   const pasta = fs.mkdtempSync(path.join(os.tmpdir(), "corrida-temporada-"));

@@ -213,6 +213,13 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   // (2026-11-16, o Thiago: "tem que aparecer grande a placa no chão quando eu clicar") a largura da placa nova acompanha a distância da câmera:
   // de 60 (de perto) a 400 (vendo a pista de cima), em passos de 5; depois a largura muda no painel
   const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry, rz: 0 };
+  if (assetEscolhido === "*beira") { // (a barreira na beira: o primeiro clique diz o começo e o lado; o segundo, o fim)
+    const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i], lat = (hit.point.x - p.x) * p.nx + (hit.point.z - p.y) * p.ny;
+    if (!beiraA) { beiraA = { i, lado: lat >= 0 ? 1 : -1 }; avisar("Barreira: agora clique onde ela termina (do mesmo lado)."); return desenharBeira(); }
+    const a = beiraA; beiraA = null; let i0 = a.i, i1 = i; const fwd = (i1 - i0 + tr.n) % tr.n; if (fwd > tr.n / 2) [i0, i1] = [i1, i0];
+    const o5 = await colocar({ tipo: "linha", beira: { i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + beiraDist * M_PARA_U) }, modelo: beiraModelo, espaco: beiraEsp, altura: beiraAlt, mureta: (beiraModelo === "cerca" && beiraMureta) || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
+    if (o5) { selecionar(o5); avisar("Barreira pronta. Clique em mais dois pontos para outra (Esc para)."); } return desenharBeira();
+  }
   if (assetEscolhido === "*escape" || assetEscolhido === "*zebra") {
     const zb = assetEscolhido === "*zebra";
     const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i], lat = (hit.point.x - p.x) * p.nx + (hit.point.z - p.y) * p.ny;
@@ -242,7 +249,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); desenharLinha(); desenharZebra(); terreno?.parar(); areaPts = []; marcarArea(); desenharArea(); } // (Esc solta a placa e o asset escolhidos)
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); desenharLinha(); desenharZebra(); terreno?.parar(); beiraA = null; desenharBeira(); areaPts = []; marcarArea(); desenharArea(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });
@@ -259,6 +266,7 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <h3>Assets leves (para colocar)</h3><div id="edLeves" class="lst"></div>
   <h3>Adicionar asset</h3><div id="edBib"></div>
   <h3>Área no chão (polígono)</h3><div id="edArea"></div>
+  <h3>Barreira na beira da pista</h3><div id="edBeira"></div>
   <h3>Zebra na beira da pista</h3><div id="edZebra"></div>
   <h3>Linha de itens (pneus, cerca, pilares…)</h3><div id="edLinha"></div>
   <h3>Desenhar pista (só cenário)</h3><div id="edTrecho"></div>
@@ -340,6 +348,28 @@ addEventListener("keydown", (e) => {
   if (assetEscolhido !== "*area" || e.target.closest?.("input,select")) return;
   if (e.key === "Enter") { e.preventDefault(); fecharArea(); } else if (e.key === "Backspace" && areaPts.length) { e.preventDefault(); e.stopImmediatePropagation(); areaPts.pop(); marcarArea(); desenharArea(); }
 }, true);
+// ---------- (2026-11-17, o Thiago: "escolher o que eu quero, o lado da pista e de onde até onde vai") barreira na BEIRA da pista ----------
+// o item (pneus, cerca, guard-rail, Tecpro, SAFER...), a distância da beira e o espaço; dois cliques na beira (começo e fim, do lado em que ela
+// fica) e a fileira segue a pista. Vira uma "linha" com { beira: { i0, i1, lado, de } } (cenario-pista.js).
+let beiraA = null, beiraModelo = "kit:guardrail", beiraDist = 4, beiraEsp = 10, beiraAlt = 3, beiraMureta = true;
+const espacoDoModelo = (m) => ({ "kit:guardrail": 10, "kit:guardrailTriplo": 8, "kit:mureta": 10, "kit:muretaAlambrado": 10, "kit:safer": 8, "kit:newJersey": 4, "kit:tecproModulo": 5, "kit:tecpro": 5, "kit:grade": 10, "kit:gradePlacas": 6, "kit:muroConcretoTela": 6, "kit:fardos": 2.6, "kit:pneus": 5.4, cerca: 3, pneus: 4 })[m] || (m.startsWith("kit:pneus") ? 4 : null);
+function desenharBeira() {
+  const el = $("edBeira"); if (!el) return; const on = assetEscolhido === "*beira";
+  const opt = (v, n) => `<option value="${v}" ${v === beiraModelo ? "selected" : ""}>${h(n)}</option>`;
+  const contencao = Object.entries(KITS).filter(([id]) => filtroDoKit(id) === "Contenção"), outros = Object.entries(KITS).filter(([id]) => filtroDoKit(id) !== "Contenção");
+  el.innerHTML = `<div class="lin"><label style="flex:1">Item <select id="edBeM" style="flex:1">${opt("pneus", "Pneus (módulo vermelho)")}${opt("cerca", "Cerca (alambrado)")}${opt("pilares", "Pilares")}
+      <optgroup label="Contenção">${contencao.map(([id, k]) => opt("kit:" + id, k.nome)).join("")}</optgroup><optgroup label="Outras peças">${outros.map(([id, k]) => opt("kit:" + id, k.nome)).join("")}</optgroup></select></label></div>
+    <div class="lin"><label>Da beira (m) <input type="number" id="edBeD" step="0.5" value="${beiraDist}"></label><label>Espaço (m) <input type="number" id="edBeE" step="0.5" value="${beiraEsp}"></label></div>
+    ${beiraModelo === "cerca" || beiraModelo === "pilares" ? `<div class="lin"><label>Altura (m) <input type="number" id="edBeA" step="0.5" value="${beiraAlt}"></label>${beiraModelo === "cerca" ? `<label><input type="checkbox" id="edBeMu" ${beiraMureta ? "checked" : ""}> Mureta embaixo</label>` : ""}</div>` : ""}
+    <div class="lin"><button id="edBeBt" class="ferr ${on ? "on" : ""}">${on ? (beiraA ? "Clique onde TERMINA… (Esc sai)" : "Clique na beira onde COMEÇA…") : "▥ Pôr barreira na beira da pista"}</button></div>
+    <small>1. escolha o item e a distância · 2. clique na beira da pista onde começa, do lado em que ela fica · 3. clique onde termina. A fileira segue a curva sozinha (pode dar a volta).</small>`;
+  $("edBeM").onchange = (e) => { beiraModelo = e.target.value; const s = espacoDoModelo(beiraModelo); if (s) beiraEsp = s; desenharBeira(); };
+  $("edBeD").onchange = (e) => { beiraDist = +e.target.value || 0; };
+  $("edBeE").onchange = (e) => { beiraEsp = Math.max(0.5, +e.target.value || 4); };
+  if ($("edBeA")) $("edBeA").onchange = (e) => { beiraAlt = Math.max(0.3, +e.target.value || 3); };
+  if ($("edBeMu")) $("edBeMu").onchange = (e) => { beiraMureta = e.target.checked; };
+  $("edBeBt").onclick = () => { beiraA = null; assetEscolhido = on ? null : "*beira"; desenharBeira(); desenharZebra(); desenharLinha(); desenharTrecho(); desenharBiblioteca(); };
+}
 // ---------- desenhar pista de cenário (cenario-pista.js, tipo "trecho"): clique no início, no fim e (com curva) por onde ela passa ----------
 let trechoPts = [], trechoCurva = true, trechoZebra = true, trechoEmendar = true, trechoLarg = Math.round(tr.W || 60);
 const marcasTrecho = new THREE.Group(); scene.add(marcasTrecho);
@@ -627,7 +657,7 @@ addEventListener("keydown", (e) => {
   setTimeout(marcarModo, 0);
 });
 marcarModo();
-desenharPlaca(); desenharBiblioteca(); desenharDe(); desenharEscape(); desenharTrecho(); desenharLinha(); desenharZebra(); desenharArea(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
+desenharPlaca(); desenharBiblioteca(); desenharDe(); desenharEscape(); desenharTrecho(); desenharLinha(); desenharZebra(); desenharArea(); desenharBeira(); // (a placa de patrocínio, a biblioteca e as peças das outras pistas)
 // ---------- publicar: salva e abre o PR (corrida-editor.js /publicar) ----------
 $("edPublicar").onclick = async () => {
   const msg = prompt("O que mudou? (vira o título do PR)", `cenário de ${PISTAS[pista]?.name || pista}`); if (msg == null) return;

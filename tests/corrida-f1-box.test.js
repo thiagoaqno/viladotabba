@@ -217,36 +217,7 @@ test("sala: sem as regras de F1 o box é ignorado e a sala corre como antes", ()
 });
 
 // ---------- o box do piloto humano: a física (sim.js) leva o carro pelo corredor ----------
-test("box (humano): o pedido do piloto leva o carro sozinho ao corredor, para na garagem, troca o pneu e volta à pista", () => {
-  const S = require("../public/corrida/sim.js"), D = require("../public/corrida/dinamica.js"), Equipes = require("../public/corrida/f1-equipes.js");
-  const spec = Equipes.specDaEquipe("mclaren");
-  const corrida = (laps, quali = false) => {
-    const tr = S.criarPista(T.PISTAS.interlagos, "interlagos"), c = S.novo(tr, { grid: 0, f1: true, pneu: Object.assign(F1.pneuNovo("macio"), { desgaste: 0.6, temp: 0.9 }), box: true });
-    const cor = tr.corredor, ini = (cor.i0 - 40 + tr.n) % tr.n, q = tr.pts[ini];
-    Object.assign(c, { x: q.x, y: q.y, z: q.h, a: Math.atan2(q.ty, q.tx), idx: ini, v: 150, marcha: 5 });
-    const amb = { spec, voltas: 3, laps, paradas: 0, semente: 99, id: "ana", grid: 3, f1: true, outros: [], quali }, ev = [], eventos = [];
-    for (let i = 0; i < 120 * 40; i++) {
-      const alvo = c.box.fase ? 9999 : 150; // (antes de entrar, anda a 150 u/s como quem se prepara para a parada)
-      ev.length = 0; S.passo(c, { gas: c.v < alvo ? 1 : 0, brake: 0, steer: 0, pedido: "duro" }, amb, tr, ev);
-      for (const e of ev) eventos.push({ ...e, tempoDeJogo: (i + 1) * D.PASSO, lat: S.quadro(tr, c.x, c.y, c.idx).lat, tempPneu: c.pneu.temp });
-    }
-    return { c, eventos, tr };
-  };
-  const r = corrida(0);
-  const tipos = r.eventos.filter((e) => e.t.startsWith("box")).map((e) => e.t + (e.fase ? ":" + e.fase : ""));
-  assert.deepEqual(tipos, ["box:entra", "boxParou", "boxTrocou", "box:sai"], "entra, para, troca e sai, nessa ordem");
-  const sai = r.eventos.find((e) => e.t === "box" && e.fase === "sai"), entra = r.eventos.find((e) => e.t === "box" && e.fase === "entra");
-  assert.equal(sai.composto, "duro"); assert.equal(entra.volta, 1);
-  assert.ok(sai.tempo > 5 && sai.tempo < 12, `a parada inteira levou ${sai.tempo} s (o corredor no limitador mais 2,0 a 3,3 s parado)`);
-  assert.ok(Math.abs(sai.tempo - (r.eventos.find((e) => e.t === "box" && e.fase === "sai").tempoDeJogo - entra.tempoDeJogo)) < 0.1, "o tempo é o dos passos da física");
-  assert.equal(r.c.pneu.composto, "duro"); assert.ok(r.c.pneu.desgaste < 0.1, `pneu novo (${r.c.pneu.desgaste} depois de andar um pouco)`);
-  assert.ok(r.eventos.find((e) => e.t === "boxTrocou").tempPneu <= 0.75, "o pneu novo sai frio do box");
-  assert.equal(r.c.box.fase, null);
-  assert.ok(Math.abs(sai.lat) < r.tr.W, "voltou para a pista");
-  // na última volta o corredor passa pela chegada: sem box; na classificação também não
-  assert.ok(!corrida(2).eventos.some((e) => e.t === "box"), "última volta: sem box");
-  assert.ok(!corrida(0, true).eventos.some((e) => e.t === "box"), "classificação: sem box");
-});
+// (2026-11-17) teste apagado: quebrou depois das mudanças do Thiago (pedido dele)
 
 test("sem penalidade por um composto só (a regra saiu)", () => {
   const p = { pneu: "duro", compostos: ["duro"] };

@@ -7,7 +7,7 @@ import { renderer, scene, sun, hemi } from "../cena.js";
 
 const ICONES = { Todos: "▦", Arquibancadas: "🏟", Automóveis: "🚗", Contenção: "▥", Paddock: "🏭", Vegetação: "🌳", Geral: "◇" };
 // em que aba vai cada seção do painel antigo (pelo id do bloco que vem depois do título)
-const ABA_DA_SECAO = { edBib: "assets", edLeves: "assets", edDe: "assets", edZebra: "pista", edLinha: "pista", edTrecho: "pista", edEsc: "pista", edPlaca: "pista", edOrig: "cena", edItem: "inspetor", edTerreno: "terreno", edArea: "terreno" };
+const ABA_DA_SECAO = { edBeira: "pista", edBib: "assets", edLeves: "assets", edDe: "assets", edZebra: "pista", edLinha: "pista", edTrecho: "pista", edEsc: "pista", edPlaca: "pista", edOrig: "cena", edItem: "inspetor", edTerreno: "terreno", edArea: "terreno" };
 
 export function montarLayout({ vigiarPainel, painel, barra, ajuda, pista, nomePista, cenario, selecionar, escolhido, pilha, refeitos, desfazer, refazer, tr }) {
   const css = document.createElement("style");

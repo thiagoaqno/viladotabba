@@ -126,6 +126,47 @@ function casino(tr, add, b, praca, ponto, hAt) {
   const espelho = new THREE.Mesh(new THREE.SphereGeometry(13, 10, 8), ESPELHO); espelho.scale.set(1, 0.85, 0.35); espelho.rotation.y = -0.4; espelho.position.set(80, 21, F + 100); espelho.castShadow = true; espelho.name = "monaco-marco"; fr.add(espelho);
   tr.reservado.push([q.cx, q.cz, 170 * esc]);
 }
+// ---- o Hôtel de Paris refeito pela imagem do Thiago (2026-11-16): a fachada creme Belle Époque de três andares com janelas emolduradas e
+// sacadas de ferro, o corpo central com o frontão, as duas rotundas de canto com cúpula de ardósia e lanterna, a mansarda de ardósia com
+// águas-furtadas, a marquise de ferro e vidro da entrada com o letreiro e a escadaria. No prédio da planta escolhido em monaco.js (o prédio
+// genérico não é desenhado), com a frente para a praça e do tamanho da planta.
+function letreiro(texto) {
+  const c = document.createElement("canvas"); c.width = 512; c.height = 64; const x = c.getContext("2d");
+  x.fillStyle = "#1d2a3a"; x.fillRect(0, 0, 512, 64); x.fillStyle = "#e6c574"; x.font = "700 40px Georgia, serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(texto, 256, 34, 490);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return new THREE.MeshStandardMaterial({ map: t, roughness: 0.5 });
+}
+function hotelDeParisNovo(tr, add, b, praca, hAt) {
+  const q = quadro(b, praca), w = Math.max(150, Math.min(330, q.w)), d = Math.max(90, Math.min(200, q.d)), F = d / 2, H = 66;
+  const fx = Math.sin(q.phi), fz = Math.cos(q.phi);
+  const g = new THREE.Group(); g.position.set(q.cx, (hAt ? hAt(q.cx + fx * F, q.cz + fz * F) : b.topo) - 1, q.cz); g.rotation.y = q.phi; g.name = "monaco-hotel-de-paris"; add(g);
+  // o corpo, o embasamento e as cornijas
+  caixa(g, CREME, w, H, d, 0, H / 2, 0); caixa(g, PEDRA_CLARA, w + 3, 7, d + 3, 0, 3.5, 0);
+  { const fundo = Math.max(0, g.position.y - b.baixo + 6); if (fundo > 8) caixa(g, PEDRA, w - 4, fundo, d - 4, 0, -fundo / 2, 0); } // (o embasamento até o chão mais baixo)
+  for (const y of [22, 44]) caixa(g, PEDRA, w + 4, 2, d + 4, 0, y, 0); caixa(g, PEDRA, w + 8, 4, d + 8, 0, H, 0);
+  // o corpo central um pouco à frente, com o frontão
+  const wc = Math.min(110, w * 0.4); caixa(g, CREME, wc, H, 5, 0, H / 2, F + 2.5); caixa(g, PEDRA, wc + 6, 4, 8, 0, H + 1, F + 2.5);
+  const fr = new THREE.Mesh(new THREE.CylinderGeometry(wc * 0.32, wc * 0.32, 6, 16, 1, false, -Math.PI / 2, Math.PI), CREME); fr.rotation.set(Math.PI / 2, 0, Math.PI / 2); fr.scale.set(1, 1, 0.5); fr.position.set(0, H + 2, F + 2); fr.castShadow = true; fr.name = "monaco-marco"; g.add(fr);
+  // as janelas emolduradas dos três andares, na frente e nos lados, e as sacadas de ferro do 1º andar
+  const jan = (x, y, z, giro) => { const m = caixa(g, PEDRA, 9, 15, 0.8, x, y, z); const v = caixa(g, JANELA_M, 6.5, 12, 1, x, y, z + 0.3); if (giro) { m.rotation.y = v.rotation.y = giro; v.position.x += Math.sign(giro) * 0.3; v.position.z -= 0.3; } };
+  for (let x = -w / 2 + 14; x <= w / 2 - 14; x += 18) { if (Math.abs(x) < wc / 2 - 4) for (const y of [12, 33, 54]) jan(x, y, F + 5.2); else for (const y of [12, 33, 54]) jan(x, y, F + 0.2); }
+  for (let z = -d / 2 + 14; z <= d / 2 - 22; z += 18) for (const s of [-1, 1]) for (const y of [12, 33, 54]) jan(s * (w / 2 + 0.2), y, z, s * Math.PI / 2);
+  caixa(g, FERRO, w - 20, 1.2, 4, 0, 24, F + 2.5); caixa(g, FERRO, w - 20, 5, 0.4, 0, 27, F + 4.4); // a sacada corrida
+  // a mansarda de ardósia com as águas-furtadas
+  caixa(g, ARDOSIA, w - 6, 16, d - 10, 0, H + 10, -2); caixa(g, ARDOSIA, w - 26, 6, d - 28, 0, H + 21, -2);
+  for (let x = -w / 2 + 24; x <= w / 2 - 24; x += 26) { caixa(g, CREME, 8, 9, 6, x, H + 10, F - 6); caixa(g, JANELA_M, 5, 6, 0.8, x, H + 9.5, F - 2.8); cone(g, ARDOSIA, 6, 5, x, H + 17, F - 6, 4); }
+  // as duas rotundas de canto (frente), com a cúpula de ardósia e a lanterna, e a do centro
+  for (const s of [-1, 1]) { const x = s * (w / 2 - 6), z = F - 6; cilindro(g, CREME, 15, H + 10, x, (H + 10) / 2, z, 20); caixa(g, PEDRA, 2, 2, 2, x, H + 10, z); cilindro(g, PEDRA, 16.5, 3, x, H + 11, z, 20); const cp = cupula(g, ARDOSIA, 15, x, H + 12, z); cp.scale.y = 1.35; cilindro(g, CREME, 3, 6, x, H + 33, z, 10); cone(g, OURO, 1, 8, x, H + 40, z, 6, 0); }
+  { const cp = cupula(g, ARDOSIA, 16, 0, H + 18, F - 14); cp.scale.y = 1.2; cilindro(g, CREME, 3.5, 7, 0, H + 38, F - 14, 10); }
+  // a entrada: a marquise de ferro e vidro com o letreiro, os pilares e a escadaria
+  caixa(g, VIDRO, wc * 0.8, 1.4, 18, 0, 22, F + 14); caixa(g, FERRO, wc * 0.82, 2, 1.4, 0, 21.5, F + 23);
+  for (const x of [-wc * 0.36, wc * 0.36]) cilindro(g, FERRO, 0.8, 21, x, 10.5, F + 22, 6);
+  const placa = caixa(g, letreiro("HÔTEL DE PARIS"), wc * 0.6, 4.5, 0.6, 0, 26, F + 23.5); placa.castShadow = false;
+  caixa(g, JANELA_M, 20, 18, 1.4, 0, 9, F + 5.6);
+  for (let k = 0; k < 3; k++) caixa(g, PEDRA_CLARA, wc * 0.7 - k * 6, 1.4, 6 - k * 1.5, 0, 0.7 + k * 1.4, F + 9 - k * 1.2);
+  // os toldos vermelhos do térreo nas alas
+  for (let x = -w / 2 + 14; x <= w / 2 - 14; x += 18) if (Math.abs(x) > wc / 2 + 4) { const t = caixa(g, VERMELHO, 10, 0.8, 5, x, 20, F + 2.4); t.rotation.x = 0.35; }
+  tr.reservado.push([q.cx, q.cz, Math.max(w, d) * 0.7 + 20]);
+}
 // ---- o Hôtel de Paris (1864): mansarda de ardósia, cúpula de canto, o toldo vermelho e as bandeiras
 function hotelDeParis(tr, add, b, praca) {
   const { g, w, d, solo } = noPredio(tr, add, b, praca);
@@ -204,7 +245,7 @@ export function marcosMonaco(tr, addBase, lista, hAt) {
   let b;
   if ((b = dono("casino")) && m.casino) { casino(tr, add, b, praca, m.casino, hAt); feitos.push("casino"); }
   // o bloco do Café de Paris na planta é o do Hôtel de Paris (os dois dividem a esquina da praça): a mansarda de ardósia e a cúpula vão nele
-  if ((b = dono("cafeDeParis") || dono("hotelDeParis"))) { hotelDeParis(tr, add, b, praca); feitos.push("hotelDeParis"); }
+  if ((b = lista.find((q) => q.hotelDeParis))) { hotelDeParisNovo(tr, add, b, praca, hAt); feitos.push("hotelDeParis"); } // (o prédio escolhido em monaco.js)
   if (m.cafeDeParis) { cafeDeParis(tr, add, m.cafeDeParis, praca, hAt); feitos.push("cafeDeParis"); }
   if ((b = dono("hermitage"))) { hermitage(tr, add, b, m.casino); feitos.push("hermitage"); }
   if ((b = dono("fairmont"))) { fairmont(tr, add, b, noTraco(D.frac.curvas.hairpin)); feitos.push("fairmont"); }

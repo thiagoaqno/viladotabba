@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { patrocinioEm } from "./f1-capacetes.js";
+import { montarKit } from "./biblioteca.js";
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), modelos = new Map();
 // os arquivos chegam logo que a página abre (a pista é montada sem esperar a rede: os ajustes precisam estar prontos até lá)
@@ -36,6 +37,8 @@ function montarPlaca(it) {
 export async function montarItem(it) {
   // (2026-11-16, o Thiago: "deve ser possível agrupar e desagrupar itens") um GRUPO: os itens dentro dele com posição relativa a ele
   if (it.tipo === "grupo") { const g = new THREE.Group(); for (const o of await Promise.all((it.itens || []).map(montarItem))) if (o) g.add(o); g.position.set(+it.x || 0, +it.y || 0, +it.z || 0); g.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); g.scale.setScalar(+it.s || 1); g.userData.item = it; g.name = "grupo"; return g; }
+  // uma peça pronta da biblioteca (biblioteca.js), com a cor do item tingindo os materiais dela
+  if (it.tipo === "kit") { const o = montarKit(it.kit); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); if (it.cor) o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color?.multiply(new THREE.Color(it.cor)); } }); o.userData.item = it; return o; }
   if (it.tipo === "placa") { const o = montarPlaca(it); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = `placa-${it.marca || ""}`; return o; }
   const base = await modeloDoAsset(it.asset); if (!base) return null;
   const o = base.clone(true);

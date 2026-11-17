@@ -15,6 +15,7 @@ import { buildTrack, useTrack } from "../pista.js";
 import { PISTAS } from "../estado.js";
 import { criarCraft } from "./craft.js";
 import { criarComandos } from "./comandos.js";
+import { KITS, montarKit } from "../biblioteca.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista } from "../cenario-pista.js";
 
@@ -38,6 +39,7 @@ css.textContent = `
 #ed .lst{display:flex;flex-direction:column;gap:4px;max-height:190px;overflow:auto}#ed .lst button{text-align:left;display:flex;justify-content:space-between}
 #ed input[type=number]{width:70px}#ed input[type=color]{padding:2px;width:38px;height:30px}#ed select{max-width:100%}#ed small{color:#8f9bb0}#ed .ok{color:#7fe08a}#ed .erro{color:#ff8080}
 #ed [data-f]{flex:1 1 30%}.edArq{display:inline-flex;cursor:pointer;border:1px dashed #44506a;border-radius:8px;padding:6px 10px;color:#b9c3d3}
+#ed .edBibG{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 8px}#ed .edBibG button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px}#ed .edBibG img{width:100%;border-radius:6px}#ed .edBibG span{font-size:11px;line-height:1.1;text-align:center}
 #edPrev{width:100%;height:170px;background:#0b0d11;border-radius:10px;display:block}
 #edBarra{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:4px;align-items:center;background:rgba(18,21,27,.94);border:1px solid #2b313d;border-radius:12px;padding:6px;z-index:51;box-shadow:0 10px 30px #0007;font:13px Barlow,system-ui,sans-serif}
 #edBarra button{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:54px;background:transparent;color:#cfd7e4;border:1px solid transparent;border-radius:8px;padding:5px 8px;cursor:pointer;font:inherit}
@@ -167,7 +169,7 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   // (2026-11-16, o Thiago: "tem que aparecer grande a placa no chão quando eu clicar") a largura da placa nova acompanha a distância da câmera:
   // de 60 (de perto) a 400 (vendo a pista de cima), em passos de 5; depois a largura muda no painel
   const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry, rz: 0 };
-  const o = await colocar(assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
+  const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o);
   }
 });
@@ -180,7 +182,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); } // (Esc solta a placa e o asset escolhidos)
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });
@@ -195,6 +197,7 @@ painel.innerHTML = `<h2>Editor de cenário</h2>
   <div class="lin"><label>Textura máx. <select id="edTex"><option>2048</option><option selected>1024</option><option>512</option><option>256</option></select></label></div>
   <canvas id="edPrev"></canvas><div id="edConv"><small>Escolha um original para ver antes e depois.</small></div>
   <h3>Assets leves (para colocar)</h3><div id="edLeves" class="lst"></div>
+  <h3>Biblioteca (pronto para pôr)</h3><div id="edBib"></div>
   <h3>Placa de patrocínio</h3><div id="edPlaca"></div>
   <h3>Item selecionado</h3><div id="edItem"><small>Clique num item do cenário.</small></div>`;
 const $ = (id) => document.getElementById(id);
@@ -215,13 +218,29 @@ function desenharOriginais() {
 const marcasDaPlaca = () => [...Object.keys(PATROCINIOS).filter(Boolean), ...Object.keys(MARCAS_CAPACETE).sort((a, b) => MARCAS_CAPACETE[a].localeCompare(MARCAS_CAPACETE[b], "pt"))];
 const nomeDaMarca = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || id;
 const opcoesDeMarca = (atual) => marcasDaPlaca().map((id) => `<option value="${id}" ${id === atual ? "selected" : ""}>${h(nomeDaMarca(id))}</option>`).join("");
+// ---------- a biblioteca (biblioteca.js): as peças prontas, com miniatura; clique numa e depois no chão ----------
+const fotosKit = {};
+function fotoDoKit(id) {
+  if (fotosKit[id]) return fotosKit[id];
+  const r = fotoDoKit.r || (fotoDoKit.r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })); r.setSize(96, 96); r.outputColorSpace = THREE.SRGBColorSpace;
+  const cena = new THREE.Scene(); cena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.4)); const d = new THREE.DirectionalLight(0xffffff, 2); d.position.set(3, 5, 4); cena.add(d);
+  const o = montarKit(id); cena.add(o); const b = new THREE.Box3().setFromObject(o), c = b.getCenter(new THREE.Vector3()), t = b.getSize(new THREE.Vector3()).length() || 1;
+  const cm = new THREE.PerspectiveCamera(35, 1, 0.1, 1e5); cm.position.set(c.x + t * 0.8, c.y + t * 0.5, c.z + t * 1.1); cm.lookAt(c);
+  r.setClearColor(0x1b2029, 1); r.render(cena, cm); return (fotosKit[id] = r.domElement.toDataURL("image/png"));
+}
+function desenharBiblioteca() {
+  const grupos = {}; for (const [id, k] of Object.entries(KITS)) (grupos[k.grupo] ||= []).push(id);
+  $("edBib").innerHTML = Object.entries(grupos).map(([gr, ids]) => `<small>${h(gr)}</small><div class="edBibG">${ids.map((id) => `<button type="button" data-kit="${id}" class="${assetEscolhido === "*kit:" + id ? "on" : ""}" title="${h(KITS[id].nome)}"><img src="${fotoDoKit(id)}" alt=""><span>${h(KITS[id].nome)}</span></button>`).join("")}</div>`).join("")
+    + `<small>${assetEscolhido?.startsWith("*kit:") ? "Clique no chão para pôr (pode pôr vários; Esc para)." : "Clique numa peça e depois no chão."}</small>`;
+  for (const b of $("edBib").querySelectorAll("[data-kit]")) b.onclick = () => { const k = "*kit:" + b.dataset.kit; assetEscolhido = assetEscolhido === k ? null : k; desenharBiblioteca(); desenharAssets(); desenharPlaca(); };
+}
 function desenharPlaca() {
   $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
     <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">${assetEscolhido === "*placa" ? "Clique no chão… (Esc sai)" : "Pôr placa"}</button></div>
     <small>1. escolha a marca e o fundo · 2. clique em Pôr placa · 3. clique no chão (pode pôr várias; Esc para) · a placa nasce virada para você e grande o bastante para ver daí</small>`;
   $("edPlMarca").onchange = (e) => { placaMarca = e.target.value; desenharPlaca(); };
   $("edPlFundo").onchange = (e) => { placaFundo = e.target.value; };
-  $("edPlPor").onclick = () => { assetEscolhido = assetEscolhido === "*placa" ? null : "*placa"; desenharPlaca(); desenharAssets(); };
+  $("edPlPor").onclick = () => { assetEscolhido = assetEscolhido === "*placa" ? null : "*placa"; desenharPlaca(); desenharAssets(); desenharBiblioteca(); };
 }
 function desenharAssets() {
   $("edLeves").innerHTML = assets.leves.length ? assets.leves.map((a) => `<button data-leve="${h(a.nome)}" class="${assetEscolhido === a.nome ? "on" : ""}"><span>${h(a.nome)}</span><small>${a.kb} KB</small></button>`).join("") : "<small>Converta um original primeiro.</small>";
@@ -235,7 +254,7 @@ function desenharItem(soNumeros = false) {
   const deg = (r) => (r * 180) / Math.PI;
   if (soNumeros && el.querySelector("[data-c]")) { for (const [k, v] of [["x", o.position.x], ["y", o.position.y], ["z", o.position.z], ["giro", deg(o.rotation.y)], ["escala", o.scale.x]]) { const i = el.querySelector(`[data-c="${k}"]`); if (i && document.activeElement !== i) i.value = (+v).toFixed(k === "escala" ? 2 : 0); } return; }
   const placa = it.tipo === "placa";
-  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.asset)}</b></div>
+  el.innerHTML = `<div class="lin"><b>${h(placa ? "Placa · " + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.asset)}</b></div>
     ${placa ? `<div class="lin"><select data-pl="marca">${opcoesDeMarca(it.marca)}</select><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>
     <div class="lin"><label>Largura <input type="number" step="5" data-pl="w" value="${it.w || 60}"></label><label>Altura dos postes <input type="number" step="1" data-pl="alto" value="${it.alto ?? 14}"></label></div>` : ""}
     <div class="lin">${n("x", o.position.x, 1)}${n("y", o.position.y, 1)}${n("z", o.position.z, 1)}</div>
@@ -388,7 +407,7 @@ addEventListener("keydown", (e) => {
   setTimeout(marcarModo, 0);
 });
 marcarModo();
-desenharPlaca(); // (a seção da placa de patrocínio)
+desenharPlaca(); desenharBiblioteca(); // (a placa de patrocínio e a biblioteca)
 // ---------- publicar: salva e abre o PR (corrida-editor.js /publicar) ----------
 $("edPublicar").onclick = async () => {
   const msg = prompt("O que mudou? (vira o título do PR)", `cenário de ${PISTAS[pista]?.name || pista}`); if (msg == null) return;

@@ -27,18 +27,29 @@ for (const id of ["home", "lobby", "bar"]) document.getElementById(id)?.classLis
 document.getElementById("race")?.classList.remove("hidden");
 for (const el of document.querySelectorAll("#race > :not(canvas)")) el.style.display = "none";
 const css = document.createElement("style");
-css.textContent = `#ed{position:fixed;left:0;top:0;bottom:0;width:330px;overflow:auto;background:#12151bee;color:#e8ecf2;font:13px Barlow,system-ui,sans-serif;z-index:50;padding:12px;box-sizing:border-box}
-#ed h2{font-size:16px;margin:0 0 8px}#ed h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin:14px 0 6px}
-#ed button,#ed select,#ed input{font:inherit;color:inherit;background:#232833;border:1px solid #3a4150;border-radius:6px;padding:4px 8px}
-#ed button{cursor:pointer}#ed button:hover{border-color:#6aa0ff}#ed button.on{background:#2d5bd6;border-color:#2d5bd6}
-#ed .lin{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0}#ed .lin label{display:flex;gap:4px;align-items:center}
-#ed .lst{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto}#ed .lst button{text-align:left;display:flex;justify-content:space-between}
-#ed input[type=number]{width:72px}#ed small{opacity:.7}#ed .ok{color:#7fe08a}#ed .erro{color:#ff8080}
-#edPrev{width:100%;height:170px;background:#0b0d11;border-radius:8px;display:block}
-#edAjuda{position:fixed;right:12px;bottom:12px;background:#12151bcc;color:#cfd6e2;font:12px Barlow,system-ui,sans-serif;padding:8px 10px;border-radius:8px;z-index:50}`;
+css.textContent = `
+#ed{position:fixed;left:12px;top:12px;bottom:12px;width:340px;overflow:auto;background:rgba(18,21,27,.94);color:#e8ecf2;font:13px Barlow,system-ui,sans-serif;z-index:50;padding:14px;box-sizing:border-box;border-radius:14px;border:1px solid #2b313d;box-shadow:0 10px 40px #0008;backdrop-filter:blur(6px)}
+#ed h2{font-size:17px;margin:0 0 10px;letter-spacing:.02em}#ed h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8fa0b8;margin:16px 0 8px;padding-top:12px;border-top:1px solid #262c37}
+#ed button,#ed select,#ed input{font:inherit;color:inherit;background:#1e232d;border:1px solid #333b49;border-radius:8px;padding:6px 10px;transition:background .12s,border-color .12s}
+#ed button{cursor:pointer}#ed button:hover,.edArq:hover{border-color:#5b8cff;background:#252c3a}#ed button.on{background:#2f63e0;border-color:#2f63e0;color:#fff}
+#ed .lin{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}#ed .lin label{display:flex;gap:6px;align-items:center;color:#b9c3d3}
+#ed .lst{display:flex;flex-direction:column;gap:4px;max-height:190px;overflow:auto}#ed .lst button{text-align:left;display:flex;justify-content:space-between}
+#ed input[type=number]{width:70px}#ed input[type=color]{padding:2px;width:38px;height:30px}#ed select{max-width:100%}#ed small{color:#8f9bb0}#ed .ok{color:#7fe08a}#ed .erro{color:#ff8080}
+#ed [data-f]{flex:1 1 30%}.edArq{display:inline-flex;cursor:pointer;border:1px dashed #44506a;border-radius:8px;padding:6px 10px;color:#b9c3d3}
+#edPrev{width:100%;height:170px;background:#0b0d11;border-radius:10px;display:block}
+#edBarra{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:4px;align-items:center;background:rgba(18,21,27,.94);border:1px solid #2b313d;border-radius:12px;padding:6px;z-index:51;box-shadow:0 10px 30px #0007;font:13px Barlow,system-ui,sans-serif}
+#edBarra button{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:54px;background:transparent;color:#cfd7e4;border:1px solid transparent;border-radius:8px;padding:5px 8px;cursor:pointer;font:inherit}
+#edBarra button b{font-size:16px;line-height:1}#edBarra button small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8f9bb0}
+#edBarra button:hover{background:#252c3a;border-color:#3a4558}#edBarra button.on{background:#2f63e0;color:#fff}#edBarra button.on small{color:#dfe7ff}#edBarra i{width:1px;height:32px;background:#2e3542;margin:0 4px}
+#edAjuda{position:fixed;right:12px;bottom:12px;max-width:560px;background:rgba(18,21,27,.85);color:#cfd6e2;font:12px Barlow,system-ui,sans-serif;padding:8px 12px;border-radius:10px;z-index:50}`;
 document.head.appendChild(css);
 const painel = document.createElement("div"); painel.id = "ed"; document.body.appendChild(painel);
-const ajuda = document.createElement("div"); ajuda.id = "edAjuda"; ajuda.textContent = "Shift + WASD anda (Q/Z sobe e desce) · W mover · E girar · R escala · G no chão · D duplica · Del apaga/esconde · Esc solta · clique escolhe uma peça; com um asset escolhido, coloca"; document.body.appendChild(ajuda);
+// a barra do topo: o modo do gizmo, as vistas e o Craft
+const barra = document.createElement("div"); barra.id = "edBarra";
+barra.innerHTML = [["mover", "✥", "Mover · W"], ["girar", "⟳", "Girar · E"], ["escala", "⤡", "Escala · R"], 0, ["cima", "⬒", "De cima · 1"], ["lado", "◧", "De lado · 2"], ["frente", "▣", "De frente · 3"], ["v3d", "◈", "3D · 4"], ["focar", "◎", "Focar · F"], 0, ["craft", "⚒", "Craft"]]
+  .map((b) => (b ? `<button type="button" data-barra="${b[0]}" title="${b[2]}"><b>${b[1]}</b><small>${b[2].split(" · ")[0]}</small></button>` : "<i></i>")).join("");
+document.body.appendChild(barra);
+const ajuda = document.createElement("div"); ajuda.id = "edAjuda"; ajuda.textContent = "1 de cima · 2 de lado · 3 de frente · 4 em 3D · F foca no escolhido · Shift + WASD anda (Q/Z sobe e desce) · W mover · E girar · R escala · G no chão · D duplica · Del apaga/esconde · Esc solta · clique escolhe uma peça; com um asset escolhido, coloca"; document.body.appendChild(ajuda);
 
 // ---------- a pista e a câmera ----------
 window.__editorCenario = true; await cenarioPronto; // (sem juntar as malhas: cada peça da pista fica clicável; e os ajustes já salvos aplicados)
@@ -268,3 +279,29 @@ $("edCraftBt").onclick = () => {
   for (const t of painel.querySelectorAll("h3:not(#edCraft h3)")) t.style.display = on ? "none" : "";
   for (const l of painel.querySelectorAll(":scope > .lin")) if (!l.contains($("edSalvar"))) l.style.display = on ? "none" : "";
 };
+// ---------- a barra: modos e vistas ----------
+function marcarModo() { for (const [k, m] of [["mover", "translate"], ["girar", "rotate"], ["escala", "scale"]]) barra.querySelector(`[data-barra="${k}"]`).classList.toggle("on", gizmo.mode === m); barra.querySelector('[data-barra="craft"]').classList.toggle("on", craft.ativo()); }
+// o que a vista enquadra: a peça escolhida (do Craft ou da pista), senão o ponto que a câmera olha
+function enquadrar() {
+  const o = craft.ativo() ? craft.selecionada() : selecionado, b = o ? new THREE.Box3().setFromObject(o) : null;
+  if (b && !b.isEmpty()) { const c = b.getCenter(new THREE.Vector3()); return { c, d: Math.max(60, b.getSize(new THREE.Vector3()).length() * 1.6) }; }
+  return { c: orbita.target.clone(), d: Math.max(200, cam.position.distanceTo(orbita.target)) };
+}
+// (2026-11-16, o Thiago: "vista de cima do selecionado, vista lateral, vista 3D") a câmera vai até o enquadramento e o alvo da órbita fica no centro
+function vista(tipo) {
+  const { c, d } = enquadrar(), dir = { cima: [0, 1, 0.0001], lado: [1, 0.08, 0], frente: [0, 0.08, 1], v3d: [0.7, 0.55, 0.7], focar: null }[tipo];
+  const v = dir ? new THREE.Vector3(...dir).normalize() : cam.position.clone().sub(orbita.target).normalize();
+  cam.position.copy(c).addScaledVector(v, d); orbita.target.copy(c); cam.lookAt(c); orbita.update();
+}
+barra.onclick = (e) => {
+  const b = e.target.closest("[data-barra]"); if (!b) return; const k = b.dataset.barra;
+  if (k === "mover") gizmo.setMode("translate"); else if (k === "girar") gizmo.setMode("rotate"); else if (k === "escala") gizmo.setMode("scale");
+  else if (k === "craft") $("edCraftBt").click(); else vista(k);
+  marcarModo();
+};
+addEventListener("keydown", (e) => {
+  if (e.target.closest?.("input,select") || e.shiftKey || e.ctrlKey) return;
+  const v = { 1: "cima", 2: "lado", 3: "frente", 4: "v3d", f: "focar" }[e.key.toLowerCase()]; if (v) vista(v);
+  setTimeout(marcarModo, 0);
+});
+marcarModo();

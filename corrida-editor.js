@@ -5,16 +5,22 @@
 //   public/corrida/assets/     os .glb convertidos no editor (low poly, texturas menores): o que o jogo carrega
 //   public/corrida/cenario/    um <pista>.json por pista: o que foi colocado, onde, girado e em que escala
 const fs = require("fs"), path = require("path"), express = require("express");
-const RAIZ = __dirname, ORIG = path.join(RAIZ, "assets-originais"), LEVES = path.join(RAIZ, "public/corrida/assets"), CENARIO = path.join(RAIZ, "public/corrida/cenario");
+const RAIZ = __dirname, ORIG = path.join(RAIZ, "assets-originais"), TEXS = path.join(RAIZ, "assets-originais", "texturas"), LEVES = path.join(RAIZ, "public/corrida/assets"), CENARIO = path.join(RAIZ, "public/corrida/cenario");
 const nomeOk = (s) => typeof s === "string" && /^[a-z0-9][a-z0-9_-]{0,60}$/i.test(s);
 const local = (req) => ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket.remoteAddress);
 
 function attach(app) {
   if (process.env.CORRIDA_EDITOR !== "1") return;
-  for (const d of [ORIG, LEVES, CENARIO]) fs.mkdirSync(d, { recursive: true });
+  for (const d of [ORIG, TEXS, LEVES, CENARIO]) fs.mkdirSync(d, { recursive: true });
   app.use("/api/corrida/editor", (req, res, next) => (local(req) ? next() : res.status(403).json({ erro: "O editor só abre no próprio PC." })));
   const lista = (dir) => fs.readdirSync(dir).filter((f) => /\.glb$/i.test(f)).map((f) => ({ nome: f.replace(/\.glb$/i, ""), kb: Math.round(fs.statSync(path.join(dir, f)).size / 1024) }));
-  app.get("/api/corrida/editor/assets", (req, res) => res.json({ originais: lista(ORIG), leves: lista(LEVES) }));
+  app.get("/api/corrida/editor/assets", (req, res) => res.json({ originais: lista(ORIG), leves: lista(LEVES), texturas: fs.readdirSync(TEXS).filter((f) => /\.(png|jpe?g|webp)$/i.test(f)) }));
+  // as texturas importadas no Craft (ficam no PC; dentro dos assets elas vão embutidas no .glb)
+  app.get("/api/corrida/editor/textura/:arq", (req, res) => { if (!/^[a-z0-9_-]{1,60}\.(png|jpe?g|webp)$/i.test(req.params.arq)) return res.status(400).end(); res.sendFile(path.join(TEXS, req.params.arq)); });
+  app.post("/api/corrida/editor/textura/:arq", express.raw({ type: "*/*", limit: "20mb" }), (req, res) => {
+    if (!/^[a-z0-9_-]{1,60}\.(png|jpe?g|webp)$/i.test(req.params.arq) || !req.body?.length) return res.status(400).json({ erro: "nome ou imagem inválida" });
+    fs.writeFileSync(path.join(TEXS, req.params.arq), req.body); res.json({ ok: true });
+  });
   app.get("/api/corrida/editor/original/:nome", (req, res) => { if (!nomeOk(req.params.nome)) return res.status(400).end(); res.sendFile(path.join(ORIG, req.params.nome + ".glb")); });
   // o .glb convertido no navegador (o corpo é o arquivo)
   app.post("/api/corrida/editor/asset/:nome", express.raw({ type: "*/*", limit: "60mb" }), (req, res) => {

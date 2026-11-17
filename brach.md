@@ -9,3 +9,5 @@ Na aba **Pista**, a seção **Barreira na beira da pista**:
 Salva como uma `linha` com `beira: { i0, i1, lado, de }` (`cenario-pista.js`); a Linha de itens à mão continua igual. No Inspetor, espaço e altura mudam depois.
 
 Conferido só com `node --check`.
+
+- Apagados os 5 testes da Corrida que já falhavam na main (Mônaco: escapes e malhas; box humano; pneu frio; mercado da temporada), a pedido do Thiago.

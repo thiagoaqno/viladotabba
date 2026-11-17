@@ -1,13 +1,7 @@
-# Editor: barreira na beira da pista
+# Editor: marca no chão
 
-Na aba **Pista**, a seção **Barreira na beira da pista**:
+Na seção Placa e pórtico (aba Pista): **Pôr marca no chão**, com a marca e o fundo escolhidos (ou "sem fundo", só o logo). Clique no chão: o logo nasce deitado, legível de onde a câmera olha, com a largura de acordo com a distância, e acompanha o relevo. No Inspetor: marca, fundo, largura, altura/largura (proporção) e tirar/pôr o fundo.
 
-- Escolhe o item: pneus, cerca (com altura e mureta opcional), pilares, qualquer peça de Contenção (guard-rail, guard-rail triplo, pneus coloridos, Tecpro, SAFER, mureta, barreira de concreto, fardos, grades) ou qualquer outra peça.
-- Escolhe a distância da beira (m) e o espaço entre as peças (m); ao trocar de item, o espaço vira o comprimento dele, para a fileira sair emendada.
-- Clica na beira da pista onde começa (o lado vem do clique) e onde termina: a fileira segue o traçado, na altura da pista, e pode dar a volta.
-
-Salva como uma `linha` com `beira: { i0, i1, lado, de }` (`cenario-pista.js`); a Linha de itens à mão continua igual. No Inspetor, espaço e altura mudam depois.
+Salvo como `{ tipo: "marcaChao", marca, fundo, w, prop }`.
 
 Conferido só com `node --check`.
-
-- Apagados os 5 testes da Corrida que já falhavam na main (Mônaco: escapes e malhas; box humano; pneu frio; mercado da temporada), a pedido do Thiago.

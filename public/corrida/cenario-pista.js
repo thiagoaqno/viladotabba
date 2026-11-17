@@ -238,7 +238,21 @@ function montarArea(it, tr) {
   }
   return g;
 }
+// (2026-11-17, o Thiago: "deve ser possível colocar marcas no chão") a MARCA NO CHÃO: o logo pintado na grama ou no asfalto, `w` de largura e
+// `prop` de altura/largura, com ou sem o fundo da cor escolhida, acompanhando o relevo. { tipo: "marcaChao", marca, fundo ("" sem fundo), w, prop }
+function montarMarcaChao(it, tr) {
+  const w = Math.max(4, +it.w || 120), prop = Math.min(2, Math.max(0.1, +it.prop || 0.3)), hgt = w * prop, c = document.createElement("canvas"); c.width = 1024; c.height = Math.max(64, Math.round(1024 * prop));
+  const x = c.getContext("2d"); if (it.fundo) { x.fillStyle = it.fundo; x.fillRect(0, 0, c.width, c.height); } if (it.marca) patrocinioEm(x, it.marca, c.width / 2, c.height / 2, c.width * 0.92, c.height * 0.85);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  const geo = new THREE.PlaneGeometry(w, hgt, Math.max(2, Math.ceil(w / 10)), Math.max(2, Math.ceil(hgt / 10))); geo.rotateX(-Math.PI / 2);
+  const chao = tr ? alturaDoChao(tr) : null, ox = +it.x || 0, oy = +it.y || 0, oz = +it.z || 0, cs = Math.cos(+it.ry || 0), sn = Math.sin(+it.ry || 0), p = geo.attributes.position;
+  if (chao) for (let k = 0; k < p.count; k++) { const lx = p.getX(k), lz = p.getZ(k), hh = chao(ox + lx * cs + lz * sn, oz - lx * sn + lz * cs); p.setY(k, (hh == null ? oy : hh) - oy + 0.5); } else for (let k = 0; k < p.count; k++) p.setY(k, 0.5);
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: !it.fundo, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, depthWrite: !!it.fundo }));
+  m.receiveShadow = true; const g = new THREE.Group(); g.add(m); return g;
+}
 export async function montarItem(it, tr = null) {
+  if (it.tipo === "marcaChao") { const o = montarMarcaChao(it, tr); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(0, +it.ry || 0, 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "marca-chao-" + (it.marca || ""); return o; }
   if (it.tipo === "area") { const o = montarArea(it, tr); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "area-" + (it.material || ""); return o; }
   if (it.tipo === "linha") { const o = montarLinha(it, tr); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "linha-" + (it.modelo || ""); return o; }
   if (it.tipo === "trecho") { const o = montarTrecho(it); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "trecho"; return o; }

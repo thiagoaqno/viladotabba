@@ -208,4 +208,107 @@ KITS.telehandler = { nome: "Manipulador telescópico", grupo: "Pista", montar() 
   const lanca = caixa(g, AM, 0.5 * U, 0.5 * U, 7 * U, 0.5 * U, 3.2 * U, 2.6 * U); lanca.rotation.x = -0.45;
   caixa(g, AM, 1.2 * U, 0.12 * U, 0.6 * U, 0.5 * U, 4.75 * U, 5.9 * U); caixa(g, AM, 1.2 * U, 0.5 * U, 0.08 * U, 0.5 * U, 5.05 * U, 6.2 * U); // a plataforma pequena na ponta da lança
   return g; } };
+// ---------- a segunda leva de 2026-11-17 (escolhida para as pistas de rua e o paddock) ----------
+// a passarela de pedestres por cima da pista: dois pilares com escada, o tabuleiro coberto e a faixa de patrocínio
+KITS.passarela = { nome: "Passarela sobre a pista", grupo: "Pista", montar() {
+  const g = new THREE.Group(), vao = 44 * U, h = 7 * U, CINZ = M(0xd8dadd), AZ = M(0x2a5bd6);
+  for (const s of [-1, 1]) { caixa(g, CINZ, 3 * U, h, 3 * U, s * vao / 2, h / 2, 0); const esc = caixa(g, CINZ, 2 * U, 0.4 * U, 9 * U, s * (vao / 2 + 2.5 * U), h / 2, 0); esc.rotation.x = -0.75; }
+  caixa(g, CINZ, vao + 3 * U, 0.8 * U, 3.2 * U, 0, h + 0.4 * U, 0);
+  for (const z of [-1.5, 1.5]) caixa(g, new THREE.MeshStandardMaterial({ color: 0x9fc4d4, roughness: 0.1, transparent: true, opacity: 0.4 }), vao + 3 * U, 2.4 * U, 0.1 * U, 0, h + 2 * U, z * U);
+  caixa(g, M(0x6b6f76), vao + 4 * U, 0.3 * U, 4 * U, 0, h + 3.4 * U, 0); // a cobertura
+  caixa(g, AZ, vao * 0.8, 1.2 * U, 0.15 * U, 0, h - 0.3 * U, 1.7 * U); caixa(g, AZ, vao * 0.8, 1.2 * U, 0.15 * U, 0, h - 0.3 * U, -1.7 * U); // a faixa do patrocínio
+  return g; } };
+// o arco inflável de patrocínio (o pórtico de largada das ruas)
+KITS.arcoInflavel = { nome: "Arco inflável", grupo: "Público", montar() {
+  const g = new THREE.Group(), r = 16 * U, ar = M(0xd62828, { roughness: 0.55 });
+  const arco = malha(g, new THREE.TorusGeometry(r, 1.6 * U, 10, 32, Math.PI), ar, 0, 0, 0); arco.castShadow = true;
+  for (const s of [-1, 1]) cil(g, ar, 1.8 * U, 1 * U, s * r, 0.5 * U, 0, 12);
+  const faixa = caixa(g, BRANCO, 14 * U, 3 * U, 0.3 * U, 0, r + 0.4 * U, 1.6 * U); faixa.castShadow = false;
+  return g; } };
+// o iate do porto: o casco branco, as duas cobertas, os vidros escuros e a antena
+KITS.iate = { nome: "Iate", grupo: "Porto", montar() {
+  const g = new THREE.Group(), L = 32 * U, B = 7 * U, CASCO = M(0xf4f4f2, { roughness: 0.35 }), VID = M(0x1d2733, { roughness: 0.1, metalness: 0.4 });
+  const forma = new THREE.Shape(); forma.moveTo(-L / 2, -B / 2); forma.lineTo(L * 0.25, -B / 2); forma.quadraticCurveTo(L / 2, -B * 0.15, L / 2 + 2 * U, 0); forma.quadraticCurveTo(L / 2, B * 0.15, L * 0.25, B / 2); forma.lineTo(-L / 2, B / 2); forma.closePath();
+  const casco = malha(g, new THREE.ExtrudeGeometry(forma, { depth: 3 * U, bevelEnabled: false }), CASCO, 0, 3 * U, 0); casco.rotation.x = Math.PI / 2;
+  caixa(g, M(0x1d3557), L, 0.6 * U, B + 0.05 * U, -0.5 * U, 0.4 * U, 0); // a linha d'água
+  caixa(g, CASCO, L * 0.55, 2.4 * U, B * 0.8, -L * 0.08, 4.2 * U, 0); caixa(g, VID, L * 0.5, 1 * U, B * 0.82, -L * 0.05, 4.4 * U, 0);
+  caixa(g, CASCO, L * 0.32, 2 * U, B * 0.65, -L * 0.12, 6.4 * U, 0); caixa(g, VID, L * 0.28, 0.8 * U, B * 0.67, -L * 0.1, 6.5 * U, 0);
+  cil(g, M(0xd8dadd), 0.12 * U, 4 * U, -L * 0.12, 9.4 * U, 0, 6); caixa(g, M(0xd8dadd), 2 * U, 0.15 * U, 0.15 * U, -L * 0.12, 10.5 * U, 0);
+  return g; } };
+// o quiosque de café com o balcão, o toldo listrado, as mesas e os guarda-sóis
+KITS.quiosque = { nome: "Quiosque com guarda-sóis", grupo: "Público", montar() {
+  const g = new THREE.Group(), MAD = M(0x8a5a35), listra = new THREE.MeshStandardMaterial({ roughness: 0.8, map: texCanvas("toldoQ", 64, 16, (x, w, h) => { for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? "#ffffff" : "#1f6fb5"; x.fillRect(i * 8, 0, 8, h); } }) });
+  caixa(g, MAD, 5 * U, 2.6 * U, 3 * U, 0, 1.3 * U, 0); caixa(g, M(0xf4f1e8), 5.4 * U, 0.2 * U, 3.4 * U, 0, 2.7 * U, 0);
+  const t = caixa(g, listra, 5.6 * U, 0.15 * U, 1.6 * U, 0, 2.9 * U, 2.2 * U); t.rotation.x = 0.35;
+  const cores = [0xf3e9b8, 0xd62828, 0xf3e9b8, 0x1f6fb5];
+  for (let k = 0; k < 4; k++) { const x = (k - 1.5) * 4 * U, z = 6 * U; cil(g, BRANCO, 0.05 * U, 2.4 * U, x, 1.2 * U, z, 6); malha(g, new THREE.ConeGeometry(1.6 * U, 0.6 * U, 8), M(cores[k]), x, 2.5 * U, z); cil(g, M(0xf4f4f2), 0.6 * U, 0.08 * U, x, 0.75 * U, z, 12); for (const s of [-1, 1]) caixa(g, M(0x2c3036), 0.4 * U, 0.45 * U, 0.4 * U, x + s * 0.9 * U, 0.22 * U, z); }
+  return g; } };
+// o prédio residencial de varandas (a beira-mar das pistas de rua): oito andares com as varandas de vidro e as lajes brancas
+KITS.predioVarandas = { nome: "Prédio de varandas", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), w = 26 * U, d = 14 * U, andar = 3.1 * U, n = 8, H = andar * n;
+  const fach = fachadaTorre("#e9e4da", "#f1ece2", Math.round(26 / 3.4), n), lado = fachadaTorre("#e9e4da", "#f1ece2", 4, n), topo = M(0xe4dfd4);
+  malha(g, new THREE.BoxGeometry(w, H, d), [lado, lado, topo, topo, fach, fach], 0, H / 2, 0);
+  const vg = new THREE.MeshStandardMaterial({ color: 0x9fc4d4, roughness: 0.1, transparent: true, opacity: 0.45 });
+  for (let k = 1; k <= n; k++) { caixa(g, BRANCO, w, 0.35 * U, 2.2 * U, 0, k * andar - 0.2 * U, d / 2 + 1.1 * U); caixa(g, vg, w, 1.1 * U, 0.08 * U, 0, k * andar + 0.4 * U, d / 2 + 2.15 * U); }
+  caixa(g, M(0xc98a5a), w + 0.6 * U, 0.8 * U, d + 2.6 * U, 0, H + 0.4 * U, 1 * U); // a platibanda terracota
+  return g; } };
+// o hotel de vidro curvo (como os de Abu Dhabi e Baku): a lâmina em arco de vidro azul com as faixas horizontais
+KITS.hotelVidro = { nome: "Hotel de vidro curvo", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), R = 34 * U, H = 70 * U, ang = 1.1;
+  const vid = new THREE.MeshStandardMaterial({ roughness: 0.12, metalness: 0.45, map: texCanvas("hotelvidro", 64, 64, (x, w, h) => { const gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#5b8bb0"); gr.addColorStop(1, "#2c4f73"); x.fillStyle = gr; x.fillRect(0, 0, w, h); x.fillStyle = "#cfd9e0"; x.fillRect(0, 58, w, 6); x.fillRect(30, 0, 2, 58); }, [24, 22]) });
+  malha(g, new THREE.CylinderGeometry(R, R, H, 40, 1, true, -ang / 2, ang), vid, 0, H / 2, -R).material.side = THREE.DoubleSide;
+  malha(g, new THREE.CylinderGeometry(R - 8 * U, R - 8 * U, H, 40, 1, true, -ang / 2, ang), M(0xd8dde2), 0, H / 2, -R).material.side = THREE.DoubleSide;
+  for (const s of [-1, 1]) { const x = Math.sin(s * ang / 2) * (R - 4 * U), z = Math.cos(s * ang / 2) * (R - 4 * U) - R; const p = caixa(g, M(0xd8dde2), 8 * U, H, 1 * U, x, H / 2, z); p.rotation.y = s * ang / 2 + Math.PI / 2; }
+  const tampa = malha(g, new THREE.RingGeometry(R - 8 * U, R, 40, 1, Math.PI / 2 - ang / 2, ang), M(0xd8dde2), 0, H, -R); tampa.rotation.x = -Math.PI / 2;
+  caixa(g, M(0x6b7178), 30 * U, 6 * U, 16 * U, 0, 3 * U, -2 * U); // o pódio da entrada
+  return g; } };
+// o telão: a tela em LED numa treliça, com a imagem da corrida
+KITS.telao = { nome: "Telão", grupo: "Público", montar() {
+  const g = new THREE.Group(), w = 12 * U, h = 7 * U, alto = 6 * U;
+  const tela = new THREE.MeshStandardMaterial({ emissive: 0xffffff, emissiveIntensity: 0.55, roughness: 0.4, map: texCanvas("telao", 128, 72, (x, cw, ch) => { const gr = x.createLinearGradient(0, 0, 0, ch); gr.addColorStop(0, "#6fa8dc"); gr.addColorStop(0.55, "#b9d4ea"); gr.addColorStop(0.56, "#3a3d42"); gr.addColorStop(1, "#2c2f33"); x.fillStyle = gr; x.fillRect(0, 0, cw, ch); x.fillStyle = "#d62828"; x.fillRect(50, 46, 28, 8); x.fillStyle = "#111"; x.fillRect(48, 52, 6, 4); x.fillRect(74, 52, 6, 4); x.fillStyle = "#000000aa"; x.fillRect(0, 0, cw, 12); x.fillStyle = "#fff"; x.font = "700 9px Arial"; x.fillText("P1  VOLTA 12/20", 4, 9); }) });
+  for (const s of [-1, 1]) { caixa(g, M(0x8d9096, { metalness: 0.5 }), 0.4 * U, alto + h, 0.4 * U, s * w * 0.4, (alto + h) / 2, -0.6 * U); }
+  caixa(g, M(0x1a1d22), w + 0.6 * U, h + 0.6 * U, 0.6 * U, 0, alto + h / 2, 0); malha(g, new THREE.PlaneGeometry(w, h), tela, 0, alto + h / 2, 0.31 * U);
+  return g; } };
+// o guindaste de torre (de obra, no horizonte da cidade)
+KITS.guindaste = { nome: "Guindaste de torre", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), H = 45 * U, AM = M(0xf2c230, { roughness: 0.5 }), trel = M(0xe0b228, { roughness: 0.5, wireframe: false });
+  caixa(g, M(0x8d9096), 5 * U, 1.5 * U, 5 * U, 0, 0.75 * U, 0);
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) caixa(g, AM, 0.25 * U, H, 0.25 * U, x * 1 * U, H / 2, z * 1 * U);
+  for (let y = 2 * U; y < H; y += 3 * U) { caixa(g, trel, 2.2 * U, 0.12 * U, 0.12 * U, 0, y, 1 * U); caixa(g, trel, 2.2 * U, 0.12 * U, 0.12 * U, 0, y, -1 * U); caixa(g, trel, 0.12 * U, 0.12 * U, 2.2 * U, 1 * U, y, 0); caixa(g, trel, 0.12 * U, 0.12 * U, 2.2 * U, -1 * U, y, 0); }
+  caixa(g, AM, 40 * U, 1.2 * U, 1.2 * U, 12 * U, H + 0.6 * U, 0); caixa(g, M(0x8d9096), 4 * U, 2 * U, 2 * U, -9 * U, H - 0.4 * U, 0); // a lança e o contrapeso
+  caixa(g, M(0x2c3036), 2.4 * U, 2 * U, 2.4 * U, 0, H - 1.8 * U, 1.6 * U); cil(g, M(0x2c3036), 0.03 * U, 18 * U, 26 * U, H - 9 * U, 0, 4); caixa(g, AM, 1 * U, 0.6 * U, 1 * U, 26 * U, H - 18 * U, 0);
+  return g; } };
+// os carros de passeio (estacionados no paddock e nas ruas), em três cores
+function sedan(cor) {
+  const g = new THREE.Group(), C = M(cor, { roughness: 0.35, metalness: 0.3 }), V = M(0x1f2a33, { roughness: 0.1, metalness: 0.4 }), P = M(0x1d1f22, { roughness: 0.95 });
+  caixa(g, C, 1.8 * U, 0.7 * U, 4.5 * U, 0, 0.65 * U, 0); caixa(g, C, 1.6 * U, 0.6 * U, 2.4 * U, 0, 1.3 * U, -0.2 * U); caixa(g, V, 1.62 * U, 0.42 * U, 2.2 * U, 0, 1.3 * U, -0.2 * U);
+  for (const z of [-1.4, 1.4]) for (const s of [-1, 1]) { const r = cil(g, P, 0.33 * U, 0.25 * U, s * 0.85 * U, 0.33 * U, z * U, 12); r.rotation.z = Math.PI / 2; }
+  return g;
+}
+KITS.carroBranco = { nome: "Carro branco", grupo: "Paddock", montar: () => sedan(0xf2f2f0) };
+KITS.carroVermelho = { nome: "Carro vermelho", grupo: "Paddock", montar: () => sedan(0xb3262f) };
+KITS.carroAzul = { nome: "Carro azul", grupo: "Paddock", montar: () => sedan(0x2a5bd6) };
+// a ambulância da pista
+KITS.ambulancia = { nome: "Ambulância", grupo: "Pista", montar() {
+  const g = new THREE.Group(), B = M(0xf4f4f2, { roughness: 0.4 }), V = M(0x1f2a33, { roughness: 0.1, metalness: 0.4 }), P = M(0x1d1f22, { roughness: 0.95 });
+  caixa(g, B, 2.1 * U, 2.4 * U, 3.6 * U, 0, 1.6 * U, -0.8 * U); caixa(g, B, 2 * U, 1.4 * U, 1.8 * U, 0, 1.1 * U, 1.9 * U); caixa(g, V, 1.9 * U, 0.6 * U, 0.1 * U, 0, 1.5 * U, 2.8 * U);
+  caixa(g, VERMELHO, 2.12 * U, 0.35 * U, 3.6 * U, 0, 1.4 * U, -0.8 * U); caixa(g, M(0xff3b3b, { emissive: 0xff2020, emissiveIntensity: 0.6 }), 1.2 * U, 0.2 * U, 0.3 * U, 0, 2.9 * U, 0.4 * U); caixa(g, M(0x3b7bff, { emissive: 0x2050ff, emissiveIntensity: 0.6 }), 0.5 * U, 0.2 * U, 0.3 * U, 0.35 * U, 2.9 * U, 0.4 * U);
+  for (const z of [-1.8, 1.8]) for (const s of [-1, 1]) { const r = cil(g, P, 0.42 * U, 0.3 * U, s * 1 * U, 0.42 * U, z * U, 12); r.rotation.z = Math.PI / 2; }
+  return g; } };
+// o heliponto com o helicóptero (a TV aérea)
+KITS.heliponto = { nome: "Heliponto com helicóptero", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), pista = new THREE.MeshStandardMaterial({ roughness: 0.8, map: texCanvas("heliH", 128, 128, (x, w, h) => { x.fillStyle = "#3a3d42"; x.fillRect(0, 0, w, h); x.strokeStyle = "#f2c230"; x.lineWidth = 6; x.beginPath(); x.arc(64, 64, 54, 0, Math.PI * 2); x.stroke(); x.fillStyle = "#fff"; x.font = "900 64px Arial"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("H", 64, 68); }) });
+  malha(g, new THREE.CylinderGeometry(9 * U, 9 * U, 0.4 * U, 32), [M(0x2c3036), pista, M(0x2c3036)], 0, 0.2 * U, 0);
+  const C = M(0x1f3a6e, { roughness: 0.4, metalness: 0.3 });
+  const corpo = malha(g, new THREE.SphereGeometry(1.4 * U, 16, 12), C, 0, 2 * U, 0.6 * U); corpo.scale.set(1, 1, 1.6);
+  caixa(g, C, 0.4 * U, 0.4 * U, 5 * U, 0, 2.3 * U, -3 * U); caixa(g, C, 0.15 * U, 1.4 * U, 0.8 * U, 0, 2.8 * U, -5.4 * U);
+  malha(g, new THREE.SphereGeometry(1.1 * U, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), M(0x1f2a33, { roughness: 0.1, metalness: 0.4 }), 0, 2.1 * U, 1.6 * U).scale.set(1, 0.8, 1.1);
+  for (const a of [0, Math.PI / 2]) { const p = caixa(g, M(0x2c3036), 11 * U, 0.08 * U, 0.4 * U, 0, 3.6 * U, 0.4 * U); p.rotation.y = a + 0.3; }
+  for (const s of [-1, 1]) caixa(g, M(0x2c3036), 0.15 * U, 0.15 * U, 3.4 * U, s * 1.1 * U, 0.6 * U, 0.4 * U);
+  return g; } };
+// a fileira de mastros com as bandeiras (a entrada do circuito)
+KITS.bandeiras = { nome: "Fileira de bandeiras", grupo: "Público", montar() {
+  const g = new THREE.Group(), cores = [0xd62828, 0xf2f2f2, 0x2a5bd6, 0x2e9e4f, 0xf2c230, 0x111111], h = 9 * U;
+  for (let k = 0; k < 6; k++) { const x = (k - 2.5) * 4 * U; cil(g, BRANCO, 0.07 * U, h, x, h / 2, 0, 6); const b = new THREE.Mesh(new THREE.PlaneGeometry(2 * U, 1.3 * U), new THREE.MeshStandardMaterial({ color: cores[k], side: THREE.DoubleSide })); b.position.set(x + 1 * U, h - 0.8 * U, 0); b.castShadow = true; g.add(b); }
+  return g; } };
 export function montarKit(id) { const k = KITS[id]; if (!k) return null; const g = k.montar(); g.name = "kit-" + id; return g; }

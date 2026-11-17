@@ -14,6 +14,7 @@ import { renderer, scene, cam } from "../cena.js";
 import { buildTrack, useTrack } from "../pista.js";
 import { PISTAS } from "../estado.js";
 import { criarCraft } from "./craft.js";
+import { criarComandos } from "./comandos.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista } from "../cenario-pista.js";
 
@@ -64,7 +65,7 @@ const orbita = new OrbitControls(cam, renderer.domElement); orbita.target.set(me
 const gizmo = new TransformControls(cam, renderer.domElement); scene.add(gizmo.getHelper ? gizmo.getHelper() : gizmo);
 gizmo.addEventListener("dragging-changed", (e) => { orbita.enabled = !e.value; if (!e.value) { if (craft?.ativo()) return craft.mudou(); guardarItem(selecionado); desenharItem(); } });
 gizmo.addEventListener("objectChange", () => { if (!craft?.ativo()) desenharItem(true); });
-let craft = null; // (o modo Craft, craft.js: criado no fim, depois do painel)
+let craft = null, comandos = null; // (o modo Craft, craft.js, e a linha de comando, comandos.js: criados no fim, depois do painel)
 // ---------- Ctrl+Z / Ctrl+Y (2026-11-16, o Thiago) ----------
 // cada mudança vira um passo: mexer (posição, giro, escala e se aparece: antes e depois), pôr (um item ou peça nova num grupo) ou tirar.
 // Desfazer aplica o "antes"; refazer, o "depois". Depois de cada passo, o item, a peça da pista ou a peça do Craft é guardada de novo.
@@ -102,6 +103,13 @@ function atualizarDestaque() {
   destaque.visible = !!(o && o.parent); if (!destaque.visible) return;
   destaque.box.setFromObject(o); if (destaque.box.isEmpty()) destaque.visible = false;
 }
+// os vários escolhidos (Ctrl+clique): uma caixa azul em cada
+const caixasVarios = [];
+function destacarVarios() {
+  let k = 0;
+  for (const o of varios) { if (!o.parent) { varios.delete(o); continue; } const c = caixasVarios[k] || (caixasVarios[k] = Object.assign(new THREE.Box3Helper(new THREE.Box3(), 0x5b8cff), { renderOrder: 998 })); if (!c.parent) scene.add(c); c.material.depthTest = false; c.box.setFromObject(o); c.visible = true; k++; }
+  for (; k < caixasVarios.length; k++) caixasVarios[k].visible = false;
+}
 function ajustar() { renderer.setSize(innerWidth, innerHeight, false); renderer.domElement.style.width = innerWidth + "px"; renderer.domElement.style.height = innerHeight + "px"; cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
 ajustar(); addEventListener("resize", ajustar);
 // (2026-11-16, o Thiago: "tá difícil andar por essa Mônaco; segurando Shift, o WASD devia andar") Shift + WASD anda no plano da câmera, Q e Z sobem e descem;
@@ -118,7 +126,7 @@ renderer.setAnimationLoop(() => {
     if (tecla.has("KeyQ")) m.y += 1; if (tecla.has("KeyZ")) m.y -= 1;
     if (m.lengthSq()) { m.normalize().multiplyScalar(v); cam.position.add(m); orbita.target.add(m); }
   }
-  atualizarDestaque(); renderer.render(scene, cam); prevRender?.();
+  comandos?.quadro(dt); atualizarDestaque(); destacarVarios(); renderer.render(scene, cam); prevRender?.();
 });
 
 // ---------- o chão: um raio de cima para baixo em tudo da pista, menos o próprio cenário do editor ----------
@@ -129,6 +137,7 @@ function chaoEm(x, z) { raio.set(new THREE.Vector3(x, 5000, z), new THREE.Vector
 function noChao(o) { const b = new THREE.Box3().setFromObject(o); o.position.y += chaoEm(o.position.x, o.position.z) - b.min.y; }
 
 // ---------- os itens ----------
+const varios = new Set(); // (a seleção de vários itens: Ctrl+clique)
 let selecionado = null, assetEscolhido = null, placaMarca = "pirelli", placaFundo = "#101114"; // ("*placa": o próximo clique no chão põe uma placa)
 // as peças que a pista já tinha e foram mexidas: chave -> ajuste (salvo em `ajustes`)
 const ajustes = new Map(ajustesDaPista(tr).map((a) => [a.chave, a]));
@@ -137,7 +146,7 @@ function guardarPeca(o) { if (!o || ehItem(o)) return; const k = chaveDe(tr, o);
 // a peça que um clique escolhe: sobe da malha até o grupo dela (um prédio, um marco), sem pegar um grupo que junta dezenas de coisas
 function pecaDe(m) { let o = m; while (o.parent && o.parent !== tr.grp && o.parent.children.length <= 40) o = o.parent; return o; }
 const guardarItem = (o) => { if (!o) return; if (!ehItem(o)) return guardarPeca(o); const it = o.userData.item; Object.assign(it, { x: +o.position.x.toFixed(2), y: +o.position.y.toFixed(2), z: +o.position.z.toFixed(2), rx: +o.rotation.x.toFixed(4), ry: +o.rotation.y.toFixed(4), rz: +o.rotation.z.toFixed(4), s: +o.scale.x.toFixed(3) }); };
-function selecionar(o) { if (o && !ehItem(o) && !o.userData.original) o.userData.original = { p: o.position.toArray(), r: [o.rotation.x, o.rotation.y, o.rotation.z], s: o.scale.toArray(), v: o.visible }; selecionado = o; if (o) gizmo.attach(o); else gizmo.detach(); desenharItem(); }
+function selecionar(o) { if (o && !ehItem(o) && !o.userData.original) o.userData.original = { p: o.position.toArray(), r: [o.rotation.x, o.rotation.y, o.rotation.z], s: o.scale.toArray(), v: o.visible }; selecionado = o; if (o) { if (o.userData.pino) gizmo.detach(); else gizmo.attach(o); } else gizmo.detach(); /* (PN: travado, sem gizmo) */ desenharItem(); }
 async function colocar(it) { const o = await montarItem(it); if (!o) return null; cenario.add(o); return o; }
 renderer.domElement.addEventListener("pointerdown", (e) => { renderer.domElement._xy = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener("pointerup", async (e) => {
@@ -145,12 +154,22 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
   const p = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); raio.setFromCamera(p, cam);
   if (craft?.ativo()) { if (!comShift()) craft.clique(); return; } // (no Craft o clique escolhe as peças da obra)
   const noCenario = raio.intersectObjects(cenario.children, true)[0];
-  if (noCenario && !assetEscolhido) { let o = noCenario.object; while (o.parent !== cenario) o = o.parent; return selecionar(o); }
+  if (noCenario && !assetEscolhido) { let o = noCenario.object; while (o.parent !== cenario) o = o.parent;
+    if (e.ctrlKey || e.shiftKey) { // (Ctrl+clique: soma ou tira da seleção, para agrupar)
+      if (selecionado && ehItem(selecionado)) varios.add(selecionado);
+      if (varios.has(o)) varios.delete(o); else varios.add(o);
+      avisar(`${varios.size} itens escolhidos (GP agrupa)`); return selecionar(o);
+    }
+    varios.clear(); return selecionar(o); }
   if (!assetEscolhido) { if (comShift()) return; const peca = raio.intersectObjects(solidos(), false)[0]; return selecionar(peca ? pecaDe(peca.object) : null); }
   const hit = raio.intersectObjects(solidos(), false)[0]; if (!hit) return;
-  const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry: 0, rz: 0 };
+  const ry = Math.atan2(cam.position.x - hit.point.x, cam.position.z - hit.point.z); // (a frente do item virada para quem está olhando)
+  const base = { x: hit.point.x, y: hit.point.y, z: hit.point.z, rx: 0, ry, rz: 0 };
   const o = await colocar(assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: 60, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
-  if (o) { noChao(o); guardarItem(o); selecionar(o); }
+  if (o) { noChao(o); guardarItem(o); selecionar(o);
+    // (2026-11-16, o Thiago: "acho que eu só não sei colocar a placa") de longe a placa é um pontinho: a câmera chega perto dela
+    if (o.userData.item.tipo === "placa" && cam.position.distanceTo(o.position) > 400) vista("focar");
+  }
 });
 addEventListener("keydown", (e) => {
   if (!(e.ctrlKey || e.metaKey) || e.target.closest?.("input,select")) return;
@@ -159,14 +178,11 @@ addEventListener("keydown", (e) => {
 });
 addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
-  const k = e.key.toLowerCase();
-  if (k === "w") gizmo.setMode("translate"); else if (k === "e") gizmo.setMode("rotate"); else if (k === "r") gizmo.setMode("scale");
-  else if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
+  const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
+  if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
   else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); }
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
-  else if (k === "g") { noChao(selecionado); guardarItem(selecionado); desenharItem(); }
-  else if (k === "d" && ehItem(selecionado)) { const it = { ...selecionado.userData.item, x: selecionado.userData.item.x + 30 }; const o = await colocar(it); if (o) { noChao(o); guardarItem(o); selecionar(o); } }
 });
 
 // ---------- o painel ----------
@@ -185,8 +201,9 @@ const $ = (id) => document.getElementById(id);
 $("edPista").onchange = (e) => { location.search = "?editor=" + e.target.value; };
 $("edFrac").oninput = (e) => { $("edFracV").textContent = e.target.value + "%"; };
 $("edSalvar").onclick = async () => {
-  for (const o of cenario.children) guardarItem(o);
-  try { const r = await api("cenario/" + pista, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pista, itens: cenario.children.map((o) => o.userData.item), ajustes: [...ajustes.values()] }) }); avisar(`Salvo: ${r.itens} itens e ${ajustes.size} peças mexidas em cenario/${pista}.json`); }
+  const dados = (o) => { guardarItem(o); const it = { ...o.userData.item }; if (it.tipo === "grupo") it.itens = o.children.filter((c) => c.userData.item).map(dados); return it; }; // (o grupo leva os itens dele)
+  const todos = cenario.children.filter((o) => o.userData.item).map(dados);
+  try { const r = await api("cenario/" + pista, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pista, itens: todos, ajustes: [...ajustes.values()] }) }); avisar(`Salvo: ${r.itens} itens e ${ajustes.size} peças mexidas em cenario/${pista}.json`); }
   catch (e) { avisar(e.message, true); }
 };
 function avisar(txt, erro = false) { $("edAviso").innerHTML = `<small class="${erro ? "erro" : "ok"}">${h(txt)}</small>`; }
@@ -200,7 +217,8 @@ const nomeDaMarca = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || id;
 const opcoesDeMarca = (atual) => marcasDaPlaca().map((id) => `<option value="${id}" ${id === atual ? "selected" : ""}>${h(nomeDaMarca(id))}</option>`).join("");
 function desenharPlaca() {
   $("edPlaca").innerHTML = `<div class="lin"><img src="${miniaturaDoPatrocinio(placaMarca)}" alt="" style="height:30px;border-radius:6px"><select id="edPlMarca">${opcoesDeMarca(placaMarca)}</select></div>
-    <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">Pôr placa (clique no chão)</button></div>`;
+    <div class="lin"><label>Fundo <input type="color" id="edPlFundo" value="${placaFundo}"></label><button id="edPlPor" class="${assetEscolhido === "*placa" ? "on" : ""}">${assetEscolhido === "*placa" ? "Clique no chão… (Esc sai)" : "Pôr placa"}</button></div>
+    <small>1. escolha a marca e o fundo · 2. clique em Pôr placa · 3. clique no chão (pode pôr várias; Esc para) · a placa nasce virada para você</small>`;
   $("edPlMarca").onchange = (e) => { placaMarca = e.target.value; desenharPlaca(); };
   $("edPlFundo").onchange = (e) => { placaFundo = e.target.value; };
   $("edPlPor").onclick = () => { assetEscolhido = assetEscolhido === "*placa" ? null : "*placa"; desenharPlaca(); desenharAssets(); };
@@ -366,7 +384,7 @@ barra.onclick = (e) => {
 };
 addEventListener("keydown", (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey || e.ctrlKey) return;
-  const v = { 1: "cima", 2: "lado", 3: "frente", 4: "v3d", f: "focar" }[e.key.toLowerCase()]; if (v) vista(v);
+  const v = { 1: "cima", 2: "lado", 3: "frente", 4: "v3d" }[e.key]; if (v) vista(v);
   setTimeout(marcarModo, 0);
 });
 marcarModo();
@@ -382,3 +400,32 @@ $("edPublicar").onclick = async () => {
     $("edAviso").innerHTML = `<small class="ok">PR aberto (${r.arquivos} arquivos): <a href="${h(r.url)}" target="_blank" rel="noopener" style="color:#9cc2ff">${h(r.url)}</a></small>`;
   } catch (e) { avisar("Não publicou: " + e.message, true); }
 };
+// ---------- a linha de comando (comandos.js): o que ela pode fazer no editor ----------
+comandos = criarComandos({
+  cam, orbita, gizmo, renderer, raio, avisar, scene, tr, pista,
+  escolhido: () => (craft.ativo() ? craft.selecionada() : selecionado), ehItem, noChao, estado, registrar, desfazer, refazer, vista,
+  guardar: (o) => (o.userData.peca ? craft.medirPeca(o) : guardarItem(o)), obra: () => craft.obra(), craftAlternar: () => $("edCraftBt").click(),
+  selecionar: (o) => (craft.ativo() ? null : selecionar(o)),
+  // GP: os itens escolhidos viram um grupo (centrado entre eles, no chão do mais baixo); UG: o grupo se desfaz e cada item volta ao cenário
+  agrupar() {
+    if (selecionado && ehItem(selecionado)) varios.add(selecionado);
+    const lista = [...varios].filter((o) => o.parent === cenario); if (lista.length < 2) return 0;
+    const c = new THREE.Vector3(); for (const o of lista) c.add(o.getWorldPosition(new THREE.Vector3())); c.divideScalar(lista.length); c.y = Math.min(...lista.map((o) => o.position.y));
+    desfazendo = true; try { const g = new THREE.Group(); g.name = "grupo"; g.position.copy(c); g.userData.item = { tipo: "grupo", x: c.x, y: c.y, z: c.z, rx: 0, ry: 0, rz: 0, s: 1 }; cenario.add(g); for (const o of lista) g.attach(o); varios.clear(); selecionar(g); } finally { desfazendo = false; }
+    pilha.length = 0; refeitos.length = 0; // (agrupar não entra no Ctrl+Z: a história recomeça daqui)
+    return lista.length;
+  },
+  desagrupar() {
+    const g = selecionado; if (!g || g.userData.item?.tipo !== "grupo") return 0; const filhos = [...g.children];
+    desfazendo = true; try { for (const o of filhos) { cenario.attach(o); guardarItem(o); } cenario.remove(g); selecionar(null); } finally { desfazendo = false; }
+    pilha.length = 0; refeitos.length = 0; return filhos.length;
+  },
+  apagar: () => dispatchEvent(new KeyboardEvent("keydown", { key: "Delete" })),
+  // uma cópia deslocada (dx, dz) de um item do cenário ou de uma peça do Craft; as peças da pista não se copiam
+  async copiar(o, dx, dz, escolher = true) {
+    if (o.userData.peca) return craft.duplicar(o, dx, dz, escolher);
+    if (!ehItem(o)) return null;
+    guardarItem(o); const it = { ...o.userData.item, x: o.position.x + dx, z: o.position.z + dz };
+    const c = await colocar(it); if (c) { c.scale.copy(o.scale); c.rotation.copy(o.rotation); guardarItem(c); if (escolher) selecionar(c); } return c;
+  },
+});

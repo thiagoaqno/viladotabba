@@ -34,6 +34,8 @@ function montarPlaca(it) {
   return g;
 }
 export async function montarItem(it) {
+  // (2026-11-16, o Thiago: "deve ser possível agrupar e desagrupar itens") um GRUPO: os itens dentro dele com posição relativa a ele
+  if (it.tipo === "grupo") { const g = new THREE.Group(); for (const o of await Promise.all((it.itens || []).map(montarItem))) if (o) g.add(o); g.position.set(+it.x || 0, +it.y || 0, +it.z || 0); g.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); g.scale.setScalar(+it.s || 1); g.userData.item = it; g.name = "grupo"; return g; }
   if (it.tipo === "placa") { const o = montarPlaca(it); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = `placa-${it.marca || ""}`; return o; }
   const base = await modeloDoAsset(it.asset); if (!base) return null;
   const o = base.clone(true);

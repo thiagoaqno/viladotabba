@@ -156,6 +156,8 @@ export function criarCraft(ed) {
   return {
     ativo: () => ativo,
     selecionada: () => sel,
+    obra: () => obra,
+    duplicar(m, dx, dz, escolherCopia = true) { const p = m.userData.peca, c = montarPeca({ ...p, sx: m.scale.x, sy: m.scale.y, sz: m.scale.z }); c.position.copy(m.position).add(new THREE.Vector3(dx, 0, dz)); c.rotation.copy(m.rotation); c.scale.copy(m.scale); obra.add(c); if (escolherCopia) escolher(c); return c; },
     medirPeca: (m) => medir(m), // (o Ctrl+Z mudou a escala: a textura acompanha)
     soltar: (m) => { if (sel === m) escolher(null); },
     alternar() { ativo = !ativo; painel.hidden = !ativo; if (ativo) { if (!obra) novaObra(); else scene.add(obra); desenhar(); } else { gizmo.detach(); sel = null; } return ativo; },

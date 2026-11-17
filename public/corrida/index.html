@@ -433,6 +433,19 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
 <script defer src="/corrida/gpu-aviso.js"></script>
 <script src="/corrida/barra.js"></script>
 <script type="module" src="/corrida/jogo.js" onerror="falhaPreparoCorrida()"></script>
+<script>
+// (2026-11-16, o Thiago: "deixa um botãozinho para eu entrar no link, para não esquecer") o atalho do editor de pistas: só no PC (localhost),
+// no menu. Ele abre o editor (editor-de-pistas.bat, porta 3123); se o editor não estiver aberto, avisa como abrir.
+(() => {
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || new URLSearchParams(location.search).has("editor")) return;
+  const b = document.createElement("a"); b.href = "http://localhost:3123/corrida/?editor=monaco"; b.target = "_blank"; b.rel = "noopener"; b.textContent = "🛠 Editor de pistas";
+  b.title = "Abre o editor de cenário (antes, rode o editor-de-pistas.bat na pasta do projeto)";
+  b.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:60;padding:8px 12px;border-radius:10px;background:#12151be6;color:#e8ecf2;font:600 13px Barlow,system-ui,sans-serif;text-decoration:none;border:1px solid #333b49";
+  b.onclick = async (e) => { try { await fetch("http://localhost:3123/api/corrida/editor/assets", { mode: "no-cors" }); } catch { e.preventDefault(); alert("O editor não está aberto. Rode o editor-de-pistas.bat na pasta do projeto e clique de novo."); } };
+  const mostrar = () => { const home = document.getElementById("home"); if (home && !home.classList.contains("hidden")) document.body.appendChild(b); else b.remove(); };
+  addEventListener("load", () => { mostrar(); new MutationObserver(mostrar).observe(document.getElementById("home") || document.body, { attributes: true, attributeFilter: ["class"] }); });
+})();
+</script>
 <script type="module">if (new URLSearchParams(location.search).has("editor")) import("/corrida/editor/editor.js"); // o editor de cenário das pistas (corrida-editor.js)</script>
 </body>
 </html>

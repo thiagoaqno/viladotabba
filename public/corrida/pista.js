@@ -710,4 +710,6 @@ export function useTrack(tr, hora = "dia", podeMudarLuz = () => true) {
 }
 
 // quando os enfeites do Kenney chegam, as pistas que já tinham sido montadas com formas simples são refeitas
-aoCarregar(() => { for (const tr of Object.values(TRACKS)) if (!tr.comProps) { for (const c of [...tr.grp.children]) { tr.grp.remove(c); c.traverse?.((o) => { o.geometry?.dispose?.(); }); } buildWorld(tr); tr.comProps = true; } });
+// (2026-11-16) o cenário do editor (cenario-pista.js) sobrevive a esta remontagem: antes ele saía junto com o resto e as placas e assets ficavam
+// fora da cena (no editor, a caixa de seleção aparecia sem nada dentro)
+aoCarregar(() => { for (const tr of Object.values(TRACKS)) if (!tr.comProps) { for (const c of [...tr.grp.children]) { if (c === tr.cenarioEditor) continue; tr.grp.remove(c); c.traverse?.((o) => { o.geometry?.dispose?.(); }); } if (tr.cenarioEditor) tr.grp.remove(tr.cenarioEditor); buildWorld(tr); if (tr.cenarioEditor) tr.grp.add(tr.cenarioEditor); tr.comProps = true; } });

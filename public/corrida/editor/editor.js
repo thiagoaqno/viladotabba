@@ -180,7 +180,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); }
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });

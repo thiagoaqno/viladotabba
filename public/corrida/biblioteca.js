@@ -64,4 +64,30 @@ export const KITS = {
   totem: { nome: "Totem de patrocínio", grupo: "Público", montar() { const g = new THREE.Group(); caixa(g, AZUL, 1.2 * U, 4 * U, 0.4 * U, 0, 2 * U, 0); caixa(g, BRANCO, 1 * U, 1 * U, 0.42 * U, 0, 3.2 * U, 0); return g; } },
   portico: { nome: "Pórtico (largada)", grupo: "Pista", montar() { const g = new THREE.Group(), w = 30 * U, h = 7 * U; for (const x of [-w / 2, w / 2]) caixa(g, CINZA, 0.8 * U, h, 0.8 * U, x, h / 2, 0); caixa(g, ESCURO, w, 1.4 * U, 0.6 * U, 0, h, 0); for (let i = 0; i < 5; i++) cil(g, VERMELHO, 0.25 * U, 0.1 * U, (i - 2) * 1.2 * U, h, 0.35 * U, 12).rotation.x = Math.PI / 2; return g; } },
 };
+// (2026-11-16, a imagem do Thiago) o prédio de faixas: seis andares com as lajes brancas saltadas, as paredes ocre, a pele de vidro azul com
+// montantes na frente e no fundo, a cobertura chanfrada, a piscina de vidro e o terraço com os aparelhos de ar
+KITS.predioFaixas = { nome: "Prédio de faixas", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), w = 24 * U, d = 14 * U, andar = 3.2 * U, n = 6, H = andar * n;
+  const OCRE = M(0xb98a4c, { roughness: 0.85 }), LAJE = M(0xe9ebee, { roughness: 0.6 }), VIDRO_AZ = M(0x1f2f6e, { roughness: 0.15, metalness: 0.35 }), MONT = M(0x2a2f38, { roughness: 0.5, metalness: 0.3 });
+  const PISCINA = new THREE.MeshStandardMaterial({ color: 0x8fc7f0, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.85 }), PISO = M(0xd9a385, { roughness: 0.9 });
+  caixa(g, OCRE, w, H, d, 0, H / 2, 0); // o corpo
+  for (const s of [-1, 1]) { // a pele de vidro na frente e no fundo, entre as paredes cheias das pontas, com os montantes
+    const lv = w * 0.62; caixa(g, VIDRO_AZ, lv, H - 0.6 * U, 0.3 * U, 0, H / 2, s * (d / 2 + 0.05 * U));
+    for (let k = 0; k <= 8; k++) caixa(g, MONT, 0.22 * U, H - 0.6 * U, 0.4 * U, -lv / 2 + (k * lv) / 8, H / 2, s * (d / 2 + 0.12 * U));
+  }
+  for (let k = 0; k <= n; k++) caixa(g, LAJE, w + 1.2 * U, 0.45 * U, d + 1.2 * U, 0, k * andar, 0); // as lajes saltadas (as faixas brancas)
+  caixa(g, M(0xc98a5a), w * 0.7, 0.6 * U, 0.3 * U, 0, 0.6 * U, d / 2 + 0.4 * U); // o friso do térreo
+  // a cobertura: a platibanda branca chanfrada em volta
+  const plat = caixa(g, LAJE, w + 2 * U, 1.4 * U, d + 2 * U, 0, H + 0.9 * U, 0);
+  const chanfro = new THREE.Mesh(new THREE.CylinderGeometry(0.86, 1, 1, 4, 1).rotateY(Math.PI / 4), LAJE); chanfro.scale.set((w + 2 * U) / Math.SQRT2, 1 * U, (d + 2 * U) / Math.SQRT2); /* (o lado do quadrado de raio 1 mede √2) */ chanfro.position.y = H + 2.1 * U; chanfro.castShadow = true; g.add(chanfro);
+  caixa(g, LAJE, w - 1 * U, 0.4 * U, d - 1 * U, 0, H + 2.4 * U, 0); // o piso da cobertura
+  // a piscina de vidro de um lado e o terraço com os quatro aparelhos de ar do outro
+  caixa(g, PISCINA, w * 0.5, 0.5 * U, d * 0.62, w * 0.2, H + 2.8 * U, 0);
+  caixa(g, PISO, w * 0.36, 0.2 * U, d * 0.7, -w * 0.28, H + 2.7 * U, 0);
+  for (const [ox, oz] of [[-0.36, -0.18], [-0.24, -0.18], [-0.36, 0.14], [-0.24, 0.14]]) {
+    const x = ox * w, z = oz * d; cil(g, ESCURO, 0.25 * U, 0.6 * U, x, H + 3.1 * U, z, 6);
+    const prato = malha(g, new THREE.SphereGeometry(0.9 * U, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), M(0x3c5d7a, { metalness: 0.5, roughness: 0.35 }), x, H + 3.4 * U, z); prato.scale.y = 0.45;
+    caixa(g, ESCURO, 0.25 * U, 0.25 * U, 1.6 * U, x + 0.6 * U, H + 2.9 * U, z + 0.5 * U).rotation.y = 0.6;
+  }
+  return g; } };
 export function montarKit(id) { const k = KITS[id]; if (!k) return null; const g = k.montar(); g.name = "kit-" + id; return g; }

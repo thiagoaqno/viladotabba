@@ -41,6 +41,8 @@ export function arquibancadas(tr, add, { trechos }) {
     ({ i0, i1 } = rec);
     if (tr.noCorredor && Array.from({ length: Math.ceil((i1 - i0) / 4) + 1 }, (_, k) => pts[(i0 + k * 4) % n])
       .some((p) => tr.noCorredor(p.x + p.nx * l0, p.y + p.ny * l0))) continue;
+    // (2026-11-18) as peças deste trecho ficam guardadas no degrau: a torcida (vida.js) some ou anda junto quando o editor esconde ou move a arquibancada
+    const pecas = [], add0 = add; add = (o) => { pecas.push(o); return add0(o); };
     // os degraus são uma rampa só (a galera aparece de baixo também); a textura repete a fileira em cada 9 unidades
     faixa(tr, add, i0, i1, l0, l0 + lado * degraus * 9, 4, 4 + degraus * 6, materiais.get(chave), 48, degraus);
     faixa(tr, add, i0, i1, l0 + lado * degraus * 9, l0 + lado * degraus * 9, -8, 4 + degraus * 6 + 22, estrutura, 60); // o fundo
@@ -52,6 +54,7 @@ export function arquibancadas(tr, add, { trechos }) {
     colunas.forEach(([x, y, z], k) => { o.position.set(x, y, z); o.scale.set(1, alto, 1); o.updateMatrix(); cs.setMatrixAt(k, o.matrix); }); cs.castShadow = true;
     for (let i = i0; i <= i1; i += 4) { const p = pts[i % n]; tr.reservado.push([p.x + p.nx * (l0 + lado * 30), p.y + p.ny * (l0 + lado * 30), 60]); }
     tr.arquibancadas.push([i0, i1]); // o som da torcida (kit/som.js)
-    (tr.arqDegraus ||= []).push({ i0, i1, l0, lado, degraus }); // onde ficam os degraus: a torcida de vida.js senta neles
+    (tr.arqDegraus ||= []).push({ i0, i1, l0, lado, degraus, pecas }); // onde ficam os degraus: a torcida de vida.js senta neles (pecas[0]: os assentos)
+    add = add0;
   }
 }

@@ -22,16 +22,6 @@
    "s": 4.8
   },
   {
-   "asset": "monaco-hotel-de-paris",
-   "x": 3279.07,
-   "y": 203.62,
-   "z": 1876.3,
-   "rx": 0,
-   "ry": 0.8612,
-   "rz": 0,
-   "s": 4.8
-  },
-  {
    "tipo": "kit",
    "kit": "predioRotunda",
    "x": 3307.14,
@@ -226,17 +216,6 @@
    "z": 2357.97,
    "rx": 0,
    "ry": 0.2055,
-   "rz": 0,
-   "s": 1
-  },
-  {
-   "tipo": "kit",
-   "kit": "hotelVidro",
-   "x": 1022.86,
-   "y": 94.42,
-   "z": 2541.93,
-   "rx": 0,
-   "ry": 0.6004,
    "rz": 0,
    "s": 1
   },
@@ -436,41 +415,7 @@
    "padrao": "asfalto",
    "marca": "-",
    "x": 0,
-   "y": 0,
-   "z": 0,
-   "rx": 0,
-   "ry": 0,
-   "rz": 0,
-   "s": 1
-  },
-  {
-   "tipo": "escape",
-   "i0": 164,
-   "i1": 191,
-   "lado": 1,
-   "de": 22,
-   "largura": 20,
-   "padrao": "asfalto",
-   "marca": "-",
-   "x": 0,
-   "y": 0,
-   "z": 0,
-   "rx": 0,
-   "ry": 0,
-   "rz": 0,
-   "s": 1
-  },
-  {
-   "tipo": "escape",
-   "i0": 164,
-   "i1": 191,
-   "lado": 1,
-   "de": 12,
-   "largura": 30,
-   "padrao": "listrado",
-   "marca": "-",
-   "x": 0,
-   "y": 0,
+   "y": 1,
    "z": 0,
    "rx": 0,
    "ry": 0,
@@ -486,13 +431,706 @@
    "largura": 20,
    "padrao": "brita",
    "marca": "-",
-   "x": -8,
+   "x": 0,
    "y": 0,
    "z": 0,
    "rx": 0,
    "ry": 0,
    "rz": 0,
    "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 2487,
+    "i1": 50,
+    "lado": 1,
+    "de": 42
+   },
+   "modelo": "kit:guardrailTela",
+   "espaco": 8,
+   "altura": 3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 50,
+    "i1": 151,
+    "lado": 1,
+    "de": 42
+   },
+   "modelo": "kit:guardrailTela",
+   "espaco": 8,
+   "altura": 3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 151,
+    "i1": 267,
+    "lado": 1,
+    "de": 42
+   },
+   "modelo": "kit:guardrailTela",
+   "espaco": 8,
+   "altura": 3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "area",
+   "pts": [
+    [
+     0,
+     0
+    ],
+    [
+     3.22,
+     -31.22
+    ],
+    [
+     26.71,
+     -31
+    ]
+   ],
+   "material": "brita",
+   "x": 1171.93,
+   "y": 95.19,
+   "z": 2677.83,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "zebra",
+   "x": 1171.57,
+   "y": 81.86,
+   "z": 2662.06,
+   "rx": 0,
+   "ry": -1.6581,
+   "rz": 0,
+   "s": 0.7
+  },
+  {
+   "tipo": "kit",
+   "kit": "zebra",
+   "x": 1184.91,
+   "y": 82.53,
+   "z": 2647.33,
+   "rx": 0,
+   "ry": 0.0321,
+   "rz": 0,
+   "s": 0.6
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 151,
+    "i1": 175,
+    "lado": -1,
+    "de": 42
+   },
+   "modelo": "kit:guardrailTela",
+   "espaco": 8,
+   "altura": 3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#009dff",
+   "w": 60,
+   "x": 1261.27,
+   "y": 85.38,
+   "z": 2560.76,
+   "rx": 0,
+   "ry": 0.0992,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#009dff",
+   "w": 60,
+   "x": 1378.89,
+   "y": 88.69,
+   "z": 2545.84,
+   "rx": 0,
+   "ry": 0.1282,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#009dff",
+   "w": 60,
+   "x": 1497,
+   "y": 92.28,
+   "z": 2530,
+   "rx": 0,
+   "ry": 0.1581,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#31aa49",
+   "w": 60,
+   "x": 1203.43,
+   "y": 83.91,
+   "z": 2568.49,
+   "rx": 0,
+   "ry": 0.1924,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#31aa49",
+   "w": 60,
+   "x": 1320.28,
+   "y": 87.05,
+   "z": 2553.56,
+   "rx": 0,
+   "ry": 0.1573,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#31aa49",
+   "w": 60,
+   "x": 1438.24,
+   "y": 90.43,
+   "z": 2538.52,
+   "rx": 0,
+   "ry": 0.1532,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#31aa49",
+   "w": 60,
+   "x": 1555.35,
+   "y": 94.29,
+   "z": 2520.69,
+   "rx": 0,
+   "ry": 0.2213,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#009dff",
+   "w": 60,
+   "x": 1613.6,
+   "y": 96.4,
+   "z": 2511.59,
+   "rx": 0,
+   "ry": 0.1526,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#31aa49",
+   "w": 60,
+   "x": 1673.27,
+   "y": 98.82,
+   "z": 2502.52,
+   "rx": 0,
+   "ry": 0.2088,
+   "rz": 0,
+   "s": 1,
+   "alto": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#31aa49",
+   "w": 60,
+   "x": 1088.11,
+   "y": 80.71,
+   "z": 2584.26,
+   "rx": 0,
+   "ry": 0.299,
+   "rz": 0,
+   "s": 1,
+   "alto": 5
+  },
+  {
+   "tipo": "placa",
+   "marca": "aramco",
+   "fundo": "#3166aa",
+   "w": 60,
+   "x": 1144.65,
+   "y": 72.79,
+   "z": 2575.27,
+   "rx": 0,
+   "ry": 0.0341,
+   "rz": 0,
+   "s": 1,
+   "alto": 12
+  },
+  {
+   "tipo": "area",
+   "pts": [
+    [
+     0,
+     0
+    ],
+    [
+     -53.11,
+     54.37
+    ],
+    [
+     -111.88,
+     56.94
+    ],
+    [
+     -114.98,
+     14.66
+    ],
+    [
+     -57.32,
+     -10.37
+    ],
+    [
+     65.21,
+     -30
+    ]
+   ],
+   "material": "asfalto",
+   "x": 1176.82,
+   "y": 84.3,
+   "z": 2575.39,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 1244.08,
+   "y": 72.26,
+   "z": 2549.7,
+   "rx": 0,
+   "ry": 0.0894,
+   "rz": 0,
+   "s": 2
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 1339.87,
+   "y": 75.33,
+   "z": 2540.27,
+   "rx": 0,
+   "ry": 0.1051,
+   "rz": 0,
+   "s": 2
+  },
+  {
+   "tipo": "kit",
+   "kit": "passarela",
+   "x": 1075.17,
+   "y": 97.87,
+   "z": 2475.75,
+   "rx": 0,
+   "ry": 0.4928,
+   "rz": 0,
+   "s": 1.9
+  },
+  {
+   "tipo": "kit",
+   "kit": "monacoPredioCreme",
+   "x": 1301.08,
+   "y": 84.67,
+   "z": 2511.39,
+   "rx": 0,
+   "ry": 0.0772,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "rochaSolta",
+   "x": 4239.01,
+   "y": 33.93,
+   "z": 1265.73,
+   "rx": 0,
+   "ry": 1.7283,
+   "rz": 0,
+   "s": 2
+  },
+  {
+   "tipo": "kit",
+   "kit": "penhascoLargo",
+   "x": 3909.86,
+   "y": 23.04,
+   "z": -1716.03,
+   "rx": 0,
+   "ry": -0.0937,
+   "rz": 0,
+   "s": 10
+  },
+  {
+   "tipo": "kit",
+   "kit": "rochaSolta",
+   "x": 2642.23,
+   "y": 412.86,
+   "z": -1341.19,
+   "rx": 0,
+   "ry": 0.8276,
+   "rz": 0,
+   "s": 10
+  },
+  {
+   "tipo": "kit",
+   "kit": "rochaSolta",
+   "x": 819.56,
+   "y": 650.19,
+   "z": -1116.87,
+   "rx": 0,
+   "ry": 0.4337,
+   "rz": 0,
+   "s": 8
+  },
+  {
+   "tipo": "kit",
+   "kit": "rochaSolta",
+   "x": 1275.28,
+   "y": 502.24,
+   "z": -749.77,
+   "rx": 0,
+   "ry": 0.179,
+   "rz": 0,
+   "s": 10
+  },
+  {
+   "tipo": "kit",
+   "kit": "rochaSolta",
+   "x": 1880.16,
+   "y": 367.18,
+   "z": -515.71,
+   "rx": 0,
+   "ry": 0.2694,
+   "rz": 0,
+   "s": 8
+  },
+  {
+   "tipo": "kit",
+   "kit": "rochaSolta",
+   "x": 3200.16,
+   "y": 310.82,
+   "z": -1166.14,
+   "rx": 0,
+   "ry": 0.1847,
+   "rz": 0,
+   "s": 15
+  },
+  {
+   "tipo": "kit",
+   "kit": "rochaSolta",
+   "x": 5026.55,
+   "y": 62.5,
+   "z": -1355.51,
+   "rx": 0,
+   "ry": -0.293,
+   "rz": 0,
+   "s": 11
+  },
+  {
+   "tipo": "kit",
+   "kit": "penhascoLargo",
+   "x": 1805.9,
+   "y": 18.43,
+   "z": -1439.05,
+   "rx": -3.1416,
+   "ry": 0.2229,
+   "rz": -3.1416,
+   "s": 12
+  },
+  {
+   "tipo": "area",
+   "pts": [
+    [
+     0,
+     0
+    ],
+    [
+     23.73,
+     157.7
+    ],
+    [
+     23.84,
+     205.02
+    ],
+    [
+     13.87,
+     283.61
+    ],
+    [
+     24.04,
+     300.35
+    ],
+    [
+     40.77,
+     262.34
+    ],
+    [
+     50.53,
+     193.63
+    ],
+    [
+     47.25,
+     88.18
+    ]
+   ],
+   "material": "nenhum",
+   "espalhar": "arvore",
+   "espaco": 6,
+   "x": 3554.62,
+   "y": 182.62,
+   "z": 1591.11,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1.2
+  },
+  {
+   "tipo": "area",
+   "pts": [
+    [
+     0,
+     0
+    ],
+    [
+     95.58,
+     135.91
+    ],
+    [
+     161.66,
+     150.27
+    ],
+    [
+     162.24,
+     313.25
+    ],
+    [
+     165.51,
+     388.85
+    ],
+    [
+     255.67,
+     323.54
+    ],
+    [
+     214.31,
+     129.08
+    ],
+    [
+     102.21,
+     11.14
+    ]
+   ],
+   "material": "nenhum",
+   "espalhar": "palmeira",
+   "espaco": 6,
+   "x": 3443.02,
+   "y": 185.89,
+   "z": 1470.03,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 3365.21,
+   "y": 189.66,
+   "z": 2005.78,
+   "rx": 0,
+   "ry": 0.7448,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 3327.65,
+   "y": 187.77,
+   "z": 2034.61,
+   "rx": 0,
+   "ry": 0.5695,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 3285.55,
+   "y": 185.61,
+   "z": 2058.16,
+   "rx": 0,
+   "ry": 0.5004,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 3240.68,
+   "y": 183.25,
+   "z": 2076.71,
+   "rx": 0,
+   "ry": 0.3417,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 3079.05,
+   "y": 174.83,
+   "z": 2106.97,
+   "rx": 0,
+   "ry": 0.1118,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 3031.23,
+   "y": 172.37,
+   "z": 2112.64,
+   "rx": 0,
+   "ry": 0.1399,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 3443.46,
+   "y": 193.41,
+   "z": 1910.39,
+   "rx": 0,
+   "ry": 1.0894,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 2983.8,
+   "y": 169.85,
+   "z": 2120.16,
+   "rx": 0,
+   "ry": 0.1636,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroPedraBalaustrada",
+   "x": 2936.25,
+   "y": 167.28,
+   "z": 2127.03,
+   "rx": 0,
+   "ry": 0.1743,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroConcretoPilastras",
+   "x": 3131.72,
+   "y": 177.48,
+   "z": 2100.59,
+   "rx": 0,
+   "ry": 0.1393,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroConcretoPilastras",
+   "x": 3189.36,
+   "y": 180.41,
+   "z": 2090.75,
+   "rx": 0,
+   "ry": 0.2132,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "asset": "monaco-hotel-de-paris",
+   "x": 3294.25,
+   "y": 199.25,
+   "z": 1908.77,
+   "rx": 0,
+   "ry": 0.8612,
+   "rz": 0,
+   "s": 4.8
+  },
+  {
+   "tipo": "kit",
+   "kit": "muroConcretoPilastras",
+   "x": 1753.78,
+   "y": 91.91,
+   "z": 2466.24,
+   "rx": 0,
+   "ry": 0.3113,
+   "rz": 0,
+   "s": 2
   }
  ],
  "ajustes": [
@@ -595,7 +1233,8 @@
    "rz": 0,
    "sx": 1,
    "sy": 1,
-   "sz": 1
+   "sz": 1,
+   "oculto": true
   },
   {
    "chave": "monaco-telhados#5",
@@ -636,7 +1275,7 @@
   {
    "chave": "monaco-casino#0/monaco-casino-frente#0",
    "x": 0,
-   "y": 15.85,
+   "y": 7.2,
    "z": 0,
    "rx": 0,
    "ry": 0,
@@ -1018,6 +1657,148 @@
   },
   {
    "chave": "monaco-ambiente-gp#8",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-muro#15",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-muro#0",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-muro#1",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-escape#4",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-chao#1",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-faixa#8",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-chao#0",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1
+  },
+  {
+   "chave": "monaco-muro#17",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "gp-cerca-tela#1",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-montanha#0",
+   "x": 2744,
+   "y": 0,
+   "z": -2550,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-muro#18",
    "x": 0,
    "y": 0,
    "z": 0,

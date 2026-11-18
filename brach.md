@@ -1,3 +1,3 @@
-# Penhascos pretos: conserto
+# Área: escala própria do que espalha (padrão 1,2)
 
-O #844 pintou o topo da rocha com cor por vértice, mas o enxugar (que junta as malhas de cada item) apagava todo atributo que não fosse posição, normal ou uv; sem a cor, o material com vertexColors saía preto. Agora a cor fica quando o material usa.
+O espalhar usava a escala global de pôr peças (que pode estar grande, lembrada de outro asset) e as árvores saíam colossais. Agora a área tem o campo "Escala" dela, padrão 1,2, também editável numa área já posta.

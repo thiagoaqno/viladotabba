@@ -13,3 +13,8 @@
 - **Livery Studio, passo 1** (`/corrida/livery.html`, botão no topo do TabbaTracks): o carro do jogo num estúdio, vistas Frente/Trás/Lado/
   Topo, árvore de peças com olho, cor base e secundária, metálico/rugosidade/reflexo com esfera de amostra, gaveta de Cores (pinturas
   prontas) e Patrocinadores (as marcas do jogo, só para ver por enquanto), Salvar no navegador e Renderizar imagem (PNG).
+- **Livery Studio, passo 2:** a pintura vira dados. Zonas do carro (bico, asa dianteira, cockpit, laterais, tampa, asa traseira, assoalho;
+  `ZONAS` em `f1-pintura.js`) e camadas por cima de uma base (a pintura de uma equipe ou cor lisa): cor na peça, faixa inclinada, listra de
+  corrida e degradê, cada uma num lado ou nos dois, com cor e opacidade; lista de camadas com subir/descer/olho/apagar; desfazer/refazer;
+  a folha da pintura aparece nas Propriedades. Salvar grava `public/corrida/pinturas/<id>.json` (rota nova no `corrida-editor.js`, só no
+  PC) e o Publicar do TabbaTracks leva a pasta junto. O jogo ainda não lê essas pinturas (passo 4).

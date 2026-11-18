@@ -1416,3 +1416,58 @@ export const PNEU_FRAG_MAIN = `
     }
   }
 }`;
+
+// ---------------------------------------------------------------- as camadas do Livery Studio (livery/estudio.js)
+// (2026-11-18, passo 2 do planos/livery-studio.md) as ZONAS do carro na folha, em metros, pelas medidas anotadas em DESENHOS (bico 0..1,0;
+// asa dianteira 0,1..0,5; cockpit 1,3..2,1; caixas laterais 2,05..3,5; tampa 2,4..3,9; asa traseira 3,9..4,4). Cada zona diz os retângulos dela
+// em cada vista: L = os lados (s, y), T = de cima (s, x), F = a frente (x, y), R = a traseira (x, y).
+export const ZONAS = {
+  carro: { nome: "Carro inteiro", L: [[0, 0, 4.45, 1.1]], T: [[0, -0.85, 4.45, 0.85]], F: [[-0.8, 0, 0.8, 1.1]], R: [[-0.8, 0, 0.8, 1.1]] },
+  asaD: { nome: "Asa dianteira", L: [[0, 0, 0.62, 0.2]], T: [[0, -0.82, 0.66, -0.12], [0, 0.12, 0.66, 0.82]], F: [[-0.8, 0, 0.8, 0.18]] },
+  bico: { nome: "Bico", L: [[0, 0.1, 1.3, 0.5]], T: [[0, -0.14, 1.3, 0.14]], F: [[-0.2, 0.15, 0.2, 0.5]] },
+  cockpit: { nome: "Cockpit", L: [[1.3, 0.45, 2.05, 1.1]], T: [[1.3, -0.3, 2.05, 0.3]] },
+  laterais: { nome: "Laterais (sidepods)", L: [[2.05, 0.1, 3.5, 0.5]], T: [[2.05, -0.75, 3.5, -0.26], [2.05, 0.26, 3.5, 0.75]] },
+  tampa: { nome: "Tampa do motor", L: [[2.05, 0.5, 3.88, 1.1]], T: [[2.05, -0.26, 3.88, 0.26]], R: [[-0.3, 0.4, 0.3, 0.78]] },
+  asaT: { nome: "Asa traseira", L: [[3.86, 0.3, 4.45, 1.1]], T: [[3.82, -0.62, 4.45, 0.62]], R: [[-0.8, 0.78, 0.8, 1.1]] },
+  assoalho: { nome: "Assoalho", L: [[0, 0, 4.45, 0.1]] },
+};
+// os retângulos de uma zona numa vista, só do lado pedido ("A" = +x, "B" = −x, senão os dois)
+function retsDe(zona, v, ladoCam, ladoV) {
+  const z = ZONAS[zona] || ZONAS.carro, rs = z[v] || [];
+  if (!ladoCam || ladoCam === "ambos") return rs;
+  if (v === "L") return ladoV === ladoCam ? rs : [];
+  const pos = ladoCam === "A"; // (de cima, +x é o lado A; de frente e de trás, x também)
+  return rs.map(([a0, b0, a1, b1]) => (pos ? [a0, Math.max(b0, 0), a1, b1] : [a0, b0, a1, Math.min(b1, 0)])).filter(([, b0, , b1]) => b1 > b0);
+}
+const recortar = (c, rs) => { c.beginPath(); for (const [a0, b0, a1, b1] of rs) c.rect(a0, b0, a1 - a0, b1 - b0); c.clip(); };
+function camadaNaVista(c, l, v, ladoV) {
+  const rs = retsDe(l.zona, v, l.lado, ladoV); if (!rs.length) return;
+  c.save(); recortar(c, rs); c.globalAlpha = l.opac == null ? 1 : +l.opac; c.fillStyle = l.cor || "#ffffff";
+  const w = +l.largura || 0.2;
+  if (l.tipo === "cor") for (const [a0, b0, a1, b1] of rs) c.fillRect(a0, b0, a1 - a0, b1 - b0);
+  else if (l.tipo === "faixa") { // (a faixa inclinada: começa em s0 embaixo e chega em s1 em cima; de cima, a mesma faixa atravessa o carro)
+    const s0 = +l.s0, s1 = +l.s1;
+    if (v === "L") { c.beginPath(); c.moveTo(s0 - w / 2, 0); c.lineTo(s0 + w / 2, 0); c.lineTo(s1 + w / 2, 1.1); c.lineTo(s1 - w / 2, 1.1); c.closePath(); c.fill(); }
+    else if (v === "T") { const m = (s0 + s1) / 2; c.fillRect(m - w / 2, -1, w, 2); }
+  } else if (l.tipo === "listra") { // (a listra de corrida: no meio do carro, de ponta a ponta, vista de cima, de frente e de trás)
+    const d = +l.dist || 0;
+    for (const x of d ? [-d, d] : [0]) { if (v === "T") c.fillRect(0, x - w / 2, 4.5, w); else if (v === "F" || v === "R") c.fillRect(x - w / 2, 0, w, 1.1); }
+  } else if (l.tipo === "degrade") { // (o degradê ao longo do carro: de s0 a s1, da cor da camada ao transparente)
+    const s0 = +l.s0, s1 = +l.s1;
+    if (v === "L" || v === "T") { const g = c.createLinearGradient(s0, 0, s1, 0); g.addColorStop(0, l.cor || "#fff"); g.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = g; for (const [a0, b0, a1, b1] of rs) c.fillRect(a0, b0, a1 - a0, b1 - b0); }
+  }
+  c.restore();
+}
+// a folha de uma pintura do Livery Studio: { base: equipe de partida ou null, c1: a cor de fundo, camadas: [...] }. Devolve o canvas (1024 × 1152).
+export function folhaDeCamadas(p, cv = document.createElement("canvas")) {
+  ESC = 1; cv.width = FW; cv.height = FH; const ctx = cv.getContext("2d");
+  const t = p.base && DESENHOS[p.base] ? folhaDaEquipe(p.base, false) : null;
+  if (t) ctx.drawImage(t.userData.cv, 0, 0, FW, FH); else base(ctx, p.c1 || "#1b2a5c");
+  for (const l of p.camadas || []) {
+    if (l.oculta) continue;
+    lados(ctx, (c, s) => camadaNaVista(c, l, "L", s > 0 ? "A" : "B"));
+    for (const v of ["T", "F", "R"]) vista(ctx, v, (c) => camadaNaVista(c, l, v));
+  }
+  if (!t) lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO)); // (a entrada de ar escura, como em toda pintura)
+  return cv;
+}

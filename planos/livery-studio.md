@@ -39,8 +39,8 @@ Patrocinadores · Grafismos · Texturas com os logos em grade.
 
 ## Ordem sugerida (PRs pequenos)
 
-1. Mapa das zonas da folha + a casca do Livery Studio (`?livery=<equipe>`): carro girando, vistas, árvore de peças com olho.
-2. Camadas de cor e faixas + material (Propriedades) + salvar o JSON.
+1. ✅ (2026-11-18) Mapa das zonas da folha + a casca do Livery Studio (`?livery=<equipe>`): carro girando, vistas, árvore de peças com olho.
+2. ✅ (2026-11-18) Camadas de cor e faixas + material (Propriedades) + salvar o JSON. As zonas ficaram em `f1-pintura.js` (`ZONAS`, em metros, por vista) e a folha sai de `folhaDeCamadas(pintura)`; os arquivos em `public/corrida/pinturas/<id>.json`.
 3. Patrocinadores: a gaveta de logos, clicar no carro para pôr, mover/escala/giro, espelhar.
 4. A pintura salva entra no jogo (`folhaDaEquipe`) e a pintura do jogador vai para a sala.
 5. Renderizar imagem (estúdio) e importar logo.

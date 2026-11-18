@@ -341,6 +341,9 @@ export function enxugar(raiz) {
 }
 export async function montarItem(it, tr = null) {
   const o = await montarItem0(it, tr);
+  // (2026-11-18, o Thiago: "devia ter como espelhar assets") `espelho`: "x" ou "z" vira o item como num espelho; vai nos filhos (a escala do
+  // item continua positiva: o editor lê a escala dele como um número só)
+  if (o && (it.espelho === "x" || it.espelho === "z")) { const e = it.espelho; for (const c of o.children) { c.position[e] *= -1; c.scale[e] *= -1; if (e === "x") { c.rotation.y *= -1; c.rotation.z *= -1; } else { c.rotation.x *= -1; c.rotation.y *= -1; } } }
   if (o && it.acab) aplicarAcabamento(o, it.acab); // (o acabamento escolhido no TabbaTracks: acabamentos.js)
   if (o && (it.tipo === "kit" || it.tipo === "linha" || (it.tipo === "area" && it.espalhar))) enxugar(o); // (as peças de código; o .glb do conversor já vem leve)
   return o;

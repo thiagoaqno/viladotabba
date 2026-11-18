@@ -1,3 +1,4 @@
-# Mais 7 logos reais
+# TabbaTracks: espelhar
 
-BOSS, OKX, Pepperstone, Revolut, Snapdragon, Stake e Valvoline, do Wikimedia Commons (o segundo download; os outros 46 ainda barrados pelo limite do Commons).
+- Itens: botões "Espelhar (lado)" e "Espelhar (frente)" nas Propriedades (campo `espelho` no item; o espelho vai nos filhos, a escala do item continua positiva).
+- Peças da pista: botão "Espelhar" (escala x negativa no ajuste), com Ctrl+Z.

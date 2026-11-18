@@ -5,13 +5,13 @@
 //   public/corrida/assets/     os .glb convertidos no editor (low poly, texturas menores): o que o jogo carrega
 //   public/corrida/cenario/    um <pista>.json por pista: o que foi colocado, onde, girado e em que escala
 const fs = require("fs"), path = require("path"), express = require("express");
-const RAIZ = __dirname, ORIG = path.join(RAIZ, "assets-originais"), TEXS = path.join(RAIZ, "assets-originais", "texturas"), LEVES = path.join(RAIZ, "public/corrida/assets"), CENARIO = path.join(RAIZ, "public/corrida/cenario");
+const RAIZ = __dirname, ORIG = path.join(RAIZ, "assets-originais"), TEXS = path.join(RAIZ, "assets-originais", "texturas"), LEVES = path.join(RAIZ, "public/corrida/assets"), CENARIO = path.join(RAIZ, "public/corrida/cenario"), PINTURAS = path.join(RAIZ, "public/corrida/pinturas");
 const nomeOk = (s) => typeof s === "string" && /^[a-z0-9][a-z0-9_-]{0,60}$/i.test(s);
 const local = (req) => ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket.remoteAddress);
 
 function attach(app) {
   if (process.env.CORRIDA_EDITOR !== "1") return;
-  for (const d of [ORIG, TEXS, LEVES, CENARIO]) fs.mkdirSync(d, { recursive: true });
+  for (const d of [ORIG, TEXS, LEVES, CENARIO, PINTURAS]) fs.mkdirSync(d, { recursive: true });
   app.use("/api/corrida/editor", (req, res, next) => (local(req) ? next() : res.status(403).json({ erro: "O editor só abre no próprio PC." })));
   app.get("/api/corrida/editor/eu", (req, res) => res.json({ login: "local", online: false })); // (no PC não há login)
   const lista = (dir) => fs.readdirSync(dir).filter((f) => /\.glb$/i.test(f)).map((f) => ({ nome: f.replace(/\.glb$/i, ""), kb: Math.round(fs.statSync(path.join(dir, f)).size / 1024) }));
@@ -41,6 +41,19 @@ function attach(app) {
     fs.writeFileSync(path.join(CENARIO, "index.json"), JSON.stringify(pistas) + "\n");
     res.json({ ok: true, itens: c.itens.length });
   });
+  // (2026-11-18) as pinturas do Livery Studio (livery/estudio.js): public/corrida/pinturas/<id>.json, com o index.json delas
+  app.post("/api/corrida/editor/livery/:id", express.json({ limit: "1mb" }), (req, res) => {
+    const p = req.body; if (!nomeOk(req.params.id) || !p || !Array.isArray(p.camadas)) return res.status(400).json({ erro: "pintura inválida" });
+    fs.writeFileSync(path.join(PINTURAS, req.params.id + ".json"), JSON.stringify(p, null, 1) + "\n");
+    const ids = fs.readdirSync(PINTURAS).filter((f) => f.endsWith(".json") && f !== "index.json").map((f) => f.slice(0, -5)).sort();
+    fs.writeFileSync(path.join(PINTURAS, "index.json"), JSON.stringify(ids) + "\n");
+    res.json({ ok: true, camadas: p.camadas.length });
+  });
+  // (passo 3) um logo importado no Livery Studio (PNG/JPEG/WEBP): public/corrida/pinturas/logo-<nome>.<ext>, solto na pasta para o Publicar levar junto
+  app.post("/api/corrida/editor/livery-logo/:arq", express.raw({ type: "*/*", limit: "8mb" }), (req, res) => {
+    const m = /^([a-z0-9_-]{1,50})\.(png|jpe?g|webp)$/i.exec(req.params.arq); if (!m || !req.body?.length) return res.status(400).json({ erro: "nome ou imagem inválida" });
+    const arq = `logo-${m[1].toLowerCase()}.${m[2].toLowerCase()}`; fs.writeFileSync(path.join(PINTURAS, arq), req.body); res.json({ ok: true, url: `/corrida/pinturas/${arq}` });
+  });
   // (2026-11-16, o Thiago: "quando ficar pronto local, vou precisar de você para o commit? precisamos de um jeito de fazer o commit pelo editor")
   // PUBLICAR: o cenário e os assets leves vão para o GitHub num PR, sem mexer na pasta em que se trabalha. Num worktree temporário, novo e
   // tirado da main do GitHub, entram só public/corrida/cenario/ e public/corrida/assets/ desta pasta; commit, push de um branch novo e o PR
@@ -54,8 +67,8 @@ function attach(app) {
     try {
       await roda("git", ["fetch", "-q", "origin", "main"]);
       await roda("git", ["worktree", "add", "-q", "-B", branch, tmp, "origin/main"]);
-      for (const rel of ["public/corrida/cenario", "public/corrida/assets"]) { const de = path.join(RAIZ, rel), para = path.join(tmp, rel); fs.mkdirSync(para, { recursive: true }); for (const f of fs.readdirSync(de)) if (fs.statSync(path.join(de, f)).isFile()) fs.copyFileSync(path.join(de, f), path.join(para, f)); }
-      await roda("git", ["add", "-A", "public/corrida/cenario", "public/corrida/assets"], tmp);
+      for (const rel of ["public/corrida/cenario", "public/corrida/assets", "public/corrida/pinturas"]) { const de = path.join(RAIZ, rel), para = path.join(tmp, rel); fs.mkdirSync(para, { recursive: true }); for (const f of fs.readdirSync(de)) if (fs.statSync(path.join(de, f)).isFile()) fs.copyFileSync(path.join(de, f), path.join(para, f)); }
+      await roda("git", ["add", "-A", "public/corrida/cenario", "public/corrida/assets", "public/corrida/pinturas"], tmp);
       const mudou = await roda("git", ["status", "--porcelain"], tmp);
       if (!mudou) return res.json({ ok: true, nada: true });
       await roda("git", ["commit", "-q", "-m", `Cenário pelo editor: ${texto}`], tmp);

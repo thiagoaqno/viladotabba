@@ -297,9 +297,21 @@ const nomeDaMarca = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || id;
 const opcoesDeMarca = (atual) => marcasDaPlaca().map((id) => `<option value="${id}" ${id === atual ? "selected" : ""}>${h(nomeDaMarca(id))}</option>`).join("");
 // ---------- a biblioteca (biblioteca.js): as peças prontas, com miniatura; clique numa e depois no chão ----------
 const fotosKit = {};
+// (TabbaTracks: desempenho) as miniaturas saem AOS POUCOS: a biblioteca abre na hora com um quadro vazio e cada foto é tirada num quadro
+// seguinte (antes, abrir a biblioteca montava e fotografava as dezenas de peças de uma vez e a tela travava)
+const VAZIO = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==", filaFotos = new Set();
 function fotoDoKit(id) {
   if (fotosKit[id]) return fotosKit[id];
-  const r = fotoDoKit.r || (fotoDoKit.r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })); r.setSize(96, 96); r.outputColorSpace = THREE.SRGBColorSpace;
+  filaFotos.add(id); if (filaFotos.size === 1) setTimeout(tirarFotos, 0); return VAZIO;
+}
+function tirarFotos() {
+  const t0 = performance.now();
+  for (const id of filaFotos) { filaFotos.delete(id); const src = fotoDoKit0(id); for (const im of document.querySelectorAll(`img[data-foto="${id}"]`)) im.src = src; if (performance.now() - t0 > 12) break; }
+  if (filaFotos.size) setTimeout(tirarFotos, 16);
+}
+function fotoDoKit0(id) {
+  if (fotosKit[id]) return fotosKit[id];
+  const r = fotoDoKit.r || (fotoDoKit.r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })); r.setSize(160, 160); r.outputColorSpace = THREE.SRGBColorSpace;
   const cena = new THREE.Scene(); cena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.4)); const d = new THREE.DirectionalLight(0xffffff, 2); d.position.set(3, 5, 4); cena.add(d);
   const o = montarKit(id); cena.add(o); const b = new THREE.Box3().setFromObject(o), c = b.getCenter(new THREE.Vector3()), t = b.getSize(new THREE.Vector3()).length() || 1;
   const cm = new THREE.PerspectiveCamera(35, 1, 0.1, 1e5); cm.position.set(c.x + t * 0.8, c.y + t * 0.5, c.z + t * 1.1); cm.lookAt(c);
@@ -311,7 +323,7 @@ function desenharBiblioteca() {
   const grupos = {};
   for (const [id, k] of Object.entries(KITS)) { const f = filtroDoKit(id); if (filtroBib !== "Todos" && f !== filtroBib) continue; if (buscaBib && !k.nome.toLowerCase().includes(buscaBib)) continue; (grupos[f] ||= []).push(id); }
   const chips = ["Todos", ...FILTROS].map((f) => `<button type="button" data-filtro="${h(f)}" class="${f === filtroBib ? "on" : ""}" style="padding:4px 8px;font-size:12px">${h(f)}</button>`).join("");
-  $("edBib").innerHTML = `<div class="lin">${chips}</div><div class="lin"><label>Escala ao pôr <input type="number" id="edBibEsc" step="0.1" min="0.05" value="${escalaPor}"></label><small>vale para as próximas peças</small></div><div class="lin"><input id="edBibBusca" placeholder="Procurar…" value="${h(buscaBib)}" style="flex:1"></div>` + (Object.keys(grupos).length ? "" : "<small>Nada neste filtro.</small>") + FILTROS.filter((f) => grupos[f]).map((f) => [f, grupos[f]]).map(([gr, ids]) => `<small>${h(gr)}</small><div class="edBibG">${ids.map((id) => `<button type="button" data-kit="${id}" class="${assetEscolhido === "*kit:" + id ? "on" : ""}" title="${h(KITS[id].nome)}"><img src="${fotoDoKit(id)}" alt=""><span>${h(KITS[id].nome)}</span></button>`).join("")}</div>`).join("")
+  $("edBib").innerHTML = `<div class="lin">${chips}</div><div class="lin"><label>Escala ao pôr <input type="number" id="edBibEsc" step="0.1" min="0.05" value="${escalaPor}"></label><small>vale para as próximas peças</small></div><div class="lin"><input id="edBibBusca" placeholder="Procurar…" value="${h(buscaBib)}" style="flex:1"></div>` + (Object.keys(grupos).length ? "" : "<small>Nada neste filtro.</small>") + FILTROS.filter((f) => grupos[f]).map((f) => [f, grupos[f]]).map(([gr, ids]) => `<small>${h(gr)}</small><div class="edBibG">${ids.map((id) => `<button type="button" data-kit="${id}" class="${assetEscolhido === "*kit:" + id ? "on" : ""}" title="${h(KITS[id].nome)}"><img src="${fotoDoKit(id)}" data-foto="${id}" alt=""><span>${h(KITS[id].nome)}</span></button>`).join("")}</div>`).join("")
     + `<small>${assetEscolhido?.startsWith("*kit:") ? "Clique no chão para pôr (pode pôr vários; Esc para)." : "Clique numa peça e depois no chão."}</small>`;
   $("edBibEsc").onchange = (e) => { escalaPor = Math.max(0.05, +e.target.value || 1); lembrar("geral", { escalaPor }); const k = assetEscolhido?.startsWith("*kit:") && assetEscolhido.slice(5); if (k) lembrar("kit:" + k, { s: escalaPor }); };
   for (const b of $("edBib").querySelectorAll("[data-kit]")) b.onclick = () => { const s0 = +lembrado("kit:" + b.dataset.kit).s; if (s0) escalaPor = s0; const k = "*kit:" + b.dataset.kit; assetEscolhido = assetEscolhido === k ? null : k; desenharBiblioteca(); desenharAssets(); desenharPlaca(); desenharTrecho(); };

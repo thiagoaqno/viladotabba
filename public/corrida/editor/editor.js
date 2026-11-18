@@ -220,7 +220,7 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i], lat = (hit.point.x - p.x) * p.nx + (hit.point.z - p.y) * p.ny;
     if (!beiraA) { beiraA = { i, lado: lat >= 0 ? 1 : -1 }; avisar("Barreira: agora clique onde ela termina (do mesmo lado)."); return desenharBeira(); }
     const a = beiraA; beiraA = null; let i0 = a.i, i1 = i; const fwd = (i1 - i0 + tr.n) % tr.n; if (fwd > tr.n / 2) [i0, i1] = [i1, i0];
-    const o5 = await colocar({ tipo: "linha", beira: { i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + beiraDist * M_PARA_U) }, modelo: beiraModelo, espaco: beiraEsp, altura: beiraModelo === "faixa" ? beiraFaixaAlt : beiraAlt, ...(beiraModelo === "faixa" ? { marca: placaMarca, marca2: beiraMarca2 || undefined, fundo: placaFundo, elev: beiraElev } : {}), mureta: (beiraModelo === "cerca" && beiraMureta) || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
+    const o5 = await colocar({ tipo: "linha", beira: { i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + beiraDist * M_PARA_U) }, modelo: beiraModelo, espaco: beiraEsp, altura: beiraModelo === "faixa" ? beiraFaixaAlt : beiraAlt, ...(beiraModelo === "faixa" ? { marca: placaMarca, marca2: beiraMarca2 || undefined, fundo: placaFundo, fundo2: beiraFundo2 || undefined, elev: beiraElev } : {}), mureta: (beiraModelo === "cerca" && beiraMureta) || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
     if (o5) { selecionar(o5); avisar("Barreira pronta. Clique em mais dois pontos para outra (Esc para)."); } return desenharBeira();
   }
   if (assetEscolhido === "*escape" || assetEscolhido === "*zebra") {
@@ -358,26 +358,38 @@ addEventListener("keydown", (e) => {
 // ---------- (2026-11-17, o Thiago: "escolher o que eu quero, o lado da pista e de onde até onde vai") barreira na BEIRA da pista ----------
 // o item (pneus, cerca, guard-rail, Tecpro, SAFER...), a distância da beira e o espaço; dois cliques na beira (começo e fim, do lado em que ela
 // fica) e a fileira segue a pista. Vira uma "linha" com { beira: { i0, i1, lado, de } } (cenario-pista.js).
+let beiraFundo2 = ""; // (a faixa: o fundo do painel alternado; vazio = o mesmo)
 let beiraMarca2 = "", beiraFaixaAlt = 1, beiraElev = 0.3; // (a faixa de patrocínio na beira: a segunda marca, a altura e a distância do chão)
 let beiraA = null, beiraModelo = "kit:guardrail", beiraDist = 4, beiraEsp = 10, beiraAlt = 3, beiraMureta = true;
 const espacoDoModelo = (m) => ({ "kit:guardrail": 10, "kit:guardrailTriplo": 8, "kit:mureta": 10, "kit:muretaAlambrado": 10, "kit:safer": 8, "kit:newJersey": 4, "kit:tecproModulo": 5, "kit:tecpro": 5, "kit:grade": 10, "kit:gradePlacas": 6, "kit:muroConcretoTela": 6, "kit:fardos": 2.6, "kit:pneus": 5.4, cerca: 3, pneus: 4, faixa: 6 })[m] || (m.startsWith("kit:pneus") ? 4 : null);
+// (2026-11-18, o Thiago: "nas cercas, conseguir ver uma prévia do que estou pegando") três módulos do item escolhido, com as marcas, os fundos e a
+// altura de agora, numa miniatura em cima do painel
+let previaVez = 0;
+async function previaBeira() {
+  const img = $("edBePrev"); if (!img) return; const vez = ++previaVez, esp = Math.max(0.5, beiraEsp);
+  const it = { tipo: "linha", pts: [[0, 0], null, [esp * 3 * M_PARA_U, 0]], modelo: beiraModelo, espaco: esp, altura: beiraModelo === "faixa" ? beiraFaixaAlt : beiraAlt, mureta: (beiraModelo === "cerca" && beiraMureta) || undefined, ...(beiraModelo === "faixa" ? { marca: placaMarca, marca2: beiraMarca2 || undefined, fundo: placaFundo, fundo2: beiraFundo2 || undefined, elev: beiraElev } : {}) };
+  const k = "beira:" + JSON.stringify(it); if (fotosDe[k]) { img.src = fotosDe[k]; return; }
+  const o = await montarItem(it, null); if (vez !== previaVez || !o) return; img.src = fotoDaPeca(k, o, 300, 120);
+}
 function desenharBeira() {
   const el = $("edBeira"); if (!el) return; const on = assetEscolhido === "*beira";
   const opt = (v, n) => `<option value="${v}" ${v === beiraModelo ? "selected" : ""}>${h(n)}</option>`;
   const contencao = Object.entries(KITS).filter(([id]) => filtroDoKit(id) === "Contenção"), outros = Object.entries(KITS).filter(([id]) => filtroDoKit(id) !== "Contenção");
-  el.innerHTML = `<div class="lin"><label style="flex:1">Item <select id="edBeM" style="flex:1">${opt("faixa", "Faixa de patrocínio (sem pés)")}${opt("pneus", "Pneus (módulo vermelho)")}${opt("cerca", "Cerca (alambrado)")}${opt("pilares", "Pilares")}
+  el.innerHTML = `<div class="lin" style="justify-content:center"><img id="edBePrev" alt="" style="width:100%;max-width:300px;height:120px;object-fit:contain;border-radius:8px;background:#1b2029"></div><div class="lin"><label style="flex:1">Item <select id="edBeM" style="flex:1">${opt("faixa", "Faixa de patrocínio (sem pés)")}${opt("pneus", "Pneus (módulo vermelho)")}${opt("cerca", "Cerca (alambrado)")}${opt("pilares", "Pilares")}
       <optgroup label="Contenção">${contencao.map(([id, k]) => opt("kit:" + id, k.nome)).join("")}</optgroup><optgroup label="Outras peças">${outros.map(([id, k]) => opt("kit:" + id, k.nome)).join("")}</optgroup></select></label></div>
     <div class="lin"><label>Da beira (m) <input type="number" id="edBeD" step="0.5" value="${beiraDist}"></label><label>Espaço (m) <input type="number" id="edBeE" step="0.5" value="${beiraEsp}"></label></div>
     ${beiraModelo === "faixa" ? `<div class="lin"><label>Marca <select id="edBeMa">${opcoesDeMarca(placaMarca)}</select></label><label>Alternar com <select id="edBeMa2"><option value="">nenhuma</option>${opcoesDeMarca(beiraMarca2)}</select></label></div>
-    <div class="lin"><label>Fundo <input type="color" id="edBeFu" value="${placaFundo}"></label><label>Altura (m) <input type="number" id="edBeFA" step="0.1" value="${beiraFaixaAlt}"></label><label>Do chão (m) <input type="number" id="edBeEl" step="0.1" value="${beiraElev}"></label></div>` : ""}
+    <div class="lin"><label>Fundo <input type="color" id="edBeFu" value="${placaFundo}"></label><label><input type="checkbox" id="edBeAlt" ${beiraFundo2 ? "checked" : ""}> alternar com</label><input type="color" id="edBeFu2" value="${beiraFundo2 || "#1e5bd6"}" ${beiraFundo2 ? "" : "disabled"}><label>Altura (m) <input type="number" id="edBeFA" step="0.1" value="${beiraFaixaAlt}"></label><label>Do chão (m) <input type="number" id="edBeEl" step="0.1" value="${beiraElev}"></label></div>` : ""}
     ${beiraModelo === "cerca" || beiraModelo === "pilares" ? `<div class="lin"><label>Altura (m) <input type="number" id="edBeA" step="0.5" value="${beiraAlt}"></label>${beiraModelo === "cerca" ? `<label><input type="checkbox" id="edBeMu" ${beiraMureta ? "checked" : ""}> Mureta embaixo</label>` : ""}</div>` : ""}
     <div class="lin"><button id="edBeBt" class="ferr ${on ? "on" : ""}">${on ? (beiraA ? "Clique onde TERMINA… (Esc sai)" : "Clique na beira onde COMEÇA…") : "▥ Pôr barreira na beira da pista"}</button></div>
     <small>1. escolha o item e a distância · 2. clique na beira da pista onde começa, do lado em que ela fica · 3. clique onde termina. A fileira segue a curva sozinha (pode dar a volta).</small>`;
   $("edBeM").onchange = (e) => { beiraModelo = e.target.value; const s = espacoDoModelo(beiraModelo); if (s) beiraEsp = s; desenharBeira(); };
   $("edBeD").onchange = (e) => { beiraDist = +e.target.value || 0; };
   if ($("edBeMa")) { $("edBeMa").onchange = (e) => { placaMarca = e.target.value; }; $("edBeMa2").onchange = (e) => { beiraMarca2 = e.target.value; }; $("edBeFu").onchange = (e) => { placaFundo = e.target.value; };
+    $("edBeAlt").onchange = (e) => { beiraFundo2 = e.target.checked ? $("edBeFu2").value : ""; $("edBeFu2").disabled = !e.target.checked; }; $("edBeFu2").onchange = (e) => { beiraFundo2 = e.target.value; };
     $("edBeFA").onchange = (e) => { beiraFaixaAlt = Math.max(0.2, +e.target.value || 1); }; $("edBeEl").onchange = (e) => { beiraElev = Math.max(0, +e.target.value || 0); }; }
   $("edBeE").onchange = (e) => { beiraEsp = Math.max(0.5, +e.target.value || 4); };
+  el.onchange = () => setTimeout(previaBeira); previaBeira(); // (a prévia do que vai ser posto: refeita a cada mudança)
   if ($("edBeA")) $("edBeA").onchange = (e) => { beiraAlt = Math.max(0.3, +e.target.value || 3); };
   if ($("edBeMu")) $("edBeMu").onchange = (e) => { beiraMureta = e.target.checked; };
   $("edBeBt").onclick = () => { beiraA = null; assetEscolhido = on ? null : "*beira"; desenharBeira(); desenharZebra(); desenharLinha(); desenharTrecho(); desenharBiblioteca(); };
@@ -436,12 +448,12 @@ function desenharTrecho() {
 // entra como qualquer asset; a segunda vez já usa o arquivo.
 let dePista = null, pecasDe = [];
 const fotosDe = {};
-function fotoDaPeca(k, o) {
+function fotoDaPeca(k, o, w = 96, hh = 96) {
   if (fotosDe[k]) return fotosDe[k];
-  const r = fotoDoKit.r || (fotoDoKit.r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })); r.setSize(96, 96); r.outputColorSpace = THREE.SRGBColorSpace;
+  const r = fotoDoKit.r || (fotoDoKit.r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })); r.setSize(w, hh); r.outputColorSpace = THREE.SRGBColorSpace;
   const cena = new THREE.Scene(); cena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.4)); const d = new THREE.DirectionalLight(0xffffff, 2); d.position.set(3, 5, 4); cena.add(d);
   const c0 = o.clone(true); c0.position.set(0, 0, 0); c0.updateMatrixWorld(true); cena.add(c0); const b = new THREE.Box3().setFromObject(c0), c = b.getCenter(new THREE.Vector3()), t = b.getSize(new THREE.Vector3()).length() || 1;
-  const cm = new THREE.PerspectiveCamera(35, 1, 0.1, 1e6); cm.position.set(c.x + t * 0.8, c.y + t * 0.5, c.z + t * 1.1); cm.lookAt(c);
+  const cm = new THREE.PerspectiveCamera(35, w / hh, 0.1, 1e6); cm.position.set(c.x + t * 0.8, c.y + t * 0.5, c.z + t * 1.1); if (w > hh) cm.position.set(c.x + t * 0.25, c.y + t * 0.18, c.z + t * 0.95); cm.lookAt(c);
   r.setClearColor(0x1b2029, 1); r.render(cena, cm); return (fotosDe[k] = r.domElement.toDataURL("image/png"));
 }
 function lerPecas(id) {

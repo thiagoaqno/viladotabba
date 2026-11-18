@@ -157,7 +157,8 @@ function pontosDaBeira(tr, b, passo) {
   return out;
 }
 // (2026-11-18, o Thiago: "colocar na barreira da pista placa de patrocinador, sem os pezinhos") a FAIXA de patrocínio em fileira: painéis colados um
-// no outro, `altura` m de altura a `elev` m do chão, com a marca no meio de cada um (alternando com `marca2`, se tiver), no fundo da cor escolhida.
+// no outro, `altura` m de altura a `elev` m do chão, com a marca no meio de cada um, no fundo da cor escolhida; um painel sim, outro não pode trocar
+// a marca (`marca2`) e o fundo (`fundo2`): a Pirelli de fundo verde e de fundo azul alternando.
 // O logo sai certo dos dois lados. { modelo: "faixa", marca, marca2, fundo, altura, elev }
 const texFaixaP = new Map();
 function texDaFaixa(marca, fundo, prop) {
@@ -169,8 +170,8 @@ function texDaFaixa(marca, fundo, prop) {
   const m = [new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 }), new THREE.MeshStandardMaterial({ map: t2, roughness: 0.6 })]; texFaixaP.set(k, m); return m;
 }
 function faixaPatrocinio(it, d, alt, i) {
-  const marca = it.marca2 && i % 2 ? it.marca2 : it.marca, elev = Math.max(0, +it.elev || 0) * UM, prop = Math.max(1, Math.min(16, Math.round((d / alt) * 2) / 2));
-  const [a, b] = texDaFaixa(marca, it.fundo, prop), lado = ML(0x1d1f22);
+  const alterna = i % 2 && (it.marca2 || it.fundo2), marca = alterna ? it.marca2 || it.marca : it.marca, fundo = alterna ? it.fundo2 || it.fundo : it.fundo, elev = Math.max(0, +it.elev || 0) * UM, prop = Math.max(1, Math.min(16, Math.round((d / alt) * 2) / 2));
+  const [a, b] = texDaFaixa(marca, fundo, prop) // (2026-11-18: o painel de número ímpar pode trocar a marca e o fundo: fundo2), lado = ML(0x1d1f22);
   // duas placas finas (uma de cada lado) e o miolo escuro: cada uma com um material só, para o enxugar juntar a fileira inteira
   const g = new THREE.Group(), y = elev + alt / 2;
   for (const [mat, sx] of [[a, 1], [b, -1]]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(d, alt), mat); p.rotation.y = sx * Math.PI / 2; p.position.set(sx * 0.031 * UM, y, 0); p.castShadow = true; p.receiveShadow = true; g.add(p); }

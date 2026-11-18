@@ -190,6 +190,12 @@ body.ttSemEsq #ed{transform:translateX(-100%)}body.ttSemDir #ttDir{transform:tra
     }
     marcarFaixa(); atualizarPrevia(true);
   }
+  // (2026-11-18, o Thiago: "apertei em pôr pórtico e depois em pôr asset, mas o menu da direita ficou só no pórtico") escolher uma peça no
+  // painel da esquerda troca a ferramenta da direita (o pórtico, a placa... saem) e mostra que é só clicar no chão
+  for (const d of Object.values(nav)) d.addEventListener("click", (e) => {
+    if (!e.target.closest("button,[data-kit],[data-leve],[data-de],.ficha")) return;
+    setTimeout(() => { ferrAtiva = d.dataset.nav === "bib" ? "bib" : "leves"; mostrarSecao(null, "Pôr peça"); $("ttFerrC").innerHTML = "<small>Peça escolhida na esquerda: clique no chão para pôr (Esc cancela). Depois de posta, as propriedades dela aparecem em Seleção.</small>"; marcarFaixa(); atualizarPrevia(true); });
+  });
   $("ttGrupos").onclick = (e) => { const b = e.target.closest("[data-f]"); if (b) usar(FERRAMENTAS.find((f) => f.id === b.dataset.f)); };
   // o que está ligado: a ferramenta que tem o botão "on", o modo do gizmo, a régua e o Craft (lido da barra antiga e das seções)
   function marcarFaixa() {

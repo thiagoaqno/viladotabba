@@ -64,7 +64,7 @@ export const KITS = {
     const braco = caixa(g, AMARELO, 7 * U, 0.2 * U, 0.2 * U, 1.8 * U, 3.4 * U, 0); braco.rotation.z = 0.25; caixa(g, ESCURO, 0.6 * U, 0.4 * U, 0.4 * U, 5 * U, 4.3 * U, 0); return g; } },
   banco: { nome: "Banco", grupo: "Público", montar() { const g = new THREE.Group(), madeira = M(0x8a5a35); caixa(g, madeira, 1.8 * U, 0.08 * U, 0.45 * U, 0, 0.45 * U, 0); caixa(g, madeira, 1.8 * U, 0.4 * U, 0.06 * U, 0, 0.7 * U, -0.2 * U); for (const x of [-0.8, 0.8]) caixa(g, ESCURO, 0.06 * U, 0.45 * U, 0.45 * U, x * U, 0.22 * U, 0); return g; } },
   totem: { nome: "Totem de patrocínio", grupo: "Público", montar() { const g = new THREE.Group(); caixa(g, AZUL, 1.2 * U, 4 * U, 0.4 * U, 0, 2 * U, 0); caixa(g, BRANCO, 1 * U, 1 * U, 0.42 * U, 0, 3.2 * U, 0); return g; } },
-  portico: { nome: "Pórtico (largada)", grupo: "Pista", montar() { const g = new THREE.Group(), w = 30 * U, h = 7 * U; for (const x of [-w / 2, w / 2]) caixa(g, CINZA, 0.8 * U, h, 0.8 * U, x, h / 2, 0); caixa(g, ESCURO, w, 1.4 * U, 0.6 * U, 0, h, 0); for (let i = 0; i < 5; i++) cil(g, VERMELHO, 0.25 * U, 0.1 * U, (i - 2) * 1.2 * U, h, 0.35 * U, 12).rotation.x = Math.PI / 2; return g; } },
+  portico: { nome: "Pórtico (largada)", grupo: "Pista", montar() { const g = new THREE.Group(), w = 30 * U, h = 7 * U; for (const x of [-w / 2, w / 2]) caixa(g, CINZA, 0.8 * U, h, 0.8 * U, x, h / 2, 0); caixa(g, ESCURO, w, 1.4 * U, 0.6 * U, 0, h, 0); return g; } }, // (o semáforo saiu daqui: o pórtico do editor tem a opção)
 };
 // (2026-11-16, a imagem do Thiago) o prédio de faixas: seis andares com as lajes brancas saltadas, as paredes ocre, a pele de vidro azul com
 // montantes na frente e no fundo, a cobertura chanfrada, a piscina de vidro e o terraço com os aparelhos de ar
@@ -352,8 +352,8 @@ function arquibancadaCadeiras({ largura = 40, raio = 0, angulo = 0, fileiras = 1
   g.userData.ponto = ponto; g.userData.yTopo = yTopo; return g;
 }
 const F = (filtro, k) => Object.assign(k, { filtro });
-KITS.arqCadeirasCurva = F("Arquibancadas", { nome: "Arquibancada curva de cadeiras", grupo: "Público", montar: () => arquibancadaCadeiras({ raio: 28, angulo: 75, fileiras: 12, base: 4 }) });
-KITS.arqCadeirasCurvaBaixa = F("Arquibancadas", { nome: "Arquibancada curva baixa", grupo: "Público", montar: () => arquibancadaCadeiras({ raio: 20, angulo: 60, fileiras: 6, base: 1.2, pilares: false }) });
+KITS.arqCadeirasCurva = F("Arquibancadas", { nome: "Arquibancada curva de cadeiras", grupo: "Público", angulo: 75, montar: (a = 75) => arquibancadaCadeiras({ raio: 28, angulo: a, fileiras: 12, base: 4 }) });
+KITS.arqCadeirasCurvaBaixa = F("Arquibancadas", { nome: "Arquibancada curva baixa", grupo: "Público", angulo: 60, montar: (a = 60) => arquibancadaCadeiras({ raio: 20, angulo: a, fileiras: 6, base: 1.2, pilares: false }) });
 KITS.arqCadeirasReta = F("Arquibancadas", { nome: "Arquibancada reta de cadeiras", grupo: "Público", montar: () => arquibancadaCadeiras({ largura: 40, fileiras: 12, base: 4 }) });
 KITS.arqCadeirasBaixa = F("Arquibancadas", { nome: "Arquibancada baixa de cadeiras", grupo: "Público", montar: () => arquibancadaCadeiras({ largura: 24, fileiras: 6, base: 1, pilares: false }) });
 // a arquibancada com toldo branco (as do fundo da imagem): cadeiras, pilares atrás e a lona curva por cima
@@ -879,13 +879,13 @@ function balaustrada(g, L, y, z, curvo = 0) {
 }
 KITS.muroPedraBalaustrada = F("Contenção", { nome: "Muro de pedra com balaustrada", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 3.2 * U; caixa(g, PEDRA_M(), L, h, 0.8 * U, 0, h / 2, 0); caixa(g, ARENITO, L + 0.2 * U, 0.25 * U, 1 * U, 0, h, 0);
   for (const x of [-L / 2, L / 2]) caixa(g, ARENITO, 0.8 * U, h + 1.4 * U, 1 * U, x, (h + 1.4 * U) / 2, 0); balaustrada(g, L - 0.8 * U, h, 0); return g; } });
-KITS.muroPedraCurvo = F("Contenção", { nome: "Muro de pedra curvo com balaustrada", grupo: "Cidade", montar() {
-  const g = new THREE.Group(), R = 6 * U, h = 3 * U, A = Math.PI * 0.8, w = malha(g, new THREE.CylinderGeometry(R, R, h, 20, 1, true, -A / 2 + Math.PI, A), PEDRA_M(), 0, h / 2, R); w.material.side = THREE.DoubleSide;
+KITS.muroPedraCurvo = F("Contenção", { nome: "Muro de pedra curvo com balaustrada", grupo: "Cidade", angulo: 144, montar(graus = 144) {
+  const g = new THREE.Group(), R = 6 * U, h = 3 * U, A = (Math.min(340, Math.max(10, graus)) * Math.PI) / 180, w = malha(g, new THREE.CylinderGeometry(R, R, h, 20, 1, true, -A / 2 + Math.PI, A), PEDRA_M(), 0, h / 2, R); w.material.side = THREE.DoubleSide;
   balaustrada(g, R * A, h, 0, A); for (const s of [-1, 1]) caixa(g, ARENITO, 0.8 * U, h + 1.4 * U, 0.8 * U, Math.sin((s * A) / 2) * R, (h + 1.4 * U) / 2, R - Math.cos((s * A) / 2) * R); return g; } });
 KITS.muroConcretoPilastras = F("Contenção", { nome: "Muro de concreto com pilastras", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 12 * U, h = 3.6 * U, C = M(0xc9c4b8, { roughness: 0.95 }); caixa(g, C, L, h, 0.6 * U, 0, h / 2, 0);
   for (let i = 0; i <= 3; i++) { const x = -L / 2 + (i * L) / 3; caixa(g, C, 0.9 * U, h + 0.4 * U, 0.9 * U, x, (h + 0.4 * U) / 2, 0); caixa(g, ARENITO, 1.1 * U, 0.25 * U, 1.1 * U, x, h + 0.5 * U, 0); } caixa(g, ARENITO, L, 0.2 * U, 0.75 * U, 0, h, 0); return g; } });
-KITS.muroCurvoEscada = F("Contenção", { nome: "Muro curvo com grade e escada", grupo: "Cidade", montar() {
-  const g = new THREE.Group(), R = 7 * U, h = 3.4 * U, A = Math.PI * 0.55, C = M(0xc9c4b8, { roughness: 0.95, side: THREE.DoubleSide }); malha(g, new THREE.CylinderGeometry(R, R, h, 16, 1, true, -A / 2 + Math.PI, A), C, 0, h / 2, R);
+KITS.muroCurvoEscada = F("Contenção", { nome: "Muro curvo com grade e escada", grupo: "Cidade", angulo: 99, montar(graus = 99) {
+  const g = new THREE.Group(), R = 7 * U, h = 3.4 * U, A = (Math.min(340, Math.max(10, graus)) * Math.PI) / 180, C = M(0xc9c4b8, { roughness: 0.95, side: THREE.DoubleSide }); malha(g, new THREE.CylinderGeometry(R, R, h, 16, 1, true, -A / 2 + Math.PI, A), C, 0, h / 2, R);
   for (let i = 0; i <= 14; i++) { const t = i / 14 - 0.5, x = Math.sin(t * A) * R, z = R - Math.cos(t * A) * R; cil(g, M(0x2c3a33, { metalness: 0.4 }), 0.04 * U, 1 * U, x, h + 0.5 * U, z, 4); }
   for (let k = 0; k < 10; k++) caixa(g, ARENITO, 1.6 * U, 0.34 * U, 0.6 * U, Math.sin(A / 2) * R + 1 * U, (k + 0.5) * 0.34 * U, R - Math.cos(A / 2) * R - k * 0.6 * U + 3 * U); return g; } });
 KITS.muroArrimo = F("Contenção", { nome: "Muro de arrimo de pedra", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 5 * U, s = new THREE.Shape([[0, 0], [1.6, 0], [0.6, 5], [0, 5]].map(([x, y]) => new THREE.Vector2(x * U, y * U)));
@@ -897,6 +897,34 @@ KITS.muroArrimoBalaustrada = F("Contenção", { nome: "Muro de arrimo com balaus
 KITS.muroPedraBaixoBalaustrada = F("Contenção", { nome: "Muro de pedra baixo com balaustrada", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 1.4 * U; caixa(g, PEDRA_M(), L, h, 0.7 * U, 0, h / 2, 0); caixa(g, ARENITO, L + 0.1 * U, 0.2 * U, 0.85 * U, 0, h, 0); balaustrada(g, L, h + 0.1 * U, 0); return g; } });
 // os penhascos com muro em cima (o terraço da imagem)
 KITS.penhascoTerraco = F("Geral", { nome: "Penhasco com terraço e muro", grupo: "Relevo", montar() { const g = penhasco(30, 12, 22, 41, 6), m = KITS.muroPedraBalaustrada.montar(); m.scale.set(2.2, 1.4, 1); m.position.set(-2 * U, 11.5 * U, 6 * U); g.add(m); return g; } });
+// (2026-11-18, o Thiago: "precisamos de uma ponte/pontilhão") as PONTES por cima da pista (vão de 30 a 40 m; a pista tem ~25 m): o pontilhão
+// de pedra em arco com balaustrada, o viaduto de concreto em pilares, a passarela de pedestres de treliça e a ponte de ferro em arco
+function vaoDeArco(L, h, flecha, prof) {
+  const s = new THREE.Shape([[-L / 2 - 4 * U, 0], [L / 2 + 4 * U, 0], [L / 2 + 4 * U, h], [-L / 2 - 4 * U, h]].map(([x, y]) => new THREE.Vector2(x, y))), b = new THREE.Path();
+  const topo = h - 1.6 * U, base = topo - flecha, r = (L * L / 4 + flecha * flecha) / (2 * flecha), yc = topo - r, a0 = Math.asin(L / 2 / r);
+  b.moveTo(-L / 2, 0); b.lineTo(-L / 2, base); b.absarc(0, yc, r, Math.PI / 2 + a0, Math.PI / 2 - a0, true); b.lineTo(L / 2, 0); b.lineTo(-L / 2, 0); s.holes.push(b);
+  const geo = new THREE.ExtrudeGeometry(s, { depth: prof, bevelEnabled: false, curveSegments: 24 }); geo.translate(0, 0, -prof / 2); return geo;
+}
+KITS.pontilhaoPedra = F("Geral", { nome: "Pontilhão de pedra em arco", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), L = 30 * U, h = 12 * U, P = 7 * U; malha(g, vaoDeArco(L, h, 4 * U, P), PEDRA_M());
+  caixa(g, ARENITO, L + 8.4 * U, 0.4 * U, P + 0.4 * U, 0, h + 0.2 * U, 0); for (const z of [-P / 2 + 0.3 * U, P / 2 - 0.3 * U]) balaustrada(g, L + 8 * U, h + 0.4 * U, z);
+  for (const x of [-L / 2, L / 2]) caixa(g, ARENITO, 1.2 * U, h, P + 0.6 * U, x + Math.sign(x) * 0.6 * U, h / 2, 0); return g; } });
+KITS.viadutoConcreto = F("Geral", { nome: "Viaduto de concreto", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), L = 40 * U, h = 9 * U, P = 10 * U, C = M(0xbfbcb5, { roughness: 0.95 }); caixa(g, C, L, 1.6 * U, P, 0, h + 0.8 * U, 0); caixa(g, M(0x3b3c3e, { roughness: 0.95 }), L, 0.1 * U, P - 1 * U, 0, h + 1.65 * U, 0);
+  for (const x of [-L / 2 + 2 * U, L / 2 - 2 * U]) for (const z of [-P / 3, P / 3]) cil(g, C, 0.7 * U, h, x, h / 2, z, 12);
+  for (const z of [-P / 2 + 0.2 * U, P / 2 - 0.2 * U]) { caixa(g, C, L, 1 * U, 0.3 * U, 0, h + 2.1 * U, z); caixa(g, GRADIL, L, 0.06 * U, 0.06 * U, 0, h + 3 * U, z); } return g; } });
+KITS.passarela = F("Geral", { nome: "Passarela de pedestres", grupo: "Público", montar() {
+  const g = new THREE.Group(), L = 32 * U, h = 7 * U, P = 3 * U, B = M(0xf2f2f0, { metalness: 0.3, roughness: 0.5 }); caixa(g, B, L, 0.4 * U, P, 0, h, 0);
+  for (const z of [-P / 2, P / 2]) { for (const y of [h + 0.2 * U, h + 2.6 * U]) caixa(g, B, L, 0.25 * U, 0.25 * U, 0, y, z); for (let i = 0; i <= 16; i++) { const d = caixa(g, B, 0.15 * U, 2.6 * U, 0.15 * U, -L / 2 + (i * L) / 16, h + 1.4 * U, z); if (i % 2) d.rotation.z = 0.5; } }
+  caixa(g, VIDRO, L, 2.4 * U, P, 0, h + 1.5 * U, 0); caixa(g, B, L, 0.2 * U, P + 0.3 * U, 0, h + 2.8 * U, 0);
+  for (const x of [-L / 2, L / 2]) { caixa(g, B, 3 * U, h, 3 * U, x + Math.sign(x) * 1.5 * U, h / 2, 0); caixa(g, VIDRO, 3.1 * U, h * 0.8, 3.1 * U, x + Math.sign(x) * 1.5 * U, h * 0.5, 0); } return g; } });
+KITS.ponteFerro = F("Geral", { nome: "Ponte de ferro em arco", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), L = 36 * U, h = 8 * U, P = 8 * U, FE = M(0x3d5a4c, { metalness: 0.6, roughness: 0.45 }), C = M(0xbfbcb5, { roughness: 0.95 }); caixa(g, C, L, 1 * U, P, 0, h, 0);
+  for (const x of [-L / 2, L / 2]) caixa(g, C, 3 * U, h + 0.5 * U, P + 1 * U, x, (h + 0.5 * U) / 2, 0);
+  for (const z of [-P / 2, P / 2]) { const n = 20; let ant = null; for (let i = 0; i <= n; i++) { const t = i / n, x = -L / 2 + t * L, y = h + 0.5 * U + Math.sin(t * Math.PI) * 7 * U;
+    if (ant) { const d = Math.hypot(x - ant[0], y - ant[1]), b = caixa(g, FE, d + 0.1 * U, 0.6 * U, 0.6 * U, (x + ant[0]) / 2, (y + ant[1]) / 2, z); b.rotation.z = Math.atan2(y - ant[1], x - ant[0]); }
+    if (i && i < n) caixa(g, FE, 0.15 * U, y - h - 0.5 * U, 0.15 * U, x, (y + h + 0.5 * U) / 2, z); ant = [x, y]; } }
+  return g; } });
 // os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.
 export const FILTROS = ["Arquibancadas", "Automóveis", "Contenção", "Paddock", "Vegetação", "Geral"];
 const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibancadas", pneus: "Contenção", tecpro: "Contenção", grade: "Contenção", guardrail: "Contenção", cone: "Contenção",
@@ -907,8 +935,10 @@ export function filtroDoKit(id) { const k = KITS[id]; return k?.filtro || PELO_I
 // que dividem a geometria e o material: uma fileira de 300 módulos de guard-rail montava 300 vezes tudo. Ninguém mexe na geometria no lugar (o
 // enxugar e o fundir.js fazem cópias) e quem tinge clona o material antes. As peças não têm sorteio: a cópia é igual a uma montagem nova.
 const moldes = new Map();
-export function montarKit(id) {
+// (2026-11-18, o Thiago: "nas peças curvas, poder escolher o ângulo, mais aberto ou fechado") a peça com `angulo` (graus) aceita outro ângulo
+export function montarKit(id, angulo) {
   const k = KITS[id]; if (!k) return null;
-  let m = moldes.get(id); if (!m) { m = k.montar(); m.name = "kit-" + id; moldes.set(id, m); }
+  const a = k.angulo && angulo != null && +angulo !== k.angulo ? +angulo : null, chave = a == null ? id : id + "@" + a;
+  let m = moldes.get(chave); if (!m) { m = a == null ? k.montar() : k.montar(a); m.name = "kit-" + id; moldes.set(chave, m); }
   return m.clone(true);
 }

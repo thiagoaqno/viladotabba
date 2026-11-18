@@ -36,8 +36,13 @@ function montarPortico(it) {
   const g = new THREE.Group(), estr = new THREE.MeshStandardMaterial({ color: 0xd8dadd, roughness: 0.5, metalness: 0.4 }), faixa = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 });
   for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(4, alto + hv, 4), estr); p.position.set(s * (w / 2 + 2), (alto + hv) / 2, 0); p.castShadow = true; g.add(p); }
   const viga = new THREE.Mesh(new THREE.BoxGeometry(w + 8, hv, 3), [estr, estr, estr, estr, faixa, faixa]); viga.position.y = alto + hv / 2; viga.castShadow = true; g.add(viga);
-  const luz = new THREE.MeshStandardMaterial({ color: 0x330000, emissive: 0xff1a1a, emissiveIntensity: 0.4 });
-  for (let k = 0; k < 5; k++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.6, 12), luz); l.rotation.x = Math.PI / 2; l.position.set((k - 2) * 5, alto - 2, 1.8); g.add(l); }
+  // (2026-11-18, o Thiago: "o pórtico já vem com semáforo, no lugar errado; deve ser possível escolher com ou sem") só com `semaforo`: a caixa
+  // preta pendurada no meio da viga, embaixo dela, com as 5 luzes nas duas faces
+  if (it.semaforo) {
+    const cx = new THREE.Mesh(new THREE.BoxGeometry(30, 7, 2.4), new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: 0.6 })); cx.position.set(0, alto - 3.6, 0); cx.castShadow = true; g.add(cx);
+    const luz = new THREE.MeshStandardMaterial({ color: 0x330000, emissive: 0xff1a1a, emissiveIntensity: 0.4 });
+    for (const lado of [-1, 1]) for (let k = 0; k < 5; k++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.4, 14), luz); l.rotation.x = Math.PI / 2; l.position.set((k - 2) * 5.6, alto - 3.6, lado * 1.3); g.add(l); }
+  }
   return g;
 }
 function montarPlaca(it) {
@@ -205,6 +210,16 @@ function montarLinha(it, tr) {
     }
     return g;
   }
+  // (2026-11-18, o Thiago: "construir paredes definindo a altura e largura, com opção de acompanharem a pista") a PAREDE: um bloco de cada
+  // ponto ao próximo, `altura` m de alto e `larg` m de espessura (com o acabamento escolhido no item, acabamentos.js)
+  if (modelo === "parede") {
+    const larg = Math.max(0.1, +it.larg || 0.5) * UM, mat = ML(it.cor || "#c9c4b8", { roughness: 0.9 });
+    for (let i = 0; i + 1 < lista.length; i++) {
+      const p = lista[i], q = lista[i + 1], d = Math.hypot(q.x - p.x, q.z - p.z); if (d < 0.05 * UM) continue;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(larg, alt, d + larg * 0.6), mat); m.position.set((p.x + q.x) / 2, ((p.y || 0) + (q.y || 0)) / 2 + alt / 2, (p.z + q.z) / 2); m.rotation.y = Math.atan2(q.x - p.x, q.z - p.z); m.castShadow = m.receiveShadow = true; m.name = "parede"; g.add(m);
+    }
+    return g;
+  }
   // (2026-11-17, o Thiago: "um entra dentro do outro") as barreiras (pneus e as peças de Contenção) vão EMENDADAS: cada módulo vai de um ponto ao
   // próximo, no meio deles, virado pela corda e esticado ao comprimento dela. Na curva elas não se cruzam mais nem deixam vão.
   const emenda = modelo === "faixa" || modelo === "faixaTela" || modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
@@ -357,7 +372,7 @@ async function montarItem0(it, tr) {
   // (2026-11-16, o Thiago: "deve ser possível agrupar e desagrupar itens") um GRUPO: os itens dentro dele com posição relativa a ele
   if (it.tipo === "grupo") { const g = new THREE.Group(); for (const o of await Promise.all((it.itens || []).map((x) => montarItem(x, tr)))) if (o) g.add(o); g.position.set(+it.x || 0, +it.y || 0, +it.z || 0); g.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); g.scale.setScalar(+it.s || 1); g.userData.item = it; g.name = "grupo"; return g; }
   // uma peça pronta da biblioteca (biblioteca.js), com a cor do item tingindo os materiais dela
-  if (it.tipo === "kit") { const o = montarKit(it.kit); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); if (it.cor) o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color?.multiply(new THREE.Color(it.cor)); } }); o.userData.item = it; return o; }
+  if (it.tipo === "kit") { const o = montarKit(it.kit, it.angulo); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); if (it.cor) o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color?.multiply(new THREE.Color(it.cor)); } }); o.userData.item = it; return o; }
   if (it.tipo === "portico") { const o = montarPortico(it); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = `portico-${it.marca || ""}`; return o; }
   if (it.tipo === "placa") { const o = montarPlaca(it); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = `placa-${it.marca || ""}`; return o; }
   const base = await modeloDoAsset(it.asset); if (!base) return null;

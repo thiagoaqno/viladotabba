@@ -338,7 +338,7 @@ export function enxugar(raiz) {
     if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || o.morphTargetInfluences) return;
     const k = chaveMat(o.material); let b = baldes.get(k); if (!b) baldes.set(k, (b = { mat: o.material, geos: [], sombra: o.castShadow }));
     let g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
-    for (const nome of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(nome)) g.deleteAttribute(nome);
+    for (const nome of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(nome) && !(nome === "color" && o.material.vertexColors)) g.deleteAttribute(nome); // (a cor por vértice fica quando o material usa: sem ela, a rocha dos penhascos saía preta)
     if (!g.attributes.normal) g.computeVertexNormals();
     if (!g.attributes.uv) g.setAttribute("uv", new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
     g.clearGroups(); _mm.multiplyMatrices(_inv, o.matrixWorld); g.applyMatrix4(_mm);

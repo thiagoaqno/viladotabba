@@ -241,7 +241,7 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     const o3 = await colocar({ tipo: "portico", marca: placaMarca, fundo: placaFundo, w: Math.round(tr.W + 20), alto: 32, x: p.x, y: p.h, z: p.y, rx: 0, ry: Math.atan2(p.tx, p.ty), rz: 0, s: 1 });
     if (o3) { guardarItem(o3); selecionar(o3); } return;
   }
-  const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: escalaPor, cor: lembrado("kit:" + assetEscolhido.slice(5)).cor || undefined } : assetEscolhido === "*marcaChao" ? { tipo: "marcaChao", marca: placaMarca, fundo: placaSemFundo ? "" : placaFundo, w: Math.round(Math.max(40, Math.min(600, cam.position.distanceTo(hit.point) * 0.25)) / 5) * 5, prop: 0.3, ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
+  const o = await colocar(assetEscolhido?.startsWith("*kit:") ? { tipo: "kit", kit: assetEscolhido.slice(5), ...base, s: escalaPor, cor: lembrado("kit:" + assetEscolhido.slice(5)).cor || undefined } : assetEscolhido === "*marcaChao" ? { tipo: "marcaChao", grampo: "pista", marca: placaMarca, fundo: placaSemFundo ? "" : placaFundo, w: Math.round(Math.max(40, Math.min(600, cam.position.distanceTo(hit.point) * 0.25)) / 5) * 5, prop: 0.3, ...base, s: 1 } : assetEscolhido === "*placa" ? { tipo: "placa", marca: placaMarca, fundo: placaFundo, w: Math.round(Math.max(60, Math.min(400, cam.position.distanceTo(hit.point) * 0.12)) / 5) * 5, ...base, s: 1 } : { asset: assetEscolhido, ...base, s: M_PARA_U });
   if (o) { noChao(o); guardarItem(o); selecionar(o);
   }
 });
@@ -334,7 +334,7 @@ function desenharBiblioteca() {
 }
 // ---------- a área (cenario-pista.js, tipo "area"): clique nos cantos do polígono; fecha clicando no primeiro, com Enter ou no botão ----------
 let areaCor = "#3fa52c", areaComCor = false; // (a cor da área: tinge o material; na "cor lisa", é a cor dela)
-let areaPts = [], areaMaterial = "grama", areaEspalhar = "", areaEsp = 8;
+let areaPts = [], areaMaterial = "grama", areaEspalhar = "", areaEsp = 8, areaMistura = ["", ""];
 const marcasArea = new THREE.Group(); scene.add(marcasArea);
 function marcarArea() {
   marcasArea.clear(); if (!areaPts.length) return;
@@ -344,7 +344,7 @@ function marcarArea() {
 async function fecharArea() {
   if (areaPts.length < 3) return avisar("A área precisa de pelo menos 3 cantos.", true);
   const A = areaPts[0], pts = areaPts.map((p) => [+(p.x - A.x).toFixed(2), +(p.z - A.z).toFixed(2)]);
-  const o = await colocar({ tipo: "area", pts, material: areaMaterial, cor: (areaComCor || areaMaterial === "cor") ? areaCor : undefined, espalhar: areaEspalhar || undefined, espaco: areaEspalhar ? areaEsp : undefined, escalaEsp: areaEspalhar && escalaPor !== 1 ? escalaPor : undefined, x: A.x, y: Math.min(...areaPts.map((p) => p.y)), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
+  const o = await colocar({ tipo: "area", pts, material: areaMaterial, cor: (areaComCor || areaMaterial === "cor") ? areaCor : undefined, espalhar: areaEspalhar || undefined, mistura: areaEspalhar && areaMistura.some(Boolean) ? areaMistura.filter(Boolean) : undefined, espaco: areaEspalhar ? areaEsp : undefined, escalaEsp: areaEspalhar && escalaPor !== 1 ? escalaPor : undefined, x: A.x, y: Math.min(...areaPts.map((p) => p.y)), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
   areaPts = []; marcarArea(); if (o) { guardarItem(o); avisar("Área pronta. Clique para começar outra (Esc para)."); } desenharArea();
 }
 function desenharArea() {
@@ -355,6 +355,7 @@ function desenharArea() {
     <div class="lin"><label>Cor <input type="color" id="edArCor" value="${areaCor}"></label>${areaMaterial === "cor" ? "" : `<label><input type="checkbox" id="edArComCor" ${areaComCor ? "checked" : ""}> tingir a textura</label>`}</div>
     <div class="lin"><label>Preencher <select id="edArMat">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === areaMaterial ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div>
     <div class="lin"><label>Espalhar <select id="edArKit"><option value="">Nada</option>${kits}</select></label></div>
+    ${areaEspalhar ? [0, 1].map((i) => `<div class="lin"><label>+ Espécie ${i + 2} <select data-mist="${i}"><option value="">Nenhuma</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${areaMistura[i] === id ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label></div>`).join("") : ""}
     ${areaEspalhar ? `<div class="lin"><label>Um a cada (m) <input type="number" id="edArEsp" step="1" value="${areaEsp}"></label></div>` : ""}
     <small>Clique nos cantos da área no chão. Ela segue o relevo. Escolha o que cobre o chão e, se quiser, uma peça para espalhar dentro (árvores, arbustos, pedras…).</small>`;
   $("edArBt").onclick = () => { areaPts = []; marcarArea(); assetEscolhido = on ? null : "*area"; desenharArea(); desenharTrecho(); desenharLinha(); desenharZebra(); desenharBiblioteca(); };
@@ -364,6 +365,7 @@ function desenharArea() {
   $("edArCor").oninput = (e) => { areaCor = e.target.value; if (areaMaterial !== "cor" && !areaComCor) { areaComCor = true; if ($("edArComCor")) $("edArComCor").checked = true; } };
   if ($("edArComCor")) $("edArComCor").onchange = (e) => { areaComCor = e.target.checked; };
   $("edArKit").onchange = (e) => { areaEspalhar = e.target.value; desenharArea(); };
+  for (const s of el.querySelectorAll("[data-mist]")) s.onchange = () => { areaMistura[+s.dataset.mist] = s.value; };
   if ($("edArEsp")) $("edArEsp").onchange = (e) => { areaEsp = Math.max(1, +e.target.value || 8); };
 }
 addEventListener("keydown", (e) => {
@@ -551,7 +553,8 @@ function desenharItem(soNumeros = false) {
   if (soNumeros && el.querySelector("[data-c]")) { for (const [k, v] of [["x", o.position.x], ["y", o.position.y], ["z", o.position.z], ["giro", deg(o.rotation.y)], ["escala", o.scale.x]]) { const i = el.querySelector(`[data-c="${k}"]`); if (i && document.activeElement !== i) i.value = (+v).toFixed(k === "escala" ? 2 : 0); } return; }
   const placa = it.tipo === "placa" || it.tipo === "marcaChao";
   el.innerHTML = `<div class="lin"><b>${h(placa ? (it.tipo === "marcaChao" ? "Marca no chão · " : "Placa · ") + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "linha" ? "Linha de " + (it.modelo || "").replace("kit:", "") : it.tipo === "area" ? "Área · " + (MATERIAIS_AREA[it.material] || "") : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
-    ${it.tipo === "area" ? `<div class="lin"><label>Preencher <select data-pl="material">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === it.material ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div><div class="lin"><label>Espalhar <select data-pl="espalhar"><option value="">Nada</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${id === it.espalhar ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label><label>A cada (m) <input type="number" step="1" data-pl="espaco" value="${it.espaco || 8}"></label></div>` : ""}
+    ${it.tipo === "area" ? `<div class="lin"><label>Preencher <select data-pl="material">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === it.material ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div><div class="lin"><label>Espalhar <select data-pl="espalhar"><option value="">Nada</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${id === it.espalhar ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label><label>A cada (m) <input type="number" step="1" data-pl="espaco" value="${it.espaco || 8}"></label></div>${it.espalhar ? [0, 1].map((i) => `<div class="lin"><label>+ Espécie ${i + 2} <select data-mist="${i}"><option value="">Nenhuma</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${(it.mistura || [])[i] === id ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label></div>`).join("") : ""}` : ""}
+    ${it.tipo === "marcaChao" ? `<div class="lin"><label>Grudar em <select data-pl="grampo"><option value="pista" ${it.grampo === "pista" ? "selected" : ""}>Pista (asfalto, zebra, calçada)</option><option value="solo" ${(it.grampo || "solo") === "solo" ? "selected" : ""}>Solo (relevo)</option><option value="livre" ${it.grampo === "livre" ? "selected" : ""}>Livre (usa o Y)</option></select></label><label>Acima (m) <input type="number" step="0.05" data-alt value="${it.alt || 0}"></label></div>` : ""}
     ${it.tipo === "linha" && /^faixa/.test(it.modelo || "") ? `<div class="lin"><label>Marca <select data-pl="marca">${opcoesDeMarca(it.marca)}</select></label><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>` : ""}
     ${it.tipo === "linha" ? `<div class="lin"><label>Espaço (m) <input type="number" step="0.5" data-pl="espaco" value="${it.espaco || 4}"></label><label>Altura (m) <input type="number" step="0.5" data-pl="altura" value="${it.altura || 3}"></label></div>` : ""}
     ${it.tipo === "trecho" ? `<div class="lin"><label>Largura <input type="number" step="5" data-pl="largura" value="${it.largura || 60}"></label><button data-trz>${it.zebra ? "Tirar zebras" : "Pôr zebras"}</button></div>` : ""}
@@ -568,6 +571,8 @@ function desenharItem(soNumeros = false) {
     guardarItem(o);
   };
   for (const c of el.querySelectorAll("[data-pl]")) c.onchange = () => { const v = c.dataset.pl === "prop" ? Math.max(0.05, +c.value || 0.3) : c.type === "number" ? Math.max(1, +c.value || 1) : c.value; refazerItem(o, { [c.dataset.pl]: v }); };
+  for (const s of el.querySelectorAll("[data-mist]")) s.onchange = () => { const m = [...(it.mistura || ["", ""])]; m[+s.dataset.mist] = s.value; refazerItem(o, { mistura: m.filter(Boolean).length ? m.filter(Boolean) : undefined }); };
+  if (el.querySelector("[data-alt]")) el.querySelector("[data-alt]").onchange = (e) => refazerItem(o, { alt: +e.target.value || undefined });
   if (el.querySelector("[data-semfundo]")) el.querySelector("[data-semfundo]").onclick = () => refazerItem(o, { fundo: it.fundo ? "" : "#101114" });
   if (el.querySelector("[data-trz]")) el.querySelector("[data-trz]").onclick = () => refazerItem(o, { zebra: !it.zebra || undefined });
   el.querySelector("[data-cor]").onchange = (e) => { if (it.tipo === "kit") lembrar("kit:" + it.kit, { cor: e.target.value }); trocarCor(o, e.target.value); };

@@ -274,27 +274,39 @@ function montarArea(it, tr) {
     m.receiveShadow = true; m.name = "area-chao"; g.add(m);
   }
   // o que espalhar: a peça a cada `espaco` m (com um tremor e um giro sorteados, sempre os mesmos para a mesma área)
-  const kit = it.espalhar && KITS[it.espalhar] ? it.espalhar : null;
+  // (2026-11-18, o Thiago: "vegetação variada entre 3 espécies num espaço") `mistura` = até mais 2 peças, sorteadas ponto a ponto com a primeira
+  const kits = [it.espalhar, ...(Array.isArray(it.mistura) ? it.mistura : [])].filter((k) => k && KITS[k]).slice(0, 3), kit = kits[0];
   if (kit) {
-    const esp = Math.max(1, +it.espaco || 8) * 4.8, modelo = montarKit(kit); let s = 1234567 + pts.length * 7919 + Math.round(pts[1][0] * 13);
+    const esp = Math.max(1, +it.espaco || 8) * 4.8, modelos = kits.map((k) => montarKit(k)); let s = 1234567 + pts.length * 7919 + Math.round(pts[1][0] * 13);
     const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
     const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]); let n = 0;
     for (let x = Math.min(...xs); x <= Math.max(...xs); x += esp) for (let z = Math.min(...zs); z <= Math.max(...zs); z += esp) {
       const px = x + (rnd() - 0.5) * esp * 0.8, pz = z + (rnd() - 0.5) * esp * 0.8; if (!dentroDoPoligono(px, pz, pts) || n++ > 1500) continue;
-      const o = modelo.clone(); o.position.set(px, yEm(px, pz), pz); o.rotation.y = rnd() * Math.PI * 2; o.scale.setScalar((0.85 + rnd() * 0.3) * (+it.escalaEsp || 1)) /* (a escala escolhida antes de pôr) */; g.add(o);
+      const o = modelos[Math.min(modelos.length - 1, Math.floor(rnd() * modelos.length))].clone(); o.position.set(px, yEm(px, pz), pz); o.rotation.y = rnd() * Math.PI * 2; o.scale.setScalar((0.85 + rnd() * 0.3) * (+it.escalaEsp || 1)) /* (a escala escolhida antes de pôr) */; g.add(o);
     }
   }
   return g;
 }
 // (2026-11-17, o Thiago: "deve ser possível colocar marcas no chão") a MARCA NO CHÃO: o logo pintado na grama ou no asfalto, `w` de largura e
 // `prop` de altura/largura, com ou sem o fundo da cor escolhida, acompanhando o relevo. { tipo: "marcaChao", marca, fundo ("" sem fundo), w, prop }
+// a altura da superfície mais alta da pista em (x, z): um raio de cima para baixo nas malhas da pista (sem os itens do editor nem a água)
+const _raioSup = new THREE.Raycaster(), _baixo = new THREE.Vector3(0, -1, 0);
+function superficieDe(tr) {
+  return (x, z) => { _raioSup.set(new THREE.Vector3(x, 5000, z), _baixo); for (const h of _raioSup.intersectObject(tr.grp, true)) { if (!h.object.visible || h.object.userData.item || /agua|ceu|sky/i.test(h.object.name)) continue; let p = h.object, item = false; while (p) { if (p.userData?.item) { item = true; break; } p = p.parent; } if (!item) return h.point.y; } return alturaDoChao(tr)?.(x, z) ?? null; };
+}
 function montarMarcaChao(it, tr) {
   const w = Math.max(4, +it.w || 120), prop = Math.min(2, Math.max(0.1, +it.prop || 0.3)), hgt = w * prop, c = document.createElement("canvas"); c.width = 1024; c.height = Math.max(64, Math.round(1024 * prop));
   const x = c.getContext("2d"); if (it.fundo) { x.fillStyle = it.fundo; x.fillRect(0, 0, c.width, c.height); } if (it.marca) patrocinioEm(x, it.marca, c.width / 2, c.height / 2, c.width * 0.92, c.height * 0.85);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   const geo = new THREE.PlaneGeometry(w, hgt, Math.max(2, Math.ceil(w / 10)), Math.max(2, Math.ceil(hgt / 10))); geo.rotateX(-Math.PI / 2);
-  const chao = tr ? alturaDoChao(tr) : null, ox = +it.x || 0, oy = +it.y || 0, oz = +it.z || 0, cs = Math.cos(+it.ry || 0), sn = Math.sin(+it.ry || 0), p = geo.attributes.position;
-  if (chao) for (let k = 0; k < p.count; k++) { const lx = p.getX(k), lz = p.getZ(k), hh = chao(ox + lx * cs + lz * sn, oz - lx * sn + lz * cs); p.setY(k, (hh == null ? oy : hh) - oy + 0.5); } else for (let k = 0; k < p.count; k++) p.setY(k, 0.5);
+  // (2026-11-18, o Thiago: "as coisas voltam pro chão automaticamente... grampear na pista e não só no solo") `grampo`: "pista" (o padrão
+  // novo: gruda na superfície mais alta embaixo, asfalto, zebra ou calçada), "solo" (o relevo, o jeito antigo) ou "livre" (plana na altura y).
+  // `alt` = quantos metros acima da superfície.
+  const grampo = it.grampo || "solo", alt = (+it.alt || 0) * 4.8;
+  const ox = +it.x || 0, oy = +it.y || 0, oz = +it.z || 0, cs = Math.cos(+it.ry || 0), sn = Math.sin(+it.ry || 0), p = geo.attributes.position;
+  const chao = !tr || grampo === "livre" ? null : grampo === "pista" ? superficieDe(tr) : alturaDoChao(tr);
+  if (grampo === "livre") for (let k = 0; k < p.count; k++) p.setY(k, 0.5 + alt);
+  else if (chao) for (let k = 0; k < p.count; k++) { const lx = p.getX(k), lz = p.getZ(k), hh = chao(ox + lx * cs + lz * sn, oz - lx * sn + lz * cs); p.setY(k, (hh == null ? oy : hh) - oy + 0.5 + alt); } else for (let k = 0; k < p.count; k++) p.setY(k, 0.5);
   geo.computeVertexNormals();
   const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: !it.fundo, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, depthWrite: !!it.fundo }));
   m.receiveShadow = true; const g = new THREE.Group(); g.add(m); return g;

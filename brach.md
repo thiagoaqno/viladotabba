@@ -1,3 +1,3 @@
-# Área: escala própria do que espalha (padrão 1,2)
+# Mônaco: hotel da curva do grampo
 
-O espalhar usava a escala global de pôr peças (que pode estar grande, lembrada de outro asset) e as árvores saíam colossais. Agora a área tem o campo "Escala" dela, padrão 1,2, também editável numa área já posta.
+O prédio branco comprido em arco do print: 7 andares de varandas corridas (laje saliente, guarda-corpo, vidro escuro e divisórias), o térreo escuro de pilares e a cobertura com gente olhando a pista. Raio de 70 m; aceita o ângulo (10° a 180°, padrão 70°).

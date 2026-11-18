@@ -854,13 +854,30 @@ function rocha(w, h, d, semente, aspereza = 0.22) {
     p.setXYZ(i, (x * w) / 2, (y / 0.75) * h, (z * d) / 2); }
   geo.computeVertexNormals(); return geo;
 }
-function topoVerde(g, w, d, h, n, semente, comArvores = true) {
-  const r = sorteio(semente + 99); const m = malha(g, new THREE.CylinderGeometry(w * 0.36, w * 0.4, 0.6 * U, 9), MATO, 0, h * 0.98, 0); m.scale.z = d / w;
-  for (let k = 0; k < n; k++) { const a = r() * Math.PI * 2, t = Math.sqrt(r()) * 0.3, x = Math.cos(a) * w * t, z = Math.sin(a) * d * t;
-    const o = comArvores && k % 2 === 0 ? pinheiroManso(3 + r() * 3, semente + k) : arbusto(0x4f6b2c, null, 1 + r(), semente + k); o.position.set(x, h * 0.98, z); o.rotation.y = r() * 6; g.add(o); }
+// (2026-11-18, o Thiago, com o print: "embaixo da grama é vazado, as pedras não chegam até a grama") o mato não é mais um disco solto por cima:
+// as faces de cima da própria rocha viram verdes (cor por vértice) e as árvores vão na altura de verdade da rocha (um raio de cima para baixo)
+const ROCHA_V = M(0xffffff, { flatShading: true, roughness: 1, vertexColors: true }), _raioTopo = new THREE.Raycaster(), _paraBaixo = new THREE.Vector3(0, -1, 0);
+function gramarTopo(m) {
+  const geo = m.geometry, p = geo.attributes.position, cor = new Float32Array(p.count * 3), base = m.material.color.clone(), mato = new THREE.Color(0x5f7a34), mato2 = new THREE.Color(0x6b8a3a);
+  let maxY = -Infinity; for (let i = 0; i < p.count; i++) maxY = Math.max(maxY, p.getY(i));
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), n = new THREE.Vector3();
+  for (let i = 0; i + 2 < p.count; i += 3) {
+    a.fromBufferAttribute(p, i); b.fromBufferAttribute(p, i + 1); c.fromBufferAttribute(p, i + 2); n.subVectors(c, b).cross(a.clone().sub(b)).normalize();
+    const cy = (a.y + b.y + c.y) / 3, verde = n.y > 0.55 && cy > maxY * 0.62, k = verde ? ((i / 3) % 3 ? mato : mato2) : base;
+    for (let j = 0; j < 3; j++) cor.set([k.r, k.g, k.b], (i + j) * 3);
+  }
+  geo.setAttribute("color", new THREE.BufferAttribute(cor, 3)); m.material = ROCHA_V;
+}
+function topoVerde(g, w, d, h, n, semente, comArvores = true, rochas = null, ox = 0, oz = 0) {
+  const r = sorteio(semente + 99);
+  if (rochas) { for (const m of rochas) if (m.material !== ROCHA_V) gramarTopo(m); g.updateMatrixWorld(true); }
+  else { const m = malha(g, new THREE.CylinderGeometry(w * 0.36, w * 0.4, 0.6 * U, 9), MATO, 0, h * 0.98, 0); m.scale.z = d / w; }
+  for (let k = 0; k < n; k++) { const a = r() * Math.PI * 2, t = Math.sqrt(r()) * 0.3, x = ox + Math.cos(a) * w * t, z = oz + Math.sin(a) * d * t;
+    let y = h * 0.98; if (rochas) { _raioTopo.set(new THREE.Vector3(x, 1e5, z), _paraBaixo); const hit = _raioTopo.intersectObjects(rochas, false)[0]; if (!hit) continue; y = hit.point.y - 0.1 * U; }
+    const o = comArvores && k % 2 === 0 ? pinheiroManso(3 + r() * 3, semente + k) : arbusto(0x4f6b2c, null, 1 + r(), semente + k); o.position.set(x, y, z); o.rotation.y = r() * 6; g.add(o); }
 }
 function arbustosNaRocha(g, w, d, h, n, semente) { const r = sorteio(semente + 7); for (let k = 0; k < n; k++) { const a = r() * Math.PI * 2, y = (0.15 + r() * 0.6) * h, o = arbusto(0x4a6a28, null, 0.9 + r() * 0.8, semente + 30 + k); o.position.set(Math.cos(a) * w * 0.47 * (1 - y / h * 0.3), y, Math.sin(a) * d * 0.47 * (1 - y / h * 0.3)); g.add(o); } }
-function penhasco(w, h, d, semente, arvores = 8) { const g = new THREE.Group(); malha(g, rocha(w * U, h * U, d * U, semente), semente % 2 ? ROCHA : ROCHA2); topoVerde(g, w * U, d * U, h * U, arvores, semente); arbustosNaRocha(g, w * U, d * U, h * U, Math.round(arvores * 0.8), semente); return g; }
+function penhasco(w, h, d, semente, arvores = 8) { const g = new THREE.Group(), pedra = malha(g, rocha(w * U, h * U, d * U, semente), semente % 2 ? ROCHA : ROCHA2); topoVerde(g, w * U, d * U, h * U, arvores, semente, true, [pedra]); arbustosNaRocha(g, w * U, d * U, h * U, Math.round(arvores * 0.8), semente); return g; }
 KITS.penhascoAlto = F("Geral", { nome: "Penhasco alto", grupo: "Relevo", montar: () => penhasco(24, 26, 20, 3, 8) });
 KITS.penhascoMedio = F("Geral", { nome: "Penhasco médio com árvores", grupo: "Relevo", montar: () => penhasco(22, 16, 18, 6, 10) });
 KITS.penhascoLargo = F("Geral", { nome: "Penhasco largo", grupo: "Relevo", montar: () => penhasco(40, 18, 26, 9, 12) });
@@ -870,8 +887,7 @@ KITS.rochedo = F("Geral", { nome: "Rochedo com forte e casario", grupo: "Relevo"
   const g = new THREE.Group(), W = 120 * U;
   const base = malha(g, rocha(W, 14 * U, 40 * U, 21, 0.15), ROCHA); base.scale.z = 1;
   const meio = malha(g, rocha(70 * U, 34 * U, 30 * U, 22, 0.2), ROCHA2); meio.position.set(10 * U, 0, -4 * U);
-  topoVerde(g, 120 * U, 40 * U, 14 * U, 14, 23);
-  const alto = new THREE.Group(); topoVerde(alto, 70 * U, 30 * U, 34 * U, 10, 24); alto.position.set(10 * U, 0, -4 * U); g.add(alto);
+  topoVerde(g, 120 * U, 40 * U, 14 * U, 14, 23, true, [base, meio]); topoVerde(g, 70 * U, 30 * U, 34 * U, 10, 24, true, [base, meio], 10 * U, -4 * U);
   for (let i = 0; i < 5; i++) { const cores = ["#e08a6a", "#ecd9b8", "#e7a789", "#f0c46a", "#efe2c8"], p = predioClassico({ w: 9, d: 8, andares: 3 + (i % 3), cor: cores[i], chave: "rochedo" + i }); p.scale.setScalar(0.8); p.position.set(-50 * U + i * 9 * U, 13 * U + i * 2.5 * U, 4 * U); g.add(p); }
   const forte = new THREE.Group(), P = M(0xe9dcc4, { roughness: 0.95 }); caixa(forte, P, 22 * U, 7 * U, 12 * U, 0, 3.5 * U, 0); caixa(forte, P, 7 * U, 11 * U, 7 * U, -9 * U, 5.5 * U, 0); caixa(forte, P, 6 * U, 9 * U, 6 * U, 10 * U, 4.5 * U, -2 * U);
   for (let i = 0; i < 11; i++) caixa(forte, P, 1 * U, 1 * U, 12.4 * U, -10 * U + i * 2 * U, 7.5 * U, 0); const tel = malha(forte, new THREE.CylinderGeometry(0.01, 5 * U, 2.5 * U, 4), M(0xb5653d, { flatShading: true }), -9 * U, 12.3 * U, 0); tel.rotation.y = Math.PI / 4;

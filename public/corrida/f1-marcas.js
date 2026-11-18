@@ -230,4 +230,33 @@ Object.assign(MARCAS, {
   betway(c) { c.fillStyle = "#262626"; c.beginPath(); c.moveTo(-1.5, -0.5); c.lineTo(1.25, -0.5); c.lineTo(1.6, 0.5); c.lineTo(-1.15, 0.5); c.closePath(); c.fill(); letra(c, "betway", { x: 0.05, h: 0.6, peso: 800, cor: "#fff" }); },
   fanduel(c) { c.fillStyle = "#0078ff"; c.fillRect(-1.6, -0.5, 3.2, 1); c.fillStyle = "#fff"; c.beginPath(); c.moveTo(-1.2, -0.25); c.quadraticCurveTo(-0.95, -0.35, -0.7, -0.25); c.quadraticCurveTo(-0.72, 0.15, -0.95, 0.28); c.quadraticCurveTo(-1.18, 0.15, -1.2, -0.25); c.fill(); letra(c, "FANDUEL", { x: 0.35, h: 0.42, peso: 800, cor: "#fff" }); },
 });
-export function desenharMarca(c, id, op) { MARCAS[id]?.(c, op); }
+function desenharMarca(c, id, op) { MARCAS[id]?.(c, op); }
+export { desenharMarcaReal as desenharMarca }; // (o real quando existe: ver o fim do arquivo)
+
+// ---------------------------------------------------------------- os LOGOS REAIS (2026-11-18, o Thiago: "sempre logos reais")
+// os arquivos de public/corrida/logos/marcas/ (ferramentas/baixar-logos-marcas.js, do Wikimedia Commons). Cada um vira um bitmap de 256 px de
+// altura uma vez (o SVG desenhado direto no canvas a cada folha sairia caro) e, com `tinta`, uma cópia de uma cor só (os carros usam a marca
+// branca ou preta conforme o fundo). Sem o arquivo, fica o desenho em código acima.
+const REAIS = new Map(), TINGIDAS = new Map(), ALTO = 256;
+export const marcasReaisProntas = typeof fetch === "undefined" || typeof document === "undefined" ? Promise.resolve() : fetch("/corrida/logos/marcas/index.json").then((r) => (r.ok ? r.json() : {})).catch(() => ({}))
+  .then((ind) => Promise.all(Object.entries(ind).map(([id, d]) => new Promise((ok) => {
+    const img = new Image(); img.onerror = () => ok(); setTimeout(ok, 10000);
+    img.onload = () => {
+      const w0 = img.naturalWidth || img.width || 300, h0 = img.naturalHeight || img.height || 150, ar = w0 / h0, cv = document.createElement("canvas");
+      cv.height = ALTO; cv.width = Math.max(8, Math.min(4096, Math.round(ALTO * ar))); cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      REAIS.set(id, { cv, ar: cv.width / cv.height }); ok();
+    };
+    img.src = "/corrida/logos/marcas/" + d.arquivo;
+  })))).catch(() => {});
+export const temLogoReal = (id) => REAIS.has(id);
+function tingida(id, r, cor) {
+  const k = id + "|" + cor; let t = TINGIDAS.get(k); if (t) return t;
+  t = document.createElement("canvas"); t.width = r.cv.width; t.height = r.cv.height; const x = t.getContext("2d");
+  x.drawImage(r.cv, 0, 0); x.globalCompositeOperation = "source-in"; x.fillStyle = cor; x.fillRect(0, 0, t.width, t.height); TINGIDAS.set(k, t); return t;
+}
+const desenharMarcaCodigo = desenharMarca;
+// (substitui a de cima: o logo real centrado em (0, 0) com altura 1, ou o desenho em código)
+function desenharMarcaReal(c, id, op) {
+  const r = REAIS.get(id); if (!r) return desenharMarcaCodigo(c, id, op);
+  c.drawImage(op?.tinta ? tingida(id, r, op.tinta) : r.cv, -r.ar / 2, -0.5, r.ar, 1);
+}

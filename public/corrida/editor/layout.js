@@ -104,7 +104,9 @@ body.ttSemEsq #ed{transform:translateX(-100%)}body.ttSemDir #ttDir{transform:tra
 #ttVistas button{width:38px;height:34px;background:rgba(24,27,32,.88);border:1px solid var(--tt-ln);border-radius:7px;color:var(--tt-tx);cursor:pointer;font-size:15px;backdrop-filter:blur(4px)}#ttVistas button:hover{border-color:var(--tt-ac)}
 .ttRecolhe{position:fixed;top:50%;z-index:51;width:16px;height:48px;background:var(--tt-pn);border:1px solid var(--tt-ln);color:var(--tt-mu);cursor:pointer;padding:0;font-size:10px;transition:left .18s,right .18s}
 #ttRecE{left:var(--tt-l);border-left:0;border-radius:0 6px 6px 0}body.ttSemEsq #ttRecE{left:0}#ttRecD{right:var(--tt-r);border-right:0;border-radius:6px 0 0 6px}body.ttSemDir #ttRecD{right:0}
-#edCraft{padding:0}`;
+#edCraft{padding:0}
+.ttAlca{position:fixed;top:calc(var(--tt-top) + var(--tt-rib));bottom:var(--tt-sb);width:6px;cursor:col-resize;z-index:52;transition:background .12s}.ttAlca:hover,.ttAlca.on{background:rgba(232,163,61,.55)}
+#ttAlcaE{left:calc(var(--tt-l) - 3px)}#ttAlcaD{right:calc(var(--tt-r) - 3px)}body.ttSemEsq #ttAlcaE,body.ttSemDir #ttAlcaD{display:none}`;
   document.head.appendChild(css);
   const $ = (id) => document.getElementById(id);
   const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -207,6 +209,18 @@ body.ttSemEsq #ed{transform:translateX(-100%)}body.ttSemDir #ttDir{transform:tra
     b.onclick = () => { document.body.classList.toggle(cls); b.textContent = document.body.classList.contains(cls) ? (seta === "◀" ? "▶" : "◀") : seta; }; document.body.appendChild(b);
   }
   addEventListener("keydown", (e) => { if (e.key !== "Tab" || e.target.closest?.("input,select,textarea")) return; e.preventDefault(); const tudo = !(document.body.classList.contains("ttSemEsq") && document.body.classList.contains("ttSemDir")); document.body.classList.toggle("ttSemEsq", tudo); document.body.classList.toggle("ttSemDir", tudo); });
+
+  // ---------- (2026-11-18, o Thiago: "deve ser possível mudar o tamanho das abas") as larguras dos painéis: arraste a borda ----------
+  const TAM = (() => { try { return { l: 300, r: 320, ...JSON.parse(localStorage.getItem("tt-paineis") || "{}") }; } catch { return { l: 300, r: 320 }; } })();
+  const aplicarTam = () => { document.documentElement.style.setProperty("--tt-l", TAM.l + "px"); document.documentElement.style.setProperty("--tt-r", TAM.r + "px"); };
+  aplicarTam();
+  for (const [id, k] of [["ttAlcaE", "l"], ["ttAlcaD", "r"]]) {
+    const a = document.createElement("div"); a.id = id; a.className = "ttAlca"; a.title = "Arraste para mudar a largura (duplo clique volta ao padrão)"; document.body.appendChild(a);
+    a.onpointerdown = (e) => { a.setPointerCapture(e.pointerId); a.classList.add("on"); const x0 = e.clientX, t0 = TAM[k];
+      a.onpointermove = (ev) => { TAM[k] = Math.round(Math.max(220, Math.min(innerWidth * 0.45, t0 + (k === "l" ? ev.clientX - x0 : x0 - ev.clientX)))); aplicarTam(); };
+      a.onpointerup = () => { a.onpointermove = null; a.classList.remove("on"); try { localStorage.setItem("tt-paineis", JSON.stringify(TAM)); } catch {} }; };
+    a.ondblclick = () => { TAM[k] = k === "l" ? 300 : 320; aplicarTam(); try { localStorage.setItem("tt-paineis", JSON.stringify(TAM)); } catch {} };
+  }
 
   // ---------- Cena: os itens postos ----------
   const cenaLista = document.createElement("div"); cenaLista.className = "ttCena";

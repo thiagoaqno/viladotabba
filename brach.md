@@ -1,30 +1,20 @@
-# TabbaTracks: interface nova do editor de pistas + desempenho
+# Livery Studio: logos reais, logos da equipe editáveis, vinis, carro do zero e painéis ajustáveis
 
-- **Nome novo:** o editor de pistas agora é o **TabbaTracks** (título, logo, botão no menu, janela do .bat).
-- **Interface no jeito Revit/Enscape** (`public/corrida/editor/layout.js`): barra de título (Salvar/Publicar, desfazer, mover/girar/escala),
-  **faixa de ferramentas** com abas Construir · Pista · Terreno · Modificar · Vista e um botão grande para cada ferramenta (barreira, zebra,
-  escape, linha, trecho, área, pincel, placa, pórtico, marca no chão, Craft, vistas, régua…). À esquerda o navegador (Biblioteca com
-  miniaturas grandes, Cena, Importar); à direita **Propriedades** com **prévia 3D girando** (peça escolhida, a que o mouse está em cima ou o
-  item selecionado, com as medidas em metros), só as opções da ferramenta ativa e a seleção; Histórico. Painéis recolhem (Tab), botões de
-  vista no canto do 3D, Ctrl+S salva. Nada do editor foi refeito: as seções são movidas com os mesmos ids.
-- **Desempenho:** `montarKit` monta cada peça uma vez e as próximas são cópias que dividem geometria e material (uma fileira de 300
-  guard-rails montava 300 vezes tudo; vale no editor e no jogo). As miniaturas da biblioteca saem aos poucos em vez de todas de uma vez.
-- **Estudo do editor de pinturas** (Livery Studio): `planos/livery-studio.md`.
-- **Livery Studio, passo 1** (`/corrida/livery.html`, botão no topo do TabbaTracks): o carro do jogo num estúdio, vistas Frente/Trás/Lado/
-  Topo, árvore de peças com olho, cor base e secundária, metálico/rugosidade/reflexo com esfera de amostra, gaveta de Cores (pinturas
-  prontas) e Patrocinadores (as marcas do jogo, só para ver por enquanto), Salvar no navegador e Renderizar imagem (PNG).
-- **Livery Studio, passo 2:** a pintura vira dados. Zonas do carro (bico, asa dianteira, cockpit, laterais, tampa, asa traseira, assoalho;
-  `ZONAS` em `f1-pintura.js`) e camadas por cima de uma base (a pintura de uma equipe ou cor lisa): cor na peça, faixa inclinada, listra de
-  corrida e degradê, cada uma num lado ou nos dois, com cor e opacidade; lista de camadas com subir/descer/olho/apagar; desfazer/refazer;
-  a folha da pintura aparece nas Propriedades. Salvar grava `public/corrida/pinturas/<id>.json` (rota nova no `corrida-editor.js`, só no
-  PC) e o Publicar do TabbaTracks leva a pasta junto. O jogo ainda não lê essas pinturas (passo 4).
-- **Livery Studio, passo 3:** patrocinadores. Escolha uma marca do jogo na gaveta (ou **＋ Importar** um PNG) e clique no carro: o logo
-  entra como camada da folha, nos dois lados ou em cima. Arraste no carro para mover, `[` `]` tamanho, `Q` `E` giro, e nas Propriedades:
-  lado, tamanho, giro, posição em metros, espelhar, opacidade e cor única. Também acabamentos (brilhante, fosca, metálica, perolizada…)
-  com verniz, clicar no carro escolhe a peça, duplicar e espelhar camada. PNG importado vai para `public/corrida/pinturas/logo-*.png`.
-- **Livery Studio, passo 4:** a pintura salva no estúdio vale no jogo. `f1-pintura.js` carrega `public/corrida/pinturas/` ao abrir e a
-  folha da equipe (temporada 2026) passa a ser a das camadas, em todos os carros dela. O acabamento continua o do jogo. Sem nenhuma
-  pintura salva (como agora: `pinturas/index.json` vazio), nada muda no jogo.
-- **Livery Studio, passo 5:** **⇩ Exportar GLB** com a pintura gravada numa textura comum (a projeção do shader vira UV: abre igual no
-  Blender), junto com o projeto `livery-<carro>.json`; **📂 Abrir** um projeto exportado; **Renderizar imagem** em alta (até 4096 px, sem
-  os painéis); luzes Estúdio, Dia, Noite e Vitrine.
+Pedidos do Thiago (2026-11-18):
+- **Logos reais** (`ferramentas/baixar-logos-marcas.js` → `public/corrida/logos/marcas/`, SVG do Wikimedia Commons): o `desenharMarca`
+  (`f1-marcas.js`) desenha o logo de verdade quando existe (no carro, halo, capacete, placas) e a imitação em código quando não.
+  A gaveta Patrocinadores do estúdio mostra todas as marcas, com o logo real em cores.
+- **Os logos da equipe viram camadas** (`✂ Separar os logos da equipe`): a pintura da equipe é refeita sem as marcas (`separarMarcas`,
+  gravando as chamadas de `marca`/`marcaU`) e cada uma vira uma camada de logo para mover, trocar ou apagar.
+- **Menos desfoque:** a folha do estúdio em 2× (como a do carro do jogador no jogo) e anisotropia 16.
+- **Logo em qualquer lugar pintado:** laterais, em cima, frente, traseira e **embaixo da asa traseira** (a vista U).
+- **Vinis:** camada "Vinil (padrão)": quadradinhos espalhados, camuflagem, pontos, listras, xadrez e hexágonos, com tamanho, densidade,
+  giro, sortear e "sumir ao longo do carro".
+- **✚ Do zero:** um carro só com a cor de fundo.
+- **Painéis ajustáveis** no Livery Studio (os dois lados e a gaveta) e no TabbaTracks (os dois lados): arraste a borda; duplo clique volta.
+
+**Logos:** 104 reais baixados. Sem logo real ainda (ficam com o desenho em código; dá para importar o PNG no estúdio ou pôr o título
+certo do Commons em `FIXOS` no script e rodar com o id): UniCredit, Peroni, Ambipar, Hyatt, bp, Jim Beam, NexGen, Kraken, AlphaTauri,
+Syntium, Allwyn, Moët Hennessy, Fever, Fanatec, Rokt, ONEflight, Myprotein, Proforce, bw Scores, e as que a busca trouxe errado e eu tirei:
+BingX, Genesys, Hilton, Dell, TWG, Eni, Orlen, Alfa Romeo, Salesforce, Crypto.com, PwC, Puma, FanDuel, Nexo, Visit Qatar, Komatsu,
+Stephens, Pirelli.

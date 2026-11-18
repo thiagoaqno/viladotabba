@@ -1,0 +1,270 @@
+{
+ "hp": {
+  "arquivo": "hp.svg",
+  "titulo": "File:HP logo 2012.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:HP_logo_2012.svg"
+ },
+ "shell": {
+  "arquivo": "shell.svg",
+  "titulo": "File:Shell 1994 wordmark.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Shell_1994_wordmark.svg"
+ },
+ "tagheuer": {
+  "arquivo": "tagheuer.svg",
+  "titulo": "File:TAG Heuer Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:TAG_Heuer_Logo.svg"
+ },
+ "tudor": {
+  "arquivo": "tudor.svg",
+  "titulo": "File:Tudor (Uhrenmarke) logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Tudor_(Uhrenmarke)_logo.svg"
+ },
+ "aws": {
+  "arquivo": "aws.svg",
+  "titulo": "File:Amazon Web Services Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Amazon_Web_Services_Logo.svg"
+ },
+ "dhl": {
+  "arquivo": "dhl.svg",
+  "titulo": "File:DHL Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:DHL_Logo.svg"
+ },
+ "vpower": {
+  "arquivo": "shell.svg",
+  "titulo": "File:Shell 1994 wordmark.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Shell_1994_wordmark.svg",
+  "alias": "shell"
+ },
+ "ibm": {
+  "arquivo": "ibm.svg",
+  "titulo": "File:IBM logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:IBM_logo.svg"
+ },
+ "rayban": {
+  "arquivo": "rayban.svg",
+  "titulo": "File:Ray-Ban logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Ray-Ban_logo.svg"
+ },
+ "etihad": {
+  "arquivo": "etihad.svg",
+  "titulo": "File:Etihad-airways-logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Etihad-airways-logo.svg"
+ },
+ "adidas": {
+  "arquivo": "adidas.svg",
+  "titulo": "File:Adidas Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Adidas_Logo.svg"
+ },
+ "hilfiger": {
+  "arquivo": "hilfiger.svg",
+  "titulo": "File:Tommy Hilfiger logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Tommy_Hilfiger_logo.svg"
+ },
+ "honda": {
+  "arquivo": "honda.svg",
+  "titulo": "File:Honda Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Honda_Logo.svg"
+ },
+ "twilio": {
+  "arquivo": "twilio.svg",
+  "titulo": "File:Twilio-logo-red.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Twilio-logo-red.svg"
+ },
+ "gemini": {
+  "arquivo": "gemini.svg",
+  "titulo": "File:Google Gemini logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Google_Gemini_logo.svg"
+ },
+ "mastercard": {
+  "arquivo": "mastercard.svg",
+  "titulo": "File:Mastercard-logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Mastercard-logo.svg"
+ },
+ "microsoft": {
+  "arquivo": "microsoft.svg",
+  "titulo": "File:Microsoft logo (2012).svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Microsoft_logo_(2012).svg"
+ },
+ "cashapp": {
+  "arquivo": "cashapp.svg",
+  "titulo": "File:Square Cash app logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Square_Cash_app_logo.svg"
+ },
+ "ford": {
+  "arquivo": "ford.svg",
+  "titulo": "File:Ford Motor Company Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Ford_Motor_Company_Logo.svg"
+ },
+ "moneygram": {
+  "arquivo": "moneygram.svg",
+  "titulo": "File:MoneyGram Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:MoneyGram_Logo.svg"
+ },
+ "kick": {
+  "arquivo": "kick.svg",
+  "titulo": "File:Kick logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Kick_logo.svg"
+ },
+ "santander": {
+  "arquivo": "santander.svg",
+  "titulo": "File:Banco santander logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Banco_santander_logo.svg"
+ },
+ "att": {
+  "arquivo": "att.svg",
+  "titulo": "File:AT&T logo 2016.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:AT%26T_logo_2016.svg"
+ },
+ "heineken": {
+  "arquivo": "heineken.svg",
+  "titulo": "File:Heineken Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Heineken_Logo.svg"
+ },
+ "lenovo": {
+  "arquivo": "lenovo.svg",
+  "titulo": "File:Lenovo logo 2015.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Lenovo_logo_2015.svg"
+ },
+ "qatar": {
+  "arquivo": "qatar.svg",
+  "titulo": "File:Qatar Airways logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Qatar_Airways_logo.svg"
+ },
+ "amex": {
+  "arquivo": "amex.svg",
+  "titulo": "File:American Express logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:American_Express_logo.svg"
+ },
+ "liquimoly": {
+  "arquivo": "liquimoly.svg",
+  "titulo": "File:Liqui-moly.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Liqui-moly.svg"
+ },
+ "louisvuitton": {
+  "arquivo": "louisvuitton.svg",
+  "titulo": "File:Louis Vuitton logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Louis_Vuitton_logo.svg"
+ },
+ "marsh": {
+  "arquivo": "marsh.svg",
+  "titulo": "File:Marsh & McLennan Companies logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Marsh_%26_McLennan_Companies_logo.svg"
+ },
+ "nestle": {
+  "arquivo": "nestle.svg",
+  "titulo": "File:Nestlé textlogo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Nestl%C3%A9_textlogo.svg"
+ },
+ "paramount": {
+  "arquivo": "paramount.svg",
+  "titulo": "File:Paramount+ logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Paramount%2B_logo.svg"
+ },
+ "pepsico": {
+  "arquivo": "pepsico.svg",
+  "titulo": "File:PepsiCologo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:PepsiCologo.svg"
+ },
+ "mcdonalds": {
+  "arquivo": "mcdonalds.svg",
+  "titulo": "File:McDonald's logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:McDonald%27s_logo.svg"
+ },
+ "rolex": {
+  "arquivo": "rolex.svg",
+  "titulo": "File:Rolex wordmark logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Rolex_wordmark_logo.svg"
+ },
+ "dpworld": {
+  "arquivo": "dpworld.svg",
+  "titulo": "File:DP World 2021 logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:DP_World_2021_logo.svg"
+ },
+ "petronas": {
+  "arquivo": "petronas.svg",
+  "titulo": "File:PETRONAS-logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:PETRONAS-logo.svg"
+ },
+ "teamviewer": {
+  "arquivo": "teamviewer.svg",
+  "titulo": "File:TeamViewer logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:TeamViewer_logo.svg"
+ },
+ "crowdstrike": {
+  "arquivo": "crowdstrike.svg",
+  "titulo": "File:CrowdStrike logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:CrowdStrike_logo.svg"
+ },
+ "redbull": {
+  "arquivo": "redbull.svg",
+  "titulo": "File:Logo of Red bull.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Logo_of_Red_bull.svg"
+ },
+ "oracle": {
+  "arquivo": "oracle.svg",
+  "titulo": "File:Oracle logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Oracle_logo.svg"
+ },
+ "mobil1": {
+  "arquivo": "mobil1.svg",
+  "titulo": "File:Mobil logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Mobil_logo.svg"
+ },
+ "visa": {
+  "arquivo": "visa.svg",
+  "titulo": "File:Visa Inc. logo (2005–2014).svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Visa_Inc._logo_(2005%E2%80%932014).svg"
+ },
+ "coreweave": {
+  "arquivo": "coreweave.svg",
+  "titulo": "File:CoreWeave logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:CoreWeave_logo.svg"
+ },
+ "coinbase": {
+  "arquivo": "coinbase.svg",
+  "titulo": "File:Coinbase.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Coinbase.svg"
+ },
+ "duracell": {
+  "arquivo": "duracell.svg",
+  "titulo": "File:Duracell logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Duracell_logo.svg"
+ },
+ "alpine": {
+  "arquivo": "alpine.svg",
+  "titulo": "File:Alpine F1 Team Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Alpine_F1_Team_Logo.svg"
+ },
+ "haas": {
+  "arquivo": "haas.svg",
+  "titulo": "File:Haas F1 Team Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Haas_F1_Team_Logo.svg"
+ },
+ "hhonda": {
+  "arquivo": "honda.svg",
+  "titulo": "File:Honda Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Honda_Logo.svg",
+  "alias": "honda"
+ },
+ "atlassian": {
+  "arquivo": "atlassian.svg",
+  "titulo": "File:Atlassian-logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Atlassian-logo.svg"
+ },
+ "barilla": {
+  "arquivo": "barilla.svg",
+  "titulo": "File:Barilla logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Barilla_logo.svg"
+ },
+ "claro": {
+  "arquivo": "claro.svg",
+  "titulo": "File:Logo de Claro.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Logo_de_Claro.svg"
+ },
+ "atlassiana": {
+  "arquivo": "atlassian.svg",
+  "titulo": "File:Atlassian-logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Atlassian-logo.svg",
+  "alias": "atlassian"
+ }
+}

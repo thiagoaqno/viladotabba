@@ -84,7 +84,11 @@ function logo(c, id, a0, b0, a1, b1, tinta) {
 function patro(c, nome, a, b, h, cor, opc = {}) { texto(c, nome, a, b, h, cor, opc); }
 // a marca desenhada (f1-marcas.js) em (a, b), com altura h em metros; `giro` em radianos: em cima do carro, DE_FRENTE é o que quem vem de frente lê
 const DE_FRENTE = Math.PI / 2;
+// (2026-11-18, Livery Studio: "a logo dos carros não está em marcas, não tenho como mexer") com GRAVANDO, as marcas não são desenhadas: viram a
+// lista de onde cada uma vai (a vista, o ponto, a altura, o giro, a tinta), para o estúdio transformar em camadas de logo editáveis
+let GRAVANDO = null, VISTA_ATUAL = null;
 function marca(c, id, a, b, h, { giro = 0, tinta, fundo } = {}) {
+  if (GRAVANDO) { GRAVANDO.push({ v: VISTA_ATUAL, id, a, b, h, giro, tinta, fundo }); return; }
   const [x, y] = pt(c, a, b), e = h * PX(); c.save(); c.setTransform(1, 0, 0, 1, x, y); c.rotate(giro); c.scale(e, e); desenharMarca(c, id, { tinta, fundo }); c.restore();
 }
 const mulberry = (seed) => () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -102,7 +106,7 @@ const VISTAS = {
   U: { r: [733, 4, 279, 108], m: [253, 0, 0, 153, 872.5, 4.65] },
 };
 function vista(ctx, nome, fn) {
-  const v = VISTAS[nome]; ctx.save(); ctx.beginPath(); ctx.rect(...v.r.map((n) => n * ESC)); ctx.clip(); ctx.setTransform(...v.m.map((n) => n * ESC)); fn(ctx); ctx.restore();
+  VISTA_ATUAL = nome; const v = VISTAS[nome]; ctx.save(); ctx.beginPath(); ctx.rect(...v.r.map((n) => n * ESC)); ctx.clip(); ctx.setTransform(...v.m.map((n) => n * ESC)); fn(ctx); ctx.restore();
 }
 const lados = (ctx, fn) => { vista(ctx, "A", (c) => fn(c, 1)); vista(ctx, "B", (c) => fn(c, -1)); };
 
@@ -1148,7 +1152,7 @@ export function aplicarCockpit(sh, textura) {
 
 // ---------------------------------------------------------------- embaixo da asa traseira (a vista U): o que se vê do carro da frente
 // Pelos prints do Thiago (2026-11-13). A marca vai em metros no carro (x, t = s − 3,7: a asa vai de t 0 a 0,65 e de x −0,47 a 0,47).
-function marcaU(c, id, x, t, h, op) { c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
+function marcaU(c, id, x, t, h, op) { if (GRAVANDO) { GRAVANDO.push({ v: "U", id, a: x, b: t, h, giro: 0, tinta: op?.tinta, fundo: op?.fundo }); return; } c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
 const ASA_BAIXO = {
   mercedes: { cor: "#0c0d0f", marcas: (c) => marcaU(c, "crowdstrike", 0, 0.32, 0.1) },
   ferrari: { cor: "#2341b3", marcas: (c) => marcaU(c, "ibm", 0, 0.32, 0.16, { tinta: "#d8dce6", fundo: "#2341b3" }) }, // (o modelo do Sketchfab: azul vivo com o IBM prateado)
@@ -1438,7 +1442,7 @@ export const PNEU_FRAG_MAIN = `
 // asa dianteira 0,1..0,5; cockpit 1,3..2,1; caixas laterais 2,05..3,5; tampa 2,4..3,9; asa traseira 3,9..4,4). Cada zona diz os retângulos dela
 // em cada vista: L = os lados (s, y), T = de cima (s, x), F = a frente (x, y), R = a traseira (x, y).
 export const ZONAS = {
-  carro: { nome: "Carro inteiro", L: [[0, 0, 4.45, 1.1]], T: [[0, -0.85, 4.45, 0.85]], F: [[-0.8, 0, 0.8, 1.1]], R: [[-0.8, 0, 0.8, 1.1]] },
+  carro: { nome: "Carro inteiro", L: [[0, 0, 4.45, 1.1]], T: [[0, -0.85, 4.45, 0.85]], F: [[-0.8, 0, 0.8, 1.1]], R: [[-0.8, 0, 0.8, 1.1]], U: [[-0.8, -0.1, 0.8, 0.8]] },
   asaD: { nome: "Asa dianteira", L: [[0, 0, 0.62, 0.2]], T: [[0, -0.82, 0.66, -0.12], [0, 0.12, 0.66, 0.82]], F: [[-0.8, 0, 0.8, 0.18]] },
   bico: { nome: "Bico", L: [[0, 0.1, 1.3, 0.5]], T: [[0, -0.14, 1.3, 0.14]], F: [[-0.2, 0.15, 0.2, 0.5]] },
   cockpit: { nome: "Cockpit", L: [[1.3, 0.45, 2.05, 1.1]], T: [[1.3, -0.3, 2.05, 0.3]] },
@@ -1464,9 +1468,14 @@ export function imagemLivery(src, aoCarregar) {
 }
 // o LOGO: uma marca do jogo (desenharMarca) ou uma imagem, centrada em (a, b) da vista dele ("L" os lados: s e y; "T" de cima: s e x),
 // com `altura` em metros, giro em graus e espelhado se pedido. Desenhado reto na folha, como as marcas das equipes (lê certo nos dois lados).
-function logoNaVista(c, l) {
+function logoNaVista(c, l, v) {
+  if (v === "U") { // (embaixo da asa: a escala não é igual nos dois eixos; como o marcaU)
+    const hh = +l.altura || 0.08; c.translate(+l.a || 0, +l.b || 0); c.rotate(((+l.giro || 0) * Math.PI) / 180); if (l.espelhar) c.scale(-1, 1); c.scale(hh, hh);
+    if (l.marca) return desenharMarca(c, l.marca, { tinta: l.tinta, fundo: l.fundo });
+    const im = l.img && imagemLivery(l.img); if (im && im.height) { const w = im.width / im.height; c.drawImage(im, -w / 2, -0.5, w, 1); } return;
+  }
   const [x, y] = pt(c, +l.a || 0, +l.b || 0), e = (+l.altura || 0.08) * PX(); c.setTransform(1, 0, 0, 1, x, y); c.rotate(((+l.giro || 0) * Math.PI) / 180); if (l.espelhar) c.scale(-1, 1);
-  if (l.marca) { c.scale(e, e); desenharMarca(c, l.marca, l.tinta ? { tinta: l.tinta } : {}); return; }
+  if (l.marca) { c.scale(e, e); desenharMarca(c, l.marca, { tinta: l.tinta, fundo: l.fundo }); return; }
   const im = l.img && imagemLivery(l.img); if (!im || !im.height) return;
   const w = (e * im.width) / im.height; c.drawImage(im, -w / 2, -e / 2, w, e);
 }
@@ -1475,7 +1484,8 @@ function camadaNaVista(c, l, v, ladoV) {
   const rs = retsDe(l.zona, v, l.lado, ladoV); if (!rs.length) return;
   c.save(); recortar(c, rs); c.globalAlpha = l.opac == null ? 1 : +l.opac; c.fillStyle = l.cor || "#ffffff";
   const w = +l.largura || 0.2;
-  if (l.tipo === "logo") logoNaVista(c, l);
+  if (l.tipo === "logo") logoNaVista(c, l, v);
+  else if (l.tipo === "padrao") for (const q of rs) vinilNoRet(c, l, q, v);
   else if (l.tipo === "cor") for (const [a0, b0, a1, b1] of rs) c.fillRect(a0, b0, a1 - a0, b1 - b0);
   else if (l.tipo === "faixa") { // (a faixa inclinada: começa em s0 embaixo e chega em s1 em cima; de cima, a mesma faixa atravessa o carro)
     const s0 = +l.s0, s1 = +l.s1;
@@ -1490,15 +1500,68 @@ function camadaNaVista(c, l, v, ladoV) {
   }
   c.restore();
 }
+// (2026-11-18, as imagens do Thiago: a Red Bull com os quadradinhos espalhados) o VINIL: um padrão repetido dentro da peça, em metros.
+// estilo: quadrados (espalhados, de tamanhos e giros sorteados), pontos, listras, xadrez, camuflagem e hexágonos; tam = o tamanho do
+// desenho, dens = quanto cobre (0 a 1), giro em graus, semente = o sorteio (o mesmo nos dois lados: fica simétrico), some = de s0 a s1 o
+// padrão vai sumindo ao longo do carro (como na Red Bull, que some para trás).
+function vinilNoRet(c, l, [a0, b0, a1, b1], v) {
+  const tam = Math.max(0.005, +l.tam || 0.05), dens = Math.min(1, Math.max(0.02, +l.dens || 0.5)), giro = ((+l.giro || 0) * Math.PI) / 180, w = a1 - a0, hh = b1 - b0;
+  const rnd = mulberry(((+l.semente || 1) * 7919 + Math.round(a0 * 1000) * 31 + Math.round(b0 * 1000) + (v === "T" ? 99991 : 0)) >>> 0);
+  const some = l.some && v !== "F" && v !== "R" && v !== "U" ? [+l.s0 || 0, +l.s1 || 4.4] : null; // (o sumir é ao longo do carro: só nas vistas com s)
+  const alfa = (x) => { if (!some) return 1; const t = (x - some[0]) / (some[1] - some[0] || 1); return Math.max(0, Math.min(1, 1 - t)); };
+  const a0g = c.globalAlpha, estilo = l.estilo || "quadrados";
+  if (estilo === "quadrados" || estilo === "camuflagem") {
+    const n = Math.min(6000, Math.round(((w * hh) / (tam * tam)) * dens * (estilo === "camuflagem" ? 0.5 : 0.8)));
+    for (let i = 0; i < n; i++) {
+      const x = a0 + rnd() * w, y = b0 + rnd() * hh, k = alfa(x); if (rnd() > k) continue;
+      const sz = tam * (0.35 + rnd() * 0.95); c.save(); c.translate(x, y); c.rotate(giro + (rnd() - 0.5) * 0.5);
+      if (estilo === "quadrados") c.fillRect(-sz / 2, -sz / 2, sz, sz);
+      else { c.beginPath(); c.ellipse(0, 0, sz * (0.8 + rnd()), sz * (0.4 + rnd() * 0.5), rnd() * Math.PI, 0, Math.PI * 2); c.fill(); }
+      c.restore();
+    }
+    return;
+  }
+  // os padrões em grade: giram em volta do meio da peça; a grade cobre a diagonal para não faltar canto
+  const cx = (a0 + a1) / 2, cy = (b0 + b1) / 2, R = Math.hypot(w, hh) / 2 + tam;
+  c.save(); c.translate(cx, cy); c.rotate(giro);
+  for (let gx = -R; gx < R; gx += tam) for (let gy = -R; gy < R; gy += tam) {
+    const sx = cx + gx * Math.cos(giro) - gy * Math.sin(giro), k = alfa(sx); if (k <= 0) continue; c.globalAlpha = a0g * k;
+    if (estilo === "pontos") { c.beginPath(); c.arc(gx + tam / 2, gy + tam / 2, (tam / 2) * Math.sqrt(dens), 0, Math.PI * 2); c.fill(); }
+    else if (estilo === "listras") { if (Math.round(gy / tam) % 1 === 0) c.fillRect(gx, gy, tam, tam * dens); }
+    else if (estilo === "xadrez") { if ((Math.round((gx + R) / tam) + Math.round((gy + R) / tam)) % 2 === 0) c.fillRect(gx, gy, tam, tam); }
+    else if (estilo === "hexagonos") { const r0 = (tam / 2) * Math.sqrt(dens), ox = Math.round((gy + R) / tam) % 2 ? tam / 2 : 0; c.beginPath(); for (let j = 0; j < 6; j++) { const g = (j * Math.PI) / 3; c.lineTo(gx + ox + tam / 2 + Math.cos(g) * r0, gy + tam / 2 + Math.sin(g) * r0); } c.closePath(); c.fill(); }
+  }
+  c.restore(); c.globalAlpha = a0g;
+}
+// a pintura de uma equipe SEPARADA: a folha sem as marcas e as marcas como camadas de logo (as dos dois lados iguais viram uma só, "ambos")
+const SEPARADAS = new Map();
+export function separarMarcas(equipe, esc = 1) {
+  const chave = equipe + "|" + esc; if (SEPARADAS.has(chave)) return SEPARADAS.get(chave);
+  const eq = chaveDo(equipe), cv = document.createElement("canvas"); ESC = esc; cv.width = FW * esc; cv.height = FH * esc; const ctx = cv.getContext("2d");
+  GRAVANDO = [];
+  try {
+    DESENHOS[eq].pintar(ctx);
+    vista(ctx, "U", (c) => { const d = ASA_BAIXO[eq]; ret(c, -0.6, -0.05, 0.6, 0.75, d?.cor || "#101113"); d?.marcas?.(c); });
+    lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO));
+  } finally { var gravadas = GRAVANDO; GRAVANDO = null; ESC = 1; }
+  const camadas = [], usadas = new Set(), igual = (x, y) => x.id === y.id && Math.abs(x.a - y.a) < 1e-6 && Math.abs(x.b - y.b) < 1e-6 && x.h === y.h && x.giro === y.giro && x.tinta === y.tinta;
+  for (const [i, m] of gravadas.entries()) {
+    if (usadas.has(i)) continue; usadas.add(i);
+    let vista0 = m.v, lado = "ambos";
+    if (m.v === "A" || m.v === "B") { const par = gravadas.findIndex((o, j) => !usadas.has(j) && o.v === (m.v === "A" ? "B" : "A") && igual(o, m)); if (par >= 0) usadas.add(par); else lado = m.v; vista0 = "L"; }
+    camadas.push({ tipo: "logo", zona: "carro", marca: m.id, vista: vista0, lado, a: +m.a.toFixed(3), b: +m.b.toFixed(3), altura: +m.h.toFixed(3), giro: Math.round((m.giro * 180) / Math.PI), tinta: m.tinta, fundo: m.fundo, daEquipe: true });
+  }
+  const r0 = { folha: cv, camadas }; SEPARADAS.set(chave, r0); return r0;
+}
 // a folha de uma pintura do Livery Studio: { base: equipe de partida ou null, c1: a cor de fundo, camadas: [...] }. Devolve o canvas (1024 × 1152).
 export function folhaDeCamadas(p, cv = document.createElement("canvas"), esc = 1) {
-  const t = p.base && DESENHOS[p.base] ? folhaDaEquipe(p.base, esc > 1, true) : null; // (antes de mudar o ESC: a folha da equipe o põe de volta em 1)
+  const t = p.base && DESENHOS[p.base] ? (p.semMarcas ? separarMarcas(p.base, esc).folha : folhaDaEquipe(p.base, esc > 1, true)) : null; // (antes de mudar o ESC: a folha da equipe o põe de volta em 1)
   ESC = esc; cv.width = FW * esc; cv.height = FH * esc; const ctx = cv.getContext("2d");
   if (t) ctx.drawImage(t.userData.cv, 0, 0, FW * esc, FH * esc); else base(ctx, p.c1 || "#1b2a5c");
   for (const l of p.camadas || []) {
     if (l.oculta) continue;
     lados(ctx, (c, s) => camadaNaVista(c, l, "L", s > 0 ? "A" : "B"));
-    for (const v of ["T", "F", "R"]) vista(ctx, v, (c) => camadaNaVista(c, l, v));
+    for (const v of ["T", "F", "R", "U"]) vista(ctx, v, (c) => camadaNaVista(c, l, v));
   }
   if (!t) lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO)); // (a entrada de ar escura, como em toda pintura)
   ESC = 1; return cv;

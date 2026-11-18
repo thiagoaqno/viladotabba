@@ -207,7 +207,7 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     trechoPts.push(pt.clone()); marcarTrecho();
     if (trechoPts.length < (curva ? 3 : 2)) { avisar(trechoPts.length === 1 ? "Agora clique onde termina." : "Agora clique por onde a curva passa."); return redesenhar(); }
     const [A, B, Mm] = trechoPts, rel = (p) => [+(p.x - A.x).toFixed(2), +(p.z - A.z).toFixed(2)], pts = [rel(A), Mm ? rel(Mm) : null, rel(B)], pos = { x: A.x, y: Math.min(A.y, B.y), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 };
-    const o4 = await colocar(ln ? { tipo: "linha", pts, modelo: linhaModelo, espaco: linhaEsp, altura: linhaAlt, mureta: (linhaModelo === "cerca" && linhaMureta) || undefined, ...pos }
+    const o4 = await colocar(ln ? { tipo: "linha", pts, modelo: linhaModelo, espaco: linhaEsp, altura: linhaAlt, larg: linhaModelo === "parede" ? linhaLarg : undefined, mureta: (linhaModelo === "cerca" && linhaMureta) || undefined, ...pos }
       : { tipo: "trecho", pts, largura: trechoLarg, zebra: trechoZebra || undefined, ...pos });
     trechoPts = trechoEmendar ? [B.clone()] : []; marcarTrecho();
     if (o4) { guardarItem(o4); avisar(trechoEmendar ? "Pronto. O próximo começa no fim deste (Esc para)." : "Pronto. Clique no início do próximo (Esc para)."); }
@@ -222,7 +222,7 @@ renderer.domElement.addEventListener("pointerup", async (e) => {
     const i = tr.indiceAt(hit.point.x, hit.point.z), p = tr.pts[i], lat = (hit.point.x - p.x) * p.nx + (hit.point.z - p.y) * p.ny;
     if (!beiraA) { beiraA = { i, lado: lat >= 0 ? 1 : -1 }; avisar("Barreira: agora clique onde ela termina (do mesmo lado)."); return desenharBeira(); }
     const a = beiraA; beiraA = null; let i0 = a.i, i1 = i; const fwd = (i1 - i0 + tr.n) % tr.n; if (fwd > tr.n / 2) [i0, i1] = [i1, i0];
-    const o5 = await colocar({ tipo: "linha", beira: { i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + beiraDist * M_PARA_U) }, modelo: beiraModelo, espaco: beiraEsp, altura: /^faixa/.test(beiraModelo) ? beiraFaixaAlt : beiraAlt, ...(/^faixa/.test(beiraModelo) ? { marca: placaMarca, marca2: beiraMarca2 || undefined, fundo: placaFundo, fundo2: beiraFundo2 || undefined, elev: beiraElev } : {}), mureta: (beiraModelo === "cerca" && beiraMureta) || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
+    const o5 = await colocar({ tipo: "linha", beira: { i0, i1, lado: a.lado, de: Math.round(tr.W / 2 + beiraDist * M_PARA_U) }, modelo: beiraModelo, espaco: beiraEsp, altura: /^faixa/.test(beiraModelo) ? beiraFaixaAlt : beiraAlt, larg: beiraModelo === "parede" ? linhaLarg : undefined, ...(/^faixa/.test(beiraModelo) ? { marca: placaMarca, marca2: beiraMarca2 || undefined, fundo: placaFundo, fundo2: beiraFundo2 || undefined, elev: beiraElev } : {}), mureta: (beiraModelo === "cerca" && beiraMureta) || undefined, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, s: 1 });
     if (o5) { selecionar(o5); avisar("Barreira pronta. Clique em mais dois pontos para outra (Esc para)."); } return desenharBeira();
   }
   if (assetEscolhido === "*escape" || assetEscolhido === "*zebra") {
@@ -365,6 +365,9 @@ function desenharArea() {
   $("edArCor").oninput = (e) => { areaCor = e.target.value; if (areaMaterial !== "cor" && !areaComCor) { areaComCor = true; if ($("edArComCor")) $("edArComCor").checked = true; } };
   if ($("edArComCor")) $("edArComCor").onchange = (e) => { areaComCor = e.target.checked; };
   $("edArKit").onchange = (e) => { areaEspalhar = e.target.value; desenharArea(); };
+  for (const c of el.querySelectorAll("[data-num]")) c.onchange = () => refazerItem(o, { [c.dataset.num]: Math.max(0.1, +c.value || 0.5) });
+  const ang = el.querySelector("[data-ang]"); if (ang) { ang.oninput = () => { $("edAngV").textContent = ang.value + "°"; }; ang.onchange = () => refazerItem(o, { angulo: +ang.value }); }
+  const sem = el.querySelector("[data-sem]"); if (sem) sem.onchange = () => refazerItem(o, { semaforo: sem.checked || undefined });
   for (const s of el.querySelectorAll("[data-mist]")) s.onchange = () => { areaMistura[+s.dataset.mist] = s.value; };
   if ($("edArEsp")) $("edArEsp").onchange = (e) => { areaEsp = Math.max(1, +e.target.value || 8); };
 }
@@ -401,12 +404,12 @@ function desenharBeira() {
   const el = $("edBeira"); if (!el) return; const on = assetEscolhido === "*beira";
   const opt = (v, n) => `<option value="${v}" ${v === beiraModelo ? "selected" : ""}>${h(n)}</option>`;
   const contencao = Object.entries(KITS).filter(([id]) => filtroDoKit(id) === "Contenção"), outros = Object.entries(KITS).filter(([id]) => filtroDoKit(id) !== "Contenção");
-  el.innerHTML = `<div class="lin" style="justify-content:center"><img id="edBePrev" alt="" style="width:100%;max-width:300px;height:120px;object-fit:contain;border-radius:8px;background:#1b2029"></div><div class="lin"><label style="flex:1">Item <select id="edBeM" style="flex:1">${opt("faixa", "Faixa de patrocínio (sem pés)")}${opt("faixaTela", "Faixa de patrocínio com tela e arame")}${opt("pneus", "Pneus (módulo vermelho)")}${opt("cerca", "Cerca (alambrado)")}${opt("pilares", "Pilares")}
+  el.innerHTML = `<div class="lin" style="justify-content:center"><img id="edBePrev" alt="" style="width:100%;max-width:300px;height:120px;object-fit:contain;border-radius:8px;background:#1b2029"></div><div class="lin"><label style="flex:1">Item <select id="edBeM" style="flex:1">${opt("faixa", "Faixa de patrocínio (sem pés)")}${opt("faixaTela", "Faixa de patrocínio com tela e arame")}${opt("pneus", "Pneus (módulo vermelho)")}${opt("cerca", "Cerca (alambrado)")}${opt("pilares", "Pilares")}${opt("parede", "Parede (altura e largura)")}
       <optgroup label="Contenção">${contencao.map(([id, k]) => opt("kit:" + id, k.nome)).join("")}</optgroup><optgroup label="Outras peças">${outros.map(([id, k]) => opt("kit:" + id, k.nome)).join("")}</optgroup></select></label></div>
     <div class="lin"><label>Da beira (m) <input type="number" id="edBeD" step="0.5" value="${beiraDist}"></label><label>Espaço (m) <input type="number" id="edBeE" step="0.5" value="${beiraEsp}"></label></div>
     ${/^faixa/.test(beiraModelo) ? `<div class="lin"><label>Marca <select id="edBeMa">${opcoesDeMarca(placaMarca)}</select></label><label>Alternar com <select id="edBeMa2"><option value="">nenhuma</option>${opcoesDeMarca(beiraMarca2)}</select></label></div>
     <div class="lin"><label>Fundo <input type="color" id="edBeFu" value="${placaFundo}"></label><label><input type="checkbox" id="edBeAlt" ${beiraFundo2 ? "checked" : ""}> alternar com</label><input type="color" id="edBeFu2" value="${beiraFundo2 || "#1e5bd6"}" ${beiraFundo2 ? "" : "disabled"}><label>Altura (m) <input type="number" id="edBeFA" step="0.1" value="${beiraFaixaAlt}"></label><label>Do chão (m) <input type="number" id="edBeEl" step="0.1" value="${beiraElev}"></label></div>` : ""}
-    ${beiraModelo === "cerca" || beiraModelo === "pilares" ? `<div class="lin"><label>Altura (m) <input type="number" id="edBeA" step="0.5" value="${beiraAlt}"></label>${beiraModelo === "cerca" ? `<label><input type="checkbox" id="edBeMu" ${beiraMureta ? "checked" : ""}> Mureta embaixo</label>` : ""}</div>` : ""}
+    ${beiraModelo === "cerca" || beiraModelo === "pilares" || beiraModelo === "parede" ? `<div class="lin"><label>Altura (m) <input type="number" id="edBeA" step="0.5" value="${beiraAlt}"></label>${beiraModelo === "parede" ? `<label>Largura (m) <input type="number" id="edBeL" step="0.1" value="${linhaLarg}"></label>` : ""}${beiraModelo === "cerca" ? `<label><input type="checkbox" id="edBeMu" ${beiraMureta ? "checked" : ""}> Mureta embaixo</label>` : ""}</div>` : ""}
     <div class="lin"><button id="edBeBt" class="ferr ${on ? "on" : ""}">${on ? (beiraA ? "Clique onde TERMINA… (Esc sai)" : "Clique na beira onde COMEÇA…") : "▥ Pôr barreira na beira da pista"}</button></div>
     <small>1. escolha o item e a distância · 2. clique na beira da pista onde começa, do lado em que ela fica · 3. clique onde termina. A fileira segue a curva sozinha (pode dar a volta).</small>`;
   $("edBeM").onchange = (e) => { beiraModelo = e.target.value; const s = espacoDoModelo(beiraModelo); if (s) beiraEsp = s; carregarBeira(); desenharBeira(); };
@@ -416,6 +419,7 @@ function desenharBeira() {
     $("edBeFA").onchange = (e) => { beiraFaixaAlt = Math.max(0.2, +e.target.value || 1); }; $("edBeEl").onchange = (e) => { beiraElev = Math.max(0, +e.target.value || 0); }; }
   $("edBeE").onchange = (e) => { beiraEsp = Math.max(0.5, +e.target.value || 4); };
   el.onchange = () => setTimeout(() => { guardarBeira(); previaBeira(); }); previaBeira(); // (a prévia do que vai ser posto: refeita a cada mudança)
+  if ($("edBeL")) $("edBeL").onchange = (e) => { linhaLarg = Math.max(0.1, +e.target.value || 0.5); };
   if ($("edBeA")) $("edBeA").onchange = (e) => { beiraAlt = Math.max(0.3, +e.target.value || 3); };
   if ($("edBeMu")) $("edBeMu").onchange = (e) => { beiraMureta = e.target.checked; };
   $("edBeBt").onclick = () => { beiraA = null; assetEscolhido = on ? null : "*beira"; desenharBeira(); desenharZebra(); desenharLinha(); desenharTrecho(); desenharBiblioteca(); };
@@ -439,17 +443,18 @@ function desenharZebra() {
   $("edZbD").onchange = (e) => { zebraDentro = +e.target.value || 0; };
 }
 // a linha de itens: o modelo, o espaçamento e a altura (em metros); reta com 2 cliques, curva com 3
-let linhaModelo = "pneus", linhaEsp = 4, linhaAlt = 3, linhaCurva = false, linhaMureta = true;
+let linhaModelo = "pneus", linhaEsp = 4, linhaAlt = 3, linhaCurva = false, linhaMureta = true, linhaLarg = 0.5; // (linhaLarg: a espessura da parede, nas duas ferramentas)
 function desenharLinha() {
   const on = assetEscolhido === "*linha", passo = ["Clique no INÍCIO…", "Clique no FIM…", "Clique por onde a CURVA passa…"][trechoPts.length] || "";
   const kits = Object.entries(KITS).map(([id, k]) => `<option value="kit:${id}" ${linhaModelo === "kit:" + id ? "selected" : ""}>${h(k.nome)}</option>`).join("");
   $("edLinha").innerHTML = `<div class="lin"><button id="edLnBt" class="ferr ${on ? "on" : ""}">${on ? passo + " (Esc sai)" : "⋯ Desenhar linha de itens"}</button></div>
-    <div class="lin"><label>Item <select id="edLnM"><option value="pneus" ${linhaModelo === "pneus" ? "selected" : ""}>Pneus (módulo vermelho)</option><option value="cerca" ${linhaModelo === "cerca" ? "selected" : ""}>Cerca (alambrado)</option><option value="pilares" ${linhaModelo === "pilares" ? "selected" : ""}>Pilares</option><optgroup label="Da biblioteca">${kits}</optgroup></select></label></div>
-    <div class="lin"><label>Espaço (m) <input type="number" id="edLnE" step="0.5" value="${linhaEsp}"></label><label>Altura (m) <input type="number" id="edLnA" step="0.5" value="${linhaAlt}"></label></div>
+    <div class="lin"><label>Item <select id="edLnM"><option value="pneus" ${linhaModelo === "pneus" ? "selected" : ""}>Pneus (módulo vermelho)</option><option value="cerca" ${linhaModelo === "cerca" ? "selected" : ""}>Cerca (alambrado)</option><option value="pilares" ${linhaModelo === "pilares" ? "selected" : ""}>Pilares</option><option value="parede" ${linhaModelo === "parede" ? "selected" : ""}>Parede (altura e largura)</option><optgroup label="Da biblioteca">${kits}</optgroup></select></label></div>
+    <div class="lin"><label>Espaço (m) <input type="number" id="edLnE" step="0.5" value="${linhaEsp}"></label><label>Altura (m) <input type="number" id="edLnA" step="0.5" value="${linhaAlt}"></label>${linhaModelo === "parede" ? `<label>Largura (m) <input type="number" id="edLnL" step="0.1" value="${linhaLarg}"></label>` : ""}</div>
     <div class="lin"><label><input type="radio" name="edLnT" value="reta" ${linhaCurva ? "" : "checked"}> Reta</label><label><input type="radio" name="edLnT" value="curva" ${linhaCurva ? "checked" : ""}> Curva</label>${linhaModelo === "cerca" ? `<label><input type="checkbox" id="edLnMu" ${linhaMureta ? "checked" : ""}> Mureta embaixo</label>` : ""}<label><input type="checkbox" id="edLnEm" ${trechoEmendar ? "checked" : ""}> Emendar</label></div>
     <small>Defina a linha com os cliques: ele distribui os itens nela, um a cada "Espaço". Na cerca, os postes ficam no espaço e a tela tem a altura escolhida.</small>`;
   $("edLnBt").onclick = () => { trechoPts = []; marcarTrecho(); assetEscolhido = on ? null : "*linha"; desenharLinha(); desenharTrecho(); desenharZebra(); desenharBiblioteca(); };
   $("edLnM").onchange = (e) => { linhaModelo = e.target.value; if (linhaModelo === "cerca") linhaEsp = Math.max(linhaEsp, 3); desenharLinha(); };
+  if ($("edLnL")) $("edLnL").onchange = (e) => { linhaLarg = Math.max(0.1, +e.target.value || 0.5); };
   $("edLnE").onchange = (e) => { linhaEsp = Math.max(0.5, +e.target.value || 4); };
   $("edLnA").onchange = (e) => { linhaAlt = Math.max(0.3, +e.target.value || 3); };
   for (const r of $("edLinha").querySelectorAll("[name=edLnT]")) r.onchange = () => { linhaCurva = r.value === "curva"; if (trechoPts.length > 2) trechoPts.length = 2; desenharLinha(); };
@@ -556,6 +561,9 @@ function desenharItem(soNumeros = false) {
     ${it.tipo === "area" ? `<div class="lin"><label>Preencher <select data-pl="material">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === it.material ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div><div class="lin"><label>Espalhar <select data-pl="espalhar"><option value="">Nada</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${id === it.espalhar ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label><label>A cada (m) <input type="number" step="1" data-pl="espaco" value="${it.espaco || 8}"></label></div>${it.espalhar ? [0, 1].map((i) => `<div class="lin"><label>+ Espécie ${i + 2} <select data-mist="${i}"><option value="">Nenhuma</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${(it.mistura || [])[i] === id ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label></div>`).join("") : ""}` : ""}
     ${it.tipo === "marcaChao" ? `<div class="lin"><label>Grudar em <select data-pl="grampo"><option value="pista" ${it.grampo === "pista" ? "selected" : ""}>Pista (asfalto, zebra, calçada)</option><option value="solo" ${(it.grampo || "solo") === "solo" ? "selected" : ""}>Solo (relevo)</option><option value="livre" ${it.grampo === "livre" ? "selected" : ""}>Livre (usa o Y)</option></select></label><label>Acima (m) <input type="number" step="0.05" data-alt value="${it.alt || 0}"></label></div>` : ""}
     ${it.tipo === "linha" && /^faixa/.test(it.modelo || "") ? `<div class="lin"><label>Marca <select data-pl="marca">${opcoesDeMarca(it.marca)}</select></label><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>` : ""}
+    ${it.tipo === "linha" && it.modelo === "parede" ? `<div class="lin"><label>Largura (m) <input type="number" step="0.1" data-num="larg" value="${it.larg || 0.5}"></label></div>` : ""}
+    ${it.tipo === "kit" && KITS[it.kit]?.angulo ? `<div class="lin"><label>Ângulo (°) <input type="range" min="10" max="340" step="1" data-ang value="${it.angulo ?? KITS[it.kit].angulo}"></label><span id="edAngV">${it.angulo ?? KITS[it.kit].angulo}°</span></div>` : ""}
+    ${it.tipo === "portico" ? `<div class="lin"><label><input type="checkbox" data-sem ${it.semaforo ? "checked" : ""}> Com semáforo</label><label>Vão <input type="number" step="5" data-num="w" value="${it.w || 150}"></label><label>Altura <input type="number" step="1" data-num="alto" value="${it.alto || 32}"></label></div>` : ""}
     ${it.tipo === "linha" ? `<div class="lin"><label>Espaço (m) <input type="number" step="0.5" data-pl="espaco" value="${it.espaco || 4}"></label><label>Altura (m) <input type="number" step="0.5" data-pl="altura" value="${it.altura || 3}"></label></div>` : ""}
     ${it.tipo === "trecho" ? `<div class="lin"><label>Largura <input type="number" step="5" data-pl="largura" value="${it.largura || 60}"></label><button data-trz>${it.zebra ? "Tirar zebras" : "Pôr zebras"}</button></div>` : ""}
     ${placa ? `<div class="lin"><select data-pl="marca">${opcoesDeMarca(it.marca)}</select><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>
@@ -578,7 +586,7 @@ function desenharItem(soNumeros = false) {
   if (el.querySelector("[data-trz]")) el.querySelector("[data-trz]").onclick = () => refazerItem(o, { zebra: !it.zebra || undefined });
   el.querySelector("[data-cor]").onchange = (e) => { if (it.tipo === "kit") lembrar("kit:" + it.kit, { cor: e.target.value }); trocarCor(o, e.target.value); };
   el.querySelector("[data-semcor]").onclick = () => trocarCor(o, null);
-  painelAcabamento($("edAcab"), o, it.acab, (acab) => { it.acab = acab || undefined; aplicarAcabamento(o, acab); });
+  painelAcabamento($("edAcab"), o, it.acab, (acab, previa) => { if (!previa) it.acab = acab || undefined; aplicarAcabamento(o, acab); });
   for (const b of el.querySelectorAll("[data-a]")) b.onclick = () => dispatchEvent(new KeyboardEvent("keydown", { key: b.dataset.a === "del" ? "Delete" : b.dataset.a }));
   for (const b of el.querySelectorAll("[data-esp]")) b.onclick = () => refazerItem(o, { espelho: it.espelho === b.dataset.esp ? undefined : b.dataset.esp });
 }
@@ -601,7 +609,7 @@ function desenharPeca(o, soNumeros) {
     try { const bin = await exportador.parseAsync(copia, { binary: true }); const r = await api("original/" + encodeURIComponent(nome), { method: "POST", headers: { "content-type": "application/octet-stream" }, body: bin }); avisar(`Exportado: assets-originais/${nome}.glb (${r.kb} KB)`); recarregarAssets(); }
     catch (e) { avisar("Não exportou: " + e.message, true); }
   };
-  painelAcabamento($("edAcab"), o, o.userData.acab, (acab) => { o.userData.acab = acab || null; aplicarAcabamento(o, acab); guardarPeca(o); });
+  painelAcabamento($("edAcab"), o, o.userData.acab, (acab, previa) => { aplicarAcabamento(o, acab); if (!previa) { o.userData.acab = acab || null; guardarPeca(o); } });
   el.querySelector("[data-p=espelhar]").onclick = () => { const a = estado(o); o.scale.x *= -1; guardarPeca(o); registrar({ tipo: "mexer", o, antes: a, depois: estado(o) }); };
   el.querySelector("[data-p=pai]").onclick = () => { if (o.parent && o.parent !== tr.grp) selecionar(o.parent); };
   el.querySelector("[data-p=esconder]").onclick = () => { const a = estado(o); o.visible = false; guardarPeca(o); registrar({ tipo: "mexer", o, antes: a, depois: estado(o) }); selecionar(null); };

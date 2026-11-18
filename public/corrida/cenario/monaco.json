@@ -958,28 +958,6 @@
   {
    "tipo": "linha",
    "beira": {
-    "i0": 172,
-    "i1": 184,
-    "lado": -1,
-    "de": 114
-   },
-   "modelo": "faixaTela",
-   "espaco": 6,
-   "altura": 2,
-   "marca": "monacogp",
-   "fundo": "#081f00",
-   "elev": 0.3,
-   "x": 0,
-   "y": 0,
-   "z": 0,
-   "rx": 0,
-   "ry": 0,
-   "rz": 0,
-   "s": 1
-  },
-  {
-   "tipo": "linha",
-   "beira": {
     "i0": 227,
     "i1": 497,
     "lado": 1,
@@ -1424,6 +1402,333 @@
    "z": 2500.57,
    "rx": 0,
    "ry": 0.098,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "placa",
+   "marca": "aws",
+   "fundo": "#000000",
+   "w": 35,
+   "x": 4107.4,
+   "y": 65.01,
+   "z": 538.32,
+   "rx": 0,
+   "ry": 0.0666,
+   "rz": 0,
+   "s": 3.7,
+   "alto": 9
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1017,
+    "i1": 1081,
+    "lado": -1,
+    "de": 42
+   },
+   "modelo": "faixa",
+   "espaco": 11,
+   "altura": 3,
+   "marca": "monacogp",
+   "fundo": "#000000",
+   "elev": 0.3,
+   "x": 0,
+   "y": -4,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1081,
+    "i1": 1109,
+    "lado": -1,
+    "de": 42
+   },
+   "modelo": "faixa",
+   "espaco": 11,
+   "altura": 2,
+   "marca": "monacocircuit",
+   "fundo": "#ffffff",
+   "elev": 0.3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1259,
+    "i1": 1479,
+    "lado": -1,
+    "de": 42
+   },
+   "modelo": "faixaTela",
+   "espaco": 11,
+   "altura": 2,
+   "marca": "monacocircuit",
+   "fundo": "#ffffff",
+   "elev": 0.3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "area",
+   "pts": [
+    [
+     0,
+     0
+    ],
+    [
+     -15.14,
+     -29.88
+    ],
+    [
+     -33.69,
+     -51.07
+    ],
+    [
+     -62.18,
+     -65.05
+    ],
+    [
+     -94.22,
+     -72.17
+    ],
+    [
+     -110.9,
+     -74.27
+    ],
+    [
+     -149.85,
+     -264.04
+    ],
+    [
+     -39.6,
+     -246.66
+    ],
+    [
+     -4.07,
+     -61.48
+    ]
+   ],
+   "material": "asfalto",
+   "x": 4466.35,
+   "y": 53.15,
+   "z": 556.43,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "muretaAlambrado",
+   "x": 4462.42,
+   "y": 44.92,
+   "z": 534.58,
+   "rx": 0,
+   "ry": -1.5167,
+   "rz": 0,
+   "s": 1.4
+  },
+  {
+   "tipo": "kit",
+   "kit": "muretaAlambrado",
+   "x": 4454.3,
+   "y": 51.17,
+   "z": 467.01,
+   "rx": 0,
+   "ry": -1.4121,
+   "rz": 0,
+   "s": 1.4
+  },
+  {
+   "tipo": "kit",
+   "kit": "muretaAlambrado",
+   "x": 4443.59,
+   "y": 55.7,
+   "z": 401.78,
+   "rx": 0,
+   "ry": -1.4008,
+   "rz": 0,
+   "s": 1.4
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1109,
+    "i1": 1113,
+    "lado": -1,
+    "de": 42
+   },
+   "modelo": "faixa",
+   "espaco": 11,
+   "altura": 2,
+   "marca": "monacocircuit",
+   "fundo": "#ffffff",
+   "elev": 0.3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "kit",
+   "kit": "arqCadeirasToldo",
+   "x": 4512.99,
+   "y": 41.93,
+   "z": 482.77,
+   "rx": 0,
+   "ry": -0.8822,
+   "rz": 0,
+   "s": 2
+  },
+  {
+   "tipo": "kit",
+   "kit": "empilhadeira",
+   "x": 4275.47,
+   "y": 47.65,
+   "z": 431.94,
+   "rx": 0,
+   "ry": -2.582,
+   "rz": 0,
+   "s": 2
+  },
+  {
+   "tipo": "kit",
+   "kit": "ambulancia",
+   "x": 4339.44,
+   "y": 42.04,
+   "z": 437.49,
+   "rx": 0,
+   "ry": -2.184,
+   "rz": 0,
+   "s": 2
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1142,
+    "i1": 1259,
+    "lado": -1,
+    "de": 42
+   },
+   "modelo": "faixaTela",
+   "espaco": 11,
+   "altura": 2.5,
+   "marca": "aws",
+   "fundo": "#000000",
+   "elev": 0.3,
+   "x": 0,
+   "y": -2,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1148,
+    "i1": 1260,
+    "lado": 1,
+    "de": 42
+   },
+   "modelo": "faixa",
+   "espaco": 11,
+   "altura": 2.5,
+   "marca": "aws",
+   "fundo": "#000000",
+   "elev": 0.3,
+   "x": 0,
+   "y": -2,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1127,
+    "i1": 1142,
+    "lado": -1,
+    "de": 42
+   },
+   "modelo": "faixaTela",
+   "espaco": 11,
+   "altura": 2.5,
+   "marca": "monacocircuit",
+   "fundo": "#ffffff",
+   "elev": 0.3,
+   "x": 0,
+   "y": -2,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 1096,
+    "i1": 1148,
+    "lado": 1,
+    "de": 42
+   },
+   "modelo": "faixa",
+   "espaco": 11,
+   "altura": 3,
+   "marca": "monacogp",
+   "fundo": "#000000",
+   "elev": 0.3,
+   "x": 0,
+   "y": -4,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "s": 1
+  },
+  {
+   "tipo": "linha",
+   "beira": {
+    "i0": 162,
+    "i1": 190,
+    "lado": -1,
+    "de": 90
+   },
+   "modelo": "faixaTela",
+   "espaco": 11,
+   "altura": 2,
+   "marca": "monacogp",
+   "fundo": "#000000",
+   "elev": 0.3,
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
    "rz": 0,
    "s": 1
   }
@@ -2720,6 +3025,19 @@
   },
   {
    "chave": "monaco-muro#33",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rx": 0,
+   "ry": 0,
+   "rz": 0,
+   "sx": 1,
+   "sy": 1,
+   "sz": 1,
+   "oculto": true
+  },
+  {
+   "chave": "monaco-muro#23",
    "x": 0,
    "y": 0,
    "z": 0,

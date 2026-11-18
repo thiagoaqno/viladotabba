@@ -564,7 +564,8 @@ function desenharItem(soNumeros = false) {
     <div class="lin">${n("giro", deg(o.rotation.y), 5)}${n("escala", o.scale.x, 0.1)}</div>
     <div class="lin"><label>Cor <input type="color" data-cor value="${it.cor || "#ffffff"}"></label><button data-semcor>Cor original</button></div>
     <div id="edAcab"></div>
-    <div class="lin"><button data-a="g">No chão (G)</button><button data-a="d">Duplicar (D)</button><button data-a="del">Apagar</button></div>`;
+    <div class="lin"><button data-a="g">No chão (G)</button><button data-a="d">Duplicar (D)</button><button data-a="del">Apagar</button></div>
+    <div class="lin"><button data-esp="x" class="${it.espelho === "x" ? "on" : ""}">⇋ Espelhar (lado)</button><button data-esp="z" class="${it.espelho === "z" ? "on" : ""}">⇵ Espelhar (frente)</button></div>`;
   for (const i of el.querySelectorAll("[data-c]")) i.onchange = () => {
     const v = +i.value; if (!Number.isFinite(v)) return;
     if (i.dataset.c === "giro") o.rotation.y = (v * Math.PI) / 180; else if (i.dataset.c === "escala") { o.scale.setScalar(Math.max(0.01, v)); if (it.tipo === "kit") lembrar("kit:" + it.kit, { s: +o.scale.x.toFixed(3) }); } else o.position[i.dataset.c] = v;
@@ -579,6 +580,7 @@ function desenharItem(soNumeros = false) {
   el.querySelector("[data-semcor]").onclick = () => trocarCor(o, null);
   painelAcabamento($("edAcab"), o, it.acab, (acab) => { it.acab = acab || undefined; aplicarAcabamento(o, acab); });
   for (const b of el.querySelectorAll("[data-a]")) b.onclick = () => dispatchEvent(new KeyboardEvent("keydown", { key: b.dataset.a === "del" ? "Delete" : b.dataset.a }));
+  for (const b of el.querySelectorAll("[data-esp]")) b.onclick = () => refazerItem(o, { espelho: it.espelho === b.dataset.esp ? undefined : b.dataset.esp });
 }
 function desenharPeca(o, soNumeros) {
   const el = $("edItem"), deg = (r) => (r * 180) / Math.PI, n = (k, v, passo) => `<label>${k} <input type="number" step="${passo}" data-c="${k}" value="${(+v).toFixed(passo < 1 ? 2 : 0)}"></label>`;
@@ -586,11 +588,12 @@ function desenharPeca(o, soNumeros) {
   el.innerHTML = `<div class="lin"><b>${h(o.name || o.type)}</b> <small>peça da pista · ${h(chaveDe(tr, o))}</small></div>
     <div class="lin">${n("x", o.position.x, 1)}${n("y", o.position.y, 1)}${n("z", o.position.z, 1)}</div>
     <div class="lin">${n("giro", deg(o.rotation.y), 5)}${n("escala", o.scale.x, 0.1)}</div>
+    <div class="lin"><button data-p="espelhar">⇋ Espelhar</button></div>
     <div class="lin"><button data-p="pai">Pegar o grupo de fora</button><button data-p="esconder">Esconder</button><button data-p="voltar">Voltar ao original</button></div>
     <div id="edAcab"></div>
     <div class="lin"><button data-p="exportar">Exportar .glb (para o Blender)</button></div>
     <small>As posições são dentro do grupo da peça. Pegue o grupo de fora para mexer num prédio inteiro.</small>`;
-  for (const i of el.querySelectorAll("[data-c]")) i.onchange = () => { const v = +i.value; if (!Number.isFinite(v)) return; if (i.dataset.c === "giro") o.rotation.y = (v * Math.PI) / 180; else if (i.dataset.c === "escala") o.scale.multiplyScalar(Math.max(0.01, v) / (o.scale.x || 1)); else o.position[i.dataset.c] = v; guardarPeca(o); };
+  for (const i of el.querySelectorAll("[data-c]")) i.onchange = () => { const v = +i.value; if (!Number.isFinite(v)) return; if (i.dataset.c === "giro") o.rotation.y = (v * Math.PI) / 180; else if (i.dataset.c === "escala") o.scale.multiplyScalar(Math.max(0.01, v) / (Math.abs(o.scale.x) || 1)); else o.position[i.dataset.c] = v; guardarPeca(o); };
   // (2026-11-16, o Thiago: "gera o glb do cassino e eu arrumo") a peça vai como está na pista (centrada no chão dela) para assets-originais/
   el.querySelector("[data-p=exportar]").onclick = async () => {
     const nome = prompt("Nome do arquivo (em assets-originais/):", (o.name || "peca").toLowerCase().replace(/[^a-z0-9_-]/g, "-")); if (!nome) return;
@@ -599,6 +602,7 @@ function desenharPeca(o, soNumeros) {
     catch (e) { avisar("Não exportou: " + e.message, true); }
   };
   painelAcabamento($("edAcab"), o, o.userData.acab, (acab) => { o.userData.acab = acab || null; aplicarAcabamento(o, acab); guardarPeca(o); });
+  el.querySelector("[data-p=espelhar]").onclick = () => { const a = estado(o); o.scale.x *= -1; guardarPeca(o); registrar({ tipo: "mexer", o, antes: a, depois: estado(o) }); };
   el.querySelector("[data-p=pai]").onclick = () => { if (o.parent && o.parent !== tr.grp) selecionar(o.parent); };
   el.querySelector("[data-p=esconder]").onclick = () => { const a = estado(o); o.visible = false; guardarPeca(o); registrar({ tipo: "mexer", o, antes: a, depois: estado(o) }); selecionar(null); };
   el.querySelector("[data-p=voltar]").onclick = () => { const or = o.userData.original; if (or) { o.position.fromArray(or.p); o.rotation.set(or.r[0], or.r[1], or.r[2]); o.scale.fromArray(or.s); o.visible = or.v; } o.userData.acab = null; aplicarAcabamento(o, null); ajustes.delete(chaveDe(tr, o)); desenharItem(); };

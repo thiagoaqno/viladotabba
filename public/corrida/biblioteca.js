@@ -510,6 +510,139 @@ KITS.cabineBranca = F("Geral", { nome: "Cabine de bandeirinha", grupo: "Pista", 
 KITS.gridLargada = F("Geral", { nome: "Posições do grid (2)", grupo: "Pista", montar() {
   const g = new THREE.Group(), t = texCanvas("grid", 128, 256, (x, w, hh) => { x.clearRect(0, 0, w, hh); x.strokeStyle = "#f4f4f2"; x.lineWidth = 8; x.beginPath(); x.moveTo(8, 60); x.lineTo(8, 8); x.lineTo(w - 8, 8); x.lineTo(w - 8, 60); x.stroke(); });
   const m = new THREE.MeshStandardMaterial({ map: t, transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }); for (const [x, z] of [[-1, 0], [1, -1.6]]) { const p = malha(g, new THREE.PlaneGeometry(2.4 * U, 4.8 * U), m, x * 2.2 * U, 0.08 * U, z * 4.8 * U); p.rotation.x = -Math.PI / 2; } return g; } });
+// ---------- (2026-11-17, as imagens do Thiago: o pacote de vegetação, o prédio da reta e o kit do GP do México) ----------
+// VEGETAÇÃO low poly "realista": tronco com galhos, copa em vários blocos facetados de verdes variados (cada árvore com o seu sorteio),
+// arbustos de tamanhos e flores diferentes, tufos de capim e forrações com flor.
+const VERDES = [0x4d6b2a, 0x5f7f34, 0x6f8f3a, 0x3f5d24, 0x7a9a44].map((c) => M(c, { flatShading: true, roughness: 0.9 })), CASCA = M(0x6a5a48, { flatShading: true, roughness: 1 });
+function galho(g, x0, y0, z0, x1, y1, z1, r) { const a = new THREE.Vector3(x0, y0, z0), b = new THREE.Vector3(x1, y1, z1), l = a.distanceTo(b), m = cil(g, CASCA, r, l, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, 5, r * 0.6); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return m; }
+// uma árvore folhosa: altura do tronco, raio e forma da copa (achatada, redonda, alta), quantos blocos, a semente
+function folhosa({ tronco = 4, copa = 3, alta = 1, larga = 1, blocos = 9, semente = 1 }) {
+  const g = new THREE.Group(), r = sorteio(semente), T = tronco * U, R = copa * U;
+  galho(g, 0, 0, 0, 0, T, 0, 0.28 * U);
+  for (let k = 0; k < 3; k++) { const a = r() * Math.PI * 2; galho(g, 0, T * (0.55 + r() * 0.3), 0, Math.cos(a) * R * 0.6 * larga, T + R * 0.3, Math.sin(a) * R * 0.6 * larga, 0.12 * U); }
+  for (let k = 0; k < blocos; k++) { const a = r() * Math.PI * 2, d = r() * R * 0.75 * larga, s = (0.45 + r() * 0.35) * R;
+    const b = malha(g, new THREE.IcosahedronGeometry(s, 1), VERDES[Math.floor(r() * VERDES.length)], Math.cos(a) * d, T + R * 0.35 + (r() - 0.3) * R * 0.9 * alta, Math.sin(a) * d); b.scale.set(1, 0.75 * alta, 1); b.rotation.set(r(), r(), r()); }
+  return g;
+}
+const ARVORES = [["Árvore folhosa pequena", { tronco: 3, copa: 2.2, blocos: 7, semente: 3 }], ["Árvore de copa redonda", { tronco: 3.5, copa: 3.4, blocos: 10, semente: 5 }], ["Árvore folhosa alta", { tronco: 5, copa: 2.8, alta: 1.5, blocos: 10, semente: 8 }],
+  ["Árvore de copa aberta", { tronco: 4.5, copa: 3.6, larga: 1.4, alta: 0.8, blocos: 11, semente: 13 }], ["Árvore grande", { tronco: 6, copa: 4.2, alta: 1.2, blocos: 13, semente: 21 }], ["Árvore de copa rala", { tronco: 5.5, copa: 3.2, larga: 1.2, blocos: 8, semente: 34 }]];
+ARVORES.forEach(([nome, o], i) => { KITS["arvoreReal" + (i + 1)] = F("Vegetação", { nome, grupo: "Natureza", montar: () => folhosa(o) }); });
+KITS.coqueiro = F("Vegetação", { nome: "Coqueiro", grupo: "Natureza", montar() {
+  const g = new THREE.Group(), h = 11 * U; let x = 0; for (let k = 0; k < 5; k++) { const x1 = x + 0.25 * U; galho(g, x, (k * h) / 5, 0, x1, ((k + 1) * h) / 5, 0, (0.3 - k * 0.03) * U); x = x1; }
+  const folha = M(0x5d8a2e, { flatShading: true, side: THREE.DoubleSide });
+  for (let k = 0; k < 11; k++) { const a = (k / 11) * Math.PI * 2, f = malha(g, new THREE.PlaneGeometry(1 * U, 4.6 * U, 1, 4), folha, x, h, 0); const p = f.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const v = (p.getY(i) + 2.3 * U) / (4.6 * U); p.setZ(i, -v * v * 1.6 * U); p.setX(i, p.getX(i) * (1 - v * 0.7)); } f.geometry.translate(0, 2.3 * U, 0); f.geometry.computeVertexNormals(); f.rotation.set(-1.1, a, 0, "YXZ"); }
+  return g; } });
+function arbusto(cor, flor, tam, semente) {
+  const g = new THREE.Group(), r = sorteio(semente), M1 = M(cor, { flatShading: true, roughness: 0.95 });
+  for (let k = 0; k < 6; k++) { const s = (0.4 + r() * 0.35) * tam * U, b = malha(g, new THREE.IcosahedronGeometry(s, 1), k % 2 ? M1 : VERDES[k % 5], (r() - 0.5) * tam * U, s * 0.8, (r() - 0.5) * tam * U); b.scale.y = 0.8; }
+  if (flor) { const F1 = M(flor, { roughness: 0.6 }); for (let k = 0; k < 18; k++) { const a = r() * Math.PI * 2, e = r() * 1.2; malha(g, new THREE.IcosahedronGeometry(0.09 * tam * U, 0), F1, Math.cos(a) * Math.cos(e) * tam * 0.55 * U, (0.5 + Math.sin(e) * 0.5) * tam * U, Math.sin(a) * Math.cos(e) * tam * 0.55 * U); } }
+  return g;
+}
+for (const [id, nome, cor, flor, tam, s] of [["arbustoPequeno", "Arbusto pequeno", 0x55752e, null, 0.9, 2], ["arbustoMedio", "Arbusto médio", 0x4a6a28, null, 1.4, 4], ["arbustoGrande", "Arbusto grande", 0x3f5f24, null, 2.2, 6], ["arbustoRosa", "Arbusto com flor rosa", 0x5a6f30, 0xd98aa0, 1.3, 9], ["arbustoBranco", "Arbusto com flor branca", 0x55752e, 0xf2f0e6, 1.2, 11]])
+  KITS[id] = F("Vegetação", { nome, grupo: "Natureza", montar: () => arbusto(cor, flor, tam, s) });
+function capim(alto, n, cor, espiga, semente) {
+  const g = new THREE.Group(), r = sorteio(semente), C = M(cor, { flatShading: true, side: THREE.DoubleSide, roughness: 1 });
+  for (let k = 0; k < n; k++) { const h = (0.6 + r() * 0.5) * alto * U, f = malha(g, new THREE.ConeGeometry(0.06 * U, h, 3), C, (r() - 0.5) * 0.7 * U, h / 2, (r() - 0.5) * 0.7 * U); f.rotation.set((r() - 0.5) * 0.6, r() * 3, (r() - 0.5) * 0.6);
+    if (espiga && r() < 0.35) malha(g, new THREE.CylinderGeometry(0.05 * U, 0.03 * U, 0.35 * U, 4), M(0xc9b77a), f.position.x * 1.3, h + 0.1 * U, f.position.z * 1.3); }
+  return g;
+}
+KITS.capimBaixo = F("Vegetação", { nome: "Tufo de capim", grupo: "Natureza", montar: () => capim(0.6, 16, 0x7d9a44, false, 3) });
+KITS.capimAlto = F("Vegetação", { nome: "Capim alto", grupo: "Natureza", montar: () => capim(1.3, 22, 0x8aa04c, true, 5) });
+KITS.capimSeco = F("Vegetação", { nome: "Capim seco", grupo: "Natureza", montar: () => capim(1, 20, 0xa8a05a, true, 7) });
+function forracao(flor, semente) {
+  const g = new THREE.Group(), r = sorteio(semente), FO = M(0x4f7a2e, { flatShading: true, side: THREE.DoubleSide });
+  for (let k = 0; k < 14; k++) { const f = malha(g, new THREE.CircleGeometry(0.3 * U, 5), FO, (r() - 0.5) * 2 * U, 0.15 * U + r() * 0.2 * U, (r() - 0.5) * 2 * U); f.rotation.set(-Math.PI / 2 + (r() - 0.5) * 0.8, 0, r() * 3); }
+  if (flor) { const FL = M(flor, { roughness: 0.6 }); for (let k = 0; k < 12; k++) { const x = (r() - 0.5) * 1.8 * U, z = (r() - 0.5) * 1.8 * U, h = (0.3 + r() * 0.4) * U; cil(g, FO, 0.015 * U, h, x, h / 2, z, 3); malha(g, new THREE.IcosahedronGeometry(0.07 * U, 0), FL, x, h, z); } }
+  return g;
+}
+KITS.forracaoVerde = F("Vegetação", { nome: "Forração verde", grupo: "Natureza", montar: () => forracao(null, 2) });
+KITS.forracaoBranca = F("Vegetação", { nome: "Flores brancas", grupo: "Natureza", montar: () => forracao(0xf4f2ea, 4) });
+KITS.forracaoRoxa = F("Vegetação", { nome: "Flores roxas", grupo: "Natureza", montar: () => forracao(0xb45cc8, 6) });
+KITS.forracaoAmarela = F("Vegetação", { nome: "Flores amarelas", grupo: "Natureza", montar: () => forracao(0xf0c52a, 8) });
+KITS.vasoPlanta = F("Vegetação", { nome: "Vaso com planta", grupo: "Natureza", montar() { const g = new THREE.Group(); caixa(g, M(0xf2f2f0), 0.8 * U, 0.8 * U, 0.8 * U, 0, 0.4 * U, 0); const p = capim(1.1, 14, 0x3f7a2e, false, 12); p.position.y = 0.8 * U; g.add(p); return g; } });
+
+// O PRÉDIO DA RETA (a imagem do México): dois andares de arquibancada coberta na frente, os camarotes de vidro atrás de cada andar,
+// a faixa de patrocínio na frente de cada laje, o telhado de terracota com as casas de máquinas
+KITS.predioReta = F("Arquibancadas", { nome: "Prédio da reta (2 andares)", grupo: "Público", montar() {
+  const g = new THREE.Group(), w = 60 * U, prof = 16 * U, andar = 6 * U, V = M(0x1f2a33, { roughness: 0.15, metalness: 0.4 }), PAR = M(0xd6d4cc, { roughness: 0.85 }), t = texFaixa("galera");
+  const faixa = (y, z) => malha(g, new THREE.BoxGeometry(w, 0.9 * U, 0.1 * U), [ESCURO, ESCURO, ESCURO, ESCURO, new THREE.MeshStandardMaterial({ map: t }), new THREE.MeshStandardMaterial({ map: t })], 0, y, z);
+  for (let a = 0; a < 2; a++) { const y0 = a * andar * 1.15, z0 = -a * 2 * U;
+    const ar = arquibancadaCadeiras({ largura: 60, fileiras: 5, base: 0, pilares: false, cor: M(0x3a3f47, { roughness: 0.6 }) }); ar.position.set(0, y0 + 1.2 * U, z0); g.add(ar);
+    faixa(y0 + 0.9 * U, z0 + 0.6 * U); caixa(g, V, w, andar * 0.55, 0.2 * U, 0, y0 + andar * 0.75 + 1.2 * U, z0 - 5 * 0.85 * U - 0.5 * U);
+    caixa(g, PAR, w + U, 0.4 * U, prof, 0, y0 + andar + 1.4 * U, z0 - prof / 2 + 2 * U); }
+  caixa(g, PAR, w, andar * 2.4, prof * 0.5, 0, andar * 1.2, -prof * 0.75); caixa(g, PAR, U, andar * 2.4, prof + 2 * U, -w / 2, andar * 1.2, -prof / 2 + U); caixa(g, PAR, U, andar * 2.4, prof + 2 * U, w / 2, andar * 1.2, -prof / 2 + U);
+  caixa(g, M(0x9a5a3a, { roughness: 0.9 }), w + 2 * U, 0.5 * U, prof + 4 * U, 0, andar * 2.4 + 0.25 * U, -prof / 2);
+  for (const x of [-20, 0, 20]) caixa(g, PAR, 6 * U, 2.4 * U, 4 * U, x * U, andar * 2.4 + 1.5 * U, -prof / 2);
+  return g; } });
+
+// O KIT DO GP DO MÉXICO: o padrão verde e vermelho (losangos e degraus), as faixas, a lona tensionada e as peças de pátio
+const texMex = () => texCanvas("mexicano", 256, 64, (x, w, hh) => { x.fillStyle = "#0f5f3a"; x.fillRect(0, 0, w, hh); const cs = ["#c8202f", "#1d8a4f", "#0a3d26", "#e8e3d6"];
+  for (let i = 0; i < 16; i++) { const cx = i * 16 + 8; x.fillStyle = cs[i % 4]; x.beginPath(); x.moveTo(cx, 8); x.lineTo(cx + 8, 32); x.lineTo(cx, 56); x.lineTo(cx - 8, 32); x.fill(); x.fillStyle = cs[(i + 2) % 4]; x.fillRect(cx - 3, 28, 6, 8); } });
+const texFaixaMex = (marca) => texCanvas("faixa-mex-" + marca, 512, 64, (x, w, hh) => { x.fillStyle = "#16181c"; x.fillRect(0, 0, w, hh); const m = texMex().image; x.drawImage(m, 0, 0, 96, 64); x.drawImage(m, w - 96, 0, 96, 64); x.fillStyle = "#c8202f"; x.fillRect(w - 150, 0, 54, hh); patrocinioEm(x, marca, w / 2, hh / 2, w * 0.5, hh * 0.75); });
+const matFaixa = (marca) => { const t = texFaixaMex(marca), m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 }); return [ESCURO, ESCURO, ESCURO, ESCURO, m, m]; };
+// a lona tensionada: picos em fileira sobre uma grelha de mastros (o toldo de "tenda pagode")
+function lonaPicos(g, w, d, y, n, alt) { const L = M(0xf4f3ef, { side: THREE.DoubleSide, roughness: 0.7 }); for (let i = 0; i < n; i++) { const c = malha(g, new THREE.ConeGeometry(Math.hypot(w / n, d) / 2, alt, 4, 1, true), L, -w / 2 + (i + 0.5) * (w / n), y + alt / 2, 0); c.rotation.y = Math.PI / 4; c.scale.set((w / n) / Math.hypot(w / n, d) * 1.414, 1, d / Math.hypot(w / n, d) * 1.414); } }
+KITS.arqLonaMex = F("Arquibancadas", { nome: "Arquibancada com lona (México)", grupo: "Público", montar() {
+  const g = arquibancadaCadeiras({ largura: 40, fileiras: 12, base: 3, pilares: false, cor: M(0x2a3a4a, { roughness: 0.6 }) }), w = 40 * U, prof = 12 * 0.85 * U, topo = g.userData.yTopo + 4 * U;
+  malha(g, new THREE.BoxGeometry(w, 3 * U, 0.15 * U), matFaixa("galera"), 0, 1.5 * U, 0.6 * U);
+  for (const x of [-w / 2, -w / 4, 0, w / 4, w / 2]) cil(g, GRADIL, 0.2 * U, topo, x, topo / 2, -prof - 0.3 * U, 8);
+  const lona = new THREE.Group(); lonaPicos(lona, w, prof + 3 * U, 0, 6, 2.2 * U); lona.position.set(0, topo, -prof / 2 + 1 * U); lona.rotation.x = 0.08; g.add(lona);
+  return g; } });
+KITS.camaroteMex = F("Paddock", { nome: "Camarote de 2 andares com toldo", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), w = 16 * U, d = 10 * U, h = 4 * U, V = new THREE.MeshStandardMaterial({ color: 0x9fc4d4, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.35 });
+  caixa(g, ESCURO, w, h, d, 0, h / 2, 0); malha(g, new THREE.BoxGeometry(w + 0.1 * U, h * 0.8, d + 0.1 * U), matFaixa("galera"), 0, h * 1.25, 0);
+  caixa(g, M(0xdedcd6), w, 0.3 * U, d, 0, h * 1.65, 0); for (const z of [-1, 1]) caixa(g, V, w, 1.1 * U, 0.05 * U, 0, h * 1.65 + 0.7 * U, z * d / 2);
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) cil(g, GRADIL, 0.1 * U, 3.4 * U, x * w / 2, h * 1.65 + 1.7 * U, z * d / 2, 6);
+  const t = malha(g, new THREE.ConeGeometry(Math.hypot(w, d) / 2 * 1.05, 2.4 * U, 4, 1, true), M(0xf4f3ef, { side: THREE.DoubleSide }), 0, h * 1.65 + 4.6 * U, 0); t.rotation.y = Math.PI / 4; t.scale.set(w / Math.hypot(w, d) * 1.414, 1, d / Math.hypot(w, d) * 1.414);
+  for (const x of [-0.3, 0.2]) { cil(g, GRADIL, 0.04 * U, 2 * U, x * w, h * 1.65 + U, 0, 4); malha(g, new THREE.ConeGeometry(1.2 * U, 0.5 * U, 8), BRANCO, x * w, h * 1.65 + 2.1 * U, 0); }
+  return g; } });
+KITS.porticoMex = F("Geral", { nome: "Pórtico de treliça (México)", grupo: "Pista", montar() {
+  const g = new THREE.Group(), w = 18 * U, h = 6 * U; trelica(g, -w / 2, h); trelica(g, w / 2, h); caixa(g, GRADIL, w + U, 0.9 * U, 0.9 * U, 0, h + 0.45 * U, 0);
+  malha(g, new THREE.BoxGeometry(w * 0.95, 2 * U, 0.12 * U), matFaixa("galera"), 0, h - 1 * U, 0.5 * U); for (const x of [-w / 2, w / 2]) malha(g, new THREE.BoxGeometry(1.1 * U, h * 0.8, 1.1 * U), new THREE.MeshStandardMaterial({ map: texMex() }), x, h * 0.45, 0); return g; } });
+KITS.tendaPagode = F("Paddock", { nome: "Tenda pagode (5 picos)", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), w = 25 * U, d = 5 * U, h = 2.8 * U, L = M(0xf4f3ef, { side: THREE.DoubleSide });
+  for (let i = 0; i <= 5; i++) for (const z of [-1, 1]) cil(g, GRADIL, 0.07 * U, h, -w / 2 + (i * w) / 5, h / 2, z * d / 2, 5);
+  caixa(g, L, w, 1.6 * U, 0.05 * U, 0, h * 0.75, -d / 2); for (const x of [-1, 1]) caixa(g, L, 0.05 * U, 1.6 * U, d, x * w / 2, h * 0.75, 0); lonaPicos(g, w, d, h, 5, 2.4 * U);
+  for (let i = 0; i < 6; i++) caixa(g, M(0x1d1f22), 0.9 * U, 0.8 * U, 0.7 * U, -w / 2 + 2 * U + i * 4 * U, 0.4 * U, -d / 4); return g; } });
+KITS.garagemAberta = F("Paddock", { nome: "Fileira de garagens abertas", grupo: "Paddock", montar() {
+  const g = new THREE.Group(), n = 5, mod = 6 * U, w = n * mod, d = 12 * U, h = 5 * U, P = M(0xe9e9e6); caixa(g, ESCURO, w, h, 0.4 * U, 0, h / 2, -d / 2);
+  for (let i = 0; i <= n; i++) caixa(g, P, 0.6 * U, h, d, -w / 2 + i * mod, h / 2, 0); caixa(g, ESCURO, w + 0.6 * U, 1.2 * U, d + 0.6 * U, 0, h + 0.6 * U, 0); caixa(g, M(0xa8acb2), w + 2 * U, 0.2 * U, d + 2 * U, 0, h + 1.3 * U, 0.5 * U);
+  for (let i = 0; i < n; i++) { const x = -w / 2 + (i + 0.5) * mod; malha(g, new THREE.BoxGeometry(mod * 0.6, 0.5 * U, 0.05 * U), matFaixa("galera"), x, h - 0.6 * U, d / 2); caixa(g, M(0xc8202f), 1.4 * U, 1 * U, 0.6 * U, x - 1.5 * U, 0.5 * U, -d / 2 + 0.8 * U); caixa(g, M(0x1d1f22), 1 * U, 0.8 * U, 0.8 * U, x + 1.2 * U, 0.4 * U, -d / 2 + 1.2 * U); }
+  caixa(g, M(0x6f747b, { roughness: 0.9 }), w, 0.1 * U, d, 0, 0.05 * U, 0); return g; } });
+const texBandeiraMex = () => texCanvas("bandeira-mx", 96, 256, (x, w, hh) => { const t = hh / 3; x.fillStyle = "#0b6b3a"; x.fillRect(0, 0, w, t); x.fillStyle = "#f4f4f2"; x.fillRect(0, t, w, t); x.fillStyle = "#c8202f"; x.fillRect(0, 2 * t, w, t); x.fillStyle = "#8a6a2e"; x.beginPath(); x.arc(w / 2, hh / 2, w * 0.18, 0, Math.PI * 2); x.fill(); });
+function bandeiraVertical(tex) { const g = new THREE.Group(), h = 6 * U; cil(g, GRADIL, 0.06 * U, h, 0, h / 2, 0, 6); caixa(g, GRADIL, 1.4 * U, 0.06 * U, 0.06 * U, 0.7 * U, h - 0.1 * U, 0); const b = new THREE.Mesh(new THREE.PlaneGeometry(1.3 * U, 3.6 * U), new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide })); b.position.set(0.7 * U, h - 1.95 * U, 0); b.castShadow = true; g.add(b); caixa(g, ESCURO, 0.8 * U, 0.2 * U, 0.8 * U, 0, 0.1 * U, 0); return g; }
+KITS.bandeiraMexico = F("Geral", { nome: "Bandeira vertical do México", grupo: "Público", montar: () => bandeiraVertical(texBandeiraMex()) });
+KITS.bandeiraPadrao = F("Geral", { nome: "Bandeira vertical (padrão mexicano)", grupo: "Público", montar: () => bandeiraVertical(texCanvas("mex-vert", 64, 256, (x, w, hh) => { const m = texMex().image; for (let y = 0; y < hh; y += 64) x.drawImage(m, 0, y, 256, 64); })) });
+KITS.bandeiraPreta = F("Geral", { nome: "Bandeira vertical preta (marca)", grupo: "Público", montar: () => bandeiraVertical(texCanvas("preta-vert", 96, 256, (x, w, hh) => { x.fillStyle = "#16181c"; x.fillRect(0, 0, w, hh); x.save(); x.translate(w / 2, hh / 2); x.rotate(-Math.PI / 2); x.translate(-w / 2, -hh / 2); patrocinioEm(x, "galera", w / 2, hh / 2, hh * 0.8, w * 0.7); x.restore(); })) });
+KITS.totemBandeira = F("Geral", { nome: "Totem com bandeira", grupo: "Público", montar() { const g = new THREE.Group(), h = 7 * U; caixa(g, ESCURO, 2.6 * U, 1 * U, 2.6 * U, 0, 0.5 * U, 0); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) caixa(g, ESCURO, 0.2 * U, h, 0.2 * U, x * 1.2 * U, h / 2, z * 1.2 * U); caixa(g, ESCURO, 2.6 * U, 0.3 * U, 2.6 * U, 0, h, 0);
+  const m = new THREE.MeshStandardMaterial({ map: texBandeiraMex() }); malha(g, new THREE.BoxGeometry(2.2 * U, 4 * U, 0.1 * U), [ESCURO, ESCURO, ESCURO, ESCURO, m, m], 0, h * 0.55, 0); return g; } });
+KITS.telaoTrelica = F("Geral", { nome: "Telão em treliça", grupo: "Público", montar() { const g = new THREE.Group(), w = 12 * U, h = 7 * U; trelica(g, -w / 2, h); trelica(g, w / 2, h); caixa(g, GRADIL, w + U, 0.7 * U, 0.7 * U, 0, h, 0);
+  caixa(g, ESCURO, w * 0.9, h * 0.6, 0.3 * U, 0, h * 0.55, 0); caixa(g, new THREE.MeshStandardMaterial({ map: texMex(), emissive: 0xffffff, emissiveIntensity: 0.25, emissiveMap: texMex() }), w * 0.86, h * 0.54, 0.05 * U, 0, h * 0.55, 0.18 * U);
+  malha(g, new THREE.BoxGeometry(w * 1.05, 1.4 * U, 1.6 * U), matFaixa("galera"), 0, 0.7 * U, 0); return g; } });
+KITS.cercaFaixaMex = F("Contenção", { nome: "Mureta com tela e faixa (México)", grupo: "Pista", montar() { const g = new THREE.Group(), w = 8 * U, C = M(0xdcdad4, { roughness: 0.9 }); caixa(g, C, w, 1.2 * U, 0.6 * U, 0, 0.6 * U, 0);
+  malha(g, new THREE.BoxGeometry(w * 0.98, 0.9 * U, 0.05 * U), matFaixa("galera"), 0, 0.6 * U, 0.32 * U); const tela = new THREE.MeshStandardMaterial({ color: 0x9aa3ab, metalness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false });
+  malha(g, new THREE.PlaneGeometry(w, 3 * U), tela, 0, 2.7 * U, -0.1 * U); for (const x of [-w / 2, 0, w / 2]) { cil(g, GRADIL, 0.06 * U, 3.4 * U, x, 2.9 * U, -0.1 * U, 6); const b = caixa(g, GRADIL, 0.05 * U, 0.05 * U, 0.7 * U, x, 4.5 * U, 0.15 * U); b.rotation.x = -0.6; } return g; } });
+KITS.faixaBaixaMex = F("Contenção", { nome: "Faixa baixa de patrocínio (México)", grupo: "Pista", montar() { const g = new THREE.Group(); malha(g, new THREE.BoxGeometry(8 * U, 1 * U, 0.15 * U), matFaixa("galera"), 0, 0.5 * U, 0); return g; } });
+KITS.barreiraLaranja = F("Contenção", { nome: "Barreira plástica laranja", grupo: "Pista", montar() { const g = new THREE.Group(), s = new THREE.Shape([[-0.3, 0], [0.3, 0], [0.18, 0.3], [0.12, 0.9], [-0.12, 0.9], [-0.18, 0.3]].map(([x, y]) => new THREE.Vector2(x * U, y * U)));
+  const geo = new THREE.ExtrudeGeometry(s, { depth: 2 * U, bevelEnabled: false }); geo.translate(0, 0, -U); malha(g, geo, M(0xf06a1a, { roughness: 0.5 })).rotation.y = Math.PI / 2; return g; } });
+KITS.cercaPainelConcreto = F("Contenção", { nome: "Painel de tela com base de concreto", grupo: "Pista", montar() { const g = new THREE.Group(), w = 3.5 * U; caixa(g, M(0xc9cac6, { roughness: 0.9 }), w, 0.4 * U, 0.5 * U, 0, 0.2 * U, 0);
+  const tela = new THREE.MeshStandardMaterial({ color: 0x8f969c, metalness: 0.4, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }); malha(g, new THREE.PlaneGeometry(w, 2 * U), tela, 0, 1.4 * U, 0); caixa(g, GRADIL, w, 0.05 * U, 0.05 * U, 0, 2.4 * U, 0); for (const x of [-w / 2, w / 2]) cil(g, GRADIL, 0.04 * U, 2.1 * U, x, 1.4 * U, 0, 5); return g; } });
+KITS.pilhaPneus = F("Paddock", { nome: "Pilhas de pneus", grupo: "Paddock", montar() { const g = new THREE.Group(), P = M(0x1d1f22, { roughness: 0.95 }), geo = new THREE.CylinderGeometry(0.34 * U, 0.34 * U, 0.3 * U, 12); for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) for (let k = 0; k < 4; k++) malha(g, geo, P, (i - 2.5) * 0.75 * U, 0.15 * U + k * 0.31 * U, (j - 0.5) * 0.75 * U); return g; } });
+KITS.casesTransporte = F("Paddock", { nome: "Cases de transporte", grupo: "Paddock", montar() { const g = new THREE.Group(), C = M(0x26282c, { roughness: 0.6 }), A = M(0x8d9096, { metalness: 0.6 }); for (const [x, y, z, w, h] of [[0, 0, 0, 1.2, 0.9], [1.3, 0, 0, 1.2, 0.9], [0.6, 0.9, 0, 1.2, 0.8], [-1.3, 0, 0.2, 1, 1.2]]) { caixa(g, C, w * U, h * U, 0.9 * U, x * U, (y + h / 2) * U, z * U); caixa(g, A, w * U + 0.02 * U, 0.06 * U, 0.92 * U, x * U, (y + h) * U - 0.03 * U, z * U); } return g; } });
+KITS.empilhadeira = F("Automóveis", { nome: "Empilhadeira", grupo: "Paddock", montar() { const g = new THREE.Group(), A = M(0xf2c230, { roughness: 0.5 }), P = M(0x1d1f22); caixa(g, A, 1.2 * U, 1 * U, 2 * U, 0, 0.8 * U, 0); caixa(g, P, 1.1 * U, 0.8 * U, 0.6 * U, 0, 0.7 * U, -1.2 * U);
+  for (const x of [-0.5, 0.5]) cil(g, P, 0.06 * U, 2.2 * U, x * U, 1.4 * U, -0.7 * U, 5); caixa(g, P, 1.1 * U, 0.06 * U, 0.06 * U, 0, 2.5 * U, -0.7 * U); for (const x of [-0.3, 0.3]) caixa(g, M(0x6b6f76), 0.12 * U, 0.05 * U, 1.1 * U, x * U, 0.15 * U, 1.4 * U); caixa(g, M(0x6b6f76), 1 * U, 1.4 * U, 0.1 * U, 0, 0.8 * U, 0.9 * U);
+  for (const z of [-0.7, 0.6]) for (const s of [-1, 1]) cil(g, P, 0.3 * U, 0.25 * U, s * 0.62 * U, 0.3 * U, z * U, 10).rotation.z = Math.PI / 2; return g; } });
+KITS.vanBau = F("Automóveis", { nome: "Caminhão baú pequeno", grupo: "Paddock", montar() { const g = new THREE.Group(), B = M(0xf2f2f0, { roughness: 0.45 }), V = M(0x1f2a33, { roughness: 0.1, metalness: 0.4 }), P = M(0x1d1f22);
+  caixa(g, B, 2.2 * U, 2 * U, 1.8 * U, 0, 1.4 * U, 2.3 * U); caixa(g, V, 2 * U, 0.8 * U, 0.1 * U, 0, 1.9 * U, 3.2 * U); caixa(g, B, 2.4 * U, 2.6 * U, 4.4 * U, 0, 1.9 * U, -0.9 * U); caixa(g, M(0xc8202f), 2.42 * U, 0.4 * U, 3 * U, 0, 1.7 * U, -0.9 * U);
+  for (const z of [-2, 2.2]) for (const s of [-1, 1]) cil(g, P, 0.42 * U, 0.3 * U, s * 1.05 * U, 0.42 * U, z * U, 12).rotation.z = Math.PI / 2; return g; } });
+KITS.carretaMex = F("Automóveis", { nome: "Carreta com faixas (México)", grupo: "Paddock", montar() { const g = new THREE.Group(); cavalo(g, 0xf2f2f0, 6 * U); const B = M(0xf4f4f2, { roughness: 0.5 }); caixa(g, B, 2.5 * U, 2.9 * U, 13.5 * U, 0, 2.6 * U, -2 * U);
+  for (const [c, dz] of [[0x0b6b3a, 0], [0xc8202f, 0.5]]) { const f = caixa(g, M(c), 2.52 * U, 0.35 * U, 4 * U, 0, 2.2 * U, (-6.5 + dz) * U); f.rotation.x = -0.5; } caixa(g, ESCURO, 2.2 * U, 0.4 * U, 13.5 * U, 0, 1.1 * U, -2 * U); rodasCarreta(g, -6 * U, 3); return g; } });
+KITS.banheiroQuimico = F("Geral", { nome: "Banheiro químico", grupo: "Paddock", montar() { const g = new THREE.Group(), A = M(0x2a6fc0, { roughness: 0.5 }); caixa(g, A, 1.2 * U, 2.3 * U, 1.2 * U, 0, 1.15 * U, 0); malha(g, new THREE.CylinderGeometry(0.85 * U, 0.85 * U, 0.2 * U, 4), M(0xf2f2f0), 0, 2.4 * U, 0).rotation.y = Math.PI / 4; caixa(g, M(0x1f4f8a), 0.9 * U, 1.9 * U, 0.05 * U, 0, 1.1 * U, 0.62 * U); return g; } });
+KITS.torreLuzReboque = F("Geral", { nome: "Torre de luz rebocável", grupo: "Pista", montar() { const g = new THREE.Group(), h = 6 * U; caixa(g, BRANCO, 1.4 * U, 1.1 * U, 2.2 * U, 0, 0.9 * U, 0); for (const s of [-1, 1]) cil(g, M(0x1d1f22), 0.35 * U, 0.2 * U, s * 0.8 * U, 0.35 * U, 0, 10).rotation.z = Math.PI / 2;
+  caixa(g, ESCURO, 0.1 * U, 0.1 * U, 1.4 * U, 0, 0.5 * U, 1.7 * U); cil(g, POSTE, 0.1 * U, h, 0, h / 2 + U, -0.6 * U, 6); caixa(g, POSTE, 1.6 * U, 0.1 * U, 0.1 * U, 0, h + U, -0.6 * U); for (const x of [-0.45, 0.45]) for (const y of [0, 0.75]) refletor(g, x * U, h + U + 0.2 * U + y * U, -0.5 * U); return g; } });
+KITS.posteBaixo = F("Geral", { nome: "Poste baixo", grupo: "Pista", montar() { const g = new THREE.Group(), h = 4 * U; cil(g, POSTE, 0.07 * U, h, 0, h / 2, 0, 6); caixa(g, POSTE, 0.5 * U, 0.15 * U, 0.3 * U, 0.15 * U, h, 0); caixa(g, LUZ, 0.4 * U, 0.05 * U, 0.25 * U, 0.15 * U, h - 0.09 * U, 0); return g; } });
+KITS.gazeboMarca = F("Paddock", { nome: "Gazebo preto com marca", grupo: "Paddock", montar() { const g = new THREE.Group(), w = 3 * U, h = 2.2 * U; for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) cil(g, ESCURO, 0.04 * U, h, x * w / 2, h / 2, z * w / 2, 5);
+  const t = malha(g, new THREE.ConeGeometry(w * 0.72, 1 * U, 4, 1, true), M(0xf4f4f2, { side: THREE.DoubleSide }), 0, h + 0.5 * U, 0); t.rotation.y = Math.PI / 4; for (let k = 0; k < 4; k++) { const a = (k / 4) * Math.PI * 2, b = malha(g, new THREE.BoxGeometry(w, 0.3 * U, 0.03 * U), matFaixa("galera"), Math.sin(a) * w / 2, h - 0.15 * U, Math.cos(a) * w / 2); b.rotation.y = a; } return g; } });
 // os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.
 export const FILTROS = ["Arquibancadas", "Automóveis", "Contenção", "Paddock", "Vegetação", "Geral"];
 const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibancadas", pneus: "Contenção", tecpro: "Contenção", grade: "Contenção", guardrail: "Contenção", cone: "Contenção",

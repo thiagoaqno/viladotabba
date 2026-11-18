@@ -1167,8 +1167,24 @@ const ASA_BAIXO = {
 
 // ---------------------------------------------------------------- as texturas (uma por equipe, guardada)
 const FOLHAS = new Map();
-export function folhaDaEquipe(equipe, alta = false) {
+// (2026-11-18, Livery Studio passo 4) as pinturas feitas no estúdio (public/corrida/pinturas/<id>.json) valem no JOGO: a folha da equipe passa a
+// ser a das camadas (na temporada de 2026; nas outras, a do ano continua). `original` pede a folha do código (o estúdio parte dela).
+const DO_ESTUDIO = new Map(); // equipe -> pintura
+export const pinturasProntas = (typeof fetch === "undefined" ? Promise.resolve() : fetch("/corrida/pinturas/index.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : [])).catch(() => [])
+  .then((ids) => Promise.all((Array.isArray(ids) ? ids : []).map((id) => fetch(`/corrida/pinturas/${id}.json`, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null).then(async (p) => {
+    const eq = p && (p.equipe || (typeof window !== "undefined" && window.Pistas?.MODS?.pintura?.[p.carro || id]?.equipe)); if (!eq || !Array.isArray(p.camadas) || !DESENHOS[eq]) return;
+    await Promise.all(p.camadas.filter((l) => l.tipo === "logo" && l.img).map((l) => new Promise((ok) => { if (imagemLivery(l.img, ok)) ok(); setTimeout(ok, 8000); }))); // (os PNG chegam antes da folha ser pintada)
+    DO_ESTUDIO.set(eq, p);
+  })))).catch(() => {}));
+export const pinturaDoEstudio = (equipe) => DO_ESTUDIO.get(equipe) || null;
+export function folhaDaEquipe(equipe, alta = false, original = false) {
   if (!DESENHOS[equipe]) return null;
+  if (!original && DO_ESTUDIO.has(equipe) && anoEmUso() === 2026) {
+    const chave = "estudio:" + equipe + (alta ? "|2" : "|1"); if (FOLHAS.has(chave)) return FOLHAS.get(chave);
+    const cv = folhaDeCamadas(DO_ESTUDIO.get(equipe), document.createElement("canvas"), alta ? 2 : 1);
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = alta ? 8 : 4; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.userData.cv = cv; FOLHAS.set(chave, t); return t;
+  }
   equipe = chaveDo(equipe); // (a pintura do ano em uso, quando a equipe tem uma: "audi@2023" é a Alfa Romeo)
   const chave = equipe + (alta ? "|2" : "|1");
   if (FOLHAS.has(chave)) return FOLHAS.get(chave);
@@ -1475,15 +1491,15 @@ function camadaNaVista(c, l, v, ladoV) {
   c.restore();
 }
 // a folha de uma pintura do Livery Studio: { base: equipe de partida ou null, c1: a cor de fundo, camadas: [...] }. Devolve o canvas (1024 × 1152).
-export function folhaDeCamadas(p, cv = document.createElement("canvas")) {
-  ESC = 1; cv.width = FW; cv.height = FH; const ctx = cv.getContext("2d");
-  const t = p.base && DESENHOS[p.base] ? folhaDaEquipe(p.base, false) : null;
-  if (t) ctx.drawImage(t.userData.cv, 0, 0, FW, FH); else base(ctx, p.c1 || "#1b2a5c");
+export function folhaDeCamadas(p, cv = document.createElement("canvas"), esc = 1) {
+  const t = p.base && DESENHOS[p.base] ? folhaDaEquipe(p.base, esc > 1, true) : null; // (antes de mudar o ESC: a folha da equipe o põe de volta em 1)
+  ESC = esc; cv.width = FW * esc; cv.height = FH * esc; const ctx = cv.getContext("2d");
+  if (t) ctx.drawImage(t.userData.cv, 0, 0, FW * esc, FH * esc); else base(ctx, p.c1 || "#1b2a5c");
   for (const l of p.camadas || []) {
     if (l.oculta) continue;
     lados(ctx, (c, s) => camadaNaVista(c, l, "L", s > 0 ? "A" : "B"));
     for (const v of ["T", "F", "R"]) vista(ctx, v, (c) => camadaNaVista(c, l, v));
   }
   if (!t) lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO)); // (a entrada de ar escura, como em toda pintura)
-  return cv;
+  ESC = 1; return cv;
 }

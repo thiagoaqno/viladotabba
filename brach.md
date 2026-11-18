@@ -22,3 +22,6 @@
   entra como camada da folha, nos dois lados ou em cima. Arraste no carro para mover, `[` `]` tamanho, `Q` `E` giro, e nas Propriedades:
   lado, tamanho, giro, posição em metros, espelhar, opacidade e cor única. Também acabamentos (brilhante, fosca, metálica, perolizada…)
   com verniz, clicar no carro escolhe a peça, duplicar e espelhar camada. PNG importado vai para `public/corrida/pinturas/logo-*.png`.
+- **Livery Studio, passo 4:** a pintura salva no estúdio vale no jogo. `f1-pintura.js` carrega `public/corrida/pinturas/` ao abrir e a
+  folha da equipe (temporada 2026) passa a ser a das camadas, em todos os carros dela. O acabamento continua o do jogo. Sem nenhuma
+  pintura salva (como agora: `pinturas/index.json` vazio), nada muda no jogo.

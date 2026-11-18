@@ -229,6 +229,7 @@ for (const [id, campo] of [["lsMet", "met"], ["lsRug", "rug"], ["lsRef2", "ref"]
 function mudou(junto = null, leve = false) { foto(junto); redesenhar(); if (!leve) { desenharLista(); desenharProp(); desenharBase(); } }
 function tudo() { redesenhar(); desenharLista(); desenharProp(); desenharBase(); }
 async function salvar() {
+  P.equipe = equipeDe(pint) || undefined; // (a equipe em que o jogo usa esta pintura: f1-pintura.js pinturasProntas)
   try { localStorage.setItem("livery:" + pint, JSON.stringify(P)); } catch {}
   const r = await fetch(`/api/corrida/editor/livery/${pint}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(P) }).catch(() => null);
   status(r?.ok ? `Salvo em public/corrida/pinturas/${pint}.json (Publicar no TabbaTracks manda para o GitHub).` : "Salvo neste navegador (para gravar o arquivo, abra pelo editor-de-pistas.bat).");

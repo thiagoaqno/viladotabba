@@ -297,7 +297,7 @@ export const MARCAS_CAPACETE = { hp: "HP", shell: "Shell", vpower: "V-Power", un
   salesforce: "Salesforce", allwyn: "Allwyn", amex: "American Express", barilla: "Barilla", cryptocom: "Crypto.com", globant: "Globant", lasvegas: "Las Vegas",
   liquimoly: "Liqui Moly", louisvuitton: "Louis Vuitton", marsh: "Marsh", moethennessy: "Moët Hennessy",
   nestle: "Nestlé", paramount: "Paramount+", pepsico: "PepsiCo", pwc: "PwC", standardchartered: "Standard Chartered", mcdonalds: "McDonald's", tmobile: "T-Mobile",
-  aggreko: "Aggreko", fever: "Fever", flexjet: "Flexjet", puma: "Puma", tata: "Tata Communications", fanatec: "Fanatec", betway: "Betway", fanduel: "FanDuel" };
+  rolex: "Rolex", monacogp: "#MonacoGP", monacocircuit: "Monaco Circuit", aggreko: "Aggreko", fever: "Fever", flexjet: "Flexjet", puma: "Puma", tata: "Tata Communications", fanatec: "Fanatec", betway: "Betway", fanduel: "FanDuel" };
 // os lugares do patrocínio na folha: [x, y, largura, altura] (largura e altura medidas no equador; mais perto do topo ou do queixo a folha
 // encolhe na volta, e a marca é esticada em 1/sen(ângulo) para continuar com a mesma cara). Os lados são dois (256 e 0/512, a costura).
 export const LUGARES_PATROCINIO = { testa: "Testa", faixa: "Faixa do visor", lados: "Lados", nuca: "Nuca", queixo: "Queixo" };

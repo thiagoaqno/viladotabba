@@ -24,7 +24,21 @@ function concha(c, x = 0, y = 0, e = 1) {
   c.restore();
 }
 
+// (2026-11-18, as imagens do Thiago: as placas de Mônaco) a coroa de cinco pontas com as bolinhas
+function coroa(c, x, y, e, cor) {
+  c.save(); c.translate(x, y); c.scale(e, e); c.fillStyle = cor; c.strokeStyle = cor; c.lineCap = "round";
+  c.beginPath(); c.moveTo(-0.42, 0.22); c.lineTo(0.42, 0.22); c.lineTo(0.38, 0.36); c.lineTo(-0.38, 0.36); c.closePath(); c.fill();
+  c.lineWidth = 0.1; for (const [a, b] of [[-0.4, -0.18], [-0.2, -0.32], [0, -0.38], [0.2, -0.32], [0.4, -0.18]]) { c.beginPath(); c.moveTo(a * 0.55, 0.2); c.lineTo(a, b); c.stroke(); disco(c, a, b - 0.06, 0.07, cor); }
+  c.restore();
+}
 export const MARCAS = {
+  // a coroa dourada e o nome em letra de serifa, dourados (vai no fundo verde)
+  rolex(c) { coroa(c, 0, -0.3, 0.75, "#d7b545"); letra(c, "ROLEX", { y: 0.32, h: 0.5, peso: 700, fam: SERIFA, cor: "#d7b545", esp: 6 }); },
+  // a hashtag do GP: "#Monaco" em letra cheia e o "GP" inclinado
+  monacogp(c, { tinta = "#fff" } = {}) { letra(c, "#Monaco", { x: -0.42, h: 0.9, peso: 800, cor: tinta }); letra(c, "GP", { x: 1.62, h: 0.9, peso: 900, ital: true, cor: tinta }); },
+  // MONACO cheio e CIRCUIT vazado, em vermelho, e o "SINCE 1929" embaixo (vai no fundo branco)
+  monacocircuit(c) { letra(c, "MONACO", { x: -1.05, y: -0.08, h: 0.72, peso: 900, cor: "#e2231a" }); c.save(); c.translate(1.25, -0.08); c.scale(0.0072, 0.0072); c.font = "400 100px " + ARIAL; c.textAlign = "center"; c.textBaseline = "middle"; c.strokeStyle = "#e2231a"; c.lineWidth = 5; c.strokeText("CIRCUIT", 0, 0); c.restore();
+    letra(c, "SINCE 1929", { x: 1.45, y: 0.42, h: 0.18, peso: 700, cor: "#2a2a2a", esp: 4 }); },
   // o redondo azul com o "hp" inclinado
   hp(c) { disco(c, 0, 0, 0.5, "#ffffff"); disco(c, 0, 0, 0.46, "#0096d6"); letra(c, "hp", { h: 0.72, ital: true, peso: 700, cor: "#fff", y: 0.03 }); },
   shell(c) { concha(c); },

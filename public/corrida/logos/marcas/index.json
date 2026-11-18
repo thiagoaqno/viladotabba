@@ -266,5 +266,40 @@
   "titulo": "File:Atlassian-logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Atlassian-logo.svg",
   "alias": "atlassian"
+ },
+ "boss": {
+  "arquivo": "boss.svg",
+  "titulo": "File:Hugo-Boss-Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Hugo-Boss-Logo.svg"
+ },
+ "okx": {
+  "arquivo": "okx.svg",
+  "titulo": "File:OKX logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:OKX_logo.svg"
+ },
+ "pepperstone": {
+  "arquivo": "pepperstone.svg",
+  "titulo": "File:Pepperstone.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Pepperstone.svg"
+ },
+ "revolut": {
+  "arquivo": "revolut.svg",
+  "titulo": "File:Revolut logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Revolut_logo.svg"
+ },
+ "snapdragon": {
+  "arquivo": "snapdragon.svg",
+  "titulo": "File:Snapdragon Logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Snapdragon_Logo.svg"
+ },
+ "stake": {
+  "arquivo": "stake.svg",
+  "titulo": "File:Stake logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Stake_logo.svg"
+ },
+ "valvoline": {
+  "arquivo": "valvoline.svg",
+  "titulo": "File:Valvoline company logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Valvoline_company_logo.svg"
  }
 }

@@ -156,6 +156,26 @@ function pontosDaBeira(tr, b, passo) {
   const u = eixo[eixo.length - 1], v = eixo[eixo.length - 2]; if (v && out.length && Math.hypot(out[out.length - 1].x - u.x, out[out.length - 1].z - u.z) > passo * 0.3) out.push({ x: u.x, z: u.z, y: u.y, ang: Math.atan2(u.x - v.x, u.z - v.z) }); // (o fim também)
   return out;
 }
+// (2026-11-18, o Thiago: "colocar na barreira da pista placa de patrocinador, sem os pezinhos") a FAIXA de patrocínio em fileira: painéis colados um
+// no outro, `altura` m de altura a `elev` m do chão, com a marca no meio de cada um (alternando com `marca2`, se tiver), no fundo da cor escolhida.
+// O logo sai certo dos dois lados. { modelo: "faixa", marca, marca2, fundo, altura, elev }
+const texFaixaP = new Map();
+function texDaFaixa(marca, fundo, prop) {
+  const k = marca + "|" + fundo + "|" + prop; if (texFaixaP.has(k)) return texFaixaP.get(k);
+  const c = document.createElement("canvas"); c.width = 1024; c.height = Math.max(32, Math.round(1024 / prop)); const x = c.getContext("2d");
+  x.fillStyle = fundo || "#101114"; x.fillRect(0, 0, c.width, c.height); if (marca) patrocinioEm(x, marca, c.width / 2, c.height / 2, Math.min(c.width * 0.8, c.height * 3.2), c.height * 0.78);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.wrapS = THREE.RepeatWrapping;
+  const t2 = t.clone(); t2.repeat.x = -1; t2.needsUpdate = true; // (o outro lado do painel: espelhado de volta)
+  const m = [new THREE.MeshStandardMaterial({ map: t, roughness: 0.6 }), new THREE.MeshStandardMaterial({ map: t2, roughness: 0.6 })]; texFaixaP.set(k, m); return m;
+}
+function faixaPatrocinio(it, d, alt, i) {
+  const marca = it.marca2 && i % 2 ? it.marca2 : it.marca, elev = Math.max(0, +it.elev || 0) * UM, prop = Math.max(1, Math.min(16, Math.round((d / alt) * 2) / 2));
+  const [a, b] = texDaFaixa(marca, it.fundo, prop), lado = ML(0x1d1f22);
+  // duas placas finas (uma de cada lado) e o miolo escuro: cada uma com um material só, para o enxugar juntar a fileira inteira
+  const g = new THREE.Group(), y = elev + alt / 2;
+  for (const [mat, sx] of [[a, 1], [b, -1]]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(d, alt), mat); p.rotation.y = sx * Math.PI / 2; p.position.set(sx * 0.031 * UM, y, 0); p.castShadow = true; p.receiveShadow = true; g.add(p); }
+  const miolo = new THREE.Mesh(new THREE.BoxGeometry(0.06 * UM, alt, d), lado); miolo.position.y = y; g.add(miolo); return g;
+}
 const compKit = new Map(); // o comprimento de uma peça da biblioteca ao longo do x (o que ela ocupa na fileira)
 function comprimentoDoKit(id) { if (!compKit.has(id)) { const o = montarKit(id), b = new THREE.Box3().setFromObject(o); compKit.set(id, Math.max(0.5 * 4.8, b.max.x - b.min.x)); } return compKit.get(id); }
 function montarLinha(it, tr) {
@@ -176,12 +196,12 @@ function montarLinha(it, tr) {
   }
   // (2026-11-17, o Thiago: "um entra dentro do outro") as barreiras (pneus e as peças de Contenção) vão EMENDADAS: cada módulo vai de um ponto ao
   // próximo, no meio deles, virado pela corda e esticado ao comprimento dela. Na curva elas não se cruzam mais nem deixam vão.
-  const emenda = modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
+  const emenda = modelo === "faixa" || modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
   if (emenda) {
     const kit = modelo.startsWith("kit:") ? modelo.slice(4) : null, L = kit ? comprimentoDoKit(kit) : 0;
     for (let i = 0; i + 1 < lista.length; i++) {
       const p = lista[i], q = lista[i + 1], d = Math.hypot(q.x - p.x, q.z - p.z); if (d < 0.2 * UM) continue;
-      let o; if (kit) { o = montarKit(kit); if (!o) continue; o.rotation.y = Math.PI / 2; o.scale.x = d / L; } else o = moduloPneus(d - 0.05 * UM);
+      let o; if (modelo === "faixa") o = faixaPatrocinio(it, d, alt, i); else if (kit) { o = montarKit(kit); if (!o) continue; o.rotation.y = Math.PI / 2; o.scale.x = d / L; } else o = moduloPneus(d - 0.05 * UM);
       const h = new THREE.Group(); h.add(o); h.position.set((p.x + q.x) / 2, ((p.y || 0) + (q.y || 0)) / 2, (p.z + q.z) / 2); h.rotation.y = Math.atan2(q.x - p.x, q.z - p.z); g.add(h);
     }
     return g;

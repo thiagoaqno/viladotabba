@@ -683,6 +683,51 @@ for (const [id, nome, o] of [
   ["monacoPredioEstreito", "Prédio estreito de pedra", { w: 9, d: 10, andares: 8, cor: "#ead9bd" }],
   ["monacoPredioGrande", "Prédio grande de esquina", { w: 24, d: 18, andares: 8, cor: "#ecdcc4", mansarda: true }],
 ]) KITS[id] = F("Geral", { nome, grupo: "Cidade", montar: () => predioClassico({ ...o, chave: id }) });
+// (2026-11-18, o Thiago: "mais variações de construções, especialmente para Mônaco, como prédios e casas") mais prédios clássicos,
+// as CASAS com telhado de telha (2 a 3 andares, venezianas, um pinheiro ou palmeira no jardim) e os prédios MODERNOS da encosta.
+for (const [id, nome, o] of [
+  ["monacoPredioOcre", "Prédio ocre de venezianas", { w: 13, d: 12, andares: 6, cor: "#d9a35c", veneziana: "#5a7a8a" }],
+  ["monacoPredioBranco", "Prédio branco com toldos azuis", { w: 14, d: 12, andares: 7, cor: "#f3efe6", toldo: "#2a5b9a", terraco: true }],
+  ["monacoPredioSalmao", "Prédio salmão alto", { w: 12, d: 12, andares: 10, cor: "#eaa585", veneziana: "#3d6b4a" }],
+  ["monacoPredioLimao", "Prédio amarelo-limão", { w: 11, d: 11, andares: 5, cor: "#f2d877", veneziana: "#2e5d3e" }],
+  ["monacoPredioTerracota", "Prédio terracota com mansarda", { w: 15, d: 12, andares: 6, cor: "#c97c62", toldo: "#f2f2ee", mansarda: true }],
+  ["monacoPredioCinza", "Prédio de pedra cinza", { w: 14, d: 13, andares: 7, cor: "#cfccc5", pedra: "#e4e1da", veneziana: "#5c6168" }],
+  ["monacoPredioBaixo", "Prédio baixo de lojas", { w: 18, d: 12, andares: 3, cor: "#ecd2a6", toldo: "#c0392b", terraco: true }],
+  ["monacoPredioCantoAmarelo", "Prédio amarelo de canto redondo", { w: 11, andares: 7, cor: "#f0c46a", redondo: true }],
+  ["monacoPredioCantoBranco", "Prédio branco de canto redondo", { w: 13, andares: 9, cor: "#f2ece0", redondo: true }],
+  ["monacoHotel", "Hotel belle époque", { w: 30, d: 16, andares: 7, cor: "#f3e6cc", toldo: "#7a1f2b", mansarda: true }],
+]) KITS[id] = F("Geral", { nome, grupo: "Cidade", montar: () => predioClassico({ ...o, chave: id }) });
+// a CASA: o prédio clássico baixo com o telhado de quatro águas em telha e, às vezes, uma árvore no jardim
+function casaRiviera({ w = 10, d = 9, andares = 2, cor, veneziana = "#3d6b4a", toldo = null, telha = 0xb5653d, arvore = null, chave }) {
+  const g = predioClassico({ w, d, andares, cor, veneziana, toldo, chave }), H = 4.2 * U + andares * 3.2 * U, r = Math.hypot(w, d) / 2 * U;
+  const t = malha(g, new THREE.CylinderGeometry(0.01, r * 1.08, 2.4 * U, 4), M(telha, { flatShading: true, roughness: 0.85 }), 0, H + 1.5 * U, 0); t.rotation.y = Math.PI / 4; t.scale.set((w * U) / r * 0.72, 1, (d * U) / r * 0.72);
+  caixa(g, M(0xe9dcc4), 0.8 * U, 1.6 * U, 0.8 * U, w * 0.25 * U, H + 2 * U, -d * 0.15 * U); // (a chaminé)
+  if (arvore) { const a = arvore === "palmeira" ? tamareira(9, 4) : pinheiroManso(11, 6); a.position.set((w / 2 + 3) * U, 0, (d / 2 - 2) * U); g.add(a); }
+  return g;
+}
+for (const [id, nome, o] of [
+  ["monacoCasaAmarela", "Casa amarela de telhado", { cor: "#f0c46a" }],
+  ["monacoCasaRosa", "Casa rosa com palmeira", { cor: "#e7a789", arvore: "palmeira" }],
+  ["monacoCasaBranca", "Casa branca de venezianas azuis", { cor: "#f3efe6", veneziana: "#3c6a9a" }],
+  ["monacoCasaOcre", "Casa ocre com pinheiro", { cor: "#d9a35c", arvore: "pinheiro", andares: 3 }],
+  ["monacoCasaTerracota", "Casa terracota com toldos", { cor: "#c97c62", toldo: "#f2f2ee", veneziana: "#f2f2ee" }],
+  ["monacoVilla", "Villa grande de três andares", { w: 16, d: 12, andares: 3, cor: "#f0dcc0", arvore: "palmeira", toldo: "#2e7a4a" }],
+  ["monacoCasaPequena", "Casinha de um andar", { w: 7, d: 7, andares: 1, cor: "#efe2c8" }],
+]) KITS[id] = F("Geral", { nome, grupo: "Cidade", montar: () => casaRiviera({ ...o, chave: id }) });
+// os MODERNOS: a torre residencial de varandas corridas (faixas brancas e vidro), em alturas diferentes
+function torreVarandas({ w = 18, d = 16, andares = 12, cor = 0xf1ebe0, vidro = 0x2a3440 }) {
+  const g = new THREE.Group(), W = w * U, D = d * U, A = 3.2 * U, B = M(cor, { roughness: 0.8 }), V = M(vidro, { roughness: 0.12, metalness: 0.5 });
+  caixa(g, V, W * 0.96, andares * A, D * 0.96, 0, (andares * A) / 2, 0);
+  for (let k = 0; k <= andares; k++) { caixa(g, B, W + 1.6 * U, 0.35 * U, D + 1.6 * U, 0, k * A, 0); if (k) caixa(g, M(0xdfe6ea, { transparent: true, opacity: 0.35 }), W + 1.5 * U, 1 * U, D + 1.5 * U, 0, k * A + 0.5 * U, 0); }
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) caixa(g, B, 0.6 * U, andares * A, 0.6 * U, (x * W) / 2, (andares * A) / 2, (z * D) / 2);
+  caixa(g, B, W * 0.4, 3 * U, D * 0.4, 0, andares * A + 1.5 * U, 0); return g;
+}
+for (const [id, nome, o] of [
+  ["monacoTorreBaixa", "Prédio moderno de varandas (8 andares)", { andares: 8 }],
+  ["monacoTorreMedia", "Torre moderna de varandas (14 andares)", { andares: 14, w: 20 }],
+  ["monacoTorreAlta", "Torre alta de vidro (24 andares)", { andares: 24, w: 22, d: 20, vidro: 0x3d5a73 }],
+  ["monacoTorreBege", "Prédio moderno bege", { andares: 10, cor: 0xe6cfa6 }],
+]) KITS[id] = F("Geral", { nome, grupo: "Cidade", montar: () => torreVarandas(o) });
 // o prédio moderno de varandas curvas (o branco da imagem)
 KITS.monacoVarandasCurvas = F("Geral", { nome: "Prédio de varandas curvas", grupo: "Cidade", montar() {
   const g = new THREE.Group(), W = 16 * U, D = 14 * U, A = 3.2 * U, n = 8, B = M(0xf1ebe0, { roughness: 0.8 }), V = M(0x2a3440, { roughness: 0.15, metalness: 0.4 });

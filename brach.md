@@ -1,12 +1,10 @@
-# Editor: vegetação, prédio da reta e kit do GP do México
+# Editor: kit de Mônaco
 
-Peças novas em código (low poly), pelas imagens do Thiago, já nos filtros. Sem logo da F1: as faixas usam o padrão mexicano verde e vermelho com as marcas do jogo.
+Peças novas em código (low poly), pelas imagens do Thiago, já nos filtros (sem logo da F1 nem de patrocinador real).
 
-- **Vegetação:** 6 árvores folhosas (pequena, copa redonda, alta, copa aberta, grande, rala) com galhos e copa facetada em vários verdes; coqueiro; arbustos pequeno, médio, grande, com flor rosa e branca; tufo de capim, capim alto e capim seco; forração verde e com flores brancas, roxas e amarelas; vaso com planta.
-- **Arquibancadas:** prédio da reta de 2 andares (como o do México: cadeiras cobertas, camarotes de vidro, faixas, telhado de terracota); arquibancada com lona tensionada (México).
-- **Paddock:** camarote de 2 andares com toldo, tenda pagode de 5 picos, fileira de garagens abertas, pilhas de pneus, cases de transporte, gazebo preto com marca.
-- **Automóveis:** empilhadeira, caminhão baú pequeno, carreta com faixas.
-- **Contenção:** mureta com tela e faixa, faixa baixa de patrocínio, barreira plástica laranja, painel de tela com base de concreto.
-- **Geral:** pórtico de treliça (México), bandeiras verticais (México, padrão mexicano, preta com marca), totem com bandeira, telão em treliça, banheiro químico, torre de luz rebocável, poste baixo.
+- **Prédios (Geral · Cidade):** 8 prédios clássicos da Riviera feitos por um gerador só (fachada com janelas altas, venezianas, sacadas de ferro, frisos e cornija; térreo de arcos de pedra; opções de mansarda, canto redondo e terraço com plantas): creme, coral de canto redondo, amarelo com toldos verdes, venezianas verdes, belle époque com mansarda, rosa, estreito de pedra e grande de esquina. Mais: prédio de varandas curvas, o cassino (palácio com pavilhão, torres de cúpula, relógio e marquise), igreja com torre e casa sobre arcos de pedra.
+- **Vegetação:** tamareira (baixa, normal, alta), pinheiro-manso (normal e baixo), cerca viva, floreira verde e com flores, arvoreta no vaso.
+- **Beira da pista:** guard-rail triplo com tela e arame, barreira vermelha e branca, poste de rua moderno, poste com câmera, cabine de fiscal com fiscal, guindaste de resgate, caixa elétrica, pórtico branco de patrocínio, totem preto com marca.
+- **Detalhes:** bandeira de Mônaco, bandeira quadriculada, placa Monte-Carlo, lampião antigo duplo, iate pequeno.
 
-Conferido com `node --check` e montando todas as 136 peças da biblioteca no Node (nenhuma com erro ou vazia).
+Conferido com `node --check` e montando as 171 peças da biblioteca no Node (nenhuma com erro ou vazia).

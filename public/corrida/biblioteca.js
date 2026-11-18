@@ -858,4 +858,12 @@ const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibanca
   carroBranco: "Automóveis", carroVermelho: "Automóveis", carroAzul: "Automóveis", caminhaoBau: "Automóveis", caminhaoCinza: "Automóveis", caminhaoPrancha: "Automóveis", ambulancia: "Automóveis", telehandler: "Automóveis", iate: "Automóveis",
   tenda: "Paddock", container: "Paddock", torreControle: "Paddock", hospitalidade: "Paddock", grua: "Paddock", heliponto: "Paddock" };
 export function filtroDoKit(id) { const k = KITS[id]; return k?.filtro || PELO_ID[id] || (k?.grupo === "Natureza" ? "Vegetação" : "Geral"); }
-export function montarKit(id) { const k = KITS[id]; if (!k) return null; const g = k.montar(); g.name = "kit-" + id; return g; }
+// (2026-11-18, TabbaTracks: desempenho) cada peça é MONTADA uma vez só (as malhas, os materiais e as texturas de canvas) e as próximas são cópias
+// que dividem a geometria e o material: uma fileira de 300 módulos de guard-rail montava 300 vezes tudo. Ninguém mexe na geometria no lugar (o
+// enxugar e o fundir.js fazem cópias) e quem tinge clona o material antes. As peças não têm sorteio: a cópia é igual a uma montagem nova.
+const moldes = new Map();
+export function montarKit(id) {
+  const k = KITS[id]; if (!k) return null;
+  let m = moldes.get(id); if (!m) { m = k.montar(); m.name = "kit-" + id; moldes.set(id, m); }
+  return m.clone(true);
+}

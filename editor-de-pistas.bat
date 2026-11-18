@@ -1,4 +1,6 @@
 @echo off
+title TabbaTracks
+rem TabbaTracks: o editor de pistas.
 rem O editor de cenario das pistas: abre o servidor do jogo com o editor ligado e o navegador na pista.
 rem Ponha os .glb originais em assets-originais. Os convertidos vao para public/corrida/assets e o cenario para public/corrida/cenario.
 cd /d "%~dp0"

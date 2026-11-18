@@ -1,9 +1,12 @@
-# Muros com balaustrada: o curvo consertado e dois novos para a beira
+# TabbaTracks: interface nova do editor de pistas + desempenho
 
-- **Muro de pedra curvo com balaustrada (consertado):** o muro curvava para um lado e a balaustrada para o outro (o sinal da curva dela estava trocado). Agora os dois seguem o mesmo arco; medido no Node: o muro vai de z 0 a 19,9 e a balaustrada com os pilares de −1,2 a 21,8.
-- **Muro de arrimo com balaustrada** (novo, Contenção): o arrimo inclinado de pedra de 10 m com a cornija e a balaustrada em cima do topo dele (o topo foi medido: de 0,2 a 0,8 m do pé).
-- **Muro de pedra baixo com balaustrada** (novo, Contenção).
-
-Como são de Contenção, os dois novos e o reto com balaustrada vão pela **Barreira na beira** e pela Linha de itens emendados pela curva da pista. Uma fileira curva de arrimo com balaustrada: 17 malhas.
-
-Conferido com `node --check` e montando no Node.
+- **Nome novo:** o editor de pistas agora é o **TabbaTracks** (título, logo, botão no menu, janela do .bat).
+- **Interface no jeito Revit/Enscape** (`public/corrida/editor/layout.js`): barra de título (Salvar/Publicar, desfazer, mover/girar/escala),
+  **faixa de ferramentas** com abas Construir · Pista · Terreno · Modificar · Vista e um botão grande para cada ferramenta (barreira, zebra,
+  escape, linha, trecho, área, pincel, placa, pórtico, marca no chão, Craft, vistas, régua…). À esquerda o navegador (Biblioteca com
+  miniaturas grandes, Cena, Importar); à direita **Propriedades** com **prévia 3D girando** (peça escolhida, a que o mouse está em cima ou o
+  item selecionado, com as medidas em metros), só as opções da ferramenta ativa e a seleção; Histórico. Painéis recolhem (Tab), botões de
+  vista no canto do 3D, Ctrl+S salva. Nada do editor foi refeito: as seções são movidas com os mesmos ids.
+- **Desempenho:** `montarKit` monta cada peça uma vez e as próximas são cópias que dividem geometria e material (uma fileira de 300
+  guard-rails montava 300 vezes tudo; vale no editor e no jogo). As miniaturas da biblioteca saem aos poucos em vez de todas de uma vez.
+- **Estudo do editor de pinturas** (Livery Studio): `planos/livery-studio.md`.

@@ -68,10 +68,13 @@ document.body.insertAdjacentHTML("beforeend", `
   <h4>Base</h4>
   <div class="sel"><span>Partir de</span><select id="lsBase"></select></div>
   <div class="cor" id="lsC1l"><span>Cor de fundo</span><input type="color" id="lsC1"><input type="text" id="lsC1t" maxlength="7"></div>
-  <h4>Material</h4><canvas id="lsEsfera"></canvas>
+  <h4>Acabamento</h4><canvas id="lsEsfera"></canvas><div id="lsPresets" style="display:flex;flex-wrap:wrap;gap:5px;margin:8px 0"></div>
   <div class="campo"><span>Metálico</span><input type="range" id="lsMet" min="0" max="100"><b id="lsMetV"></b></div>
   <div class="campo"><span>Rugosidade</span><input type="range" id="lsRug" min="0" max="100"><b id="lsRugV"></b></div>
   <div class="campo"><span>Reflexo</span><input type="range" id="lsRef2" min="0" max="200"><b id="lsRef2V"></b></div>
+  <div class="campo"><span>Verniz</span><input type="range" id="lsCc" min="0" max="100"><b id="lsCcV"></b></div>
+  <div class="campo"><span>Verniz fosco</span><input type="range" id="lsCcr" min="0" max="100"><b id="lsCcrV"></b></div>
+  <div class="campo"><span>Perolizado</span><input type="range" id="lsIri" min="0" max="100"><b id="lsIriV"></b></div>
   <h4>A folha da pintura</h4><canvas id="lsFolha" width="512" height="576" title="As vistas que o jogo projeta no carro: os dois lados, de cima, a frente e a traseira"></canvas></div>
 <div id="lsGaveta"><div class="abas"><button data-g="cores" class="on">🎨 Cores</button><button data-g="pinturas">🏁 Pinturas</button><button data-g="marcas">🏷 Patrocinadores</button></div><div id="lsGav"></div></div>
 <div id="lsStatus">Arraste para girar · roda do mouse aproxima</div>`);
@@ -96,7 +99,7 @@ ajustar(); addEventListener("resize", ajustar);
 
 // ---------- a pintura (os dados) ----------
 // { versao, carro (a pintura do PINTURAS), base (equipe de partida ou null), c1, met, rug, ref, camadas: [{ tipo, zona, lado, cor, opac, s0, s1, largura, dist, oculta }] }
-const padrao = (id) => ({ versao: 1, carro: id, base: equipeDe(id), c1: coresDa(id, "#e63946")[0], c2: coresDa(id, "#e63946")[1], met: 30, rug: 35, ref: 100, camadas: [] });
+const padrao = (id) => ({ versao: 1, carro: id, base: equipeDe(id), c1: coresDa(id, "#e63946")[0], c2: coresDa(id, "#e63946")[1], met: 30, rug: 35, ref: 100, cc: 100, ccr: 38, iri: 0, camadas: [] });
 const local = (id) => { try { return JSON.parse(localStorage.getItem("livery:" + id) || "null"); } catch { return null; } };
 async function carregar(id) {
   const arq = await fetch(`/corrida/pinturas/${id}.json`, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
@@ -117,7 +120,7 @@ function redesenhar() {
   requestAnimationFrame(() => {
     agendado = false; folhaDeCamadas(P, folhaCv); folhaTx.needsUpdate = true;
     const f = $("lsFolha"), fx = f.getContext("2d"); fx.clearRect(0, 0, f.width, f.height); fx.drawImage(folhaCv, 0, 0, f.width, f.height);
-    if (k) { trocarCores(k, P.c1, P.c2); const m = k.pintura; if (m?.userData?.liv) m.userData.liv.liv.value = folhaTx; if (m && "metalness" in m) { m.metalness = P.met / 100; m.roughness = P.rug / 100; m.envMapIntensity = P.ref / 100; } }
+    if (k) { trocarCores(k, P.c1, P.c2); const m = k.pintura; if (m?.userData?.liv) m.userData.liv.liv.value = folhaTx; if (m && "metalness" in m) { m.metalness = P.met / 100; m.roughness = P.rug / 100; m.envMapIntensity = P.ref / 100; if ("clearcoat" in m) { m.clearcoat = (P.cc ?? 100) / 100; m.clearcoatRoughness = (P.ccr ?? 38) / 100; m.iridescence = (P.iri || 0) / 100; } } }
     esfera.cor(P);
   });
 }
@@ -145,13 +148,15 @@ function desenharLista() {
   } else {
     el.innerHTML = P.camadas.length ? [...P.camadas.keys()].reverse().map((i) => { const l = P.camadas[i];
       return `<div class="no ${i === sel ? "on" : ""}" data-i="${i}"><i style="background:${h(l.cor)}"></i><span>${TIPOS[l.tipo]?.ic || ""} ${h(TIPOS[l.tipo]?.nome || l.tipo)} · ${h(ZONAS[l.zona]?.nome || "")}</span>
-        <button class="mini" data-acao="sobe" title="Subir">▲</button><button class="mini" data-acao="desce" title="Descer">▼</button><button class="mini ${l.oculta ? "off" : ""}" data-acao="olho" title="Mostrar/esconder">👁</button><button class="mini" data-acao="apaga" title="Apagar">🗑</button></div>`; }).join("")
+        <button class="mini" data-acao="sobe" title="Subir">▲</button><button class="mini" data-acao="desce" title="Descer">▼</button><button class="mini" data-acao="dup" title="Duplicar">⧉</button><button class="mini" data-acao="espelho" title="Uma cópia no outro lado">⇋</button><button class="mini ${l.oculta ? "off" : ""}" data-acao="olho" title="Mostrar/esconder">👁</button><button class="mini" data-acao="apaga" title="Apagar">🗑</button></div>`; }).join("")
       + `<div class="no raiz" style="opacity:.7">▣ Base · ${h(P.base ? "pintura da equipe" : "cor de fundo")}</div>`
       : `<small style="display:block;padding:10px 8px;color:var(--mu)">Nenhuma camada ainda. Use os botões de baixo: a de cima da lista é pintada por cima das outras.</small>`;
     for (const n of el.querySelectorAll("[data-i]")) n.onclick = (e) => {
       const i = +n.dataset.i, a = e.target.closest("[data-acao]")?.dataset.acao, L = P.camadas;
       if (a === "olho") L[i].oculta = !L[i].oculta || undefined;
       else if (a === "apaga") { L.splice(i, 1); sel = -1; }
+      else if (a === "dup") { L.splice(i + 1, 0, JSON.parse(JSON.stringify(L[i]))); sel = i + 1; }
+      else if (a === "espelho") { const c = JSON.parse(JSON.stringify(L[i])); c.lado = { A: "B", B: "A" }[c.lado] || "ambos"; if (c.lado === "ambos") return status("Esta camada já está nos dois lados."); L.splice(i + 1, 0, c); sel = i + 1; }
       else if (a === "sobe" && i < L.length - 1) { [L[i], L[i + 1]] = [L[i + 1], L[i]]; sel = i + 1; }
       else if (a === "desce" && i > 0) { [L[i], L[i - 1]] = [L[i - 1], L[i]]; sel = i - 1; }
       else if (!a) sel = sel === i ? -1 : i;
@@ -190,12 +195,16 @@ function desenharProp() {
 function desenharBase() {
   $("lsBase").innerHTML = `<option value="">Cor lisa</option>` + Object.entries(PINTURAS).filter(([id]) => equipeDe(id)).map(([id, p]) => `<option value="${equipeDe(id)}" ${equipeDe(id) === P.base ? "selected" : ""}>Pintura ${h(p.name)}</option>`).join("");
   $("lsC1l").style.display = P.base ? "none" : ""; $("lsC1").value = P.c1; $("lsC1t").value = P.c1;
-  for (const [id, v] of [["lsMet", P.met], ["lsRug", P.rug], ["lsRef2", P.ref]]) { $(id).value = v; $(id + "V").textContent = (v / 100).toFixed(2); }
+  for (const [id, v] of [["lsMet", P.met], ["lsRug", P.rug], ["lsRef2", P.ref], ["lsCc", P.cc ?? 100], ["lsCcr", P.ccr ?? 38], ["lsIri", P.iri || 0]]) { $(id).value = v; $(id + "V").textContent = (v / 100).toFixed(2); }
+  $("lsPresets").innerHTML = Object.keys(ACABAMENTOS).map((n) => `<button class="bt" style="height:26px;padding:0 8px;border-color:var(--ln);font-size:12px" data-preset="${n}">${n}</button>`).join("");
 }
 $("lsBase").onchange = (e) => { P.base = e.target.value || null; mudou(); };
 $("lsC1").oninput = (e) => { P.c1 = e.target.value; $("lsC1t").value = P.c1; mudou("c1", true); };
 $("lsC1t").onchange = (e) => { if (/^#[0-9a-f]{6}$/i.test(e.target.value)) { P.c1 = e.target.value; mudou(); } };
-for (const [id, campo] of [["lsMet", "met"], ["lsRug", "rug"], ["lsRef2", "ref"]]) $(id).oninput = (e) => { P[campo] = +e.target.value; $(id + "V").textContent = (P[campo] / 100).toFixed(2); mudou(campo, true); };
+// (os presets do texto que o Thiago trouxe, 2026-11-18: só a carroceria pintada; o carbono e as rodas continuam os do jogo)
+const ACABAMENTOS = { Brilhante: { met: 10, rug: 30, cc: 100, ccr: 5, iri: 0 }, Fosca: { met: 0, rug: 85, cc: 0, ccr: 100, iri: 0 }, Acetinada: { met: 15, rug: 55, cc: 60, ccr: 45, iri: 0 }, Metálica: { met: 80, rug: 30, cc: 100, ccr: 10, iri: 0 }, Perolizada: { met: 40, rug: 25, cc: 100, ccr: 8, iri: 80 }, Cromada: { met: 100, rug: 6, cc: 40, ccr: 5, iri: 0 } };
+$("lsPresets").onclick = (e) => { const b = e.target.closest("[data-preset]"); if (!b) return; Object.assign(P, ACABAMENTOS[b.dataset.preset]); mudou(); status(`Acabamento: ${b.dataset.preset}.`); };
+for (const [id, campo] of [["lsMet", "met"], ["lsRug", "rug"], ["lsRef2", "ref"], ["lsCc", "cc"], ["lsCcr", "ccr"], ["lsIri", "iri"]]) $(id).oninput = (e) => { P[campo] = +e.target.value; $(id + "V").textContent = (P[campo] / 100).toFixed(2); mudou(campo, true); };
 
 // ---------- mudanças, salvar, desfazer ----------
 // `leve`: só a folha e o material (arrastando um controle: o painel não é refeito, para não perder o foco)
@@ -223,13 +232,28 @@ function status(t) { $("lsStatus").textContent = t; }
 const VISTAS = { Frente: [0, 0.6, -6], Trás: [0, 0.9, 6], Lado: [6.2, 0.7, 0], Topo: [0, 8, 0.01], v3d: [-5.2, 2.2, -4.6] }; // (a frente do carro é −z)
 $("lsVistas").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; cam.position.set(...VISTAS[b.dataset.v]); orbita.target.set(0, 0.45, 0); orbita.update(); };
 
+// ---------- clicar no carro escolhe a PEÇA (a zona da folha onde o clique caiu: s a partir do bico, a altura ou, de cima, o x) ----------
+const raio = new THREE.Raycaster(), ponteiro = new THREE.Vector2(), nrm = new THREE.Vector3(); let xy0 = null;
+cv.addEventListener("pointerdown", (e) => { xy0 = [e.clientX, e.clientY]; });
+cv.addEventListener("pointerup", (e) => {
+  if (!k || !xy0 || Math.hypot(e.clientX - xy0[0], e.clientY - xy0[1]) > 4) return;
+  const r = cv.getBoundingClientRect(); ponteiro.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); raio.setFromCamera(ponteiro, cam);
+  const hit = raio.intersectObject(k.carro, true)[0]; if (!hit) return;
+  const cx = new THREE.Box3().setFromObject(k.carro), p = hit.point, s0 = p.z - cx.min.z, y = p.y - cx.min.y, x = p.x; // (a frente é −z: o bico está no menor z)
+  const deCima = hit.face && Math.abs(nrm.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).y) > 0.7;
+  let melhor = null, dist = 1e9;
+  for (const [z, d] of Object.entries(ZONAS)) { if (z === "carro") continue;
+    for (const [a0, b0, a1, b1] of (deCima ? d.T : d.L) || []) { const v = deCima ? x : y, dd = Math.hypot(Math.max(a0 - s0, 0, s0 - a1), Math.max(b0 - v, 0, v - b1)); if (dd < dist) { dist = dd; melhor = z; } } }
+  if (!melhor) return; zonaSel = melhor; abaEsq = "pecas"; desenharLista(); status(`${ZONAS[melhor].nome} (${x > 0 ? "lado direito" : "lado esquerdo"}): as camadas novas vão para ela.`);
+});
+
 // ---------- a esfera do material ----------
 const esfera = (() => {
   const c = $("lsEsfera"), r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping;
   const s = new THREE.Scene(); s.environment = scene.environment; s.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1)); const d = new THREE.DirectionalLight(0xffffff, 2.5); d.position.set(2, 3, 3); s.add(d);
-  const m = new THREE.MeshStandardMaterial(); s.add(new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), m));
+  const m = new THREE.MeshPhysicalMaterial(); s.add(new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), m));
   const cm = new THREE.PerspectiveCamera(30, 1, 0.1, 20); cm.position.set(0, 0, 4.6); let sujo = true;
-  return { cor(p) { const l = p.camadas[sel]; m.color.set(l?.cor || p.c1); m.metalness = p.met / 100; m.roughness = p.rug / 100; m.envMapIntensity = p.ref / 100; sujo = true; },
+  return { cor(p) { const l = p.camadas[sel]; m.color.set(l?.cor || p.c1); m.metalness = p.met / 100; m.roughness = p.rug / 100; m.envMapIntensity = p.ref / 100; m.clearcoat = (p.cc ?? 100) / 100; m.clearcoatRoughness = (p.ccr ?? 38) / 100; m.iridescence = (p.iri || 0) / 100; sujo = true; },
     quadro() { if (!sujo) return; const w = c.clientWidth, hh = c.clientHeight; if (!w) return; r.setSize(w, hh, false); cm.aspect = w / hh; cm.updateProjectionMatrix(); r.render(s, cm); sujo = false; } };
 })();
 

@@ -47,3 +47,21 @@ Patrocinadores · Grafismos · Texturas com os logos em grade.
 
 Estimativa grosseira: a casca e as cores saem rápido porque reaproveitam o TabbaTracks; o ponto que mais toma tempo é o 3 (decal no
 lugar certo sem distorcer).
+
+## O texto do ChatGPT (2026-11-18): o que entrou e o que não se aplica aqui
+
+Entrou: os presets de acabamento (brilhante, fosca, acetinada, metálica, perolizada, cromada) com verniz, verniz fosco e perolizado
+(`MeshPhysicalMaterial`: clearcoat, clearcoatRoughness, iridescence); clicar no carro escolhe a peça (raycast → zona da folha);
+duplicar camada e "espelhar" (uma cópia no outro lado). Fica para os passos 3 a 5: importar PNG, decals por raycast com
+mover/escala/giro/espelhar, exportar GLB com a pintura gravada na textura.
+
+Não se aplica (ou não agora):
+- **"Importar qualquer GLB" e a hierarquia tirada das malhas:** o carro de 2026 é UMA malha de carroceria; a pintura não vem do UV, é
+  projetada pela posição de cada ponto (as 5 vistas da folha). Por isso as "peças" são as zonas da folha, não as malhas do arquivo.
+  Um GLB qualquer não teria esse shader nem as zonas medidas.
+- **Normal map, emissive e materiais por malha** (carbono, rodas): o carbono e as rodas são do jogo e iguais em toda equipe; mexer neles
+  pesa nos 20 carros. Dá para abrir depois, se fizer falta.
+- **Pintura por pincel no UV, como no Substance Painter:** pelo mesmo motivo do primeiro item (sem UV de pintura no modelo de 2026). As
+  camadas por zona e os decals cobrem o que uma livery de F1 usa.
+- **Projetos com Novo/Abrir e histórico salvo:** cada carro tem o seu JSON (`pinturas/<id>.json`), que já é o "projeto"; o histórico fica
+  na sessão (Ctrl+Z).

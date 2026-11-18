@@ -49,6 +49,11 @@ function attach(app) {
     fs.writeFileSync(path.join(PINTURAS, "index.json"), JSON.stringify(ids) + "\n");
     res.json({ ok: true, camadas: p.camadas.length });
   });
+  // (passo 3) um logo importado no Livery Studio (PNG/JPEG/WEBP): public/corrida/pinturas/logo-<nome>.<ext>, solto na pasta para o Publicar levar junto
+  app.post("/api/corrida/editor/livery-logo/:arq", express.raw({ type: "*/*", limit: "8mb" }), (req, res) => {
+    const m = /^([a-z0-9_-]{1,50})\.(png|jpe?g|webp)$/i.exec(req.params.arq); if (!m || !req.body?.length) return res.status(400).json({ erro: "nome ou imagem inválida" });
+    const arq = `logo-${m[1].toLowerCase()}.${m[2].toLowerCase()}`; fs.writeFileSync(path.join(PINTURAS, arq), req.body); res.json({ ok: true, url: `/corrida/pinturas/${arq}` });
+  });
   // (2026-11-16, o Thiago: "quando ficar pronto local, vou precisar de você para o commit? precisamos de um jeito de fazer o commit pelo editor")
   // PUBLICAR: o cenário e os assets leves vão para o GitHub num PR, sem mexer na pasta em que se trabalha. Num worktree temporário, novo e
   // tirado da main do GitHub, entram só public/corrida/cenario/ e public/corrida/assets/ desta pasta; commit, push de um branch novo e o PR

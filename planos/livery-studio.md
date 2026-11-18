@@ -41,7 +41,7 @@ Patrocinadores · Grafismos · Texturas com os logos em grade.
 
 1. ✅ (2026-11-18) Mapa das zonas da folha + a casca do Livery Studio (`?livery=<equipe>`): carro girando, vistas, árvore de peças com olho.
 2. ✅ (2026-11-18) Camadas de cor e faixas + material (Propriedades) + salvar o JSON. As zonas ficaram em `f1-pintura.js` (`ZONAS`, em metros, por vista) e a folha sai de `folhaDeCamadas(pintura)`; os arquivos em `public/corrida/pinturas/<id>.json`.
-3. Patrocinadores: a gaveta de logos, clicar no carro para pôr, mover/escala/giro, espelhar.
+3. ✅ (2026-11-18) Patrocinadores: a gaveta de logos, clicar no carro para pôr, mover/escala/giro, espelhar.
 4. A pintura salva entra no jogo (`folhaDaEquipe`) e a pintura do jogador vai para a sala.
 5. Renderizar imagem (estúdio) e importar logo.
 
@@ -65,3 +65,10 @@ Não se aplica (ou não agora):
   camadas por zona e os decals cobrem o que uma livery de F1 usa.
 - **Projetos com Novo/Abrir e histórico salvo:** cada carro tem o seu JSON (`pinturas/<id>.json`), que já é o "projeto"; o histórico fica
   na sessão (Ctrl+Z).
+
+### Como o passo 3 ficou
+O logo NÃO é um DecalGeometry: é mais uma camada da folha (`tipo: "logo"`, desenhada por `logoNaVista` em `f1-pintura.js`, do mesmo jeito
+que as marcas das equipes). Assim ele segue a carroceria sem flutuar, sai no mesmo shader do jogo e não pesa (nenhuma malha a mais). O
+clique no carro vira (s, altura) na lateral ou (s, x) em cima; a camada guarda `vista`, `a`, `b`, `altura`, `giro`, `lado`, `espelhar`,
+`opac` e `marca` (as do jogo) ou `img` (PNG importado: `public/corrida/pinturas/logo-<nome>.png`). Limite conhecido: nas partes muito
+curvas a projeção estica um pouco, como nas pinturas das equipes.

@@ -18,3 +18,7 @@
   corrida e degradê, cada uma num lado ou nos dois, com cor e opacidade; lista de camadas com subir/descer/olho/apagar; desfazer/refazer;
   a folha da pintura aparece nas Propriedades. Salvar grava `public/corrida/pinturas/<id>.json` (rota nova no `corrida-editor.js`, só no
   PC) e o Publicar do TabbaTracks leva a pasta junto. O jogo ainda não lê essas pinturas (passo 4).
+- **Livery Studio, passo 3:** patrocinadores. Escolha uma marca do jogo na gaveta (ou **＋ Importar** um PNG) e clique no carro: o logo
+  entra como camada da folha, nos dois lados ou em cima. Arraste no carro para mover, `[` `]` tamanho, `Q` `E` giro, e nas Propriedades:
+  lado, tamanho, giro, posição em metros, espelhar, opacidade e cor única. Também acabamentos (brilhante, fosca, metálica, perolizada…)
+  com verniz, clicar no carro escolhe a peça, duplicar e espelhar camada. PNG importado vai para `public/corrida/pinturas/logo-*.png`.

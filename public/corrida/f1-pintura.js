@@ -1440,11 +1440,27 @@ function retsDe(zona, v, ladoCam, ladoV) {
   return rs.map(([a0, b0, a1, b1]) => (pos ? [a0, Math.max(b0, 0), a1, b1] : [a0, b0, a1, Math.min(b1, 0)])).filter(([, b0, , b1]) => b1 > b0);
 }
 const recortar = (c, rs) => { c.beginPath(); for (const [a0, b0, a1, b1] of rs) c.rect(a0, b0, a1 - a0, b1 - b0); c.clip(); };
+// (passo 3) as imagens importadas (PNG com transparência) das camadas de logo: carregadas uma vez; quem pinta pede de novo quando chegam
+const IMAGENS = new Map();
+export function imagemLivery(src, aoCarregar) {
+  let e = IMAGENS.get(src); if (!e) { e = { img: new Image(), ok: false, esperando: [] }; IMAGENS.set(src, e); e.img.onload = () => { e.ok = true; for (const f of e.esperando.splice(0)) f(); }; e.img.src = src; }
+  if (!e.ok && aoCarregar) e.esperando.push(aoCarregar); return e.ok ? e.img : null;
+}
+// o LOGO: uma marca do jogo (desenharMarca) ou uma imagem, centrada em (a, b) da vista dele ("L" os lados: s e y; "T" de cima: s e x),
+// com `altura` em metros, giro em graus e espelhado se pedido. Desenhado reto na folha, como as marcas das equipes (lê certo nos dois lados).
+function logoNaVista(c, l) {
+  const [x, y] = pt(c, +l.a || 0, +l.b || 0), e = (+l.altura || 0.08) * PX(); c.setTransform(1, 0, 0, 1, x, y); c.rotate(((+l.giro || 0) * Math.PI) / 180); if (l.espelhar) c.scale(-1, 1);
+  if (l.marca) { c.scale(e, e); desenharMarca(c, l.marca, l.tinta ? { tinta: l.tinta } : {}); return; }
+  const im = l.img && imagemLivery(l.img); if (!im || !im.height) return;
+  const w = (e * im.width) / im.height; c.drawImage(im, -w / 2, -e / 2, w, e);
+}
 function camadaNaVista(c, l, v, ladoV) {
+  if (l.tipo === "logo" && (l.vista || "L") !== v) return;
   const rs = retsDe(l.zona, v, l.lado, ladoV); if (!rs.length) return;
   c.save(); recortar(c, rs); c.globalAlpha = l.opac == null ? 1 : +l.opac; c.fillStyle = l.cor || "#ffffff";
   const w = +l.largura || 0.2;
-  if (l.tipo === "cor") for (const [a0, b0, a1, b1] of rs) c.fillRect(a0, b0, a1 - a0, b1 - b0);
+  if (l.tipo === "logo") logoNaVista(c, l);
+  else if (l.tipo === "cor") for (const [a0, b0, a1, b1] of rs) c.fillRect(a0, b0, a1 - a0, b1 - b0);
   else if (l.tipo === "faixa") { // (a faixa inclinada: começa em s0 embaixo e chega em s1 em cima; de cima, a mesma faixa atravessa o carro)
     const s0 = +l.s0, s1 = +l.s1;
     if (v === "L") { c.beginPath(); c.moveTo(s0 - w / 2, 0); c.lineTo(s0 + w / 2, 0); c.lineTo(s1 + w / 2, 1.1); c.lineTo(s1 - w / 2, 1.1); c.closePath(); c.fill(); }

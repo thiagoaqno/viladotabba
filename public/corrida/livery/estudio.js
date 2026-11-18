@@ -7,14 +7,14 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { montarF1, f1Pronto, PINTURAS, coresDa, trocarCores } from "../f1.js";
-import { ZONAS, folhaDeCamadas, temDesenho } from "../f1-pintura.js";
+import { ZONAS, folhaDeCamadas, temDesenho, imagemLivery } from "../f1-pintura.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 
 const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const qs = new URLSearchParams(location.search);
 let pint = PINTURAS[qs.get("livery")] ? qs.get("livery") : "touro";
 const equipeDe = (id) => { const e = PINTURAS[id]?.equipe; return e && temDesenho(e) ? e : null; };
-const TIPOS = { cor: { ic: "■", nome: "Cor na zona" }, faixa: { ic: "▱", nome: "Faixa inclinada" }, listra: { ic: "┃", nome: "Listra de corrida" }, degrade: { ic: "◐", nome: "Degradê" } };
+const TIPOS = { cor: { ic: "■", nome: "Cor na zona" }, faixa: { ic: "▱", nome: "Faixa inclinada" }, listra: { ic: "┃", nome: "Listra de corrida" }, degrade: { ic: "◐", nome: "Degradê" }, logo: { ic: "🏷", nome: "Logo" } };
 const LADOS = { ambos: "Os dois lados", A: "Lado direito", B: "Lado esquerdo" };
 
 // ---------- a tela ----------
@@ -62,7 +62,7 @@ document.body.insertAdjacentHTML("beforeend", `
   <div class="dir"><span style="color:var(--mu)">Carro</span><select id="lsPint">${Object.entries(PINTURAS).filter(([k]) => k !== "propria").map(([k, p]) => `<option value="${k}" ${k === pint ? "selected" : ""}>${h(p.name)}</option>`).join("")}</select>
   <button class="bt" id="lsGirar" title="Girar sozinho">⟳ Girar</button><button class="bt pri" id="lsRender">📷 Renderizar imagem</button></div></div>
 <div id="lsEsq"><div class="abas"><button data-e="pecas" class="on">🏎 Peças</button><button data-e="camadas">☰ Camadas</button></div><div id="lsLista"></div>
-  <div id="lsNovas">${Object.entries(TIPOS).map(([k, t]) => `<button data-nova="${k}">${t.ic} ${t.nome}</button>`).join("")}</div></div>
+  <div id="lsNovas">${Object.entries(TIPOS).filter(([k]) => k !== "logo").map(([k, t]) => `<button data-nova="${k}">${t.ic} ${t.nome}</button>`).join("")}</div></div>
 <div id="lsVistas"><div class="grp"><button class="bt" data-v="v3d" title="3D">◈</button></div><div class="grp">${["Frente", "Trás", "Lado", "Topo"].map((v) => `<button class="bt" data-v="${v}">${v}</button>`).join("")}</div></div>
 <div id="lsDir"><h3>🛠 Propriedades</h3><div id="lsProp"></div>
   <h4>Base</h4>
@@ -118,7 +118,8 @@ let agendado = false;
 function redesenhar() {
   if (agendado) return; agendado = true;
   requestAnimationFrame(() => {
-    agendado = false; folhaDeCamadas(P, folhaCv); folhaTx.needsUpdate = true;
+    agendado = false; for (const l of P.camadas) if (l.tipo === "logo" && l.img) imagemLivery(l.img, redesenhar); // (a imagem que ainda não chegou: pinta de novo quando chegar)
+    folhaDeCamadas(P, folhaCv); folhaTx.needsUpdate = true;
     const f = $("lsFolha"), fx = f.getContext("2d"); fx.clearRect(0, 0, f.width, f.height); fx.drawImage(folhaCv, 0, 0, f.width, f.height);
     if (k) { trocarCores(k, P.c1, P.c2); const m = k.pintura; if (m?.userData?.liv) m.userData.liv.liv.value = folhaTx; if (m && "metalness" in m) { m.metalness = P.met / 100; m.roughness = P.rug / 100; m.envMapIntensity = P.ref / 100; if ("clearcoat" in m) { m.clearcoat = (P.cc ?? 100) / 100; m.clearcoatRoughness = (P.ccr ?? 38) / 100; m.iridescence = (P.iri || 0) / 100; } } }
     esfera.cor(P);
@@ -147,7 +148,7 @@ function desenharLista() {
     for (const n of el.querySelectorAll("[data-z]")) n.onclick = (e) => { zonaSel = n.dataset.z; if (e.target.closest("[data-pintar]")) return nova("cor"); desenharLista(); };
   } else {
     el.innerHTML = P.camadas.length ? [...P.camadas.keys()].reverse().map((i) => { const l = P.camadas[i];
-      return `<div class="no ${i === sel ? "on" : ""}" data-i="${i}"><i style="background:${h(l.cor)}"></i><span>${TIPOS[l.tipo]?.ic || ""} ${h(TIPOS[l.tipo]?.nome || l.tipo)} · ${h(ZONAS[l.zona]?.nome || "")}</span>
+      return `<div class="no ${i === sel ? "on" : ""}" data-i="${i}"><i style="background:${h(l.cor)}"></i><span>${TIPOS[l.tipo]?.ic || ""} ${l.tipo === "logo" ? h(l.marca ? nomeMarca(l.marca) : l.nome || "Imagem") + " · " + (l.vista === "T" ? "em cima" : "lados") : h(TIPOS[l.tipo]?.nome || l.tipo) + " · " + h(ZONAS[l.zona]?.nome || "")}</span>
         <button class="mini" data-acao="sobe" title="Subir">▲</button><button class="mini" data-acao="desce" title="Descer">▼</button><button class="mini" data-acao="dup" title="Duplicar">⧉</button><button class="mini" data-acao="espelho" title="Uma cópia no outro lado">⇋</button><button class="mini ${l.oculta ? "off" : ""}" data-acao="olho" title="Mostrar/esconder">👁</button><button class="mini" data-acao="apaga" title="Apagar">🗑</button></div>`; }).join("")
       + `<div class="no raiz" style="opacity:.7">▣ Base · ${h(P.base ? "pintura da equipe" : "cor de fundo")}</div>`
       : `<small style="display:block;padding:10px 8px;color:var(--mu)">Nenhuma camada ainda. Use os botões de baixo: a de cima da lista é pintada por cima das outras.</small>`;
@@ -176,6 +177,7 @@ $("lsNovas").onclick = (e) => { const b = e.target.closest("[data-nova]"); if (b
 function desenharProp() {
   const el = $("lsProp"), l = P.camadas[sel];
   if (!l) { el.innerHTML = `<small style="color:var(--mu)">Escolha uma camada (aba Camadas) para mexer nela.</small>`; return; }
+  if (l.tipo === "logo") return propLogo(el, l);
   const faixa = (k, nome, min, max, passo) => `<div class="campo"><span>${nome}</span><input type="range" data-n="${k}" min="${min}" max="${max}" step="${passo}" value="${l[k] ?? 0}"><b>${(+(l[k] ?? 0)).toFixed(2)}</b></div>`;
   el.innerHTML = `<div style="font-weight:700;margin-bottom:6px">${TIPOS[l.tipo]?.ic} ${h(TIPOS[l.tipo]?.nome)}</div>
     <div class="sel"><span>Peça</span><select data-s="zona">${Object.entries(ZONAS).map(([z, d]) => `<option value="${z}" ${z === l.zona ? "selected" : ""}>${h(d.nome)}</option>`).join("")}</select></div>
@@ -190,6 +192,22 @@ function desenharProp() {
   for (const r of el.querySelectorAll("[data-n]")) r.oninput = () => { l[r.dataset.n] = +r.value; r.nextElementSibling.textContent = (+r.value).toFixed(2); mudou("n" + sel + r.dataset.n, true); };
   el.querySelector("[data-c]").oninput = (e) => { l.cor = e.target.value; el.querySelector("[data-ct]").value = l.cor; mudou("c" + sel, true); };
   el.querySelector("[data-ct]").onchange = (e) => { if (/^#[0-9a-f]{6}$/i.test(e.target.value)) { l.cor = e.target.value; mudou(); } };
+}
+// o logo: onde (a vista, o lado, s e a altura/x), o tamanho, o giro, espelhar, opacidade e, nas marcas do jogo, uma cor única
+function propLogo(el, l) {
+  const T = l.vista === "T", rg = (k, nome, min, max, passo, pad) => `<div class="campo"><span>${nome}</span><input type="range" data-n="${k}" min="${min}" max="${max}" step="${passo}" value="${l[k] ?? pad}"><b>${(+(l[k] ?? pad)).toFixed(2)}</b></div>`;
+  el.innerHTML = `<div style="font-weight:700;margin-bottom:6px">🏷 ${h(l.marca ? nomeMarca(l.marca) : l.nome || "Imagem")}</div>
+    <div class="sel"><span>Onde</span><select data-s="vista"><option value="L" ${T ? "" : "selected"}>Nas laterais</option><option value="T" ${T ? "selected" : ""}>Em cima</option></select></div>
+    <div class="sel"><span>Lado</span><select data-s="lado">${Object.entries(LADOS).map(([z, n]) => `<option value="${z}" ${z === (l.lado || "ambos") ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+    ${rg("altura", "Tamanho (m)", 0.02, 0.8, 0.005, 0.08)}${rg("giro", "Giro (°)", -180, 180, 1, 0)}
+    ${rg("a", "Do bico (m)", 0, 4.45, 0.005, 2)}${T ? rg("b", "Para o lado (m)", -0.85, 0.85, 0.005, 0) : rg("b", "Altura (m)", 0, 1.1, 0.005, 0.4)}
+    ${rg("opac", "Opacidade", 0, 1, 0.05, 1)}
+    <div class="chk"><label><input type="checkbox" data-k="espelhar" ${l.espelhar ? "checked" : ""}> Espelhar</label>${l.marca ? `<label><input type="checkbox" data-k="tinta" ${l.tinta ? "checked" : ""}> Cor única</label><input type="color" data-tinta value="${h(l.tinta || "#ffffff")}" ${l.tinta ? "" : "disabled"}>` : ""}</div>
+    <small style="color:var(--mu)">Arraste o logo no carro para mover · [ e ] mudam o tamanho · Q e E giram · Delete apaga.</small>`;
+  for (const s of el.querySelectorAll("[data-s]")) s.onchange = () => { l[s.dataset.s] = s.value; if (s.dataset.s === "vista") { l.b = s.value === "T" ? 0 : 0.4; l.giro = s.value === "T" ? 90 : 0; } mudou(); };
+  for (const r of el.querySelectorAll("[data-n]")) r.oninput = () => { l[r.dataset.n] = +r.value; r.nextElementSibling.textContent = (+r.value).toFixed(2); mudou("n" + sel + r.dataset.n, true); };
+  for (const c of el.querySelectorAll("[data-k]")) c.onchange = () => { if (c.dataset.k === "tinta") l.tinta = c.checked ? el.querySelector("[data-tinta]").value : undefined; else l[c.dataset.k] = c.checked || undefined; mudou(); };
+  const ti = el.querySelector("[data-tinta]"); if (ti) ti.oninput = () => { l.tinta = ti.value; mudou("t" + sel, true); };
 }
 // a base e o material
 function desenharBase() {
@@ -223,6 +241,10 @@ addEventListener("keydown", (e) => {
   else if ((e.ctrlKey || e.metaKey) && t === "z" && !e.shiftKey) { e.preventDefault(); voltar(pilha, refeitos); }
   else if ((e.ctrlKey || e.metaKey) && (t === "y" || (t === "z" && e.shiftKey))) { e.preventDefault(); voltar(refeitos, pilha); }
   else if (t === "delete" && sel >= 0) { P.camadas.splice(sel, 1); sel = -1; mudou(); }
+  else if (t === "escape" && pondo) { pondo = null; cv.style.cursor = ""; desenharGaveta(); status("Cancelado."); }
+  else if (P.camadas[sel]?.tipo === "logo" && ["[", "]", "q", "e"].includes(t)) { const l = P.camadas[sel];
+    if (t === "[" || t === "]") l.altura = Math.max(0.02, Math.min(0.8, (+l.altura || 0.08) * (t === "]" ? 1.1 : 1 / 1.1))); else l.giro = (((+l.giro || 0) + (t === "e" ? 5 : -5) + 540) % 360) - 180;
+    mudou("tecla" + sel + t); }
 });
 $("lsVoltar").onclick = () => { P = { ...padrao(pint), met: P.met, rug: P.rug, ref: P.ref }; sel = -1; mudou(); status("De volta à pintura da equipe (Salvar para guardar)."); };
 $("lsPint").onchange = async (e) => { pint = e.target.value; history.replaceState(null, "", "?livery=" + pint); P = await carregar(pint); sel = -1; pilha.length = refeitos.length = 0; ultimaFoto = JSON.stringify(P); montar(); tudo(); desenharGaveta(); };
@@ -232,19 +254,41 @@ function status(t) { $("lsStatus").textContent = t; }
 const VISTAS = { Frente: [0, 0.6, -6], Trás: [0, 0.9, 6], Lado: [6.2, 0.7, 0], Topo: [0, 8, 0.01], v3d: [-5.2, 2.2, -4.6] }; // (a frente do carro é −z)
 $("lsVistas").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; cam.position.set(...VISTAS[b.dataset.v]); orbita.target.set(0, 0.45, 0); orbita.update(); };
 
-// ---------- clicar no carro escolhe a PEÇA (a zona da folha onde o clique caiu: s a partir do bico, a altura ou, de cima, o x) ----------
-const raio = new THREE.Raycaster(), ponteiro = new THREE.Vector2(), nrm = new THREE.Vector3(); let xy0 = null;
-cv.addEventListener("pointerdown", (e) => { xy0 = [e.clientX, e.clientY]; });
+// ---------- clicar no carro: PÔR o logo escolhido, ARRASTAR o logo escolhido, ou escolher a PEÇA ----------
+// o ponto do carro em coordenadas da folha: s a partir do bico, a altura e o x; "de cima" se a superfície olha para cima ou para baixo
+const raio = new THREE.Raycaster(), ponteiro = new THREE.Vector2(), nrm = new THREE.Vector3(); let xy0 = null, arrastando = false, pondo = null;
+function noCarro(e) {
+  if (!k) return null; const r = cv.getBoundingClientRect(); ponteiro.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); raio.setFromCamera(ponteiro, cam);
+  const hit = raio.intersectObject(k.carro, true)[0]; if (!hit) return null;
+  const cx = new THREE.Box3().setFromObject(k.carro), p = hit.point; // (a frente é −z: o bico está no menor z)
+  return { s: p.z - cx.min.z, y: p.y - cx.min.y, x: p.x, deCima: !!hit.face && Math.abs(nrm.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).y) > 0.7 };
+}
+const r3 = (v) => Math.round(v * 1000) / 1000;
+cv.addEventListener("pointerdown", (e) => {
+  xy0 = [e.clientX, e.clientY]; const l = P?.camadas[sel];
+  if (pondo || l?.tipo !== "logo" || e.button !== 0) return;
+  if (!noCarro(e)) return;
+  arrastando = true; orbita.enabled = false; cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener("pointermove", (e) => {
+  if (!arrastando) return; const l = P.camadas[sel], q = noCarro(e); if (!l || !q) return;
+  const T = l.vista === "T"; if (q.deCima !== T) return; // (não pula da lateral para cima no meio do arrasto)
+  l.a = r3(q.s); l.b = r3(T ? q.x : q.y); mudou("arrasto" + sel, true);
+});
 cv.addEventListener("pointerup", (e) => {
-  if (!k || !xy0 || Math.hypot(e.clientX - xy0[0], e.clientY - xy0[1]) > 4) return;
-  const r = cv.getBoundingClientRect(); ponteiro.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); raio.setFromCamera(ponteiro, cam);
-  const hit = raio.intersectObject(k.carro, true)[0]; if (!hit) return;
-  const cx = new THREE.Box3().setFromObject(k.carro), p = hit.point, s0 = p.z - cx.min.z, y = p.y - cx.min.y, x = p.x; // (a frente é −z: o bico está no menor z)
-  const deCima = hit.face && Math.abs(nrm.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).y) > 0.7;
+  const parado = xy0 && Math.hypot(e.clientX - xy0[0], e.clientY - xy0[1]) <= 4;
+  if (arrastando) { arrastando = false; orbita.enabled = true; desenharProp(); if (!parado) return; } // (um clique sem arrastar escolhe a peça, como sempre)
+  if (!parado) return;
+  const q = noCarro(e); if (!q) return;
+  if (pondo) { // o logo novo: na lateral, nos dois lados; em cima, girado para ler de quem vê o carro de lado
+    P.camadas.push({ tipo: "logo", zona: "carro", ...pondo, vista: q.deCima ? "T" : "L", lado: "ambos", a: r3(q.s), b: r3(q.deCima ? q.x : q.y), altura: q.deCima ? 0.1 : 0.08, giro: q.deCima ? 90 : 0 });
+    sel = P.camadas.length - 1; abaEsq = "camadas"; pondo = null; cv.style.cursor = ""; mudou(); desenharGaveta();
+    return status("Logo posto: arraste para ajustar, [ ] tamanho, Q E giro. Ele vai nos dois lados (mude em Lado).");
+  }
   let melhor = null, dist = 1e9;
   for (const [z, d] of Object.entries(ZONAS)) { if (z === "carro") continue;
-    for (const [a0, b0, a1, b1] of (deCima ? d.T : d.L) || []) { const v = deCima ? x : y, dd = Math.hypot(Math.max(a0 - s0, 0, s0 - a1), Math.max(b0 - v, 0, v - b1)); if (dd < dist) { dist = dd; melhor = z; } } }
-  if (!melhor) return; zonaSel = melhor; abaEsq = "pecas"; desenharLista(); status(`${ZONAS[melhor].nome} (${x > 0 ? "lado direito" : "lado esquerdo"}): as camadas novas vão para ela.`);
+    for (const [a0, b0, a1, b1] of (q.deCima ? d.T : d.L) || []) { const v = q.deCima ? q.x : q.y, dd = Math.hypot(Math.max(a0 - q.s, 0, q.s - a1), Math.max(b0 - v, 0, v - b1)); if (dd < dist) { dist = dd; melhor = z; } } }
+  if (!melhor) return; zonaSel = melhor; abaEsq = "pecas"; desenharLista(); status(`${ZONAS[melhor].nome} (${q.x > 0 ? "lado direito" : "lado esquerdo"}): as camadas novas vão para ela.`);
 });
 
 // ---------- a esfera do material ----------
@@ -270,10 +314,26 @@ function desenharGaveta() {
     g.innerHTML = Object.entries(PINTURAS).filter(([id]) => equipeDe(id)).map(([id, p]) => { const [c1, c2] = coresDa(id, "#e63946"); return `<div class="ficha ${equipeDe(id) === P.base ? "on" : ""}" data-base="${equipeDe(id)}"><div class="dupla" style="background:linear-gradient(135deg,${c1} 55%,${c2} 55%)"></div>${h(p.name)}</div>`; }).join("");
     for (const f of g.querySelectorAll("[data-base]")) f.onclick = () => { P.base = f.dataset.base; mudou(); desenharGaveta(); status("Base trocada: as camadas continuam por cima."); };
   } else {
-    const ids = [...Object.keys(PATROCINIOS).filter(Boolean), ...Object.keys(MARCAS_CAPACETE)];
-    g.innerHTML = ids.map((id) => `<div class="ficha" title="${h(nomeMarca(id))}"><img src="${miniaturaDoPatrocinio(id)}" alt="">${h(nomeMarca(id))}</div>`).join("");
-    for (const f of g.querySelectorAll(".ficha")) f.onclick = () => status("Pôr a marca no carro chega no próximo passo do Livery Studio.");
+    const ids = [...Object.keys(PATROCINIOS).filter(Boolean), ...Object.keys(MARCAS_CAPACETE)], meus = meusLogos();
+    g.innerHTML = `<label class="ficha" title="Importar um PNG (com transparência) ou JPEG" style="justify-content:center;border-style:dashed"><b style="font-size:22px">＋</b>Importar<input type="file" id="lsImp" accept="image/png,image/jpeg,image/webp" hidden></label>`
+      + meus.map((m, i) => `<div class="ficha ${pondo?.img === m.url ? "on" : ""}" data-meu="${i}" title="${h(m.nome)}"><img src="${h(m.url)}" alt="">${h(m.nome)}</div>`).join("")
+      + ids.map((id) => `<div class="ficha ${pondo?.marca === id ? "on" : ""}" data-marca="${id}" title="${h(nomeMarca(id))}"><img src="${miniaturaDoPatrocinio(id)}" alt="">${h(nomeMarca(id))}</div>`).join("");
+    const escolher = (o, nome) => { pondo = pondo && JSON.stringify(pondo) === JSON.stringify(o) ? null : o; cv.style.cursor = pondo ? "crosshair" : ""; desenharGaveta(); status(pondo ? `${nome}: clique no carro onde ele vai (Esc cancela).` : "Cancelado."); };
+    for (const f of g.querySelectorAll("[data-marca]")) f.onclick = () => escolher({ marca: f.dataset.marca }, nomeMarca(f.dataset.marca));
+    for (const f of g.querySelectorAll("[data-meu]")) f.onclick = () => { const m = meus[+f.dataset.meu]; escolher({ img: m.url, nome: m.nome }, m.nome); };
+    $("lsImp").onchange = (e) => importar(e.target.files[0]);
   }
+}
+// os logos importados: gravados pelo servidor do editor (public/corrida/pinturas/logo-<nome>.png, vão no Publicar) e, sem ele, guardados no
+// navegador como imagem embutida. A lista fica no navegador (livery-logos).
+const meusLogos = () => { try { return JSON.parse(localStorage.getItem("livery-logos") || "[]"); } catch { return []; } };
+async function importar(arq) {
+  if (!arq) return; const nome = arq.name.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, 40) || "logo", ext = (/\.(png|jpe?g|webp)$/i.exec(arq.name)?.[1] || "png").toLowerCase();
+  let url = null; const r = await fetch(`/api/corrida/editor/livery-logo/${nome}.${ext}`, { method: "POST", headers: { "content-type": "application/octet-stream" }, body: arq }).catch(() => null);
+  if (r?.ok) url = (await r.json()).url;
+  else url = await new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(arq); });
+  const l = meusLogos().filter((m) => m.nome !== nome); l.unshift({ nome, url }); try { localStorage.setItem("livery-logos", JSON.stringify(l.slice(0, 40))); } catch { status("O navegador não guardou o logo (grande demais): abra pelo editor-de-pistas.bat."); }
+  pondo = { img: url, nome }; cv.style.cursor = "crosshair"; desenharGaveta(); status(`${nome} importado${r?.ok ? "" : " (só neste navegador)"}: clique no carro onde ele vai.`);
 }
 $("lsGaveta").querySelector(".abas").onclick = (e) => { const b = e.target.closest("[data-g]"); if (b) { gaveta = b.dataset.g; desenharGaveta(); } };
 

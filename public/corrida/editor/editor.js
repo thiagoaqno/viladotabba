@@ -334,6 +334,7 @@ function desenharBiblioteca() {
 }
 // ---------- a área (cenario-pista.js, tipo "area"): clique nos cantos do polígono; fecha clicando no primeiro, com Enter ou no botão ----------
 let areaCor = "#3fa52c", areaComCor = false; // (a cor da área: tinge o material; na "cor lisa", é a cor dela)
+let areaEscala = 1.2; // (2026-11-18, o Thiago: "árvore em grupo saindo COLOSSAL; põe 1,2 de padrão") a escala do que a área espalha, só dela
 let areaPts = [], areaMaterial = "grama", areaEspalhar = "", areaEsp = 8, areaMistura = ["", ""];
 const marcasArea = new THREE.Group(); scene.add(marcasArea);
 function marcarArea() {
@@ -344,7 +345,7 @@ function marcarArea() {
 async function fecharArea() {
   if (areaPts.length < 3) return avisar("A área precisa de pelo menos 3 cantos.", true);
   const A = areaPts[0], pts = areaPts.map((p) => [+(p.x - A.x).toFixed(2), +(p.z - A.z).toFixed(2)]);
-  const o = await colocar({ tipo: "area", pts, material: areaMaterial, cor: (areaComCor || areaMaterial === "cor") ? areaCor : undefined, espalhar: areaEspalhar || undefined, mistura: areaEspalhar && areaMistura.some(Boolean) ? areaMistura.filter(Boolean) : undefined, espaco: areaEspalhar ? areaEsp : undefined, escalaEsp: areaEspalhar && escalaPor !== 1 ? escalaPor : undefined, x: A.x, y: Math.min(...areaPts.map((p) => p.y)), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
+  const o = await colocar({ tipo: "area", pts, material: areaMaterial, cor: (areaComCor || areaMaterial === "cor") ? areaCor : undefined, espalhar: areaEspalhar || undefined, mistura: areaEspalhar && areaMistura.some(Boolean) ? areaMistura.filter(Boolean) : undefined, espaco: areaEspalhar ? areaEsp : undefined, escalaEsp: areaEspalhar ? areaEscala : undefined, x: A.x, y: Math.min(...areaPts.map((p) => p.y)), z: A.z, rx: 0, ry: 0, rz: 0, s: 1 });
   areaPts = []; marcarArea(); if (o) { guardarItem(o); avisar("Área pronta. Clique para começar outra (Esc para)."); } desenharArea();
 }
 function desenharArea() {
@@ -356,7 +357,7 @@ function desenharArea() {
     <div class="lin"><label>Preencher <select id="edArMat">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === areaMaterial ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div>
     <div class="lin"><label>Espalhar <select id="edArKit"><option value="">Nada</option>${kits}</select></label></div>
     ${areaEspalhar ? [0, 1].map((i) => `<div class="lin"><label>+ Espécie ${i + 2} <select data-mist="${i}"><option value="">Nenhuma</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${areaMistura[i] === id ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label></div>`).join("") : ""}
-    ${areaEspalhar ? `<div class="lin"><label>Um a cada (m) <input type="number" id="edArEsp" step="1" value="${areaEsp}"></label></div>` : ""}
+    ${areaEspalhar ? `<div class="lin"><label>Um a cada (m) <input type="number" id="edArEsp" step="1" value="${areaEsp}"></label><label>Escala <input type="number" id="edArEsc" step="0.1" min="0.1" value="${areaEscala}"></label></div>` : ""}
     <small>Clique nos cantos da área no chão. Ela segue o relevo. Escolha o que cobre o chão e, se quiser, uma peça para espalhar dentro (árvores, arbustos, pedras…).</small>`;
   $("edArBt").onclick = () => { areaPts = []; marcarArea(); assetEscolhido = on ? null : "*area"; desenharArea(); desenharTrecho(); desenharLinha(); desenharZebra(); desenharBiblioteca(); };
   if ($("edArFim")) $("edArFim").onclick = fecharArea;
@@ -366,6 +367,7 @@ function desenharArea() {
   if ($("edArComCor")) $("edArComCor").onchange = (e) => { areaComCor = e.target.checked; };
   $("edArKit").onchange = (e) => { areaEspalhar = e.target.value; desenharArea(); };
   for (const s of el.querySelectorAll("[data-mist]")) s.onchange = () => { areaMistura[+s.dataset.mist] = s.value; };
+  if ($("edArEsc")) $("edArEsc").onchange = (e) => { areaEscala = Math.max(0.1, +e.target.value || 1.2); };
   if ($("edArEsp")) $("edArEsp").onchange = (e) => { areaEsp = Math.max(1, +e.target.value || 8); };
 }
 addEventListener("keydown", (e) => {
@@ -555,7 +557,7 @@ function desenharItem(soNumeros = false) {
   if (soNumeros && el.querySelector("[data-c]")) { for (const [k, v] of [["x", o.position.x], ["y", o.position.y], ["z", o.position.z], ["giro", deg(o.rotation.y)], ["escala", o.scale.x]]) { const i = el.querySelector(`[data-c="${k}"]`); if (i && document.activeElement !== i) i.value = (+v).toFixed(k === "escala" ? 2 : 0); } return; }
   const placa = it.tipo === "placa" || it.tipo === "marcaChao";
   el.innerHTML = `<div class="lin"><b>${h(placa ? (it.tipo === "marcaChao" ? "Marca no chão · " : "Placa · ") + nomeDaMarca(it.marca) : it.tipo === "kit" ? "📦 " + (KITS[it.kit]?.nome || it.kit) : it.tipo === "grupo" ? "Grupo" : it.tipo === "trecho" ? "Trecho de pista (cenário)" : it.tipo === "linha" ? "Linha de " + (it.modelo || "").replace("kit:", "") : it.tipo === "area" ? "Área · " + (MATERIAIS_AREA[it.material] || "") : it.tipo === "escape" ? "Área de escape" : it.asset)}</b></div>
-    ${it.tipo === "area" ? `<div class="lin"><label>Preencher <select data-pl="material">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === it.material ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div><div class="lin"><label>Espalhar <select data-pl="espalhar"><option value="">Nada</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${id === it.espalhar ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label><label>A cada (m) <input type="number" step="1" data-pl="espaco" value="${it.espaco || 8}"></label></div>${it.espalhar ? [0, 1].map((i) => `<div class="lin"><label>+ Espécie ${i + 2} <select data-mist="${i}"><option value="">Nenhuma</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${(it.mistura || [])[i] === id ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label></div>`).join("") : ""}` : ""}
+    ${it.tipo === "area" ? `<div class="lin"><label>Preencher <select data-pl="material">${Object.entries(MATERIAIS_AREA).map(([k, n]) => `<option value="${k}" ${k === it.material ? "selected" : ""}>${h(n)}</option>`).join("")}</select></label></div><div class="lin"><label>Espalhar <select data-pl="espalhar"><option value="">Nada</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${id === it.espalhar ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label><label>A cada (m) <input type="number" step="1" data-pl="espaco" value="${it.espaco || 8}"></label><label>Escala <input type="number" step="0.1" data-esc-esp value="${it.escalaEsp || 1}"></label></div>${it.espalhar ? [0, 1].map((i) => `<div class="lin"><label>+ Espécie ${i + 2} <select data-mist="${i}"><option value="">Nenhuma</option>${Object.entries(KITS).map(([id, k]) => `<option value="${id}" ${(it.mistura || [])[i] === id ? "selected" : ""}>${h(k.nome)}</option>`).join("")}</select></label></div>`).join("") : ""}` : ""}
     ${it.tipo === "marcaChao" ? `<div class="lin"><label>Grudar em <select data-pl="grampo"><option value="pista" ${it.grampo === "pista" ? "selected" : ""}>Pista (asfalto, zebra, calçada)</option><option value="solo" ${(it.grampo || "solo") === "solo" ? "selected" : ""}>Solo (relevo)</option><option value="livre" ${it.grampo === "livre" ? "selected" : ""}>Livre (usa o Y)</option></select></label><label>Acima (m) <input type="number" step="0.05" data-alt value="${it.alt || 0}"></label></div>` : ""}
     ${it.tipo === "linha" && /^faixa/.test(it.modelo || "") ? `<div class="lin"><label>Marca <select data-pl="marca">${opcoesDeMarca(it.marca)}</select></label><label>Fundo <input type="color" data-pl="fundo" value="${it.fundo || "#101114"}"></label></div>` : ""}
     ${it.tipo === "linha" && it.modelo === "parede" ? `<div class="lin"><label>Largura (m) <input type="number" step="0.1" data-num="larg" value="${it.larg || 0.5}"></label></div>` : ""}
@@ -578,6 +580,7 @@ function desenharItem(soNumeros = false) {
   };
   for (const c of el.querySelectorAll("[data-pl]")) c.onchange = () => { const v = c.dataset.pl === "prop" ? Math.max(0.05, +c.value || 0.3) : c.type === "number" ? Math.max(1, +c.value || 1) : c.value; refazerItem(o, { [c.dataset.pl]: v }); };
   for (const s of el.querySelectorAll("[data-mist]")) s.onchange = () => { const m = [...(it.mistura || ["", ""])]; m[+s.dataset.mist] = s.value; refazerItem(o, { mistura: m.filter(Boolean).length ? m.filter(Boolean) : undefined }); };
+  if (el.querySelector("[data-esc-esp]")) el.querySelector("[data-esc-esp]").onchange = (e) => refazerItem(o, { escalaEsp: Math.max(0.1, +e.target.value || 1.2) });
   for (const c of el.querySelectorAll("[data-num]")) c.onchange = () => refazerItem(o, { [c.dataset.num]: Math.max(0.1, +c.value || 0.5) });
   const ang = el.querySelector("[data-ang]"); if (ang) { ang.oninput = () => { $("edAngV").textContent = ang.value + "°"; }; ang.onchange = () => refazerItem(o, { angulo: +ang.value }); }
   const sem = el.querySelector("[data-sem]"); if (sem) sem.onchange = () => refazerItem(o, { semaforo: sem.checked || undefined });

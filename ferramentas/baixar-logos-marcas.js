@@ -41,6 +41,16 @@ async function api(q) {
   }
   throw Error("o Commons não respondeu");
 }
+// a imagem em si (upload.wikimedia.org também limita: devolve uma página "Wikimedia Error" com status 429). Só aceita o que É imagem
+// (começa com <svg / <?xml ou com a assinatura do PNG); se não, espera e tenta de novo.
+async function baixarImagem(url) {
+  for (let t = 0; t < 6; t++) {
+    await espera(10000 + t * 30000);
+    const r = await fetch(url, { headers: UA }), bin = Buffer.from(await r.arrayBuffer()), ini = bin.subarray(0, 400).toString("latin1");
+    if (r.ok && (/<svg|^\s*<\?xml/i.test(ini) || ini.slice(1, 4) === "PNG")) return bin;
+  }
+  throw Error("o arquivo não veio (só página de erro)");
+}
 // a nota de um título: tem as palavras da marca, tem "logo", é curto e não é de outra coisa (um evento, uma filial, um produto)
 function nota(titulo, busca) {
   const t = titulo.toLowerCase(), pal = busca.toLowerCase().replace(/(logo|\d{4})/g, "").split(/[^a-z0-9&+.'-]+/).filter((w) => w.length > 1);
@@ -69,7 +79,7 @@ async function achar(id) {
       const ii = Object.values(info.query.pages)[0]?.imageinfo?.[0]; if (!ii) throw Error("sem imageinfo");
       const ext = ii.mime === "image/svg+xml" ? "svg" : ii.mime === "image/png" ? "png" : null; if (!ext) throw Error("formato " + ii.mime);
       if (ii.size > 3e6) throw Error("grande demais (" + ii.size + ")");
-      const bin = Buffer.from(await (await fetch(ii.url, { headers: UA })).arrayBuffer());
+      const bin = await baixarImagem(ii.url);
       for (const f of fs.readdirSync(DIR)) if (f.startsWith(id + ".")) fs.unlinkSync(path.join(DIR, f));
       fs.writeFileSync(path.join(DIR, `${id}.${ext}`), bin);
       indice[id] = { arquivo: `${id}.${ext}`, titulo, fonte: ii.descriptionurl || ii.url }; ok++;

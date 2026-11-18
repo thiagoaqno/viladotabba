@@ -9,11 +9,6 @@
   "titulo": "File:Shell 1994 wordmark.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Shell_1994_wordmark.svg"
  },
- "ceva": {
-  "arquivo": "ceva.svg",
-  "titulo": "File:Logo of CEVA Logistics (2023).svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Logo_of_CEVA_Logistics_(2023).svg"
- },
  "tagheuer": {
   "arquivo": "tagheuer.svg",
   "titulo": "File:TAG Heuer Logo.svg",
@@ -23,11 +18,6 @@
   "arquivo": "tudor.svg",
   "titulo": "File:Tudor (Uhrenmarke) logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Tudor_(Uhrenmarke)_logo.svg"
- },
- "aramco": {
-  "arquivo": "aramco.svg",
-  "titulo": "File:Saudi aramco logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Saudi_aramco_logo.svg"
  },
  "aws": {
   "arquivo": "aws.svg",
@@ -50,26 +40,6 @@
   "titulo": "File:IBM logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:IBM_logo.svg"
  },
- "zyn": {
-  "arquivo": "zyn.png",
-  "titulo": "File:ZYN lockup-stacked-cyan.png",
-  "fonte": "https://commons.wikimedia.org/wiki/File:ZYN_lockup-stacked-cyan.png"
- },
- "richardmille": {
-  "arquivo": "richardmille.svg",
-  "titulo": "File:Richard Mille Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Richard_Mille_Logo.svg"
- },
- "bitdefender": {
-  "arquivo": "bitdefender.svg",
-  "titulo": "File:Bitdefender logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Bitdefender_logo.svg"
- },
- "whoop": {
-  "arquivo": "whoop.svg",
-  "titulo": "File:WHOOP Logo Black.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:WHOOP_Logo_Black.svg"
- },
  "rayban": {
   "arquivo": "rayban.svg",
   "titulo": "File:Ray-Ban logo.svg",
@@ -80,60 +50,15 @@
   "titulo": "File:Etihad-airways-logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Etihad-airways-logo.svg"
  },
- "groq": {
-  "arquivo": "groq.svg",
-  "titulo": "File:Groq logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Groq_logo.svg"
- },
- "castrol": {
-  "arquivo": "castrol.svg",
-  "titulo": "File:Castrol textlogo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Castrol_textlogo.svg"
- },
- "revolut": {
-  "arquivo": "revolut.svg",
-  "titulo": "File:Revolut logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Revolut_logo.svg"
- },
  "adidas": {
   "arquivo": "adidas.svg",
   "titulo": "File:Adidas Logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Adidas_Logo.svg"
  },
- "corescientific": {
-  "arquivo": "corescientific.svg",
-  "titulo": "File:Core Scientific logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Core_Scientific_logo.svg"
- },
  "hilfiger": {
   "arquivo": "hilfiger.svg",
   "titulo": "File:Tommy Hilfiger logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Tommy_Hilfiger_logo.svg"
- },
- "coherent": {
-  "arquivo": "coherent.svg",
-  "titulo": "File:Coherent logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Coherent_logo.svg"
- },
- "pepperstone": {
-  "arquivo": "pepperstone.svg",
-  "titulo": "File:Pepperstone.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Pepperstone.svg"
- },
- "glenfiddich": {
-  "arquivo": "glenfiddich.svg",
-  "titulo": "File:Glenfiddich Text Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Glenfiddich_Text_Logo.svg"
- },
- "netapp": {
-  "arquivo": "netapp.svg",
-  "titulo": "File:NetApp logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:NetApp_logo.svg"
- },
- "xerox": {
-  "arquivo": "xerox.svg",
-  "titulo": "File:Xerox logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Xerox_logo.svg"
  },
  "honda": {
   "arquivo": "honda.svg",
@@ -145,11 +70,6 @@
   "titulo": "File:Twilio-logo-red.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Twilio-logo-red.svg"
  },
- "vast": {
-  "arquivo": "vast.svg",
-  "titulo": "File:VAST Data logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:VAST_Data_logo.svg"
- },
  "gemini": {
   "arquivo": "gemini.svg",
   "titulo": "File:Google Gemini logo.svg",
@@ -159,11 +79,6 @@
   "arquivo": "mastercard.svg",
   "titulo": "File:Mastercard-logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Mastercard-logo.svg"
- },
- "dropbox": {
-  "arquivo": "dropbox.svg",
-  "titulo": "File:Dropbox Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Dropbox_Logo.svg"
  },
  "microsoft": {
   "arquivo": "microsoft.svg",
@@ -180,20 +95,10 @@
   "titulo": "File:Ford Motor Company Logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Ford_Motor_Company_Logo.svg"
  },
- "gulf": {
-  "arquivo": "gulf.svg",
-  "titulo": "File:Gulf Oil logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Gulf_Oil_logo.svg"
- },
  "moneygram": {
   "arquivo": "moneygram.svg",
   "titulo": "File:MoneyGram Logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:MoneyGram_Logo.svg"
- },
- "stake": {
-  "arquivo": "stake.svg",
-  "titulo": "File:Stake logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Stake_logo.svg"
  },
  "kick": {
   "arquivo": "kick.svg",
@@ -204,26 +109,6 @@
   "arquivo": "santander.svg",
   "titulo": "File:Banco santander logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Banco_santander_logo.svg"
- },
- "palmangels": {
-  "arquivo": "palmangels.svg",
-  "titulo": "File:Palm Angels logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Palm_Angels_logo.svg"
- },
- "estrela": {
-  "arquivo": "estrela.svg",
-  "titulo": "File:Mercedes-Benz Star.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_Star.svg"
- },
- "gate": {
-  "arquivo": "gate.svg",
-  "titulo": "File:Gateio logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Gateio_logo.svg"
- },
- "carlyle": {
-  "arquivo": "carlyle.svg",
-  "titulo": "File:The Carlyle Group logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:The_Carlyle_Group_logo.svg"
  },
  "att": {
   "arquivo": "att.svg",
@@ -240,16 +125,6 @@
   "titulo": "File:Lenovo logo 2015.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Lenovo_logo_2015.svg"
  },
- "lvmh": {
-  "arquivo": "lvmh.svg",
-  "titulo": "File:LVMH logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:LVMH_logo.svg"
- },
- "msc": {
-  "arquivo": "msc.svg",
-  "titulo": "File:MSC Cruises de logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:MSC_Cruises_de_logo.svg"
- },
  "qatar": {
   "arquivo": "qatar.svg",
   "titulo": "File:Qatar Airways logo.svg",
@@ -259,16 +134,6 @@
   "arquivo": "amex.svg",
   "titulo": "File:American Express logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:American_Express_logo.svg"
- },
- "barilla": {
-  "arquivo": "barilla.svg",
-  "titulo": "File:Barilla logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Barilla_logo.svg"
- },
- "globant": {
-  "arquivo": "globant.svg",
-  "titulo": "File:Globant Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Globant_Logo.svg"
  },
  "liquimoly": {
   "arquivo": "liquimoly.svg",
@@ -300,60 +165,20 @@
   "titulo": "File:PepsiCologo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:PepsiCologo.svg"
  },
- "standardchartered": {
-  "arquivo": "standardchartered.svg",
-  "titulo": "File:Standard Chartered 2002 logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Standard_Chartered_2002_logo.svg"
- },
  "mcdonalds": {
   "arquivo": "mcdonalds.svg",
   "titulo": "File:McDonald's logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:McDonald%27s_logo.svg"
- },
- "tmobile": {
-  "arquivo": "tmobile.svg",
-  "titulo": "File:T-Mobile-Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:T-Mobile-Logo.svg"
  },
  "rolex": {
   "arquivo": "rolex.svg",
   "titulo": "File:Rolex wordmark logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Rolex_wordmark_logo.svg"
  },
- "aggreko": {
-  "arquivo": "aggreko.svg",
-  "titulo": "File:Aggreko logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Aggreko_logo.svg"
- },
- "flexjet": {
-  "arquivo": "flexjet.svg",
-  "titulo": "File:Flexjet Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Flexjet_Logo.svg"
- },
- "tata": {
-  "arquivo": "tata.svg",
-  "titulo": "File:Tata Comm logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Tata_Comm_logo.svg"
- },
- "betway": {
-  "arquivo": "betway.svg",
-  "titulo": "File:Betway Logo (black).svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Betway_Logo_(black).svg"
- },
  "dpworld": {
   "arquivo": "dpworld.svg",
   "titulo": "File:DP World 2021 logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:DP_World_2021_logo.svg"
- },
- "velo": {
-  "arquivo": "velo.png",
-  "titulo": "File:Velo logo.png",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Velo_logo.png"
- },
- "okx": {
-  "arquivo": "okx.svg",
-  "titulo": "File:OKX logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:OKX_logo.svg"
  },
  "petronas": {
   "arquivo": "petronas.svg",
@@ -364,36 +189,6 @@
   "arquivo": "teamviewer.svg",
   "titulo": "File:TeamViewer logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:TeamViewer_logo.svg"
- },
- "solera": {
-  "arquivo": "solera.svg",
-  "titulo": "File:Solera Logo CMYK-master.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Solera_Logo_CMYK-master.svg"
- },
- "amg": {
-  "arquivo": "amg.svg",
-  "titulo": "File:Mercedes-AMG logo (grey).svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Mercedes-AMG_logo_(grey).svg"
- },
- "signify": {
-  "arquivo": "signify.svg",
-  "titulo": "File:Signify logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Signify_logo.svg"
- },
- "ineos": {
-  "arquivo": "ineos.svg",
-  "titulo": "File:INEOS logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:INEOS_logo.svg"
- },
- "iwc": {
-  "arquivo": "iwc.png",
-  "titulo": "File:IWC Schaffhausen logo-white-transparent-bg.png",
-  "fonte": "https://commons.wikimedia.org/wiki/File:IWC_Schaffhausen_logo-white-transparent-bg.png"
- },
- "snapdragon": {
-  "arquivo": "snapdragon.svg",
-  "titulo": "File:Snapdragon Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Snapdragon_Logo.svg"
  },
  "crowdstrike": {
   "arquivo": "crowdstrike.svg",
@@ -420,70 +215,20 @@
   "titulo": "File:Visa Inc. logo (2005–2014).svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Visa_Inc._logo_(2005%E2%80%932014).svg"
  },
- "hugo": {
-  "arquivo": "hugo.svg",
-  "titulo": "File:Hugo-Boss-Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Hugo-Boss-Logo.svg"
- },
- "boss": {
-  "arquivo": "boss.svg",
-  "titulo": "File:Hugo-Boss-Logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Hugo-Boss-Logo.svg"
- },
  "coreweave": {
   "arquivo": "coreweave.svg",
   "titulo": "File:CoreWeave logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:CoreWeave_logo.svg"
- },
- "maaden": {
-  "arquivo": "maaden.svg",
-  "titulo": "File:Ma'aden.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Ma%27aden.svg"
- },
- "valvoline": {
-  "arquivo": "valvoline.svg",
-  "titulo": "File:Valvoline company logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Valvoline_company_logo.svg"
- },
- "cognizant": {
-  "arquivo": "cognizant.svg",
-  "titulo": "File:Cognizant's logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Cognizant%27s_logo.svg"
- },
- "astonmartin": {
-  "arquivo": "astonmartin.svg",
-  "titulo": "File:Aston Martin wordmark.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Aston_Martin_wordmark.svg"
  },
  "coinbase": {
   "arquivo": "coinbase.svg",
   "titulo": "File:Coinbase.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Coinbase.svg"
  },
- "atlassian": {
-  "arquivo": "atlassian.svg",
-  "titulo": "File:Atlassian-logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Atlassian-logo.svg"
- },
- "keeper": {
-  "arquivo": "keeper.svg",
-  "titulo": "File:Keeper Security logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Keeper_Security_logo.svg"
- },
  "duracell": {
   "arquivo": "duracell.svg",
   "titulo": "File:Duracell logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Duracell_logo.svg"
- },
- "ninjaone": {
-  "arquivo": "ninjaone.svg",
-  "titulo": "File:NinjaOne logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:NinjaOne_logo.svg"
- },
- "bwt": {
-  "arquivo": "bwt.svg",
-  "titulo": "File:BWT Logo 2024.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:BWT_Logo_2024.svg"
  },
  "alpine": {
   "arquivo": "alpine.svg",
@@ -495,42 +240,31 @@
   "titulo": "File:Haas F1 Team Logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Haas_F1_Team_Logo.svg"
  },
- "cadillac": {
-  "arquivo": "cadillac.svg",
-  "titulo": "File:Cadillac Wordmark.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Cadillac_Wordmark.svg"
- },
- "claro": {
-  "arquivo": "claro.svg",
-  "titulo": "File:Logo de Claro.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Logo_de_Claro.svg"
- },
- "ifs": {
-  "arquivo": "ifs.png",
-  "titulo": "File:Ifs-logo-70.png",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Ifs-logo-70.png"
- },
- "aneis": {
-  "arquivo": "aneis.svg",
-  "titulo": "File:Audi logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Audi_logo.svg"
- },
  "hhonda": {
   "arquivo": "honda.svg",
   "titulo": "File:Honda Logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Honda_Logo.svg",
   "alias": "honda"
  },
+ "atlassian": {
+  "arquivo": "atlassian.svg",
+  "titulo": "File:Atlassian-logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Atlassian-logo.svg"
+ },
+ "barilla": {
+  "arquivo": "barilla.svg",
+  "titulo": "File:Barilla logo.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Barilla_logo.svg"
+ },
+ "claro": {
+  "arquivo": "claro.svg",
+  "titulo": "File:Logo de Claro.svg",
+  "fonte": "https://commons.wikimedia.org/wiki/File:Logo_de_Claro.svg"
+ },
  "atlassiana": {
   "arquivo": "atlassian.svg",
   "titulo": "File:Atlassian-logo.svg",
   "fonte": "https://commons.wikimedia.org/wiki/File:Atlassian-logo.svg",
   "alias": "atlassian"
- },
- "revolutr": {
-  "arquivo": "revolut.svg",
-  "titulo": "File:Revolut logo.svg",
-  "fonte": "https://commons.wikimedia.org/wiki/File:Revolut_logo.svg",
-  "alias": "revolut"
  }
 }

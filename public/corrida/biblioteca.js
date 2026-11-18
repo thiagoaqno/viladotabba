@@ -1013,6 +1013,38 @@ for (const [id, nome, o] of [
 KITS.mcQuadra = F("Geral", { nome: "Mônaco: quadra de prédios colados", grupo: "Cidade", montar() {
   const g = new THREE.Group(), lista = [[12, 7, "#ecd9b8", "#3d6b4a"], [10, 9, "#e7a789", null], [13, 6, "#f0c46a", "#2e5d3e"], [11, 8, "#efe2c8", "#5a7a8a"]]; let x = -23;
   for (const [w, a, cor, ven] of lista) { const p = predioClassico({ w, d: 12, andares: a, cor, veneziana: ven, chave: "quadra-" + cor }); p.position.x = (x + w / 2) * U; g.add(p); x += w; } return g; } });
+// (2026-11-18, o print do Thiago: "preciso de um asset disso") o HOTEL DA CURVA DO GRAMPO: o prédio branco comprido em arco, sete andares de
+// varandas corridas (laje branca saliente, guarda-corpo, vidro escuro recuado e as divisórias entre os quartos), o térreo escuro de pilares
+// (a pista passa embaixo/na frente) e a cobertura com gente olhando a corrida. A frente fica para o lado de fora do arco (+z).
+// Com `angulo` (graus) o arco abre ou fecha; o raio é de 70 m.
+function hotelGrampo(graus = 70) {
+  const g = new THREE.Group(), R = 70 * U, A = (Math.min(180, Math.max(10, graus)) * Math.PI) / 180, andares = 7, Ah = 3.2 * U, T = 5 * U, prof = 14 * U;
+  const BR = M(0xeeece6, { roughness: 0.85 }), VID = M(0x2b333c, { roughness: 0.2, metalness: 0.4 }), ESC = M(0x1c1e22, { roughness: 0.9 }), GC = M(0xd9dde0, { roughness: 0.6 });
+  // um ponto no arco: s de -1 a 1, r = o raio (a frente é o raio maior); o arco tem o centro em z = -R, a frente olha para +z
+  const pt = (sv, r) => { const a = (sv * A) / 2; return [Math.sin(a) * r, Math.cos(a) * r - R, a]; }; // (o giro do bloco: o x dele vai pela tangente do arco)
+  const L = R * A, segs = Math.max(8, Math.round(L / (4 * U)));
+  const vidro = [], lajes = [], guarda = [], divis = [], terreo = [], miolo = [];
+  for (let i = 0; i < segs; i++) {
+    const s0 = (i / segs) * 2 - 1, s1 = ((i + 1) / segs) * 2 - 1, sm = (s0 + s1) / 2, [x, z, ry] = pt(sm, R), corda = (L / segs) * 1.01;
+    const [xm, zm] = pt(sm, R - prof / 2);
+    miolo.push(geoEm(new THREE.BoxGeometry(corda * (R - prof / 2) / R, andares * Ah, prof - 1.6 * U), xm, T + (andares * Ah) / 2, zm, ry));
+    const [xv, zv] = pt(sm, R - 1.6 * U); vidro.push(geoEm(new THREE.BoxGeometry(corda, andares * Ah, 0.1 * U), xv, T + (andares * Ah) / 2, zv, ry));
+    for (let k = 0; k <= andares; k++) { const y = T + k * Ah; lajes.push(geoEm(new THREE.BoxGeometry(corda, 0.35 * U, 2 * U), x, y, z, ry)); if (k) guarda.push(geoEm(new THREE.BoxGeometry(corda, 1 * U, 0.12 * U), ...(() => { const [gx, gz] = pt(sm, R + 0.95 * U); return [gx, y - Ah + 0.85 * U, gz]; })(), ry)); }
+    const [xd, zd] = pt(s0, R - 0.3 * U); divis.push(geoEm(new THREE.BoxGeometry(0.25 * U, andares * Ah, 2.6 * U), xd, T + (andares * Ah) / 2, zd, (s0 * A) / 2));
+    if (i % 2 === 0) { const [xp, zp] = pt(s0, R - 1 * U); terreo.push(geoEm(new THREE.BoxGeometry(1.2 * U, T, 1.2 * U), xp, T / 2, zp, ry)); }
+    const [xf, zf] = pt(sm, R - 6 * U); terreo.push(geoEm(new THREE.BoxGeometry(corda, T, 0.3 * U), xf, T / 2, zf, ry));
+  }
+  juntar(g, BR, miolo); juntar(g, VID, vidro); juntar(g, BR, lajes); juntar(g, GC, guarda); juntar(g, BR, divis); juntar(g, ESC, terreo);
+  // a cobertura: o parapeito e o público em pé olhando a pista
+  const topo = T + andares * Ah, par = [], lug = [];
+  for (let i = 0; i < segs; i++) { const sm = ((i + 0.5) / segs) * 2 - 1, [x, z, ry] = pt(sm, R + 0.4 * U); par.push(geoEm(new THREE.BoxGeometry((L / segs) * 1.01, 1.1 * U, 0.3 * U), x, topo + 0.55 * U, z, ry)); }
+  for (let j = 0; j < segs * 3; j++) { const sm = (j / (segs * 3)) * 2 - 1, [x, z, ry] = pt(sm, R - 0.8 * U); lug.push([x, topo, z, ry]); }
+  juntar(g, BR, par); plateia(g, lug, { ocupa: 0.55, semente: 17 });
+  // as pontas do prédio fechadas
+  for (const sv of [-1, 1]) { const [x, z, ry] = pt(sv, R - prof / 2); caixa(g, BR, 0.6 * U, andares * Ah + T, prof, x, (andares * Ah + T) / 2, z).rotation.y = ry; }
+  return g;
+}
+KITS.mcHotelGrampo = F("Geral", { nome: "Mônaco: hotel da curva do grampo", grupo: "Cidade", angulo: 70, montar: (a = 70) => hotelGrampo(a) });
 // os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.
 export const FILTROS = ["Arquibancadas", "Automóveis", "Contenção", "Paddock", "Vegetação", "Geral"];
 const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibancadas", pneus: "Contenção", tecpro: "Contenção", grade: "Contenção", guardrail: "Contenção", cone: "Contenção",

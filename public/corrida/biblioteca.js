@@ -780,6 +780,73 @@ KITS.lampiaoDuplo = F("Geral", { nome: "Lampião antigo duplo", grupo: "Cidade",
 KITS.lancha = F("Automóveis", { nome: "Iate pequeno", grupo: "Porto", montar() { const g = new THREE.Group(), B = M(0xf6f6f4, { roughness: 0.3 }), V = M(0x1f2a33, { roughness: 0.1, metalness: 0.4 });
   const casco = new THREE.Shape([[-1.6, -5], [1.6, -5], [1.8, 2], [0, 6], [-1.8, 2]].map(([x, z]) => new THREE.Vector2(x * U, z * U))); const c = malha(g, new THREE.ExtrudeGeometry(casco, { depth: 1.6 * U, bevelEnabled: false }), B, 0, 1.6 * U, 0); c.rotation.x = Math.PI / 2;
   caixa(g, M(0x1d3a6e), 3.7 * U, 0.2 * U, 9 * U, 0, 0.3 * U, -0.5 * U); caixa(g, B, 2.8 * U, 1.2 * U, 4.5 * U, 0, 2.2 * U, -1 * U); caixa(g, V, 2.85 * U, 0.6 * U, 4 * U, 0, 2.3 * U, -1 * U); caixa(g, B, 2 * U, 0.8 * U, 2.4 * U, 0, 3.2 * U, -1.6 * U); cil(g, B, 0.06 * U, 1.6 * U, 0, 4.2 * U, -2 * U, 5); return g; } });
+// ---------- (2026-11-17, a imagem do Thiago: a topografia de Mônaco) ----------
+// a ROCHA calcária facetada (um icosaedro subdividido, deformado por um ruído fixo e achatado no chão), com o mato e as árvores por cima,
+// e os MUROS da encosta: de pedra com balaustrada (reto e curvo), de concreto com pilastras, curvo com grade e escada, e o de arrimo inclinado.
+const ROCHA = M(0xcbb79a, { flatShading: true, roughness: 1 }), ROCHA2 = M(0xb9a687, { flatShading: true, roughness: 1 }), MATO = M(0x5f7a34, { flatShading: true, roughness: 1 });
+function rocha(w, h, d, semente, aspereza = 0.22) {
+  const r = sorteio(semente), geo = new THREE.IcosahedronGeometry(1, 3), p = geo.attributes.position, ruido = new Map();
+  const n = (x, y, z) => { const k = `${Math.round(x * 40)},${Math.round(y * 40)},${Math.round(z * 40)}`; if (!ruido.has(k)) ruido.set(k, r()); return ruido.get(k); }; // (o mesmo vértice repetido ganha o mesmo tremor: sem rachar a malha)
+  for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const f = 1 + (n(x, y, z) - 0.5) * aspereza * 2 + Math.sin(x * 5 + y * 3) * aspereza * 0.4;
+    x *= f; z *= f; y = Math.max(-0.02, y * f); if (y > 0.55) y = 0.55 + (y - 0.55) * 0.35; // (o topo achata: dá para pôr mato e árvore)
+    p.setXYZ(i, (x * w) / 2, (y / 0.75) * h, (z * d) / 2); }
+  geo.computeVertexNormals(); return geo;
+}
+function topoVerde(g, w, d, h, n, semente, comArvores = true) {
+  const r = sorteio(semente + 99); const m = malha(g, new THREE.CylinderGeometry(w * 0.36, w * 0.4, 0.6 * U, 9), MATO, 0, h * 0.98, 0); m.scale.z = d / w;
+  for (let k = 0; k < n; k++) { const a = r() * Math.PI * 2, t = Math.sqrt(r()) * 0.3, x = Math.cos(a) * w * t, z = Math.sin(a) * d * t;
+    const o = comArvores && k % 2 === 0 ? pinheiroManso(3 + r() * 3, semente + k) : arbusto(0x4f6b2c, null, 1 + r(), semente + k); o.position.set(x, h * 0.98, z); o.rotation.y = r() * 6; g.add(o); }
+}
+function arbustosNaRocha(g, w, d, h, n, semente) { const r = sorteio(semente + 7); for (let k = 0; k < n; k++) { const a = r() * Math.PI * 2, y = (0.15 + r() * 0.6) * h, o = arbusto(0x4a6a28, null, 0.9 + r() * 0.8, semente + 30 + k); o.position.set(Math.cos(a) * w * 0.47 * (1 - y / h * 0.3), y, Math.sin(a) * d * 0.47 * (1 - y / h * 0.3)); g.add(o); } }
+function penhasco(w, h, d, semente, arvores = 8) { const g = new THREE.Group(); malha(g, rocha(w * U, h * U, d * U, semente), semente % 2 ? ROCHA : ROCHA2); topoVerde(g, w * U, d * U, h * U, arvores, semente); arbustosNaRocha(g, w * U, d * U, h * U, Math.round(arvores * 0.8), semente); return g; }
+KITS.penhascoAlto = F("Geral", { nome: "Penhasco alto", grupo: "Relevo", montar: () => penhasco(24, 26, 20, 3, 8) });
+KITS.penhascoMedio = F("Geral", { nome: "Penhasco médio com árvores", grupo: "Relevo", montar: () => penhasco(22, 16, 18, 6, 10) });
+KITS.penhascoLargo = F("Geral", { nome: "Penhasco largo", grupo: "Relevo", montar: () => penhasco(40, 18, 26, 9, 12) });
+KITS.rochaSolta = F("Geral", { nome: "Rocha grande", grupo: "Relevo", montar() { const g = new THREE.Group(); malha(g, rocha(14 * U, 12 * U, 11 * U, 12, 0.3), ROCHA2); arbustosNaRocha(g, 14 * U, 11 * U, 12 * U, 6, 12); return g; } });
+// o rochedo: a encosta comprida em dois patamares, com mato, árvores, a fileira de prédios coloridos e o forte no alto
+KITS.rochedo = F("Geral", { nome: "Rochedo com forte e casario", grupo: "Relevo", montar() {
+  const g = new THREE.Group(), W = 120 * U;
+  const base = malha(g, rocha(W, 14 * U, 40 * U, 21, 0.15), ROCHA); base.scale.z = 1;
+  const meio = malha(g, rocha(70 * U, 34 * U, 30 * U, 22, 0.2), ROCHA2); meio.position.set(10 * U, 0, -4 * U);
+  topoVerde(g, 120 * U, 40 * U, 14 * U, 14, 23);
+  const alto = new THREE.Group(); topoVerde(alto, 70 * U, 30 * U, 34 * U, 10, 24); alto.position.set(10 * U, 0, -4 * U); g.add(alto);
+  for (let i = 0; i < 5; i++) { const cores = ["#e08a6a", "#ecd9b8", "#e7a789", "#f0c46a", "#efe2c8"], p = predioClassico({ w: 9, d: 8, andares: 3 + (i % 3), cor: cores[i], chave: "rochedo" + i }); p.scale.setScalar(0.8); p.position.set(-50 * U + i * 9 * U, 13 * U + i * 2.5 * U, 4 * U); g.add(p); }
+  const forte = new THREE.Group(), P = M(0xe9dcc4, { roughness: 0.95 }); caixa(forte, P, 22 * U, 7 * U, 12 * U, 0, 3.5 * U, 0); caixa(forte, P, 7 * U, 11 * U, 7 * U, -9 * U, 5.5 * U, 0); caixa(forte, P, 6 * U, 9 * U, 6 * U, 10 * U, 4.5 * U, -2 * U);
+  for (let i = 0; i < 11; i++) caixa(forte, P, 1 * U, 1 * U, 12.4 * U, -10 * U + i * 2 * U, 7.5 * U, 0); const tel = malha(forte, new THREE.CylinderGeometry(0.01, 5 * U, 2.5 * U, 4), M(0xb5653d, { flatShading: true }), -9 * U, 12.3 * U, 0); tel.rotation.y = Math.PI / 4;
+  forte.position.set(12 * U, 33 * U, -6 * U); g.add(forte);
+  return g; } });
+// a encosta com a estrada subindo, presa por um muro de arrimo de pedra
+KITS.encostaEstrada = F("Geral", { nome: "Encosta com estrada e muro de arrimo", grupo: "Relevo", montar() {
+  const g = penhasco(60, 14, 22, 31, 10), L = 60 * U, asf = M(0x4a4d52, { roughness: 0.95 });
+  const rampa = caixa(g, asf, L, 0.4 * U, 7 * U, 0, 6 * U, 13 * U); rampa.rotation.z = Math.atan2(10 * U, L);
+  const muro = caixa(g, new THREE.MeshStandardMaterial({ map: (() => { const t = texPedra(); t.repeat.set(12, 2); return t; })(), roughness: 1 }), L, 10 * U, 1 * U, 0, 1 * U, 16.6 * U); muro.rotation.z = Math.atan2(10 * U, L);
+  caixa(g, M(0xe7e0d0), L, 0.6 * U, 1.2 * U, 0, 6.5 * U, 16.6 * U).rotation.z = Math.atan2(10 * U, L); return g; } });
+// os muros
+const texPedra = () => texCanvas("pedra-muro", 128, 128, (x, w, hh) => { x.fillStyle = "#a89b86"; x.fillRect(0, 0, w, hh); const r = sorteio(5);
+  for (let y = 0; y < hh; y += 16) for (let xx = -(y % 32 ? 12 : 0); xx < w; xx += 18 + r() * 12) { const c = 150 + r() * 40 | 0; x.fillStyle = `rgb(${c + 10},${c},${c - 15})`; x.fillRect(xx + 1, y + 1, 16 + r() * 10, 14); } });
+const PEDRA_M = () => { const t = texPedra(); t.repeat.set(4, 2); return new THREE.MeshStandardMaterial({ map: t, roughness: 1 }); };
+const ARENITO = M(0xe7e0d0, { roughness: 0.9 });
+function balaustrada(g, L, y, z, curvo = 0) {
+  const n = Math.round(L / (0.45 * U));
+  for (let i = 0; i <= n; i++) { const t = i / n - 0.5, [x, zz, a] = curvo ? [Math.sin(t * curvo) * L / curvo, z - (1 - Math.cos(t * curvo)) * L / curvo, t * curvo] : [t * L, z, 0]; const b = cil(g, ARENITO, 0.12 * U, 0.8 * U, x, y + 0.4 * U, zz, 6, 0.08 * U); b.rotation.y = a; }
+  const segs = curvo ? 12 : 1; for (let k = 0; k < segs; k++) { const t0 = k / segs - 0.5, t1 = (k + 1) / segs - 0.5, P = (t) => curvo ? [Math.sin(t * curvo) * L / curvo, z - (1 - Math.cos(t * curvo)) * L / curvo] : [t * L, z];
+    const [x0, z0] = P(t0), [x1, z1] = P(t1), c = caixa(g, ARENITO, Math.hypot(x1 - x0, z1 - z0) + 0.05 * U, 0.2 * U, 0.5 * U, (x0 + x1) / 2, y + 0.9 * U, (z0 + z1) / 2); c.rotation.y = -Math.atan2(z1 - z0, x1 - x0); }
+}
+KITS.muroPedraBalaustrada = F("Contenção", { nome: "Muro de pedra com balaustrada", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 3.2 * U; caixa(g, PEDRA_M(), L, h, 0.8 * U, 0, h / 2, 0); caixa(g, ARENITO, L + 0.2 * U, 0.25 * U, 1 * U, 0, h, 0);
+  for (const x of [-L / 2, L / 2]) caixa(g, ARENITO, 0.8 * U, h + 1.4 * U, 1 * U, x, (h + 1.4 * U) / 2, 0); balaustrada(g, L - 0.8 * U, h, 0); return g; } });
+KITS.muroPedraCurvo = F("Contenção", { nome: "Muro de pedra curvo com balaustrada", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), R = 6 * U, h = 3 * U, A = Math.PI * 0.8, w = malha(g, new THREE.CylinderGeometry(R, R, h, 20, 1, true, -A / 2 + Math.PI, A), PEDRA_M(), 0, h / 2, R); w.material.side = THREE.DoubleSide;
+  balaustrada(g, R * A, h, 0, A); for (const s of [-1, 1]) caixa(g, ARENITO, 0.8 * U, h + 1.4 * U, 0.8 * U, Math.sin((s * A) / 2) * R, (h + 1.4 * U) / 2, R - Math.cos((s * A) / 2) * R); return g; } });
+KITS.muroConcretoPilastras = F("Contenção", { nome: "Muro de concreto com pilastras", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 12 * U, h = 3.6 * U, C = M(0xc9c4b8, { roughness: 0.95 }); caixa(g, C, L, h, 0.6 * U, 0, h / 2, 0);
+  for (let i = 0; i <= 3; i++) { const x = -L / 2 + (i * L) / 3; caixa(g, C, 0.9 * U, h + 0.4 * U, 0.9 * U, x, (h + 0.4 * U) / 2, 0); caixa(g, ARENITO, 1.1 * U, 0.25 * U, 1.1 * U, x, h + 0.5 * U, 0); } caixa(g, ARENITO, L, 0.2 * U, 0.75 * U, 0, h, 0); return g; } });
+KITS.muroCurvoEscada = F("Contenção", { nome: "Muro curvo com grade e escada", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), R = 7 * U, h = 3.4 * U, A = Math.PI * 0.55, C = M(0xc9c4b8, { roughness: 0.95, side: THREE.DoubleSide }); malha(g, new THREE.CylinderGeometry(R, R, h, 16, 1, true, -A / 2 + Math.PI, A), C, 0, h / 2, R);
+  for (let i = 0; i <= 14; i++) { const t = i / 14 - 0.5, x = Math.sin(t * A) * R, z = R - Math.cos(t * A) * R; cil(g, M(0x2c3a33, { metalness: 0.4 }), 0.04 * U, 1 * U, x, h + 0.5 * U, z, 4); }
+  for (let k = 0; k < 10; k++) caixa(g, ARENITO, 1.6 * U, 0.34 * U, 0.6 * U, Math.sin(A / 2) * R + 1 * U, (k + 0.5) * 0.34 * U, R - Math.cos(A / 2) * R - k * 0.6 * U + 3 * U); return g; } });
+KITS.muroArrimo = F("Contenção", { nome: "Muro de arrimo de pedra", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 5 * U, s = new THREE.Shape([[0, 0], [1.6, 0], [0.6, 5], [0, 5]].map(([x, y]) => new THREE.Vector2(x * U, y * U)));
+  const m = malha(g, new THREE.ExtrudeGeometry(s, { depth: L, bevelEnabled: false }), PEDRA_M(), -L / 2, 0, 0); m.rotation.y = Math.PI / 2; m.position.set(-L / 2, 0, 0.8 * U); return g; } });
+// os penhascos com muro em cima (o terraço da imagem)
+KITS.penhascoTerraco = F("Geral", { nome: "Penhasco com terraço e muro", grupo: "Relevo", montar() { const g = penhasco(30, 12, 22, 41, 6), m = KITS.muroPedraBalaustrada.montar(); m.scale.set(2.2, 1.4, 1); m.position.set(-2 * U, 11.5 * U, 6 * U); g.add(m); return g; } });
 // os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.
 export const FILTROS = ["Arquibancadas", "Automóveis", "Contenção", "Paddock", "Vegetação", "Geral"];
 const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibancadas", pneus: "Contenção", tecpro: "Contenção", grade: "Contenção", guardrail: "Contenção", cone: "Contenção",

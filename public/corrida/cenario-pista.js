@@ -8,7 +8,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { patrocinioEm } from "./f1-capacetes.js";
-import { montarKit, KITS } from "./biblioteca.js";
+import { montarKit, KITS, filtroDoKit } from "./biblioteca.js";
 import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js";
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), modelos = new Map();
@@ -152,8 +152,11 @@ function pontosDaBeira(tr, b, passo) {
   const out = []; let falta = 0;
   for (let i = 1; i < eixo.length; i++) { const a = eixo[i - 1], c = eixo[i], d = Math.hypot(c.x - a.x, c.z - a.z) || 1e-6, ang = Math.atan2(c.x - a.x, c.z - a.z); let t = falta;
     while (t <= d) { const u = t / d; out.push({ x: a.x + (c.x - a.x) * u, z: a.z + (c.z - a.z) * u, y: a.y + (c.y - a.y) * u, ang }); t += passo; } falta = t - d; }
+  const u = eixo[eixo.length - 1], v = eixo[eixo.length - 2]; if (v && out.length && Math.hypot(out[out.length - 1].x - u.x, out[out.length - 1].z - u.z) > passo * 0.3) out.push({ x: u.x, z: u.z, y: u.y, ang: Math.atan2(u.x - v.x, u.z - v.z) }); // (o fim também)
   return out;
 }
+const compKit = new Map(); // o comprimento de uma peça da biblioteca ao longo do x (o que ela ocupa na fileira)
+function comprimentoDoKit(id) { if (!compKit.has(id)) { const o = montarKit(id), b = new THREE.Box3().setFromObject(o); compKit.set(id, Math.max(0.5 * 4.8, b.max.x - b.min.x)); } return compKit.get(id); }
 function montarLinha(it, tr) {
   const beira = it.beira && tr ? it.beira : null, pts = Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2] ? it.pts : null; if (!pts && !beira) return null;
   const modelo = it.modelo || "pneus", esp = Math.max(0.5, +it.espaco || 4) * UM, alt = Math.max(0.3, +it.altura || 3) * UM, g = new THREE.Group(), lista = beira ? pontosDaBeira(tr, beira, esp) : pontosCada(pts, esp);
@@ -167,6 +170,18 @@ function montarLinha(it, tr) {
       const d = Math.hypot(q.x - p.x, q.z - p.z), a = Math.atan2(q.x - p.x, q.z - p.z), mx = (p.x + q.x) / 2, mz = (p.z + q.z) / 2, my = ((p.y || 0) + (q.y || 0)) / 2;
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(d, alt), tela); pl.position.set(mx, my + base + alt / 2, mz); pl.rotation.y = a - Math.PI / 2; g.add(pl);
       if (base) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.6 * UM, base, d + 0.05 * UM), muro); m.position.set(mx, my + base / 2, mz); m.rotation.y = a; m.castShadow = m.receiveShadow = true; g.add(m); }
+    }
+    return g;
+  }
+  // (2026-11-17, o Thiago: "um entra dentro do outro") as barreiras (pneus e as peças de Contenção) vão EMENDADAS: cada módulo vai de um ponto ao
+  // próximo, no meio deles, virado pela corda e esticado ao comprimento dela. Na curva elas não se cruzam mais nem deixam vão.
+  const emenda = modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
+  if (emenda) {
+    const kit = modelo.startsWith("kit:") ? modelo.slice(4) : null, L = kit ? comprimentoDoKit(kit) : 0;
+    for (let i = 0; i + 1 < lista.length; i++) {
+      const p = lista[i], q = lista[i + 1], d = Math.hypot(q.x - p.x, q.z - p.z); if (d < 0.2 * UM) continue;
+      let o; if (kit) { o = montarKit(kit); if (!o) continue; o.rotation.y = Math.PI / 2; o.scale.x = d / L; } else o = moduloPneus(d - 0.05 * UM);
+      const h = new THREE.Group(); h.add(o); h.position.set((p.x + q.x) / 2, ((p.y || 0) + (q.y || 0)) / 2, (p.z + q.z) / 2); h.rotation.y = Math.atan2(q.x - p.x, q.z - p.z); g.add(h);
     }
     return g;
   }

@@ -9,6 +9,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { montarF1, f1Pronto, PINTURAS, coresDa, trocarCores } from "../f1.js";
 import { ZONAS, folhaDeCamadas, temDesenho, imagemLivery } from "../f1-pintura.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
+import { exportarGLB } from "./exportar.js";
 
 const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const qs = new URLSearchParams(location.search);
@@ -58,9 +59,10 @@ const nomeMarca = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || id;
 document.body.insertAdjacentHTML("beforeend", `
 <canvas id="lsCena"></canvas>
 <div id="lsTopo"><div class="logo"><i>LS</i>Livery Studio</div>
-  <button class="bt" id="lsSalvar" title="Ctrl+S">💾 Salvar</button><button class="bt" id="lsDesf" title="Desfazer (Ctrl+Z)">↶</button><button class="bt" id="lsRef" title="Refazer (Ctrl+Y)">↷</button><button class="bt" id="lsVoltar" title="Volta à pintura da equipe, sem camadas">↺ Original</button>
+  <button class="bt" id="lsSalvar" title="Ctrl+S">💾 Salvar</button><button class="bt" id="lsDesf" title="Desfazer (Ctrl+Z)">↶</button><button class="bt" id="lsRef" title="Refazer (Ctrl+Y)">↷</button><label class="bt" title="Abrir um livery-*.json exportado">📂 Abrir<input type="file" id="lsAbrir" accept="application/json,.json" hidden></label><button class="bt" id="lsVoltar" title="Volta à pintura da equipe, sem camadas">↺ Original</button>
   <div class="dir"><span style="color:var(--mu)">Carro</span><select id="lsPint">${Object.entries(PINTURAS).filter(([k]) => k !== "propria").map(([k, p]) => `<option value="${k}" ${k === pint ? "selected" : ""}>${h(p.name)}</option>`).join("")}</select>
-  <button class="bt" id="lsGirar" title="Girar sozinho">⟳ Girar</button><button class="bt pri" id="lsRender">📷 Renderizar imagem</button></div></div>
+  <button class="bt" id="lsGirar" title="Girar sozinho">⟳ Girar</button><select id="lsLuz" title="A luz do estúdio"><option value="estudio">☀ Estúdio</option><option value="dia">🌤 Dia</option><option value="noite">🌙 Noite</option><option value="vitrine">✦ Vitrine</option></select>
+  <button class="bt" id="lsExp" title="O carro em .glb com a pintura gravada numa textura (para o Blender e outros programas)">⇩ Exportar GLB</button><button class="bt pri" id="lsRender">📷 Renderizar imagem</button></div></div>
 <div id="lsEsq"><div class="abas"><button data-e="pecas" class="on">🏎 Peças</button><button data-e="camadas">☰ Camadas</button></div><div id="lsLista"></div>
   <div id="lsNovas">${Object.entries(TIPOS).filter(([k]) => k !== "logo").map(([k, t]) => `<button data-nova="${k}">${t.ic} ${t.nome}</button>`).join("")}</div></div>
 <div id="lsVistas"><div class="grp"><button class="bt" data-v="v3d" title="3D">◈</button></div><div class="grp">${["Frente", "Trás", "Lado", "Topo"].map((v) => `<button class="bt" data-v="${v}">${v}</button>`).join("")}</div></div>
@@ -235,6 +237,7 @@ async function salvar() {
   status(r?.ok ? `Salvo em public/corrida/pinturas/${pint}.json (Publicar no TabbaTracks manda para o GitHub).` : "Salvo neste navegador (para gravar o arquivo, abra pelo editor-de-pistas.bat).");
 }
 $("lsSalvar").onclick = salvar;
+$("lsAbrir").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.camadas)) throw Error("sem camadas"); P = { ...padrao(pint), ...d }; sel = -1; mudou(); status(`Aberto: ${f.name} (Salvar para guardar neste carro).`); } catch (er) { status("Não abriu: " + er.message); } e.target.value = ""; };
 $("lsDesf").onclick = () => voltar(pilha, refeitos); $("lsRef").onclick = () => voltar(refeitos, pilha);
 addEventListener("keydown", (e) => {
   if (e.target.closest?.("input,select")) return; const t = e.key.toLowerCase();
@@ -250,7 +253,28 @@ addEventListener("keydown", (e) => {
 $("lsVoltar").onclick = () => { P = { ...padrao(pint), met: P.met, rug: P.rug, ref: P.ref }; sel = -1; mudou(); status("De volta à pintura da equipe (Salvar para guardar)."); };
 $("lsPint").onchange = async (e) => { pint = e.target.value; history.replaceState(null, "", "?livery=" + pint); P = await carregar(pint); sel = -1; pilha.length = refeitos.length = 0; ultimaFoto = JSON.stringify(P); montar(); tudo(); desenharGaveta(); };
 $("lsGirar").onclick = () => { orbita.autoRotate = !orbita.autoRotate; $("lsGirar").classList.toggle("on", orbita.autoRotate); };
-$("lsRender").onclick = () => { renderer.render(scene, cam); const a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = `livery-${pint}.png`; a.click(); status("Imagem baixada."); };
+// (passo 5) a imagem sai em alta: 3× os pixels da tela (até 4096 de largura), sem os painéis, com a sombra mais fina
+$("lsRender").onclick = () => {
+  const pr0 = renderer.getPixelRatio(), alvo = Math.min(3, 4096 / innerWidth); chave.shadow.mapSize.set(4096, 4096); chave.shadow.map?.dispose(); chave.shadow.map = null;
+  cam.clearViewOffset(); renderer.setPixelRatio(alvo); renderer.setSize(innerWidth, innerHeight, false); renderer.render(scene, cam);
+  const a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = `livery-${pint}.png`; a.click();
+  renderer.setPixelRatio(pr0); chave.shadow.mapSize.set(2048, 2048); chave.shadow.map?.dispose(); chave.shadow.map = null; ajustar(); status("Imagem baixada em alta.");
+};
+const baixar = (dados, nome, tipo) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([dados], { type: tipo })); a.download = nome; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); };
+$("lsExp").onclick = async () => {
+  if (!k?.pintura) return status("O carro ainda está carregando.");
+  status("Exportando… (a pintura vai para uma textura)");
+  try { const bin = await exportarGLB(k, folhaCv, { ...P, carro: pint }); baixar(bin, `carro-${pint}.glb`, "model/gltf-binary"); baixar(JSON.stringify(P, null, 1), `livery-${pint}.json`, "application/json"); status(`Exportado: carro-${pint}.glb (${Math.round(bin.byteLength / 1024)} KB) e o projeto livery-${pint}.json.`); }
+  catch (e) { status("Não exportou: " + e.message); }
+};
+// as luzes: o estúdio escuro, o dia (céu claro), a noite (contraluz azul) e a vitrine (chão claro e luz por cima)
+const LUZES = {
+  estudio: { fundo: 0x16181d, chao: 0x24272d, hemi: 1.4, chave: 2.6, contra: 1.2, exp: 1.1, corC: 0x9fb8ff },
+  dia: { fundo: 0x9fb8d6, chao: 0x8c8f93, hemi: 2.2, chave: 3.4, contra: 0.6, exp: 1.0, corC: 0xffffff },
+  noite: { fundo: 0x05070c, chao: 0x101218, hemi: 0.35, chave: 1.0, contra: 3.2, exp: 1.2, corC: 0x4f7dff },
+  vitrine: { fundo: 0xd9dce1, chao: 0xeeeff1, hemi: 2.4, chave: 2.0, contra: 1.0, exp: 1.05, corC: 0xffffff },
+};
+$("lsLuz").onchange = (e) => { const l = LUZES[e.target.value]; scene.background.setHex(l.fundo); scene.fog.color.setHex(l.fundo); chao.material.color.setHex(l.chao); scene.children.find((o) => o.isHemisphereLight).intensity = l.hemi; chave.intensity = l.chave; contra.intensity = l.contra; contra.color.setHex(l.corC); renderer.toneMappingExposure = l.exp; };
 function status(t) { $("lsStatus").textContent = t; }
 const VISTAS = { Frente: [0, 0.6, -6], Trás: [0, 0.9, 6], Lado: [6.2, 0.7, 0], Topo: [0, 8, 0.01], v3d: [-5.2, 2.2, -4.6] }; // (a frente do carro é −z)
 $("lsVistas").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; cam.position.set(...VISTAS[b.dataset.v]); orbita.target.set(0, 0.45, 0); orbita.update(); };

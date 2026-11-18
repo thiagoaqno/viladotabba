@@ -43,7 +43,7 @@ Patrocinadores · Grafismos · Texturas com os logos em grade.
 2. ✅ (2026-11-18) Camadas de cor e faixas + material (Propriedades) + salvar o JSON. As zonas ficaram em `f1-pintura.js` (`ZONAS`, em metros, por vista) e a folha sai de `folhaDeCamadas(pintura)`; os arquivos em `public/corrida/pinturas/<id>.json`.
 3. ✅ (2026-11-18) Patrocinadores: a gaveta de logos, clicar no carro para pôr, mover/escala/giro, espelhar.
 4. ✅ (2026-11-18, só a parte das equipes) A pintura salva entra no jogo (`folhaDaEquipe`) e a pintura do jogador vai para a sala.
-5. Renderizar imagem (estúdio) e importar logo.
+5. ✅ (2026-11-18) Renderizar imagem (estúdio) e importar logo. Também: exportar GLB (`livery/exportar.js`: a projeção do shader vira UV de verdade, um triângulo por vista) e abrir/baixar o projeto .json.
 
 Estimativa grosseira: a casca e as cores saem rápido porque reaproveitam o TabbaTracks; o ponto que mais toma tempo é o 3 (decal no
 lugar certo sem distorcer).

@@ -25,3 +25,6 @@
 - **Livery Studio, passo 4:** a pintura salva no estúdio vale no jogo. `f1-pintura.js` carrega `public/corrida/pinturas/` ao abrir e a
   folha da equipe (temporada 2026) passa a ser a das camadas, em todos os carros dela. O acabamento continua o do jogo. Sem nenhuma
   pintura salva (como agora: `pinturas/index.json` vazio), nada muda no jogo.
+- **Livery Studio, passo 5:** **⇩ Exportar GLB** com a pintura gravada numa textura comum (a projeção do shader vira UV: abre igual no
+  Blender), junto com o projeto `livery-<carro>.json`; **📂 Abrir** um projeto exportado; **Renderizar imagem** em alta (até 4096 px, sem
+  os painéis); luzes Estúdio, Dia, Noite e Vitrine.

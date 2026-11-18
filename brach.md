@@ -1,9 +1,7 @@
-# Editor de pistas mais leve
+# Editor: faixa de patrocínio na barreira
 
-O Thiago notou que a pista fica muito pesada no editor. No editor as malhas não são juntadas (para cada peça ficar clicável), e cada item tinha dezenas de pedaços: uma árvore ~15, um módulo de mureta com tela 9, uma fileira de barreiras centenas de módulos.
+Na aba Pista, **Barreira na beira da pista**, o item novo **Faixa de patrocínio (sem pés)**: painéis colados um no outro seguindo a beira, com a marca no meio de cada um (ou duas marcas alternando), o fundo da cor escolhida, a altura do painel e a distância do chão (para ficar em cima da mureta ou do guard-rail, é só subir). O logo sai certo dos dois lados. Depois, no Inspetor, dá para trocar a marca, o fundo, o espaço e a altura.
 
-`cenario-pista.js`: `enxugar(raiz)` junta os pedaços de um item por material (materiais iguais em cor, textura e acabamento contam como um só, então os itens tingidos também juntam), já no lugar, e tira os grupos que ficaram vazios. Vale para as peças da biblioteca (`kit`), as fileiras (`linha`) e as áreas com peças espalhadas. O item continua um objeto só, clicável e movível; no jogo o `fundir.js` junta de novo o que puder. Ficam de fora InstancedMesh, malha de vários materiais, linha e sprite; os .glb do conversor não mudam.
-
-Medido no Node, montando cada peça da biblioteca: **3.310 → 715 malhas** nas 207 peças, com a caixa exata de cada uma igual antes e depois; uma fileira curva de mureta com tela e faixa: **30 malhas**.
+`cenario-pista.js`: modelo `faixa` da `linha` (`marca`, `marca2`, `fundo`, `altura`, `elev`), emendado como as barreiras; cada painel é feito de peças de um material só, e a fileira inteira vira 5 malhas (medido no Node numa fileira curva com duas marcas).
 
 Conferido com `node --check`.

@@ -1,20 +1,7 @@
-# Livery Studio: logos reais, logos da equipe editáveis, vinis, carro do zero e painéis ajustáveis
+# TabbaTracks: acabamentos (texturas e materiais)
 
-Pedidos do Thiago (2026-11-18):
-- **Logos reais** (`ferramentas/baixar-logos-marcas.js` → `public/corrida/logos/marcas/`, SVG do Wikimedia Commons): o `desenharMarca`
-  (`f1-marcas.js`) desenha o logo de verdade quando existe (no carro, halo, capacete, placas) e a imitação em código quando não.
-  A gaveta Patrocinadores do estúdio mostra todas as marcas, com o logo real em cores.
-- **Os logos da equipe viram camadas** (`✂ Separar os logos da equipe`): a pintura da equipe é refeita sem as marcas (`separarMarcas`,
-  gravando as chamadas de `marca`/`marcaU`) e cada uma vira uma camada de logo para mover, trocar ou apagar.
-- **Menos desfoque:** a folha do estúdio em 2× (como a do carro do jogador no jogo) e anisotropia 16.
-- **Logo em qualquer lugar pintado:** laterais, em cima, frente, traseira e **embaixo da asa traseira** (a vista U).
-- **Vinis:** camada "Vinil (padrão)": quadradinhos espalhados, camuflagem, pontos, listras, xadrez e hexágonos, com tamanho, densidade,
-  giro, sortear e "sumir ao longo do carro".
-- **✚ Do zero:** um carro só com a cor de fundo.
-- **Painéis ajustáveis** no Livery Studio (os dois lados e a gaveta) e no TabbaTracks (os dois lados): arraste a borda; duplo clique volta.
+Pedido do Thiago (imagem de referência "Wall finishes"): mais texturas e poder trocar a textura e o material das construções que já existem.
 
-**Logos:** 104 reais baixados. Sem logo real ainda (ficam com o desenho em código; dá para importar o PNG no estúdio ou pôr o título
-certo do Commons em `FIXOS` no script e rodar com o id): UniCredit, Peroni, Ambipar, Hyatt, bp, Jim Beam, NexGen, Kraken, AlphaTauri,
-Syntium, Allwyn, Moët Hennessy, Fever, Fanatec, Rokt, ONEflight, Myprotein, Proforce, bw Scores, e as que a busca trouxe errado e eu tirei:
-BingX, Genesys, Hilton, Dell, TWG, Eni, Orlen, Alfa Romeo, Salesforce, Crypto.com, PwC, Puma, FanDuel, Nexo, Visit Qatar, Komatsu,
-Stephens, Pirelli.
+- `public/corrida/acabamentos.js`: 31 texturas feitas em código (concretos, rebocos, pedras, tijolos, granito, mármore, ardósia, azulejo, pastilha, madeiras, metal, chapas, vidro, telha, asfalto, listrado, treliça, hera...), com rugosidade e metal próprios. A textura é projetada pela face, em metros (não depende do UV do modelo).
+- Propriedades do TabbaTracks: seção **Acabamento** para peças da pista e itens. Grade de miniaturas, a escolhida com descrição, variações de cor + cor livre, rugosidade, metal, repetição e "Aplicar em" (todos os materiais ou um só, por exemplo a parede e não a janela).
+- Guardado em `acab` no item ou no ajuste da peça (`cenario/<pista>.json`); o jogo aplica ao montar o cenário. "Voltar ao original" tira.

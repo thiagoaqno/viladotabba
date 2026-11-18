@@ -18,6 +18,8 @@ import { criarComandos } from "./comandos.js";
 import { montarLayout } from "./layout.js";
 import { criarTerreno } from "./terreno.js";
 import { criarRegua } from "./regua.js";
+import { painelAcabamento } from "./acabamentos-ui.js";
+import { aplicarAcabamento } from "../acabamentos.js";
 import { KITS, montarKit, FILTROS, filtroDoKit } from "../biblioteca.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, PADROES_ESCAPE, MATERIAIS_AREA } from "../cenario-pista.js";
@@ -172,7 +174,7 @@ let selecionado = null, assetEscolhido = null, placaMarca = "pirelli", placaFund
 // as peças que a pista já tinha e foram mexidas: chave -> ajuste (salvo em `ajustes`)
 const ajustes = new Map(ajustesDaPista(tr).map((a) => [a.chave, a]));
 const ehItem = (o) => !!o?.userData.item;
-function guardarPeca(o) { if (!o || ehItem(o)) return; const k = chaveDe(tr, o); if (!k) return; ajustes.set(k, { chave: k, x: +o.position.x.toFixed(2), y: +o.position.y.toFixed(2), z: +o.position.z.toFixed(2), rx: +o.rotation.x.toFixed(4), ry: +o.rotation.y.toFixed(4), rz: +o.rotation.z.toFixed(4), sx: +o.scale.x.toFixed(3), sy: +o.scale.y.toFixed(3), sz: +o.scale.z.toFixed(3), ...(o.visible ? {} : { oculto: true }) }); }
+function guardarPeca(o) { if (!o || ehItem(o)) return; const k = chaveDe(tr, o); if (!k) return; ajustes.set(k, { chave: k, x: +o.position.x.toFixed(2), y: +o.position.y.toFixed(2), z: +o.position.z.toFixed(2), rx: +o.rotation.x.toFixed(4), ry: +o.rotation.y.toFixed(4), rz: +o.rotation.z.toFixed(4), sx: +o.scale.x.toFixed(3), sy: +o.scale.y.toFixed(3), sz: +o.scale.z.toFixed(3), ...(o.visible ? {} : { oculto: true }), ...(o.userData.acab ? { acab: o.userData.acab } : {}) }); }
 // a peça que um clique escolhe: sobe da malha até o grupo dela (um prédio, um marco), sem pegar um grupo que junta dezenas de coisas
 function pecaDe(m) { let o = m; while (o.parent && o.parent !== tr.grp && o.parent.children.length <= 40) o = o.parent; return o; }
 const guardarItem = (o) => { if (!o) return; if (!ehItem(o)) return guardarPeca(o); const it = o.userData.item; Object.assign(it, { x: +o.position.x.toFixed(2), y: +o.position.y.toFixed(2), z: +o.position.z.toFixed(2), rx: +o.rotation.x.toFixed(4), ry: +o.rotation.y.toFixed(4), rz: +o.rotation.z.toFixed(4), s: +o.scale.x.toFixed(3) }); };
@@ -558,6 +560,7 @@ function desenharItem(soNumeros = false) {
     <div class="lin">${n("x", o.position.x, 1)}${n("y", o.position.y, 1)}${n("z", o.position.z, 1)}</div>
     <div class="lin">${n("giro", deg(o.rotation.y), 5)}${n("escala", o.scale.x, 0.1)}</div>
     <div class="lin"><label>Cor <input type="color" data-cor value="${it.cor || "#ffffff"}"></label><button data-semcor>Cor original</button></div>
+    <div id="edAcab"></div>
     <div class="lin"><button data-a="g">No chão (G)</button><button data-a="d">Duplicar (D)</button><button data-a="del">Apagar</button></div>`;
   for (const i of el.querySelectorAll("[data-c]")) i.onchange = () => {
     const v = +i.value; if (!Number.isFinite(v)) return;
@@ -569,6 +572,7 @@ function desenharItem(soNumeros = false) {
   if (el.querySelector("[data-trz]")) el.querySelector("[data-trz]").onclick = () => refazerItem(o, { zebra: !it.zebra || undefined });
   el.querySelector("[data-cor]").onchange = (e) => { if (it.tipo === "kit") lembrar("kit:" + it.kit, { cor: e.target.value }); trocarCor(o, e.target.value); };
   el.querySelector("[data-semcor]").onclick = () => trocarCor(o, null);
+  painelAcabamento($("edAcab"), o, it.acab, (acab) => { it.acab = acab || undefined; aplicarAcabamento(o, acab); });
   for (const b of el.querySelectorAll("[data-a]")) b.onclick = () => dispatchEvent(new KeyboardEvent("keydown", { key: b.dataset.a === "del" ? "Delete" : b.dataset.a }));
 }
 function desenharPeca(o, soNumeros) {
@@ -578,6 +582,7 @@ function desenharPeca(o, soNumeros) {
     <div class="lin">${n("x", o.position.x, 1)}${n("y", o.position.y, 1)}${n("z", o.position.z, 1)}</div>
     <div class="lin">${n("giro", deg(o.rotation.y), 5)}${n("escala", o.scale.x, 0.1)}</div>
     <div class="lin"><button data-p="pai">Pegar o grupo de fora</button><button data-p="esconder">Esconder</button><button data-p="voltar">Voltar ao original</button></div>
+    <div id="edAcab"></div>
     <div class="lin"><button data-p="exportar">Exportar .glb (para o Blender)</button></div>
     <small>As posições são dentro do grupo da peça. Pegue o grupo de fora para mexer num prédio inteiro.</small>`;
   for (const i of el.querySelectorAll("[data-c]")) i.onchange = () => { const v = +i.value; if (!Number.isFinite(v)) return; if (i.dataset.c === "giro") o.rotation.y = (v * Math.PI) / 180; else if (i.dataset.c === "escala") o.scale.multiplyScalar(Math.max(0.01, v) / (o.scale.x || 1)); else o.position[i.dataset.c] = v; guardarPeca(o); };
@@ -588,9 +593,10 @@ function desenharPeca(o, soNumeros) {
     try { const bin = await exportador.parseAsync(copia, { binary: true }); const r = await api("original/" + encodeURIComponent(nome), { method: "POST", headers: { "content-type": "application/octet-stream" }, body: bin }); avisar(`Exportado: assets-originais/${nome}.glb (${r.kb} KB)`); recarregarAssets(); }
     catch (e) { avisar("Não exportou: " + e.message, true); }
   };
+  painelAcabamento($("edAcab"), o, o.userData.acab, (acab) => { o.userData.acab = acab || null; aplicarAcabamento(o, acab); guardarPeca(o); });
   el.querySelector("[data-p=pai]").onclick = () => { if (o.parent && o.parent !== tr.grp) selecionar(o.parent); };
   el.querySelector("[data-p=esconder]").onclick = () => { const a = estado(o); o.visible = false; guardarPeca(o); registrar({ tipo: "mexer", o, antes: a, depois: estado(o) }); selecionar(null); };
-  el.querySelector("[data-p=voltar]").onclick = () => { const or = o.userData.original; if (or) { o.position.fromArray(or.p); o.rotation.set(or.r[0], or.r[1], or.r[2]); o.scale.fromArray(or.s); o.visible = or.v; } ajustes.delete(chaveDe(tr, o)); desenharItem(); };
+  el.querySelector("[data-p=voltar]").onclick = () => { const or = o.userData.original; if (or) { o.position.fromArray(or.p); o.rotation.set(or.r[0], or.r[1], or.r[2]); o.scale.fromArray(or.s); o.visible = or.v; } o.userData.acab = null; aplicarAcabamento(o, null); ajustes.delete(chaveDe(tr, o)); desenharItem(); };
 }
 // refaz um item com dados novos (a placa com outra marca, fundo ou tamanho), no mesmo lugar
 async function refazerItem(o, mudar) {

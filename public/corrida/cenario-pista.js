@@ -9,6 +9,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { patrocinioEm } from "./f1-capacetes.js";
 import { montarKit, KITS, filtroDoKit } from "./biblioteca.js";
+import { aplicarAcabamento } from "./acabamentos.js";
 import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -328,6 +329,7 @@ export function enxugar(raiz) {
 }
 export async function montarItem(it, tr = null) {
   const o = await montarItem0(it, tr);
+  if (o && it.acab) aplicarAcabamento(o, it.acab); // (o acabamento escolhido no TabbaTracks: acabamentos.js)
   if (o && (it.tipo === "kit" || it.tipo === "linha" || (it.tipo === "area" && it.espalhar))) enxugar(o); // (as peças de código; o .glb do conversor já vem leve)
   return o;
 }
@@ -374,6 +376,7 @@ export function aplicarAjuste(o, a) {
   if (a.rx != null) o.rotation.set(+a.rx, +a.ry, +a.rz);
   if (a.sx != null) o.scale.set(+a.sx, +a.sy, +a.sz);
   o.visible = !a.oculto;
+  if (a.acab || o.userData.acab) { o.userData.acab = a.acab || null; aplicarAcabamento(o, a.acab || null); }
 }
 export function aplicarAjustes(tr) {
   const d = dadosDe.get(tr.pistaId || tr.id); if (!d || !Array.isArray(d.ajustes)) return;

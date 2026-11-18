@@ -121,7 +121,7 @@ export function enfeitar(tr, add, r, alturaEm) {
           gente.push({ arq: true, x, y: p.h + (q.base ?? 4) + (fila + 0.5) * (q.alt ?? 6), z, ry: Math.atan2(-p.nx * s, -p.ny * s), fase: r() * 6.3, ritmo: 5 + r() * 5, pula: r() < 0.6, pele: pele[(r() * 5) | 0], camisa: camisa[(r() * camisa.length) | 0] });
         }
       }
-      if (gente.length) V.torcidasArq.push(montarTorcida(add, gente, { escala: G }));
+      if (gente.length) { const T = montarTorcida(add, gente, { escala: G }); T.arq = q; V.torcidasArq.push(T); }
     }
     V.torcida = V.torcidasArq.shift() || null;
   }
@@ -177,6 +177,23 @@ export function enfeitar(tr, add, r, alturaEm) {
 // ---------- a cada quadro ----------
 const d = new THREE.Object3D();
 const pPos = new THREE.Vector3(), pQ = new THREE.Quaternion(), pEixo = new THREE.Vector3(0, 1, 0), pUm = new THREE.Vector3(1, 1, 1), pBando = new THREE.Matrix4(), pAve = new THREE.Matrix4(), pBase = new THREE.Matrix4(), pTmp = new THREE.Matrix4(), pRot = new THREE.Matrix4(), pEsp = new THREE.Matrix4().makeScale(-1, 1, 1);
+// (2026-11-18, o Thiago: "quando eu tiro as arquibancadas, os torcedores ficam flutuando") depois dos ajustes do editor (cenario-pista.js), a torcida
+// de cada arquibancada segue os assentos dela: se eles foram escondidos, ela some; se foram movidos ou girados, cada pessoa vai junto.
+// Chamada pelo pista.js logo depois de aplicarAjustes, antes de juntar as malhas.
+const _m0 = new THREE.Matrix4(), _m1 = new THREE.Matrix4(), _v = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler();
+export function torcidaSegueArquibancadas(tr) {
+  const V = tr.vida; if (!V) return;
+  for (const T of [V.torcida, ...(V.torcidasArq || [])]) {
+    const assento = T?.arq?.pecas?.[0]; if (!assento) continue;
+    let visivel = true; for (let o = assento; o && o !== tr.grp; o = o.parent) if (!o.visible) visivel = false;
+    if (!visivel) { for (const m of [T.corpo, T.cabeca, T.bracos]) m.visible = false; T.gente = []; continue; }
+    const or = assento.userData.original; if (!or) continue; // (não foi mexida)
+    _m0.compose(_v.fromArray(or.p), _q.setFromEuler(_e.set(or.r[0], or.r[1], or.r[2])), new THREE.Vector3().fromArray(or.s)).invert();
+    assento.updateMatrix(); _m1.multiplyMatrices(assento.matrix, _m0); const giro = assento.rotation.y - or.r[1];
+    for (const o of T.gente) { _v.set(o.x, o.y, o.z).applyMatrix4(_m1); o.x = _v.x; o.y = _v.y; o.z = _v.z; o.ry += giro; }
+    T.x = T.gente.reduce((s, o) => s + o.x, 0) / (T.gente.length || 1); T.z = T.gente.reduce((s, o) => s + o.z, 0) / (T.gente.length || 1); T.primeira = true;
+  }
+}
 export function animarVida(tr, dt, foco) {
   const V = tr && tr.vida; if (!V) return;
   const parado = reduz.matches; V.tempo += dt; const t = V.tempo;

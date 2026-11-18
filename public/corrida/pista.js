@@ -7,7 +7,7 @@ import { fecharLuzes, ambienteDaNoite, ativarLuzPostes } from "./kit/luz-postes.
 import { asfaltoGP, borrachaGP } from "./asfalto-gp.js";
 import { aguaUvDaFita, prepararAguaPista } from "./agua-pista.js";
 import { PROPS, aoCarregar } from "./props.js";
-import { enfeitar, animarVida } from "./vida.js";
+import { enfeitar, animarVida, torcidaSegueArquibancadas } from "./vida.js";
 import { aplicarCeu } from "./ceu.js";
 import { fundoMonaco, relevoMonaco, corDoChaoMonaco, NIVEL_DO_MAR, afastarMuro } from "./monaco.js";
 // o kit de pista (kit/README.md) e a configuração de cada GP (gps/)
@@ -645,7 +645,7 @@ function buildWorld(tr) {
   // (2026-11-17) o que uma pista acrescenta DEPOIS de tudo (`tr.depois`): entra no fim do grupo, então as peças de antes mantêm as chaves
   // que o editor de cenário guardou (cenario/<pista>.json `ajustes`), e um paredão ou pilar novo não desloca o que o Thiago já mexeu
   for (const f of tr.depois || []) f(); tr.depois = null;
-  aplicarAjustes(tr);
+  aplicarAjustes(tr); torcidaSegueArquibancadas(tr); // (a torcida some ou anda junto com a arquibancada que o editor escondeu ou moveu)
   if (!window.__editorCenario) fundirEstaticos(tr, { celulaInst: tr.id === "interlagos" ? 1200 : 2400, simular: () => { for (let k = 0; k < 24; k++) { const p = pts[Math.floor((k / 24) * n)], foco = { x: p.x, y: p.y, z: p.h, a: Math.atan2(p.ty, p.tx) }; for (let s = 0; s < 6; s++) animarVida(tr, 0.08, foco); } } });
 }
 // Los Angeles: placa "GALERA" no morro (estilo Hollywood) e placa verde da freeway em cima da pista

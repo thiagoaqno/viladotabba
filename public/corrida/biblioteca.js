@@ -17,6 +17,19 @@ const CINZA = M(0x8d9096), ESCURO = M(0x2c3036, { roughness: 0.6, metalness: 0.3
 const VERDE = M(0x4e7a35, { flatShading: true }), VERDE2 = M(0x5f8f3e, { flatShading: true }), TRONCO = M(0x6b4a2f), AZUL = M(0x2a5bd6), LARANJA = M(0xff7a1a), BORRACHA = M(0x1d1f22, { roughness: 0.95 });
 const VIDRO = new THREE.MeshStandardMaterial({ color: 0x9fc4d4, roughness: 0.15, metalness: 0.3, transparent: true, opacity: 0.5 }), LUZ = new THREE.MeshStandardMaterial({ color: 0xfff6d8, emissive: 0xfff1c0, emissiveIntensity: 0.8 });
 
+// (2026-11-18, o Thiago: "todas as arquibancadas deviam ter pessoas") o PÚBLICO: um boneco low poly (tronco de camiseta colorida + cabeça) em
+// ~3 de cada 4 lugares, sorteado sempre igual; junta tudo em poucas malhas (uma por cor de camiseta e uma das cabeças). lugares = [[x, y, z, ry], ...]
+// com y = o assento. Mônaco: muitas camisetas vermelhas e brancas.
+const CAMISETAS = [0xd62828, 0xf2f2f0, 0x1d3f8a, 0x2a2d33, 0xf2c230, 0x2e8b57, 0xe46a1f, 0x8a2be2].map((c) => M(c, { roughness: 0.9 })), PELES = M(0xd8a77e, { roughness: 0.9 });
+function plateia(g, lugares, { ocupa = 0.75, semente = 7 } = {}) {
+  const r = sorteio(semente), porCor = CAMISETAS.map(() => []), cabecas = [];
+  for (const [x, y, z, ry = 0] of lugares) {
+    if (r() > ocupa) continue; const c = (r() * CAMISETAS.length) | 0, h = 0.9 + r() * 0.2;
+    porCor[c].push(geoEm(new THREE.BoxGeometry(0.42 * U, 0.55 * U * h, 0.28 * U), x, y + 0.3 * U * h, z, ry));
+    cabecas.push(geoEm(new THREE.IcosahedronGeometry(0.13 * U, 0), x, y + 0.7 * U * h, z, ry));
+  }
+  porCor.forEach((geos, i) => juntar(g, CAMISETAS[i], geos)); juntar(g, PELES, cabecas); return g;
+}
 export const KITS = {
   arquibancada: { nome: "Arquibancada", grupo: "Público", montar() {
     const g = new THREE.Group(), w = 40 * U, deg = 8, alt = 0.5 * U, fun = 0.8 * U;
@@ -24,7 +37,8 @@ export const KITS = {
     caixa(g, CINZA, w, alt * deg, 0.3 * U, 0, alt * deg / 2, -deg * fun);
     const cob = caixa(g, BRANCO, w + U, 0.3 * U, deg * fun + 2 * U, 0, alt * deg + 4 * U, -deg * fun / 2 + U); cob.rotation.x = -0.08;
     for (const x of [-w / 2, -w / 6, w / 6, w / 2]) cil(g, ESCURO, 0.2 * U, alt * deg + 4 * U, x, (alt * deg + 4 * U) / 2, -deg * fun);
-    return g; } },
+    const lug = []; for (let k = 0; k < deg; k++) for (let x = -w / 2 + 0.4 * U; x < w / 2; x += 0.6 * U) lug.push([x, alt * (k + 1) + 0.45 * U, -k * fun - 0.1 * U]);
+    plateia(g, lug, { semente: 11 }); return g; } },
   poste: { nome: "Poste de luz", grupo: "Pista", montar() {
     const g = new THREE.Group(), h = 10 * U; cil(g, ESCURO, 0.15 * U, h, 0, h / 2, 0, 8, 0.1 * U);
     caixa(g, ESCURO, 2.4 * U, 0.15 * U, 0.15 * U, 0, h, 0.6 * U).rotation.x = 0.2; caixa(g, LUZ, 1.2 * U, 0.2 * U, 0.6 * U, 0, h - 0.1 * U, 1.1 * U); return g; } },
@@ -136,6 +150,8 @@ KITS.arquibancadaGrande = { nome: "Arquibancada grande coberta", grupo: "Públic
   const costela = new THREE.ExtrudeGeometry(forma, { depth: 1.2 * U, bevelEnabled: false }).rotateY(-Math.PI / 2);
   for (let k = 0; k <= 6; k++) malha(g, costela, M(0x6b6f76), -L / 2 + (k * L) / 6 + 0.6 * U, 0, 0);
   const teto = caixa(g, M(0x5a5e66, { roughness: 0.7 }), L + 2 * U, 0.6 * U, frente - Z, 0, topo + 0.6 * U, (frente + Z) / 2); teto.rotation.x = -Math.atan2(1.2 * U, frente - Z);
+  const lug = []; for (const [base, z0] of [[0, 0], [degraus * alt + 3 * U, -degraus * fun - 1.5 * U]]) for (let k = 0; k < degraus; k++) for (let x = -L / 2 + 0.4 * U; x < L / 2; x += 0.6 * U) lug.push([x, base + alt * (k + 1) + 0.4 * U, z0 - k * fun + 0.1 * U]);
+  plateia(g, lug, { semente: 13 });
   return g; } };
 
 // os caminhões do paddock: o cavalo (a cabine com o defletor) e a carreta baú, ou a prancha vazia
@@ -322,9 +338,9 @@ function geoEm(geo, x, y, z, ry = 0, rx = 0) { _o.position.set(x, y, z); _o.rota
 const CONCRETO = M(0xb9bcc0), CADEIRA = M(0xf2c230, { roughness: 0.55 }), GRADIL = M(0xdfe3e7, { metalness: 0.5, roughness: 0.35 });
 // a arquibancada de cadeiras: `fileiras` degraus que sobem para trás, numa reta de `largura` m ou num arco de `angulo` graus com raio `raio` m
 // (a frente para +z; o centro do arco fica na frente). `base`: a altura da primeira fileira, em cima de pilares.
-function arquibancadaCadeiras({ largura = 40, raio = 0, angulo = 0, fileiras = 10, base = 3, cor = CADEIRA, pilares = true }) {
+function arquibancadaCadeiras({ largura = 40, raio = 0, angulo = 0, fileiras = 10, base = 3, cor = CADEIRA, pilares = true, publico = true }) {
   const g = new THREE.Group(), fun = 0.85 * U, alt = 0.45 * U, b = base * U, R = raio * U, A = (angulo * Math.PI) / 180;
-  const degraus = [], cad = [], encostos = [], trilhos = [], pil = [];
+  const degraus = [], cad = [], encostos = [], trilhos = [], pil = [], lugares = [];
   // a posição e o giro de um ponto a `s` (de -1 a 1 ao longo da fileira) na fileira k (k = 0 é a da frente)
   const ponto = (s, k) => { if (!R) return { x: (s * largura * U) / 2, z: -k * fun, ry: 0 }; const r = R + k * fun, a = (s * A) / 2; return { x: r * Math.sin(a), z: R - r * Math.cos(a), ry: -a }; };
   const compr = (k) => (R ? (R + k * fun) * A : largura * U);
@@ -333,7 +349,7 @@ function arquibancadaCadeiras({ largura = 40, raio = 0, angulo = 0, fileiras = 1
     for (let i = 0; i < segs; i++) { const p = ponto(((i + 0.5) / segs) * 2 - 1, k); degraus.push(geoEm(new THREE.BoxGeometry(L / segs + 0.05 * U, 0.25 * U, fun), p.x, y - 0.12 * U, p.z, p.ry)); }
     const n = Math.max(1, Math.floor(L / (0.55 * U)));
     for (let i = 0; i < n; i++) { const p = ponto(((i + 0.5) / n) * 2 - 1, k);
-      cad.push(geoEm(new THREE.BoxGeometry(0.45 * U, 0.08 * U, 0.4 * U), p.x, y + 0.42 * U, p.z, p.ry));
+      cad.push(geoEm(new THREE.BoxGeometry(0.45 * U, 0.08 * U, 0.4 * U), p.x, y + 0.42 * U, p.z, p.ry)); lugares.push([p.x, y + 0.46 * U, p.z - 0.05 * U, p.ry]);
       const tras = ponto(((i + 0.5) / n) * 2 - 1, k + 0.3); encostos.push(geoEm(new THREE.BoxGeometry(0.45 * U, 0.45 * U, 0.07 * U), tras.x, y + 0.66 * U, tras.z, tras.ry, -0.15)); }
   }
   // o gradil da frente e o de trás (barras finas), e a parede de trás
@@ -349,6 +365,7 @@ function arquibancadaCadeiras({ largura = 40, raio = 0, angulo = 0, fileiras = 1
       pil.push(geoEm(new THREE.BoxGeometry(0.3 * U, 0.4 * U, Math.hypot(dz, dy)), (p0.x + p1.x) / 2, b - 0.45 * U + dy / 2, (p0.z + p1.z) / 2, p0.ry, Math.atan2(dy, dz))); }
   } else if (b > 0) { const L = compr(0), segs = Math.max(1, Math.ceil(L / (4 * U))); for (let i = 0; i < segs; i++) { const p = ponto(((i + 0.5) / segs) * 2 - 1, -0.5); degraus.push(geoEm(new THREE.BoxGeometry(L / segs + 0.05 * U, b, 0.2 * U), p.x, b / 2, p.z, p.ry)); } }
   juntar(g, CONCRETO, degraus); juntar(g, cor, cad); juntar(g, cor, encostos); juntar(g, GRADIL, trilhos); juntar(g, CINZA, pil);
+  if (publico) plateia(g, lugares, { semente: 3 + fileiras + Math.round(largura + angulo) });
   g.userData.ponto = ponto; g.userData.yTopo = yTopo; return g;
 }
 const F = (filtro, k) => Object.assign(k, { filtro });
@@ -925,6 +942,61 @@ KITS.ponteFerro = F("Geral", { nome: "Ponte de ferro em arco", grupo: "Cidade", 
     if (ant) { const d = Math.hypot(x - ant[0], y - ant[1]), b = caixa(g, FE, d + 0.1 * U, 0.6 * U, 0.6 * U, (x + ant[0]) / 2, (y + ant[1]) / 2, z); b.rotation.z = Math.atan2(y - ant[1], x - ant[0]); }
     if (i && i < n) caixa(g, FE, 0.15 * U, y - h - 0.5 * U, 0.15 * U, x, (y + h + 0.5 * U) / 2, z); ant = [x, y]; } }
   return g; } });
+// (2026-11-18, o Thiago, com o print de Mônaco: "mais variedade de prédios e arquibancadas voltadas para Mônaco") as ARQUIBANCADAS DE MÔNACO:
+// as provisórias de tubo com a lona vermelha (Rolex/patrocínio) na frente, a do porto em cima da água, a da Piscina e a de toldo listrado; e
+// os prédios da imagem: a torre alta de concreto com varandas, o prédio de cúpula de zinco (o pavilhão belle époque), o de toldos e a fileira.
+const LONA_MC = () => texCanvas("lona-mc", 512, 64, (x, w, hh) => { x.fillStyle = "#b0123a"; x.fillRect(0, 0, w, hh); x.fillStyle = "#f4f4f2"; x.font = "bold 40px Arial"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("MONACO", w * 0.25, hh / 2 + 2); x.fillText("GRAND PRIX", w * 0.72, hh / 2 + 2); });
+function arqTubular({ largura = 40, fileiras = 14, base = 2, cor = 0xc8102e, cobertura = false }) {
+  const g = arquibancadaCadeiras({ largura, fileiras, base, pilares: false, cor: M(cor, { roughness: 0.6 }) }), w = largura * U, prof = fileiras * 0.85 * U, topo = g.userData.yTopo;
+  const tubo = M(0xb8bdc3, { metalness: 0.6, roughness: 0.4 }), tubos = [];
+  for (let x = -w / 2; x <= w / 2 + 1; x += 2.5 * U) for (let k = 0; k <= fileiras; k += 2) { const y = base * U + k * 0.45 * U, z = -k * 0.85 * U; tubos.push(geoEm(new THREE.CylinderGeometry(0.06 * U, 0.06 * U, y, 5), x, y / 2, z)); }
+  for (let k = 0; k <= fileiras; k += 2) { const z = -k * 0.85 * U; tubos.push(geoEm(new THREE.BoxGeometry(w, 0.08 * U, 0.08 * U), 0, 0.8 * U, z)); }
+  juntar(g, tubo, tubos);
+  const lona = new THREE.MeshStandardMaterial({ map: (() => { const t = LONA_MC(); t.repeat.set(Math.max(1, Math.round(largura / 20)), 1); return t; })(), roughness: 0.8 });
+  malha(g, new THREE.BoxGeometry(w, base * U + 0.9 * U, 0.1 * U), [tubo, tubo, tubo, tubo, lona, lona], 0, (base * U + 0.9 * U) / 2, 0.45 * U);
+  if (cobertura) { const t = caixa(g, M(0xf4f4f2, { roughness: 0.7 }), w + 1 * U, 0.3 * U, prof + 2 * U, 0, topo + 4 * U, -prof / 2); t.rotation.x = -0.06; for (const x of [-w / 2, 0, w / 2]) cil(g, tubo, 0.15 * U, topo + 4 * U, x, (topo + 4 * U) / 2, -prof, 8); }
+  return g;
+}
+KITS.mcArqTubular = F("Arquibancadas", { nome: "Mônaco: arquibancada de tubo com lona", grupo: "Público", montar: () => arqTubular({}) });
+KITS.mcArqTubularCoberta = F("Arquibancadas", { nome: "Mônaco: arquibancada de tubo coberta", grupo: "Público", montar: () => arqTubular({ largura: 50, fileiras: 16, cobertura: true }) });
+KITS.mcArqTubularBaixa = F("Arquibancadas", { nome: "Mônaco: arquibancada de tubo baixa", grupo: "Público", montar: () => arqTubular({ largura: 24, fileiras: 7, base: 1.2, cor: 0xf2f2f0 }) });
+KITS.mcArqPorto = F("Arquibancadas", { nome: "Mônaco: arquibancada do porto (sobre a água)", grupo: "Público", montar() {
+  const g = arqTubular({ largura: 60, fileiras: 18, base: 4, cor: 0x1d3f8a, cobertura: true }), w = 60 * U, C = M(0xbfbcb5, { roughness: 0.95 });
+  caixa(g, C, w + 2 * U, 0.6 * U, 18 * 0.85 * U + 4 * U, 0, -0.3 * U, -18 * 0.85 * U / 2); for (let x = -w / 2; x <= w / 2; x += 6 * U) for (const z of [0, -16 * U]) cil(g, C, 0.5 * U, 4 * U, x, -2.6 * U, z, 10); return g; } });
+KITS.mcArqToldo = F("Arquibancadas", { nome: "Mônaco: arquibancada de toldo listrado", grupo: "Público", montar() {
+  const g = arquibancadaCadeiras({ largura: 30, fileiras: 10, base: 1.5, pilares: false, cor: M(0xf2f2f0, { roughness: 0.6 }) }), w = 30 * U, prof = 10 * 0.85 * U, topo = g.userData.yTopo;
+  const t = texCanvas("toldo-mc", 128, 32, (x, ww, hh) => { for (let i = 0; i < 8; i++) { x.fillStyle = i % 2 ? "#f4f4f2" : "#c8102e"; x.fillRect(i * 16, 0, 16, hh); } }); t.repeat.set(6, 1);
+  const tol = malha(g, new THREE.CylinderGeometry(prof * 0.7, prof * 0.7, w, 16, 1, true, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide, roughness: 0.7 }), 0, topo + 2 * U, -prof / 2); tol.rotation.z = Math.PI / 2; tol.scale.set(0.35, 1, 1);
+  for (const x of [-w / 2, w / 2]) for (const z of [0.3 * U, -prof]) cil(g, M(0xd8dadd, { metalness: 0.5 }), 0.1 * U, topo + 2 * U, x, (topo + 2 * U) / 2, z, 6); return g; } });
+KITS.mcArqPiscina = F("Arquibancadas", { nome: "Mônaco: arquibancada da Piscina (curva)", grupo: "Público", angulo: 50, montar: (a = 50) => { const g = arquibancadaCadeiras({ raio: 35, angulo: a, fileiras: 14, base: 2.5, cor: M(0xc8102e, { roughness: 0.6 }) }); return g; } });
+// os prédios do print: a torre alta de concreto (muitas varandas iguais), o pavilhão de cúpula de zinco e os de toldo
+function torreConcreto({ w = 20, d = 14, andares = 18, cor = "#d9d4ca" }) {
+  const g = new THREE.Group(), W = w * U, D = d * U, A = 3 * U, H = andares * A;
+  const t = texCanvas("torre-conc-" + cor, 128, 64, (x, ww, hh) => { x.fillStyle = cor; x.fillRect(0, 0, ww, hh); for (let i = 0; i < 6; i++) { x.fillStyle = "#3a4048"; x.fillRect(4 + i * 21, 14, 15, 30); x.fillStyle = "#ffffff30"; x.fillRect(5 + i * 21, 15, 4, 28); } x.fillStyle = "#00000020"; x.fillRect(0, 50, ww, 14); });
+  const mk = (larg) => { const tt = t.clone(); tt.needsUpdate = true; tt.repeat.set(Math.max(1, Math.round(larg / 12)), andares); return new THREE.MeshStandardMaterial({ map: tt, roughness: 0.85 }); };
+  const topo = M(new THREE.Color(cor).getHex(), { roughness: 0.9 });
+  malha(g, new THREE.BoxGeometry(W, H, D), [mk(d), mk(d), topo, topo, mk(w), mk(w)], 0, H / 2, 0);
+  const lajes = []; for (let k = 1; k <= andares; k++) lajes.push(geoEm(new THREE.BoxGeometry(W + 1.4 * U, 0.25 * U, 1.4 * U), 0, k * A - 0.1 * U, D / 2 + 0.6 * U));
+  juntar(g, topo, lajes); caixa(g, topo, W * 0.3, 3 * U, D * 0.4, 0, H + 1.5 * U, 0); return g;
+}
+KITS.mcTorreConcreto = F("Geral", { nome: "Mônaco: torre de concreto com varandas", grupo: "Cidade", montar: () => torreConcreto({}) });
+KITS.mcTorreConcretoAlta = F("Geral", { nome: "Mônaco: torre alta de concreto (26 andares)", grupo: "Cidade", montar: () => torreConcreto({ w: 24, d: 16, andares: 26, cor: "#cfc8bb" }) });
+KITS.mcTorreConcretoEstreita = F("Geral", { nome: "Mônaco: torre estreita bege", grupo: "Cidade", montar: () => torreConcreto({ w: 14, d: 12, andares: 15, cor: "#e3d3b5" }) });
+KITS.mcPavilhaoCupula = F("Geral", { nome: "Mônaco: pavilhão de cúpula de zinco", grupo: "Cidade", montar() {
+  const g = predioClassico({ w: 18, d: 14, andares: 2, cor: "#efe6d4", pedra: "#f6efe2", chave: "mc-pavilhao" }), H = 4.2 * U + 2 * 3.2 * U, zinco = M(0x8f9aa0, { metalness: 0.6, roughness: 0.4, flatShading: true });
+  const c = malha(g, new THREE.SphereGeometry(7 * U, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), zinco, 0, H + 0.4 * U, 0); c.scale.set(1.25, 0.7, 1);
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; caixa(g, M(0xf6efe2), 0.3 * U, 3 * U, 0.3 * U, Math.cos(a) * 8.6 * U, H + 1.4 * U, Math.sin(a) * 6.9 * U); }
+  caixa(g, M(0xf6efe2), 22 * U, 0.4 * U, 0.4 * U, 0, H + 1.2 * U, 7.2 * U); return g; } });
+for (const [id, nome, o] of [
+  ["mcPredioToldosBranco", "Mônaco: prédio de toldos brancos", { w: 16, d: 12, andares: 8, cor: "#f2ece0", toldo: "#f4f4f2", veneziana: "#8a7a66", terraco: true }],
+  ["mcPredioToldosVerde", "Mônaco: prédio de toldos verdes alto", { w: 14, d: 12, andares: 11, cor: "#ead9bd", toldo: "#2e7a4a" }],
+  ["mcPredioRosaMansarda", "Mônaco: prédio rosa com mansarda", { w: 18, d: 14, andares: 7, cor: "#e7b0a0", mansarda: true, veneziana: "#f2f2ee" }],
+  ["mcPredioAmareloCanto", "Mônaco: prédio amarelo de esquina", { w: 22, d: 18, andares: 6, cor: "#f0d690", toldo: "#c0392b", mansarda: true }],
+]) KITS[id] = F("Geral", { nome, grupo: "Cidade", montar: () => predioClassico({ ...o, chave: id }) });
+// a FILEIRA de prédios colados (uma quadra): 4 prédios de alturas e cores diferentes lado a lado
+KITS.mcQuadra = F("Geral", { nome: "Mônaco: quadra de prédios colados", grupo: "Cidade", montar() {
+  const g = new THREE.Group(), lista = [[12, 7, "#ecd9b8", "#3d6b4a"], [10, 9, "#e7a789", null], [13, 6, "#f0c46a", "#2e5d3e"], [11, 8, "#efe2c8", "#5a7a8a"]]; let x = -23;
+  for (const [w, a, cor, ven] of lista) { const p = predioClassico({ w, d: 12, andares: a, cor, veneziana: ven, chave: "quadra-" + cor }); p.position.x = (x + w / 2) * U; g.add(p); x += w; } return g; } });
 // os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.
 export const FILTROS = ["Arquibancadas", "Automóveis", "Contenção", "Paddock", "Vegetação", "Geral"];
 const PELO_ID = { arquibancada: "Arquibancadas", arquibancadaGrande: "Arquibancadas", pneus: "Contenção", tecpro: "Contenção", grade: "Contenção", guardrail: "Contenção", cone: "Contenção",

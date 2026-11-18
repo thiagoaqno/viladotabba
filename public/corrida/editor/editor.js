@@ -365,9 +365,6 @@ function desenharArea() {
   $("edArCor").oninput = (e) => { areaCor = e.target.value; if (areaMaterial !== "cor" && !areaComCor) { areaComCor = true; if ($("edArComCor")) $("edArComCor").checked = true; } };
   if ($("edArComCor")) $("edArComCor").onchange = (e) => { areaComCor = e.target.checked; };
   $("edArKit").onchange = (e) => { areaEspalhar = e.target.value; desenharArea(); };
-  for (const c of el.querySelectorAll("[data-num]")) c.onchange = () => refazerItem(o, { [c.dataset.num]: Math.max(0.1, +c.value || 0.5) });
-  const ang = el.querySelector("[data-ang]"); if (ang) { ang.oninput = () => { $("edAngV").textContent = ang.value + "°"; }; ang.onchange = () => refazerItem(o, { angulo: +ang.value }); }
-  const sem = el.querySelector("[data-sem]"); if (sem) sem.onchange = () => refazerItem(o, { semaforo: sem.checked || undefined });
   for (const s of el.querySelectorAll("[data-mist]")) s.onchange = () => { areaMistura[+s.dataset.mist] = s.value; };
   if ($("edArEsp")) $("edArEsp").onchange = (e) => { areaEsp = Math.max(1, +e.target.value || 8); };
 }
@@ -581,6 +578,9 @@ function desenharItem(soNumeros = false) {
   };
   for (const c of el.querySelectorAll("[data-pl]")) c.onchange = () => { const v = c.dataset.pl === "prop" ? Math.max(0.05, +c.value || 0.3) : c.type === "number" ? Math.max(1, +c.value || 1) : c.value; refazerItem(o, { [c.dataset.pl]: v }); };
   for (const s of el.querySelectorAll("[data-mist]")) s.onchange = () => { const m = [...(it.mistura || ["", ""])]; m[+s.dataset.mist] = s.value; refazerItem(o, { mistura: m.filter(Boolean).length ? m.filter(Boolean) : undefined }); };
+  for (const c of el.querySelectorAll("[data-num]")) c.onchange = () => refazerItem(o, { [c.dataset.num]: Math.max(0.1, +c.value || 0.5) });
+  const ang = el.querySelector("[data-ang]"); if (ang) { ang.oninput = () => { $("edAngV").textContent = ang.value + "°"; }; ang.onchange = () => refazerItem(o, { angulo: +ang.value }); }
+  const sem = el.querySelector("[data-sem]"); if (sem) sem.onchange = () => refazerItem(o, { semaforo: sem.checked || undefined });
   if (el.querySelector("[data-alt]")) el.querySelector("[data-alt]").onchange = (e) => refazerItem(o, { alt: +e.target.value || undefined });
   if (el.querySelector("[data-semfundo]")) el.querySelector("[data-semfundo]").onclick = () => refazerItem(o, { fundo: it.fundo ? "" : "#101114" });
   if (el.querySelector("[data-trz]")) el.querySelector("[data-trz]").onclick = () => refazerItem(o, { zebra: !it.zebra || undefined });

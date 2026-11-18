@@ -115,7 +115,7 @@ body.ttSemEsq #ed{transform:translateX(-100%)}body.ttSemDir #ttDir{transform:tra
     <button id="ttSalvar" class="pri" title="Salvar (Ctrl+S)">💾 Salvar</button><button id="ttPub" title="Salva e abre um PR no GitHub">⇪ Publicar</button><span class="sep"></span>
     <button id="ttDesf" title="Desfazer (Ctrl+Z)">↶</button><button id="ttRef" title="Refazer (Ctrl+Y)">↷</button><span class="sep"></span>
     <button data-rap="mover" title="Mover (W)">✥</button><button data-rap="girar" title="Girar (E)">⟳</button><button data-rap="escala" title="Escala (R)">⤡</button>
-    <div class="dir"><span>Pista</span><span id="ttPistaLugar"></span></div>`;
+    <div class="dir"><a href="/corrida/livery.html" target="_blank" rel="noopener" style="color:var(--tt-tx);text-decoration:none;border:1px solid var(--tt-ln);border-radius:6px;padding:5px 9px" title="O editor de pinturas dos carros">🏎 Livery Studio</a><span>Pista</span><span id="ttPistaLugar"></span></div>`;
   document.body.appendChild(topo);
   const barraClica = (k) => barra.querySelector(`[data-barra="${k}"]`)?.click();
   $("ttDesf").onclick = desfazer; $("ttRef").onclick = refazer;

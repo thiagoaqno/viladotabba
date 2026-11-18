@@ -828,8 +828,8 @@ const PEDRA_M = () => { const t = texPedra(); t.repeat.set(4, 2); return new THR
 const ARENITO = M(0xe7e0d0, { roughness: 0.9 });
 function balaustrada(g, L, y, z, curvo = 0) {
   const n = Math.round(L / (0.45 * U));
-  for (let i = 0; i <= n; i++) { const t = i / n - 0.5, [x, zz, a] = curvo ? [Math.sin(t * curvo) * L / curvo, z - (1 - Math.cos(t * curvo)) * L / curvo, t * curvo] : [t * L, z, 0]; const b = cil(g, ARENITO, 0.12 * U, 0.8 * U, x, y + 0.4 * U, zz, 6, 0.08 * U); b.rotation.y = a; }
-  const segs = curvo ? 12 : 1; for (let k = 0; k < segs; k++) { const t0 = k / segs - 0.5, t1 = (k + 1) / segs - 0.5, P = (t) => curvo ? [Math.sin(t * curvo) * L / curvo, z - (1 - Math.cos(t * curvo)) * L / curvo] : [t * L, z];
+  for (let i = 0; i <= n; i++) { const t = i / n - 0.5, [x, zz, a] = curvo ? [Math.sin(t * curvo) * L / curvo, z + (1 - Math.cos(t * curvo)) * L / curvo, t * curvo] : [t * L, z, 0]; const b = cil(g, ARENITO, 0.12 * U, 0.8 * U, x, y + 0.4 * U, zz, 6, 0.08 * U); b.rotation.y = a; }
+  const segs = curvo ? 12 : 1; for (let k = 0; k < segs; k++) { const t0 = k / segs - 0.5, t1 = (k + 1) / segs - 0.5, P = (t) => curvo ? [Math.sin(t * curvo) * L / curvo, z + (1 - Math.cos(t * curvo)) * L / curvo] : [t * L, z];
     const [x0, z0] = P(t0), [x1, z1] = P(t1), c = caixa(g, ARENITO, Math.hypot(x1 - x0, z1 - z0) + 0.05 * U, 0.2 * U, 0.5 * U, (x0 + x1) / 2, y + 0.9 * U, (z0 + z1) / 2); c.rotation.y = -Math.atan2(z1 - z0, x1 - x0); }
 }
 KITS.muroPedraBalaustrada = F("Contenção", { nome: "Muro de pedra com balaustrada", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 3.2 * U; caixa(g, PEDRA_M(), L, h, 0.8 * U, 0, h / 2, 0); caixa(g, ARENITO, L + 0.2 * U, 0.25 * U, 1 * U, 0, h, 0);
@@ -845,6 +845,11 @@ KITS.muroCurvoEscada = F("Contenção", { nome: "Muro curvo com grade e escada",
   for (let k = 0; k < 10; k++) caixa(g, ARENITO, 1.6 * U, 0.34 * U, 0.6 * U, Math.sin(A / 2) * R + 1 * U, (k + 0.5) * 0.34 * U, R - Math.cos(A / 2) * R - k * 0.6 * U + 3 * U); return g; } });
 KITS.muroArrimo = F("Contenção", { nome: "Muro de arrimo de pedra", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 5 * U, s = new THREE.Shape([[0, 0], [1.6, 0], [0.6, 5], [0, 5]].map(([x, y]) => new THREE.Vector2(x * U, y * U)));
   const m = malha(g, new THREE.ExtrudeGeometry(s, { depth: L, bevelEnabled: false }), PEDRA_M(), -L / 2, 0, 0); m.rotation.y = Math.PI / 2; m.position.set(-L / 2, 0, 0.8 * U); return g; } });
+// (2026-11-18, o Thiago: "um muro de arrimo com balaustrada como cerca, que fica curvo ao longo da pista") o arrimo inclinado de pedra com a
+// cornija e a balaustrada em cima, 10 m; na Barreira na beira os módulos se emendam pela curva
+KITS.muroArrimoBalaustrada = F("Contenção", { nome: "Muro de arrimo com balaustrada", grupo: "Cidade", montar() {
+  const g = KITS.muroArrimo.montar(), L = 10 * U, h = 5 * U; caixa(g, ARENITO, L, 0.3 * U, 1.2 * U, 0, h + 0.15 * U, 0.5 * U); balaustrada(g, L, h + 0.3 * U, 0.5 * U); /* (o topo do arrimo vai de z 0,2 a 0,8 m: a cornija e a balaustrada no meio dele) */ return g; } });
+KITS.muroPedraBaixoBalaustrada = F("Contenção", { nome: "Muro de pedra baixo com balaustrada", grupo: "Cidade", montar() { const g = new THREE.Group(), L = 10 * U, h = 1.4 * U; caixa(g, PEDRA_M(), L, h, 0.7 * U, 0, h / 2, 0); caixa(g, ARENITO, L + 0.1 * U, 0.2 * U, 0.85 * U, 0, h, 0); balaustrada(g, L, h + 0.1 * U, 0); return g; } });
 // os penhascos com muro em cima (o terraço da imagem)
 KITS.penhascoTerraco = F("Geral", { nome: "Penhasco com terraço e muro", grupo: "Relevo", montar() { const g = penhasco(30, 12, 22, 41, 6), m = KITS.muroPedraBalaustrada.montar(); m.scale.set(2.2, 1.4, 1); m.position.set(-2 * U, 11.5 * U, 6 * U); g.add(m); return g; } });
 // os FILTROS do editor (2026-11-17, o Thiago): cada peça num tipo de construção. As que não dizem o filtro caem pelo id ou pelo grupo.

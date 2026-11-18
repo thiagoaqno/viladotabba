@@ -1,11 +1,9 @@
-# Patrocinadores de Mônaco: Rolex, #MonacoGP e Monaco Circuit
+# Muros com balaustrada: o curvo consertado e dois novos para a beira
 
-Pelas imagens do Thiago (placas da beira em Mônaco), três marcas novas desenhadas no canvas (`f1-marcas.js`) e na lista (`f1-capacetes.js`, `MARCAS_CAPACETE`), então aparecem nas placas, faixas, pórticos e marcas no chão do editor e também no capacete e no halo:
+- **Muro de pedra curvo com balaustrada (consertado):** o muro curvava para um lado e a balaustrada para o outro (o sinal da curva dela estava trocado). Agora os dois seguem o mesmo arco; medido no Node: o muro vai de z 0 a 19,9 e a balaustrada com os pilares de −1,2 a 21,8.
+- **Muro de arrimo com balaustrada** (novo, Contenção): o arrimo inclinado de pedra de 10 m com a cornija e a balaustrada em cima do topo dele (o topo foi medido: de 0,2 a 0,8 m do pé).
+- **Muro de pedra baixo com balaustrada** (novo, Contenção).
 
-- **Rolex:** a coroa de cinco pontas e o nome em serifa, dourados (para o fundo verde).
-- **#MonacoGP:** "#Monaco" cheio e "GP" inclinado, na cor que contrasta com o fundo (branco no preto).
-- **Monaco Circuit:** MONACO cheio e CIRCUIT vazado em vermelho, com "SINCE 1929" (para o fundo branco).
+Como são de Contenção, os dois novos e o reto com balaustrada vão pela **Barreira na beira** e pela Linha de itens emendados pela curva da pista. Uma fileira curva de arrimo com balaustrada: 17 malhas.
 
-As outras três das imagens já existiam: **Qatar Airways** (no fundo vinho a letra sai branca), **AWS** e **Pirelli (caixa)** (a caixa amarela com o PIRELLI vermelho).
-
-Conferido com `node --check`.
+Conferido com `node --check` e montando no Node.

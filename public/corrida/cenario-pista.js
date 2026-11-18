@@ -171,11 +171,20 @@ function texDaFaixa(marca, fundo, prop) {
 }
 function faixaPatrocinio(it, d, alt, i) {
   const alterna = i % 2 && (it.marca2 || it.fundo2), marca = alterna ? it.marca2 || it.marca : it.marca, fundo = alterna ? it.fundo2 || it.fundo : it.fundo, elev = Math.max(0, +it.elev || 0) * UM, prop = Math.max(1, Math.min(16, Math.round((d / alt) * 2) / 2));
-  const [a, b] = texDaFaixa(marca, fundo, prop) // (2026-11-18: o painel de número ímpar pode trocar a marca e o fundo: fundo2), lado = ML(0x1d1f22);
+  const [a, b] = texDaFaixa(marca, fundo, prop), lado = ML(0x1d1f22); // (2026-11-18: o painel de número ímpar pode trocar a marca e o fundo: fundo2)
   // duas placas finas (uma de cada lado) e o miolo escuro: cada uma com um material só, para o enxugar juntar a fileira inteira
   const g = new THREE.Group(), y = elev + alt / 2;
   for (const [mat, sx] of [[a, 1], [b, -1]]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(d, alt), mat); p.rotation.y = sx * Math.PI / 2; p.position.set(sx * 0.031 * UM, y, 0); p.castShadow = true; p.receiveShadow = true; g.add(p); }
   const miolo = new THREE.Mesh(new THREE.BoxGeometry(0.06 * UM, alt, d), lado); miolo.position.y = y; g.add(miolo); return g;
+}
+// (2026-11-18, o Thiago: "o guard-rail triplo com tela e arame, mas com a base sendo uma placa") a tela com o poste dobrado e os três fios de arame,
+// em cima da faixa de patrocínio: o mesmo alto do guard-rail com tela, a base trocada pela placa
+function telaComArame(g, d, y0, ht) {
+  const tela = ML(0x8f969c, { metalness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }), poste = ML(0x2c3036, { roughness: 0.6, metalness: 0.3 }), fio = ML(0xc7ccd1, { metalness: 0.6, roughness: 0.35 });
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(d, ht), tela); p.rotation.y = Math.PI / 2; p.position.set(-0.15 * UM, y0 + ht / 2, 0); g.add(p);
+  const c = new THREE.Mesh(new THREE.CylinderGeometry(0.07 * UM, 0.07 * UM, ht + 0.6 * UM, 6), poste); c.position.set(-0.15 * UM, y0 + (ht + 0.6 * UM) / 2, -d / 2); g.add(c);
+  const b = new THREE.Mesh(new THREE.BoxGeometry(0.9 * UM, 0.06 * UM, 0.06 * UM), poste); b.position.set(0.15 * UM, y0 + ht + 0.3 * UM, -d / 2); b.rotation.z = 0.6; g.add(b);
+  for (let k = 0; k < 3; k++) { const a = new THREE.Mesh(new THREE.BoxGeometry(0.02 * UM, 0.02 * UM, d), fio); a.position.set(0.2 * UM + k * 0.12 * UM, y0 + ht + 0.2 * UM + k * 0.2 * UM, 0); g.add(a); }
 }
 const compKit = new Map(); // o comprimento de uma peça da biblioteca ao longo do x (o que ela ocupa na fileira)
 function comprimentoDoKit(id) { if (!compKit.has(id)) { const o = montarKit(id), b = new THREE.Box3().setFromObject(o); compKit.set(id, Math.max(0.5 * 4.8, b.max.x - b.min.x)); } return compKit.get(id); }
@@ -197,12 +206,12 @@ function montarLinha(it, tr) {
   }
   // (2026-11-17, o Thiago: "um entra dentro do outro") as barreiras (pneus e as peças de Contenção) vão EMENDADAS: cada módulo vai de um ponto ao
   // próximo, no meio deles, virado pela corda e esticado ao comprimento dela. Na curva elas não se cruzam mais nem deixam vão.
-  const emenda = modelo === "faixa" || modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
+  const emenda = modelo === "faixa" || modelo === "faixaTela" || modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
   if (emenda) {
     const kit = modelo.startsWith("kit:") ? modelo.slice(4) : null, L = kit ? comprimentoDoKit(kit) : 0;
     for (let i = 0; i + 1 < lista.length; i++) {
       const p = lista[i], q = lista[i + 1], d = Math.hypot(q.x - p.x, q.z - p.z); if (d < 0.2 * UM) continue;
-      let o; if (modelo === "faixa") o = faixaPatrocinio(it, d, alt, i); else if (kit) { o = montarKit(kit); if (!o) continue; o.rotation.y = Math.PI / 2; o.scale.x = d / L; } else o = moduloPneus(d - 0.05 * UM);
+      let o; if (modelo === "faixa") o = faixaPatrocinio(it, d, alt, i); else if (modelo === "faixaTela") { o = faixaPatrocinio(it, d, alt, i); telaComArame(o, d, Math.max(0, +it.elev || 0) * UM + alt, (+it.alturaTela || 3.2) * UM); } else if (kit) { o = montarKit(kit); if (!o) continue; o.rotation.y = Math.PI / 2; o.scale.x = d / L; } else o = moduloPneus(d - 0.05 * UM);
       const h = new THREE.Group(); h.add(o); h.position.set((p.x + q.x) / 2, ((p.y || 0) + (q.y || 0)) / 2, (p.z + q.z) / 2); h.rotation.y = Math.atan2(q.x - p.x, q.z - p.z); g.add(h);
     }
     return g;
@@ -271,7 +280,7 @@ function montarArea(it, tr) {
     const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]); let n = 0;
     for (let x = Math.min(...xs); x <= Math.max(...xs); x += esp) for (let z = Math.min(...zs); z <= Math.max(...zs); z += esp) {
       const px = x + (rnd() - 0.5) * esp * 0.8, pz = z + (rnd() - 0.5) * esp * 0.8; if (!dentroDoPoligono(px, pz, pts) || n++ > 1500) continue;
-      const o = modelo.clone(); o.position.set(px, yEm(px, pz), pz); o.rotation.y = rnd() * Math.PI * 2; o.scale.setScalar(0.85 + rnd() * 0.3); g.add(o);
+      const o = modelo.clone(); o.position.set(px, yEm(px, pz), pz); o.rotation.y = rnd() * Math.PI * 2; o.scale.setScalar((0.85 + rnd() * 0.3) * (+it.escalaEsp || 1)) /* (a escala escolhida antes de pôr) */; g.add(o);
     }
   }
   return g;

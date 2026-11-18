@@ -1,10 +1,7 @@
-# Editor: kit de Mônaco
+# Editor: régua, barreiras emendadas e relevo de Mônaco
 
-Peças novas em código (low poly), pelas imagens do Thiago, já nos filtros (sem logo da F1 nem de patrocinador real).
+- **Régua** (`editor/regua.js`): botão **Medir** na barra do topo (ou Shift+R). Clique no primeiro ponto, a medida aparece ao vivo, e o segundo clique a fixa: a cota fica na tela em metros (com a distância no plano e a diferença de altura quando tem desnível). Ctrl ao clicar trava em metros inteiros. **Limpar medidas** apaga; Esc desliga. Não vai para o cenário.
+- **Barreiras emendadas** (`cenario-pista.js`): na Linha de itens e na Barreira na beira, os pneus e as peças de Contenção vão de um ponto ao próximo, no meio deles, virados pela corda e esticados ao comprimento dela. Nas curvas um módulo não entra mais no outro e não sobra vão. A fileira também vai até o ponto final.
+- **Relevo de Mônaco** (biblioteca, Geral · Relevo e Contenção · Cidade): rocha calcária facetada com mato, arbustos e pinheiros-mansos: penhasco alto, médio com árvores, largo, rocha grande, rochedo com forte e casario, encosta com estrada e muro de arrimo, penhasco com terraço e muro; muros de pedra com balaustrada (reto e curvo), de concreto com pilastras, curvo com grade e escada, de arrimo de pedra.
 
-- **Prédios (Geral · Cidade):** 8 prédios clássicos da Riviera feitos por um gerador só (fachada com janelas altas, venezianas, sacadas de ferro, frisos e cornija; térreo de arcos de pedra; opções de mansarda, canto redondo e terraço com plantas): creme, coral de canto redondo, amarelo com toldos verdes, venezianas verdes, belle époque com mansarda, rosa, estreito de pedra e grande de esquina. Mais: prédio de varandas curvas, o cassino (palácio com pavilhão, torres de cúpula, relógio e marquise), igreja com torre e casa sobre arcos de pedra.
-- **Vegetação:** tamareira (baixa, normal, alta), pinheiro-manso (normal e baixo), cerca viva, floreira verde e com flores, arvoreta no vaso.
-- **Beira da pista:** guard-rail triplo com tela e arame, barreira vermelha e branca, poste de rua moderno, poste com câmera, cabine de fiscal com fiscal, guindaste de resgate, caixa elétrica, pórtico branco de patrocínio, totem preto com marca.
-- **Detalhes:** bandeira de Mônaco, bandeira quadriculada, placa Monte-Carlo, lampião antigo duplo, iate pequeno.
-
-Conferido com `node --check` e montando as 171 peças da biblioteca no Node (nenhuma com erro ou vazia).
+Conferido com `node --check`, montando as 183 peças no Node e uma Linha curva de guard-rail e de pneus.

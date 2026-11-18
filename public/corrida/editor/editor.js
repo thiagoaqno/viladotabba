@@ -17,6 +17,7 @@ import { criarCraft } from "./craft.js";
 import { criarComandos } from "./comandos.js";
 import { montarLayout } from "./layout.js";
 import { criarTerreno } from "./terreno.js";
+import { criarRegua } from "./regua.js";
 import { KITS, montarKit, FILTROS, filtroDoKit } from "../biblioteca.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, PADROES_ESCAPE, MATERIAIS_AREA } from "../cenario-pista.js";
@@ -74,7 +75,7 @@ document.head.appendChild(css);
 const painel = document.createElement("div"); painel.id = "ed"; document.body.appendChild(painel);
 // a barra do topo: o modo do gizmo, as vistas e o Craft
 const barra = document.createElement("div"); barra.id = "edBarra";
-barra.innerHTML = [["mover", "✥", "Mover · W"], ["girar", "⟳", "Girar · E"], ["escala", "⤡", "Escala · R"], 0, ["cima", "⬒", "De cima · 1"], ["lado", "◧", "De lado · 2"], ["frente", "▣", "De frente · 3"], ["v3d", "◈", "3D · 4"], ["focar", "◎", "Focar · F"], 0, ["craft", "⚒", "Craft"], 0, ["desfazer", "↶", "Desfazer · Ctrl+Z"], ["refazer", "↷", "Refazer · Ctrl+Y"]]
+barra.innerHTML = [["mover", "✥", "Mover · W"], ["girar", "⟳", "Girar · E"], ["escala", "⤡", "Escala · R"], 0, ["cima", "⬒", "De cima · 1"], ["lado", "◧", "De lado · 2"], ["frente", "▣", "De frente · 3"], ["v3d", "◈", "3D · 4"], ["focar", "◎", "Focar · F"], 0, ["medir", "📏", "Medir · Shift+R"], ["limparMedidas", "⌫", "Limpar medidas"], 0, ["craft", "⚒", "Craft"], 0, ["desfazer", "↶", "Desfazer · Ctrl+Z"], ["refazer", "↷", "Refazer · Ctrl+Y"]]
   .map((b) => (b ? `<button type="button" data-barra="${b[0]}" title="${b[2]}"><b>${b[1]}</b><small>${b[2].split(" · ")[0]}</small></button>` : "<i></i>")).join("");
 document.body.appendChild(barra);
 const ajuda = document.createElement("div"); ajuda.id = "edAjuda"; ajuda.textContent = "1 de cima · 2 de lado · 3 de frente · 4 em 3D · F foca no escolhido · Shift + WASD anda (Q/Z sobe e desce) · W mover · E girar · R escala · G no chão · D duplica · Del apaga/esconde · Esc solta · clique escolhe uma peça; com um asset escolhido, coloca"; document.body.appendChild(ajuda);
@@ -91,7 +92,7 @@ const orbita = new OrbitControls(cam, renderer.domElement); orbita.target.set(me
 const gizmo = new TransformControls(cam, renderer.domElement); scene.add(gizmo.getHelper ? gizmo.getHelper() : gizmo);
 gizmo.addEventListener("dragging-changed", (e) => { orbita.enabled = !e.value; if (!e.value) { if (craft?.ativo()) return craft.mudou(); guardarItem(selecionado); desenharItem(); } });
 gizmo.addEventListener("objectChange", () => { if (!craft?.ativo()) desenharItem(true); });
-let craft = null, comandos = null, terreno = null; // (o modo Craft, craft.js, e a linha de comando, comandos.js: criados no fim, depois do painel)
+let craft = null, comandos = null, terreno = null, regua = null; // (o modo Craft, craft.js, e a linha de comando, comandos.js: criados no fim, depois do painel)
 // ---------- Ctrl+Z / Ctrl+Y (2026-11-16, o Thiago) ----------
 // cada mudança vira um passo: mexer (posição, giro, escala e se aparece: antes e depois), pôr (um item ou peça nova num grupo) ou tirar.
 // Desfazer aplica o "antes"; refazer, o "depois". Depois de cada passo, o item, a peça da pista ou a peça do Craft é guardada de novo.
@@ -153,7 +154,7 @@ renderer.setAnimationLoop(() => {
     if (tecla.has("KeyQ")) m.y += 1; if (tecla.has("KeyZ")) m.y -= 1;
     if (m.lengthSq()) { m.normalize().multiplyScalar(v); cam.position.add(m); orbita.target.add(m); }
   }
-  comandos?.quadro(dt); atualizarDestaque(); destacarVarios(); renderer.render(scene, cam); prevRender?.();
+  comandos?.quadro(dt); regua?.quadro(); atualizarDestaque(); destacarVarios(); renderer.render(scene, cam); prevRender?.();
 });
 
 // ---------- o chão: um raio de cima para baixo em tudo da pista, menos o próprio cenário do editor ----------
@@ -181,6 +182,7 @@ renderer.domElement.addEventListener("pointerdown", (e) => { renderer.domElement
 renderer.domElement.addEventListener("pointerup", async (e) => {
   const [x0, y0] = renderer.domElement._xy || [0, 0]; if (Math.hypot(e.clientX - x0, e.clientY - y0) > 4 || gizmo.dragging) return; // (arrastou a câmera ou o gizmo)
   if (terreno?.ativo()) return; // (com o pincel de terreno, o clique pinta: terreno.js)
+  if (regua?.ativo()) return; // (com a régua, o clique mede: regua.js)
   const p = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); raio.setFromCamera(p, cam);
   if (craft?.ativo()) { if (!comShift()) craft.clique(); return; } // (no Craft o clique escolhe as peças da obra)
   const noCenario = raio.intersectObjects(cenario.children, true)[0];
@@ -250,7 +252,7 @@ addEventListener("keydown", async (e) => {
   if (e.target.closest?.("input,select") || e.shiftKey) return; // (com Shift o WASD anda)
   const k = e.key.toLowerCase(); // (as letras soltas vão para a linha de comando, comandos.js: MV, RO, SC, CO…)
   if (craft?.ativo()) { if (k === "delete") craft.apagar(); return; }
-  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); desenharLinha(); desenharZebra(); terreno?.parar(); beiraA = null; desenharBeira(); areaPts = []; marcarArea(); desenharArea(); } // (Esc solta a placa e o asset escolhidos)
+  else if (k === "escape") { assetEscolhido = null; selecionar(null); desenharAssets(); desenharPlaca(); desenharBiblioteca(); desenharDe(); escapeA = null; desenharEscape(); trechoPts = []; marcarTrecho(); desenharTrecho(); desenharLinha(); desenharZebra(); terreno?.parar(); regua?.parar(); marcarModo(); beiraA = null; desenharBeira(); areaPts = []; marcarArea(); desenharArea(); } // (Esc solta a placa e o asset escolhidos)
   else if (!selecionado) return;
   else if (k === "delete" || k === "backspace") { if (ehItem(selecionado)) cenario.remove(selecionado); else { const a = estado(selecionado); selecionado.visible = false; guardarPeca(selecionado); registrar({ tipo: "mexer", o: selecionado, antes: a, depois: estado(selecionado) }); } selecionar(null); } // (a peça da pista só fica escondida)
 });
@@ -640,7 +642,7 @@ $("edCraftBt").onclick = () => {
   for (const l of painel.querySelectorAll(":scope > .lin")) if (!l.contains($("edSalvar"))) l.style.display = on ? "none" : "";
 };
 // ---------- a barra: modos e vistas ----------
-function marcarModo() { for (const [k, m] of [["mover", "translate"], ["girar", "rotate"], ["escala", "scale"]]) barra.querySelector(`[data-barra="${k}"]`).classList.toggle("on", gizmo.mode === m); barra.querySelector('[data-barra="craft"]').classList.toggle("on", craft.ativo()); }
+function marcarModo() { for (const [k, m] of [["mover", "translate"], ["girar", "rotate"], ["escala", "scale"]]) barra.querySelector(`[data-barra="${k}"]`).classList.toggle("on", gizmo.mode === m); barra.querySelector('[data-barra="craft"]').classList.toggle("on", craft.ativo()); barra.querySelector('[data-barra="medir"]')?.classList.toggle("on", !!regua?.ativo()); }
 // o que a vista enquadra: a peça escolhida (do Craft ou da pista), senão o ponto que a câmera olha
 function enquadrar() {
   const o = craft.ativo() ? craft.selecionada() : selecionado, b = o ? new THREE.Box3().setFromObject(o) : null;
@@ -656,6 +658,7 @@ function vista(tipo) {
 barra.onclick = (e) => {
   const b = e.target.closest("[data-barra]"); if (!b) return; const k = b.dataset.barra;
   if (k === "mover") gizmo.setMode("translate"); else if (k === "girar") gizmo.setMode("rotate"); else if (k === "escala") gizmo.setMode("scale");
+  else if (k === "medir") regua.alternar(); else if (k === "limparMedidas") { regua.limpar(); avisar("Medidas apagadas."); }
   else if (k === "craft") $("edCraftBt").click(); else if (k === "desfazer") desfazer(); else if (k === "refazer") refazer(); else vista(k);
   marcarModo();
 };
@@ -706,6 +709,9 @@ comandos = criarComandos({
     const c = await colocar(it); if (c) { c.scale.copy(o.scale); c.rotation.copy(o.rotation); guardarItem(c); if (escolher) selecionar(c); } return c;
   },
 });
+// ---------- a régua (regua.js): Shift+R liga e desliga ----------
+regua = criarRegua({ scene, cam, renderer, raio, solidos, avisar });
+addEventListener("keydown", (e) => { if (e.shiftKey && e.code === "KeyR" && !e.target.closest?.("input,select")) { regua.alternar(); marcarModo(); } });
 // ---------- o terreno (terreno.js): os pincéis no chão da pista ----------
 terreno = criarTerreno({ scene, cam, renderer, raio, orbita, tr, pista, painel, registrar, avisar, comShift });
 // ---------- o layout do TRACKSCAPE (layout.js): as mesmas seções, em abas, com o Inspetor à direita e a barra de status ----------

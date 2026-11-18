@@ -1,5 +1,14 @@
 [
   {
+    "id": "editor-regua-rochas-2026-11-17",
+    "data": "2026-11-17",
+    "itens": [
+      "Editor: régua de medir em metros (botão Medir ou Shift+R)",
+      "Editor: guard-rails, pneus e barreiras em fileira agora vão emendados, sem um entrar no outro nas curvas",
+      "Editor: relevo de Mônaco: penhascos com árvores, rochedo com forte e casario, encosta com estrada, muros de pedra com balaustrada, de concreto e de arrimo"
+    ]
+  },
+  {
     "id": "editor-kit-monaco-2026-11-17",
     "data": "2026-11-17",
     "itens": [

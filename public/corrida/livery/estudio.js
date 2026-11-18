@@ -7,7 +7,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { montarF1, f1Pronto, PINTURAS, coresDa, trocarCores } from "../f1.js";
-import { ZONAS, folhaDeCamadas, temDesenho, imagemLivery } from "../f1-pintura.js";
+import { ZONAS, folhaDeCamadas, temDesenho, imagemLivery, separarMarcas } from "../f1-pintura.js";
+import { MARCAS } from "../f1-marcas.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
 import { exportarGLB } from "./exportar.js";
 
@@ -15,13 +16,13 @@ const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<":
 const qs = new URLSearchParams(location.search);
 let pint = PINTURAS[qs.get("livery")] ? qs.get("livery") : "touro";
 const equipeDe = (id) => { const e = PINTURAS[id]?.equipe; return e && temDesenho(e) ? e : null; };
-const TIPOS = { cor: { ic: "■", nome: "Cor na zona" }, faixa: { ic: "▱", nome: "Faixa inclinada" }, listra: { ic: "┃", nome: "Listra de corrida" }, degrade: { ic: "◐", nome: "Degradê" }, logo: { ic: "🏷", nome: "Logo" } };
+const TIPOS = { cor: { ic: "■", nome: "Cor na zona" }, faixa: { ic: "▱", nome: "Faixa inclinada" }, listra: { ic: "┃", nome: "Listra de corrida" }, degrade: { ic: "◐", nome: "Degradê" }, padrao: { ic: "▦", nome: "Vinil (padrão)" }, logo: { ic: "🏷", nome: "Logo" } };
 const LADOS = { ambos: "Os dois lados", A: "Lado direito", B: "Lado esquerdo" };
 
 // ---------- a tela ----------
 const css = document.createElement("style");
 css.textContent = `
-:root{--bg:#111317;--pn:#181b20;--pn2:#1e2228;--ln:#2a2f37;--tx:#e8eaee;--mu:#8a93a2;--ac:#3d7bff;--ac2:#e8a33d}
+:root{--le:280px;--ld:300px;--lg:190px;--bg:#111317;--pn:#181b20;--pn2:#1e2228;--ln:#2a2f37;--tx:#e8eaee;--mu:#8a93a2;--ac:#3d7bff;--ac2:#e8a33d}
 body{font:13px Inter,Barlow,system-ui,sans-serif;color:var(--tx)}
 #lsTopo{position:fixed;left:0;right:0;top:0;height:52px;background:var(--bg);border-bottom:1px solid #000;display:flex;align-items:center;gap:6px;padding:0 14px;z-index:5;box-sizing:border-box}
 #lsTopo .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;margin-right:16px}#lsTopo .logo i{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#e10600,#ff6a3d);display:grid;place-items:center;font-style:normal;font-size:12px}
@@ -30,14 +31,14 @@ button,select,input{font:inherit;color:var(--tx)}
 .pri{background:var(--ac);border-color:var(--ac);font-weight:700}.pri:hover{background:#5a90ff}
 #lsTopo .dir{margin-left:auto;display:flex;gap:8px;align-items:center}select{background:var(--pn2);border:1px solid var(--ln);border-radius:7px;height:32px;padding:0 8px}
 #lsEsq,#lsDir{position:fixed;top:52px;bottom:0;background:var(--pn);z-index:4;display:flex;flex-direction:column;box-sizing:border-box}
-#lsEsq{left:0;width:280px;border-right:1px solid var(--ln)}#lsDir{right:0;width:300px;border-left:1px solid var(--ln);overflow:auto;padding:14px}
+#lsEsq{left:0;width:var(--le);border-right:1px solid var(--ln)}#lsDir{right:0;width:var(--ld);border-left:1px solid var(--ln);overflow:auto;padding:14px}
 .abas{display:flex;gap:4px;padding:10px;border-bottom:1px solid var(--ln)}.abas button{flex:1;background:transparent;border:0;border-radius:7px;padding:8px 4px;color:var(--mu);cursor:pointer;font-weight:600}.abas button.on{background:#22324f;color:#cfe0ff}
 #lsLista{flex:1;overflow:auto;padding:8px 6px 10px}
 .no{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;color:#cfd5de}.no:hover{background:#20252c}.no.on{background:#22324f;color:#fff}
 .no span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.no .mini{background:transparent;border:0;cursor:pointer;color:var(--mu);font-size:13px;padding:0 3px}.no .mini:hover{color:var(--tx)}.no .off{opacity:.35}
 .no i{width:14px;height:14px;border-radius:4px;border:1px solid #fff3;flex:none}.raiz{font-weight:700;color:var(--tx)}
 #lsNovas{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;border-top:1px solid var(--ln)}#lsNovas button{background:var(--pn2);border:1px solid var(--ln);border-radius:7px;padding:8px 6px;cursor:pointer;font-size:12px}#lsNovas button:hover{border-color:var(--ac)}
-#lsVistas{position:fixed;top:64px;left:296px;z-index:3;display:flex;gap:8px}#lsVistas .grp{display:flex;background:rgba(24,27,32,.9);border:1px solid var(--ln);border-radius:9px;padding:3px}
+#lsVistas{position:fixed;top:64px;left:calc(var(--le) + 16px);z-index:3;display:flex;gap:8px}#lsVistas .grp{display:flex;background:rgba(24,27,32,.9);border:1px solid var(--ln);border-radius:9px;padding:3px}
 #lsDir h3{font-size:13px;margin:4px 0 12px;display:flex;align-items:center;gap:8px}#lsDir h4{font-size:12px;color:var(--mu);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.08em}
 .campo{display:grid;grid-template-columns:90px 1fr 42px;align-items:center;gap:8px;margin:10px 0;color:#c4cbd6}.campo input[type=range]{width:100%;accent-color:var(--ac)}.campo b{font-weight:500;text-align:right;background:var(--pn2);border-radius:5px;padding:3px 5px;font-size:12px}
 .cor{display:grid;grid-template-columns:90px 34px 1fr;align-items:center;gap:8px;margin:10px 0;color:#c4cbd6}.cor input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--ln);border-radius:6px;background:none}.cor input[type=text]{background:var(--pn2);border:1px solid var(--ln);border-radius:6px;padding:6px 8px;width:100%;box-sizing:border-box}
@@ -45,21 +46,26 @@ button,select,input{font:inherit;color:var(--tx)}
 .chk{display:flex;gap:8px;align-items:center;margin:10px 0;color:#c4cbd6}
 #lsEsfera{width:100%;height:110px;border-radius:10px;background:radial-gradient(circle at 50% 40%,#2a2f38,#121418);display:block}
 #lsFolha{width:100%;border-radius:8px;background:#0b0d11;display:block;margin-top:6px;image-rendering:auto}
-#lsGaveta{position:fixed;left:280px;right:300px;bottom:0;height:190px;background:var(--pn);border-top:1px solid var(--ln);z-index:4;display:flex;flex-direction:column}
+#lsGaveta{position:fixed;left:var(--le);right:var(--ld);bottom:0;height:var(--lg);background:var(--pn);border-top:1px solid var(--ln);z-index:4;display:flex;flex-direction:column}
 #lsGaveta .abas{justify-content:flex-start}#lsGaveta .abas button{flex:none;padding:8px 14px}
 #lsGav{flex:1;overflow:auto;padding:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;align-content:start}
 #lsGav.cores{grid-template-columns:repeat(auto-fill,minmax(54px,1fr))}
 .ficha{background:var(--pn2);border:1px solid var(--ln);border-radius:9px;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:#cfd5de;font-size:12px}.ficha:hover{border-color:#4a5262}.ficha.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac)}
 .ficha img{width:100%;height:46px;object-fit:contain}.ficha .dupla{width:100%;height:40px;border-radius:6px}
 .amostra{height:44px;border-radius:8px;border:1px solid #fff2;cursor:pointer}.amostra:hover{outline:2px solid var(--ac)}
-#lsStatus{position:fixed;left:296px;bottom:202px;z-index:3;color:var(--mu);font-size:12px;background:rgba(17,19,23,.7);padding:5px 9px;border-radius:7px}
-canvas#lsCena{position:fixed;inset:0;display:block}`;
+#lsStatus{position:fixed;left:calc(var(--le) + 16px);bottom:calc(var(--lg) + 12px);z-index:3;color:var(--mu);font-size:12px;background:rgba(17,19,23,.7);padding:5px 9px;border-radius:7px}
+canvas#lsCena{position:fixed;inset:0;display:block}
+.alca{position:fixed;z-index:6;background:transparent;transition:background .12s}.alca:hover,.alca.on{background:rgba(61,123,255,.55)}
+.alca.v{top:52px;bottom:0;width:6px;cursor:col-resize}.alca.h{height:6px;cursor:row-resize}`;
 document.head.appendChild(css);
-const nomeMarca = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || id;
+// os logos reais (public/corrida/logos/marcas/index.json, ferramentas/baixar-logos-marcas.js): a gaveta mostra a imagem de verdade
+let REAIS = {}; fetch("/corrida/logos/marcas/index.json").then((r) => (r.ok ? r.json() : {})).then((j) => { REAIS = j || {}; if (gaveta === "marcas") desenharGaveta(); }).catch(() => {});
+const NOMES = { redbull: "Red Bull", oracle: "Oracle", visa: "Visa", mobil1: "Mobil 1", rokt: "Rokt", petronas: "Petronas", amg: "Mercedes-AMG", ineos: "INEOS", iwc: "IWC", snapdragon: "Snapdragon", crowdstrike: "CrowdStrike", teamviewer: "TeamViewer", solera: "Solera", signify: "Signify", dpworld: "DP World", velo: "VELO", okx: "OKX", hugo: "HUGO", boss: "BOSS", honda: "Honda", coreweave: "CoreWeave", maaden: "Ma'aden", valvoline: "Valvoline", cognizant: "Cognizant", astonmartin: "Aston Martin", coinbase: "Coinbase", atlassian: "Atlassian", komatsu: "Komatsu", keeper: "Keeper", duracell: "Duracell", revolut: "Revolut", nexo: "Nexo", ninjaone: "NinjaOne", visitqatar: "Visit Qatar", bwt: "BWT", alpine: "Alpine", haas: "Haas", twg: "TWG", cadillac: "Cadillac", claro: "Claro", ifs: "IFS" };
+const nomeMarca = (id) => PATROCINIOS[id] || MARCAS_CAPACETE[id] || NOMES[id] || id;
 document.body.insertAdjacentHTML("beforeend", `
 <canvas id="lsCena"></canvas>
 <div id="lsTopo"><div class="logo"><i>LS</i>Livery Studio</div>
-  <button class="bt" id="lsSalvar" title="Ctrl+S">💾 Salvar</button><button class="bt" id="lsDesf" title="Desfazer (Ctrl+Z)">↶</button><button class="bt" id="lsRef" title="Refazer (Ctrl+Y)">↷</button><label class="bt" title="Abrir um livery-*.json exportado">📂 Abrir<input type="file" id="lsAbrir" accept="application/json,.json" hidden></label><button class="bt" id="lsVoltar" title="Volta à pintura da equipe, sem camadas">↺ Original</button>
+  <button class="bt" id="lsSalvar" title="Ctrl+S">💾 Salvar</button><button class="bt" id="lsDesf" title="Desfazer (Ctrl+Z)">↶</button><button class="bt" id="lsRef" title="Refazer (Ctrl+Y)">↷</button><label class="bt" title="Abrir um livery-*.json exportado">📂 Abrir<input type="file" id="lsAbrir" accept="application/json,.json" hidden></label><button class="bt" id="lsZero" title="Um carro do zero: só a cor, sem pintura de equipe nem camadas">✚ Do zero</button><button class="bt" id="lsVoltar" title="Volta à pintura da equipe, sem camadas">↺ Original</button>
   <div class="dir"><span style="color:var(--mu)">Carro</span><select id="lsPint">${Object.entries(PINTURAS).filter(([k]) => k !== "propria").map(([k, p]) => `<option value="${k}" ${k === pint ? "selected" : ""}>${h(p.name)}</option>`).join("")}</select>
   <button class="bt" id="lsGirar" title="Girar sozinho">⟳ Girar</button><select id="lsLuz" title="A luz do estúdio"><option value="estudio">☀ Estúdio</option><option value="dia">🌤 Dia</option><option value="noite">🌙 Noite</option><option value="vitrine">✦ Vitrine</option></select>
   <button class="bt" id="lsExp" title="O carro em .glb com a pintura gravada numa textura (para o Blender e outros programas)">⇩ Exportar GLB</button><button class="bt pri" id="lsRender">📷 Renderizar imagem</button></div></div>
@@ -69,6 +75,7 @@ document.body.insertAdjacentHTML("beforeend", `
 <div id="lsDir"><h3>🛠 Propriedades</h3><div id="lsProp"></div>
   <h4>Base</h4>
   <div class="sel"><span>Partir de</span><select id="lsBase"></select></div>
+  <button class="bt" id="lsSeparar" style="width:100%;justify-content:center;border-color:var(--ln);margin:2px 0 6px" title="Os logos da pintura da equipe viram camadas: dá para mover, trocar, apagar">✂ Separar os logos da equipe</button>
   <div class="cor" id="lsC1l"><span>Cor de fundo</span><input type="color" id="lsC1"><input type="text" id="lsC1t" maxlength="7"></div>
   <h4>Acabamento</h4><canvas id="lsEsfera"></canvas><div id="lsPresets" style="display:flex;flex-wrap:wrap;gap:5px;margin:8px 0"></div>
   <div class="campo"><span>Metálico</span><input type="range" id="lsMet" min="0" max="100"><b id="lsMetV"></b></div>
@@ -96,7 +103,24 @@ const chao = new THREE.Mesh(new THREE.CircleGeometry(12, 64).rotateX(-Math.PI / 
   scene.environment = pm.fromScene(sala, 0.04).texture; }
 const cam = new THREE.PerspectiveCamera(32, 1, 0.05, 200); cam.position.set(-5.2, 2.2, -4.6);
 const orbita = new OrbitControls(cam, cv); orbita.target.set(0, 0.45, 0); orbita.enableDamping = true; orbita.maxPolarAngle = Math.PI * 0.495; orbita.minDistance = 2; orbita.maxDistance = 16; orbita.autoRotateSpeed = 0.8;
-function ajustar() { const w = innerWidth, hh = innerHeight; renderer.setSize(w, hh, false); cv.style.width = w + "px"; cv.style.height = hh + "px"; cam.aspect = w / hh; cam.updateProjectionMatrix(); cam.setViewOffset(w, hh, (300 - 280) / 2, 190 / 2 - 26, w, hh); }
+// (2026-11-18, o Thiago: "deve ser possível mudar o tamanho das abas; não faz sentido ser fixo") os painéis têm largura e a gaveta altura
+// ajustáveis: arraste a borda. As medidas ficam no navegador (livery-paineis) e o carro continua no meio do espaço livre.
+const TAM = (() => { try { return { le: 280, ld: 300, lg: 190, ...JSON.parse(localStorage.getItem("livery-paineis") || "{}") }; } catch { return { le: 280, ld: 300, lg: 190 }; } })();
+function aplicarTam() { for (const k of ["le", "ld", "lg"]) document.documentElement.style.setProperty("--" + k, TAM[k] + "px"); posAlcas(); }
+function ajustar() { const w = innerWidth, hh = innerHeight; renderer.setSize(w, hh, false); cv.style.width = w + "px"; cv.style.height = hh + "px"; cam.aspect = w / hh; cam.updateProjectionMatrix(); cam.setViewOffset(w, hh, (TAM.ld - TAM.le) / 2, TAM.lg / 2 - 26, w, hh); }
+const alcas = {};
+for (const [k, tipo] of [["le", "v"], ["ld", "v"], ["lg", "h"]]) {
+  const a = document.createElement("div"); a.className = "alca " + tipo; a.title = "Arraste para mudar o tamanho (duplo clique volta ao padrão)"; document.body.appendChild(a); alcas[k] = a;
+  a.onpointerdown = (e) => { a.setPointerCapture(e.pointerId); a.classList.add("on"); const x0 = e.clientX, y0 = e.clientY, t0 = TAM[k];
+    a.onpointermove = (ev) => { const d = k === "le" ? ev.clientX - x0 : k === "ld" ? x0 - ev.clientX : y0 - ev.clientY; TAM[k] = Math.round(Math.max(k === "lg" ? 90 : 200, Math.min(k === "lg" ? innerHeight * 0.6 : innerWidth * 0.45, t0 + d))); aplicarTam(); ajustar(); };
+    a.onpointerup = () => { a.onpointermove = null; a.classList.remove("on"); try { localStorage.setItem("livery-paineis", JSON.stringify(TAM)); } catch {} }; };
+  a.ondblclick = () => { Object.assign(TAM, { le: 280, ld: 300, lg: 190 }[k] != null ? { [k]: { le: 280, ld: 300, lg: 190 }[k] } : {}); aplicarTam(); ajustar(); try { localStorage.setItem("livery-paineis", JSON.stringify(TAM)); } catch {} };
+}
+function posAlcas() {
+  if (!alcas.le) return; alcas.le.style.left = TAM.le - 3 + "px"; alcas.ld.style.right = TAM.ld - 3 + "px";
+  Object.assign(alcas.lg.style, { left: TAM.le + "px", right: TAM.ld + "px", bottom: TAM.lg - 3 + "px" });
+}
+aplicarTam();
 ajustar(); addEventListener("resize", ajustar);
 
 // ---------- a pintura (os dados) ----------
@@ -115,13 +139,13 @@ function voltar(de, para) { const s = de.pop(); if (s == null || s === "") retur
 
 // a folha: redesenhada a cada mudança e posta no shader do carro (no lugar da folha da equipe)
 const folhaCv = document.createElement("canvas"), folhaTx = new THREE.CanvasTexture(folhaCv);
-folhaTx.colorSpace = THREE.SRGBColorSpace; folhaTx.anisotropy = 8; folhaTx.minFilter = THREE.LinearMipmapLinearFilter;
+folhaTx.colorSpace = THREE.SRGBColorSpace; folhaTx.anisotropy = 16; folhaTx.minFilter = THREE.LinearMipmapLinearFilter;
 let agendado = false;
 function redesenhar() {
   if (agendado) return; agendado = true;
   requestAnimationFrame(() => {
     agendado = false; for (const l of P.camadas) if (l.tipo === "logo" && l.img) imagemLivery(l.img, redesenhar); // (a imagem que ainda não chegou: pinta de novo quando chegar)
-    folhaDeCamadas(P, folhaCv); folhaTx.needsUpdate = true;
+    folhaDeCamadas(P, folhaCv, 2); // (em 2×, como o carro do jogador no jogo: a 1× as marcas pequenas saíam borradas) folhaTx.needsUpdate = true;
     const f = $("lsFolha"), fx = f.getContext("2d"); fx.clearRect(0, 0, f.width, f.height); fx.drawImage(folhaCv, 0, 0, f.width, f.height);
     if (k) { trocarCores(k, P.c1, P.c2); const m = k.pintura; if (m?.userData?.liv) m.userData.liv.liv.value = folhaTx; if (m && "metalness" in m) { m.metalness = P.met / 100; m.roughness = P.rug / 100; m.envMapIntensity = P.ref / 100; if ("clearcoat" in m) { m.clearcoat = (P.cc ?? 100) / 100; m.clearcoatRoughness = (P.ccr ?? 38) / 100; m.iridescence = (P.iri || 0) / 100; } } }
     esfera.cor(P);
@@ -150,7 +174,7 @@ function desenharLista() {
     for (const n of el.querySelectorAll("[data-z]")) n.onclick = (e) => { zonaSel = n.dataset.z; if (e.target.closest("[data-pintar]")) return nova("cor"); desenharLista(); };
   } else {
     el.innerHTML = P.camadas.length ? [...P.camadas.keys()].reverse().map((i) => { const l = P.camadas[i];
-      return `<div class="no ${i === sel ? "on" : ""}" data-i="${i}"><i style="background:${h(l.cor)}"></i><span>${TIPOS[l.tipo]?.ic || ""} ${l.tipo === "logo" ? h(l.marca ? nomeMarca(l.marca) : l.nome || "Imagem") + " · " + (l.vista === "T" ? "em cima" : "lados") : h(TIPOS[l.tipo]?.nome || l.tipo) + " · " + h(ZONAS[l.zona]?.nome || "")}</span>
+      return `<div class="no ${i === sel ? "on" : ""}" data-i="${i}"><i style="background:${h(l.cor)}"></i><span>${TIPOS[l.tipo]?.ic || ""} ${l.tipo === "logo" ? h(l.marca ? nomeMarca(l.marca) : l.nome || "Imagem") + " · " + (VISTAS_LOGO[l.vista || "L"] || "").toLowerCase() + (l.daEquipe ? " · da equipe" : "") : h(TIPOS[l.tipo]?.nome || l.tipo) + " · " + h(ZONAS[l.zona]?.nome || "")}</span>
         <button class="mini" data-acao="sobe" title="Subir">▲</button><button class="mini" data-acao="desce" title="Descer">▼</button><button class="mini" data-acao="dup" title="Duplicar">⧉</button><button class="mini" data-acao="espelho" title="Uma cópia no outro lado">⇋</button><button class="mini ${l.oculta ? "off" : ""}" data-acao="olho" title="Mostrar/esconder">👁</button><button class="mini" data-acao="apaga" title="Apagar">🗑</button></div>`; }).join("")
       + `<div class="no raiz" style="opacity:.7">▣ Base · ${h(P.base ? "pintura da equipe" : "cor de fundo")}</div>`
       : `<small style="display:block;padding:10px 8px;color:var(--mu)">Nenhuma camada ainda. Use os botões de baixo: a de cima da lista é pintada por cima das outras.</small>`;
@@ -167,7 +191,8 @@ function desenharLista() {
   }
 }
 $("lsEsq").querySelector(".abas").onclick = (e) => { const b = e.target.closest("[data-e]"); if (b) { abaEsq = b.dataset.e; desenharLista(); } };
-const NOVAS = { cor: (c) => ({ tipo: "cor", cor: c }), faixa: (c) => ({ tipo: "faixa", cor: c, s0: 2.9, s1: 2.3, largura: 0.25 }), listra: (c) => ({ tipo: "listra", cor: c, largura: 0.12, dist: 0 }), degrade: (c) => ({ tipo: "degrade", cor: c, s0: 2.0, s1: 3.6 }) };
+const NOVAS = { cor: (c) => ({ tipo: "cor", cor: c }), faixa: (c) => ({ tipo: "faixa", cor: c, s0: 2.9, s1: 2.3, largura: 0.25 }), listra: (c) => ({ tipo: "listra", cor: c, largura: 0.12, dist: 0 }), degrade: (c) => ({ tipo: "degrade", cor: c, s0: 2.0, s1: 3.6 }), padrao: (c) => ({ tipo: "padrao", cor: c, estilo: "quadrados", tam: 0.04, dens: 0.35, giro: 0, semente: 1 + Math.floor(Math.random() * 9999), opac: 0.8 }) };
+const ESTILOS = { quadrados: "Quadradinhos espalhados", camuflagem: "Camuflagem", pontos: "Pontos", listras: "Listras", xadrez: "Xadrez", hexagonos: "Hexágonos" };
 function nova(tipo) {
   const zona = tipo === "listra" && zonaSel === "laterais" ? "carro" : zonaSel;
   P.camadas.push({ ...NOVAS[tipo](P.c2 || "#ffffff"), zona, lado: "ambos" }); sel = P.camadas.length - 1; abaEsq = "camadas"; mudou();
@@ -189,24 +214,30 @@ function desenharProp() {
     ${l.tipo === "faixa" ? faixa("s0", "Embaixo (m)", 0, 4.45, 0.01) + faixa("s1", "Em cima (m)", 0, 4.45, 0.01) + faixa("largura", "Largura (m)", 0.02, 1.5, 0.01) : ""}
     ${l.tipo === "listra" ? faixa("largura", "Largura (m)", 0.02, 0.8, 0.01) + faixa("dist", "Afastadas (m)", 0, 0.6, 0.01) : ""}
     ${l.tipo === "degrade" ? faixa("s0", "Começa (m)", 0, 4.45, 0.01) + faixa("s1", "Some (m)", 0, 4.45, 0.01) : ""}
+    ${l.tipo === "padrao" ? `<div class="sel"><span>Padrão</span><select data-s="estilo">${Object.entries(ESTILOS).map(([k, n]) => `<option value="${k}" ${k === l.estilo ? "selected" : ""}>${n}</option>`).join("")}</select></div>`
+      + faixa("tam", "Tamanho (m)", 0.005, 0.4, 0.005) + faixa("dens", "Densidade", 0.02, 1, 0.01) + faixa("giro", "Giro (°)", -90, 90, 1)
+      + `<div class="chk"><label><input type="checkbox" data-some ${l.some ? "checked" : ""}> Sumir ao longo do carro</label><button class="bt" data-sortear style="border-color:var(--ln);height:28px">🎲 Sortear</button></div>`
+      + (l.some ? faixa("s0", "Cheio até (m)", 0, 4.45, 0.01) + faixa("s1", "Some em (m)", 0, 4.45, 0.01) : "") : ""}
     <small style="color:var(--mu)">As medidas são a partir da ponta do bico (o carro tem 4,4 m).</small>`;
   for (const s of el.querySelectorAll("[data-s]")) s.onchange = () => { l[s.dataset.s] = s.value; mudou(); };
+  const so = el.querySelector("[data-some]"); if (so) so.onchange = () => { l.some = so.checked || undefined; if (l.some && l.s1 == null) { l.s0 = 1.6; l.s1 = 3.4; } mudou(); };
+  const sr = el.querySelector("[data-sortear]"); if (sr) sr.onclick = () => { l.semente = 1 + Math.floor(Math.random() * 99999); mudou(); };
   for (const r of el.querySelectorAll("[data-n]")) r.oninput = () => { l[r.dataset.n] = +r.value; r.nextElementSibling.textContent = (+r.value).toFixed(2); mudou("n" + sel + r.dataset.n, true); };
   el.querySelector("[data-c]").oninput = (e) => { l.cor = e.target.value; el.querySelector("[data-ct]").value = l.cor; mudou("c" + sel, true); };
   el.querySelector("[data-ct]").onchange = (e) => { if (/^#[0-9a-f]{6}$/i.test(e.target.value)) { l.cor = e.target.value; mudou(); } };
 }
 // o logo: onde (a vista, o lado, s e a altura/x), o tamanho, o giro, espelhar, opacidade e, nas marcas do jogo, uma cor única
 function propLogo(el, l) {
-  const T = l.vista === "T", rg = (k, nome, min, max, passo, pad) => `<div class="campo"><span>${nome}</span><input type="range" data-n="${k}" min="${min}" max="${max}" step="${passo}" value="${l[k] ?? pad}"><b>${(+(l[k] ?? pad)).toFixed(2)}</b></div>`;
+  const F_ = FAIXAS_LOGO[l.vista || "L"], rg = (k, nome, min, max, passo, pad) => `<div class="campo"><span>${nome}</span><input type="range" data-n="${k}" min="${min}" max="${max}" step="${passo}" value="${l[k] ?? pad}"><b>${(+(l[k] ?? pad)).toFixed(2)}</b></div>`;
   el.innerHTML = `<div style="font-weight:700;margin-bottom:6px">🏷 ${h(l.marca ? nomeMarca(l.marca) : l.nome || "Imagem")}</div>
-    <div class="sel"><span>Onde</span><select data-s="vista"><option value="L" ${T ? "" : "selected"}>Nas laterais</option><option value="T" ${T ? "selected" : ""}>Em cima</option></select></div>
+    <div class="sel"><span>Onde</span><select data-s="vista">${Object.entries(VISTAS_LOGO).map(([v, n]) => `<option value="${v}" ${v === (l.vista || "L") ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     <div class="sel"><span>Lado</span><select data-s="lado">${Object.entries(LADOS).map(([z, n]) => `<option value="${z}" ${z === (l.lado || "ambos") ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     ${rg("altura", "Tamanho (m)", 0.02, 0.8, 0.005, 0.08)}${rg("giro", "Giro (°)", -180, 180, 1, 0)}
-    ${rg("a", "Do bico (m)", 0, 4.45, 0.005, 2)}${T ? rg("b", "Para o lado (m)", -0.85, 0.85, 0.005, 0) : rg("b", "Altura (m)", 0, 1.1, 0.005, 0.4)}
+    ${rg("a", F_[0][2], F_[0][0], F_[0][1], 0.005, 0)}${rg("b", F_[1][2], F_[1][0], F_[1][1], 0.005, 0)}
     ${rg("opac", "Opacidade", 0, 1, 0.05, 1)}
     <div class="chk"><label><input type="checkbox" data-k="espelhar" ${l.espelhar ? "checked" : ""}> Espelhar</label>${l.marca ? `<label><input type="checkbox" data-k="tinta" ${l.tinta ? "checked" : ""}> Cor única</label><input type="color" data-tinta value="${h(l.tinta || "#ffffff")}" ${l.tinta ? "" : "disabled"}>` : ""}</div>
     <small style="color:var(--mu)">Arraste o logo no carro para mover · [ e ] mudam o tamanho · Q e E giram · Delete apaga.</small>`;
-  for (const s of el.querySelectorAll("[data-s]")) s.onchange = () => { l[s.dataset.s] = s.value; if (s.dataset.s === "vista") { l.b = s.value === "T" ? 0 : 0.4; l.giro = s.value === "T" ? 90 : 0; } mudou(); };
+  for (const s of el.querySelectorAll("[data-s]")) s.onchange = () => { l[s.dataset.s] = s.value; if (s.dataset.s === "vista") { const f = FAIXAS_LOGO[s.value]; l.a = +((f[0][0] + f[0][1]) / 2).toFixed(2); l.b = +((f[1][0] + f[1][1]) / 2).toFixed(2); l.giro = s.value === "T" ? 90 : 0; } mudou(); };
   for (const r of el.querySelectorAll("[data-n]")) r.oninput = () => { l[r.dataset.n] = +r.value; r.nextElementSibling.textContent = (+r.value).toFixed(2); mudou("n" + sel + r.dataset.n, true); };
   for (const c of el.querySelectorAll("[data-k]")) c.onchange = () => { if (c.dataset.k === "tinta") l.tinta = c.checked ? el.querySelector("[data-tinta]").value : undefined; else l[c.dataset.k] = c.checked || undefined; mudou(); };
   const ti = el.querySelector("[data-tinta]"); if (ti) ti.oninput = () => { l.tinta = ti.value; mudou("t" + sel, true); };
@@ -218,7 +249,13 @@ function desenharBase() {
   for (const [id, v] of [["lsMet", P.met], ["lsRug", P.rug], ["lsRef2", P.ref], ["lsCc", P.cc ?? 100], ["lsCcr", P.ccr ?? 38], ["lsIri", P.iri || 0]]) { $(id).value = v; $(id + "V").textContent = (v / 100).toFixed(2); }
   $("lsPresets").innerHTML = Object.keys(ACABAMENTOS).map((n) => `<button class="bt" style="height:26px;padding:0 8px;border-color:var(--ln);font-size:12px" data-preset="${n}">${n}</button>`).join("");
 }
-$("lsBase").onchange = (e) => { P.base = e.target.value || null; mudou(); };
+$("lsBase").onchange = (e) => { P.base = e.target.value || null; if (!P.base) P.semMarcas = undefined; mudou(); };
+$("lsSeparar").onclick = () => {
+  if (!P.base) return status("Escolha uma pintura de equipe em \"Partir de\" primeiro.");
+  if (P.semMarcas) return status("Os logos desta equipe já estão nas camadas.");
+  const { camadas } = separarMarcas(P.base, 2); P.semMarcas = true; P.camadas = [...JSON.parse(JSON.stringify(camadas)), ...P.camadas];
+  sel = -1; abaEsq = "camadas"; mudou(); status(`${camadas.length} logos da equipe viraram camadas: clique numa para mover, trocar ou apagar.`);
+};
 $("lsC1").oninput = (e) => { P.c1 = e.target.value; $("lsC1t").value = P.c1; mudou("c1", true); };
 $("lsC1t").onchange = (e) => { if (/^#[0-9a-f]{6}$/i.test(e.target.value)) { P.c1 = e.target.value; mudou(); } };
 // (os presets do texto que o Thiago trouxe, 2026-11-18: só a carroceria pintada; o carbono e as rodas continuam os do jogo)
@@ -237,6 +274,7 @@ async function salvar() {
   status(r?.ok ? `Salvo em public/corrida/pinturas/${pint}.json (Publicar no TabbaTracks manda para o GitHub).` : "Salvo neste navegador (para gravar o arquivo, abra pelo editor-de-pistas.bat).");
 }
 $("lsSalvar").onclick = salvar;
+$("lsZero").onclick = () => { P = { ...padrao(pint), base: null, semMarcas: undefined, camadas: [], c1: P.c1 || "#1b2a5c" }; sel = -1; abaEsq = "pecas"; mudou(); status("Carro do zero: escolha a cor de fundo à direita (ou na gaveta Cores) e vá pondo camadas, vinis e logos."); };
 $("lsAbrir").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.camadas)) throw Error("sem camadas"); P = { ...padrao(pint), ...d }; sel = -1; mudou(); status(`Aberto: ${f.name} (Salvar para guardar neste carro).`); } catch (er) { status("Não abriu: " + er.message); } e.target.value = ""; };
 $("lsDesf").onclick = () => voltar(pilha, refeitos); $("lsRef").onclick = () => voltar(refeitos, pilha);
 addEventListener("keydown", (e) => {
@@ -286,8 +324,16 @@ function noCarro(e) {
   if (!k) return null; const r = cv.getBoundingClientRect(); ponteiro.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); raio.setFromCamera(ponteiro, cam);
   const hit = raio.intersectObject(k.carro, true)[0]; if (!hit) return null;
   const cx = new THREE.Box3().setFromObject(k.carro), p = hit.point; // (a frente é −z: o bico está no menor z)
-  return { s: p.z - cx.min.z, y: p.y - cx.min.y, x: p.x, deCima: !!hit.face && Math.abs(nrm.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).y) > 0.7 };
+  const n = hit.face ? nrm.copy(hit.face.normal).transformDirection(hit.object.matrixWorld) : nrm.set(1, 0, 0), s = p.z - cx.min.z, y = p.y - cx.min.y;
+  const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z);
+  // a vista do ponto, como o shader escolhe: a maior componente da normal (de baixo, só a parte de baixo da asa traseira tem pintura)
+  const v = ay >= ax && ay >= az ? (n.y > 0 ? "T" : s > 3.7 && y > 0.45 ? "U" : null) : ax >= az ? "L" : n.z < 0 ? "F" : "R";
+  const ab = { L: [s, y], T: [s, p.x], F: [p.x, y], R: [p.x, y], U: [p.x, s - 3.7] }[v] || [s, y];
+  return { s, y, x: p.x, v, a: ab[0], b: ab[1], deCima: v === "T" };
 }
+const VISTAS_LOGO = { L: "Nas laterais", T: "Em cima", F: "Na frente", R: "Atrás", U: "Embaixo da asa traseira" };
+// os limites de (a, b) em cada vista, em metros
+const FAIXAS_LOGO = { L: [[0, 4.45, "Do bico (m)"], [0, 1.1, "Altura (m)"]], T: [[0, 4.45, "Do bico (m)"], [-0.85, 0.85, "Para o lado (m)"]], F: [[-0.8, 0.8, "Para o lado (m)"], [0, 1.1, "Altura (m)"]], R: [[-0.8, 0.8, "Para o lado (m)"], [0, 1.1, "Altura (m)"]], U: [[-0.6, 0.6, "Para o lado (m)"], [-0.05, 0.75, "Da ponta (m)"]] };
 const r3 = (v) => Math.round(v * 1000) / 1000;
 cv.addEventListener("pointerdown", (e) => {
   xy0 = [e.clientX, e.clientY]; const l = P?.camadas[sel];
@@ -297,8 +343,8 @@ cv.addEventListener("pointerdown", (e) => {
 });
 cv.addEventListener("pointermove", (e) => {
   if (!arrastando) return; const l = P.camadas[sel], q = noCarro(e); if (!l || !q) return;
-  const T = l.vista === "T"; if (q.deCima !== T) return; // (não pula da lateral para cima no meio do arrasto)
-  l.a = r3(q.s); l.b = r3(T ? q.x : q.y); mudou("arrasto" + sel, true);
+  if (q.v !== (l.vista || "L")) return; // (não pula de uma vista para outra no meio do arrasto)
+  l.a = r3(q.a); l.b = r3(q.b); mudou("arrasto" + sel, true);
 });
 cv.addEventListener("pointerup", (e) => {
   const parado = xy0 && Math.hypot(e.clientX - xy0[0], e.clientY - xy0[1]) <= 4;
@@ -306,7 +352,8 @@ cv.addEventListener("pointerup", (e) => {
   if (!parado) return;
   const q = noCarro(e); if (!q) return;
   if (pondo) { // o logo novo: na lateral, nos dois lados; em cima, girado para ler de quem vê o carro de lado
-    P.camadas.push({ tipo: "logo", zona: "carro", ...pondo, vista: q.deCima ? "T" : "L", lado: "ambos", a: r3(q.s), b: r3(q.deCima ? q.x : q.y), altura: q.deCima ? 0.1 : 0.08, giro: q.deCima ? 90 : 0 });
+    if (!q.v) return status("Embaixo do carro não tem pintura: só embaixo da asa traseira.");
+    P.camadas.push({ tipo: "logo", zona: "carro", ...pondo, vista: q.v, lado: "ambos", a: r3(q.a), b: r3(q.b), altura: q.v === "T" ? 0.1 : q.v === "U" ? 0.12 : 0.08, giro: q.v === "T" ? 90 : 0 });
     sel = P.camadas.length - 1; abaEsq = "camadas"; pondo = null; cv.style.cursor = ""; mudou(); desenharGaveta();
     return status("Logo posto: arraste para ajustar, [ ] tamanho, Q E giro. Ele vai nos dois lados (mude em Lado).");
   }
@@ -339,10 +386,10 @@ function desenharGaveta() {
     g.innerHTML = Object.entries(PINTURAS).filter(([id]) => equipeDe(id)).map(([id, p]) => { const [c1, c2] = coresDa(id, "#e63946"); return `<div class="ficha ${equipeDe(id) === P.base ? "on" : ""}" data-base="${equipeDe(id)}"><div class="dupla" style="background:linear-gradient(135deg,${c1} 55%,${c2} 55%)"></div>${h(p.name)}</div>`; }).join("");
     for (const f of g.querySelectorAll("[data-base]")) f.onclick = () => { P.base = f.dataset.base; mudou(); desenharGaveta(); status("Base trocada: as camadas continuam por cima."); };
   } else {
-    const ids = [...Object.keys(PATROCINIOS).filter(Boolean), ...Object.keys(MARCAS_CAPACETE)], meus = meusLogos();
+    const ids = [...new Set([...Object.keys(REAIS), ...Object.keys(PATROCINIOS).filter(Boolean), ...Object.keys(MARCAS_CAPACETE)])].filter((id) => REAIS[id] || MARCAS[id]).sort((a, b) => nomeMarca(a).localeCompare(nomeMarca(b), "pt")), meus = meusLogos();
     g.innerHTML = `<label class="ficha" title="Importar um PNG (com transparência) ou JPEG" style="justify-content:center;border-style:dashed"><b style="font-size:22px">＋</b>Importar<input type="file" id="lsImp" accept="image/png,image/jpeg,image/webp" hidden></label>`
       + meus.map((m, i) => `<div class="ficha ${pondo?.img === m.url ? "on" : ""}" data-meu="${i}" title="${h(m.nome)}"><img src="${h(m.url)}" alt="">${h(m.nome)}</div>`).join("")
-      + ids.map((id) => `<div class="ficha ${pondo?.marca === id ? "on" : ""}" data-marca="${id}" title="${h(nomeMarca(id))}"><img src="${miniaturaDoPatrocinio(id)}" alt="">${h(nomeMarca(id))}</div>`).join("");
+      + ids.map((id) => `<div class="ficha ${pondo?.marca === id ? "on" : ""}" data-marca="${id}" title="${h(nomeMarca(id))}${REAIS[id] ? "" : " (desenho, sem logo real ainda)"}"><img src="${REAIS[id] ? "/corrida/logos/marcas/" + REAIS[id].arquivo : miniaturaDoPatrocinio(id)}" alt="" ${REAIS[id] ? 'style="background:#fff;border-radius:5px;padding:3px;box-sizing:border-box"' : ""}>${h(nomeMarca(id))}</div>`).join("");
     const escolher = (o, nome) => { pondo = pondo && JSON.stringify(pondo) === JSON.stringify(o) ? null : o; cv.style.cursor = pondo ? "crosshair" : ""; desenharGaveta(); status(pondo ? `${nome}: clique no carro onde ele vai (Esc cancela).` : "Cancelado."); };
     for (const f of g.querySelectorAll("[data-marca]")) f.onclick = () => escolher({ marca: f.dataset.marca }, nomeMarca(f.dataset.marca));
     for (const f of g.querySelectorAll("[data-meu]")) f.onclick = () => { const m = meus[+f.dataset.meu]; escolher({ img: m.url, nome: m.nome }, m.nome); };

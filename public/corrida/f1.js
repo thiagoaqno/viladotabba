@@ -9,6 +9,7 @@ import { temDesenho, folhaDaEquipe, corDoNumero, numPosDe, carbonoDe, texturaDas
   LIV_VERT_DECL, LIV_VERT_MAIN, LIV_FRAG_DECL, LIV_FRAG_MAIN, aplicarVerniz, limitarBrilhoCarro, texturaDoHalo, aplicarHalo, texturaDoCockpit, aplicarCockpit, SOL_FRAG_DECL, SOL_FRAG_MAIN, PNEU_VERT_DECL, PNEU_VERT_MAIN, PNEU_FRAG_DECL, PNEU_FRAG_MAIN } from "./f1-pintura.js";
 import { lerHalo } from "./f1-capacetes.js";
 import { pinturasProntas } from "./f1-pintura.js";
+import { marcasReaisProntas } from "./f1-marcas.js";
 import { construir2026 } from "./f1-2026.js";
 import { construir2022 } from "./f1-2022.js";
 import { texturaUV, temPinturaUV } from "./f1-uv.js";
@@ -44,7 +45,7 @@ export const modeloAtual = () => atual;
 export function usarModelo(id) { if (MODELOS[id] && !forcado) atual = id; return atual; }
 // o modelo em uso pronto (o completo e o leve): a carga da corrida espera por ele (jogo.js). Pedir já começa a baixar.
 export const modeloPronto = () => Promise.all([carga(atual, false).pronto, carga(atual, true).pronto]);
-export const f1Pronto = Promise.all([carga(atual, false).pronto, carga(atual, true).pronto, logosProntos, pinturasProntas]); // (e as pinturas do Livery Studio, public/corrida/pinturas/) // (os logos das equipes entram na pintura: esperam também)
+export const f1Pronto = Promise.all([carga(atual, false).pronto, carga(atual, true).pronto, logosProntos, pinturasProntas, marcasReaisProntas]); // (e as pinturas do Livery Studio, public/corrida/pinturas/) // (os logos das equipes entram na pintura: esperam também)
 
 // a pintura: troca a cor que vem da máscara (mapa) pelas duas cores do carro. Com `equipe` (uma das pinturas de equipe de
 // f1-pintura.js) o corpo ganha, no lugar das duas cores, a folha de pintura da equipe projetada pela posição de cada ponto

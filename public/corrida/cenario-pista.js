@@ -10,6 +10,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { patrocinioEm } from "./f1-capacetes.js";
 import { montarKit, KITS, filtroDoKit } from "./biblioteca.js";
 import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), modelos = new Map();
 // os arquivos chegam logo que a página abre (a pista é montada sem esperar a rede: os ajustes precisam estar prontos até lá)
@@ -267,7 +268,40 @@ function montarMarcaChao(it, tr) {
   const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: t, transparent: !it.fundo, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, depthWrite: !!it.fundo }));
   m.receiveShadow = true; const g = new THREE.Group(); g.add(m); return g;
 }
+// (2026-11-18, o Thiago: "quando eu edito a pista fica muito pesada") cada item vira POUCAS malhas: os pedaços dele (uma árvore tem ~15, um
+// módulo de mureta com tela 9, uma fileira de barreiras centenas) são juntados por material, já no lugar. O item continua um só objeto, clicável
+// e movível no editor; no jogo, o fundir.js junta de novo o que puder. Fica de fora: InstancedMesh, malha de vários materiais, linha e sprite.
+const _inv = new THREE.Matrix4(), _mm = new THREE.Matrix4();
+const chaveMat = (m) => [m.type, m.color?.getHex(), m.map?.uuid, m.emissive?.getHex(), m.emissiveMap?.uuid, m.emissiveIntensity, m.roughness, m.metalness, m.transparent, m.opacity, m.side, m.flatShading, m.depthWrite, m.polygonOffset, m.vertexColors].join("|");
+export function enxugar(raiz) {
+  raiz.updateMatrixWorld(true); _inv.copy(raiz.matrixWorld).invert();
+  const baldes = new Map(), tirar = [];
+  raiz.traverse((o) => {
+    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || o.morphTargetInfluences) return;
+    const k = chaveMat(o.material); let b = baldes.get(k); if (!b) baldes.set(k, (b = { mat: o.material, geos: [], sombra: o.castShadow }));
+    let g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    for (const nome of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(nome)) g.deleteAttribute(nome);
+    if (!g.attributes.normal) g.computeVertexNormals();
+    if (!g.attributes.uv) g.setAttribute("uv", new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    g.clearGroups(); _mm.multiplyMatrices(_inv, o.matrixWorld); g.applyMatrix4(_mm);
+    if (_mm.determinant() < 0) { const p = g.attributes.position, n = g.attributes.normal, u = g.attributes.uv; for (let i = 0; i < p.count; i += 3) for (const a of [p, n, u]) { for (let c = 0; c < a.itemSize; c++) { const t = a.array[(i + 1) * a.itemSize + c]; a.array[(i + 1) * a.itemSize + c] = a.array[(i + 2) * a.itemSize + c]; a.array[(i + 2) * a.itemSize + c] = t; } } } // (espelhada: desvira os triângulos)
+    b.geos.push(g); tirar.push(o);
+  });
+  if (tirar.length < 2) return raiz;
+  const novas = [];
+  for (const { mat, geos, sombra } of baldes.values()) { let g; try { g = mergeGeometries(geos, false); } catch { g = null; } for (const x of geos) if (x !== g) x.dispose(); if (!g) return raiz; const m = new THREE.Mesh(g, mat); m.castShadow = sombra; m.receiveShadow = true; m.name = "item-junto"; novas.push(m); }
+  for (const o of tirar) o.parent?.remove(o);
+  // os grupos que ficaram vazios saem também (as pontas de uma fileira, os ganchos das peças)
+  const vazios = []; raiz.traverse((o) => { if (o !== raiz && !o.isMesh && !o.isSprite && !o.isLine && !o.children.length) vazios.push(o); }); for (const o of vazios) o.parent?.remove(o);
+  for (const m of novas) raiz.add(m);
+  return raiz;
+}
 export async function montarItem(it, tr = null) {
+  const o = await montarItem0(it, tr);
+  if (o && (it.tipo === "kit" || it.tipo === "linha" || (it.tipo === "area" && it.espalhar))) enxugar(o); // (as peças de código; o .glb do conversor já vem leve)
+  return o;
+}
+async function montarItem0(it, tr) {
   if (it.tipo === "marcaChao") { const o = montarMarcaChao(it, tr); o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(0, +it.ry || 0, 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "marca-chao-" + (it.marca || ""); return o; }
   if (it.tipo === "area") { const o = montarArea(it, tr); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "area-" + (it.material || ""); return o; }
   if (it.tipo === "linha") { const o = montarLinha(it, tr); if (!o) return null; o.position.set(+it.x || 0, +it.y || 0, +it.z || 0); o.rotation.set(+it.rx || 0, +it.ry || 0, +it.rz || 0); o.scale.setScalar(+it.s || 1); o.userData.item = it; o.name = "linha-" + (it.modelo || ""); return o; }

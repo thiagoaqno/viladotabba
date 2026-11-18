@@ -1,11 +1,9 @@
-# A torcida segue a arquibancada
+# Editor de pistas mais leve
 
-O Thiago tirou arquibancadas da Cidade do México pelo editor e os torcedores ficaram flutuando: a torcida (`vida.js`) senta nos degraus de `tr.arqDegraus`, que guardavam só o trecho da pista, sem a peça.
+O Thiago notou que a pista fica muito pesada no editor. No editor as malhas não são juntadas (para cada peça ficar clicável), e cada item tinha dezenas de pedaços: uma árvore ~15, um módulo de mureta com tela 9, uma fileira de barreiras centenas de módulos.
 
-- `kit/arquibancadas.js`: cada trecho guarda as peças que criou (`pecas`, a primeira são os assentos).
-- `vida.js`: cada torcida de arquibancada sabe de qual trecho é; a nova `torcidaSegueArquibancadas(tr)` olha os assentos depois dos ajustes do editor: escondidos → a torcida some; movidos ou girados → cada pessoa vai junto (a mesma diferença entre a posição original e a nova).
-- `pista.js`: chama logo depois de `aplicarAjustes(tr)`.
+`cenario-pista.js`: `enxugar(raiz)` junta os pedaços de um item por material (materiais iguais em cor, textura e acabamento contam como um só, então os itens tingidos também juntam), já no lugar, e tira os grupos que ficaram vazios. Vale para as peças da biblioteca (`kit`), as fileiras (`linha`) e as áreas com peças espalhadas. O item continua um objeto só, clicável e movível; no jogo o `fundir.js` junta de novo o que puder. Ficam de fora InstancedMesh, malha de vários materiais, linha e sprite; os .glb do conversor não mudam.
 
-Vale para todas as pistas que usam as arquibancadas do kit (México, Interlagos, Mônaco, Silverstone, Suzuka, Xangai, Catar e as simples). No editor, a torcida acerta ao abrir de novo a pista; no jogo, já na largada.
+Medido no Node, montando cada peça da biblioteca: **3.310 → 715 malhas** nas 207 peças, com a caixa exata de cada uma igual antes e depois; uma fileira curva de mureta com tela e faixa: **30 malhas**.
 
 Conferido com `node --check`.

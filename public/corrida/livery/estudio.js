@@ -145,7 +145,7 @@ function redesenhar() {
   if (agendado) return; agendado = true;
   requestAnimationFrame(() => {
     agendado = false; for (const l of P.camadas) if (l.tipo === "logo" && l.img) imagemLivery(l.img, redesenhar); // (a imagem que ainda não chegou: pinta de novo quando chegar)
-    folhaDeCamadas(P, folhaCv, 2); // (em 2×, como o carro do jogador no jogo: a 1× as marcas pequenas saíam borradas) folhaTx.needsUpdate = true;
+    folhaDeCamadas(P, folhaCv, 2); folhaTx.needsUpdate = true; // (em 2×, como o carro do jogador no jogo: a 1× as marcas pequenas saíam borradas)
     const f = $("lsFolha"), fx = f.getContext("2d"); fx.clearRect(0, 0, f.width, f.height); fx.drawImage(folhaCv, 0, 0, f.width, f.height);
     if (k) { trocarCores(k, P.c1, P.c2); const m = k.pintura; if (m?.userData?.liv) m.userData.liv.liv.value = folhaTx; if (m && "metalness" in m) { m.metalness = P.met / 100; m.roughness = P.rug / 100; m.envMapIntensity = P.ref / 100; if ("clearcoat" in m) { m.clearcoat = (P.cc ?? 100) / 100; m.clearcoatRoughness = (P.ccr ?? 38) / 100; m.iridescence = (P.iri || 0) / 100; } } }
     esfera.cor(P);

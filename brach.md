@@ -1,8 +1,6 @@
-# TabbaTracks: paredes, ângulo das curvas, pontes, semáforo opcional e prévia dos acabamentos
+# TabbaTracks: ângulo funcionando, público nas arquibancadas e mais Mônaco
 
-- **Parede** com altura e largura (espessura): em "Linha de itens" (reta ou curva) e em "Barreira na beira" (acompanha a pista). Aceita acabamento.
-- **Ângulo** nas peças curvas (muro de pedra curvo, muro curvo com escada, as duas arquibancadas curvas): controle de 10° a 340° nas Propriedades.
-- **Pontes**: pontilhão de pedra em arco, viaduto de concreto, passarela de pedestres e ponte de ferro em arco.
-- **Pórtico**: o semáforo virou opção ("Com semáforo", desligado por padrão), agora pendurado no meio da viga com luzes nas duas faces; vão e altura editáveis. O pórtico da biblioteca saiu sem semáforo.
-- **Acabamentos**: miniaturas como imagem (o CSS do painel apagava o fundo), ficha "↺ Original" e prévia ao passar o mouse.
-- **Painel da direita**: escolher uma peça na esquerda troca a ferramenta da direita (antes ficava presa no pórtico).
+- **Conserto:** o ângulo das peças curvas, a largura da parede e o "Com semáforo" do pórtico estavam ligados ao painel da Área (por engano no #842); agora estão no da Seleção e mudam a peça.
+- **Público:** todas as arquibancadas da biblioteca têm gente (boneco low poly, ~3 de cada 4 lugares, camisetas de várias cores), juntado em poucas malhas.
+- **Arquibancadas de Mônaco (6):** de tubo com lona vermelha "MONACO GRAND PRIX" (normal, coberta, baixa), do porto sobre a água, de toldo listrado e a curva da Piscina (com ângulo).
+- **Prédios de Mônaco (9):** torres de concreto com varandas (normal, 26 andares, estreita), pavilhão de cúpula de zinco, quatro prédios clássicos novos e uma quadra de 4 prédios colados.

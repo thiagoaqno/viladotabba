@@ -71,7 +71,7 @@ document.body.insertAdjacentHTML("beforeend", `
   <button class="bt" id="lsExp" title="O carro em .glb com a pintura gravada numa textura (para o Blender e outros programas)">⇩ Exportar GLB</button><button class="bt pri" id="lsRender">📷 Renderizar imagem</button></div></div>
 <div id="lsEsq"><div class="abas"><button data-e="pecas" class="on">🏎 Peças</button><button data-e="camadas">☰ Camadas</button></div><div id="lsLista"></div>
   <div id="lsNovas">${Object.entries(TIPOS).filter(([k]) => k !== "logo").map(([k, t]) => `<button data-nova="${k}">${t.ic} ${t.nome}</button>`).join("")}</div></div>
-<div id="lsVistas"><div class="grp"><button class="bt" data-v="v3d" title="3D">◈</button></div><div class="grp">${["Frente", "Trás", "Lado", "Topo"].map((v) => `<button class="bt" data-v="${v}">${v}</button>`).join("")}</div></div>
+<div id="lsVistas"><div class="grp"><button class="bt" data-v="v3d" title="3D">◈</button></div><div class="grp">${["Frente", "Trás", "Lado", "Topo"].map((v) => `<button class="bt" data-v="${v}">${v}</button>`).join("")}<button class="bt" data-v="Asa" title="Olhar a asa traseira por baixo (para pôr logo embaixo dela)">Asa por baixo</button></div></div>
 <div id="lsDir"><h3>🛠 Propriedades</h3><div id="lsProp"></div>
   <h4>Base</h4>
   <div class="sel"><span>Partir de</span><select id="lsBase"></select></div>
@@ -98,6 +98,7 @@ scene.add(new THREE.HemisphereLight(0xdfe6ff, 0x20232a, 1.4));
 const chave = new THREE.DirectionalLight(0xffffff, 2.6); chave.position.set(4, 7, -3); chave.castShadow = true; chave.shadow.mapSize.set(2048, 2048); Object.assign(chave.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4 }); scene.add(chave);
 const contra = new THREE.DirectionalLight(0x9fb8ff, 1.2); contra.position.set(-5, 3, 5); scene.add(contra);
 const chao = new THREE.Mesh(new THREE.CircleGeometry(12, 64).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x24272d, roughness: 0.35, metalness: 0.4 })); chao.receiveShadow = true; scene.add(chao);
+{ const deBaixo = new THREE.DirectionalLight(0xffffff, 1.1); deBaixo.position.set(0, -4, 5); scene.add(deBaixo); } // (2026-11-18: a parte de baixo da asa traseira ficava preta; esta luz fraca, sem sombra, a mostra)
 { const pm = new THREE.PMREMGenerator(renderer), sala = new THREE.Scene(); sala.background = new THREE.Color(0x1a1c22);
   for (const [x, z, w] of [[0, 0, 6], [-5, 3, 2], [5, -3, 2]]) { const l = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.5), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })); l.position.set(x, 6, z); l.rotation.x = Math.PI / 2; sala.add(l); }
   scene.environment = pm.fromScene(sala, 0.04).texture; }
@@ -314,8 +315,10 @@ const LUZES = {
 };
 $("lsLuz").onchange = (e) => { const l = LUZES[e.target.value]; scene.background.setHex(l.fundo); scene.fog.color.setHex(l.fundo); chao.material.color.setHex(l.chao); scene.children.find((o) => o.isHemisphereLight).intensity = l.hemi; chave.intensity = l.chave; contra.intensity = l.contra; contra.color.setHex(l.corC); renderer.toneMappingExposure = l.exp; };
 function status(t) { $("lsStatus").textContent = t; }
-const VISTAS = { Frente: [0, 0.6, -6], Trás: [0, 0.9, 6], Lado: [6.2, 0.7, 0], Topo: [0, 8, 0.01], v3d: [-5.2, 2.2, -4.6] }; // (a frente do carro é −z)
-$("lsVistas").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; cam.position.set(...VISTAS[b.dataset.v]); orbita.target.set(0, 0.45, 0); orbita.update(); };
+const VISTAS = { Frente: [0, 0.6, -6], Trás: [0, 0.9, 6], Lado: [6.2, 0.7, 0], Topo: [0, 8, 0.01], Asa: [0, 0.06, 4.9], v3d: [-5.2, 2.2, -4.6] }; // (a frente do carro é −z)
+$("lsVistas").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; const asa = b.dataset.v === "Asa"; // (2026-11-18, o Thiago: "não atualiza quando coloco patrocinador embaixo da asa") a câmera não descia abaixo do alvo, então não dava
+  // para ver nem clicar a parte de baixo da asa traseira (a 0,71 m do chão): esta vista olha de baixo para ela; as outras voltam ao limite de antes
+  orbita.maxPolarAngle = asa ? Math.PI * 0.8 : Math.PI * 0.495; cam.position.set(...VISTAS[b.dataset.v]); orbita.target.set(0, asa ? 0.8 : 0.45, asa ? 1.6 : 0); orbita.update(); };
 
 // ---------- clicar no carro: PÔR o logo escolhido, ARRASTAR o logo escolhido, ou escolher a PEÇA ----------
 // o ponto do carro em coordenadas da folha: s a partir do bico, a altura e o x; "de cima" se a superfície olha para cima ou para baixo

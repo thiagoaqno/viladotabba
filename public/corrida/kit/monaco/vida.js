@@ -180,6 +180,9 @@ export function vidaMonaco(tr, ctx, { lista, predioEm, hAt }) {
   const anterior = tr.animarPista; tr.animarPista = (dt, foco, tt) => { anterior?.(dt, foco, tt); anim(dt, foco, tt); };
 
   for (const q of tr.ponteMonaco?.pessoas || []) pessoa(q.x, q.y, q.z, q.ry, CAMISA[(r() * CAMISA.length) | 0], r() < 0.5); // a galera em cima da ponte do Portier (kit/monaco/ponte.js); no fim, para não mudar o sorteio do resto
-  tr.torcidasGP = gente; // vida-mais.js monta e anima
+  // (2026-11-18, o Thiago: "ainda tem torcida fora da arquibancada em Mônaco") o cenário de Mônaco agora é o do editor, e esta gente (sacadas,
+  // terraços, arquibancadas e postos do kit antigo) ficava no ar onde as peças antigas saíram. A torcida fica só nas arquibancadas (as do editor
+  // já vêm com público); os fiscais e a galera daqui não entram mais.
+  tr.torcidasGP = [];
   tr.vidaMonaco = stats;
 }

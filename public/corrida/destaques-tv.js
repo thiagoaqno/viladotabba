@@ -1,4 +1,3 @@
-import monaco from "./kit/monaco/dados.js";
 import baku from "./kit/baku/dados.js";
 import singapura from "./kit/singapura/dados.js";
 import lasvegas from "./kit/lasvegas/dados.js";
@@ -6,7 +5,7 @@ import lasvegas from "./kit/lasvegas/dados.js";
 // Frações medidas nos arquivos gps; os marcos urbanos usam os mesmos dados que constroem a cidade.
 const lv = (nome) => { const m = lasvegas.marcos.find((p) => p.chave === nome); return [m.cx, m.cz]; };
 export const DESTAQUES = {
-  monaco: [["Cassino de Monte Carlo", monaco.marcos.casino], ["Porto de Mônaco", monaco.marcos.yachtClub], ["Grampo do Fairmont", 0.389]],
+  monaco: [["Cassino de Monte Carlo", [3685, 1601]], ["Porto de Mônaco", [2997, 2640]], ["Grampo do Fairmont", [4078, 1097]]], // (2026-11-18: os lugares do cenário refeito no editor, cenario/monaco.json: o cassino, o meio das lanchas e o hotel do grampo)
   interlagos: [["S do Senna", 0.085], ["Lago e reta oposta", 0.325], ["Subida dos boxes", 0.86]],
   monza: [["Parabolica", 0.88], ["Sopraelevata", 0.53], ["Tribunas e boxes", 0.99]],
   barcelona: [["Campsa e as serras", 0.61], ["La Caixa", 0.74], ["Tribuna e torre de controle", 0.99]],

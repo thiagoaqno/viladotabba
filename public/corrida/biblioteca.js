@@ -1021,7 +1021,7 @@ function hotelGrampo(graus = 70) {
   const g = new THREE.Group(), R = 70 * U, A = (Math.min(180, Math.max(10, graus)) * Math.PI) / 180, andares = 7, Ah = 3.2 * U, T = 5 * U, prof = 14 * U;
   const BR = M(0xeeece6, { roughness: 0.85 }), VID = M(0x2b333c, { roughness: 0.2, metalness: 0.4 }), ESC = M(0x1c1e22, { roughness: 0.9 }), GC = M(0xd9dde0, { roughness: 0.6 });
   // um ponto no arco: s de -1 a 1, r = o raio (a frente é o raio maior); o arco tem o centro em z = -R, a frente olha para +z
-  const pt = (sv, r) => { const a = (sv * A) / 2; return [Math.sin(a) * r, Math.cos(a) * r - R, a]; }; // (o giro do bloco: o x dele vai pela tangente do arco)
+  const pt = (sv, r) => { const a = (sv * A) / 2, rr = 2 * R - r; return [Math.sin(a) * rr, R - Math.cos(a) * rr, -a]; }; // côncavo: o centro do arco fica na frente (z = +R), como na curva do grampo // (o giro do bloco: o x dele vai pela tangente do arco)
   const L = R * A, segs = Math.max(8, Math.round(L / (4 * U)));
   const vidro = [], lajes = [], guarda = [], divis = [], terreo = [], miolo = [];
   for (let i = 0; i < segs; i++) {
@@ -1030,7 +1030,7 @@ function hotelGrampo(graus = 70) {
     miolo.push(geoEm(new THREE.BoxGeometry(corda * (R - prof / 2) / R, andares * Ah, prof - 1.6 * U), xm, T + (andares * Ah) / 2, zm, ry));
     const [xv, zv] = pt(sm, R - 1.6 * U); vidro.push(geoEm(new THREE.BoxGeometry(corda, andares * Ah, 0.1 * U), xv, T + (andares * Ah) / 2, zv, ry));
     for (let k = 0; k <= andares; k++) { const y = T + k * Ah; lajes.push(geoEm(new THREE.BoxGeometry(corda, 0.35 * U, 2 * U), x, y, z, ry)); if (k) guarda.push(geoEm(new THREE.BoxGeometry(corda, 1 * U, 0.12 * U), ...(() => { const [gx, gz] = pt(sm, R + 0.95 * U); return [gx, y - Ah + 0.85 * U, gz]; })(), ry)); }
-    const [xd, zd] = pt(s0, R - 0.3 * U); divis.push(geoEm(new THREE.BoxGeometry(0.25 * U, andares * Ah, 2.6 * U), xd, T + (andares * Ah) / 2, zd, (s0 * A) / 2));
+    const [xd, zd] = pt(s0, R - 0.3 * U); divis.push(geoEm(new THREE.BoxGeometry(0.25 * U, andares * Ah, 2.6 * U), xd, T + (andares * Ah) / 2, zd, -(s0 * A) / 2));
     if (i % 2 === 0) { const [xp, zp] = pt(s0, R - 1 * U); terreo.push(geoEm(new THREE.BoxGeometry(1.2 * U, T, 1.2 * U), xp, T / 2, zp, ry)); }
     const [xf, zf] = pt(sm, R - 6 * U); terreo.push(geoEm(new THREE.BoxGeometry(corda, T, 0.3 * U), xf, T / 2, zf, ry));
   }

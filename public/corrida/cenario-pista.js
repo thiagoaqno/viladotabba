@@ -418,10 +418,12 @@ export async function carregarCenario(tr) {
   await pronto;
   const dados = dadosDe.get(tr.pistaId || tr.id);
   if (!dados || !Array.isArray(dados.itens)) return g;
+  if (dados.colisao === "pecas" && window.Pistas?.murosDoCenario) tr.murosCenario = window.Pistas.murosDoCenario(tr.pts, tr.W, dados); // (a mesma conta do servidor, sim.js)
   const objs = await Promise.all(dados.itens.map((it) => montarItem(it, tr)));
   for (const o of objs) if (o) g.add(o);
   return g;
 }
+export const colisaoDaPista = (tr) => dadosDe.get(tr.pistaId || tr.id)?.colisao || "";
 export const ajustesDaPista = (tr) => (dadosDe.get(tr.pistaId || tr.id)?.ajustes || []).slice();
 // (2026-11-17, o Thiago: o TERRENO do editor com pincéis) o relevo pintado no editor: { relevo: { cel, d: { "ix,iz": dh } } } no cenario/<pista>.json,
 // a diferença de altura numa grade de `cel` unidades (só as células mexidas). O pista.js soma ao chão de cada pista que tem relevo salvo;

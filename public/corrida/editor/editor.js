@@ -22,7 +22,7 @@ import { painelAcabamento } from "./acabamentos-ui.js";
 import { aplicarAcabamento } from "../acabamentos.js";
 import { KITS, montarKit, FILTROS, filtroDoKit } from "../biblioteca.js";
 import { PATROCINIOS, MARCAS_CAPACETE, miniaturaDoPatrocinio } from "../f1-capacetes.js";
-import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, PADROES_ESCAPE, MATERIAIS_AREA } from "../cenario-pista.js";
+import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, colisaoDaPista, PADROES_ESCAPE, MATERIAIS_AREA } from "../cenario-pista.js";
 
 const M_PARA_U = 4.8; // 1 metro ≈ 4,8 unidades do jogo (dinamica.js: 1 u = 0,2083 m): um asset em metros entra no tamanho certo
 const pista = new URLSearchParams(location.search).get("editor") || "interlagos";
@@ -263,6 +263,7 @@ addEventListener("keydown", async (e) => {
 let assets = { originais: [], leves: [] }, aviso = "";
 painel.innerHTML = `<h2>Editor de cenário</h2>
   <div class="lin"><select id="edPista">${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === pista ? "selected" : ""}>${h(PISTAS[id].name || id)}</option>`).join("")}</select><button id="edSalvar">Salvar</button><button id="edPublicar" title="Salva e manda o cenário e os assets para o GitHub num PR (o merge é seu)">Publicar (PR)</button><button id="edCraftBt">Craft</button></div>
+  <div class="lin"><label title="Tira o muro invisível da pista: o carro só bate nas placas, faixas, muros, guard-rails, pneus e paredes colocados aqui. Vale depois de salvar e publicar."><input type="checkbox" id="edColisao" ${colisaoDaPista(tr) === "pecas" ? "checked" : ""}> Colisão só nas placas e muros</label></div>
   <div id="edAviso"></div>
   <h3>Converter (assets-originais/)</h3><div id="edOrig" class="lst"></div>
   <div class="lin"><label>Triângulos <input id="edFrac" type="range" min="5" max="100" value="30"> <b id="edFracV">30%</b></label></div>
@@ -285,7 +286,7 @@ $("edFrac").oninput = (e) => { $("edFracV").textContent = e.target.value + "%"; 
 $("edSalvar").onclick = async () => {
   const dados = (o) => { guardarItem(o); const it = { ...o.userData.item }; if (it.tipo === "grupo") it.itens = o.children.filter((c) => c.userData.item).map(dados); return it; }; // (o grupo leva os itens dele)
   const todos = cenario.children.filter((o) => o.userData.item).map(dados);
-  try { const r = await api("cenario/" + pista, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pista, itens: todos, ajustes: [...ajustes.values()], relevo: terreno?.dados() }) }); avisar(`Salvo: ${r.itens} itens e ${ajustes.size} peças mexidas em cenario/${pista}.json`); }
+  try { const r = await api("cenario/" + pista, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pista, itens: todos, ajustes: [...ajustes.values()], relevo: terreno?.dados(), ...($("edColisao")?.checked ? { colisao: "pecas" } : {}) }) }); avisar(`Salvo: ${r.itens} itens e ${ajustes.size} peças mexidas em cenario/${pista}.json`); }
   catch (e) { avisar(e.message, true); }
 };
 function avisar(txt, erro = false) { $("edAviso").innerHTML = `<small class="${erro ? "erro" : "ok"}">${h(txt)}</small>`; }

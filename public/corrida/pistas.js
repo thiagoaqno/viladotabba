@@ -2339,7 +2339,34 @@ const aoTrocarEscala = (fn) => { AO_TROCAR_ESCALA.push(fn); fn(ESCALA_REAL); };
 const usarEscala = (id) => { const r = !!(id && PISTAS[id] && PISTAS[id].real); if (r !== ESCALA_REAL) { ESCALA_REAL = r; for (const fn of AO_TROCAR_ESCALA) fn(r); } return r; };
 const escalaReal = () => ESCALA_REAL;
 const idsReais = () => Object.keys(PISTAS).filter((id) => PISTAS[id].real); // as pistas do Formula GP
-const api = { usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
+// (2026-11-18, o Thiago: "remover tudo e colocar hitbox só nas placas de anúncio... e muros") a COLISÃO PELO CENÁRIO DO EDITOR: com
+// `colisao: "pecas"` no cenario/<pista>.json, o muro invisível da pista sai e o carro só bate nas placas, faixas, muros, guard-rails,
+// pneus e paredes colocados no editor. Devolve { 1: Float32Array, -1: Float32Array }: por ponto da pista e lado, o recuo da barreira
+// (da borda do asfalto até ela); 0 = aberto (o carro passa e vai para a grama).
+const KIT_BARREIRA = /muro|mureta|guard|barreira|pneu|cerca|parede|grade|alambrado|contencao|tecpro|faixa|placa/i;
+function murosDoCenario(pts, largura, cen) {
+  const n = pts.length, lados = { 1: new Float32Array(n), [-1]: new Float32Array(n) };
+  const marcar = (i, lado, recuo) => { i = ((i % n) + n) % n; recuo = Math.max(1, recuo); const a = lados[lado]; if (!a[i] || recuo < a[i]) a[i] = recuo; };
+  const perto = (x, y) => { let m = 0, d = Infinity; for (let i = 0; i < n; i++) { const q = pts[i], e = (q.x - x) ** 2 + (q.y - y) ** 2; if (e < d) { d = e; m = i; } } return m; };
+  const ponto = (x, y, meio) => { // uma barreira solta num lugar (x, y), com `meio` unidades para cada lado ao longo da pista
+    const i = perto(x, y), q = pts[i], nx = q.nx ?? -q.ty, ny = q.ny ?? q.tx, lat = (x - q.x) * nx + (y - q.y) * ny, rec = Math.abs(lat) - largura / 2;
+    if (rec < -largura / 4 || rec > 600) return; // (no meio da pista ou longe demais: não conta)
+    const k = Math.max(1, Math.ceil(meio / 6)); for (let j = -k; j <= k; j++) marcar(i + j, lat < 0 ? -1 : 1, rec);
+  };
+  for (const it of (cen && cen.itens) || []) {
+    if (!it) continue;
+    const mod = String(it.modelo || ""), barreira = it.tipo === "placa" || (it.tipo === "kit" && KIT_BARREIRA.test(it.kit || "")) || (it.tipo === "linha" && (mod === "parede" || mod === "pneus" || mod.startsWith("faixa") || KIT_BARREIRA.test(mod) || !mod));
+    if (!barreira) continue;
+    if (it.tipo === "linha" && it.beira) { const b = it.beira, lado = b.lado < 0 ? -1 : 1, rec = (+b.de || largura / 2 + 20) - largura / 2; let i0 = Math.round(+b.i0) || 0, i1 = Math.round(+b.i1) || 0; if (i1 < i0) i1 += n; if (i1 - i0 > n) i1 = i0 + n; for (let i = i0; i <= i1; i++) marcar(i, lado, rec); continue; }
+    if (it.tipo === "linha" && Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2]) { // a curva de três pontos (relativos ao item), de 6 em 6
+      const ox = +it.x || 0, oz = +it.z || 0, [a, c, b] = it.pts, P = (t) => [(1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x + ox, (1 - t) ** 2 * a.z + 2 * (1 - t) * t * c.z + t * t * b.z + oz];
+      const L = Math.hypot(b.x - a.x, b.z - a.z) + 1, m = Math.max(2, Math.ceil(L / 6)); for (let k = 0; k <= m; k++) { const [x, y] = P(k / m); ponto(x, y, 4); } continue;
+    }
+    if (it.tipo === "placa" || it.tipo === "kit") ponto(+it.x || 0, +it.z || 0, ((+it.w || 6) * Math.abs(+it.s || 1) * 4.8) / 2);
+  }
+  return lados;
+}
+const api = { murosDoCenario, usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Pistas = api;
 })(typeof window !== "undefined" ? window : globalThis);

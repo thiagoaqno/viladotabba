@@ -29,6 +29,9 @@ function criarPista(t, id) {
   if (t.superficieEscape) tr.superficiesEscape = P.mapaSuperficies(pts, t.superficieEscape);
   tr.obstaculos = P.obstaculosDaPista(t, pts); // os obstáculos sólidos da pista (o canteiro do grampo de Mônaco), os mesmos do navegador e do servidor
   if (t.escapeLivre || t.muros) tr.murosEscape = P.murosDoEscape(pts, W, tr.superficiesEscape, t);
+  if (id && typeof require === "function" && typeof window === "undefined") { // no servidor: a colisão pelas peças do editor (pistas.js, murosDoCenario)
+    try { const cen = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "cenario", id + ".json"), "utf8")); if (cen.colisao === "pecas") tr.murosCenario = P.murosDoCenario(pts, W, cen); } catch {}
+  }
   if (!t.espaco && !t.muro && !t.escapeLivre) { // barreiras de pneus: do lado de fora das curvas fechadas (o mesmo cálculo de pista.js)
     for (let i = 0; i < n; i++) {
       const p = pts[i], q = pts[(i + 3) % n]; if (!(p.k > 1 / 170)) continue;
@@ -282,7 +285,7 @@ function passo(c, ent, amb, tr, ev) {
   c.idx = procurar(tr, nx, ny, c.idx);
   const fr = quadro(tr, nx, ny, c.idx), lim = tr.wallLat - (tr.t.muroFolga ?? 8);
   const pneu = tr.pneus && tr.pneus[c.idx], lado = Math.sign(fr.lat) || 1;
-  const limiteL = Math.min(P.limiteViaduto(tr.t, tr.n, c.idx, tr.W), tr.murosEscape?.[lado]?.[c.idx] ? tr.W / 2 + tr.murosEscape[lado][c.idx] - (tr.t.muroFolga ?? 8) : pneu && lado === pneu ? tr.W / 2 + 26 : lim);
+  const limiteL = Math.min(P.limiteViaduto(tr.t, tr.n, c.idx, tr.W), tr.murosCenario ? (tr.murosCenario[lado][c.idx] ? tr.W / 2 + tr.murosCenario[lado][c.idx] - (tr.t.muroFolga ?? 8) : Infinity) : tr.murosEscape?.[lado]?.[c.idx] ? tr.W / 2 + tr.murosEscape[lado][c.idx] - (tr.t.muroFolga ?? 8) : pneu && lado === pneu ? tr.W / 2 + 26 : lim);
   if (Math.abs(fr.lat) > limiteL || nx < 2 || ny < 2 || nx > tr.t.world - 2 || ny > tr.t.world - 2) {
     const q = tr.pts[c.idx], s = Math.sign(fr.lat) || 1, over = Math.abs(fr.lat) - limiteL;
     if (over > 0) { nx -= q.nx * s * over; ny -= q.ny * s * over; }

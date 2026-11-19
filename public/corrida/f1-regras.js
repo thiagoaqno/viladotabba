@@ -336,8 +336,8 @@ const AGUA_QUALI_CHUVA = 0.3; // na classificação ninguém troca de pneu: a se
 const seco = (dur) => ({ chove: false, t0: 0, dur: Math.round(dur), agua0: 0, trechos: [] });
 
 // ----- a previsão -----
-const OPCOES_DE_CLIMA = ["aleatorio", "seco", "chuva", "variavel"]; // a opção da sala casual: Aleatório (a previsão), Seco, Chuva, Variável
-const ROTULO_CLIMA = { aleatorio: "Aleatório", seco: "Seco", chuva: "Chuva", variavel: "Variável" };
+const OPCOES_DE_CLIMA = ["aleatorio", "seco", "nublado", "chuva", "variavel"]; // (2026-11-18, o Thiago: "nublado, sem chover, uma pegada meio 16h") Nublado: céu fechado e luz de fim de tarde, pista seca // a opção da sala casual: Aleatório (a previsão), Seco, Chuva, Variável
+const ROTULO_CLIMA = { aleatorio: "Aleatório", seco: "Seco", nublado: "Nublado", chuva: "Chuva", variavel: "Variável" };
 // [peso, de, ate]: média das previsões ~51%, preservando previsões diferentes para cada GP.
 const FAIXAS_DE_CHUVA = [[0.15, 0, 0.10], [0.25, 0.20, 0.40], [0.35, 0.50, 0.70], [0.25, 0.80, 0.95]];
 // quando a chuva pode começar: `de`..`ate` (fração da sessão em que ela começa de verdade) e `janela` (o que a previsão anuncia)
@@ -417,7 +417,7 @@ const chanceReal = (p) => (p >= 0.5 ? 1 : p < 0.25 ? 0 : p);
 // roteiros; `t0` o servidor põe quando a sessão abre). Chove com a chance da previsão (p = 1 nas opções Chuva e Variável).
 function sortearClima(semente, duracoes = {}, opcao = "aleatorio") {
   const dc = duracoes.corrida || 300, dq = duracoes.quali || 360, previsao = previsaoDoGP(semente, opcao);
-  if (!(chanceReal(previsao.p) >= 1 || sorteio(`clima:${semente}:chuva`)() < chanceReal(previsao.p))) return { chuva: false, previsao, quali: seco(dq), corrida: seco(dc) };
+  if (!(chanceReal(previsao.p) >= 1 || sorteio(`clima:${semente}:chuva`)() < chanceReal(previsao.p))) { const q = seco(dq), c = seco(dc); if (previsao.opcao === "nublado") q.nublado = c.nublado = true; return { chuva: false, previsao, quali: q, corrida: c }; }
   const plano = { quando: previsao.quando, forca: previsao.forca, sempre: previsao.opcao === "chuva" };
   return { chuva: true, previsao, quali: roteiroDeChuva(sorteio(`clima:${semente}:quali`), dq, plano), corrida: roteiroDeChuva(sorteio(`clima:${semente}:corrida`), dc, plano) };
 }
@@ -472,7 +472,7 @@ function proximaMudanca(c, t) {
 // molhada, encharcada, chove (o roteiro tem chuva), t (segundos do relógio do roteiro) }. Sem roteiro, seco. É o que o visual lê.
 function climaEm(c, agora) {
   const t = c && c.t0 ? (agora - c.t0) / 1000 : 0, agua = c ? aguaEm(c, t) : 0, chuva = c ? chuvaEm(c, t) : 0;
-  return { agua, chuva, garoa: chuva > 0 && chuva < 0.7, molhada: agua >= AGUA_MOLHADA, encharcada: agua >= AGUA_ENCHARCADA, chove: !!(c && c.chove), t };
+  return { agua, chuva, garoa: chuva > 0 && chuva < 0.7, molhada: agua >= AGUA_MOLHADA, encharcada: agua >= AGUA_ENCHARCADA, chove: !!(c && c.chove), nublado: !!(c && c.nublado), t };
 }
 // O pneu da classificação (ninguém troca de pneu nela): o de chuva se a pista abre com água suficiente, senão o macio.
 const compostoDaClassificacao = (agua) => ((agua || 0) >= AGUA_QUALI_CHUVA ? "chuva" : "macio");

@@ -28,7 +28,7 @@ let fogRef = null;
 // escalar: se o valor não é o que escrevi da última vez, alguém mudou a base; devolve base × fator
 function escalar(e, atual, fator) { if (!(Math.abs(atual - e.u) < 1e-5)) e.b = atual; return (e.u = e.b * fator); }
 function capturar(e, atual) { if (!e.ok || Math.abs(atual.r - e.ult.r) + Math.abs(atual.g - e.ult.g) + Math.abs(atual.b - e.ult.b) > 1e-4) { e.base.copy(atual); e.ok = true; } }
-const FRIO_SOL = new THREE.Color(0xc8d4e4), FRIO_HEMI = new THREE.Color(0xa9b8ca), cinza = new THREE.Color(), BRANCO = new THREE.Color(1, 1, 1);
+const FRIO_SOL = new THREE.Color(0xc8d4e4), FRIO_HEMI = new THREE.Color(0xa9b8ca), cinza = new THREE.Color(), TARDE = new THREE.Color(0xffc89a), BRANCO = new THREE.Color(1, 1, 1);
 
 // o domo de nuvens: uma calota em volta da câmera, mais escura no alto, com nuvens pintadas que andam devagar. Desenhada
 // antes de tudo o que é transparente (renderOrder) e escondida atrás do chão e das montanhas pelo teste de profundidade.
@@ -448,10 +448,12 @@ export function passoClima(dt, race, cam, mode, src, c) {
   const sK = Math.min(1.2, Math.abs(src.v || 0) / 300);
 
   // céu, luz e neblina (some tudo, voltando à base, quando I chega a 0)
-  if (I > 0 || ativoAntes) {
+  // (Nublado: o céu fica fechado como numa garoa, com a luz baixa e quente de umas 16h, mas sem gota nenhuma)
+  const N = clima.nublado ? 0.62 : 0, Iv = Math.max(I, N);
+  if (Iv > 0 || ativoAntes) {
     const fog = scene.fog;
     if (fog !== fogRef) { fogRef = fog; eNear.u = eFar.u = NaN; eCorFog.ok = false; }
-    const fecha = suave(0, 0.3, I), forte = suave(0.45, 1, I), Ic = Math.max(I, 0.75 * fecha); // qualquer chuva (até a garoa) fecha o céu e apaga o sol; a forte escurece mais
+    const I = Iv, fecha = suave(0, 0.3, I), forte = suave(0.45, 1, I), Ic = Math.max(I, 0.75 * fecha); // qualquer chuva (até a garoa) fecha o céu e apaga o sol; a forte escurece mais
     sun.intensity = escalar(eSol, sun.intensity, 1 - 0.72 * Ic);
     hemi.intensity = escalar(eHemi, hemi.intensity, 1 - 0.28 * I);
     scene.environmentIntensity = escalar(eAmb, scene.environmentIntensity, 1 - 0.25 * I);
@@ -469,6 +471,7 @@ export function passoClima(dt, race, cam, mode, src, c) {
     domo.material.opacity = op; domo.visible = op > 0.01; domo.position.copy(cam.position);
     if (!reduz.matches) nuvens.offset.x = (nuvens.offset.x + dt * 0.002) % 1;
     ativoAntes = I > 0;
+    if (N && Iv === N) { sun.color.lerp(TARDE, 0.35); sun.shadow.intensity = 0.35; eCorSol.ult.copy(sun.color); } // (o sol baixo atrás das nuvens: um pouco de sombra mole, quente)
   }
 
   // as gotas caindo (dentro do túnel de Mônaco, `tr.coberto`, não chove: nem gota nem pingo na tela)

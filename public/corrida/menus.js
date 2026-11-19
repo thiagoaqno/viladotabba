@@ -217,13 +217,13 @@ function renderGP(m, isHost, f1, c, t) {
   const seg = (itens, atual, attr, rot, dsb = dis) => `<div class="sn-seg" role="group" aria-label="${rot}">${itens.map(([v, l]) => { const on = String(atual) === String(v); return `<button class="sn-opt ${on ? "on" : ""}" data-${attr}="${v}" aria-pressed="${on}" ${dsb}>${l}</button>`; }).join("")}</div>`;
   const campo = (rot, corpo, nota) => `<div class="sn-grupo"><span class="sn-rot">${rot}</span>${corpo}${nota ? `<small>${nota}</small>` : ""}</div>`;
   const robos = Math.min(c.robos || 0, (f1 ? 22 : 8) - E.S.players.length);
-  const OPC_CLIMA = [["aleatorio", "Aleatório"], ["seco", "Seco"], ["chuva", "Chuva"], ["variavel", "Variável"]];
+  const OPC_CLIMA = [["aleatorio", "Aleatório"], ["seco", "Seco"], ["nublado", "Nublado"], ["chuva", "Chuva"], ["variavel", "Variável"]];
   trocar($("gpOpcoes"), `<h3 class="sn-tit"><span>O GP</span><em>${isHost ? "Você é o organizador" : "Só o organizador muda"}</em></h3><div class="sn-opcoes">`
     + (f1 ? campo("Temporada", seg(window.F1Temporadas.ANOS.map((a) => [a, String(a)]), window.F1Temporadas.anoValido(c.ano), "ano", "Temporada"), "As equipes, os pilotos e a força dos carros daquele ano.") : "")
     + campo("Regras", seg([["f1", "Fórmula 1"], ["formulagp", "Formula GP"], ["galera", "Corrida da Galera"]], gpReal && f1 ? "formulagp" : c.regras || "galera", "regras", "Regras"), gpReal && f1 ? "A Fórmula 1 com as pistas no tamanho real: traçado, largura de 12 m e relevo de verdade." : f1 ? "Pneus, paradas nos boxes, classificação e robôs com os pilotos de 2026." : "Caixas de itens e a ajuda do pelotão, sem pneus.")
     + campo("Voltas", seg([1, 2, 3, 5, 10, 21].map((v) => [v, v]), c.voltas, "v", "Voltas"))
     + campo("Horário", seg([["dia", "Dia"], ["noite", "Noite"]], c.hora === "noite" ? "noite" : "dia", "hora", "Horário"))
-    + (f1 && !temporada ? campo("Clima", seg(OPC_CLIMA, c.clima || "aleatorio", "clima", "Clima"), "Aleatório segue a previsão do GP. Chuva larga molhado; Variável larga seco e a chuva vem no meio.") : "")
+    + (f1 && !temporada ? campo("Clima", seg(OPC_CLIMA, c.clima || "aleatorio", "clima", "Clima"), "Aleatório segue a previsão do GP. Nublado fecha o céu sem chover. Chuva larga molhado; Variável larga seco e a chuva vem no meio.") : "")
     + campo("Robôs", seg((f1 ? [0, 1, 3, 7, 11, 21] : [0, 1, 3, 5, 7]).map((v) => [v, v === 21 && f1 ? "Grid de 22" : v ? v : "Sem"]), c.robos || 0, "robos", "Robôs")
       + (c.robos ? seg([["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]], c.nivel || "medio", "nivel", "Nível dos robôs") : ""),
       f1 ? `Os robôs são os pilotos reais de ${window.F1Temporadas?.anoAtual?.() || 2026}, com as cores das equipes. "Grid de 22" completa o que faltar.` : "Pilotos do computador completam o grid (até 8 carros) e usam itens.")

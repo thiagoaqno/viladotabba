@@ -5,7 +5,7 @@
 //   chove (o roteiro desta sessão tem chuva) · t (segundos do relógio do roteiro)
 import { E, sNow } from "./estado.js";
 
-export const clima = { agua: 0, chuva: 0, garoa: false, molhada: false, encharcada: false, chove: false, t: 0 };
+export const clima = { agua: 0, chuva: 0, garoa: false, molhada: false, encharcada: false, chove: false, nublado: false, t: 0 };
 // Atualiza `clima` para a hora `agora` (ms do relógio do servidor) e devolve ele. Chamado por quadro (jogo.js) e pela física.
 export function atualizarClima(agora = sNow()) {
   const c = window.F1Regras.climaEm(E.S && E.S.config && E.S.config.regras === "f1" ? E.S.clima : null, agora);

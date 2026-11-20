@@ -16,11 +16,12 @@
 // temperatura passa de 1, até +0,4, e a aderência cai até 25%) quando a pista está seca: dura 2 a 3 voltas.
 // `final` e `potencia` (2026-11-20, o Thiago: macio com mais velocidade final e aceleração, duro com menos, uns 2 s de diferença em Mônaco):
 // multiplicam a velocidade final e a força do motor com o pneu dentro da vida (dinamica.js). Medido com o piloto ideal (ferramentas/pneus-fisica.js,
-// voltaFixa, pneu novo e quente) em Mônaco: macio 78,43 s, médio 79,48 s, duro 80,53 s (antes 78,77 / 79,48 / 80,26).
+// voltaFixa, pneu novo e quente) em Mônaco: macio 77,17 s, médio 79,48 s, duro 81,41 s (antes 78,77 / 79,48 / 80,26; o Thiago pediu o macio
+// uns 5% mais forte e o duro mais fraco: velocidade final e aceleração +5% no macio, −3% e −5% no duro).
 const PNEUS = {
-  macio: { nome: "Macio", cor: "#e8202a", pico: 1.40, final: 1.008, potencia: 1.04, vida: 2.95, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
+  macio: { nome: "Macio", cor: "#e8202a", pico: 1.40, final: 1.05, potencia: 1.05, vida: 2.95, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
   medio: { nome: "Médio", cor: "#ffd100", pico: 1.36, vida: 3.95, aquece: 1.1, perdaAntes: 0.03, molhado: 0.5 },
-  duro: { nome: "Duro", cor: "#f4f4f4", pico: 1.32, final: 0.994, potencia: 0.97, vida: 4.95, aquece: 0.85, perdaAntes: 0.02, molhado: 0.5 },
+  duro: { nome: "Duro", cor: "#f4f4f4", pico: 1.32, final: 0.97, potencia: 0.95, vida: 4.95, aquece: 0.85, perdaAntes: 0.02, molhado: 0.5 },
   chuva: { nome: "Chuva", cor: "#1e7fd6", pico: 1.126, vida: 7.95, aquece: 0.5, perdaAntes: 0.02, molhado: 0.9, derrete: 2.8, esquenta: 0.4 },
   intermediario: { nome: "Intermediário", cor: "#39c85a", pico: 1.126, vida: 5.95, aquece: 0.5, perdaAntes: 0.02, molhado: 1, derrete: 2, esquenta: 0.4 },
 };

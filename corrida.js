@@ -475,11 +475,14 @@ module.exports = function attachCorrida(io) {
     log(room, `🔧 ${p.name} parou nos boxes (${F1.PNEUS[d.composto].nome}): ${F1.textoDaParada(parada)}, ${tempo.toFixed(1)} s no corredor.${motivo.length ? " " + motivo.join(", ") : ""}`);
   }
   // o corredor dos boxes da pista da sala (os pontos da pista são de 6 em 6 unidades, como no navegador)
-  const corredorDe = (room) => { const t = T.PISTAS[room.config.pista]; return t.boxes ? F1.corredor(t, T.pontos(t, 6).length, t.width) : null; };
+  const corredorDe = (room) => { const t = T.PISTAS[room.config.pista]; return t.boxes ? F1.corredor(t, pontosPorVolta(room.config.pista), t.width) : null; };
   // onde o carro está na pista agora (o ponto da pista), para conferir um setor que pulou: a simulação do servidor (humanos e
   // robôs das regras de F1) ou a posição que o navegador mandou
   const pontoDoCarro = (room, p) => {
-    const t = T.PISTAS[room.config.pista], n = T.pontos(t, 6).length, c = p.sim ? p.sim.c : p.ia && p.ia.sim;
+    // (2026-11-20) `pontosPorVolta` guarda o número; antes `T.pontos` refazia o traçado inteiro para cada carro a cada amostra do replay: medido
+    // no servidor local em Mônaco, 55 a 70 ms a cada 100 ms do laço da direção de prova, e os pacotes de posição dos robôs saíam com buracos de
+    // até meio segundo (as travadinhas deles mesmo jogando no PC)
+    const n = pontosPorVolta(room.config.pista), c = p.sim ? p.sim.c : p.ia && p.ia.sim;
     if (c && Number.isFinite(c.idx)) return { idx: c.idx, n };
     if (p.pos && Number.isFinite(p.pos.prog)) return { idx: ((Math.floor(p.pos.prog) % n) + n) % n, n };
     return { idx: NaN, n };

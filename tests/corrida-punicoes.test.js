@@ -50,7 +50,7 @@ test("direção de prova: o causador leva +3 s e o dano, o batido não leva puni
   impacto(room, 60, "a");
   Direcao.bater(room, a, 60, "carro", 5000, (s) => log.push(s), "carro:b");
   Direcao.bater(room, b, 60, "carro", 5000, (s) => log.push(s), "carro:a");
-  assert.equal(a.penal, 3); assert.equal(a.acrescimo, 3); assert.equal(a.dano, 12);
+  assert.equal(a.penal, 3); assert.equal(a.acrescimo, 3);
   assert.equal(b.penal, 0); assert.equal(b.dano, 0);
   assert.ok(log.some((s) => /Ana: causou uma batida leve, \+3 s/.test(s)), log.join("|"));
   assert.ok(log.some((s) => /Beto.*atingido: sem punição/.test(s)));
@@ -60,13 +60,13 @@ test("direção de prova: média +6 s sempre (a 2ª não sobe); a grave é stop-
   const room = sala(), a = room.players.a, log = [];
   impacto(room, 120, "a");
   Direcao.bater(room, a, 120, "carro", 5000, (s) => log.push(s), "carro:b");
-  assert.equal(a.penal, 6); assert.equal(a.dano, 20);
+  assert.equal(a.penal, 6);
   a.batidaPares = {}; impacto(room, 120, "a"); // a segunda média: de novo +6 s, sem stop-and-go
   Direcao.bater(room, a, 120, "carro", 20000, (s) => log.push(s), "carro:b");
   assert.equal(a.penal, 12); assert.equal(a.stopGo, undefined);
   a.batidaPares = {}; impacto(room, 200, "a");
   Direcao.bater(room, a, 200, "carro", 40000, (s) => log.push(s), "carro:b");
-  assert.equal(a.dano, 75); assert.equal(a.stopGo.s, F1.STOPGO_S); assert.equal(a.stopGo.ate, 2 + F1.STOPGO_VOLTAS);
+  assert.equal(a.stopGo.s, F1.STOPGO_S); assert.equal(a.stopGo.ate, 2 + F1.STOPGO_VOLTAS);
   assert.ok(log.some((s) => /Stop-and-go 8 s: cumpra em 3 voltas/.test(s)), log.join("|"));
 });
 

@@ -1,5 +1,16 @@
 [
   {
+    "id": "offline-muros-pneus-2026-11-20",
+    "data": "2026-11-20",
+    "itens": [
+      "Programa de PC: botão Offline no menu, para jogar tudo no seu PC com a internet ruim",
+      "Mônaco: menos muros invisíveis (a placa por cima da pista e o tamanho exagerado das placas)",
+      "Pneus: o macio ganhou velocidade final e aceleração, o duro perdeu um pouco (uns 2 s de diferença por volta em Mônaco)",
+      "Dano das batidas entre carros menor: 5%, 10% e 15%",
+      "A atualização do programa não trava mais num arquivo que nunca baixava"
+    ]
+  },
+  {
     "id": "noite-leds-2026-11-20",
     "data": "2026-11-20",
     "itens": [

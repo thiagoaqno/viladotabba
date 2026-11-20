@@ -2343,13 +2343,18 @@ const idsReais = () => Object.keys(PISTAS).filter((id) => PISTAS[id].real); // a
 // `colisao: "pecas"` no cenario/<pista>.json, o muro invisível da pista sai e o carro só bate nas placas, faixas, muros, guard-rails,
 // pneus e paredes colocados no editor. Devolve { 1: Float32Array, -1: Float32Array }: por ponto da pista e lado, o recuo da barreira
 // (da borda do asfalto até ela); 0 = aberto (o carro passa e vai para a grama).
+// (2026-11-20) a peça mais de 12 u (2,5 m) acima ou abaixo do asfalto mais perto não bate: a placa da Lenovo em Mônaco fica 32 u acima da pista
+// (passa por cima) e punha muro invisível dos dois lados da pista embaixo dela
+const ALTURA_FORA = 12;
 const KIT_BARREIRA = /muro|mureta|guard|barreira|pneu|cerca|parede|grade|alambrado|contencao|tecpro|faixa|placa/i;
 function murosDoCenario(pts, largura, cen) {
   const n = pts.length, lados = { 1: new Float32Array(n), [-1]: new Float32Array(n) };
-  const marcar = (i, lado, recuo) => { i = ((i % n) + n) % n; recuo = Math.max(1, recuo); const a = lados[lado]; if (!a[i] || recuo < a[i]) a[i] = recuo; };
+  const marcar = (i, lado, recuo) => { if (!Number.isFinite(recuo) || !Number.isFinite(i)) return; i = ((i % n) + n) % n; recuo = Math.max(1, recuo); const a = lados[lado]; if (!a[i] || recuo < a[i]) a[i] = recuo; };
   const perto = (x, y) => { let m = 0, d = Infinity; for (let i = 0; i < n; i++) { const q = pts[i], e = (q.x - x) ** 2 + (q.y - y) ** 2; if (e < d) { d = e; m = i; } } return m; };
-  const ponto = (x, y, meio) => { // uma barreira solta num lugar (x, y), com `meio` unidades para cada lado ao longo da pista
-    const i = perto(x, y), q = pts[i], nx = q.nx ?? -q.ty, ny = q.ny ?? q.tx, lat = (x - q.x) * nx + (y - q.y) * ny, rec = Math.abs(lat) - largura / 2;
+  const ponto = (x, y, meio, alt) => { // uma barreira solta num lugar (x, y), com `meio` unidades para cada lado ao longo da pista
+    const i = perto(x, y), q = pts[i];
+    if (Number.isFinite(alt) && Number.isFinite(q.h) && Math.abs(alt - q.h) > ALTURA_FORA) return; // (por cima da pista, numa ponte ou num terraço, ou embaixo dela: não é barreira)
+    const nx = q.nx ?? -q.ty, ny = q.ny ?? q.tx, lat = (x - q.x) * nx + (y - q.y) * ny, rec = Math.abs(lat) - largura / 2;
     if (rec < -largura / 4 || rec > 600) return; // (no meio da pista ou longe demais: não conta)
     const k = Math.max(1, Math.ceil(meio / 6)); for (let j = -k; j <= k; j++) marcar(i + j, lat < 0 ? -1 : 1, rec);
   };
@@ -2358,11 +2363,22 @@ function murosDoCenario(pts, largura, cen) {
     const mod = String(it.modelo || ""), barreira = it.tipo === "placa" || (it.tipo === "kit" && KIT_BARREIRA.test(it.kit || "")) || (it.tipo === "linha" && (mod === "parede" || mod === "pneus" || mod.startsWith("faixa") || KIT_BARREIRA.test(mod) || !mod));
     if (!barreira) continue;
     if (it.tipo === "linha" && it.beira) { const b = it.beira, lado = b.lado < 0 ? -1 : 1, rec = (+b.de || largura / 2 + 20) - largura / 2; let i0 = Math.round(+b.i0) || 0, i1 = Math.round(+b.i1) || 0; if (i1 < i0) i1 += n; if (i1 - i0 > n) i1 = i0 + n; for (let i = i0; i <= i1; i++) marcar(i, lado, rec); continue; }
-    if (it.tipo === "linha" && Array.isArray(it.pts) && it.pts.length === 3 && it.pts[0] && it.pts[2]) { // a curva de três pontos (relativos ao item), de 6 em 6
-      const ox = +it.x || 0, oz = +it.z || 0, [a, c, b] = it.pts, P = (t) => [(1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x + ox, (1 - t) ** 2 * a.z + 2 * (1 - t) * t * c.z + t * t * b.z + oz];
-      const L = Math.hypot(b.x - a.x, b.z - a.z) + 1, m = Math.max(2, Math.ceil(L / 6)); for (let k = 0; k <= m; k++) { const [x, y] = P(k / m); ponto(x, y, 4); } continue;
+    // (2026-11-20, o Thiago: "ainda bato em muros invisíveis perto das placas e do guard-rail triplo") as contas abaixo seguem o desenho
+    // (cenario-pista.js): a linha guarda os pontos como [x, z] relativos ao item, com o do meio (ou null: reta) por onde a curva passa; a placa
+    // tem `w` já em unidades e gira com `ry`. Antes a linha lia .x/.z (NaN: o guard-rail em linha não batia e marcava lixo no começo da pista)
+    // e a placa virava um muro 4,8 vezes mais comprido que ela, sempre ao longo da pista, mesmo de lado.
+    const ry = +it.ry || 0, cr = Math.cos(ry), sr = Math.sin(ry), ox = +it.x || 0, oz = +it.z || 0, sc = Math.abs(+it.s || 1);
+    const noMundo = (lx, lz) => [ox + (lx * cr + lz * sr) * sc, oz + (-lx * sr + lz * cr) * sc]; // (o giro do three.js em y: x' = x cos + z sen, z' = −x sen + z cos)
+    const alt = Number.isFinite(+it.y) && it.y !== undefined ? +it.y : NaN, reta = (x0, y0, x1, y1) => { const L = Math.hypot(x1 - x0, y1 - y0), m = Math.max(1, Math.ceil(L / 6)); for (let k = 0; k <= m; k++) ponto(x0 + ((x1 - x0) * k) / m, y0 + ((y1 - y0) * k) / m, 3, alt); };
+    const par = (p) => (Array.isArray(p) ? p : p && Number.isFinite(+p.x) ? [+p.x, +(p.z ?? p.y)] : null);
+    if (it.tipo === "linha" && Array.isArray(it.pts) && it.pts.length === 3 && par(it.pts[0]) && par(it.pts[2])) {
+      const A = par(it.pts[0]), B = par(it.pts[2]), M = par(it.pts[1]), C = M ? [2 * M[0] - (A[0] + B[0]) / 2, 2 * M[1] - (A[1] + B[1]) / 2] : [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
+      const P = (t) => noMundo((1 - t) ** 2 * A[0] + 2 * (1 - t) * t * C[0] + t * t * B[0], (1 - t) ** 2 * A[1] + 2 * (1 - t) * t * C[1] + t * t * B[1]);
+      const L = (Math.hypot(C[0] - A[0], C[1] - A[1]) + Math.hypot(B[0] - C[0], B[1] - C[1])) * sc, m = Math.max(2, Math.ceil(L / 6));
+      for (let k = 0; k < m; k++) { const [x0, y0] = P(k / m), [x1, y1] = P((k + 1) / m); reta(x0, y0, x1, y1); }
+      continue;
     }
-    if (it.tipo === "placa" || it.tipo === "kit") ponto(+it.x || 0, +it.z || 0, ((+it.w || 6) * Math.abs(+it.s || 1) * 4.8) / 2);
+    if (it.tipo === "placa" || it.tipo === "kit") { const meio = it.tipo === "placa" ? (+it.w || 60) / 2 : 3 * 4.8; const [x0, y0] = noMundo(-meio, 0), [x1, y1] = noMundo(meio, 0); reta(x0, y0, x1, y1); } // (o kit: 6 m de comprimento, girado como ele)
   }
   return lados;
 }

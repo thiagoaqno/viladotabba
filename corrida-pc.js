@@ -174,8 +174,18 @@ const PC_JS = `(function () {
   // internet: sem ping, o carro responde na hora. O site fica para as salas com os amigos, a carreira e os recordes (que sobem sozinhos).
   // O GP da carreira solo também (sede.js manda para /corrida/?sala=<código>&pc=1; rede.js mantém o pc=1 num F5): a carreira solo é a do PC.
   if (C && C.pc && /[?&](solo|treino|pc)=/.test(location.search)) { C.local = true; S = ""; }
+  // (2026-11-20, o Thiago: "jogando numa internet ruim, Mônaco travou: deve ter uma opção para jogar offline") o modo OFFLINE: tudo roda no PC,
+  // como sem internet (a sala, os robôs, a carreira); os recordes sobem sozinhos quando voltar ao online. Liga e desliga no botão do canto do menu.
+  var OFF = false; try { OFF = localStorage.getItem("corrida:pc:offline") === "1"; } catch (e) {}
+  if (C && C.pc && OFF) { C.local = true; C.offline = true; S = ""; }
   // no programa, um selo discreto no canto: online (salas do site), no PC (sozinho, ou sem internet) e o aviso de atualização quando houver
-  if (C && C.pc) addEventListener("DOMContentLoaded", function () { var d = document.createElement("div"); d.textContent = C.aviso || (C.local ? "Sozinho, rodando no seu PC (sem ping)" : S ? "Online" : "Sem internet: jogando no seu PC"); d.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:99999;padding:4px 8px;font:600 12px system-ui,sans-serif;color:#fff;background:" + (C.aviso ? "#b8860bdd" : S ? "#1e7e34aa" : "#444a") + ";pointer-events:none;max-width:60vw"; document.body.appendChild(d); if (!C.aviso) setTimeout(function () { d.remove(); }, 6000); });
+  if (C && C.pc && location.pathname === "/corrida/" && !/[?&](sala|solo|treino)=/.test(location.search)) addEventListener("DOMContentLoaded", function () { // o botão do modo offline, no menu
+    var k = document.createElement("button"); k.type = "button"; k.textContent = OFF ? "📴 Offline: tudo no seu PC (clique para ficar online)" : "🌐 Online (clique para jogar offline, tudo no seu PC)";
+    k.style.cssText = "position:fixed;right:8px;bottom:8px;z-index:99999;padding:5px 10px;border:0;font:600 12px system-ui,sans-serif;color:#fff;cursor:pointer;background:" + (OFF ? "#444d" : "#1e7e34cc");
+    k.onclick = function () { try { if (OFF) localStorage.removeItem("corrida:pc:offline"); else localStorage.setItem("corrida:pc:offline", "1"); } catch (e) {} location.reload(); };
+    document.body.appendChild(k);
+  });
+  if (C && C.pc) addEventListener("DOMContentLoaded", function () { var d = document.createElement("div"); d.textContent = C.aviso || (C.offline ? "Offline: jogando no seu PC" : C.local ? "Sozinho, rodando no seu PC (sem ping)" : S ? "Online" : "Sem internet: jogando no seu PC"); d.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:99999;padding:4px 8px;font:600 12px system-ui,sans-serif;color:#fff;background:" + (C.aviso ? "#b8860bdd" : S ? "#1e7e34aa" : "#444a") + ";pointer-events:none;max-width:60vw"; document.body.appendChild(d); if (!C.aviso) setTimeout(function () { d.remove(); }, 6000); });
   // a pergunta da atualização, ao abrir o jogo (só no menu; "Agora não" vale até fechar o programa): baixa só o que mudou, e só com o sim
   var A = C && C.atualizacao, menu = location.pathname === "/corrida/" && !/[?&](sala|solo|treino)=/.test(location.search), adiado = false;
   try { adiado = sessionStorage.getItem("corrida:pc:adiar") === "1"; } catch (e) {}

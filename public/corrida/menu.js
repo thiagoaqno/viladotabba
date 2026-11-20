@@ -50,7 +50,7 @@ const nomePiloto = () => ($("hName")?.value || store.get("galera:name") || "").t
 export function menuNaTela(sim) {
   if (sim === naTela) return; naTela = sim;
   if (!sim) { fecharAjustes(); clearInterval(timerResumo); clearInterval(timerPad); desligarGaragem(); pararPreCarga(); return; } // a corrida precisa da GPU inteira
-  if (pcLocal && !soloPedido && !treinoPedido) { location.replace("/corrida/"); return; } // (o programa de PC: o menu é sempre o do site)
+  if (pcLocal && !PC.offline && !soloPedido && !treinoPedido) { location.replace("/corrida/"); return; } // (o programa de PC: o menu é sempre o do site)
   ligarUmaVez();
   $("mnNomeTopo").textContent = nomePiloto() || "Piloto";
   $("hName").value = nomePiloto();

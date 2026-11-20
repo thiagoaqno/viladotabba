@@ -28,6 +28,9 @@ import { carregarCenario, montarItem, cenarioPronto, chaveDe, ajustesDaPista, co
 
 const M_PARA_U = 4.8; // 1 metro ≈ 4,8 unidades do jogo (dinamica.js: 1 u = 0,2083 m): um asset em metros entra no tamanho certo
 const pista = new URLSearchParams(location.search).get("editor") || "interlagos";
+// (2026-11-20, o Thiago: "o TabbaTracks também poder editar as pistas do Formula GP") a escala da pista escolhida antes de montar: as do Formula GP
+// (`real` em pistas.js) são montadas no tamanho de verdade, como no jogo (jogo.js chama o mesmo usarEscala na largada)
+window.Pistas?.usarEscala?.(pista);
 let prevRender = null; // (a prévia do conversor, desenhada junto com a cena)
 const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const api = (u, op) => fetch("/api/corrida/editor/" + u, op).then(async (r) => { const j = await r.json().catch(() => ({})); if (!r.ok) throw Error(j.erro || r.statusText); return j; });
@@ -264,7 +267,7 @@ addEventListener("keydown", async (e) => {
 // ---------- o painel ----------
 let assets = { originais: [], leves: [] }, aviso = "";
 painel.innerHTML = `<h2>Editor de cenário</h2>
-  <div class="lin"><select id="edPista">${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === pista ? "selected" : ""}>${h(PISTAS[id].name || id)}</option>`).join("")}</select><button id="edSalvar">Salvar</button><button id="edPublicar" title="Salva e manda o cenário e os assets para o GitHub num PR (o merge é seu)">Publicar (PR)</button><button id="edCraftBt">Craft</button></div>
+  <div class="lin"><select id="edPista">${Object.keys(PISTAS).map((id) => `<option value="${id}" ${id === pista ? "selected" : ""}>${h(PISTAS[id].name || id)}${PISTAS[id].real ? " (Formula GP)" : ""}</option>`).join("")}</select><button id="edSalvar">Salvar</button><button id="edPublicar" title="Salva e manda o cenário e os assets para o GitHub num PR (o merge é seu)">Publicar (PR)</button><button id="edCraftBt">Craft</button></div>
   <div class="lin"><label title="Tira o muro invisível da pista: o carro só bate nas placas, faixas, muros, guard-rails, pneus e paredes colocados aqui. Vale depois de salvar e publicar."><input type="checkbox" id="edColisao" ${colisaoDaPista(tr) === "pecas" ? "checked" : ""}> Colisão só nas placas e muros</label></div>
   <div id="edAviso"></div>
   <h3>Converter (assets-originais/)</h3><div id="edOrig" class="lst"></div>

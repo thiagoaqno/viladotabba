@@ -29,6 +29,7 @@
   const ler = () => { try { return JSON.parse(localStorage.getItem("galera:musica")) || {}; } catch (e) { return {}; } };
   const guardar = () => { try { localStorage.setItem("galera:musica", JSON.stringify({ vol, volMexido, tocando })); } catch (e) { /* sem armazenamento */ } };
   const VOLUME_PADRAO = 0.05;
+  const BASE_MUSICA = 0.4; // o 100% do deslizante vale 40% do arquivo (2026-11-20: as músicas são masterizadas altas; o Thiago deixava em 1 a 2%)
   const salvo = ler();
   let calada = false; // a partida está tocando: a música espera (MusicaCarreira, logo abaixo)
   // O volume padrão é baixo; só vale o guardado se a pessoa mexeu nele (`volMexido`: os saves antigos guardavam o padrão de antes, 40%)
@@ -50,7 +51,7 @@
   function tocar() {
     if (!lista.length || calada) return;
     if (!audio.src) carregar(i);
-    audio.volume = vol;
+    audio.volume = vol * BASE_MUSICA;
     // o navegador só deixa tocar depois de um toque ou tecla da pessoa: se recusar, fica pausado
     audio.play().then(() => { tocando = true; guardar(); pintar(); }).catch(() => { pintar(); });
   }
@@ -60,7 +61,7 @@
   // (`tocando` continua guardado como estava: é a vontade da pessoa, não o que a partida fez)
   window.MusicaCarreira = {
     nivel() { return vol; },
-    volume(v) { vol = Math.max(0, Math.min(1, +v)); volMexido = true; audio.volume = vol; const el = $("mVol"); if (el) el.value = Math.round(vol * 100); guardar(); }, // (o mixer de som da Corrida, corrida/mixer.js)
+    volume(v) { vol = Math.max(0, Math.min(1, +v)); volMexido = true; audio.volume = vol * BASE_MUSICA; const el = $("mVol"); if (el) el.value = Math.round(vol * 100); guardar(); }, // (o mixer de som da Corrida, corrida/mixer.js)
     calar() { calada = true; audio.pause(); },
     voltar() { if (!calada) return; calada = false; if (tocando) tocar(); },
   };
@@ -73,14 +74,14 @@
   $("mTocar").addEventListener("click", () => { if (audio.paused) { calada = false; tocar(); } else pausar(); }); // tocar à mão vale até na partida
   $("mProx").addEventListener("click", () => { calada = false; carregar(i + 1); tocar(); });
   $("mAnt").addEventListener("click", () => { calada = false; carregar(i - 1); tocar(); });
-  $("mVol").addEventListener("input", (e) => { vol = e.target.value / 100; volMexido = true; audio.volume = vol; guardar(); });
+  $("mVol").addEventListener("input", (e) => { vol = e.target.value / 100; volMexido = true; audio.volume = vol * BASE_MUSICA; guardar(); });
   addEventListener("keydown", (e) => { if (e.key === "Escape") cx.classList.remove("on"); });
 
   fetch("/api/musicas").then((r) => r.json()).then((l) => {
     if (!Array.isArray(l) || !l.length) return;
     lista = l.slice();
     for (let a = lista.length - 1; a > 0; a--) { const b = Math.floor(Math.random() * (a + 1)); [lista[a], lista[b]] = [lista[b], lista[a]]; } // cada vez numa ordem: começa numa música diferente e não repete até dar a volta
-    audio.volume = vol;
+    audio.volume = vol * BASE_MUSICA;
     bt.hidden = false;
     pintar();
     if (tocando) { // começa sozinha; se o navegador barrar, começa no primeiro toque na página (regra de autoplay dos navegadores)

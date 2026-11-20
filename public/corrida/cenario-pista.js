@@ -10,6 +10,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { patrocinioEm } from "./f1-capacetes.js";
 import { montarKit, KITS, filtroDoKit } from "./biblioteca.js";
 import { aplicarAcabamento } from "./acabamentos.js";
+import { aplicarLuz } from "./luz-item.js";
 import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -330,7 +331,7 @@ function montarMarcaChao(it, tr) {
 // módulo de mureta com tela 9, uma fileira de barreiras centenas) são juntados por material, já no lugar. O item continua um só objeto, clicável
 // e movível no editor; no jogo, o fundir.js junta de novo o que puder. Fica de fora: InstancedMesh, malha de vários materiais, linha e sprite.
 const _inv = new THREE.Matrix4(), _mm = new THREE.Matrix4();
-const chaveMat = (m) => [m.type, m.color?.getHex(), m.map?.uuid, m.emissive?.getHex(), m.emissiveMap?.uuid, m.emissiveIntensity, m.roughness, m.metalness, m.transparent, m.opacity, m.side, m.flatShading, m.depthWrite, m.polygonOffset, m.vertexColors].join("|");
+const chaveMat = (m) => [m.type, m.color?.getHex(), m.map?.uuid, m.emissive?.getHex(), m.emissiveMap?.uuid, m.emissiveIntensity, m.roughness, m.metalness, m.transparent, m.opacity, m.side, m.flatShading, m.depthWrite, m.polygonOffset, m.vertexColors, m.toneMapped, m.userData?.bloom].join("|"); // (o bloom e o tom: um LED não junta com outro material da mesma cor)
 export function enxugar(raiz) {
   raiz.updateMatrixWorld(true); _inv.copy(raiz.matrixWorld).invert();
   const baldes = new Map(), tirar = [];
@@ -360,6 +361,7 @@ export async function montarItem(it, tr = null) {
   // item continua positiva: o editor lê a escala dele como um número só)
   if (o && (it.espelho === "x" || it.espelho === "z")) { const e = it.espelho; for (const c of o.children) { c.position[e] *= -1; c.scale[e] *= -1; if (e === "x") { c.rotation.y *= -1; c.rotation.z *= -1; } else { c.rotation.x *= -1; c.rotation.y *= -1; } } }
   if (o && it.acab) aplicarAcabamento(o, it.acab); // (o acabamento escolhido no TabbaTracks: acabamentos.js)
+  if (o && it.luz) aplicarLuz(o, it.luz); // (o LED e o brilho escolhidos no TabbaTracks: luz-item.js)
   if (o && (it.tipo === "kit" || it.tipo === "linha" || (it.tipo === "area" && it.espalhar))) enxugar(o); // (as peças de código; o .glb do conversor já vem leve)
   return o;
 }
@@ -407,6 +409,7 @@ export function aplicarAjuste(o, a) {
   if (a.sx != null) o.scale.set(+a.sx, +a.sy, +a.sz);
   o.visible = !a.oculto;
   if (a.acab || o.userData.acab) { o.userData.acab = a.acab || null; aplicarAcabamento(o, a.acab || null); }
+  if (a.luz || o.userData.luz) { o.userData.luz = a.luz || null; aplicarLuz(o, a.luz || null); }
 }
 export function aplicarAjustes(tr) {
   const d = dadosDe.get(tr.pistaId || tr.id); if (!d || !Array.isArray(d.ajustes)) return;

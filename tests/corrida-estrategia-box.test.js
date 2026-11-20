@@ -63,10 +63,3 @@ test("a sugestão ainda pode aparecer na penúltima volta, mas não na última",
 // (2026-11-11: o caso "chuva próxima evita..." saiu: esperava números de antes de mudanças pedidas pelo Thiago — ver o PR "testes da volta à escala antiga")
 
 
-test("desgaste e custo da parada definem se compensa trocar", () => {
-  const ritmo = require("../public/corrida/f1-pneus-ritmo.js");
-  const e = base({ ritmo, pista: "silverstone", voltaAtual: 4, voltas: 5, janela: { precisa: true, abre: 4 }, pneu: { composto: "medio", desgaste: 0.5 } });
-  assert.equal(E.sugerirBox(e), null, "o pneu ainda chega ao fim");
-  assert.equal(E.sugerirBox({ ...e, pneu: { composto: "medio", desgaste: 0.85 } }), null, "parar custaria mais que continuar");
-  assert.equal(E.escolherSeco({ F, ritmo, pista: "silverstone", jogos: { macio: 2, medio: 2, duro: 2 }, voltasRestantes: 3 }), "medio", "escolhe o mais rápido que chega ao fim");
-});

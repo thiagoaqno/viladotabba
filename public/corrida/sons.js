@@ -121,7 +121,7 @@ export const Sound = (() => {
     eng.f.frequency.setTargetAtTime(500 + rpm * 1400 + v * 2, t, 0.06);
     eng.g.gain.setTargetAtTime(on && racing && !f1 ? (0.035 + rpm * 0.02) * (troca > 0 ? 0.3 : 1) : 0, t, 0.05);
     eng.wg.gain.setTargetAtTime(on && racing ? Math.min(0.05, v * 0.00011) : 0, t, 0.1);
-    if (f1) { if (!motorF1) { motorBus = c.createGain(); motorBus.connect(CANAL.motor); motorF1 = criarMotorF1(c, motorBus, reverbExistente); } motorF1.atualizar(t, { gas, rpm: rpmF1, marcha: marchaF1 || 1, ativo: on && racing, cam: f1.cam, lim: f1.lim || 0, ers: false, freio: false }); } else if (motorF1) motorF1.silenciar(t);
+    if (f1) { if (!motorF1) { motorBus = c.createGain(); motorBus.connect(CANAL.motor); motorF1 = criarMotorF1(c, motorBus, reverbExistente); } motorF1.atualizar(t, { gas, rpm: rpmF1, marcha: marchaF1 || 1, ativo: on && racing, cam: f1.cam, lim: f1.lim || 0, ers: !!f1.ers, freio: !!f1.freio, kmh: v * 0.75 }); } else if (motorF1) motorF1.silenciar(t);
     if (ambBus) ambBus.gain.setTargetAtTime(on && racing ? 1 : 0, t, 0.4);
     if (!racing && ecoG) ecoG.gain.setTargetAtTime(0, t, 0.1);
   }

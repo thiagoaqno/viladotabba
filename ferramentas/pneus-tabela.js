@@ -35,7 +35,7 @@ if (!isMainThread) {
   }))).then(() => {
     const todas = { ...atual, ...novas }; for (const id of semTabela) delete todas[id];
     const ordem = Object.keys(T.PISTAS).filter((id) => todas[id]);
-    const linhas = ordem.map((id) => `  ${id}: ${JSON.stringify(todas[id])},`);
+    const linhas = ordem.map((id) => `  ${/^[A-Za-z_$][w$]*$/.test(id) ? id : JSON.stringify(id)}: ${JSON.stringify(todas[id])},`);
     const txt = `// GERADO por ferramentas/pneus-tabela.js (o simulador de stint com a física do carro): não edite à mão. Para cada pista, o
 // tempo da volta de cada composto a cada desgaste (GRADE de f1-pneus-ritmo.js), quanto o piloto ideal gasta o pneu por volta, o
 // que o pneu frio perde e o que uma parada custa de verdade.

@@ -170,6 +170,7 @@ function pov(x, p) {
   C.pitch = (C.pitch || 0) + ((R.pitch || 0) - (C.pitch || 0)) * (1 - Math.exp(-dt * 8));
   cam.position.set(c.x + fx * fo - fy * lat, c.z + (R.dyChao || 0) + eh + p.lift + Math.sin(C.pitch) * fo * 0.5, c.y + fy * fo + fx * lat); C.pos = null;
   cam.lookAt(c.x + fx * (fo + 70) - fy * lat, Math.max(C.lookY, c.z + Math.tan(C.pitch) * 70 - 6) + p.eh * p.mira - (p.baixo || 0) * 70 + Math.tan(A.incl * Math.PI / 180) * 70, c.y + fy * (fo + 70) + fx * lat); // (baixo: o olhar inclinado para o volante)
+  balanco(x, 0.55);
   if (!rm) { // a vibração cresce com a velocidade e o volante inclina um pouco a cabeça
     const trem = (speedK * speedK * 0.35 * tremorDaVelocidade(x.src.v) + (R.offroad ? p.tremOff : 0)) * p.trem * kt;
     cam.position.y += (Math.random() - 0.5) * trem; cam.position.x += (Math.random() - 0.5) * trem * 0.5;
@@ -203,7 +204,31 @@ function perseguicao(x) {
   const la = near ? 60 : 85, lx = src.x + fx * la, ly = src.y + fy * la, chao = groundH(tr, lx, ly, nearest(tr, lx, ly, R.idx));
   C.lookH = C.lookH == null ? chao : C.lookH + (chao - C.lookH) * (1 - Math.exp(-dt * 5));
   cam.lookAt(lx - fy * lat, Math.max((src.z || 0) + 4 + (C.lookH - (src.z || 0)) * 0.6, C.lookH + 2) + Math.tan(A.incl * Math.PI / 180) * la, ly + fx * lat);
+  balanco(x, 1);
   cam.fov += (A.fov + speedK * (rm ? 4 : near ? 16 : 14) + C.surge * 5 - cam.fov) * fovStep; cam.updateProjectionMatrix();
+}
+
+// o balanço da câmera: uma mola com amortecedor (inércia). A batida (R.shake subindo) dá um tranco para baixo e inclina um pouco; a zebra dá
+// toquinhos curtos enquanto o carro passa nela. A mola puxa de volta e o amortecedor segura: balança uma ou duas vezes e para. Leve de propósito
+// (alguns centímetros e 1 a 2 graus); movimento reduzido desliga, e o tremor da câmera em 0% também.
+function balanco(x, peso) {
+  const { R, C, rm, speedK, c } = x, A = ajusteDe(x.mode);
+  const B = C.bal || (C.bal = { y: 0, vy: 0, r: 0, vr: 0, sh: 0, zt: 0 });
+  const sh = R.shake || 0;
+  if (sh > B.sh + 0.05) { const f = Math.min(1, sh / 0.3); B.vy -= 16 * f; B.vr += (Math.random() < 0.5 ? -1 : 1) * 0.3 * f; }
+  B.sh = sh;
+  if (R.naZebra && !(c && c.air) && speedK > 0.15) {
+    B.zt -= x.dt;
+    if (B.zt <= 0) { B.zt = 0.06 + Math.random() * 0.05; const k = Math.min(1, speedK); B.vy += (Math.random() - 0.4) * 6 * k; B.vr += (Math.random() - 0.5) * 0.14 * k; }
+  } else B.zt = 0;
+  // a mola em passos curtos (estável mesmo com o quadro lento)
+  let t = Math.min(x.dt, 0.1);
+  while (t > 0) { const h = Math.min(t, 1 / 120); t -= h;
+    B.vy += (-95 * B.y - 12 * B.vy) * h; B.y += B.vy * h;
+    B.vr += (-120 * B.r - 14 * B.vr) * h; B.r += B.vr * h; }
+  B.y = lim(B.y, -3, 3); B.r = lim(B.r, -0.06, 0.06);
+  if (rm || A.trem <= 0) return;
+  cam.position.y += B.y * peso; cam.rotateZ(B.r * peso);
 }
 
 // a guinada suavizada de C.a: as câmeras que não a usam a mantêm em dia, para a troca para a perseguição não girar de repente

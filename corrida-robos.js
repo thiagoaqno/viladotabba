@@ -546,7 +546,7 @@ function estiloDe(room, p, rng) {
   const estreita = T.PISTAS[room.config.pista].width <= LARGURA_ESTREITA;
   return { dentro: (rng() * 2 - 1) * (estreita ? 0.5 : 1), lado: (rng() * 2 - 1) * (estreita ? 2 : 9), look: pil && Estilos.PERFIS[pil.id] ? 2 + Math.min(3, Math.floor((1 - Estilos.dePiloto(pil).frenagem) * 4)) : 2 + Math.floor(rng() * 4), erroK: nivel * (pil ? 0.5 + (100 - pil.constancia) / 40 : 1), erros: F1.sorteio(`erros:${room.semente}:${p.id}`) };
 }
-let L_CARRO = 44, W_CARRO = 26; // o carro em unidades da pista (carros.js: 4,4 m x 2,6 m, escala 10; no Formula GP 26,4 × 9,1: 5,5 m × 1,9 m, escala 4,8)
+let L_CARRO = 44, W_CARRO = 20; // (2026-11-20: W_CARRO 26 → 20: o carro da física tem 16 u de largura, sim.js DIMENSOES; 20 é ele com 2 u de folga de cada lado. Medido com 20 robôs, 3 min, 2 sementes: Mônaco 105 → 228 batidas e 136 → 230 trocas de posição; Interlagos 104 → 226 e 267 → 397; Monza 126 → 92 e 346 → 440) o carro em unidades da pista (carros.js: 4,4 m x 2,6 m, escala 10; no Formula GP 26,4 × 9,1: 5,5 m × 1,9 m, escala 4,8)
 // atrás de um HUMANO, no Formula GP, o robô guarda mais espaço (de antes de #665): RESERVA_HUMANO s da velocidade dele na folga e FREADA_HUMANO s da freada medida
 let RESERVA_HUMANO = 0, FREADA_HUMANO = 0.25;
 // os 3 círculos do carro (como em colisao.js, que é do navegador)
@@ -597,7 +597,7 @@ const TRANSITO_NIVEL = { facil: { margem: 40, antec: 0.95, defende: 0.2 }, medio
 // Formula GP: a escala real troca os números acima pelos de antes de #665 (pistas.js chama na troca de escala)
 const MARGENS_ANTIGAS = { facil: 40, medio: 32, dificil: 30 }, MARGENS_REAIS = { facil: 17, medio: 13.5, dificil: 12.5 };
 T.aoTrocarEscala((real) => {
-  [L_CARRO, W_CARRO, MARG_PARADO, RESERVA_HUMANO, FREADA_HUMANO] = real ? [26.4, 9.1, 10, 0.15, 0.45] : [44, 26, 28, 0, 0.25];
+  [L_CARRO, W_CARRO, MARG_PARADO, RESERVA_HUMANO, FREADA_HUMANO] = real ? [26.4, 9.1, 10, 0.15, 0.45] : [44, 20, 28, 0, 0.25];
   Object.assign(FOLGA_F1, real ? FOLGA_F1_REAL : FOLGA_F1_ANTIGA); Object.assign(EMPURRAO_F1, real ? EMPURRAO_F1_REAL : EMPURRAO_F1_ANTIGO);
   for (const [k, m] of Object.entries(real ? MARGENS_REAIS : MARGENS_ANTIGAS)) TRANSITO_NIVEL[k].margem = m;
 }); // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)

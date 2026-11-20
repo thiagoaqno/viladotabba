@@ -52,13 +52,19 @@ export const ESCAPAMENTO = [{ f: 130, q: 1.2, g: 6 }, { f: 430, q: 1.8, g: 8 }, 
 // cada câmera: fc (passa-baixas final), esc (escapamento), baixo (ordens baixas), adm (admissão), ar (o ar da passagem), eco,
 // brilho (ganho do pico de 1,7 kHz), turbo (assobio) e mgu (zumbido elétrico)
 export const CAMERAS = {
-  perto: { fc: 7000, esc: 1, baixo: 0.9, adm: 0.9, ar: 1, eco: 0.55, brilho: 5, vib: 0, turbo: 0.8, mgu: 0.7 },
-  longe: { fc: 5600, esc: 0.9, baixo: 0.95, adm: 0.8, ar: 0.8, eco: 0.8, brilho: 4, vib: 0, turbo: 0.5, mgu: 0.45 },
-  cima: { fc: 3400, esc: 0.8, baixo: 1.05, adm: 0.8, ar: 0.5, eco: 0.7, brilho: 2, vib: 0, turbo: 0.35, mgu: 0.3 },
-  cockpit: { fc: 5200, esc: 0.72, baixo: 1.5, adm: 2, ar: 0, eco: 0.2, brilho: 3, vib: 1, turbo: 1.4, mgu: 1.3 },
+  perto: { fc: 7000, esc: 1, baixo: 0.9, adm: 0.9, ar: 1, eco: 0.55, brilho: 5, vib: 0, turbo: 0.8, mgu: 0.7, cambio: 0.8 },
+  longe: { fc: 5600, esc: 0.9, baixo: 0.95, adm: 0.8, ar: 0.8, eco: 0.8, brilho: 4, vib: 0, turbo: 0.5, mgu: 0.45, cambio: 0.45 },
+  cima: { fc: 3400, esc: 0.8, baixo: 1.05, adm: 0.8, ar: 0.5, eco: 0.7, brilho: 2, vib: 0, turbo: 0.35, mgu: 0.3, cambio: 0.25 },
+  cockpit: { fc: 5200, esc: 0.72, baixo: 1.5, adm: 2, ar: 0, eco: 0.2, brilho: 3, vib: 1, turbo: 1.4, mgu: 1.3, cambio: 1.4 },
 };
 // o turbo: a frequência do assobio vai de 2 a ~5,4 kHz com a rotação do turbo (0 a 1); o MGU-K zumbe em rpm / 60 × 8
 export const TURBO_HZ = [2000, 5400], MGU_ORDEM = 8;
+// (2026-11-20, sons novos) o zumbido das engrenagens de dentes retos do câmbio: sobe com a VELOCIDADE (o eixo de saída), não com a
+// rotação, então não cai na troca de marcha; de ~350 Hz parado a ~3,3 kHz a 330 km/h
+export const CAMBIO_HZ = (kmh) => 350 + Math.min(360, Math.max(0, kmh)) * 9;
+// o super clipping de 2026: no fim das retas, com o pé no fundo e de marcha alta, o MGU-K passa a recarregar e o motor "murcha"
+// (perde o brilho, a rotação sobe mais devagar e o zumbido elétrico muda de tom). Só no som: a física não muda.
+export const CLIP_MARCHA = 7, CLIP_DEPOIS_S = 2.2;
 
 // distorção suave e levemente assimétrica (os harmônicos pares dão o rasgado); mais forte que a do V10 (o V6 é mais rouco)
 export function curvaDeSaturacao(k) {
@@ -149,6 +155,9 @@ export function criarMotorF1(c, saida, eco) {
   const mguG = ganho(0), mguAm = ganho(0.82), mg1 = osc("sine"), mg2 = osc("triangle"), mg2G = ganho(0.3), mguBp = no("peaking", 1800, 0.9, 5);
   mg1.connect(mguAm); mg2.connect(mg2G); mg2G.connect(mguAm); mguAm.connect(mguBp); mguBp.connect(mguG); mguG.connect(agudo);
   const lfoK = osc("sine"), lfoKG = ganho(0.18); lfoK.frequency.value = 95; lfoK.connect(lfoKG); lfoKG.connect(mguAm.gain);
+  // o câmbio: duas senoides (a engrenagem e a vizinha, 1,37 ×) num passa-banda estreito, com um tremor leve no tom
+  const cbG = ganho(0), cb1 = osc("sine"), cb2 = osc("sine"), cb2G = ganho(0.35), cbBp = no("bandpass", 1500, 2.5);
+  cb1.connect(cbBp); cb2.connect(cb2G); cb2G.connect(cbBp); cbBp.connect(cbG); cbG.connect(agudo); jitter(cb1, 8); jitter(cb2, 10);
 
   // ---- os carros dos outros: até VOZES, a versão barata (menos ordens), com volume pela distância, Doppler forte e pan ----
   const ondaExp = onda("explosaoBarata", 0.6), ondaBx = onda("baixoBarato", 1.4), vozes = [];
@@ -158,10 +167,11 @@ export function criarMotorF1(c, saida, eco) {
     const r1 = no("peaking", 430, 2, 7), r2 = no("peaking", 1700, 2.4, 5); soma2.connect(r1); r1.connect(r2); r2.connect(f);
     f.connect(g); gt.connect(g); // o assobio do turbo passa fora do passa-baixas da voz (só pela distância)
     if (p) { g.connect(p); p.connect(camLp1); } else g.connect(camLp1);
-    vozes.push({ a, b, w, f, g, p, fino: 1 + (i - 1) * 0.004 });
+    vozes.push({ a, b, w, f, g, p, fino: 1 + (i - 1) * 0.004 + (Math.random() - 0.5) * 0.03, tFino: 0.85 + Math.random() * 0.3 }); // (cada voz com o tom e o turbo um pouco diferentes: os carros não soam iguais)
   }
 
   let marchaAnt = 0, gasAntes = false, corteAte = 0, estalosAte = 0, proxEstalo = 0, blipIni = -1;
+  let clip = 0, fundoDesde = -1, proxFalha = 0; // o super clipping (0 a 1), desde quando o pé está no fundo de marcha alta, a próxima falha aleatória
   let turbo = 0.15, tAnt = null; // a rotação do turbo (0 a 1): anda atrás da carga, devagar (o atraso do turbo)
   // um pipoco abafado do escapamento, a partir de t0: ruído em banda média-baixa (o V6 turbo estala mais surdo que o V10, a
   // turbina no caminho); o forte tem uma pancada grave por baixo
@@ -179,32 +189,45 @@ export function criarMotorF1(c, saida, eco) {
     s.connect(f); f.connect(g); g.connect(agudo); s.start(t0, Math.random() * 0.8, 0.46);
   }
 
+  // a engatada: uma pancadinha grave e seca do câmbio na troca (o "tunc" de dentro do carro)
+  function engate(t0, nivel) {
+    const o = c.createOscillator(), og = ganho(0); o.type = "triangle"; o.frequency.setValueAtTime(85 + Math.random() * 25, t0); o.frequency.exponentialRampToValueAtTime(45, t0 + 0.05);
+    og.gain.setValueAtTime(0.05 * nivel, t0); og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06); o.connect(og); og.connect(camLp1); o.start(t0); o.stop(t0 + 0.08);
+  }
   // o: { gas, rpm, marcha, ativo (andando e com som), cam (perto, cockpit, longe, cima), lim (0 a 1: o limitador batendo),
   //      ers (o ERS entregando energia), freio (o pedal de freio: recarrega) }
-  function atualizar(t, { gas, rpm, marcha, ativo, cam: camera, lim, ers, freio }) {
+  function atualizar(t, { gas, rpm, marcha, ativo, cam: camera, lim, ers, freio, kmh = 0 }) {
     const r = Math.min(1.04, Math.max(0, rpm)), K = CAMERAS[camera] || CAMERAS.perto;
     const dt = tAnt === null ? 0.016 : Math.min(0.25, Math.max(0, t - tAnt)); tAnt = t;
     if (marchaAnt && marcha !== marchaAnt && ativo) {
+      engate(t + 0.02, K.cambio);
       if (marcha > marchaAnt) { corteAte = t + 0.035; if (gas && r > 0.5) estalo(t + 0.035, false); } // sobe: corte de ignição curtíssimo (35 ms) e um pipoquinho
       else { corteAte = t + 0.025; blipIni = t; for (let i = 0; i < 2; i++) estalo(t + 0.06 + i * 0.07 + Math.random() * 0.05, i === 0 && r > 0.65); } // reduz: "blip" do acelerador e dois pipocos abafados
     }
     marchaAnt = marcha;
     if (ativo && gasAntes && !gas && r > 0.7) { estalosAte = t + 0.15 + r * 0.3; sopro(t, Math.min(1, turbo) * K.turbo); } // tirou o pé em alta: o sopro do turbo e uns pipocos
     gasAntes = gas;
+    // a falha aleatória: sem acelerador e com o motor alto, de vez em quando um pipoco solto (o combustível queimando no escapamento)
+    if (ativo && !gas && r > 0.4 && t >= proxFalha) { if (proxFalha > 0 && Math.random() < 0.5) estalo(t, Math.random() < 0.15); proxFalha = t + 0.6 + Math.random() * 2.2; }
+    if (gas) proxFalha = t + 0.4;
+    // o super clipping: pé no fundo, marcha alta e rotação alta por um tempo, e sem o ERS ligado; sai na hora em que tira o pé
+    if (ativo && gas && !ers && marcha >= CLIP_MARCHA && r > 0.75) { if (fundoDesde < 0) fundoDesde = t; } else fundoDesde = -1;
+    const alvoClip = fundoDesde >= 0 && t - fundoDesde > CLIP_DEPOIS_S ? 1 : 0;
+    clip += (alvoClip - clip) * (1 - Math.exp(-dt / (alvoClip > clip ? 0.6 : 0.12)));
     if (ativo && t < estalosAte && t >= proxEstalo) { estalo(t, Math.random() < 0.06); proxEstalo = t + 0.07 + Math.random() * 0.18; }
     const blip = blipIni >= 0 && t - blipIni < 0.2 ? Math.sin(Math.PI * (t - blipIni) / 0.2) : 0; // 0 a 1 a 0 em 200 ms
-    const f3 = rpmV6(r) * (1 + 0.09 * blip) / 20; // Hz da nota de explosão (3ª ordem: rpm / 60 × 3)
+    const f3 = rpmV6(r) * (1 + 0.09 * blip) * (1 - 0.035 * clip) / 20; // Hz da nota de explosão (3ª ordem: rpm / 60 × 3)
     const tom = t < corteAte ? 0.01 : 0.02;
     bx.frequency.setTargetAtTime(f3 / 6, t, tom); md.frequency.setTargetAtTime(f3 / 2, t, tom);
     exA.frequency.setTargetAtTime(f3, t, tom); exB.frequency.setTargetAtTime(f3 * 1.004, t, tom); exC.frequency.setTargetAtTime(f3 * 0.996, t, tom);
     pulso.frequency.setTargetAtTime(f3, t, tom); lfoAm.frequency.setTargetAtTime(f3 / 2, t, tom); vib.frequency.setTargetAtTime(f3 / 3, t, tom);
     // pisando, a explosão manda; sem acelerador (e em movimento) ela some e ficam as ordens baixas, a admissão e os pipocos
     const pe = gas || blip > 0, fogo = pe ? 1 : 0.14 + 0.55 * Math.min(1, Math.max(0, (0.45 - r) / 0.2)); // na marcha lenta o motor segue explodindo
-    fogoG.gain.setTargetAtTime(ativo ? fogo : 0, t, pe ? 0.03 : 0.06);
+    fogoG.gain.setTargetAtTime(ativo ? fogo * (1 - 0.35 * clip) : 0, t, pe ? 0.03 : 0.06);
     combG.gain.setTargetAtTime(ativo ? fogo * (0.35 + 0.65 * r) * 0.6 : 0, t, 0.05);
     bxG.gain.setTargetAtTime(ativo ? (pe ? 0.8 : 1) * K.baixo : 0, t, 0.06); mdG.gain.setTargetAtTime(ativo ? (pe ? 0.6 : 0.32) : 0, t, 0.06);
     vibG.gain.setTargetAtTime(ativo ? 0.35 * K.vib * (0.4 + 0.6 * r) : 0, t, 0.08);
-    brilho.frequency.setTargetAtTime(pe ? 2000 + r * r * 3600 : 900 + r * 1300, t, 0.05); // o agudo abre com a rotação; sem acelerador fica abafado
+    brilho.frequency.setTargetAtTime((pe ? 2000 + r * r * 3600 : 900 + r * 1300) * (1 - 0.4 * clip), t, 0.05); // o agudo abre com a rotação; sem acelerador fica abafado
     pico3.gain.setTargetAtTime(K.brilho, t, 0.15); camLp1.frequency.setTargetAtTime(K.fc, t, 0.1); camLp2.frequency.setTargetAtTime(K.fc * 1.06, t, 0.1); envioEco.gain.setTargetAtTime(K.eco, t, 0.2);
     saidaMotor.gain.setTargetAtTime(ativo ? (0.5 + 0.5 * r) * K.esc * 0.3 * (t < corteAte ? 0.1 : 1) : 0, t, t < corteAte ? 0.006 : 0.03);
     // a admissão: ronco de 180 a 520 Hz que cresce com a rotação e com o acelerador
@@ -220,13 +243,17 @@ export function criarMotorF1(c, saida, eco) {
     tu1.frequency.setTargetAtTime(fT, t, 0.03); tu2.frequency.setTargetAtTime(fT * 1.498, t, 0.03); tuAr.frequency.setTargetAtTime(fT, t, 0.03); tuFiltro.frequency.setTargetAtTime(fT, t, 0.05);
     turboG.gain.setTargetAtTime(ativo ? (gas ? 0.008 + 0.032 * turbo * turbo : 0.007 + 0.014 * turbo * turbo) * K.turbo : 0, t, gas ? 0.08 : 0.2);
     // o MGU-K: zumbe na ordem 8 da rotação; entrega (ERS ligado) forte, recarrega na frenagem mais fraco e um pouco mais grave
-    const recarga = !!freio && !gas && r > 0.3, nivelK = ers && gas ? 1 : recarga ? 0.55 : 0.05;
+    const recarga = (!!freio && !gas && r > 0.3) || clip > 0.3, nivelK = ers && gas ? 1 : recarga ? 0.55 * Math.max(clip, freio ? 1 : 0) : 0.05;
     const fK = rpmV6(r) / 60 * MGU_ORDEM * (recarga ? 0.9 : 1);
     mg1.frequency.setTargetAtTime(fK, t, 0.04); mg2.frequency.setTargetAtTime(fK * 2, t, 0.04); mguBp.frequency.setTargetAtTime(Math.min(3500, fK * 1.4), t, 0.1);
-    mguG.gain.setTargetAtTime(ativo ? nivelK * (0.4 + 0.6 * r) * 0.034 * K.mgu : 0, t, nivelK > 0.9 ? 0.06 : 0.15);
+    mguG.gain.setTargetAtTime(ativo ? nivelK * (0.4 + 0.6 * r) * 0.016 * K.mgu : 0, t, nivelK > 0.9 ? 0.06 : 0.15); // (religado em 2026-11-20 bem mais baixo: textura, não zumbido)
+    // o câmbio: mais claro sem acelerador (o motor não cobre) e só com o carro andando
+    const fC = CAMBIO_HZ(kmh), andaC = Math.min(1, kmh / 60);
+    cb1.frequency.setTargetAtTime(fC, t, 0.05); cb2.frequency.setTargetAtTime(fC * 1.37, t, 0.05); cbBp.frequency.setTargetAtTime(fC * 1.1, t, 0.08);
+    cbG.gain.setTargetAtTime(ativo ? andaC * (pe ? 0.006 : 0.011) * K.cambio : 0, t, 0.1);
   }
   function silenciar(t) {
-    for (const g of [saidaMotor, fogoG, combG, bxG, mdG, vibG, admG, arG, lfoAmp, turboG, mguG]) g.gain.setTargetAtTime(0, t, 0.05);
+    for (const g of [saidaMotor, fogoG, combG, bxG, mdG, vibG, admG, arG, lfoAmp, turboG, mguG, cbG]) g.gain.setTargetAtTime(0, t, 0.05);
     outros(t, null, 0, false);
   }
   // lista: [{ dist (m), vRel (m/s, positivo = se aproximando), v (m/s), lado (-1 esquerda a 1 direita) }], n: quantos valem
@@ -237,7 +264,7 @@ export function criarMotorF1(c, saida, eco) {
       const rot = rotacaoPorVelocidade(r.v), dop = SOM / (SOM - Math.max(-150, Math.min(150, r.vRel * 1.35))); // Doppler forte: o "nheeeeooow" na passagem
       const f3 = rpmV6(rot) / 20 * dop * v.fino;
       v.a.frequency.setTargetAtTime(f3, t, 0.045); v.b.frequency.setTargetAtTime(f3 / 6, t, 0.045);
-      v.w.frequency.setTargetAtTime((TURBO_HZ[0] + (TURBO_HZ[1] - TURBO_HZ[0]) * rot * rot) * dop, t, 0.045); // o assobio acompanha o Doppler
+      v.w.frequency.setTargetAtTime((TURBO_HZ[0] + (TURBO_HZ[1] - TURBO_HZ[0]) * rot * rot) * dop * v.tFino, t, 0.045); // o assobio acompanha o Doppler
       v.f.frequency.setTargetAtTime((800 + rot * rot * rot * 3600) / (1 + r.dist / 240), t, 0.08);
       v.g.gain.setTargetAtTime(0.11 / (1 + Math.pow(r.dist / 32, 1.4)), t, 0.07);
       if (v.p) v.p.pan.setTargetAtTime(r.lado * 0.85, t, 0.07);

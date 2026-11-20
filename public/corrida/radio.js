@@ -100,9 +100,9 @@ function bip(c, f, dur, vol, destino, t) {
 // sintetizado: o chiado de abrir o canal e dois bipes subindo. Devolve quantos segundos ela dura (a voz entra depois)
 function abertura(c, destino, t) {
   const b = aberturas.length ? aberturas[Math.floor(Math.random() * aberturas.length)] : null;
-  if (b) { const s = c.createBufferSource(); s.buffer = b; s.connect(destino); s.start(t); return b.duration + 0.03; }
-  ruido(c, 0.06, 0.07, destino, t);
-  bip(c, 1150, 0.06, 0.05, destino, t + 0.05); bip(c, 1550, 0.08, 0.05, destino, t + 0.13);
+  if (b) { const s = c.createBufferSource(), g = c.createGain(); g.gain.value = 0.35; s.buffer = b; s.connect(g).connect(destino); s.start(t); return b.duration + 0.03; } // (o bip gravado bem abaixo da voz: era o som mais alto do rádio)
+  ruido(c, 0.06, 0.03, destino, t);
+  bip(c, 1150, 0.06, 0.02, destino, t + 0.05); bip(c, 1550, 0.08, 0.02, destino, t + 0.13);
   return 0.26;
 }
 // o HUD mostra o cartão "RÁDIO" do engenheiro enquanto ele fala (evento `radio:fala` com { on })

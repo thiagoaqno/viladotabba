@@ -10,7 +10,7 @@ import { noEscape } from "./escapes.js";
 
 const M_ALTURA = D.projecao.k * 1.1; // unidades de altura por metro de parede (a escala da planta; o morro é mais achatado)
 const JANELA = 3.5 * D.projecao.k, ANDAR = 3.1 * D.projecao.k * 1.1; // o módulo da fachada: 3,5 m de largura e 3,1 m de altura, em unidades do mundo
-const CELULA = 1600; // as malhas por região (a mesma célula de kit/fundir.js)
+const CELULA = 700; // as malhas por região: menores que a célula de kit/fundir.js (1600) para a câmera e a sombra (520 × 520 em volta do carro) descartarem os quarteirões fora da vista em vez de desenhar a região inteira; Mônaco é a pista com mais prédios
 const PAREDES = [[1, 0.93, 0.78], [0.98, 0.74, 0.39], [0.98, 0.66, 0.58], [0.96, 0.55, 0.42], [0.97, 0.96, 0.92], [0.97, 0.89, 0.6], [0.88, 0.82, 0.72], [0.9, 0.68, 0.62]]; // creme, ocre, rosa, salmão, gelo, amarelo, areia, terracota
 const TERRACOS = [[0.8, 0.77, 0.72], [0.74, 0.71, 0.68], [0.84, 0.8, 0.74], [0.5, 0.62, 0.44]];
 const TELHAS = [[0.72, 0.36, 0.25], [0.78, 0.42, 0.28], [0.66, 0.32, 0.24]];

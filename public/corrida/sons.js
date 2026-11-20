@@ -16,10 +16,13 @@ export const Sound = (() => {
   // o motor (o meu e o dos outros), os efeitos (batidas, zebra, pneu, ERS...), o ambiente (torcida, chuva, vento, o som da pista),
   // o rádio do engenheiro e o narrador da transmissão. A música é o tocador da carreira (window.MusicaCarreira), fora daqui.
   const MIX_PADRAO = { motor: 1, efeitos: 1, ambiente: 1, radio: 1, narrador: 1 };
+  // a equalização geral (2026-11-20, os amigos do Thiago achavam o jogo alto demais): o 100% de cada canal no mixer vale isto. Fica por
+  // baixo do deslizante, então vale também para quem já mexeu no mixer. Ponto de partida de ouvido: o Thiago ajusta jogando.
+  const BASE = { motor: 0.5, efeitos: 0.6, ambiente: 0.8, radio: 0.6, narrador: 0.8 };
   const MIX = { ...MIX_PADRAO, ...(store.get("corrida:mixer") || {}) };
   const CANAL = {};
   function ctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = volume; master.connect(ac.destination);
-    for (const k of Object.keys(MIX_PADRAO)) { CANAL[k] = ac.createGain(); CANAL[k].gain.value = MIX[k]; CANAL[k].connect(master); } // (cada canal no volume geral; antes ia para CANAL.efeitos, que ainda não existia: o connect falhava, o catch engolia e o som ficava sem os canais)
+    for (const k of Object.keys(MIX_PADRAO)) { CANAL[k] = ac.createGain(); CANAL[k].gain.value = MIX[k] * BASE[k]; CANAL[k].connect(master); } // (cada canal no volume geral; antes ia para CANAL.efeitos, que ainda não existia: o connect falhava, o catch engolia e o som ficava sem os canais)
     carregarAmostras(ac); } catch { return null; } } if (ac.state === "suspended") ac.resume(); return ac; }
   // os sons gravados da pista (public/corrida/sons/<id>.mp3, gerados por GERAR-SONS-PISTA.bat com a ElevenLabs): quando existem, a zebra
   // e a torcida tocam eles; sem o arquivo, continua o som sintetizado de cada uma
@@ -57,7 +60,7 @@ export const Sound = (() => {
   function fimDoPit() { return umaVez("macaco", 0.6, 0.95); }
   // o ERS ligando (o overtake na tecla): só o som gravado que o Thiago fez (sons/ers-liga-1.mp3, no índice sons/indice.json), bem acima do
   // motor (1,8 ×, no canal de efeitos do mixer). O sintetizado de antes saiu, e também o zumbido do MGU-K no motor (engine: ers e freio falsos)
-  function ersLiga() { if (!ctx() || !on) return; umaVez("ers-liga", 1.8); }
+  function ersLiga() { if (!ctx() || !on) return; umaVez("ers-liga", 0.7); }
 
   // OS EFEITOS NOVOS da ElevenLabs (GERAR-SONS-PISTA.bat): só tocam quando o arquivo existe; sem ele, silêncio (não há versão sintetizada).
   // Os laços (o assoalho raspando, a brita, a grama, o vento) entram e saem pelo volume; os de uma vez (o fundo, o ERS acabando, o
@@ -118,7 +121,7 @@ export const Sound = (() => {
     eng.f.frequency.setTargetAtTime(500 + rpm * 1400 + v * 2, t, 0.06);
     eng.g.gain.setTargetAtTime(on && racing && !f1 ? (0.035 + rpm * 0.02) * (troca > 0 ? 0.3 : 1) : 0, t, 0.05);
     eng.wg.gain.setTargetAtTime(on && racing ? Math.min(0.05, v * 0.00011) : 0, t, 0.1);
-    if (f1) { if (!motorF1) { motorBus = c.createGain(); motorBus.connect(CANAL.motor); motorF1 = criarMotorF1(c, motorBus, reverbExistente); } motorF1.atualizar(t, { gas, rpm: rpmF1, marcha: marchaF1 || 1, ativo: on && racing, cam: f1.cam, lim: f1.lim || 0, ers: false, freio: false }); } else if (motorF1) motorF1.silenciar(t);
+    if (f1) { if (!motorF1) { motorBus = c.createGain(); motorBus.connect(CANAL.motor); motorF1 = criarMotorF1(c, motorBus, reverbExistente); } motorF1.atualizar(t, { gas, rpm: rpmF1, marcha: marchaF1 || 1, ativo: on && racing, cam: f1.cam, lim: f1.lim || 0, ers: !!f1.ers, freio: !!f1.freio, kmh: v * 0.75 }); } else if (motorF1) motorF1.silenciar(t);
     if (ambBus) ambBus.gain.setTargetAtTime(on && racing ? 1 : 0, t, 0.4);
     if (!racing && ecoG) ecoG.gain.setTargetAtTime(0, t, 0.1);
   }
@@ -262,11 +265,11 @@ export const Sound = (() => {
     pop() { tone(700, 0.05, { vol: 0.06 }); },
     sling() { [520, 780, 1040].forEach((f, i) => tone(f, 0.12, { at: i * 0.06, type: "sawtooth", vol: 0.07 })); },
     // o mixer: mixer() devolve os volumes; mixer(canal, v) muda um (de 0 a 1) e guarda
-    mixer(canal, v) { if (canal == null) return { ...MIX }; if (!(canal in MIX_PADRAO)) return null; MIX[canal] = Math.max(0, Math.min(1, +v)); store.set("corrida:mixer", MIX); if (CANAL[canal] && ac) CANAL[canal].gain.setTargetAtTime(MIX[canal], ac.currentTime, 0.05); return MIX[canal]; },
+    mixer(canal, v) { if (canal == null) return { ...MIX }; if (!(canal in MIX_PADRAO)) return null; MIX[canal] = Math.max(0, Math.min(1, +v)); store.set("corrida:mixer", MIX); if (CANAL[canal] && ac) CANAL[canal].gain.setTargetAtTime(MIX[canal] * BASE[canal], ac.currentTime, 0.05); return MIX[canal]; },
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.radio, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.narrador, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.6); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.35); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

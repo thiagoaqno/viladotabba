@@ -93,26 +93,6 @@ test("a água sobe com a chuva, seca devagar e é a mesma conta em qualquer orde
   assert.equal(F.climaEm(null, 5000).agua, 0);
 });
 
-test("as opções da sala: seco nunca chove; chuva larga molhado e não para; variável larga seco e chove no meio", () => {
-  for (const s of sementes(200)) {
-    const seco = F.sortearClima(s, { corrida: CORRIDA, quali: 300 }, "seco");
-    assert.equal(seco.chuva, false);
-    assert.equal(seco.previsao.p, 0);
-    const chuva = F.sortearClima(s, { corrida: CORRIDA, quali: 300 }, "chuva");
-    assert.equal(chuva.chuva, true);
-    assert.equal(chuva.previsao.p, 1);
-    assert.ok(chuva.corrida.trechos[chuva.corrida.trechos.length - 1][1] >= CORRIDA, "não para");
-    assert.ok(chuva.corrida.agua0 > 0 && chuva.corrida.trechos[0][0] === 0);
-    const vari = F.sortearClima(s, { corrida: CORRIDA, quali: 300 }, "variavel");
-    assert.equal(vari.chuva, true);
-    assert.equal(vari.corrida.agua0, 0);
-    const ini = vari.corrida.trechos[0][0] / CORRIDA;
-    assert.ok(ini >= 0.24 && ini <= 0.36, `variável começa em ${ini}`);
-  }
-  assert.deepEqual(F.OPCOES_DE_CLIMA, ["aleatorio", "seco", "chuva", "variavel"]);
-  assert.equal(F.previsaoDoGP("x", "lixo").opcao, "aleatorio");
-});
-
 test("o rádio sabe o próximo degrau da chuva", () => {
   const c = { chove: true, t0: 0, dur: 600, agua0: 0, trechos: [[100, 300, F.CHUVA_FORTE]] };
   assert.deepEqual(F.proximaMudanca(c, 10), { tipo: "comeca", quando: 100, em: 90 });

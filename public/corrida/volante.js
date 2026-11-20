@@ -30,7 +30,8 @@ const PADRAO_ANTIGO = { ...ACERTO_PADRAO }, PADRAO_REAL = { virada: 0.6, sobe: 0
 let CHAVE = "corrida:acerto-direcao:antiga";
 function carregar() { Object.assign(ACERTO, ACERTO_PADRAO); try { const v = JSON.parse(localStorage.getItem(CHAVE) || "null"); if (v) for (const k of Object.keys(ACERTO_PADRAO)) if (Number.isFinite(+v[k])) ACERTO[k] = limite(+v[k], ...ACERTO_LIMITES[k]); } catch (e) {} }
 carregar();
-function usarEscala(real) { Object.assign(ACERTO_PADRAO, real ? PADRAO_REAL : PADRAO_ANTIGO); CHAVE = real ? "corrida:acerto-direcao" : "corrida:acerto-direcao:antiga"; carregar(); }
+// (2026-11-20, o Thiago: "a mesma dirigibilidade do F1 no Formula GP") a direção e o acerto dela são os mesmos nas duas escalas; PADRAO_REAL fica como registro
+function usarEscala() { Object.assign(ACERTO_PADRAO, PADRAO_ANTIGO); CHAVE = "corrida:acerto-direcao:antiga"; carregar(); }
 function acertar(campo, valor) { if (!(campo in ACERTO_PADRAO)) return; ACERTO[campo] = Number.isFinite(+valor) ? limite(+valor, ...ACERTO_LIMITES[campo]) : ACERTO_PADRAO[campo]; try { localStorage.setItem(CHAVE, JSON.stringify(ACERTO)); } catch (e) {} }
 function acertoPadrao() { Object.assign(ACERTO, ACERTO_PADRAO); try { localStorage.removeItem(CHAVE); } catch (e) {} }
 const CURVA = ACERTO_PADRAO.curva;

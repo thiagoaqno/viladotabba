@@ -157,7 +157,7 @@ const LD_K = 0.6, K_TRASEIRA = 2, K_GUINADA = 0.5;
 // VIRADA_MAX: o teto do volante dos robôs (e do fantasma e do robô que assume um carro), o mesmo que quem joga tem no teclado e no controle
 // (ACERTO_PADRAO.virada em volante.js, acertado pelo Thiago jogando): todos com a mesma dirigibilidade, ninguém faz curva que o outro não faz.
 const VIRADA_MAX = 1, VIRADA_MAX_REAL = 0.6; // (Formula GP: a virada da escala real, 0,6, a que o Thiago acertou jogando em 10/nov)
-const viradaMax = () => (escalaReal() ? VIRADA_MAX_REAL : VIRADA_MAX); // (de volta à escala antiga, 2026-11-11: a virada padrão de quem joga é 1, então os robôs também; o 0,75 era da escala real)
+const viradaMax = () => VIRADA_MAX; // (2026-11-20, o Thiago: "a mesma dirigibilidade do F1 no Formula GP": a virada é a mesma nos dois; VIRADA_MAX_REAL fica só como registro) // (de volta à escala antiga, 2026-11-11: a virada padrão de quem joga é 1, então os robôs também; o 0,75 era da escala real)
 // fatorOlhar permite antecipar o ponto de mira em trechos específicos; os demais pilotos conservam a distância padrão.
 function pilotoAutomatico(c, tr, spec, vAlvo, latAlvo, saida = {}, fatorOlhar = 1) {
   const p = D.parametros(spec), n = tr.n, v = Math.max(c.v, 30), Ld = Math.max(22, v * LD_K * fatorOlhar);

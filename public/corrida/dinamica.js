@@ -36,7 +36,8 @@ const FREIO_G_REAL = 1.95, ATRITO_REAL = [0.526, 1.095];
 // perdeu aderência (gasto, frio, molhado, depois de uma batida), onde o pedal cheio já trava a roda. Vai de ATRITO_MIN a ATRITO_MAX
 // conforme a aderência `kGrip` sobe de GRIP_TRAVA a GRIP_TRAVA + 0,25.
 const ATRITO_MIN = 0.72, ATRITO_MAX = 1.5, GRIP_TRAVA = 1.04;
-const atritoDeFreio = (kGrip) => { const x = limite((kGrip - GRIP_TRAVA) / 0.25, 0, 1), [a0, a1] = escalaReal() ? ATRITO_REAL : [ATRITO_MIN, ATRITO_MAX]; return a0 + (a1 - a0) * x * x * (3 - 2 * x); };
+// (2026-11-20, o Thiago: "a mesma dirigibilidade do F1 no Formula GP": o freio e o atrito do Formula GP iguais aos da F1; FREIO_G_REAL e ATRITO_REAL ficam como registro)
+const atritoDeFreio = (kGrip) => { const x = limite((kGrip - GRIP_TRAVA) / 0.25, 0, 1), [a0, a1] = [ATRITO_MIN, ATRITO_MAX]; return a0 + (a1 - a0) * x * x * (3 - 2 * x); };
 const limite = (v, a, b) => (v < a ? a : v > b ? b : v);
 
 // ---------- o câmbio de 8 marchas ----------
@@ -107,7 +108,7 @@ function parametrosLento(spec) {
   const kin = limite(spec.kin, 0.5, 0.95);
   const C = Math.PI / (Math.PI - Math.asin(limite(kin * 1.04, 0.5, 0.97))); // a curva cai até ~kin·1,04 do pico quando o pneu escorrega todo
   const B = Math.tan(Math.PI / (2 * C)) / alfaP;
-  const frenagem = (escalaReal() ? FREIO_G_REAL : FREIO_G) * (spec.brake / 470);               // o freio a zero de velocidade, em g (a carga aerodinâmica soma, ver FREIO_AERO)
+  const frenagem = FREIO_G * (spec.brake / 470);               // o freio a zero de velocidade, em g (a carga aerodinâmica soma, ver FREIO_AERO)
   p = { massa, W, L, a, b, h, Iz, ClA, CdA, crr, Ppico, eta, mu, muTr, C, B, alfaP, frenagem, gripU: spec.grip, kinU: limite(spec.kin, 0.3, 1),
     // o balanço aerodinâmico (parte da carga que vai para a frente) e o do freio (parte da força que vai para a frente)
     balAero: 0.34, balFreio: 0.6, balPneu: 1.03,

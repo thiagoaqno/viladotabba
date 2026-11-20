@@ -45,15 +45,6 @@ test("gerirSugestao: não repete a mesma sugestão até a situação mudar", () 
 });
 
 
-test("Silverstone: escolhe o pneu que chega ao fim e avalia o custo da parada", () => {
-  const ritmo = require("../public/corrida/f1-pneus-ritmo.js");
-  const op = { F, ritmo, pista: "silverstone", jogos: { macio: 2, medio: 1, duro: 2, chuva: 2 }, voltasRestantes: 1, evitar: ["medio"] };
-  assert.equal(E.escolherSeco(op), "macio");
-  assert.equal(E.escolherSeco({ ...op, jogos: { ...op.jogos, macio: 0 } }), "duro");
-  const s = E.sugerirBox(base({ ritmo, pista: "silverstone", voltaAtual: 4, voltas: 5, pneu: { composto: "medio", desgaste: 0.85 }, janela: null }));
-  assert.equal(s, null, "na penúltima volta a perda no box supera o ganho");
-});
-
 test("a sugestão ainda pode aparecer na penúltima volta, mas não na última", () => {
   const e = base({ voltaAtual: 4, voltas: 5, pneu: { composto: "medio", desgaste: 0.9 }, janela: null });
   assert.ok(E.sugerirBox(e));

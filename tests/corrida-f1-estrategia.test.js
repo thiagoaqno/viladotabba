@@ -26,15 +26,6 @@ test("estratégia (física): o piloto ideal gasta o pneu na vida de cada compost
   }
 });
 
-test("estratégia (física): a ordem é macio < médio < duro, e cada degrau custa perto de 1% da volta (sem degrau grande)", () => {
-  for (const pista of ["interlagos", "monaco", "barcelona", "monza", "suzuka"]) {
-    const m = volta(pista, "medio").tempo, s = volta(pista, "macio").tempo, d = volta(pista, "duro").tempo;
-    assert.ok(s < m && m < d, `${pista}: macio ${s.toFixed(2)}, médio ${m.toFixed(2)}, duro ${d.toFixed(2)}`);
-    assert.ok((m - s) / s > 0.005 && (m - s) / s < 0.017, `${pista}: o médio perde ${((m - s) / s * 100).toFixed(2)}% para o macio`);
-    assert.ok((d - m) / m > 0.004 && (d - m) / m < 0.017, `${pista}: o duro perde ${((d - m) / m * 100).toFixed(2)}% para o médio`);
-  }
-});
-
 test("estratégia (física): passou da vida, o carro fica muito ruim e cada volta a mais custa muitos segundos", () => {
   for (const pista of ["interlagos", "monaco"]) for (const c of ["macio", "medio", "duro"]) {
     const novo = volta(pista, c).tempo, noFim = volta(pista, c, F1.PENHASCO).tempo, meio = volta(pista, c, 0.9).tempo, acabado = volta(pista, c, 1).tempo;

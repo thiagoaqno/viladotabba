@@ -1,15 +1,6 @@
-# Robôs sem as travadinhas (servidor)
+# Noite de verdade e LEDs no TabbaTracks
 
-`pontoDoCarro` (corrida.js), chamado pela gravação do replay para cada carro a cada 250 ms, fazia `T.pontos(t, 6)` (o traçado inteiro) só para saber quantos pontos a pista tem. Agora usa o `pontosPorVolta`, que já guardava esse número; o `corredorDe` também.
-
-Medido com o servidor de verdade (`node server.js`, Mônaco, 21 robôs, 90 s, no modo do programa de PC com `CORRIDA_SITE`):
-
-| | antes | depois |
-|---|---|---|
-| laço da direção de prova (100 ms) | 55 a 70 ms por volta, quase tudo na gravação | < 1 ms |
-| atraso do laço do servidor, p99 | 93 ms | 21 ms |
-| intervalo entre pacotes de posição, p99 | 120 ms | 34 ms |
-| intervalos acima de 80 ms | 303 | 3 (no carregamento) |
-| pacotes em 90 s | 3538 | 5109 |
-
-O `servidor.log` do programa no PC do Thiago (19/nov, Mônaco) também mostrava o laço atrasando ~90 ms todo minuto durante a corrida.
+- **Corridas noturnas:** saiu o `anoitecer.js` (o pôr do sol que virava noite em 2 voltas). A pista já era montada no modo noite (`useTrack`), então agora a corrida larga de noite fechada, como a classificação.
+- **Luz · LED no TabbaTracks** (`luz-item.js`, `editor/luz-ui.js`): item do cenário ou peça da pista guarda `luz: { cor, forca, alvo? }`. O material vira um `MeshBasicMaterial` aceso (`toneMapped: false`) com `userData.bloom = forca`, o mesmo caminho do neon e das lâmpadas (`pos.js`, `preparar`): halo na Média e na Alta, só a cor acesa na Baixa. `alvo` acende só um material da peça (a lâmpada e não o poste). Vale no jogo por `montarItem` e `aplicarAjuste`.
+- **Peças de LED** na biblioteca (grupo Luzes): faixa de 4 m, ponto, painel de 3 × 2 m e arco de 10 m; a cor do item tinge o LED.
+- `enxugar`: a chave do material inclui `toneMapped` e `userData.bloom` (um LED não se junta a um material comum da mesma cor).

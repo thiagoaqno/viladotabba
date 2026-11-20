@@ -35,7 +35,6 @@ import { alternarAcerto } from "./acerto.js";
 import "./mixer.js"; // (o mixer de som: os botões [data-mixer])
 import { animarVida } from "./vida.js";
 import { ceuPronto, luzPendente } from "./ceu.js";
-import { iniciarAnoitecer, passoAnoitecer, pararAnoitecer } from "./anoitecer.js";
 import { desenhar, ajustarTela, medirQuadro, comecarMedida, compilarPos, prepararBrilhos, definirEstacao } from "./pos.js";
 import { quadroTV, pularTV } from "./transmissao.js";
 import { criarLinhaFreio } from "./linha-frenagem.js";
@@ -208,7 +207,6 @@ export function startRace(st) {
   if (race) clearRace();
   // regras de F1: o carro é o da física nova (sim.js), com o pneu, o ERS e o box dentro dele; o servidor é a autoridade (fisica.js)
   const f1 = st.config.regras === "f1", carro = f1 ? window.Sim.novo(tr, { grid: mine ? mine.grid : 0, f1: true, pneu: window.Sim.pneuDaLargada(st.phase, mine && mine.pneu, window.F1Regras.climaEm(st.clima, st.startAt).agua), box: true }) : { x: spot.x, y: spot.y, z: tr.pts[spot.idx].h, vz: 0, air: false, a: spot.a, v: 0, vx: 0, vy: 0, slip: 0, steer: 0 };
-  iniciarAnoitecer(tr, st); // as corridas noturnas largam no fim de tarde e anoitecem até a metade (anoitecer.js)
   definirEstacao(tr.id); // o filtro de cor da estação do GP (pos.js)
   race = { startAt: st.startAt, tr, car: carro, net: f1 && mine ? criarRede() : null, acc: 0, idx: spot.idx, sector: SECTORS - 1, lastSent: 0, wrong: 0, ghosts: new Map(), msg: null, beeped: 0, finished: false, laps: 0, shake: 0,
     kart: mine ? makeKart(mine.color, mine.car, false, "", mine.mods, undefined, false, { numero: mine.numero, volante: true }) : null, cam: { pos: null, a: spot.a }, lapT0: st.startAt, rec: [], recLast: -1e9, best: loadBest(st.config.pista), bestKart: null, bptr: 0, draft: 0, draftT: 0, sling: 0,
@@ -237,7 +235,7 @@ export function startRace(st) {
   if (f1 && mine) { usarPista(st.config.pista); carregarIdeais(); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
-export function stopRace() { ForcaVolante.parar(); pararAnoitecer(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
+export function stopRace() { ForcaVolante.parar(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
 function resize() {
   const w = window.innerWidth, hh = window.innerHeight;
   renderer.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); ajustarTela(w, hh);
@@ -448,7 +446,6 @@ function draw(dt) {
   sun.target.position.set(src.x, src.z || 0, src.y);
   abrirTV(tr, dt, motionPreference.matches);
   if (tr.sky) tr.sky.position.set(cam.position.x, 0, cam.position.z);
-  passoAnoitecer(dt, race); // (antes do clima: a chuva escurece por cima do anoitecer)
   passoClima(dt, race, cam, modoClima, src, c); // o visual do clima: céu, luz, neblina, chuva, asfalto molhado, borrifo, som e HUD (clima-visual.js)
   quadroRecorte(tr, cam, mode !== "cima" && mode !== "tv" && !(race.tvAte && now < race.tvAte), nearest); // o que não dá para ver daqui não vai para a placa de vídeo (recorte.js)
   race.linhaFreio?.atualizar(race, !(race.tvAte && now < race.tvAte));

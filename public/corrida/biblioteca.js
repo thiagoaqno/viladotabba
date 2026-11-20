@@ -406,6 +406,18 @@ KITS.muretaAlambrado = F("Contenção", { nome: "Mureta com alambrado", grupo: "
 // a zebra solta (10 m, vermelha e branca), para enfeitar uma curva de cenário
 KITS.zebra = F("Contenção", { nome: "Zebra (10 m)", grupo: "Pista", montar() {
   const g = new THREE.Group(); for (let k = 0; k < 10; k++) caixa(g, k % 2 ? BRANCO : VERMELHO, 1 * U, 0.08 * U, 1.2 * U, (k - 4.5) * U, 0.04 * U, 0); return g; } });
+// (2026-11-20, o Thiago: "leds de cores diferentes") os LEDS: acesos (sem luz do sol, sem sombra) e marcados para o bloom do jogo (pos.js:
+// userData.bloom). A cor do item tinge o branco: escolha a cor no painel; o painel "Luz · LED" muda a cor e o brilho de qualquer peça.
+const ledAceso = () => { const m = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }); m.userData.bloom = 3; m.name = "LED"; return m; };
+const suporteLed = () => M(0x1c1d20, { roughness: 0.6, metalness: 0.4 });
+KITS.ledFaixa = F("Geral", { nome: "Faixa de LED (4 m)", grupo: "Luzes", montar() {
+  const g = new THREE.Group(); caixa(g, suporteLed(), 4 * U, 0.08 * U, 0.12 * U, 0, 0.04 * U, 0); const l = caixa(g, ledAceso(), 3.96 * U, 0.04 * U, 0.06 * U, 0, 0.1 * U, 0); l.castShadow = false; return g; } });
+KITS.ledPonto = F("Geral", { nome: "Ponto de LED", grupo: "Luzes", montar() {
+  const g = new THREE.Group(), m = new THREE.Mesh(new THREE.SphereGeometry(0.15 * U, 12, 8), ledAceso()); m.position.y = 0.15 * U; m.castShadow = false; g.add(m); return g; } });
+KITS.ledPainel = F("Geral", { nome: "Painel de LED (3 × 2 m)", grupo: "Luzes", montar() {
+  const g = new THREE.Group(); caixa(g, suporteLed(), 3.1 * U, 2.1 * U, 0.2 * U, 0, 1.05 * U, 0); const l = caixa(g, ledAceso(), 3 * U, 2 * U, 0.04 * U, 0, 1.05 * U, 0.12 * U); l.castShadow = false; return g; } });
+KITS.ledArco = F("Geral", { nome: "Arco de LED (10 m)", grupo: "Luzes", montar() {
+  const g = new THREE.Group(), m = new THREE.Mesh(new THREE.TorusGeometry(5 * U, 0.08 * U, 8, 48, Math.PI), ledAceso()); m.position.y = 0; m.castShadow = false; g.add(m); return g; } });
 // o bloco de concreto (a barreira New Jersey) de 4 m
 KITS.newJersey = F("Contenção", { nome: "Barreira de concreto", grupo: "Pista", montar() {
   const g = new THREE.Group(), s = new THREE.Shape([[-0.3, 0], [0.3, 0], [0.15, 0.25], [0.1, 0.8], [-0.1, 0.8], [-0.15, 0.25]].map(([x, y]) => new THREE.Vector2(x * U, y * U)));

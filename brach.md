@@ -1,6 +1,10 @@
-# Noite de verdade e LEDs no TabbaTracks
+# Offline no PC, muros invisíveis de Mônaco, pneus, dano e a atualização presa
 
-- **Corridas noturnas:** saiu o `anoitecer.js` (o pôr do sol que virava noite em 2 voltas). A pista já era montada no modo noite (`useTrack`), então agora a corrida larga de noite fechada, como a classificação.
-- **Luz · LED no TabbaTracks** (`luz-item.js`, `editor/luz-ui.js`): item do cenário ou peça da pista guarda `luz: { cor, forca, alvo? }`. O material vira um `MeshBasicMaterial` aceso (`toneMapped: false`) com `userData.bloom = forca`, o mesmo caminho do neon e das lâmpadas (`pos.js`, `preparar`): halo na Média e na Alta, só a cor acesa na Baixa. `alvo` acende só um material da peça (a lâmpada e não o poste). Vale no jogo por `montarItem` e `aplicarAjuste`.
-- **Peças de LED** na biblioteca (grupo Luzes): faixa de 4 m, ponto, painel de 3 × 2 m e arco de 10 m; a cor do item tinge o LED.
-- `enxugar`: a chave do material inclui `toneMapped` e `userData.bloom` (um LED não se junta a um material comum da mesma cor).
+- **Modo offline no programa de PC** (`corrida-pc.js`): um botão no canto do menu liga e desliga (`localStorage` `corrida:pc:offline`). Ligado, tudo roda no servidor do PC, como sem internet: sem ping, os robôs lisos. O selo mostra "Offline: jogando no seu PC". Precisa reabrir o programa uma vez depois de atualizar, porque muda o servidor.
+- **A atualização presa** (`corrida-pc-atualizar.js`): o `public/corrida/assets/.gitkeep` (0 bytes, o "0,1 MB" é o mínimo da tela) estava na lista, mas o `sendFile` do Express não entrega arquivo com ponto no nome, e a pergunta voltava sempre. Conferido contra o programa instalado: era o único arquivo diferente. Agora nada com ponto no nome entra na lista.
+- **Muros invisíveis de Mônaco** (`pistas.js`, `murosDoCenario`):
+  - a placa da Lenovo fica 32 u acima da pista e punha muro dos dois lados embaixo dela: peça a mais de 12 u acima ou abaixo do asfalto não bate;
+  - a placa usava `w × s × 4,8` de comprimento (o `w` já é em unidades: 4,8 vezes maior) e sempre ao longo da pista; agora o comprimento e o giro (`ry`) são os do desenho;
+  - as linhas (guard-rail em fileira) liam os pontos como `.x/.z`, mas eles são `[x, z]` com o do meio opcional: davam NaN e não batiam. Agora seguem a mesma curva do desenho.
+- **Pneus** (`f1-regras.js`, `dinamica.js`): `final` e `potencia` por composto (macio 1,008 e 1,04; duro 0,994 e 0,97; médio igual). Medido com o piloto ideal (`voltaFixa`, pneu novo e quente) em Mônaco: macio 78,43 s, médio 79,48 s, duro 80,53 s (antes 78,77 / 79,48 / 80,26). A tabela dos robôs (`f1-pneus-tabela.js`) foi refeita com `ferramentas/pneus-tabela.js`.
+- **Dano** (`corrida-f1-direcao.js`): quem causa a batida entre carros leva 5, 10 e 15% (era 12, 20 e 35). No muro continua 1% por batida. Saíram as três conferências antigas do dano em `tests/corrida-punicoes.test.js`.

@@ -10,7 +10,9 @@ const fs = require("fs"), fsp = fs.promises, path = require("path"), crypto = re
 const RAIZ = __dirname;
 // o que NÃO vai no programa (só na raiz do projeto; o mesmo de programa-pc.yml)
 const FORA = new Set(["node_modules", ".git", ".github", ".claude", "dados", "tests", "docs", "planos", "dist", "saida", "desktop", "ferramentas-prints", "test-results", "playwright-report", "fly.toml"]);
-const foraDoPrograma = (rel) => { const topo = rel.split("/")[0]; return FORA.has(topo) || topo.startsWith(".") || (!rel.includes("/") && /\.md$/i.test(rel)); };
+// (2026-11-20, o Thiago: "tem um arquivo de 0,1 MB que não baixa") nada que comece com ponto, em qualquer pasta: o public/corrida/assets/.gitkeep
+// estava na lista, mas o site (sendFile do Express) não entrega arquivos com ponto no nome, e a pergunta da atualização voltava toda vez
+const foraDoPrograma = (rel) => { const topo = rel.split("/")[0]; return FORA.has(topo) || rel.split("/").some((p) => p.startsWith(".")) || (!rel.includes("/") && /\.md$/i.test(rel)); };
 const LINK = "https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe";
 
 async function listar(dir = RAIZ, base = "") {

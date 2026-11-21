@@ -1,48 +1,24 @@
-# Eventos que saem da corrida, estratégia da equipe, planos novos, ERS no pneu e voltas perto de 10
+# Contratos de verdade: valores e exigências por equipe, propostas no meio do ano, demissões
 
-Pedido do Thiago (2026-11-21). Não foi jogado: conferido com `node --check`, com uma carreira na memória e com o robô medido (`klk/medir/desgaste.js`).
+Pedido do Thiago (2026-11-21): "rever os contratos para ter opções mais vantajosas e receber realmente oportunidades de outras equipes; o salário e os requisitos têm que ser diferentes; tem que rolar demissões (até minha)". Tudo no caixa da equipe, sem caixa do piloto (pedido dele). O dano acumulado entre GPs foi feito e tirado a pedido dele. Não foi jogado: conferido com `node --check` e com carreiras simuladas na memória.
 
-## Eventos ligados à corrida (`paddock.js`)
-- O servidor anota os toques de quem joga na carreira (`corrida.js anotarToque`: no muro, um a cada 2 s; em cada piloto, um por par a cada 3 s, com a culpa de `Contato.impactoDe`), e o resumo vai para a análise do GP (`corrida-temporada.js`, `analise.corrida`): toques, dano no fim, segundos de punição, stop-and-go, ultrapassagens feitas e sofridas, paradas.
-- Oito acontecimentos saem disso, para o GP seguinte:
-  - **conta da oficina** (dano 20%+ ou 4+ toques): conserto completo, que custa 1 milhão a cada 12% de dano, ou básico (−1,5% de aderência, −1% de potência);
-  - **comissários** (2+ toques causados por você): aceitar 3 posições no grid, ou recorrer por 1 milhão (metade das vezes anula, senão 5 posições);
-  - **o piloto em quem você mais bateu reclama**: pedir desculpas, ignorar ou provocar; provocar faz dele um rival neste GP (`regras.js`, rixa 3: ele aperta o ritmo perto de você);
-  - **batida com o companheiro**: assumir, culpar ou ordem de equipe (a agressividade dele cai);
-  - **corrida limpa**: os dados dão +1,5% de aderência;
-  - **show de ultrapassagens** (6+): +2 milhões ou +8 de torcida;
-  - **depois do abandono**: revisão completa por 2 milhões, ou rápida com −2% de potência;
-  - **punições demais**: treinar no simulador ou reclamar dos comissários.
-- Três acontecimentos por GP (eram dois). Os da corrida passam na frente no sorteio, depois os de #874.
+## Contratos (`temporada/regras.js`)
+- **Verba por GP de cada equipe** (`verbaBase`): da mais rica à mais pobre, de 9 a 4 milhões. A carreira nova começa com a verba da equipe escolhida (era 6 para todas).
+- **Propostas** com a verba da equipe nova mais um extra pela sua posição no campeonato (top 3 +3, top 6 +2, top 10 +1, até 14), o bônus por vitória e as **exigências** (as metas da equipe nova: top X no campeonato e nos GPs).
+- **Do meio do ano em diante**, quem anda no top 10 recebe sondagem das equipes mais fortes. Assinar antes do último GP é um **pré-contrato**: vale na virada do ano, e a diretoria atual perde 6 de confiança. Nas 2 últimas etapas vêm todas as propostas, como antes.
+- **Renovar** com a confiança em 50 ou mais sobe a verba em 1 milhão; em 70 ou mais, em 2 (era +1 só com 70).
 
-## Estratégia de paradas da equipe
-- Em todo GP, junto do plano do domingo: "Equilibrada" (o melhor plano da conta, `f1-pneus-ritmo.js`), "Agressiva" (uma parada a mais), "Conservadora" (uma a menos) ou "Sem plano". Nenhum plano sugerido deixa um stint passar do penhasco.
-- O plano escolhido define o pneu da largada (`corrida.js abrirGP`). O MFD chama o box na volta dele, com o pneu dele (`estrategia-box.js`), menos na chuva.
-- A página da carreira passou a carregar `f1-pneus-tabela.js` e `f1-pneus-ritmo.js`.
+## Demissões
+- **No meio do ano** (`demissaoNoMeio`): a partir do 3º GP do ano, com 2 ou mais GPs na equipe, os 3 últimos GPs fora da meta e a confiança abaixo de 35, a diretoria demite. Você vai para uma das 3 equipes mais fracas, escolhida pela semente, e o ano segue de lá, com notícia na Central.
+  - Simulado: Ferrari em 18º em todo GP, demitido no GP 4 para a Alpine.
+  - Alternando 4º e 18º, fica.
+- **No fim do contrato**: com a confiança abaixo de 30 e sem contrato para o ano seguinte, a equipe não renova, e você vai para a mais fraca que fez proposta. Antes, o contrato seguia sozinho.
+- A confiança agora conta só os GPs da equipe de agora: trocou de equipe, a conta e a diretoria do Paddock recomeçam.
 
-## Planos do domingo (`sim.js PLANO`)
+## Tela (`central-contrato.js`, `sede.js`)
+- As propostas mostram as exigências e avisam da sondagem antecipada. O botão vira "Assinar pré-contrato" antes do último GP.
+- Os termos do contrato mostram o pré-contrato assinado.
 
-| Plano | Potência | Aderência | Pneu | Dano nas batidas |
-|---|---|---|---|---|
-| Ataque total | +12% | +3% | +15% | +50% |
-| Largada forte, no primeiro terço | +15% | +4% | +25% | |
-| Largada forte, depois | −2% | −1% | −15% | |
-| Guardar para o fim, até 60% | −3% | −1% | −25% | |
-| Guardar para o fim, depois | +15% | +4% | +20% | |
-| Esticar os pneus | +2% | | −40% | |
-| Jogar seguro | −3% | −1,5% | −30% | −40% |
-
-- O dano entra em `corrida-f1-direcao.js`.
-- Cada plano tem uma fala nova do engenheiro na largada.
-
-## ERS no pneu (`f1-regras.js gastarPneu`)
-- Com o ERS ligado, o pneu gasta 15% mais e o alvo da temperatura sobe 0,04. Com ele desligado, gasta 15% menos.
-- Sem a opção (as contas de vida), nada muda.
-- Medido no robô de Bahrein. Com 1,3× e +0,12 de temperatura, o médio caiu de 3,69 para 3,07 voltas, forte demais. Com os números finais ficou macio 2,79 (era 2,80) e médio 3,85.
-
-## Voltas
-- `voltasDoGP` ajusta pela raiz do comprimento: com 10 voltas, todo o calendário fica entre 9 e 10.
-- "Longa (~10 voltas)" é o padrão da carreira.
-
-## Fora do código
-- O atalho `Downloads\lts\Falas novas da Corrida.bat` roda o `FALAS-NOVAS-CORRIDA.bat` em `klk\falas`, uma pasta própria que se atualiza com a `main`.
+## Vozes
+- Os 68 mp3 das falas de #874 (eventos, pista comprida ou curta, as variações), gerados pelo Thiago com o `Falas novas da Corrida.bat`, entram com `git add -f`.
+- Faltam 12, as dos planos novos de #875 (`riscolargada`, `riscofinal`, `riscopneu`): é rodar o atalho de novo.

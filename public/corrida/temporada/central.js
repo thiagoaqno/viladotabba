@@ -99,7 +99,7 @@ function tendencia(c, eu) { // subiu ou desceu no campeonato depois do último G
 }
 function central(c) {
   const { s, t, prox, terminou, ativo, previsao, botao, gps } = c, eu = t.pilotos.findIndex((p) => p.id === "voce"), E = Eq(), eq = Pilotos().EQUIPES[s.equipe];
-  const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, s.voltas) : null, traco = prox && root.GpSobre ? root.GpSobre.mapaSvg(prox.pista, "cx-traco") : "";
+  const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, (root.F1Regras.voltasDoGP ? root.F1Regras.voltasDoGP(s.voltas, prox && prox.pista) : s.voltas)) : null, traco = prox && root.GpSobre ? root.GpSobre.mapaSvg(prox.pista, "cx-traco") : "";
   const limite = E.EQUIPES[s.equipe].orcamento + (s.bonus || 0), usado = E.custoDaMontagem(s.montagem), o = Reg().objetivos(s, c.t).pilotos, meus = t.pilotos[eu]?.pontos || 0, dif = (t.pilotos[0]?.pontos || 0) - meus;
   const acao = botao.replace("Avançar para o fim de semana", "Continuar carreira");
   const direita = prox
@@ -115,7 +115,7 @@ function central(c) {
 // ---------- o Calendário ----------
 function calendario(c) {
   const { s, gps, prox, botao, previsao } = c, feitos = gps.length;
-  const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, s.voltas) : null;
+  const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, (root.F1Regras.voltasDoGP ? root.F1Regras.voltasDoGP(s.voltas, prox && prox.pista) : s.voltas)) : null;
   const ok = '<svg class="cx-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4.6 4.6L19 7"/></svg>';
   const cards = s.calendario.map((e, i) => {
     const r = gps.find((g) => g.gp === i), eu = r?.linhas.find((l) => l.piloto === "voce"), foto = Gi()?.fundoDe(e.pista), traco = root.GpSobre ? root.GpSobre.mapaSvg(e.pista, "cx-traco") : "", atual = i === s.gp, info = Gi()?.get(e.pista);

@@ -57,7 +57,8 @@ function pneuNovo(composto = COMPOSTO_PADRAO) {
 // distância equivalente à vida do composto em qualquer corrida. Escorregar, travar a roda e patinar gastam mais. A temperatura vai para um alvo pela
 // velocidade e pelo escorregão, mais rápido no macio.
 // d: { dist (andado neste passo), volta (o comprimento de uma volta), slip, travada (0..1), patina (0..1), zebra (0..1, opcional), v, vmax, dt,
-//      fator (opcional: o quanto o carro gasta o pneu, `desgaste` de f1-equipes.js), agua (opcional: a água na pista, 0 a 1) }
+//      fator (opcional: o quanto o carro gasta o pneu, `desgaste` de f1-equipes.js), agua (opcional: a água na pista, 0 a 1),
+//      rel (opcional: relDaPista, o comprimento da volta sobre o da referência: o pneu por distância) }
 function gastarPneu(pneu, d) {
   const pn = PNEUS[pneu.composto] || PNEUS[COMPOSTO_PADRAO];
   const escorrega = limite((d.slip || 0) / 60, 0, 1), seca = pneu.composto === "intermediario" ? 1 - limite((d.agua || 0) / 0.3, 0, 1) : secaDaPista(d.agua);
@@ -65,7 +66,7 @@ function gastarPneu(pneu, d) {
     const quente = pn.esquenta ? 0 : limite(((pneu.temp || 0) - QUENTE) / 0.2, 0, 1); // (o de chuva tem o próprio superaquecimento)
     const estresse = (ESTRESSE_BASE + ESTRESSE_LADO * escorrega + ESTRESSE_TRAVA * limite(d.travada || 0, 0, 1) + ESTRESSE_PATINA * limite(d.patina || 0, 0, 1)
       + ESTRESSE_ZEBRA * limite(d.zebra || 0, 0, 1) + ESTRESSE_QUENTE * quente) / ESTRESSE_NORMAL;
-    pneu.desgaste = Math.min(1, pneu.desgaste + (d.dist / d.volta) * (PENHASCO / pn.vida) * estresse * (d.fator || 1) * (1 + ((pn.derrete || 1) - 1) * seca));
+    pneu.desgaste = Math.min(1, pneu.desgaste + (d.dist / d.volta) * (d.rel || 1) * (PENHASCO / pn.vida) * estresse * (d.fator || 1) * (1 + ((pn.derrete || 1) - 1) * seca));
   }
   const vel = d.vmax > 0 ? limite(Math.abs(d.v || 0) / d.vmax, 0, 1) : 0;
   const alvo = Math.min(1 + (pn.esquenta || 0) * seca, 0.65 + 0.35 * vel + 0.15 * escorrega + (pn.esquenta || 0) * seca); // (o de chuva no seco passa de 1: superaquece)
@@ -112,11 +113,21 @@ function aderencia(pneu, agua = 0) {
     freio: limite(BASE_FREIO * Math.pow(rT, EXPOENTE_FREIO), 0.4, 1.5), tracao: limite(BASE_FREIO * Math.pow(rT, EXPOENTE_TRACAO), 0.4, 1.5) * (ruina ? RUINA_ACEL : 1),
     final: ruina ? RUINA_FINAL : pn.final || 1, potencia: ruina ? RUINA_ACEL : pn.potencia || 1 };
 }
+// O PNEU POR DISTÂNCIA (2026-11-21, o Thiago: "mudar a duração dos pneus ao invés de medir em voltas na pista medir em distância"): a `vida` de
+// cada composto é em voltas da pista de referência (Bahrein; nas pistas em tamanho real da Formula GP, a gp-bahrein). Numa pista mais
+// comprida o pneu dura menos voltas, numa mais curta dura mais: o macio faz ~3,3 voltas no México e ~2,2 em Singapura. REL_PISTA é o
+// comprimento da volta de cada pista sobre o da referência (medido com sim.js criarPista: n × 6 u; Bahrein 13.920 u, gp-bahrein 25.986 u).
+const REL_PISTA = { abudhabi: 0.996, arcoiris: 0.93, austin: 1.169, bahrein: 1, baku: 1.016, barcelona: 0.997, catar: 1.012, deserto: 0.935, "gp-abudhabi": 0.976, "gp-austin": 1.018, "gp-bahrein": 1, "gp-baku": 1.085, "gp-barcelona": 0.86, "gp-catar": 1.001, "gp-hungaroring": 0.809, "gp-interlagos": 0.796, "gp-jeddah": 1.141, "gp-lasvegas": 1.145, "gp-madri": 1.011, "gp-melbourne": 0.975, "gp-mexico": 0.795, "gp-miami": 1, "gp-monaco": 0.616, "gp-montreal": 0.806, "gp-monza": 1.07, "gp-redbullring": 0.798, "gp-silverstone": 1.088, "gp-singapura": 0.909, "gp-spa": 1.289, "gp-suzuka": 1.073, "gp-xangai": 1.007, "gp-zandvoort": 0.787, hungaroring: 0.939, interlagos: 0.968, jeddah: 1.057, laguna: 0.897, lasvegas: 1.066, losangeles: 0.933, luigi: 0.932, madri: 0.999, melbourne: 0.999, mexico: 0.922, miami: 0.998, monaco: 1.093, montreal: 0.934, monza: 1.068, nurburgring: 1.257, redbullring: 0.929, rio: 0.932, serra: 0.934, silverstone: 1.048, singapura: 1.338, sorvete: 0.933, spa: 1.253, suzuka: 1.03, tokyo: 0.936, xangai: 1.154, zandvoort: 0.928 };
+const relDaPista = (pista) => (pista && REL_PISTA[pista]) || 1;
+// As VOLTAS DE CADA GP (2026-11-21, o Thiago: "cada pista ter uma quantidade de voltas específica"): a carreira escolhe o tamanho da corrida
+// (2, 3, 5 ou 10 voltas) em voltas de Bahrein, e cada GP tem as voltas que dão essa distância (como na F1, ~305 km): mais voltas nas pistas
+// curtas, menos nas compridas. Nunca menos de 2 (com 1 volta não há estratégia).
+const voltasDoGP = (base, pista) => { base = Math.round(+base || 0); return base <= 1 ? base : Math.max(2, Math.round(base / relDaPista(pista))); };
 // Em quantas voltas o pneu chega ao penhasco, pilotado como o piloto ideal e com um gasto `fator` do carro
-function vidaEmVoltas(composto, fator = 1, agua = null) {
+function vidaEmVoltas(composto, fator = 1, agua = null, pista = null) {
   const pn = PNEUS[composto] || PNEUS[COMPOSTO_PADRAO];
   const seca = agua == null ? 0 : composto === "intermediario" ? 1 - limite(agua / 0.3, 0, 1) : secaDaPista(agua);
-  return pn.vida / (fator || 1) / (1 + ((pn.derrete || 1) - 1) * seca);
+  return pn.vida / (fator || 1) / (1 + ((pn.derrete || 1) - 1) * seca) / relDaPista(pista); // (`pista`: a vida por distância, em voltas DESTA pista)
 }
 // Quanto falta para o penhasco, de 1 (novo) a 0 (chegou ao penhasco: dali o pneu despenca). É o que o anel do HUD mostra.
 const vidaRestante = (pneu) => limite(1 - (pneu ? pneu.desgaste : 0) / PENHASCO, 0, 1);
@@ -235,8 +246,8 @@ const SECOS_ORDEM = ["macio", "medio", "duro"]; // do mais rápido ao mais durá
 // O composto para esta parada: pista molhada (ou chovendo) com pneu seco pede chuva; pista seca com o de chuva pede seco; o resto é o seco mais
 // rápido, DIFERENTE do atual, que ainda aguenta as voltas que faltam (senão o que mais dura); sem jogo sobra o atual.
 // e: { atual, jogos, agua (0..1), voltasRestantes, fator }
-function recomendarParada({ atual, jogos, agua = 0, voltasRestantes = 99, fator = 1 }) {
-  const tem = (c) => !jogos || jogos[c] == null || jogos[c] > 0, vida = (c) => vidaEmVoltas(c, fator);
+function recomendarParada({ atual, jogos, agua = 0, voltasRestantes = 99, fator = 1, pista = null }) {
+  const tem = (c) => !jogos || jogos[c] == null || jogos[c] > 0, vida = (c) => vidaEmVoltas(c, fator, null, pista);
   const seco = () => {
     const cands = SECOS_ORDEM.filter((c) => tem(c) && c !== atual); if (!cands.length) return SECOS_ORDEM.includes(atual) ? atual : (SECOS_ORDEM.find(tem) || "medio");
     return cands.find((c) => vida(c) >= voltasRestantes) || cands.slice().sort((a, b) => vida(b) - vida(a))[0];
@@ -643,7 +654,7 @@ function vacuoF1(draft, curva) {
   return { final: vf * d, acel: va * d, aderencia: 1 - (curva ? AR_SUJO * d : 0) };
 }
 
-const api = { PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,
+const api = { REL_PISTA, relDaPista, voltasDoGP, PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,
   zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersBloqueadoNaChuva, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
   LIMITADOR, PARADA_BASE, PARADA_ERRO, UM_COMPOSTO, RAPIDO, RAMPA, GARAGENS, EQUIPES_GARAGEM, indiceDaGaragem, sorteio, tempoDeParada, PARADAS, classeDaParada, textoDaParada, BATIDA_MIN, BATIDA_MEDIA, BATIDA_FORTE, BATIDA_MAX, BATIDA_INTERVALO, batida, COLISAO_LEVE, COLISAO_MEDIA, COLISAO_GRAVE, PUNICAO_LEVE_S, PUNICAO_MEDIA_S, STOPGO_S, STOPGO_VOLTAS, STOPGO_CONVERSAO_S, gravidadeDaBatida, nivelDaPunicao, batidaProposital, DSQ_PROPOSITAIS, AVISO_PROPOSITAIS, stopGoCabe, efeitoDoDano, corredor, garagemDe, saidaDoCorredor, tempoNoBox, registrarParada, usouDoisCompostos, JOGOS_POR_COMPOSTO, jogosUsados, jogosRestantes, podeUsar, compostoParaParada, recomendarParada, ESCOLHA_BOX_S, penalidadeUmComposto, acrescimoDeFinal, estrategia, melhoresPlanos,
   CHANCE_CHUVA, GAROA, CHUVA_FORTE, AGUA_SOBE_S, AGUA_SECA_S, RAMPA_S, CHUVA_MIN_S, AVISO_S, AGUA_MOLHADA, AGUA_ENCHARCADA, AGUA_QUALI_CHUVA, OPCOES_DE_CLIMA, ROTULO_CLIMA, previsaoDoGP, descreverPrevisao, sortearClima, chuvaEm, aguaEm, proximaMudanca, climaEm, fatorAgua, compostoDaClassificacao, tempoMolhado, compostoPorAgua };

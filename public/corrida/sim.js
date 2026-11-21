@@ -272,7 +272,7 @@ function passo(c, ent, amb, tr, ev) {
   amb2.pn = pn; amb2.dano = dano; amb2.drs = drs; amb2.ers = ersAtivo; amb2.vacuo = vac; amb2.curva = curva;
   amb2.extra = c.acerto ? extraDoAcerto(c.acerto, Math.abs(c.v || 0), amb2.extraAc || (amb2.extraAc = {})) : null; // o acerto do carro (asa e altura)
   const plano = !amb.quali && PLANO[amb.plano]; // (2026-11-16) o plano da corrida da carreira (paddock.js, "plano"): aderência contra desgaste
-  if (plano) { const b = amb2.extra, e = amb2.planoEx || (amb2.planoEx = {}); for (const k in e) delete e[k]; if (b) Object.assign(e, b); e.grip = (e.grip || 1) * plano.grip; e.desgaste = (e.desgaste || 1) * plano.desgaste; amb2.extra = e; }
+  if (plano) { const b = amb2.extra, e = amb2.planoEx || (amb2.planoEx = {}); for (const k in e) delete e[k]; if (b) Object.assign(e, b); e.grip = (e.grip || 1) * plano.grip; e.potencia = (e.potencia || 1) * (plano.potencia || 1); e.desgaste = (e.desgaste || 1) * plano.desgaste; amb2.extra = e; }
   // SEM teto de velocidade (pedido do Thiago, 2026-11-10): a velocidade final sai da potência contra o arrasto (dinamica.js). O teto fixo
   // (spec.vmax × TETO_VELOCIDADE) escondia o arrasto da asa (a asa cheia ganhava em quase toda pista) e o ganho de DRS, ERS e vácuo na reta.
   amb2.tetoV = Infinity;
@@ -319,7 +319,7 @@ function passo(c, ent, amb, tr, ev) {
       if (vn > 0) { c.vx -= q.nx * s * vn * 1.2; c.vy -= q.ny * s * vn * 1.2; const ca = Math.cos(c.a), sa = Math.sin(c.a); c.v = c.vx * ca + c.vy * sa; c.vl = -c.vx * sa + c.vy * ca; if (vn > 60 && ev) ev.push({ t: "bump", forca: vn }); }
     }
   }
-  if (amb.f1 !== false) F1.gastarPneu(c.pneu, { dist: Math.hypot(nx - xAnt, ny - yAnt), volta: n * 6, slip: c.slip, travada: c.travada, patina: c.patina, zebra: Math.max(0, Math.min(1, (Math.abs(fr.lat) - (tr.W / 2 - 10)) / 10)), v: c.v, vmax: spec.vmax, dt, fator: (spec.desgaste || 1) * (amb.fatorDesgastePneu ?? 1) * ((amb2.extra && amb2.extra.desgaste) || 1), agua: amb.agua }); // (zebra: os últimos 10 da borda e além)
+  if (amb.f1 !== false) F1.gastarPneu(c.pneu, { dist: Math.hypot(nx - xAnt, ny - yAnt), volta: n * 6, rel: F1.relDaPista(tr.pistaId || tr.id), slip: c.slip, travada: c.travada, patina: c.patina, zebra: Math.max(0, Math.min(1, (Math.abs(fr.lat) - (tr.W / 2 - 10)) / 10)), v: c.v, vmax: spec.vmax, dt, fator: (spec.desgaste || 1) * (amb.fatorDesgastePneu ?? 1) * ((amb2.extra && amb2.extra.desgaste) || 1), agua: amb.agua }); // (zebra: os últimos 10 da borda e além)
   c.x = nx; c.y = ny;
   // altura: no chão acompanha o relevo; se o chão some (lombada rápida), voa e cai com a gravidade
   const gh = alturaDoChao(tr, c.x, c.y, c.idx);
@@ -394,7 +394,7 @@ function passoBox(c, ent, amb, tr, p, ev) {
     // composto pedido é outro (`troca`), a equipe troca o pneu em seguida, na mesma parada, com o tempo normal da troca somado
     // `B.parada`/`B.t`: a parada em si (no stop-and-go, os segundos dele); `B.troca = { parada, t }`: a troca de pneu que vem logo depois (null se não troca)
     const stopGo = amb.stopGo > 0, decidir = B.pedido === "decidir", atual = c.pneu ? c.pneu.composto : (decidir ? "medio" : B.pedido), tempoTroca = F1.tempoDeParada(amb.semente, amb.id, n);
-    const voltasRest = Math.max(0, (amb.voltas || 1) - ((amb.laps || 0) + 1)), rec = decidir ? F1.recomendarParada({ atual, jogos: amb.jogos, agua: amb.agua || 0, voltasRestantes: voltasRest, fator: spec.desgaste }) : null;
+    const voltasRest = Math.max(0, (amb.voltas || 1) - ((amb.laps || 0) + 1)), rec = decidir ? F1.recomendarParada({ atual, jogos: amb.jogos, agua: amb.agua || 0, voltasRestantes: voltasRest, fator: spec.desgaste, pista: tr.pistaId || tr.id }) : null;
     const uEntrada = rel + 0.5, garagem = F1.garagemDe(cor, amb.grid || 0, amb.equipe);
     const desvioEntrada = direto ? lado - cor.latParada(uEntrada, garagem, lado) : 0;
     Object.assign(B, { fase: "entra", u: uEntrada, uEntrada, desvioEntrada, lat0: lado, t: 0, composto: decidir ? null : B.pedido, escolher: decidir, rec, tt: tempoTroca, manter: false, stopGo, troca: !decidir && stopGo && B.pedido !== atual ? { parada: tempoTroca, t: 0 } : null, sg: stopGo ? amb.stopGo : 0, volta: (amb.laps || 0) + 1, n, parada: stopGo ? amb.stopGo : tempoTroca, garagem, tick0: c.tick });
@@ -731,7 +731,9 @@ function reconciliar(c, st, tr, ctx) {
 //   cambagem (pouca 0 · muita 1): a aderência na curva contra a frenagem e a tração em linha reta e o desgaste (até ±4% e +12% de desgaste);
 //   pressão dos pneus (baixa 0 · alta 1): baixa agarra mais e gasta mais; alta gasta menos e agarra menos (até ±4% e ±15% de desgaste);
 //   rigidez da suspensão (macia 0 · dura 1): dura segura a plataforma da asa (mais carga) e sofre nas zebras e lombadas (menos aderência mecânica).
-const PLANO = { arriscar: { grip: 1.02, desgaste: 1.2 }, seguro: { grip: 0.985, desgaste: 0.8 } };
+// (2026-11-21, o Thiago: "o de arriscar nem vale a pena... valeria se trouxesse mais potência, como 15%": algo que compense parar mais) o motor
+// no modo de ataque e o carro no limite: +15% de potência e +3% de aderência, e o pneu gasta 50% mais; o seguro poupa o motor e o pneu.
+const PLANO = { arriscar: { grip: 1.03, potencia: 1.15, desgaste: 1.5 }, seguro: { grip: 0.98, potencia: 0.96, desgaste: 0.65 } };
 const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5, cambagem: 0.5, pressao: 0.5, rigidez: 0.5 });
 const meio = (v) => (Number.isFinite(v) ? v : 0.5) - 0.5; // −0,5 a +0,5
 const alturaParada = (a) => 0.025 + a.altura * 0.05;

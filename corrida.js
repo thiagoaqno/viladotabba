@@ -88,7 +88,7 @@ module.exports = function attachCorrida(io) {
     return {
       pista: T.PISTAS[c.pista] ? c.pista : "interlagos",
       hora: c.hora === "noite" || (c.hora == null && T.PISTAS[c.pista]?.horaPadrao === "noite") ? "noite" : "dia", // (sem horário na config: a pista que só corre à noite, Singapura, nasce de noite)
-      voltas: [1, 2, 3, 5, 10, 21].includes(int(c.voltas, 3)) ? int(c.voltas, 3) : 3,
+      voltas: [1, 2, 3, 5, 10, 21].includes(int(c.voltas, 3)) || (c.voltasDoGP && int(c.voltas, 0) >= 1 && int(c.voltas, 0) <= 40) ? int(c.voltas, 3) : 3, // (voltasDoGP: a carreira, com as voltas de cada pista, F1.voltasDoGP)
       regras: f1 ? "f1" : "galera",
       ano: Anos.anoValido(c.ano), // a temporada (f1-temporadas.js); sem ano, 2026
       caixas: !f1 && c.caixas === true,
@@ -590,7 +590,7 @@ module.exports = function attachCorrida(io) {
     const gp = temporada.calendario[temporada.gp];
     if (!gp) throw Error("A temporada terminou.");
     const rivais = require("./public/corrida/temporada/regras.js").desenvolvimentoRivais(temporada, [temporada.equipe], gp.pista); // (o carro dos rivais vem ajustado para esta pista, com os engenheiros deles)
-    const room = { code: novoCodigo(rooms), host: null, phase: "lobby", config: cleanConfig({ ano: temporada.anoF1, regras: "f1", pista: gp.pista, voltas: temporada.voltas, robos: Robos.GRID_F1 - 1, classificacao: "completa", nivel: temporada.nivel || "medio" }),
+    const room = { code: novoCodigo(rooms), host: null, phase: "lobby", config: cleanConfig({ ano: temporada.anoF1, regras: "f1", pista: gp.pista, voltas: F1.voltasDoGP(temporada.voltas, gp.pista), voltasDoGP: true, robos: Robos.GRID_F1 - 1, classificacao: "completa", nivel: temporada.nivel || "medio" }),
       players: {}, order: [], finishOrder: [], log: [], t: Date.now(), privada: true, temporada: true, equipeTemporada: temporada.equipe,
       sementeFixa: `${temporada.semente}:${temporada.ano}:${temporada.gp}`, pilotosTemporada: require("./public/corrida/temporada/regras.js").pilotosNoGrid(temporada),
       montagens: { ...rivais.montagens, [temporada.equipe]: temporada.montagem }, bonusMontagem: { ...rivais.bonus, [temporada.equipe]: temporada.bonus }, estrategistas: { [temporada.equipe]: temporada.engenheiros.estrategista || 0 }, bonusBox: (temporada.engenheiros.mecanico * 0.5 + temporada.engenheiros.estrategista * 0.25), bonusBoxEquipes: { ...rivais.bonusBox, [temporada.equipe]: temporada.engenheiros.mecanico * 0.5 + temporada.engenheiros.estrategista * 0.25 }, aoTerminarGP, aoMontar,
@@ -610,7 +610,7 @@ module.exports = function attachCorrida(io) {
   function abrirGPGrupo(g, aoTerminarGP) {
     const gp = T.PISTAS[g.pista];
     if (!gp) throw Error("Pista inválida.");
-    const room = { code: novoCodigo(rooms), host: null, phase: "lobby", config: cleanConfig({ regras: "f1", pista: g.pista, voltas: g.voltas, robos: g.robos.length, classificacao: "completa", nivel: g.nivel }),
+    const room = { code: novoCodigo(rooms), host: null, phase: "lobby", config: cleanConfig({ regras: "f1", pista: g.pista, voltas: F1.voltasDoGP(g.voltas, g.pista), voltasDoGP: true, robos: g.robos.length, classificacao: "completa", nivel: g.nivel }),
       players: {}, order: [], finishOrder: [], log: [], t: Date.now(), privada: true, temporada: true, grupo: true, salaTemporada: g.salaTemporada || null, espectadores: new Set(),
       sementeFixa: g.semente, pilotosTemporada: g.robos, montagens: g.montagens || {}, bonusMontagem: g.bonusMontagem || {}, bonusBoxEquipes: g.bonusBox || {}, estrategistas: g.estrategistas || {}, aoTerminarGP, aoMontar: g.aoMontar,
       tvTemporada: g.tv ? resumoTV(g.tv.tabelas, { gp: g.tv.gp, total: g.tv.total, ano: g.tv.ano }, (p) => p.humano, (e) => e.humana) : null };

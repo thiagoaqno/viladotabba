@@ -8,7 +8,7 @@ const SECOS = ["macio", "medio", "duro"]; // do mais rápido ao mais durável
 // O seco que vale para o que falta: o mais rápido que aguenta as voltas que restam; senão o que mais dura. `evitar`: compostos que não servem
 // (a regra dos dois compostos exige outro). null se não sobra nenhum jogo.
 function escolherSeco({ F, jogos, voltasRestantes, fator = 1, evitar = [], ritmo = null, pista = null, voltasTotais = voltasRestantes }) {
-  const tem = (c) => !jogos || jogos[c] == null || jogos[c] > 0, vida = (c) => F.vidaEmVoltas(c, fator);
+  const tem = (c) => !jogos || jogos[c] == null || jogos[c] > 0, vida = (c) => F.vidaEmVoltas(c, fator, null, pista);
   const cands = SECOS.filter((c) => tem(c) && !evitar.includes(c)); if (!cands.length) return null;
   const aguenta = cands.find((c) => vida(c) >= voltasRestantes);
   return aguenta || cands.slice().sort((a, b) => vida(b) - vida(a))[0];
@@ -56,7 +56,7 @@ function sugerirBoxAgora(e) {
   // O prazo do stop-and-go é independente da necessidade de trocar pneus.
   if (e.stopGo && e.stopGo.v != null && e.stopGo.v <= 1) return mk(e.pneu.desgaste < 0.5 ? atual : seu([]), "stop-and-go no prazo", "stopgo", 3);
   // Projeta o desgaste restante e compara o tempo de seguir com o custo da parada.
-  const taxa = e.taxaPneu > 0 ? e.taxaPneu : F.PENHASCO / F.vidaEmVoltas(atual, e.fator || 1);
+  const taxa = e.taxaPneu > 0 ? e.taxaPneu : F.PENHASCO / F.vidaEmVoltas(atual, e.fator || 1, null, e.pista);
   const chega = e.pneu.desgaste + taxa * restam <= F.PENHASCO;
   if (chega && !obrigatoria) return null;
   const tab = e.ritmo && e.pista && e.ritmo.tabelaDe(e.pista), novo = seu([]);

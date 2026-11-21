@@ -97,7 +97,7 @@ function montar(c) {
       num: a.dado ? a.dado.num : "", numRot: a.dado ? a.dado.rot : "", modelo: a.modelo || null, amigo: a, meu: a.pid === c.eu });
   }
   if (prox) {
-    const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, s.voltas) : null;
+    const prev = previsao && root.F1Regras?.descreverPrevisao ? root.F1Regras.descreverPrevisao(previsao, (root.F1Regras.voltasDoGP ? root.F1Regras.voltasDoGP(s.voltas, prox && prox.pista) : s.voltas)) : null;
     story(`prox:${s.ano}:${s.gp}`, "Próxima etapa", s.equipe, Gi?.fundoDe(prox.pista), "proxima",
       { gp: nomeGP(prox), etapa: s.gp + 1, total: s.tamanho, faltam: s.tamanho - s.gp, previsao: prev && prev.titulo ? ` · ${prev.titulo}` : "" }, { num: `${s.gp + 1}/${s.tamanho}`, numRot: "etapa", pista: prox.pista });
   }

@@ -79,16 +79,16 @@ const EVENTOS = {
       { id: "aumento", rotulo: "Dar um aumento a ele", efeito: { moral: 10, lealdade: 8 }, acao: "aumentoComp" },
     ],
   },
-  // (2026-11-16, o Thiago: "decisões que impactam diretamente no carro") o plano do domingo, em todo GP: arriscar dá 2% de aderência e gasta
-  // 20% mais pneu; jogar seguro tira 1,5% de aderência e poupa 20% do pneu (sim.js PLANO, no seu carro). A conta vem no fim do GP (aoResultado).
+  // (2026-11-16, o Thiago: "decisões que impactam diretamente no carro"; 2026-11-21: "o de arriscar nem vale a pena") o plano do domingo, em todo GP:
+  // os números estão em sim.js PLANO (no seu carro). A conta da diretoria vem no fim do GP (aoResultado).
   plano: {
     quem: "Engenheiros", fase: "domingo",
     quando: (c) => !!c.proximo,
     titulo: () => "O plano para a corrida",
-    texto: () => "Os engenheiros querem saber como você vai correr: arriscar dá mais aderência e gasta mais pneu; jogar seguro poupa o pneu e o carro.",
+    texto: () => "Os engenheiros querem saber como você vai correr: arriscar liga o motor no modo de ataque (mais potência e aderência, e para mais no box); jogar seguro poupa o motor e o pneu.",
     opcoes: [
-      { id: "arriscar", rotulo: "Arriscar: +2% de aderência, pneu gasta 20% mais", efeito: { torcida: 2 } },
-      { id: "seguro", rotulo: "Jogar seguro: −1,5% de aderência, pneu gasta 20% menos", efeito: { diretoria: 1 } },
+      { id: "arriscar", rotulo: "Arriscar: +15% de potência e +3% de aderência, pneu gasta 50% mais", efeito: { torcida: 2 } },
+      { id: "seguro", rotulo: "Jogar seguro: −4% de potência e −2% de aderência, pneu gasta 35% menos", efeito: { diretoria: 1 } },
       { id: "normal", rotulo: "Sem plano especial", efeito: {} },
     ],
   },

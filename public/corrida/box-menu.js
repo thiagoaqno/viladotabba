@@ -67,7 +67,7 @@ export function atualizarMenuBox() {
     if (c === "manter") return;
     set(b, "style", `--c:${f.PNEUS[c].cor}`);
     set(refs["j" + c], "t", j[c] <= 0 ? "esgotado" : j[c] + (j[c] === 1 ? " jogo" : " jogos"));
-    set(refs["a" + c], "t", `aderência ${Math.round((f.PNEUS[c].pico / maxPico) * 100)}% · ~${Math.floor(f.vidaEmVoltas(c, 1, clima.agua))} voltas`);
+    set(refs["a" + c], "t", `aderência ${Math.round((f.PNEUS[c].pico / maxPico) * 100)}% · ~${Math.floor(f.vidaEmVoltas(c, 1, clima.agua, E.S?.config?.pista))} voltas`);
   });
   const pn = race.pneu;
   set(refs.info, "t", pn ? `Pneu de agora: ${f.PNEUS[pn.composto].nome} · desgaste ${Math.round(pn.desgaste * 100)}%${B.stopGo ? " · stop-and-go: cumpre e troca junto" : ""}` : "");

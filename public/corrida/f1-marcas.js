@@ -72,7 +72,8 @@ const SO_LETRA = {
   revolut: ["Revolut", { peso: 800, h: 1.1 }], nexo: ["NEXO", { peso: 900, esp: 4 }], ninjaone: ["ninjaOne", { peso: 700 }], visitqatar: ["visit QATAR", { peso: 800 }],
   bwt: ["BWT", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#ff7ab8" }], msc: ["MSC", { peso: 800, fam: SERIFA, esp: 3 }], alpine: ["ALPINE", { peso: 800, esp: 5 }],
   toyota: ["TOYOTA", { peso: 900, esp: 4 }], haas: ["HAAS", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#101114" }], zoomex: ["ZOOMEX", { peso: 800, esp: 2 }], twg: ["TWG", { peso: 800, fam: SERIFA, esp: 5, h: 1.1 }],
-  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }], cadillacw: ["CADILLAC", { peso: 500, esp: 16, h: 0.95 }], indeed: ["indeed", { peso: 700 }], workday: ["workday", { peso: 700 }], deloitte: ["Deloitte.", { peso: 800 }], cisco: ["CISCO", { peso: 700, esp: 3 }], dewalt: ["DEWALT", { peso: 900, ital: true }], rubrik: ["rubrik", { peso: 600 }],
+  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }], cadillacw: ["CADILLAC", { peso: 500, esp: 16, h: 0.95 }], indeed: ["indeed", { peso: 700 }], oakberry: ["OAKBERRY", { peso: 800, esp: 2 }], playngo: ["PLAY'n GO", { peso: 900, ital: true }], brillio: ["brillio", { peso: 800 }], reviva: ["Reviva", { peso: 700, fam: SERIFA }],
+  ingenuity: ["THE INGENUITY", { peso: 700, esp: 2 }], workday: ["workday", { peso: 700 }], deloitte: ["Deloitte.", { peso: 800 }], cisco: ["CISCO", { peso: 700, esp: 3 }], dewalt: ["DEWALT", { peso: 900, ital: true }], rubrik: ["rubrik", { peso: 600 }],
   okta: ["okta", { peso: 700 }], primax: ["PRIMAX", { peso: 900, ital: true }], sap: ["SAP", { peso: 900, ital: true, fam: PESADA }], akkodis: ["AKKODIS", { peso: 700, esp: 2 }], einhell: ["Einhell", { peso: 800 }], siemens: ["SIEMENS", { peso: 800, esp: 2 }], hexagon: ["HEXAGON", { peso: 700, esp: 3 }], clear: ["CLEAR", { peso: 400, esp: 4 }],
 };
 for (const [id, [str, o]] of Object.entries(SO_LETRA)) MARCAS[id] = (c, { tinta } = {}) => letra(c, str, { ...o, cor: tinta || o.tinta || "#fff" });
@@ -115,6 +116,14 @@ Object.assign(MARCAS, {
   },
   // o 1Password: o redondo com o "1" e o nome
   onepassword(c, { tinta = "#fff", fundo = "#1b2452" } = {}) { disco(c, -2.15, 0, 0.42, tinta); letra(c, "1", { x: -2.15, y: 0.02, h: 0.62, peso: 900, cor: fundo }); letra(c, "Password", { x: 0.35, h: 0.9, peso: 700, cor: tinta }); },
+  // (2026-11-20, as imagens da Haas) o GR vermelho e o "TOYOTA GAZOO Racing" (o R de Racing vermelho)
+  gazoo(c, { tinta = "#fff" } = {}) { c.fillStyle = "#e10600"; c.fillRect(-3.1, -0.42, 0.95, 0.84); letra(c, "GR", { x: -2.62, h: 0.62, peso: 900, ital: true, cor: "#fff" });
+    letra(c, "TOYOTA GAZOO", { x: -1.95, h: 0.7, peso: 900, cor: tinta, align: "left" }); letra(c, "R", { x: 1.62, h: 0.7, peso: 900, cor: "#e10600", align: "left" }); letra(c, "acing", { x: 2.05, h: 0.7, peso: 700, cor: tinta, align: "left" }); },
+  // o leão dourado (um redondo) e o MGM com o REWARDS embaixo
+  mgm(c, { tinta = "#fff" } = {}) { disco(c, -1.15, 0, 0.42, "#c8a24a"); disco(c, -1.15, 0, 0.3, "#101114"); disco(c, -1.15, -0.02, 0.17, "#c8a24a");
+    letra(c, "MGM", { x: 0.2, y: -0.14, h: 0.62, peso: 900, cor: tinta }); letra(c, "REWARDS", { x: 0.2, y: 0.32, h: 0.24, peso: 700, cor: tinta, esp: 4 }); },
+  // o H da Haas no redondo, em vermelho
+  haash(c, { tinta = "#e10600" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.09; c.beginPath(); c.arc(0, 0, 0.44, 0, Math.PI * 2); c.stroke(); letra(c, "H", { h: 0.62, peso: 900, ital: true, fam: PESADA, cor: tinta }); },
   // (2026-11-20, a imagem do Thiago) o brasão da Cadillac de agora: o escudo de contorno fino com o xadrez de blocos dentro, em uma cor só
   crest(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.05; c.lineJoin = "round";
     const escudo = () => { c.beginPath(); c.moveTo(-0.62, -0.44); c.lineTo(0.62, -0.44); c.lineTo(0.56, 0.12); c.quadraticCurveTo(0.3, 0.38, 0, 0.5); c.quadraticCurveTo(-0.3, 0.38, -0.56, 0.12); c.closePath(); };

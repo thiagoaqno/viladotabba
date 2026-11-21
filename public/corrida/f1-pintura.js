@@ -469,8 +469,11 @@ DESENHOS["aston-martin"] = {
 // baixo da asa: azul-royal vivo, escurecendo embaixo e para trás, a barriga azul-marinho com os frisos azul-claro, a asa dianteira azul-marinho
 // com o ATLASSIAN e o MYPROTEIN, KOMATSU grande e o redondo da Gulf na caixa, ATLASSIAN no alto das caixas; embaixo da asa traseira, a faixa
 // roxa do Kraken.
+// (2026-11-20, acertada pelas seis imagens de Carros F1/2026/Williams: o 55 na barbatana, o "A" da Atlassian em cima do ATLASSIAN, o Gulf atrás e o
+// KOMATSU embaixo na caixa, a entrada de ar cobre com o DURACELL no azul-marinho, as placas da asa traseira com KOMATSU e brillio, ATLASSIAN em
+// cima da asa traseira e a fila do bico como na foto de frente)
 DESENHOS.williams = {
-  numero: "#ffffff", carbono: 1, numPos: [3.5, 0.66, 9, 9],
+  numero: "#ffffff", carbono: 1, numPos: [3.56, 0.88, 9, 9],
   pintar(ctx) {
     const ROYAL = "#1d3fc4", ROYAL_ESC = "#14299a", MARINHO = "#0b1140", CEU = "#5aa8ff";
     base(ctx, ROYAL);
@@ -482,20 +485,22 @@ DESENHOS.williams = {
       baixo(c, MARINHO);
       poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], MARINHO); // as placas da asa dianteira
       ret(c, 3.82, 0.3, 4.45, 1.1, ROYAL_ESC); // a placa da asa traseira
-      ret(c, 2.3, 0.86, 2.62, 1.0, "#101114"); // a entrada de ar
-      marca(c, "stephens", 1.49, 0.35, 0.035); marca(c, "myprotein", 2.2, 0.42, 0.034); marca(c, "kraken", 2.4, 0.56, 0.026);
-      marca(c, "atlassian", 2.95, 0.62, 0.05); marca(c, "komatsu", 2.85, 0.3, 0.07); marca(c, "gulf", 3.32, 0.33, 0.085);
-      marca(c, "keeper", 1.7, 0.13, 0.03); marca(c, "duracell", 2.46, 0.92, 0.026); marca(c, "bwscores", 0.27, 0.12, 0.05);
-      marca(c, "komatsu", 4.15, 0.8, 0.045); marca(c, "twilio", 4.15, 0.64, 0.04);
+      ret(c, 2.18, 0.86, 2.62, 1.1, MARINHO); ret(c, 2.18, 0.86, 2.3, 1.0, "#b8693a"); // a entrada de ar: o azul-marinho e a boca cor de cobre
+      marca(c, "stephens", 1.6, 0.48, 0.04); marca(c, "myprotein", 2.25, 0.46, 0.034); marca(c, "kraken", 2.42, 0.63, 0.026);
+      marca(c, "atlassiana", 2.95, 0.76, 0.06); marca(c, "atlassian", 2.95, 0.64, 0.05); marca(c, "komatsu", 2.88, 0.28, 0.065); marca(c, "gulf", 3.36, 0.42, 0.08);
+      marca(c, "keeper", 1.95, 0.17, 0.03); marca(c, "duracell", 2.46, 0.95, 0.026); marca(c, "bwscores", 0.27, 0.12, 0.05);
+      marca(c, "komatsu", 4.15, 0.8, 0.045); marca(c, "brillio", 4.15, 0.64, 0.04);
     });
     vista(ctx, "T", (c) => {
       for (const l of [-1, 1]) { c.fillStyle = "rgba(11,17,64,0.35)"; c.fillRect(3.0, l > 0 ? 0.3 : -0.8, 0.9, 0.5); }
       asasT(c, MARINHO, ROYAL_ESC, ROYAL);
       const f = { giro: DE_FRENTE };
       for (const l of [-1, 1]) { marca(c, "atlassian", 0.24, l * 0.47, 0.045, f); marca(c, "myprotein", 0.1, l * 0.47, 0.03, f); marca(c, "atlassian", 2.85, l * 0.5, 0.055, { giro: l > 0 ? Math.PI : 0 }); }
-      marca(c, "williamsw", 0.1, 0, 0.04, f); marca(c, "pirelli", 0.2, 0, 0.024, f); marca(c, "vast", 0.3, 0, 0.024, f); marca(c, "twilio", 0.4, 0, 0.03, f);
-      marca(c, "bwscores", 0.5, 0, 0.03, f); marca(c, "komatsu", 0.6, 0, 0.026, f); marca(c, "gulf", 0.74, 0, 0.06, f);
-      marca(c, "atlassiana", 1.18, 0, 0.06, f); marca(c, "santander", 1.28, 0, 0.022, f); marca(c, "duracell", 2.4, 0, 0.03, f);
+      // a fila do bico, da ponta para trás, como na foto de frente (o 55 é o shader, no 1,02)
+      marca(c, "williamsw", 0.14, 0, 0.04, f); marca(c, "pirelli", 0.3, 0, 0.022, f); marca(c, "reviva", 0.38, 0, 0.026, f); marca(c, "keeper", 0.46, 0, 0.02, f);
+      marca(c, "vast", 0.53, 0, 0.02, f); marca(c, "brillio", 0.6, 0, 0.026, f); marca(c, "bwscores", 0.68, 0, 0.022, f); marca(c, "ingenuity", 0.75, 0, 0.014, f);
+      marca(c, "komatsu", 0.82, 0, 0.022, f); marca(c, "gulf", 0.91, 0, 0.055, f); marca(c, "santander", 1.12, 0, 0.022, f); marca(c, "atlassiana", 1.24, 0, 0.06, f);
+      marca(c, "duracell", 2.4, 0, 0.03, f); marca(c, "atlassian", 4.12, 0, 0.07, { giro: -DE_FRENTE }); // (em cima da asa traseira, lido por quem vem atrás)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ROYAL); ret(c, -0.6, 0, 0.6, 0.12, MARINHO); });
     vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MARINHO); ret(c, -0.45, 0.35, 0.45, 0.7, ROYAL_ESC); });
@@ -564,33 +569,52 @@ DESENHOS.alpine = {
   },
 };
 
-// Haas (2026), a pedido do Thiago igual ao modelo do VF-24 do Sketchfab (o de 2024: ele não achou o de 2026), olhado de lado, de cima e de trás:
-// preto, o HAAS branco grande na caixa lateral e no alto das caixas, o filete branco no alto da caixa, a faixa branca no alto da tampa, o
-// redondo vermelho da MoneyGram na tampa e no bico, o bico e a volta do cockpit brancos, os dois losangos vermelhos atrás da entrada de ar, a asa
-// dianteira branca com o vermelho e a asa traseira vermelha em cima. (Medidas do carro de 2026; as de 2024 e 2025 estão em pinturaHaas24.)
+// Haas VF-26, refeita pelas sete imagens de Carros F1/2026/Haas (2026-11-20): preto atrás, a frente branca (o bico, a volta do cockpit e a cunha
+// que desce pela lateral do chassi até apontar embaixo do halo) com o filete vermelho na borda; a faixa branca no alto da tampa com o MoneyGram
+// preto, o MGM Rewards embaixo dela, o HAAS branco grande na caixa e no alto das caixas, o 87 vermelho, a ponta do bico preta com o H vermelho,
+// a asa dianteira branca e vermelha com o MoneyGram e o TOYOTA GAZOO Racing, e o TOYOTA GAZOO Racing em cima da asa traseira.
 DESENHOS.haas = {
-  numero: "#ffffff", carbono: 1, numPos: [3.38, 0.5, 9, 9],
+  numero: "#e10600", carbono: 1, numPos: [3.56, 0.88, 9, 9],
   pintar(ctx) {
     const PRETO = "#101113", BRANCO = "#eef0f2", VERM = "#e10600";
     base(ctx, PRETO);
     lados(ctx, (c) => {
-      c.beginPath(); c.moveTo(1.5, 0.5); c.quadraticCurveTo(2.6, 0.53, 3.6, 0.52); c.lineWidth = 0.014; c.strokeStyle = BRANCO; c.stroke(); // o filete no alto da caixa
-      ret(c, 2.3, 0.62, 3.4, 0.68, BRANCO); // a faixa no alto da tampa
-      ret(c, 1.35, 0.55, 2.1, 0.6, BRANCO); ret(c, 2.15, 0.54, 2.3, 0.57, VERM); // a volta do cockpit e o detalhe vermelho
+      // a cunha branca da lateral do chassi, do bico até embaixo do halo, com o filete vermelho na borda de baixo
+      poli(c, [[0.3, 0.24], [1.3, 0.4], [1.95, 0.5], [2.28, 0.58], [2.1, 0.66], [2.1, 1.1], [0.3, 1.1]], BRANCO);
+      c.beginPath(); c.moveTo(0.3, 0.24); c.lineTo(1.3, 0.4); c.lineTo(1.95, 0.5); c.lineTo(2.28, 0.58); c.lineWidth = 0.014; c.strokeStyle = VERM; c.stroke();
+      // a faixa branca no alto da tampa, do halo até a barbatana, com o filete vermelho embaixo
+      c.beginPath(); c.moveTo(2.12, 0.86); c.quadraticCurveTo(2.8, 0.78, 3.42, 0.72); c.lineTo(3.42, 0.86); c.quadraticCurveTo(2.8, 0.92, 2.12, 0.98); c.closePath(); c.fillStyle = BRANCO; c.fill();
+      c.beginPath(); c.moveTo(2.12, 0.86); c.quadraticCurveTo(2.8, 0.78, 3.42, 0.72); c.lineWidth = 0.012; c.strokeStyle = VERM; c.stroke();
       baixo(c, PRETO);
-      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], BRANCO); ret(c, 0, 0.1, 0.62, 0.125, VERM); // a placa da asa dianteira
-      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); ret(c, 3.82, 0.9, 4.45, 1.1, VERM); // a placa da asa traseira, vermelha em cima
-      marca(c, "haas", 2.44, 0.32, 0.13, { tinta: BRANCO }); marca(c, "moneygram", 2.75, 0.72, 0.05, { tinta: BRANCO });
-      marca(c, "palmangels", 1.46, 0.12, 0.03, { tinta: BRANCO }); marca(c, "haas", 4.15, 0.74, 0.06, { tinta: BRANCO });
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO); // as placas da asa dianteira
+      // a asa traseira: preta, a faixa vermelha embaixo da placa com o OAKBERRY e o TOYOTA GAZOO Racing em cima
+      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); ret(c, 3.92, 0.5, 4.42, 0.62, VERM);
+      marca(c, "oakberry", 4.17, 0.56, 0.035); marca(c, "gazoo", 4.17, 0.84, 0.03);
+      marca(c, "haas", 2.6, 0.32, 0.13, { tinta: BRANCO });
+      for (let k = 0; k < 3; k++) ret(c, 2.1 - k * 0.07, 0.27 + k * 0.035, 2.24 - k * 0.07, 0.283 + k * 0.035, BRANCO); // os riscos de movimento do HAAS
+      marca(c, "moneygram", 2.8, 0.85, 0.05, { tinta: PRETO }); marca(c, "mgm", 3.1, 0.62, 0.04);
+      marca(c, "playngo", 2.25, 0.74, 0.022, { tinta: PRETO }); marca(c, "palmangels", 1.46, 0.12, 0.03, { tinta: BRANCO });
+      marca(c, "playngo", 0.3, 0.12, 0.03);
     });
     vista(ctx, "T", (c) => {
-      asasT(c, BRANCO, VERM, BRANCO);
-      poli(c, [[0, -0.09], [1.3, -0.13], [1.3, 0.13], [0, 0.09]], BRANCO); ret(c, 1.3, -0.3, 2.1, 0.3, BRANCO); // o bico e a volta do cockpit
-      for (const l of [-1, 1]) { poli(c, [[2.5, l * 0.03], [2.6, l * 0.08], [2.7, l * 0.03], [2.6, l * 0.005]], VERM); marca(c, "haas", 2.75, l * 0.47, 0.1, { giro: l > 0 ? Math.PI : 0, tinta: BRANCO }); ret(c, 0.08, l * 0.62, 0.5, l * 0.66, VERM); }
-      marca(c, "moneygram", 0.4, 0, 0.06, { giro: DE_FRENTE }); marca(c, "haas", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: BRANCO });
+      asasT(c, BRANCO, PRETO, BRANCO);
+      // a frente branca: o bico, a volta do cockpit e as pontas que avançam sobre as caixas, e a espinha branca na tampa; o filete vermelho em volta
+      const frente = [[0.3, 0.1], [1.3, 0.14], [1.75, 0.3], [2.3, 0.5], [2.1, 0.3], [2.2, 0.12], [3.4, 0.1]];
+      const contorno = (c) => { c.moveTo(0.3, 0.1); for (const [a, b] of frente.slice(1)) c.lineTo(a, b); c.lineTo(3.4, -0.1); for (const [a, b] of frente.slice(0, -1).reverse()) c.lineTo(a, -b); c.closePath(); };
+      c.beginPath(); contorno(c); c.fillStyle = BRANCO; c.fill(); c.lineWidth = 0.012; c.strokeStyle = VERM; c.stroke();
+      poli(c, [[0, -0.09], [0.3, -0.1], [0.3, 0.1], [0, 0.09]], PRETO); marca(c, "haash", 0.15, 0, 0.1, { giro: DE_FRENTE });
+      for (const l of [-1, 1]) {
+        ret(c, 0.02, l * 0.18, 0.12, l * 0.78, VERM); marca(c, "moneygram", 0.2, l * 0.47, 0.045, { giro: DE_FRENTE, tinta: PRETO }); marca(c, "gazoo", 0.07, l * 0.47, 0.028, { giro: DE_FRENTE });
+        marca(c, "haas", 2.95, l * 0.48, 0.12, { giro: l > 0 ? Math.PI : 0, tinta: BRANCO }); marca(c, "mgm", 3.1, l * 0.22, 0.035, { giro: l > 0 ? Math.PI : 0 });
+      }
+      marca(c, "moneygram", 2.8, 0, 0.05, { giro: DE_FRENTE, tinta: PRETO });
+      const fp = { giro: DE_FRENTE, tinta: PRETO }; // a fila do bico (o 87 é o shader, no 1,02)
+      marca(c, "moneygram", 1.25, 0, 0.03, fp); marca(c, "gazoo", 1.15, 0, 0.018, fp);
+      marca(c, "playngo", 0.62, 0, 0.022, { giro: DE_FRENTE, tinta: "#1d4fd8" }); marca(c, "pirelli", 0.5, 0, 0.02, fp);
+      marca(c, "gazoo", 4.12, 0, 0.05, { giro: -DE_FRENTE }); // (em cima da asa traseira, lido por quem vem atrás)
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.15, 0.2, 0.15, 0.45, BRANCO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.8, 0.9, 0.8, 1.1, VERM); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.15, 0.2, 0.15, 0.5, BRANCO); });
+    vista(ctx, "R", (c) => ret(c, -0.8, 0, 0.8, 1.1, PRETO)); // (o MoneyGram de trás da asa vem de ASA_BAIXO)
   },
 };
 
@@ -1197,7 +1221,7 @@ const ASA_BAIXO = {
   "haas@2024": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "haas@2025": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "racing-bulls@2024": { cor: "#101114", marcas: (c) => marcaU(c, "cashapp", 0, 0.32, 0.1) },
-  haas: { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
+  haas: { cor: "#141518", marcas: (c) => marcaU(c, "moneygram", 0, 0.32, 0.1, { tinta: "#c9ccd0" }) }, // (2026-11-20, as imagens: o MoneyGram cinza atrás da asa)
   "racing-bulls": { cor: "#101114", marcas: (c) => marcaU(c, "cashapp", 0, 0.32, 0.1) },
 };
 

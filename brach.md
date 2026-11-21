@@ -26,9 +26,14 @@ Medido com `klk/medir/voltas.js` (os robôs sem tela, a física do servidor) e c
   - Medido com 21 robôs, 5 voltas e 4 sementes, as batidas fortes (força ≥ 60, as que acabam a corrida) e o total:
     - Suzuka: main 72 fortes (300 no total) → **40** (134);
     - Melbourne: main 130 (390) → **42** (206).
-  - **Mônaco piorou e ainda não está resolvido:** main 60 e 84 fortes (sementes 1–4 e 5–8) → 132 e 138.
-    - Lá o trânsito já usava o lado pela pista, então essa correção nem entra em Mônaco.
-    - Testei voltar cada mudança, uma por vez, e nenhuma sozinha devolve o número da main (sempre 114 a 168): a colisão pelas peças, o `LAT_ALEM`, o nível 92, o pneu antigo, o ERS na curva, a correção de muro e a tabela de pneus antigas.
+  - **Mônaco** (o Thiago: "um piloto derrapa na frente, outro vem atrás e bate nele; às vezes batem no muro por conta da linha"). Medi as derrapadas (o escorregão de lado passando de 40 u/s) e vi duas causas:
+    - a correção de muro refeita com as peças empurrava a linha e criava uma quina no ponto 850 (a subida do Cassino): 19 derrapadas ali, contra 2 na main;
+    - o nível 100 passando do limite da curva (`LAT_ALEM`) numa rua colada no muro.
+  - Agora em Mônaco:
+    - os robôs planejam pelos muros de antes, com a correção da main;
+    - o 100 não passa do limite;
+    - a física bate nas peças.
+  - Mônaco, 8 sementes: 1028 batidas no total (main 1258), 381 no muro (main 405) e 172 fortes (main 144). Ainda sobram ~19% de fortes a mais.
 - **Testado e descartado** (não reduziram as batidas):
   - freio de emergência pelo tempo até a batida;
   - a distância segura supondo que o da frente freia no máximo;
@@ -62,9 +67,9 @@ Medido com `klk/medir/voltas.js` (os robôs sem tela, a física do servidor) e c
 - O `cenario/monaco.json` estava sem a colisão pelas peças, e a física usava os muros antigos da pista.
   - Medido: em vários trechos o muro ficava mais de 10 u fora do guard-rail colocado no editor (dá para atravessar).
   - Em outros havia muro onde não tem peça nenhuma (o muro invisível).
-- Agora `colisao: "pecas"` está ligado.
-- A linha dos robôs (`Piloto.murosDasPecas`) e o teto do muro (`tetoDoMuro`) usam as mesmas barreiras.
-- A correção de muro (`linha-correcao.json`) foi refeita para Mônaco (a linha de sempre, com os muros novos) e para Baku (a linha nova).
+- Agora `colisao: "pecas"` está ligado (a física, a do jogo e a do servidor).
+- Os robôs continuam planejando a linha pelos muros de antes, com a correção de muro da main: com as peças na conta deles, a linha ganhava quinas e eles derrapavam (ver Robôs).
+- A correção de muro de Baku foi refeita para a linha nova.
 
 ## Chuva (item 7)
 - **Chance por lugar** (`CHUVA_LOCAL`):

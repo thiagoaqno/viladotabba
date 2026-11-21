@@ -76,7 +76,7 @@ const FOLGA_TETO = +(process.env.ROBO_FOLGA_TETO ?? 3); // até onde a linha pod
 // o maior deslocamento do centro do carro que cabe entre as barreiras explícitas de uma pista (`muros` em pistas.js, Baku: a Cidade Velha é estreita); Infinity onde a pista é a de sempre
 function tetoDoMuro(t, pts) {
   const n = pts.length, teto = new Float64Array(n).fill(Infinity); if (!t.muros) return teto;
-  const m = Piloto.murosDasPecas(t, pts) || T.murosDoEscape(pts, t.width, null, t), folga = t.muroFolga ?? 8; // (a colisão pelas peças do editor, quando a pista tem)
+  const m = T.murosDoEscape(pts, t.width, null, t), folga = t.muroFolga ?? 8;
   for (let i = 0; i < n; i++) for (const lado of [-1, 1]) if (m[lado][i]) teto[i] = Math.min(teto[i], t.width / 2 + m[lado][i] - folga - (t.folgaLinha ?? 6));
   return teto;
 }
@@ -255,7 +255,9 @@ function tempoDaVolta(pf, escala, ader) {
 const NIVEIS_F1 = [0.3, 0.5, 0.65, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5]; // (acima de 1: o difícil passa um pouco do ideal medido, como quem joga bem)
 function topoDe(pf) { return pf.topo || (pf.topo = D.velocidadeFinal(pf.c)); }
 function perfilF1(pf, f) {
-  const q = Math.round(Math.min(1.5, Math.max(0.3, f)) * 100) / 100, mapa = pf.perfisF1 || (pf.perfisF1 = new Map());
+  // (2026-11-21) em Mônaco o robô não passa do limite calculado (LAT_ALEM de corrida-piloto.js): na rua colada no muro, passar dele dobrava as batidas
+  // fortes (medido com 21 robôs, 4 sementes: 98 → 72, a main 60) e a volta nem ficava mais rápida
+  const q = Math.round(Math.min(T.baseDe(pf.pista) === "monaco" ? 1 : 1.5, Math.max(0.3, f)) * 100) / 100, mapa = pf.perfisF1 || (pf.perfisF1 = new Map());
   let v = mapa.get(q);
   if (!v && pf.linha.hi) { // pistas de GP: o ritmo do piloto novo (corrida-piloto.js), com os limites de verdade do carro
     const lat = Float64Array.from({ length: pf.n }, (_, i) => pf.lat[(i + 2) % pf.n]);

@@ -15,16 +15,9 @@ const MARGEM_MURO = 4; // quantos u antes do ponto em que o centro do carro enco
 
 // Até onde o centro do carro pode ir para cada lado em cada ponto: a mesma conta da física (sim.js: largura/2 + recuo - muroFolga), lado por
 // lado. O limite simétrico de antes deixava o muro de um lado encolher o outro, e a linha ficava no meio.
-// (2026-11-21, o Thiago: "os hitbox de Mônaco não fazem sentido") a pista com a colisão pelas peças do editor (cenario/<id>.json com colisao "pecas",
-// a mesma conta de sim.js): a linha dos robôs respeita os muros e guard-rails que foram colocados, não os muros antigos da pista
-function murosDasPecas(t, pts) {
-  const id = Object.keys(T.PISTAS).find((k) => T.PISTAS[k] === t); if (!id) return null;
-  try { const cen = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "public", "corrida", "cenario", id + ".json"), "utf8")); if (cen.colisao !== "pecas") return null;
-    const m = T.murosDoCenario(pts, t.width, cen), n = pts.length, longe = 600; for (const l of [1, -1]) for (let i = 0; i < n; i++) if (!m[l][i]) m[l][i] = longe; return m; } catch (e) { return null; }
-}
 function limitesDaPista(t, pts, margem = t.margemLinha ?? MARGEM_MURO) { // (`margemLinha`: a pista real do Formula GP que pede outra)
   const n = pts.length, lo = new Float64Array(n), hi = new Float64Array(n), W = t.width, beira = W / 2 - margem;
-  const m = murosDasPecas(t, pts) || (t.muros || t.escapeLivre ? T.murosDoEscape(pts, W, null, t) : null), folga = t.muroFolga ?? 8;
+  const m = t.muros || t.escapeLivre ? T.murosDoEscape(pts, W, null, t) : null, folga = t.muroFolga ?? 8;
   for (let i = 0; i < n; i++) {
     const noLado = (lado) => (m && m[lado][i] ? Math.min(beira, W / 2 + m[lado][i] - folga - margem) : beira);
     hi[i] = Math.max(2, noLado(1)); lo[i] = -Math.max(2, noLado(-1));
@@ -193,4 +186,4 @@ function contexto(spec, ref) {
   return { p: D.parametros(spec), cap: CAP_LINHA(spec, ref), teto: Infinity };
 }
 
-module.exports = { murosDasPecas, MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, contexto, jeitoDe, comandos, naTabela };
+module.exports = { MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, contexto, jeitoDe, comandos, naTabela };

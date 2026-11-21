@@ -331,7 +331,7 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0.005 }, // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil"; depois do Catar: "tira só mais meio por cento, não quero que virem lendas") os 2,5% de folga no médio e no difícil foram desfeitos no mesmo dia: o difícil insano era só em Baku, pelo ajuste do qualify de lá; nas outras pistas o Thiago passou a fazer a pole sempre)
+const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0.005 }, // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil"; depois do Catar: "tira só mais meio por cento, não quero que virem lendas") (2026-11-21: o difícil mais difícil veio da linha de corrida nova, que usa a pista toda; mirar abaixo do limite fazia todos baterem no teto e andarem igual)
   FOLGA_F1_ANTIGA = { ...FOLGA_F1 }, FOLGA_F1_REAL = { facil: 0.13, medio: 0.08, dificil: 0 }; // (Formula GP: os de antes de #665, afinados na escala real) // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
 // por nível, a fração do limite das curvas e da frenagem que o robô usa, por cima do nível que dá o ideal. 1 é o limite do pneu:
 // o perfil (Piloto.perfilDoNivel) para nele, então acima de 1 não muda nada.
@@ -359,6 +359,9 @@ function largada(pts, g, W, f1) { // mesma posição usada pela física e pelas 
 // montagem do carro e ritmo do piloto; no modo clássico, continua seguindo a média das voltas da sala.
 function nivelDe(room, p, tracadoId, nBots, pf) {
   if (room.config.regras === "f1") {
+    // (2026-11-21) Mônaco no difícil (96 ou mais): todos no limite do próprio carro. Com a diferença de ritmo de cada piloto, na rua colada no muro eles viviam
+    // tentando passar e batiam: medido com 21 robôs, 4 sementes, 116 batidas fortes; com todos no limite, 88 (a main, 60)
+    if (T.baseDe(room.config.pista) === "monaco" && forcaDoNivel(room.config.nivel) >= 96) return 1;
     return Math.min(1.5, escalaPara(pf, alvoF1(room, p, pf), aderRef(), 8) * porNivel(EMPURRAO_F1, room.config.nivel)); // o nível é do piloto; o pneu de cada momento (macio, gasto, frio) mexe no ritmo de verdade, em passoF1
   }
   const pil = p.piloto, ritmo = room.ritmoRobos;
@@ -671,12 +674,19 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     if (distancia * STEP < -220 || distancia * STEP > 470) continue; // (até 470 adiante: o rastro do vácuo vai até 450)
     const dx = o.pos.x - p.pos.x, dy = o.pos.y - p.pos.y;
     const frente = dx * tx + dy * ty, lado = dx * -ty + dy * tx;
-    if (frente < -210 || frente > 460 || Math.abs(lado) > 90 || (o.box && !p.box)) continue;
+    // (2026-11-21) numa curva, o carro 300 u adiante aparece a mais de 90 u de lado no MEU quadro e era descartado: o robô só via o carro lento (rodado,
+    // batido) a 60 u e entrava na traseira dele a 100-150 u/s a mais. O lado longe é o da pista (o dele no ponto dele contra o meu no meu).
+    if (frente < -210 || frente > 460 || (o.box && !p.box)) continue;
+    if (Math.abs(lado) > 90 && (monaco || Math.abs(ondeEsta(o, distancia).lat - (ia.lat || 0)) > 90)) continue;
     const temV = o.pos.vx !== undefined, ov = temV ? o.pos.vx * tx + o.pos.vy * ty : (o.pos.v || 0), vlatO = temV ? o.pos.vx * -ty + o.pos.vy * tx : 0;
     let latOutro = (o.pos.x - ponto.x) * -ty + (o.pos.y - ponto.y) * tx, iO = i, frentePista = frente;
     // Mônaco: o alvo adiante (100 a 260 u) costuma estar do outro lado de uma curva, e o lateral medido no quadro do MEU ponto não tem sentido ali
     // (dava 50 a 68 com a meia pista de 42). O lateral vale no quadro da pista DELE (o ponto dele), o mesmo do `baseLat` e dos limites.
     if (monaco) { const q = ondeEsta(o, distancia); latOutro = q.lat; iO = q.i; frentePista = q.dist; }
+    // (2026-11-21) com a linha de corrida usando a pista toda, o lado medido no MEU quadro erra o do carro adiante numa curva (ele já foi para o ápice e
+    // parecia estar de lado): o robô não freava por trânsito e batia na traseira. Longe (mais de 1,5 carro), a faixa é comparada pela pista: o lateral
+    // dele no ponto dele contra o meu no meu.
+    const faixaPista = !monaco && Math.abs(frente) > L_CARRO * 1.5 ? ondeEsta(o, distancia).lat - (ia.lat || 0) : lado;
     vizinhos.push({ id: oid, frente: monaco ? frentePista : frente, lat: latOutro, v: ov });
     const perto = Math.min(Math.abs(lado), Math.abs(lado + (vlatO - vlatMeu) * (monaco && ia.ult ? 0.5 : 0.4))); // a folga agora e adiante: quem vem de lado conta antes
     if (Math.abs(frente) < L_CARRO * 1.7 && perto < MARG + 12) { // ao lado (ou prestes a): lado ocupado e folga lateral mínima
@@ -697,7 +707,7 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     const alvoDaManobra = ia.ult?.id === oid;
     const separados = !alvoDaManobra ? perto : monaco ? Math.abs(ia.lat - latOutro) : ia.ult.lento ? perto : Math.min(perto, Math.abs(ia.lat - ondeEsta(o, distancia).lat));
     const faixaLivre = alvoDaManobra && separados >= W_CARRO + 1; // (sem sobreposição de lado: já pode emparelhar)
-    if (frente > 0 && distancia * STEP > 8 && !faixaLivre && Math.abs(lado) < W_CARRO + 8 + Math.min(10, aproxima * 0.1)) { // na minha faixa (quem chega rápido vê a faixa mais larga), à frente
+    if (frente > 0 && distancia * STEP > 8 && !faixaLivre && Math.abs(faixaPista) < W_CARRO + 8 + Math.min(10, aproxima * 0.1)) { // na minha faixa (quem chega rápido vê a faixa mais larga), à frente
       // reserva espaço para o freio progressivo da física (o pedal leva ~0,2 s para subir) e para o da frente frear mais forte que o previsto
       // (na largada o pelotão sai junto: a reserva de espaço cresce aos poucos, de quase nada no grid, onde os carros estão a 4 u um do outro, até
       // a de sempre; senão a fila de trás esperava cada carro da frente andar, uma fileira de cada vez)
@@ -1003,11 +1013,21 @@ function trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator) {
   if (F1.SECOS.includes(pneu.composto)) return !F1.SECOS.includes(melhor) ? melhor : null;
   if (!F1.SECOS.includes(melhor)) {
     if (melhor !== pneu.composto) return melhor;
-    if (pneu.desgaste > F1.PENHASCO) { const disponiveis = ["chuva", "intermediario"].filter((c) => F1.podeUsar(p, c)); return disponiveis.length ? F1.compostoPorAgua(room.config.pista, agua, disponiveis) : null; }
+    // (2026-11-21, o Thiago: "às vezes eles esticam o pneu até o fim na chuva, principalmente o intermediário") parava só depois do penhasco, e sem jogo
+    // novo do mesmo composto não parava nunca. Agora para quando a próxima volta já passaria do penhasco (como no seco), com o jogo que ainda tiver (o
+    // outro de chuva se o mesmo acabou)
+    const taxaChuva = taxaDoPneu(pneu.composto, fator);
+    if (restam >= 1 && pneu.desgaste + taxaChuva > F1.PENHASCO) {
+      const disponiveis = ["chuva", "intermediario"].filter((c) => F1.podeUsar(p, c));
+      if (disponiveis.length) return F1.compostoPorAgua(room.config.pista, agua, disponiveis);
+      return null; // (os quatro jogos de chuva acabaram: um seco na água é pior que o de chuva gasto)
+    }
     return null;
   }
   return escolherComposto(restam, usados, fator, p); // secou: volta ao seco que aguenta o resto da corrida
 }
+let RITMO_PNEUS = null;
+const ritmoDosPneus = () => RITMO_PNEUS || (RITMO_PNEUS = (() => { try { return require("./public/corrida/f1-pneus-ritmo.js"); } catch (e) { return null; } })());
 function decidirParada(room, p, ia, car, spec, cl) {
   const voltas = room.config.voltas, feitas = p.laps || 0;
   if (!p.started || feitas + 1 >= voltas || car.box?.fase) return null; // na última volta o corredor passa pela chegada: sem box
@@ -1031,6 +1051,16 @@ function decidirParada(room, p, ia, car, spec, cl) {
   const scLimite = estilo === "oportunista" ? 0.15 : 0.3;
   let para = false;
   if (!chega) para = passaNaProxima || noPlano || (room.direcao?.safety && pneu.desgaste > scLimite);
+  // (2026-11-21) com a degradação uniforme o pneu passado do penhasco perde "só" mais 10%: no fim da corrida ficar fora pode sair mais barato que parar.
+  // A conta é a da tabela da pista (f1-pneus-ritmo.js): as voltas que faltam no pneu de agora contra as mesmas com o pneu novo mais a parada.
+  if (para && restam <= 3 && !(room.direcao?.safety)) {
+    const RP = ritmoDosPneus(), tab = RP && RP.tabelaDe(room.config.pista), comp = tab && tab.compostos[pneu.composto];
+    if (comp) {
+      let ficar = 0, trocar = tab.parada, d = pneu.desgaste, dn = 0; const novo = tab.compostos[escolherComposto(restam, usados, fator, p)] || comp;
+      for (let k = 0; k < restam; k++) { const d1 = Math.min(1, d + taxa), dn1 = Math.min(1, dn + novo.gasto * fator); ficar += RP.tempoDaVolta(comp, d, d1); trocar += RP.tempoDaVolta(novo, dn, dn1) + (k === 0 ? novo.frio : 0); d = d1; dn = dn1; }
+      if (ficar < trocar) para = false;
+    }
+  }
   else if (noPlano && planoAguenta && estilo !== "overcut") para = true; // (o overcut, com o pneu aguentando até o fim, estica sem parar)
   else if (estilo === "oportunista" && room.direcao?.safety && pneu.desgaste > 0.45 && restam >= 3) para = true; // parada barata sob SC, com pneu já gasto
   if (!para) return null;
@@ -1217,7 +1247,10 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     const cargaErs = car.ers ? car.ers.carga : 0, pertoDaFrente = tf.atras != null && tf.atras < L_CARRO * 3, coladoAtras = !!tf.tras && tf.tras.gap < L_CARRO * 2.5;
     // (2026-11-16, o Thiago: "eles nunca me ultrapassam, ficam travados atrás de mim") colado atrás e sem manobra, gastava a bateria em toda reta (até zerar) e
     // nunca juntava ERS_MANOBRA para partir para a ultrapassagem. Agora guarda até ter ERS_MANOBRA; na manobra (ia.ult) gasta até zerar.
-    ent.ers = (!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > (process.env.ROBO_PERSEGUE_ANTIGO ? ERS_ATAQUE : minimoParaAtacar(p)) && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA)));
+    // (2026-11-21, o Thiago: "eles precisam ser capazes de não usar o ERS em curvas") só com o carro em reta (a curvatura do ponto de agora e a de ~2 carros
+    // adiante abaixo de 1/1500, a mesma conta do ERS automático de sim.js). Medido em Suzuka, 21 robôs: com o ERS na curva, 274 batidas; só na reta, 74
+    const kAqui = Math.max(Math.abs(tr.pts[car.idx].k || 0), Math.abs(tr.pts[(car.idx + 14) % n].k || 0)), retaAqui = kAqui < 1 / 1500;
+    ent.ers = retaAqui && ((!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > (process.env.ROBO_PERSEGUE_ANTIGO ? ERS_ATAQUE : minimoParaAtacar(p)) && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA))));
     ent.pedido = proxima;
     Sim.passo(car, ent, amb, tr, ev);
     // a batida deste passo: a mesma dos humanos (corrida-contato.js), com os outros carros na hora do passo; o robô também troca momento

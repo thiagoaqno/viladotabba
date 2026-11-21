@@ -51,7 +51,7 @@ function memoriaDe(s) {
 function renderizar() {
   if (!estado?.dados) return telaInicial();
   const G = window.F1Garagem, s = estado.dados, eq = equipe(s.equipe), t = estado.tabelas || Regras.tabelas(s), terminou = s.gp >= s.tamanho;
-  const prox = s.calendario[s.gp], ativo = estado.ativo, previsao = terminou ? null : G.previsaoDoGP(s.semente, s.ano, s.gp);
+  const prox = s.calendario[s.gp], ativo = estado.ativo, previsao = terminou ? null : G.previsaoDoGP(s.semente, s.ano, s.gp, prox && prox.pista);
   const ultimo = s.resultados.filter((r) => r.ano === s.ano).at(-1);
   const im = Regras.imersao(s); try { localStorage.setItem("corrida:objetivoGP", JSON.stringify({ gp: im.meta.gp, em: Date.now() })); } catch { /* sem armazenamento */ }
   // (2026-11-16) o Paddock deste GP para as falas da metade da corrida (hud.js, meioDaCorrida): o ultimato, a promessa e o clima da equipe

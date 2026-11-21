@@ -30,7 +30,7 @@ function criarPista(t, id) {
   tr.obstaculos = P.obstaculosDaPista(t, pts); // os obstáculos sólidos da pista (o canteiro do grampo de Mônaco), os mesmos do navegador e do servidor
   if (t.escapeLivre || t.muros) tr.murosEscape = P.murosDoEscape(pts, W, tr.superficiesEscape, t);
   if (id && typeof require === "function" && typeof window === "undefined") { // no servidor: a colisão pelas peças do editor (pistas.js, murosDoCenario)
-    try { const cen = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "cenario", id + ".json"), "utf8")); if (cen.colisao === "pecas") tr.murosCenario = P.murosDoCenario(pts, W, cen); } catch {}
+    try { const cen = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "cenario", id + ".json"), "utf8")); if (cen.colisao === "pecas") tr.murosCenario = P.murosDoCenario(pts, W, cen); tr.obstaculos = P.obstaculosComAjustes(tr.obstaculos, cen); } catch {}
   }
   if (!t.espaco && !t.muro && !t.escapeLivre) { // barreiras de pneus: do lado de fora das curvas fechadas (o mesmo cálculo de pista.js)
     for (let i = 0; i < n; i++) {

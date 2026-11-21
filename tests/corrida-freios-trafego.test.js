@@ -35,21 +35,7 @@ test("freio de F1: o pneu molhado trava a roda se o pedal vai a fundo (o novo e 
   assert.ok(molhado < 0.85 * seco, `seco ${seco.toFixed(0)} u/s², molhado ${molhado.toFixed(0)} u/s²`);
 });
 
-test("a linha de corrida dos robôs sai da otimização: curvatura mínima, usa a largura e fica dentro dela", () => {
-  const t = T.PISTAS.interlagos, pts = T.pontos(t, 6), max = t.width / 2 - 18;
-  const lat = Linha.otimizar(pts, max), zero = new Float64Array(pts.length);
-  const J = (l) => { const n = pts.length; let s = 0; const X = pts.map((q, i) => [q.x - q.ty * l[i], q.y + q.tx * l[i]]); for (let i = 0; i < n; i++) { const a = X[(i - 1 + n) % n], b = X[i], c = X[(i + 1) % n]; s += (a[0] - 2 * b[0] + c[0]) ** 2 + (a[1] - 2 * b[1] + c[1]) ** 2; } return s; };
-  assert.ok(J(lat) < 0.7 * J(zero), `curvatura ${J(lat).toFixed(0)} contra ${J(zero).toFixed(0)} no eixo`);
-  assert.ok(Math.max(...lat.map(Math.abs)) <= max + 1e-6, "dentro do limite");
-  assert.ok(Math.max(...lat.map(Math.abs)) > 0.7 * max, "usa a largura nas curvas");
-  const rms = Math.sqrt(lat.reduce((s, x) => s + x * x, 0) / lat.length);
-  assert.ok(rms > 12, `não fica no eixo da pista (rms ${rms.toFixed(1)} u)`);
-  // fora-dentro-fora: numa curva de verdade o robô passa pelo lado de dentro no ápice e pelo de fora antes e depois
-  const pf = Robos.perfil("interlagos", mclaren, 0), n = pf.n;
-  let ok = 0, tot = 0;
-  for (let i = 0; i < n; i++) if (pf.kf[i] > 1 / 150 && pf.kf[i] >= pf.kf[(i - 10 + n) % n] && pf.kf[i] >= pf.kf[(i + 10) % n]) { tot++; if (pf.lat[(i + 2) % n] * pf.linha.sinal[i] > 0) ok++; }
-  assert.ok(tot > 3 && ok / tot > 0.7, `no ápice a linha fica por dentro (${ok} de ${tot})`);
-});
+// (2026-11-21, apagado: "a linha de corrida dos robôs sai da otimização…" fixava o comportamento antigo; o Thiago pediu para tirar esses testes)
 
 // uma corrida de robôs no tempo de mentira, contando os contatos
 function corrida({ pista = "interlagos", nivel = "medio", robos = 8, voltas = 2, semente = 4321, extra = null, depois = 0 }) {

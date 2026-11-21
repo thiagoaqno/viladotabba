@@ -362,3 +362,85 @@ body.sv-on.sn-nav .sn.sf :focus{outline:2px solid var(--sv-at);outline-offset:2p
 .ra-corpo .ra-melhores~.ra-setores .ra-legenda{display:none}
 @media (max-width:1150px){.rg2 .rg2-grade{grid-template-columns:minmax(0,1fr);grid-template-areas:"podio" "class" "ana"}.rg2 .rg2-cab,.rg2 .rg2-l{grid-template-columns:30px 56px minmax(0,1fr) 80px 46px 80px 50px 40px 30px}}
 @media (max-width:760px){.rg2 .rg2-cab,.rg2 .rg2-l{grid-template-columns:30px minmax(0,1fr) 76px 30px}.rg2 .rg2-eq,.rg2 .rg2-par,.rg2 .rg2-mv,.rg2 .rg2-pun,.rg2 .rg2-dano,.rg2 .rg2-cab span:nth-child(2),.rg2 .rg2-cab span:nth-child(n+5):not(:last-child){display:none}.rg2 .rg2-cab span:nth-child(3),.rg2 .rg2-cab span:nth-child(4){display:block}}
+
+/* ---------- o painel de ACERTO (acerto.js .ac): compacto no canto na corrida (tecla P) e grande no meio quando abre da sala (.ac-sala) ---------- */
+.ac{--ac-eq:var(--sv-at,#e10600);--ac-c:"Barlow Condensed","Titillium Web",Manrope,sans-serif;position:fixed;z-index:95;top:12px;right:12px;color:#fff;font:600 13px/1.35 Manrope,system-ui,sans-serif}
+.ac.fechado{display:none}
+.ac .ac-fundo{display:none}
+.ac .ac-caixa{width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;padding:12px 14px;background:#0b0d13ee;border:1px solid #ffffff2a;border-top:3px solid var(--ac-eq);border-radius:4px}
+.ac .ac-cab{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.ac .ac-cab>div{flex:1;min-width:0}.ac .ac-cab h2{margin:0;font:800 18px/1 var(--ac-c);letter-spacing:.06em;text-transform:uppercase}
+.ac .ac-cab small{color:#ffffff90;font-weight:500}
+.ac .ac-logo:empty{display:none}.ac .ac-logo .equipe-marca{display:block;width:44px;height:30px}.ac .ac-logo img{width:100%;height:100%;object-fit:contain}
+.ac .ac-x{padding:4px 9px;border:1px solid #ffffff2a;border-radius:4px;background:none;color:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.ac .ac-x:hover{background:#ffffff18;border-color:#fff}
+.ac .ac-carro{display:none}
+.ac .ac-barra{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 10px;margin:8px 0;padding:8px 10px;border:1px solid #ffffff14;border-radius:5px;background:#ffffff08;transition:background .15s,border-color .15s}
+.ac .ac-barra:hover{background:#ffffff10;border-color:#ffffff30}
+.ac .ac-barra b{font:800 15px var(--ac-c);letter-spacing:.06em;text-transform:uppercase}
+.ac .ac-barra output{font:800 20px/1 var(--ac-c);font-variant-numeric:tabular-nums}
+.ac .ac-barra input{grid-column:1/-1;width:100%;accent-color:var(--ac-eq);cursor:pointer;transition:filter .15s}
+.ac .ac-barra input:hover{filter:brightness(1.25) drop-shadow(0 0 6px var(--ac-eq))}
+.ac .ac-pontas{grid-column:1/-1;display:flex;justify-content:space-between;color:#ffffffa0;font:500 12px Manrope,sans-serif}
+.ac .ac-ico{width:22px;height:22px;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.ac .ac-ico.asa{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M1 9c6-3 16-3 22 0l-2 3c-5-2-13-2-18 0zM6 13h12l-1 3H7z'/%3E%3C/svg%3E")}
+.ac .ac-ico.altura{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l5 6h-4v10h4l-5 6-5-6h4V7H7z'/%3E%3C/svg%3E")}
+.ac .ac-raspa{margin:4px 0;padding:6px 8px;background:#ffffff10;border-left:3px solid #2ecc71;border-radius:0 4px 4px 0}.ac .ac-raspa.raspa{border-left-color:#f1c40f}
+.ac .ac-sem{color:#ffffff90}
+.ac .ac-balao{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:6px 0;padding:8px 10px;background:#ffffff0d;border-left:3px solid var(--ac-eq);border-radius:0 6px 6px 0;transition:background .15s,transform .15s}
+.ac .ac-balao:hover{background:#ffffff16;transform:translateX(2px)}
+.ac .ac-balao b{display:block;font:800 14px var(--ac-c);letter-spacing:.06em;text-transform:uppercase;color:var(--ac-eq)}
+.ac .ac-balao p{margin:2px 0 0;color:#ffffffd0;font-weight:500}
+.ac .ac-rosto{width:34px;height:34px;border-radius:50%;border:2px solid var(--ac-eq);background:#ffffff10 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffffcc'%3E%3Ccircle cx='12' cy='9' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6zM5 9a7 7 0 0 1 14 0h-1.5a5.5 5.5 0 0 0-11 0z'/%3E%3C/svg%3E") center/70% no-repeat}
+.ac button{transition:background .15s,border-color .15s,transform .15s,filter .15s}
+.ac .ac-balao button,.ac .ac-acoes button{padding:6px 10px;background:#ffffff18;border:1px solid #ffffff2a;border-radius:4px;color:#fff;cursor:pointer;font:700 13px Manrope,sans-serif}
+.ac .ac-balao button:hover,.ac .ac-acoes button:hover{background:var(--ac-eq);border-color:var(--ac-eq);transform:translateY(-1px)}
+.ac .ac-acoes{display:flex;gap:8px;margin-top:8px}.ac .ac-acoes button{flex:1}.ac .ac-acoes button.forte{background:var(--ac-eq);border-color:var(--ac-eq)}
+.ac .ac-graf{margin-top:8px}
+.ac .ac-graf header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:6px}
+.ac .ac-graf header b{font:800 14px var(--ac-c);letter-spacing:.05em;text-transform:uppercase}.ac .ac-graf header small{color:#ffffff90;font-weight:500;font-size:11.5px}
+.ac .ac-ico-graf{display:none}
+.ac .ac-leg{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#ffffffc0}.ac .ac-leg i{width:10px;height:10px;border-radius:2px}
+.ac .ac-leg i.c,.ac .ac-par i.c{background:var(--ac-eq)}.ac .ac-leg i.a,.ac .ac-par i.a{background:#2a7fff}
+.ac .ac-barras{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;height:120px}
+.ac .ac-grupo{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:6px 4px 4px;border:1px solid transparent;border-radius:4px;background:none;color:#fff;cursor:pointer}
+.ac .ac-grupo:hover{background:#ffffff0d;border-color:#ffffff30}
+.ac .ac-grupo.on{border-color:var(--ac-eq);background:#ffffff0a}
+.ac .ac-par{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:5px}
+.ac .ac-par i{position:relative;width:34%;max-width:26px;border-radius:2px 2px 0 0;transition:height .25s cubic-bezier(.2,.8,.2,1)}
+.ac .ac-par em{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font:700 10.5px var(--ac-c);font-style:normal;color:#ffffffb0;white-space:nowrap;opacity:0;transition:opacity .15s}
+.ac .ac-grupo:hover em,.ac .ac-grupo.on em{opacity:1}
+.ac .ac-grupo small{text-align:center;font:700 12px var(--ac-c);color:#ffffffc0}
+.ac .ac-direcao{margin-top:10px;border-top:1px solid #ffffff2a}
+.ac .ac-direcao summary{padding:8px 0;cursor:pointer;font:800 15px var(--ac-c);letter-spacing:.06em;text-transform:uppercase;transition:color .15s}.ac .ac-direcao summary:hover{color:var(--ac-eq)}
+.ac .ac-linha{display:block;margin:8px 0 2px}.ac .ac-linha span{display:flex;justify-content:space-between}.ac .ac-linha input{width:100%;accent-color:var(--ac-eq)}.ac .ac-linha small,.ac .ac-rodape{display:block;color:#ffffff90;font-weight:500}
+.ac .ac-rodape{margin-top:8px}
+
+/* o painel grande, aberto da sala: a tela "Acerto do carro" */
+.ac.ac-sala{inset:0;display:grid;place-items:center}
+.ac.ac-sala .ac-fundo{display:block;position:absolute;inset:0;background:#05070acc;backdrop-filter:blur(4px)}
+.ac.ac-sala .ac-caixa{position:relative;width:min(1400px,calc(100vw - 48px));max-height:calc(100vh - 48px);padding:18px 22px 20px;background:#11141cf5;border:1px solid var(--ac-eq);border-radius:8px;box-shadow:0 30px 80px -30px #000;animation:acEntra .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes acEntra{from{transform:translateY(14px) scale(.985);opacity:0}}
+.ac.ac-sala .ac-cab{gap:16px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #ffffff1c}
+.ac.ac-sala .ac-cab h2{font-size:clamp(24px,2.2vw,34px)}.ac.ac-sala .ac-logo .equipe-marca{width:64px;height:40px}
+.ac.ac-sala .ac-x{font-size:20px;border:0}
+.ac.ac-sala .ac-corpo{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:18px;align-items:start}
+.ac.ac-sala .ac-carro{display:block;width:100%;max-height:250px;object-fit:contain;-webkit-mask-image:radial-gradient(60% 62% at 50% 52%,#000 58%,transparent 100%);mask-image:radial-gradient(60% 62% at 50% 52%,#000 58%,transparent 100%)}
+.ac.ac-sala .ac-carro[hidden]{display:none}
+.ac.ac-sala .ac-barra{padding:12px 16px;margin:10px 0}
+.ac.ac-sala .ac-barra b{font-size:20px}.ac.ac-sala .ac-barra output{font-size:34px}
+.ac.ac-sala .ac-barra .ac-ico{width:30px;height:30px}
+.ac.ac-sala .ac-pontas small{font-size:13.5px}
+.ac.ac-sala .ac-dir{display:flex;flex-direction:column;gap:12px}
+.ac.ac-sala .ac-balao{grid-template-columns:auto 1fr;gap:14px;margin:0;padding:16px 18px;border:1px solid #ffffff17;border-left:3px solid var(--ac-eq);border-radius:6px;background:#181c26}
+.ac.ac-sala .ac-balao button{grid-column:2;justify-self:start}
+.ac.ac-sala .ac-balao b{font-size:18px}.ac.ac-sala .ac-balao p{font-size:16px;line-height:1.35}
+.ac.ac-sala .ac-rosto{width:64px;height:64px;border-width:3px}
+.ac.ac-sala .ac-graf{margin-top:16px;padding:14px 16px;border:1px solid #ffffff17;border-radius:6px;background:#0f1219}
+.ac.ac-sala .ac-graf header b{font-size:18px}
+.ac.ac-sala .ac-barras{height:170px;gap:14px}
+.ac.ac-sala .ac-par i{max-width:40px}
+.ac.ac-sala .ac-grupo small{font-size:14px}
+.ac.ac-sala .ac-acoes{max-width:420px}
+body.ac-aberto{overflow:hidden}
+@media (max-width:900px){.ac.ac-sala .ac-corpo{grid-template-columns:minmax(0,1fr)}.ac.ac-sala .ac-caixa{width:calc(100vw - 16px);padding:12px}}

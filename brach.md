@@ -22,6 +22,15 @@ Pelas telas que o Thiago gerou (2026-11-21).
 
 **Os seus melhores setores:** `hud-painel.js` guarda o melhor tempo de cada setor por pista neste aparelho (`corrida:setores:<pista>`), nas regras de F1 e fora da classificação, como o recorde da volta.
 
+**Acerto do carro** (a tela 4): o painel da tecla P (`acerto.js`) foi reescrito com classes e ganhou dois jeitos.
+- **Na corrida**, compacto no canto, como antes.
+- **Aberto da sala, do menu ou da pausa da classificação**, grande no meio da tela:
+  - o carro da equipe de lado (a sala passa o desenho: `acerto.js` não pode importar `carros.js`);
+  - a asa e a altura em barras largas, com o valor grande;
+  - o engenheiro e o estrategista em balões, com o "Usar";
+  - o gráfico **carga na curva × arrasto na reta** nas 5 posições da asa, em % do carro padrão, com a altura de agora. É a mesma conta da física (`AcertoSugestao.numeros`), não km/h inventado. Clicar numa coluna põe aquela asa.
+  - O acerto da direção ficou num "mostrar mais", e o Esc fecha.
+
 **O nível dos robôs de 0 a 100** (pedido do Thiago):
 - Na sala e na corrida rápida do menu, uma barra com o número.
 - No servidor (`corrida-robos.js`), cada tabela por nível continua com as três marcas de antes, e o número mistura as duas vizinhas: Fácil = 60, Médio = 92 (o de sempre, padrão) e Difícil = 100. Abaixo de 60, a reta continua, mais fácil.

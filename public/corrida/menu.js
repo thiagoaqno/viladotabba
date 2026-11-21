@@ -281,7 +281,7 @@ function aoClicar(e) {
   if (d.rpClima) return mudar(rapida, "clima", d.rpClima, "rp-clima", "rapida");
   if (d.rpQuali) return mudar(rapida, "classificacao", d.rpQuali, "rp-quali", "rapida");
   if (d.ctVoltas) return mudar(contra, "voltas", +d.ctVoltas, "ct-voltas", "contra");
-  if (b.id === "mnAcerto") { usarPista(rapida.pista); return alternarAcerto(true); } // o acerto antes de largar (o mesmo painel da tecla P)
+  if (b.id === "mnAcerto") { usarPista(rapida.pista); return alternarAcerto(true, { sala: true }); } // o acerto antes de largar (o mesmo painel da tecla P)
   if (b.id === "mnLargar") return largarRapida(true);
   if (b.id === "mnAjustar") return largarRapida(false);
   if (b.id === "mnContraLargar") return largarContra();

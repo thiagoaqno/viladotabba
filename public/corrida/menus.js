@@ -406,7 +406,12 @@ function renderGaveta() {
   trocar($("pawnPick"), PAWNS.map((pw) => { const taken = E.S.players.some((p) => p.pawn === pw && p.id !== m.id); return `<button class="${pw === m.pawn ? "on" : ""}" data-p="${pw}" ${taken ? "disabled" : ""} aria-pressed="${pw === m.pawn}">${pw}</button>`; }).join(""));
 }
 document.querySelectorAll("[data-gaveta]").forEach((b) => (b.onclick = () => abrirGaveta(b.dataset.gaveta))); // Peças, Pintura e Capacete abrem a gaveta na seção de cada um
-$("btnAcertoSala").onclick = () => { if (!E.S) return; usarPista(E.S.config.pista); alternarAcerto(true); };
+$("btnAcertoSala").onclick = () => { // o painel grande (acerto.js, modo sala), com o carro da equipe de lado
+  if (!E.S) return; usarPista(E.S.config.pista);
+  const m = me(), eqInfo = m && m.equipe && window.F1Pilotos?.EQUIPES[m.equipe];
+  const mods = eqInfo && MODS3.pintura[eqInfo.pintura] ? { ...(m.mods || MODS_PADRAO), pintura: eqInfo.pintura } : m && m.mods;
+  alternarAcerto(true, { sala: true, desenhar: m ? (cv) => carPreview(cv, m.color, m.car, mods) : null, logo: m && m.equipe ? marcaEquipe(m.equipe) : "", cor: eqInfo ? eqInfo.cor : null });
+};
 $("gavetaFechar").onclick = fecharGaveta;
 
 // ----- os cliques de toda a sala (um ouvinte só, lendo o estado de agora) -----

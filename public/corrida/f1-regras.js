@@ -130,6 +130,22 @@ const relDaPista = (pista) => (pista && REL_PISTA[pista]) || 1;
 // o ajuste é pela raiz do comprimento: com 10, de 9 voltas (Singapura, Spa) a 11 (Laguna); a distância que sobra numa pista comprida vira
 // pneu gasto (o pneu por distância), então ela ainda pede mais paradas.
 const voltasDoGP = (base, pista) => { base = Math.round(+base || 0); return base <= 1 ? base : Math.max(2, Math.round(base / Math.sqrt(relDaPista(pista)))); };
+// OS PLANOS DO DOMINGO (2026-11-21, o Thiago: "um pneu que gasta 50% mais para ter só mais 15% de potência não me parece nada vantajoso... quero
+// mais variedade de planos"): no seu carro na corrida da carreira (sim.js, fora da classificação; paddock.js "plano"). `dano` multiplica o dano das
+// batidas (corrida-f1-direcao.js). Os de duas fases (`ate`: a fração da corrida) mudam no meio da prova. Escolhidos para sentir jogando, não medidos.
+// (2026-11-21, a corrida do Thiago em Jeddah: "Jogar seguro" com "Acerto para o calor" deu 10% de desgaste por volta no médio, 7 voltas com um
+// jogo, a metade do normal) os planos poupam menos pneu (seguro 0,7 → 0,85, esticar 0,6 → 0,75) e o pneu do plano vezes o dos eventos do fim de
+// semana fica entre DESGASTE_SOMADO (sim.js).
+const PLANOS_DOMINGO = {
+  arriscar: { grip: 1.03, potencia: 1.12, desgaste: 1.15, dano: 1.5 }, // ataque o tempo todo: rápido, mas a batida custa caro
+  seguro: { grip: 0.985, potencia: 0.97, desgaste: 0.85, dano: 0.6 }, // poupa motor, pneu e carro
+  largada: { ate: 0.35, antes: { grip: 1.04, potencia: 1.15, desgaste: 1.25 }, depois: { grip: 0.99, potencia: 0.98, desgaste: 0.9 } }, // tudo no primeiro terço
+  final: { ate: 0.6, antes: { grip: 0.99, potencia: 0.97, desgaste: 0.85 }, depois: { grip: 1.04, potencia: 1.15, desgaste: 1.2 } }, // guarda o carro e ataca no fim
+  pneu: { grip: 1, potencia: 1.02, desgaste: 0.75 }, // estender o stint
+};
+const DESGASTE_SOMADO = [0.8, 1.4]; // o pneu do plano × o dos eventos (o pacote, o calor...): nunca menos que 0,8 nem mais que 1,4
+// o desgaste médio de um plano na corrida inteira (os de duas fases pesam cada fase pelo tamanho dela)
+const desgasteDoPlano = (id) => { const p = PLANOS_DOMINGO[id]; return !p ? 1 : p.ate != null ? p.antes.desgaste * p.ate + p.depois.desgaste * (1 - p.ate) : p.desgaste || 1; };
 // Em quantas voltas o pneu chega ao penhasco, pilotado como o piloto ideal e com um gasto `fator` do carro
 function vidaEmVoltas(composto, fator = 1, agua = null, pista = null) {
   const pn = PNEUS[composto] || PNEUS[COMPOSTO_PADRAO];
@@ -661,7 +677,7 @@ function vacuoF1(draft, curva) {
   return { final: vf * d, acel: va * d, aderencia: 1 - (curva ? AR_SUJO * d : 0) };
 }
 
-const api = { REL_PISTA, relDaPista, voltasDoGP, PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,
+const api = { PLANOS_DOMINGO, DESGASTE_SOMADO, desgasteDoPlano, REL_PISTA, relDaPista, voltasDoGP, PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,
   zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersBloqueadoNaChuva, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
   LIMITADOR, PARADA_BASE, PARADA_ERRO, UM_COMPOSTO, RAPIDO, RAMPA, GARAGENS, EQUIPES_GARAGEM, indiceDaGaragem, sorteio, tempoDeParada, PARADAS, classeDaParada, textoDaParada, BATIDA_MIN, BATIDA_MEDIA, BATIDA_FORTE, BATIDA_MAX, BATIDA_INTERVALO, batida, COLISAO_LEVE, COLISAO_MEDIA, COLISAO_GRAVE, PUNICAO_LEVE_S, PUNICAO_MEDIA_S, STOPGO_S, STOPGO_VOLTAS, STOPGO_CONVERSAO_S, gravidadeDaBatida, nivelDaPunicao, batidaProposital, DSQ_PROPOSITAIS, AVISO_PROPOSITAIS, stopGoCabe, efeitoDoDano, corredor, garagemDe, saidaDoCorredor, tempoNoBox, registrarParada, usouDoisCompostos, JOGOS_POR_COMPOSTO, jogosUsados, jogosRestantes, podeUsar, compostoParaParada, recomendarParada, ESCOLHA_BOX_S, penalidadeUmComposto, acrescimoDeFinal, estrategia, melhoresPlanos,
   CHANCE_CHUVA, GAROA, CHUVA_FORTE, AGUA_SOBE_S, AGUA_SECA_S, RAMPA_S, CHUVA_MIN_S, AVISO_S, AGUA_MOLHADA, AGUA_ENCHARCADA, AGUA_QUALI_CHUVA, OPCOES_DE_CLIMA, ROTULO_CLIMA, previsaoDoGP, descreverPrevisao, sortearClima, chuvaEm, aguaEm, proximaMudanca, climaEm, fatorAgua, compostoDaClassificacao, tempoMolhado, compostoPorAgua };

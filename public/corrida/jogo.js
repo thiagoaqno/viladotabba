@@ -286,6 +286,7 @@ function loop(t) {
   // (2026-11-21, o servidor.log do Thiago: no pós-corrida, quadros de 76 a 250 ms o tempo todo) com a tela do resultado aberta, a corrida atrás do
   // painel (escurecida) é desenhada a 10 quadros por segundo: a análise, a miniatura 3D e o pódio ficam com a placa de vídeo
   if (E.S?.phase === "results" && !$("results").classList.contains("hidden")) { if (t - (race.ultDesenhoResultado || 0) < 100) return; race.ultDesenhoResultado = t; }
+  const q0 = performance.now(); // (o tempo de cada parte do quadro: contarTravada)
   pollPad();
   // os materiais TRANSPARENTES de dois lados (as marcas do grid, a borracha, os decalques) numa passada só: por padrão o Three.js desenha cada um
   // duas vezes (o verso e a frente) e marca o material como mudado a cada vez, o que refazia o shader dele em todo quadro, na cena e nos espelhos
@@ -295,7 +296,9 @@ function loop(t) {
   // a física anda em passos fixos de 1/120 s (fisica.js): o tempo do quadro só diz quantos passos dar, então 30 ou 144 quadros
   // por segundo dão a mesma corrida
   if (ativo()) quadroDeFisica(real); else quadroParado(real);
-  updateGhosts(dt, t); // (os outros carros na hora do meu desenho, pela hora do QUADRO da tela: rede.js)
+  const q1 = performance.now();
+  updateGhosts(dt, t);
+  const q2 = performance.now(); // (os outros carros na hora do meu desenho, pela hora do QUADRO da tela: rede.js)
   recordLap();
   if (me() && ativo() && !race.net && performance.now() - race.lastSent > 100) { race.lastSent = performance.now(); socket.emit("pos", { x: race.car.x, y: race.car.y, z: race.car.z, a: race.car.a, v: race.car.v, prog: myProg() }); }
   const somF1 = E.S?.config.regras === "f1"; // regras de F1: o motor V6 turbo (motor-v6.js; ?motor=v10 traz o V10), com o limitador e os carros dos outros
@@ -328,25 +331,37 @@ function loop(t) {
   const ersTecla = !!(keys.ers && race.ersAtivo);
   if (correndo && ersTecla && !race.ersSom && sNow() - (race.ersSomEm || 0) > 1500) { Sound.ersLiga(); race.ersSomEm = sNow(); }
   race.ersSom = ersTecla;
+  const q3 = performance.now();
   draw(dt);
+  const q4 = performance.now();
   medirQuadro();
   hud();
-  contarTravada(bruto);
+  contarTravada(bruto, [q1 - q0, q2 - q1, q3 - q2, q4 - q3, performance.now() - q4]);
 }
 // (2026-11-16) no programa de PC, cada quadro de mais de 70 ms vai para o servidor.log com o que aconteceu nele: shaders novos (renderer.info),
 // batida, safety car, câmera, quantos carros na tela. Medida para achar a travadinha da batida antes de mexer no carro.
 let progAntes = 0, geoAntes = 0, texAntes = 0, travadaEnviada = 0;
-function contarTravada(real) {
+// (2026-11-21, o Thiago: "na contagem do qualify o game sempre trava") o tempo de um quadro (`real`) é medido no COMEÇO do quadro seguinte: o que
+// travou foi o trabalho do quadro ANTERIOR (ou o que rodou fora dele, entre os dois). Antes o log contava os shaders, as geometrias e as texturas
+// do quadro errado (o seguinte, quase sempre sem nada novo): agora vai o que o quadro anterior criou e quanto cada parte dele levou (física, os
+// outros carros, sons e efeitos, o desenho, o HUD) e o que sobrou fora do quadro (eventos do servidor, a placa de vídeo, o navegador).
+let quadroAnt = null;
+function contarTravada(real, partes) {
   const info = renderer.info, prog = info.programs ? info.programs.length : 0, geo = info.memory.geometries, tex = info.memory.textures;
-  const ms = Math.round(real * 1000); // (o tempo de verdade do quadro: antes ia o cortado em 250 ms, e uma travada de 3 s aparecia como 250)
-  if (ms > 70 && window.CORRIDA_PC?.pc && performance.now() - travadaEnviada > 1500 && race) {
-    travadaEnviada = performance.now();
-    const oque = [prog > progAntes ? `${prog - progAntes} shader(s) novo(s)` : "", geo !== geoAntes ? `geometrias ${geoAntes}→${geo}` : "", tex !== texAntes ? `texturas ${texAntes}→${tex}` : "",
-      (race.batidaT || 0) > sNow() - 1500 ? "batida agora" : "", (race.hitT || 0) > 0 ? "impacto" : "", race.shake > 0.05 ? "tremendo" : "", `câmera ${camEstado.modo || camMode}`,
-      `${info.render.calls} desenhos`, `${Math.round(info.render.triangles / 1000)} mil triângulos`, document.hidden ? "janela escondida" : ""].filter(Boolean).join(", ");
-    fetch("/api/corrida/pc/travada", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ms, pista: race.tr?.pistaId || race.tr?.id, fase: E.S?.phase, oque }) }).catch(() => {});
-  }
+  const agora = { partes, prog: prog - progAntes, geo: [geoAntes, geo], tex: [texAntes, tex], calls: info.render.calls, tri: info.render.triangles };
   progAntes = prog; geoAntes = geo; texAntes = tex;
+  const a = quadroAnt; quadroAnt = agora;
+  const ms = Math.round(real * 1000); // (o tempo de verdade do quadro: antes ia o cortado em 250 ms, e uma travada de 3 s aparecia como 250)
+  if (!(ms > 70 && window.CORRIDA_PC?.pc && performance.now() - travadaEnviada > 1500 && race && a)) return;
+  travadaEnviada = performance.now();
+  const NOMES = ["física", "outros carros", "sons e efeitos", "desenho", "HUD"], dentro = a.partes.reduce((x, y) => x + y, 0);
+  const lentas = a.partes.map((v, i) => [NOMES[i], Math.round(v)]).filter(([, v]) => v >= 15).sort((x, y) => y[1] - x[1]).map(([n, v]) => `${n} ${v} ms`);
+  const fora = Math.round(ms - dentro);
+  const oque = [a.prog > 0 ? `${a.prog} shader(s) novo(s)` : "", a.geo[0] !== a.geo[1] ? `geometrias ${a.geo[0]}→${a.geo[1]}` : "", a.tex[0] !== a.tex[1] ? `texturas ${a.tex[0]}→${a.tex[1]}` : "",
+    lentas.length ? `no quadro: ${lentas.join(", ")}` : "", fora >= 30 ? `fora do quadro ${fora} ms` : "",
+    (race.batidaT || 0) > sNow() - 1500 ? "batida agora" : "", (race.hitT || 0) > 0 ? "impacto" : "", race.shake > 0.05 ? "tremendo" : "", `câmera ${camEstado.modo || camMode}`,
+    `${a.calls} desenhos`, `${Math.round(a.tri / 1000)} mil triângulos`, document.hidden ? "janela escondida" : ""].filter(Boolean).join(", ");
+  fetch("/api/corrida/pc/travada", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ms, pista: race.tr?.pistaId || race.tr?.id, fase: E.S?.phase, oque }) }).catch(() => {});
 }
 
 // O kart sente o relevo: mede o chão embaixo do bico, da traseira e dos dois lados e inclina junto (sobe o bico na

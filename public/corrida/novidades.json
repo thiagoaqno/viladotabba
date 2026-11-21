@@ -1,5 +1,16 @@
 [
   {
+    "id": "controle-celular-2026-11-21",
+    "data": "2026-11-21",
+    "itens": [
+      "Controle no celular (no programa do PC): o celular vira volante pelo giroscópio, com freio, acelerador, ERS, box, rádio, MFD, câmera e marcha",
+      "Funciona sem internet, na mesma rede Wi-Fi do PC (vale o hotspot do iPhone); o botão 📱 fica no canto do menu",
+      "Replay 3D na carreira: a aba Replay 3D lista os GPs da temporada",
+      "Replay 3D: não fica mais carregando para sempre, e as câmeras de dentro do carro funcionam",
+      "Pós-corrida mais leve: a corrida atrás do painel do resultado é desenhada com menos quadros"
+    ]
+  },
+  {
     "id": "replay-3d-2026-11-21",
     "data": "2026-11-21",
     "itens": [
@@ -7,6 +18,9 @@
       "Siga qualquer piloto, com todas as câmeras do jogo (cockpit, T-cam, perseguição, aérea e TV)",
       "Pause, volte e avance (5 s, 30 s, quadro a quadro, e até 16× para a frente ou 8× para trás)",
       "Vale para as corridas novas da temporada; as antigas aparecem com os carros no meio da pista"
+    ]
+  },
+  {
     "id": "robos-pneus-chuva-2026-11-21",
     "data": "2026-11-21",
     "itens": [

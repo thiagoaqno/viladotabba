@@ -12,3 +12,4 @@ public/corrida/radio/*.mp3
 
 # os .glb originais do editor de cenário (pesados; só os convertidos, em public/corrida/assets/, vão para o site)
 assets-originais/
+dados/controle-certificado.json

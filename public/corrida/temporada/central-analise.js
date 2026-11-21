@@ -181,7 +181,31 @@ function montar3d() {
   import("/corrida/analise-salva.js").then((m) => { if (el.isConnected) m.montarNaCentral(el, { r, nomes, meu: "voce", aba, pedirReplay, aoAba }); })
     .catch((e) => { console.warn("Carreira: análise 3D indisponível", e); el.innerHTML = '<p class="ra-vazio">A análise 3D não carregou.</p>'; });
 }
+// a aba Replay 3D da Central (central.js): os GPs da temporada, do mais recente ao primeiro, cada um com o botão que abre o replay 3D
+// (analise-salva.js abrir3dSalvo → replay-3d.js). Ficam guardados os 30 replays mais recentes de cada carreira (bd.js); os outros dizem que não têm.
+function replays(c) {
+  ultimoC = c;
+  const s = c.s, UI = U();
+  const topo = `<div class="cx-cabeca"><div><small class="cx-an-olho">Replay 3D</small><h2>As corridas da temporada</h2><p>A corrida na pista do jogo, na câmera de qualquer piloto: pause, volte e avance.</p></div></div>`;
+  if (!c.gps.length) return `${topo}<section class="cx-card cx-an-vazio">${IC.crono}<h3>Nenhum GP disputado nesta temporada</h3><p>Depois da primeira corrida, o replay dela aparece aqui.</p></section>`;
+  const itens = [...c.gps].reverse().map((r) => {
+    const g = s.calendario[r.gp], eu = (r.linhas || []).find((l) => l.piloto === "voce");
+    return `<li class="cx-card cx-r3d-item"><span class="cx-an-band" aria-hidden="true">${UI.bandeira(r.pista)}</span><span class="cx-r3d-nome"><small class="cx-rot">Etapa ${r.gp + 1}</small><b>${h(UI.nomeGP(r.pista, g?.nome))}</b>${eu ? `<small>${eu.dnf ? "Abandono" : `${eu.pos}º lugar`}</small>` : ""}</span>
+      <button type="button" class="cx-bt cx-r3d-bt" data-cx-r3d="${r.gp}">Assistir em 3D</button></li>`;
+  }).join("");
+  return `${topo}<ul class="cx-r3d-lista">${itens}</ul>`;
+}
+function abrir3d(gp, bt) {
+  const c = ultimoC, r = c && c.gps.find((g) => g.gp === gp); if (!r) return;
+  const s = c.s, nomes = { voce: s.nome, ...(s.nomesExtras || {}) };
+  const pedirReplay = () => (root.SedeGrupo?.ativo ? root.SedeGrupo.replayDoGP(r.ano, r.gp) : root.CarreiraReplay ? root.CarreiraReplay(r.ano, r.gp) : Promise.resolve(null));
+  const txt = bt.textContent; bt.disabled = true; bt.textContent = "Carregando…";
+  import("/corrida/analise-salva.js").then((m) => m.abrir3dSalvo({ r, nomes, meu: "voce", pedirReplay }))
+    .then((ok) => { bt.disabled = false; bt.textContent = ok ? txt : "Sem replay gravado"; })
+    .catch((e) => { console.warn("Carreira: replay 3D", e); bt.disabled = false; bt.textContent = "Não abriu"; });
+}
 function clique(b, render) {
+  if (b.dataset.cxR3d != null) { abrir3d(+b.dataset.cxR3d, b); return true; } // (a aba Replay 3D)
   if (root.CentralTelemetria?.clique(b, render)) return true;
   if (b.dataset.cxAgTodos != null) { verTodos = !verTodos; render(); return true; } // o resultado final inteiro (Visão geral)
   if (b.dataset.cxAgEq != null) { filtroEq = b.dataset.cxAgEq; render(); return true; } // o filtro por equipe (Pneus)
@@ -191,5 +215,5 @@ function mudou(e, render) {
   if (e.target.matches?.("[data-cx-comparar]")) { comparar = e.target.value; render(); return true; }
   return false;
 }
-root.CentralAnalise = { html, clique, mudou, ligarGraficos };
+root.CentralAnalise = { html, replays, clique, mudou, ligarGraficos };
 })(window);

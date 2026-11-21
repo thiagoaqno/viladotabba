@@ -368,3 +368,11 @@ body.cx-escuro .cx-an-cab.com-foto::after{opacity:.38;filter:grayscale(.6) brigh
 @media (max-width:1100px){.cx-ag-baixo{grid-template-columns:repeat(2,minmax(0,1fr))}.cx-ag-faixa{grid-template-columns:1fr 1fr}.cx-ag-f-setores{grid-column:1/-1;border-left:0;border-top:1px solid var(--cx-lin)}}
 @media (max-width:760px){.cx-ag-meio,.cx-ag-baixo,.cx-ag-faixa,.cx-ag-q3{grid-template-columns:1fr}.cx-ag-f-item+.cx-ag-f-item{border-left:0;border-top:1px solid var(--cx-lin)}.cx-ag-q+.cx-ag-q{border-left:0;border-top:1px solid var(--cx-lin)}.cx-an-band{display:none}}
 @media (prefers-reduced-motion:reduce){.cx-ag-card,.cx-ag-faixa,.cx-ag-mapa,.cx-ag-res-l li,.cx-ag-q li,.cx-ag-q li u,.cx-ag-barra u,.cx-ag-pneus-t tr{animation:none}.cx-ag-card:hover{transform:none}}
+/* a aba Replay 3D (central-analise.js replays): um cartão por GP, do mais recente ao primeiro, com o botão que abre o replay */
+.cx-r3d-lista{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.cx-r3d-item{display:flex;align-items:center;gap:6px;padding:14px 16px;transition:transform .15s,box-shadow .15s}
+.cx-r3d-item:hover{transform:translateY(-2px);box-shadow:0 10px 26px #0002}
+.cx-r3d-item .cx-an-band{width:54px}
+.cx-r3d-nome{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.cx-r3d-nome b{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cx-r3d-bt{white-space:nowrap;background:var(--eq-at);color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+.cx-r3d-bt:hover{filter:brightness(1.1)}.cx-r3d-bt:disabled{opacity:.6;cursor:wait}

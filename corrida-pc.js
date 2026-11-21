@@ -128,13 +128,45 @@ function semEconomiaDeEnergia() {
   } catch (e) { console.warn("Corrida PC: economia de energia não mudou:", e.message); }
 }
 // o laço vigiado: um tique a cada 50 ms; atrasou mais de 150 ms, uma linha no servidor.log (%LOCALAPPDATA%\CorridaDaGalera), no máximo uma a cada 2 s
+// (2026-11-21, o servidor.log do Thiago: "o laço atrasou 2547 ms · fora de corrida" no pós-corrida da carreira, e 839 ms abrindo o qualify) a linha do
+// atraso não diz O QUE travou. O perfil da CPU roda em janelas de 10 s (uma amostra a cada 2 ms, pelo inspetor do próprio Node); na janela em que o
+// laço travou mais de 400 ms, as funções que mais gastaram vão para o servidor.log numa linha. Sem travada, a janela é jogada fora.
+function perfilDasTravadas() {
+  let insp; try { insp = require("node:inspector"); } catch { return () => {}; }
+  const sessao = new insp.Session(); try { sessao.connect(); } catch { return () => {}; }
+  const post = (m, p = {}) => new Promise((ok, falha) => sessao.post(m, p, (e, r) => (e ? falha(e) : ok(r))));
+  const INTERVALO_US = 2000;
+  let travou = 0;
+  const resumir = (perfil, ms) => {
+    const soma = new Map();
+    for (const no of perfil.nodes || []) {
+      const f = no.callFrame || {}, nome = f.functionName || "(anônima)";
+      if (!no.hitCount || nome === "(idle)" || nome === "(program)") continue;
+      const arq = String(f.url || "").split(/[\/]/).pop() || "node", chave = `${nome} ${arq}:${(f.lineNumber || 0) + 1}`;
+      soma.set(chave, (soma.get(chave) || 0) + no.hitCount * INTERVALO_US / 1000);
+    }
+    const top = [...soma].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k} ${Math.round(v)} ms`).join(" · ");
+    console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: perfil da travada de ${ms} ms (os 10 s em volta): ${top || "sem amostra"}`);
+  };
+  const janela = async () => {
+    try { await post("Profiler.enable"); await post("Profiler.setSamplingInterval", { interval: INTERVALO_US }); await post("Profiler.start"); } catch { return; }
+    setTimeout(async () => {
+      let r = null; try { r = await post("Profiler.stop"); } catch { r = null; }
+      if (r && travou >= 400) { try { resumir(r.profile, travou); } catch (e) { /* o perfil é só para o log */ } }
+      travou = 0; janela();
+    }, 10000).unref();
+  };
+  janela();
+  return (ms) => { travou = Math.max(travou, ms); };
+}
 function vigiarLaco() {
   let ant = Date.now(), ultimoLog = 0, pior = 0, n = 0, piorMin = 0, ultimoMin = Date.now();
+  const marcar = perfilDasTravadas();
   setInterval(() => {
     const agora = Date.now(), atraso = agora - ant - 50; ant = agora; piorMin = Math.max(piorMin, atraso);
     // (2026-11-16, o Thiago: "corri até 11:55 e o log parou às 11:50") o silêncio não prova nada: uma linha por minuto com corrida rodando, mesmo sem travada
     if (agora - ultimoMin >= 60000) { const f = (() => { try { return require("./corrida.js").faseAgora?.(); } catch { return null; } })(); if (f) console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: tudo certo no último minuto, o pior atraso foi ${Math.max(0, piorMin)} ms · ${f}`); ultimoMin = agora; piorMin = 0; }
-    if (atraso > 150) { n++; pior = Math.max(pior, atraso); if (agora - ultimoLog > 2000) { ultimoLog = agora; console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: o laço atrasou ${atraso} ms (${n} vezes, o pior ${pior} ms) · ${(() => { try { return require("./corrida.js").faseAgora?.() || "fora de corrida"; } catch { return "?"; } })()}`); } }
+    if (atraso > 150) { marcar(atraso); n++; pior = Math.max(pior, atraso); if (agora - ultimoLog > 2000) { ultimoLog = agora; console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: o laço atrasou ${atraso} ms (${n} vezes, o pior ${pior} ms) · ${(() => { try { return require("./corrida.js").faseAgora?.() || "fora de corrida"; } catch { return "?"; } })()}`); } }
   }, 50).unref();
 }
 

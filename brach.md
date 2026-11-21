@@ -1,10 +1,22 @@
-# Offline no PC, muros invisíveis de Mônaco, pneus, dano e a atualização presa
+# Pintura dos carros de 2026: cada vista só pinta o que enxerga, folha mais nítida e a Cadillac nova
 
-- **Modo offline no programa de PC** (`corrida-pc.js`): um botão no canto do menu liga e desliga (`localStorage` `corrida:pc:offline`). Ligado, tudo roda no servidor do PC, como sem internet: sem ping, os robôs lisos. O selo mostra "Offline: jogando no seu PC". Precisa reabrir o programa uma vez depois de atualizar, porque muda o servidor.
-- **A atualização presa** (`corrida-pc-atualizar.js`): o `public/corrida/assets/.gitkeep` (0 bytes, o "0,1 MB" é o mínimo da tela) estava na lista, mas o `sendFile` do Express não entrega arquivo com ponto no nome, e a pergunta voltava sempre. Conferido contra o programa instalado: era o único arquivo diferente. Agora nada com ponto no nome entra na lista.
-- **Muros invisíveis de Mônaco** (`pistas.js`, `murosDoCenario`):
-  - a placa da Lenovo fica 32 u acima da pista e punha muro dos dois lados embaixo dela: peça a mais de 12 u acima ou abaixo do asfalto não bate;
-  - a placa usava `w × s × 4,8` de comprimento (o `w` já é em unidades: 4,8 vezes maior) e sempre ao longo da pista; agora o comprimento e o giro (`ry`) são os do desenho;
-  - as linhas (guard-rail em fileira) liam os pontos como `.x/.z`, mas eles são `[x, z]` com o do meio opcional: davam NaN e não batiam. Agora seguem a mesma curva do desenho.
-- **Pneus** (`f1-regras.js`, `dinamica.js`): `final` e `potencia` por composto (macio 1,008 e 1,04; duro 0,994 e 0,97; médio igual). Medido com o piloto ideal (`voltaFixa`, pneu novo e quente) em Mônaco: macio 78,43 s, médio 79,48 s, duro 80,53 s (antes 78,77 / 79,48 / 80,26). A tabela dos robôs (`f1-pneus-tabela.js`) foi refeita com `ferramentas/pneus-tabela.js`.
-- **Dano** (`corrida-f1-direcao.js`): quem causa a batida entre carros leva 5, 10 e 15% (era 12, 20 e 35). No muro continua 1% por batida. Saíram as três conferências antigas do dano em `tests/corrida-punicoes.test.js`.
+O Thiago mandou o print da Cadillac na garagem: resolução baixa, partes borradas e o adesivo de trás da asa "indo pra baixo da asa toda vez".
+
+**A causa:** a pintura não fica no carro. Ela é uma folha com cinco vistas planas (os lados, de cima, de frente e de trás) projetada pela posição de cada ponto. Tudo o que está na mesma coluna pega o mesmo desenho: a vista de cima pintava a asa traseira e também a beam wing e o difusor embaixo dela, e a de lado pintava a placa de fora e a de dentro. O UV do modelo não resolve sozinho: medido no carro.glb, a tampa do motor e a asa traseira são em boa parte "carbono" sem UV que o jogo pinta por cima (1.586 e 337 vértices pintados).
+
+**O que mudou:**
+- `f1-2026.js` `visibilidade`: uma vez por modelo, o corpo (com o flap) é rasterizado nas cinco vistas, na metade da resolução lógica da folha (512 × 576). Cada célula guarda a superfície mais de fora. No carro de 2026 leva ~0,4 s no node para o modelo completo e ~0,2 s para o leve. `f1.js` faz isso na primeira vez e passa o mapa para o material do corpo (vale também para o de 2022 projetado).
+- `f1-pintura.js` LIV_FRAG_MAIN (só com `NOVO`): cada vista só conta onde o ponto é o de fora (folga de 3 cm, maior na superfície inclinada). O que nenhuma vista vê fica no carbono, como no carro de verdade. Isso substitui o borrão de mipmap (`fcar`) das camadas escondidas. A vista de baixo da asa (U) continua igual.
+  - Conferido no node com o modelo: nada que olha para cima embaixo do plano da asa recebe mais a vista de cima (0 de 23 pontos no completo e 0 de 9 no leve). A placa da asa traseira por dentro fica escondida (3%) e por fora continua visível (91%). A caixa lateral por fora continua visível (92%).
+- A folha passou de 2× para 3× no carro do jogador e na garagem, e de 1× para 1,5× nos outros (uma folha por equipe).
+- Cadillac redesenhada pela imagem do Thiago:
+  - preta brilhante;
+  - CADILLAC largo em prata na tampa e na asa traseira;
+  - o brasão (marca nova `crest`) no airbox, na placa da asa traseira, na asa dianteira e no bico;
+  - as faixas prata e grafite na caixa;
+  - o Mobil 1 e o número na caixa.
+- `f1-marcas.js`: as marcas `crest` e `cadillacw`.
+
+Sem print (só `node --check`): o Thiago testa jogando.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

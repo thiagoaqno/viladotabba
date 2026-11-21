@@ -24,6 +24,9 @@ export const K = 1024 / 4.4, FW = 1024, FH = 1152;
 // A folha sai em 2× no carro do jogador (e na garagem) e em 1× nos outros, para um grid de 20 não pesar na memória: ESC vale durante a pintura.
 // As contas continuam em "pixels lógicos" de 1024 x 1152 (o shader também): só o canvas é maior.
 let ESC = 1;
+// (2026-11-20, "os carros hoje têm uma resolução MUITO baixa"): eram 2× e 1×; agora 3× no carro do jogador e na garagem (3072 x 3456, ~1,4 mm por pixel
+// na lateral) e 1,5× nos outros (uma folha por equipe, não por carro: ~14 MB cada com os mipmaps)
+const ESC_ALTA = 3, ESC_OUTROS = 1.5;
 const PX = () => K * ESC;
 const CARBONO = "#0b0c0f";
 
@@ -554,59 +557,40 @@ DESENHOS.haas = {
   },
 };
 
-// Cadillac MAC-26 (2026), pelo modelo do Sketchfab que o Thiago mandou ("2026 Cadillac MAC-26", olhado dos dois lados, de cima, de frente e de
-// trás). O carro é ASSIMÉTRICO: o lado esquerdo (B, lado −1) é prata-claro com uma faixa preta larga descendo do cockpit até embaixo atrás, a
-// barriga preta e o TWG preto; o lado direito (A, lado 1) é o contrário, preto com a faixa prata subindo de trás até a frente da caixa e o TWG
-// branco. Em cima: a tampa meio a meio (prata à esquerda, preta à direita) com a espinha preta, o bico prata com o 11 no preto perto do
-// cockpit, a asa dianteira em blocos pretos e brancos. As placas da asa traseira levam o IFS (preto no prata, branco no preto).
-function blocos(c, s0, s1, x0, x1, n, semente, a, b) { // os blocos pretos e brancos da asa dianteira (como um código de barras)
-  const r = mulberry(semente), w = (s1 - s0) / n;
-  for (let i = 0; i < n; i++) { const corte = x0 + (x1 - x0) * (0.25 + r() * 0.6); ret(c, s0 + i * w, x0, s0 + (i + 1) * w, corte, i % 2 ? a : b); ret(c, s0 + i * w, corte, s0 + (i + 1) * w, x1, i % 2 ? b : a); }
-}
+// Cadillac MAC-26 (2026), pela imagem que o Thiago mandou (2026-11-20: o carro todo preto brilhante, sem o prata do modelo do Sketchfab de antes).
+// Os dois lados iguais: preto, o CADILLAC largo em prata na lateral da tampa do motor, o brasão no airbox, na placa da asa traseira e na asa
+// dianteira, as faixas angulares prata e grafite subindo pela caixa lateral, os traços cinza embaixo do CADILLAC, o Mobil 1 na frente do cockpit e
+// o número branco na caixa. Em cima: preto, os frisos cinza na tampa e o CADILLAC na asa traseira, lido por quem vem atrás.
 DESENHOS.cadillac = {
-  numero: "#ffffff", carbono: 1, numPos: [3.5, 0.68, 9, 9],
+  numero: "#ffffff", carbono: 1, numPos: [3.1, 0.47, 9, 9],
   pintar(ctx) {
-    const PRATA = "#d4d7da", PRATA_ESC = "#9ea3a8", PRETO = "#0e0f12";
+    const PRATA = "#d9dcdf", GRAFITE = "#5b5f65", CINZA = "#8f949a", PRETO = "#0c0d0f";
     base(ctx, PRETO);
-    lados(ctx, (c, lado) => {
-      const preto = lado > 0, fundo = preto ? PRETO : PRATA, tinta = preto ? PRATA : PRETO;
-      ret(c, 0, 0.1, 3.86, 1.1, fundo);
-      if (preto) {
-        // a faixa prata subindo de trás (embaixo) até a frente da caixa, e os frisos cromados na tampa
-        c.beginPath(); c.moveTo(3.45, 0.13); c.lineTo(3.3, 0.27); c.quadraticCurveTo(2.6, 0.38, 1.85, 0.56); c.lineTo(1.95, 0.44); c.quadraticCurveTo(2.7, 0.24, 3.2, 0.13); c.closePath(); c.fillStyle = PRATA; c.fill();
-        for (let i = 0; i < 3; i++) ret(c, 2.95, 0.56 + i * 0.05, 3.5, 0.575 + i * 0.05, PRATA_ESC);
-      } else {
-        // a faixa preta larga descendo do lado do cockpit até embaixo atrás, a barriga preta embaixo do bico e da frente da caixa
-        c.beginPath(); c.moveTo(1.75, 0.6); c.lineTo(2.05, 0.62); c.quadraticCurveTo(2.9, 0.4, 3.5, 0.13); c.lineTo(3.05, 0.13); c.quadraticCurveTo(2.5, 0.36, 1.75, 0.6); c.closePath(); c.fillStyle = PRETO; c.fill();
-        poli(c, [[0.55, 0.12], [2.1, 0.12], [2.1, 0.38], [0.9, 0.3], [0.55, 0.22]], PRETO);
-        for (const s of [3.08, 3.15]) ret(c, s, 0.58, s + 0.035, 0.76, PRETO); // as duas barras na tampa
-      }
-      ret(c, 2.75, 0.86, 3.75, 1.1, PRETO); // a barbatana
-      poli(c, [[1.4, 0.1], [2.05, 0.1], [2.05, 0.3], [1.4, 0.3]], PRETO); // o painel do Jim Beam
+    lados(ctx, (c) => {
+      // as faixas da caixa lateral: a prata larga subindo de trás (perto da roda) até a frente da caixa, o grafite em cima dela e as lascas
+      poli(c, [[2.12, 0.34], [2.32, 0.38], [3.38, 0.18], [3.26, 0.12]], PRATA);
+      poli(c, [[2.42, 0.39], [2.95, 0.41], [3.42, 0.27], [3.36, 0.22]], GRAFITE);
+      poli(c, [[2.05, 0.27], [2.2, 0.3], [2.55, 0.2], [2.42, 0.17]], CINZA);
+      poli(c, [[3.0, 0.43], [3.12, 0.44], [3.5, 0.32], [3.44, 0.3]], CINZA);
+      // os traços cinza na tampa, embaixo do CADILLAC
+      for (let i = 0; i < 4; i++) { const s0 = 2.9 + i * 0.1; poli(c, [[s0, 0.585], [s0 + 0.06, 0.585], [s0 + 0.1, 0.625], [s0 + 0.04, 0.625]], i % 2 ? CINZA : GRAFITE); }
+      poli(c, [[2.5, 0.53], [3.65, 0.47], [3.65, 0.49], [2.5, 0.55]], GRAFITE);
       baixo(c, PRETO);
-      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRATA); // as placas da asa dianteira, cromadas
-      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); ret(c, 3.95, 0.55, 4.45, 0.95, preto ? PRETO : PRATA); // a placa da asa traseira
-      marca(c, "twg", 2.55, 0.33, 0.13, { tinta }); marca(c, "twgai", 2.98, 0.36, 0.08, { tinta });
-      marca(c, "cadillac", 1.15, 0.47, 0.05, { tinta: preto ? PRATA : PRETO }); marca(c, "claro", 1.6, 0.4, 0.04, { tinta: "#ffffff" }); marca(c, "jimbeam", 1.72, 0.2, 0.05);
-      marca(c, "corescientific", 2.35, 0.62, 0.026, { tinta }); marca(c, "brasao", 2.55, 0.86, 0.075, { tinta });
-      marca(c, "ifs", 4.18, 0.76, 0.075, { tinta });
+      marca(c, "cadillacw", 3.02, 0.7, 0.085, { tinta: PRATA });
+      marca(c, "crest", 2.45, 0.85, 0.11, { tinta: PRATA });
+      marca(c, "crest", 4.16, 0.72, 0.12, { tinta: PRATA }); // a placa da asa traseira
+      marca(c, "crest", 0.22, 0.12, 0.06, { tinta: PRATA }); // a placa da asa dianteira
+      marca(c, "mobil1", 1.55, 0.42, 0.045, { tinta: "#ffffff" });
+      marca(c, "cadillacw", 1.95, 0.62, 0.026, { tinta: PRATA });
     });
     vista(ctx, "T", (c) => {
-      ret(c, 0.9, -0.8, 3.9, 0, PRATA); ret(c, 0.9, 0, 3.9, 0.8, PRETO); // meio a meio, como dos lados (a esquerda, −x, prata)
-      ret(c, 2.0, -0.07, 3.9, 0.07, PRETO); // a espinha preta
-      for (let i = 0; i < 3; i++) ret(c, 2.9 + i * 0.12, -0.3, 2.95 + i * 0.12, -0.1, PRETO); // os frisos no lado prata
-      for (let i = 0; i < 3; i++) ret(c, 2.9 + i * 0.12, 0.1, 2.95 + i * 0.12, 0.3, PRATA_ESC); // e no lado preto
-      ret(c, 0, -0.82, 0.66, 0.82, PRETO); blocos(c, 0.04, 0.64, 0.14, 0.8, 9, 11, PRETO, PRATA); blocos(c, 0.04, 0.64, -0.8, -0.14, 9, 23, PRATA, PRETO);
-      poli(c, [[0, -0.09], [0.9, -0.13], [0.9, 0.13], [0, 0.09]], PRATA); poli(c, [[0.9, -0.13], [1.3, -0.15], [1.3, 0.15], [0.9, 0.13]], PRETO); // o bico prata e o preto antes do cockpit
-      ret(c, 3.82, -0.62, 4.45, 0.62, PRETO);
-      const f = { giro: DE_FRENTE, tinta: PRETO };
-      marca(c, "brasao", 0.14, 0, 0.05, { giro: DE_FRENTE, tinta: PRETO }); marca(c, "twg", 0.3, 0, 0.035, f); marca(c, "ifs", 0.42, 0, 0.03, f);
-      marca(c, "hilfiger", 0.7, 0, 0.06, { giro: DE_FRENTE });
-      marca(c, "cadillac", 1.2, 0, 0.035, { giro: DE_FRENTE, tinta: PRATA });
-      marca(c, "ifs", 4.12, 0, 0.09, { giro: -DE_FRENTE, tinta: PRATA });
+      for (const l of [-1, 1]) for (let i = 0; i < 3; i++) ret(c, 2.95 + i * 0.13, l * 0.12, 3.03 + i * 0.13, l * 0.26, GRAFITE); // os frisos na tampa
+      marca(c, "crest", 0.75, 0, 0.07, { giro: DE_FRENTE, tinta: PRATA });
+      marca(c, "cadillacw", 1.12, 0, 0.03, { giro: DE_FRENTE, tinta: PRATA });
+      marca(c, "cadillacw", 4.15, 0, 0.075, { giro: -DE_FRENTE, tinta: PRATA }); // a asa traseira, lida de trás
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.8, 0.3, 0, 1.1, PRATA); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.8, 0.3, -0.05, 0.8, PRATA); marca(c, "cadillac", 0, 0.9, 0.08, { tinta: PRATA }); });
+    vista(ctx, "F", (c) => ret(c, -0.8, 0, 0.8, 1.1, PRETO));
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); marca(c, "crest", 0, 0.88, 0.08, { tinta: PRATA }); });
   },
 };
 
@@ -1185,14 +1169,14 @@ export function folhaDaEquipe(equipe, alta = false, original = false) {
   if (!DESENHOS[equipe]) return null;
   if (!original && DO_ESTUDIO.has(equipe) && anoEmUso() === 2026) {
     const chave = "estudio:" + equipe + (alta ? "|2" : "|1"); if (FOLHAS.has(chave)) return FOLHAS.get(chave);
-    const cv = folhaDeCamadas(DO_ESTUDIO.get(equipe), document.createElement("canvas"), alta ? 2 : 1);
+    const cv = folhaDeCamadas(DO_ESTUDIO.get(equipe), document.createElement("canvas"), alta ? ESC_ALTA : ESC_OUTROS);
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = alta ? 8 : 4; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
     t.userData.cv = cv; FOLHAS.set(chave, t); return t;
   }
   equipe = chaveDo(equipe); // (a pintura do ano em uso, quando a equipe tem uma: "audi@2023" é a Alfa Romeo)
   const chave = equipe + (alta ? "|2" : "|1");
   if (FOLHAS.has(chave)) return FOLHAS.get(chave);
-  ESC = alta ? 2 : 1;
+  ESC = alta ? ESC_ALTA : ESC_OUTROS;
   const cv = document.createElement("canvas"); cv.width = FW * ESC; cv.height = FH * ESC;
   const ctx = cv.getContext("2d"); DESENHOS[equipe].pintar(ctx);
   vista(ctx, "U", (c) => { const d = ASA_BAIXO[equipe]; ret(c, -0.6, -0.05, 0.6, 0.75, d?.cor || "#101113"); d?.marcas?.(c); });
@@ -1236,6 +1220,9 @@ varying vec3 vNc;
 #ifdef NOVO
 varying float vMc;
 varying float vFc;
+uniform sampler2D vis; // o mapa de visibilidade do modelo (f1-2026.js visibilidade): a superfície mais de fora de cada vista
+// 1 quando o ponto (profundidade d na vista) é o de fora naquela vista; nv = o quanto a normal olha para a vista (a folga cresce na superfície inclinada)
+float visto(vec2 uv, float d, float nv) { float m = texture2D(vis, uv).r, folga = 0.03 + min(0.12, 0.0086 * sqrt(max(0.0, 1.0 - nv * nv)) / max(nv, 0.08)); return smoothstep(m - folga - 0.02, m - folga, d); }
 #endif
 const float KK = 232.72727;
 vec2 lv(vec2 px, vec4 r) { px = clamp(px, r.xy + 1.5, r.zw - 1.5); return vec2(px.x / 1024.0, 1.0 - px.y / 1152.0); }
@@ -1258,16 +1245,24 @@ export const LIV_FRAG_MAIN = `
   vec2 pS = dir ? vec2((4.4 - p.z) * KK, (1.1 - p.y) * KK) : vec2(p.z * KK, 256.0 + (1.1 - p.y) * KK);
   vec2 uS = lv(pS, dir ? vec4(0.0, 0.0, 1024.0, 256.0) : vec4(0.0, 256.0, 1024.0, 512.0));
   vec3 cS = texture2D(liv, uS).rgb;
-#ifdef NOVO
-  cS = mix(texture2D(liv, uS, 4.5).rgb, cS, vFc); // as superfícies escondidas atrás de outra (f1-2026.js camadas): só a cor, sem repetir o logo
-#endif
   vec3 cT = vec3(0.012);
-  if (n.y > 0.0) cT = texture2D(liv, lv(vec2(p.z * KK, 704.0 - p.x * KK), vec4(0.0, 512.0, 1024.0, 896.0))).rgb;
+  vec2 uT = lv(vec2(p.z * KK, 704.0 - p.x * KK), vec4(0.0, 512.0, 1024.0, 896.0));
+  if (n.y > 0.0) cT = texture2D(liv, uT).rgb;
   else if (p.z > 3.7 && p.y > 0.48) cT = texture2D(liv, lv(vec2(872.5 + p.x * 253.0, 4.65 + (p.z - 3.7) * 153.0), vec4(733.0, 4.0, 1012.0, 112.0))).rgb; // embaixo da asa traseira (a vista U)
   bool fr = n.z < 0.0;
   vec2 pZ = vec2(fr ? 256.0 - p.x * KK : 768.0 + p.x * KK, 896.0 + (1.1 - p.y) * KK);
-  vec3 cZ = texture2D(liv, lv(pZ, fr ? vec4(0.0, 896.0, 512.0, 1152.0) : vec4(512.0, 896.0, 1024.0, 1152.0))).rgb;
+  vec2 uZ = lv(pZ, fr ? vec4(0.0, 896.0, 512.0, 1152.0) : vec4(512.0, 896.0, 1024.0, 1152.0));
+  vec3 cZ = texture2D(liv, uZ).rgb;
   vec3 c = cS * a.x + cT * a.y + cZ * a.z;
+#ifdef NOVO
+  // (2026-11-20) cada vista só pinta o que ela enxerga: a de cima não desce mais da asa traseira para a beam wing, a de lado não pinta a placa de
+  // dentro nem as camadas da caixa lateral. Embaixo da asa traseira (a vista U) continua como antes. O que nenhuma vista vê fica no carbono (mk).
+  float sobAsa = step(n.y, 0.0) * step(3.7, p.z) * step(0.48, p.y);
+  vec3 vv = vec3(visto(uS, dir ? p.x : -p.x, abs(n.x)), mix(visto(uT, p.y, abs(n.y)), 1.0, sobAsa), visto(uZ, fr ? -p.z : p.z, abs(n.z)));
+  vec3 av = a * vv; float tv = av.x + av.y + av.z;
+  a = av / max(tv, 1e-4);
+  c = mix(mk, (cS * av.x + cT * av.y + cZ * av.z) / max(tv, 1e-4), smoothstep(0.0, 0.15, tv));
+#endif
   if (numero.y >= 0.0) {
     // número na tampa do motor (os dois lados) e na asa traseira (os dois lados); em cima do bico, lido por quem vem atrás
     float us = dir ? -p.z : p.z;

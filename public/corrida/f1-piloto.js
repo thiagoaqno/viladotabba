@@ -14,7 +14,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
-import { pintarFolha, capacetePorSigla, acabamentoDoCasco, extraDoCapacete, folhaDeRelevo } from "./f1-capacetes.js";
+import { pintarFolha, capacetePorSigla, acabamentoDoCasco, extraDoCapacete, folhaDeRelevo, VISEIRAS_FURTACOR } from "./f1-capacetes.js";
 
 const menosMovimento = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 const lim = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -205,7 +205,16 @@ function maosDe(cLuva, cPainel) {
 }
 const LUVA = () => (LUVA.m ||= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.65, metalness: 0.05, side: THREE.DoubleSide }));
 // a viseira (docs/capacetes-guia.md, item 2): metal ~0,9 e rugosidade ~0,05, com verniz por cima, na cor escolhida; a escura reflete menos
-const VISEIRA = (cor) => { const k = cor || "#090b10"; VISEIRA.m ||= new Map(); if (!VISEIRA.m.has(k)) VISEIRA.m.set(k, new THREE.MeshPhysicalMaterial({ color: k, roughness: 0.05, metalness: k === "#090b10" ? 0.6 : 0.9, clearcoat: 1, clearcoatRoughness: 0.03 })); return VISEIRA.m.get(k); };
+// a viseira: um material por cor, guardado. As furta-cor (f1-capacetes.js VISEIRAS_FURTACOR) ganham a película iridescente (o brilho troca de cor com o ângulo)
+const VISEIRA = (cor) => {
+  const k = cor || "#090b10"; VISEIRA.m ||= new Map();
+  if (!VISEIRA.m.has(k)) {
+    const furta = VISEIRAS_FURTACOR && VISEIRAS_FURTACOR[k];
+    VISEIRA.m.set(k, new THREE.MeshPhysicalMaterial({ color: k, roughness: 0.05, metalness: k === "#090b10" ? 0.6 : furta ? 0.75 : 0.9, clearcoat: 1, clearcoatRoughness: 0.03,
+      ...(furta ? { iridescence: 1, iridescenceIOR: 1.6, iridescenceThicknessRange: furta } : {}) }));
+  }
+  return VISEIRA.m.get(k);
+};
 export const materialDaViseira = VISEIRA;
 // as geometrias do capacete e da viseira (as mesmas da pista), para a prévia 3D do editor (capacete-3d.js)
 export const geometriasDoCapacete = () => { const g = geometrias(); return { capacete: g.capacete, viseira: g.viseira, moldura: g.moldura }; };

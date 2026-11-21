@@ -48,6 +48,7 @@
 .cp2-op:hover{transform:translateY(-2px)}.cp2-op.on{border-color:var(--cp-ac)}
 .cp2-op b{font:800 14px var(--display,"Barlow Condensed",sans-serif);text-transform:uppercase;letter-spacing:.04em}.cp2-op small{color:var(--cp-tx2);font-size:11.5px}
 .cp2-vis{width:100%;height:22px;border-radius:12px 12px 6px 6px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 60%,#fff) 0,var(--c) 45%,#000 120%)}
+.cp2-vis.furta{background:linear-gradient(120deg,var(--c) 0,#3ad6ff 35%,#c04dff 55%,#ff9a3c 78%,var(--c) 100%)} /* as viseiras furta-cor (f1-capacetes.js VISEIRAS_FURTACOR) */
 .cp2-amostra{width:100%;height:30px;border-radius:6px;background:#c8102e}
 .cp2-ac-brilho .cp2-amostra{background:linear-gradient(160deg,#ff6b6b,#c8102e 45%,#7a0a1c)}
 .cp2-ac-fosco .cp2-amostra{background:#a51c2c}

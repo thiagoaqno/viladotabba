@@ -396,7 +396,12 @@ function selo(x, id, cx, cy, w, h) {
   x.fillStyle = s[1]; x.beginPath(); x.roundRect ? x.roundRect(cx - w / 2, cy - h / 2, w, h, h / 3) : x.rect(cx - w / 2, cy - h / 2, w, h); x.fill();
   x.fillStyle = s[2]; x.font = `900 ${Math.round(h * 0.62)}px Arial, sans-serif`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(s[0], cx, cy + 1, w - 8);
 }
-export const VISEIRAS = { "#090b10": "Escura", "#c9ccd2": "Espelhada", "#d4a017": "Dourada", "#1e6fd9": "Azul", "#d8142c": "Vermelha", "#7a2fd0": "Roxa", "#1fa64a": "Verde", "#f07c1a": "Laranja" };
+// (2026-11-21, o Thiago: "crie novas cores de viseiras") as de antes, mais oito lisas e três furta-cor (o brilho muda de cor com o ângulo, como as
+// viseiras irídio de verdade: f1-piloto.js VISEIRA, pela iridescência do material; VISEIRAS_FURTACOR diz a espessura da película de cada uma)
+export const VISEIRAS = { "#090b10": "Escura", "#c9ccd2": "Espelhada", "#d4a017": "Dourada", "#1e6fd9": "Azul", "#d8142c": "Vermelha", "#7a2fd0": "Roxa", "#1fa64a": "Verde", "#f07c1a": "Laranja",
+  "#4a4f58": "Fumê", "#ff3d8b": "Rosa", "#19c3c9": "Turquesa", "#ffd60a": "Amarela", "#9be22d": "Verde-limão", "#b06a2c": "Bronze", "#0d2b6e": "Azul-marinho", "#e6f2ff": "Gelo",
+  "#2b1a5c": "Furta-cor azul", "#5c1a24": "Furta-cor fogo", "#0f3b3a": "Furta-cor petróleo" };
+export const VISEIRAS_FURTACOR = { "#2b1a5c": [180, 420], "#5c1a24": [420, 780], "#0f3b3a": [600, 900] };
 export const CAPACETE_PADRAO = { desenho: "stripe", cores: ["#f4f4f4", "#e10600", "#101114"], viseira: "#090b10", bandeira: "BR", nome: "" };
 // as bandeiras (o SVG de gp-info.js) viram imagem uma vez; quem pinta antes de ela chegar é avisado para repintar
 const BAND = new Map();

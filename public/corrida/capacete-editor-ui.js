@@ -4,7 +4,7 @@
 // A tela (2026-11-14, pela referência do Thiago): o menu à esquerda (Desenho, Cores, Detalhes, Patrocínios, Visor, Acabamento), o painel da opção
 // no meio (no Desenho, a grade de miniaturas em 3D com as suas cores, 12 por página) e o capacete grande à direita (arrastar gira), com as
 // cores principais e o "Padrão" (as 4 variações do desenho) embaixo. Sem WebGL, a prévia volta a ser a folha aberta e a grade fica em texto.
-import { pintarFolha, DESENHOS_CAPACETE, VISEIRAS, CAPACETE_PADRAO, VARIANTES, ACABAMENTOS, PATROCINIOS, MARCAS_CAPACETE, LUGARES_PATROCINIO, FUNDOS_PATROCINIO,
+import { pintarFolha, DESENHOS_CAPACETE, VISEIRAS, VISEIRAS_FURTACOR, CAPACETE_PADRAO, VARIANTES, ACABAMENTOS, PATROCINIOS, MARCAS_CAPACETE, LUGARES_PATROCINIO, FUNDOS_PATROCINIO,
   patrociniosDe, extraDoCapacete, CORES_DO_ESTILO, miniaturaDoPatrocinio, LUGARES_HALO, lerHalo, gravarHalo } from "./f1-capacetes.js";
 import { previaDoCapacete } from "./capacete-3d.js";
 
@@ -97,7 +97,7 @@ export function montarEditorCapacete(el, op = {}) {
         <p class="cp2-nota">Escolha o lugar e depois a marca: as da galera e as das pinturas dos carros. Com marca na faixa do visor, o nome fica só na nuca.</p>`;
       const nova = painel.querySelector(".cp2-marcas"); if (nova && rolagem) nova.scrollTop = rolagem;
     } else if (aba === "visor") {
-      painel.innerHTML = `<header class="cp2-ph"><h4>Visor</h4></header><div class="cp2-opcoes">${Object.entries(VISEIRAS).map(([c, n]) => `<button type="button" class="cp2-op ${atual.viseira === c ? "on" : ""}" data-cp-visor="${c}" aria-pressed="${atual.viseira === c}"><i class="cp2-vis" style="--c:${c}"></i><b>${h(n)}</b></button>`).join("")}</div>`;
+      painel.innerHTML = `<header class="cp2-ph"><h4>Visor</h4></header><div class="cp2-opcoes">${Object.entries(VISEIRAS).map(([c, n]) => `<button type="button" class="cp2-op ${atual.viseira === c ? "on" : ""}" data-cp-visor="${c}" aria-pressed="${atual.viseira === c}"><i class="cp2-vis ${VISEIRAS_FURTACOR[c] ? "furta" : ""}" style="--c:${c}"></i><b>${h(n)}</b></button>`).join("")}</div>`;
     } else {
       const dicas = { brilho: "verniz de espelho, o clássico", fosco: "sem brilho, aveludado", acetinado: "meio brilho, sedoso", metal: "pintura metálica com verniz", perola: "brilho perolado que muda de tom",
         camaleao: "muda de cor conforme o ângulo", flocos: "purpurina de metal sob o verniz", carbono: "a trama da fibra à mostra", cromo: "metal polido, reflete tudo" };

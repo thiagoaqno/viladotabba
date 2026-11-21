@@ -534,8 +534,11 @@ DESENHOS.williams = {
 // da asa): titânio do bico até logo atrás da entrada de ar (s 2,33), grafite dali para trás; a cunha laranja na caixa lateral, de s 2,33 a 3,28,
 // afinando para trás (de lado e no alto da caixa); o painel preto embaixo da frente da caixa com o ninjaOne; o Revolut grande em preto no
 // titânio; os anéis vermelhos na tampa, no bico e na espinha; as asas de titânio com o Revolut; as placas grafite com o visit QATAR.
+// (2026-11-20, acertada pelas seis imagens de Carros F1/2026/Audi: o Revolut e o Castrol mais para trás na caixa, o NEXO no chassi, o bp, os
+// anéis vermelhos grandes em cima da asa traseira e a fila do bico como na foto de frente: os anéis, o R, Libertex, visit QATAR, PIRELLI, perk+
+// e adidas; o 5 na barbatana)
 DESENHOS.audi = {
-  numero: "#e8401c", carbono: 1, numPos: [3.55, 0.68, 9, 9],
+  numero: "#e8401c", carbono: 1, numPos: [3.56, 0.88, 9, 9],
   pintar(ctx) {
     const TIT = "#c4c8cc", TIT_CL = "#d9dcdf", GRAF = "#2c3036", LAR = "#e8401c", PRETO = "#0d0e11", CORTE = 2.33;
     base(ctx, TIT);
@@ -547,9 +550,9 @@ DESENHOS.audi = {
       baixo(c, PRETO);
       poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], GRAF); // as placas da asa dianteira
       ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); // a asa traseira de carbono
-      marca(c, "revolut", 1.95, 0.4, 0.075, { tinta: PRETO }); marca(c, "castrol", 2.05, 0.56, 0.032, { tinta: PRETO });
-      marca(c, "nexo", 1.15, 0.45, 0.034, { tinta: PRETO }); marca(c, "ninjaone", 1.66, 0.22, 0.036); marca(c, "hyatt", 1.62, 0.62, 0.016, { tinta: PRETO });
-      marca(c, "aneis", 2.58, 0.8, 0.07, { tinta: LAR }); marca(c, "bp", 3.2, 0.78, 0.06); marca(c, "visitqatar", 2.42, 0.95, 0.022);
+      marca(c, "revolut", 2.08, 0.43, 0.075, { tinta: PRETO }); marca(c, "castrol", 2.12, 0.62, 0.032, { tinta: PRETO });
+      marca(c, "nexo", 1.3, 0.53, 0.034, { tinta: PRETO }); marca(c, "ninjaone", 1.7, 0.24, 0.036); marca(c, "hyatt", 1.62, 0.66, 0.016, { tinta: PRETO });
+      marca(c, "aneis", 2.6, 0.82, 0.07, { tinta: LAR }); marca(c, "bp", 3.25, 0.84, 0.05); marca(c, "visitqatar", 2.42, 0.95, 0.022);
       marca(c, "visitqatar", 0.28, 0.12, 0.05);
     });
     vista(ctx, "T", (c) => {
@@ -559,36 +562,58 @@ DESENHOS.audi = {
       asasT(c, TIT_CL, GRAF, TIT_CL);
       const f = { giro: DE_FRENTE, tinta: PRETO };
       for (const l of [-1, 1]) { marca(c, "revolut", 0.26, l * 0.48, 0.06, f); marca(c, "nexo", 1.22, l * 0.09, 0.02, f); marca(c, "castrol", 2.1, l * 0.36, 0.03, { giro: Math.PI / 2 * l, tinta: PRETO }); }
-      marca(c, "revolutr", 0.14, 0, 0.06, f); marca(c, "adidas", 0.74, 0, 0.05, f); marca(c, "aneis", 1.26, 0, 0.045, { giro: DE_FRENTE, tinta: LAR });
+      // a fila do bico, da ponta para trás (o 5 é o shader, no 1,02)
+      marca(c, "aneis", 0.1, 0, 0.04, { giro: DE_FRENTE, tinta: LAR }); marca(c, "revolutr", 0.24, 0, 0.07, f); marca(c, "libertex", 0.38, 0, 0.02, f);
+      marca(c, "visitqatar", 0.6, 0, 0.035, f); marca(c, "pirelli", 0.7, 0, 0.02, f); marca(c, "perk", 1.12, 0, 0.03, f); marca(c, "adidas", 1.22, 0, 0.04, f);
       marca(c, "aneis", 2.75, 0, 0.065, { tinta: LAR }); // os anéis ao longo da espinha
-      marca(c, "revolut", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: TIT });
+      marca(c, "aneis", 4.12, 0, 0.16, { giro: -DE_FRENTE, tinta: LAR }); // os anéis grandes em cima da asa traseira (o Revolut vai atrás dela: ASA_BAIXO)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, TIT); ret(c, -0.55, 0, 0.55, 0.12, PRETO); });
     vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, GRAF); for (const l of [-1, 1]) ret(c, l * 0.25, 0.2, l * 0.52, 0.55, LAR); ret(c, -0.8, 0.64, 0.8, 1.1, PRETO); });
   },
 };
 
-// Alpine A526: azul-marinho com degradê azul, rosa na asa dianteira, no bico, atrás da caixa e na asa traseira
+// Alpine A526, refeita pelas seis imagens de Carros F1/2026/Alpine (2026-11-20): azul-marinho embaixo e azul-royal em cima; o bico e o alto do
+// chassi rosa até o cockpit (a fila de patrocínios azul-marinho no bico); o BWT rosa enorme de borda azul-marinho na caixa, o MSC e o ApeCoin em
+// cima dele, o eni grande na tampa, o bloco rosa atrás da tampa com o "A" branco; a asa dianteira com os painéis rosa e o BWT azul-marinho de borda
+// branca, embaixo azul-marinho com o businessolver e o eni; a asa traseira branca em cima com o BWT e, atrás dela, o ALPINE.
 DESENHOS.alpine = {
-  numero: "#ffffff", carbono: 2, numPos: [3.45, 0.68, 9, 9],
+  numero: "#ffffff", carbono: 2, numPos: [3.56, 0.88, 9, 9],
   pintar(ctx) {
-    const AZUL = "#0c1f5c", ESC = "#071338", ROSA = "#ff6fb1", CLARO = "#2a6fd6";
+    const AZUL = "#0c1f5c", ESC = "#071338", ROSA = "#ff7ab8", ROYAL = "#2449c4", BRANCO = "#ffffff";
     base(ctx, AZUL);
     lados(ctx, (c) => {
-      c.fillStyle = degrade(c, 1.4, 0, 3.2, 0, [[0, "rgba(42,111,214,0)"], [0.5, CLARO], [1, "rgba(42,111,214,0)"]]); c.fillRect(1.4, 0.14, 1.8, 0.4);
-      poli(c, [[3.2, 0.44], [3.72, 0.3], [3.86, 0.3], [3.86, 0.62], [3.4, 0.64]], ROSA); // o bloco rosa atrás da caixa
-      c.beginPath(); c.moveTo(0, 0.1); c.lineTo(1.05, 0.1); c.lineTo(0.85, 0.32); c.lineTo(0, 0.3); c.closePath(); c.fillStyle = ROSA; c.fill();
+      // o azul-royal de cima (caixa e tampa), o marinho embaixo
+      c.beginPath(); c.moveTo(1.4, 0.5); c.quadraticCurveTo(2.6, 0.2, 3.9, 0.3); c.lineTo(3.9, 1.1); c.lineTo(1.4, 1.1); c.closePath(); c.fillStyle = ROYAL; c.fill();
+      // o bico e o alto do chassi rosa, até o cockpit
+      c.beginPath(); c.moveTo(0, 0.1); c.lineTo(0.9, 0.18); c.quadraticCurveTo(1.4, 0.4, 1.75, 0.56); c.lineTo(1.75, 1.1); c.lineTo(0, 1.1); c.closePath(); c.fillStyle = ROSA; c.fill();
+      // o bloco rosa atrás da tampa, com o "A" branco
+      poli(c, [[3.3, 0.66], [3.88, 0.58], [3.88, 0.4], [3.45, 0.42]], ROSA); marca(c, "alpinea", 3.68, 0.52, 0.13, { tinta: BRANCO });
       baixo(c, ESC);
-      ret(c, 3.86, 0.62, 4.45, 1.1, ROSA); ret(c, 3.86, 0.3, 4.45, 0.62, ESC);
-      marca(c, "bwt", 2.72, 0.33, 0.13); marca(c, "eni", 3.02, 0.72, 0.075); marca(c, "msc", 2.1, 0.5, 0.05); marca(c, "alpine", 3.55, 0.47, 0.045, { tinta: AZUL }); marca(c, "eni", 4.15, 0.72, 0.08, { tinta: ESC });
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], AZUL); // as placas da asa dianteira
+      ret(c, 3.86, 0.3, 4.45, 1.1, AZUL); ret(c, 3.95, 0.55, 3.98, 0.95, ROSA); // a placa da asa traseira, com o filete rosa
+      marca(c, "bwtc", 2.72, 0.35, 0.14); marca(c, "msc", 2.28, 0.5, 0.045); marca(c, "apecoin", 2.45, 0.66, 0.03); marca(c, "modocasino", 2.2, 0.72, 0.02);
+      marca(c, "eni", 3.02, 0.76, 0.08); marca(c, "changeworld", 3.18, 0.27, 0.016); marca(c, "ada", 3.42, 0.3, 0.03);
+      marca(c, "binance", 1.6, 0.47, 0.024); marca(c, "infinox", 1.2, 0.28, 0.026);
+      marca(c, "msc", 4.17, 0.8, 0.04); marca(c, "mntn", 0.4, 0.13, 0.03);
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.3, -0.3, 4, 0.3, AZUL); ret(c, 3, -0.3, 4, -0.14, ROSA); ret(c, 3, 0.14, 4, 0.3, ROSA);
-      asasT(c, ROSA, ESC, ROSA); ret(c, 1, -0.17, 1.3, 0.17, AZUL);
-      const f = { giro: DE_FRENTE, tinta: AZUL }; marca(c, "bwt", 0.7, 0, 0.08, f); marca(c, "alpine", 0.45, 0, 0.04, f); marca(c, "bwt", 4.15, 0, 0.1, { giro: DE_FRENTE }); marca(c, "eni", 2.9, 0, 0.07, { giro: DE_FRENTE });
+      // em cima: royal na tampa e nas caixas, o rosa do bico até o cockpit
+      ret(c, 1.7, -0.75, 3.9, 0.75, ROYAL); ret(c, 3.3, -0.3, 3.9, -0.14, ROSA); ret(c, 3.3, 0.14, 3.9, 0.3, ROSA);
+      asasT(c, AZUL, BRANCO, ROSA); ret(c, 0.66, -0.2, 1.75, 0.2, ROSA);
+      for (const l of [-1, 1]) {
+        ret(c, 0.18, l * 0.18, 0.5, l * 0.74, ROSA); marca(c, "bwtc", 0.34, l * 0.46, 0.12, { giro: DE_FRENTE, tinta: AZUL, fundo: BRANCO }); // os painéis rosa da asa dianteira
+        marca(c, "businessolver", 0.08, l * 0.46, 0.03, { giro: DE_FRENTE }); marca(c, "binance", 1.9, l * 0.3, 0.025, { giro: l > 0 ? Math.PI : 0 });
+      }
+      const fa = { giro: DE_FRENTE, tinta: AZUL }; // a fila do bico, da ponta para trás (o 10 é o shader, no 1,02)
+      marca(c, "alpinea", 0.25, 0, 0.06, fa); marca(c, "eni", 0.36, 0, 0.03, fa); marca(c, "msc", 0.44, 0, 0.026, fa); marca(c, "microsoft", 0.52, 0, 0.022, fa);
+      marca(c, "mobilize", 0.59, 0, 0.018, fa); marca(c, "pirelli", 0.66, 0, 0.018, fa); marca(c, "binance", 0.72, 0, 0.018, fa); marca(c, "arcticwolf", 0.78, 0, 0.018, fa);
+      marca(c, "brb", 0.85, 0, 0.026, fa); marca(c, "bwt", 0.92, 0, 0.035, fa); marca(c, "alpine", 1.2, 0, 0.025, fa);
+      marca(c, "eni", 2.9, 0, 0.07, { giro: DE_FRENTE });
+      marca(c, "bwtc", 4.15, 0, 0.12, { giro: -DE_FRENTE, tinta: AZUL, fundo: ROSA }); // em cima da asa traseira, lido por quem vem atrás
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.8, 0, 0.8, 0.14, ROSA); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ESC); ret(c, -0.45, 0.45, 0.45, 0.75, ROSA); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.2, 0.1, 0.2, 0.45, ROSA); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ESC); ret(c, -0.45, 0.42, 0.45, 0.6, ROSA); ret(c, -0.8, 0.64, 0.8, 1.1, ESC); }); // (o ALPINE de trás da asa vem de ASA_BAIXO)
   },
 };
 
@@ -1238,6 +1263,7 @@ const ASA_BAIXO = {
   "red-bull": { cor: "#25272b", marcas: (c) => marcaU(c, "oracle", 0, 0.32, 0.11) },
   mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
   audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },
+  alpine: { cor: "#071338", marcas: (c) => marcaU(c, "alpine", 0, 0.32, 0.1, { tinta: "#d9dde3" }) }, // (2026-11-20, as imagens: o ALPINE largo atrás da asa)
   cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillacw", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
   "aston-martin": { cor: "#0a1210", marcas: (c) => { retU(c, -0.42, 0.2, 0.0, 0.44, "#3aa54a"); retU(c, 0.0, 0.2, 0.42, 0.44, "#2f86c8"); marcaU(c, "aramco", 0, 0.32, 0.11, { tinta: "#e8ecef" }); } }, // (2026-11-20, as imagens: o aramco no degradê verde e azul atrás da asa)
   williams: { cor: "#0b1140", marcas: (c) => { retU(c, -0.45, 0.2, 0.45, 0.44, "#5741d9"); marcaU(c, "kraken", 0, 0.32, 0.12); } },

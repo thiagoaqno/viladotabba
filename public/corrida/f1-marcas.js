@@ -72,7 +72,10 @@ const SO_LETRA = {
   revolut: ["Revolut", { peso: 800, h: 1.1 }], nexo: ["NEXO", { peso: 900, esp: 4 }], ninjaone: ["ninjaOne", { peso: 700 }], visitqatar: ["visit QATAR", { peso: 800 }],
   bwt: ["BWT", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#ff7ab8" }], msc: ["MSC", { peso: 800, fam: SERIFA, esp: 3 }], alpine: ["ALPINE", { peso: 800, esp: 5 }],
   toyota: ["TOYOTA", { peso: 900, esp: 4 }], haas: ["HAAS", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#101114" }], zoomex: ["ZOOMEX", { peso: 800, esp: 2 }], twg: ["TWG", { peso: 800, fam: SERIFA, esp: 5, h: 1.1 }],
-  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }], cadillacw: ["CADILLAC", { peso: 500, esp: 16, h: 0.95 }], indeed: ["indeed", { peso: 700 }], confluent: ["CONFLUENT", { peso: 600, esp: 4 }], octave: ["octave", { peso: 700 }], dynatrace: ["dynatrace", { peso: 700 }], neft: ["NEFT", { peso: 900, esp: 3 }],
+  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }], cadillacw: ["CADILLAC", { peso: 500, esp: 16, h: 0.95 }], indeed: ["indeed", { peso: 700 }], binance: ["BINANCE", { peso: 800, esp: 2 }], apecoin: ["ApeCoin", { peso: 700 }], modocasino: ["MODO CASINO", { peso: 900, esp: 2 }],
+  ada: ["ADA", { peso: 400, fam: SERIFA, esp: 6 }], changeworld: ["CHANGE THE WORLD", { peso: 900 }], infinox: ["INFINOX", { peso: 600, esp: 4 }],
+  businessolver: ["businessolver", { peso: 600 }], mntn: ["mntn", { peso: 800 }], brb: ["BRB", { peso: 900, ital: true }], arcticwolf: ["ARCTIC WOLF", { peso: 800 }],
+  mobilize: ["MOBILIZE", { peso: 800, esp: 3 }], moserwatch: ["MOSER.WATCH", { peso: 700, fam: SERIFA, esp: 2 }], perk: ["perk+", { peso: 700 }], libertex: ["Libertex", { peso: 700 }], confluent: ["CONFLUENT", { peso: 600, esp: 4 }], octave: ["octave", { peso: 700 }], dynatrace: ["dynatrace", { peso: 700 }], neft: ["NEFT", { peso: 900, esp: 3 }],
   mobil: ["Mobil", { peso: 800 }], hrc: ["HRC", { peso: 900, ital: true, fam: PESADA }], oakberry: ["OAKBERRY", { peso: 800, esp: 2 }], playngo: ["PLAY'n GO", { peso: 900, ital: true }], brillio: ["brillio", { peso: 800 }], reviva: ["Reviva", { peso: 700, fam: SERIFA }],
   ingenuity: ["THE INGENUITY", { peso: 700, esp: 2 }], workday: ["workday", { peso: 700 }], deloitte: ["Deloitte.", { peso: 800 }], cisco: ["CISCO", { peso: 700, esp: 3 }], dewalt: ["DEWALT", { peso: 900, ital: true }], rubrik: ["rubrik", { peso: 600 }],
   okta: ["okta", { peso: 700 }], primax: ["PRIMAX", { peso: 900, ital: true }], sap: ["SAP", { peso: 900, ital: true, fam: PESADA }], akkodis: ["AKKODIS", { peso: 700, esp: 2 }], einhell: ["Einhell", { peso: 800 }], siemens: ["SIEMENS", { peso: 800, esp: 2 }], hexagon: ["HEXAGON", { peso: 700, esp: 3 }], clear: ["CLEAR", { peso: 400, esp: 4 }],
@@ -117,6 +120,12 @@ Object.assign(MARCAS, {
   },
   // o 1Password: o redondo com o "1" e o nome
   onepassword(c, { tinta = "#fff", fundo = "#1b2452" } = {}) { disco(c, -2.15, 0, 0.42, tinta); letra(c, "1", { x: -2.15, y: 0.02, h: 0.62, peso: 900, cor: fundo }); letra(c, "Password", { x: 0.35, h: 0.9, peso: 700, cor: tinta }); },
+  // (2026-11-20, as imagens da Alpine) o BWT com contorno (rosa com a borda azul-marinho na caixa; azul-marinho com a borda branca na asa)
+  bwtc(c, { tinta = "#ff7ab8", fundo = "#0c1f5c" } = {}) { c.save(); c.scale(0.011, 0.011); c.font = "italic 900 100px 'Arial Black', Arial, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
+    c.lineJoin = "round"; c.lineWidth = 16; c.strokeStyle = fundo; c.strokeText("BWT", 0, 0); c.fillStyle = tinta; c.fillText("BWT", 0, 0); c.restore(); },
+  // o "A" da Alpine: as duas pernas inclinadas e a travessa em seta
+  alpinea(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.14; c.lineJoin = "miter"; c.beginPath(); c.moveTo(-0.62, 0.45); c.lineTo(0.02, -0.45); c.lineTo(0.62, 0.45); c.stroke();
+    c.fillStyle = tinta; c.beginPath(); c.moveTo(-0.75, 0.2); c.lineTo(0.42, 0.06); c.lineTo(0.3, 0.2); c.closePath(); c.fill(); },
   // (2026-11-20, as imagens da Racing Bulls) o redondo branco da vugo
   vugo(c, { tinta = "#fff", fundo = "#101114" } = {}) { disco(c, 0, 0, 0.5, tinta); letra(c, "vugo", { h: 0.36, peso: 700, cor: fundo }); },
   // (2026-11-20, as imagens da Haas) o GR vermelho e o "TOYOTA GAZOO Racing" (o R de Racing vermelho)

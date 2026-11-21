@@ -58,7 +58,7 @@ function noticias(c) {
     }
   } catch (e) { /* sem as contas da carreira, sem essa notícia */ }
   if (c.prox && c.previsao && root.F1Regras?.descreverPrevisao) {
-    const d = root.F1Regras.descreverPrevisao(c.previsao, s.voltas);
+    const d = root.F1Regras.descreverPrevisao(c.previsao, root.F1Regras.voltasDoGP ? root.F1Regras.voltasDoGP(s.voltas, c.prox && c.prox.pista) : s.voltas);
     out.push({ t: d.seco ? `Tempo firme: ${c.prox.nome}` : d.pct >= 25 ? `Previsão de chuva: ${c.prox.nome}` : `Pouca chance de chuva: ${c.prox.nome}`, x: d.seco ? "Os meteorologistas não esperam chuva no fim de semana." : `${d.pct}% de chance de chuva: ${d.titulo.toLowerCase()}.${d.quando ? ` ${d.quando}.` : ""}${d.pct >= 25 ? " Os engenheiros recomendam rever o acerto." : ""}` });
   }
   const ultimo = (s.resultados || []).filter((r) => r.ano === s.ano).at(-1);

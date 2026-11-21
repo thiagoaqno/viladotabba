@@ -194,6 +194,33 @@ Object.assign(SITUACOES, {
   rivalrixa: ["Lembre-se: hoje tem o nosso rival na pista. Vocês já se pegaram antes.", "O rival vai vir com tudo hoje, depois do que aconteceu entre vocês.", "Cuidado com o rival. A rixa entre vocês está quente.", "A imprensa está de olho no duelo com o rival. Corrida limpa e forte."],
 });
 Object.assign(SITUACOES, NOVAS_CARREIRA);
+// (2026-11-21, o Thiago: "novas falas... dar uma variada com base em tudo que criamos") os eventos do fim de semana (paddock.js, hud.js na
+// largada), o pneu por distância (a pista comprida ou curta) e mais jeitos de dizer as de sempre. Gere com FALAS-NOVAS-CORRIDA.bat.
+Object.assign(SITUACOES, {
+  evpacoteok: ["O pacote novo está funcionando. O carro tem mais aderência hoje.", "Os dados do assoalho novo são bons. Pode confiar nas curvas rápidas.", "A peça nova correlacionou. Temos mais carro hoje.", "Assoalho novo aprovado. Aproveite a aderência extra."],
+  evpacoteruim: ["Má notícia: o pacote novo não está funcionando como no túnel.", "O assoalho novo não correlacionou. O carro está com menos aderência.", "A peça nova está pior que a antiga. Vamos ter que administrar.", "Os dados do pacote novo são ruins. Cuidado nas curvas rápidas."],
+  evmotornovo: ["Motor novo instalado. Largamos atrás, mas temos potência para subir.", "Perdemos posições no grid, mas o motor novo é forte. Vá buscar.", "Unidade nova no carro. Use essa potência nas retas.", "Cinco posições a menos no grid. Agora é recuperar com o motor novo."],
+  evmotorvelho: ["O motor está cansado. Vamos perder um pouco nas retas.", "Estamos com o motor velho. Defenda nas freadas, não nas retas.", "Potência abaixo do normal hoje. Ganhe tempo nas curvas.", "O motor está no limite. Cuidado com o giro alto."],
+  evchassi: ["Estamos com o chassi reserva. O carro está um pouco pior, faça o que der.", "Chassi reserva hoje. Menos aderência, então seja paciente.", "O carro reserva é mais velho. Vamos trazer pontos mesmo assim.", "Chassi reserva no lugar do titular. Sem riscos desnecessários."],
+  evcalorpoupar: ["Acerto para o calor. O pneu vai durar mais, aproveite.", "Mudamos o carro por causa do calor. Menos aderência, mais pneu.", "Asfalto muito quente. O acerto está protegendo a borracha.", "O calor está forte, mas o carro está preparado para poupar os pneus."],
+  evcalormanter: ["Asfalto fervendo e acerto normal. Os pneus vão sofrer.", "Com esse calor os pneus vão cair rápido. Fique atento ao box.", "Muito calor hoje. Esperamos mais desgaste que o normal.", "Pneus vão superaquecer com esse asfalto. Administre."],
+  evdesafio: ["Lembra do desafio na imprensa? Hoje é chegar na frente dele.", "O rival está na pista. O desafio vale muito para a torcida.", "Todo mundo viu o desafio. Agora é provar na pista.", "Hoje é você contra ele. Não deixe o rival na frente."],
+  evaposta: ["O patrocinador apostou em você hoje. Cinco milhões se batermos a meta.", "A marca está de olho. A aposta só vale com o resultado.", "Tem bônus em jogo hoje. Vamos buscar a meta.", "O patrocinador quer resultado. A aposta está de pé."],
+  pistalonga: ["Pista comprida. O pneu dura menos voltas aqui.", "Volta longa nesta pista. Cuide do pneu desde o começo.", "Aqui o pneu gasta mais por volta. Pense numa parada a mais.", "Circuito longo. A estratégia vai ter mais paradas."],
+  pistacurta: ["Pista curta. O pneu aguenta mais voltas aqui.", "Volta curta nesta pista. Dá para esticar o stint.", "Aqui o pneu dura mais. Talvez dê para parar menos.", "Circuito curto. O pneu rende mais voltas."],
+});
+for (const [q, textos] of Object.entries({
+  riscoarriscar: ["Motor no modo ataque. Muita potência, mas vamos parar mais.", "Plano agressivo. Use a potência extra e cuide da borracha.", "Modo ataque ligado. Cada volta conta hoje."],
+  riscoseguro: ["Motor poupado e pneus protegidos. Paciência hoje.", "Ritmo controlado. A gente ganha no fim da corrida."],
+  largada: ["Bom pulo. Agora segure a linha.", "Largada boa. Cuidado com quem vem por dentro.", "Primeira volta é sobrevivência. Traga o carro inteiro."],
+  ganhou: ["Belo ataque. Mais uma posição.", "Passou bonito. Agora feche a porta.", "Isso! Continue nesse ritmo."],
+  perdeu: ["Ele passou com o vácuo. Responda na próxima reta.", "Perdemos essa. Ainda tem corrida.", "Deixe ele ir se o pneu pedir. Pense no fim."],
+  pneu: ["O pneu está acabando. A próxima volta pode ser a última dele.", "Borracha no fim. Vamos chamar o box em breve."],
+  voltarapida: ["Volta mais rápida. A garagem inteira comemorou.", "Que volta! Melhor tempo da corrida."],
+  ultima: ["Última volta. Tudo que você tiver agora.", "Última volta. Cuide do carro e traga para casa."],
+  vitoria: ["Vencemos! Que corrida, que corrida!", "É vitória! A equipe inteira está gritando aqui."],
+  podio: ["Pódio! Grande corrida, obrigado.", "No pódio! A garagem está em festa."],
+})) if (SITUACOES[q]) SITUACOES[q].push(...textos);
 
 // situações que passam na frente do intervalo mínimo entre falas
 const URGENTES = ["box", "boxmacio", "boxmedio", "boxduro", "boxintermediario", "boxchuva", "safety", "spotesq", "spotdir", "spotlivre"];

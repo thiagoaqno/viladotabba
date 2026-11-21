@@ -117,7 +117,7 @@ export function atualizarTempo(m, st, now) {
 export function estrategia(m, cors, esc) {
   const pneu = race.pneu, B = race.box; if (!m || !pneu || !B) return {};
   const f = F(), T = race.hudT || {}, car = carOf(m);
-  const tp = M().voltasDePneu(pneu, f, { taxaMedida: T.taxa, fator: car && car.desgaste, agua: clima.agua });
+  const tp = M().voltasDePneu(pneu, f, { taxaMedida: T.taxa, fator: car && car.desgaste, agua: clima.agua, pista: E.S?.config?.pista });
   const jogos = m.jogos || {}, usados = ["macio", "medio", "duro"].filter((c) => jogos[c] != null && jogos[c] < f.JOGOS_POR_COMPOSTO).length;
   const chuva = !!(E.S.clima && E.S.clima.chove) || (pneu.composto === "chuva" || pneu.composto === "intermediario") || jogos.chuva < f.JOGOS_POR_COMPOSTO || jogos.intermediario < f.JOGOS_POR_COMPOSTO;
   const voltaAtual = Math.min(E.S.config.voltas, (m.laps || 0) + 1);

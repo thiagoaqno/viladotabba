@@ -316,6 +316,12 @@ function objetivoDaCorrida() {
   { // (2026-11-16) o plano da corrida que você escolheu no Paddock (sede.js: corrida:paddockGP)
     let p = null; try { p = JSON.parse(localStorage.getItem("corrida:paddockGP")); } catch { /* sem armazenamento */ }
     if (p && Date.now() - p.em <= 3 * 60 * 60 * 1000 && p.rixa > 0) setTimeout(() => { const f = window.Radio?.dizer("rivalrixa", { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 20000); // (a rivalidade: as batidas de antes)
+    // (2026-11-21) os eventos do fim de semana (paddock.js): o engenheiro conta como o carro está, e o pneu da pista (o pneu por distância)
+    const ev = p && Date.now() - p.em <= 3 * 60 * 60 * 1000 && p.eventos ? p.eventos : {}, falaEv = ev.motorNoLimite === "trocar" ? "evmotornovo" : ev.motorNoLimite === "seguir" ? "evmotorvelho"
+      : ev.pacoteNovo === "tunel" || ev.pacoteOk === true ? "evpacoteok" : ev.pacoteOk === false ? "evpacoteruim" : ev.chassiReserva === "reserva" ? "evchassi" : ev.calor === "poupar" ? "evcalorpoupar" : ev.calor === "manter" ? "evcalormanter" : null;
+    if (falaEv) setTimeout(() => { const f = window.Radio?.dizer(falaEv, { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 15000);
+    if (ev.desafio || ev.apostaPatrocinador === "aceitar") setTimeout(() => { const f = window.Radio?.dizer(ev.desafio ? "evdesafio" : "evaposta", { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 26000);
+    { const rel = window.F1Regras?.relDaPista ? window.F1Regras.relDaPista(E.S?.config?.pista) : 1; if (E.S?.config?.regras === "f1" && (rel >= 1.15 || rel <= 0.95)) setTimeout(() => { const f = window.Radio?.dizer(rel >= 1.15 ? "pistalonga" : "pistacurta"); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 34000); }
     if (p && Date.now() - p.em <= 3 * 60 * 60 * 1000 && (p.plano === "arriscar" || p.plano === "seguro")) setTimeout(() => { const f = window.Radio?.dizer(p.plano === "arriscar" ? "riscoarriscar" : "riscoseguro", { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 9000);
   }
   let o = null; try { o = JSON.parse(localStorage.getItem("corrida:objetivoGP")); } catch { /* sem armazenamento */ }

@@ -1,5 +1,18 @@
 [
   {
+    "id": "pneus-inteiros-2026-11-21",
+    "data": "2026-11-21",
+    "itens": [
+      "Pneu por distância: o macio dura 3 voltas em Bahrein, ~3,3 no México e ~2,2 em Singapura (pista comprida gasta mais)",
+      "Carreira com as voltas de cada GP: a mesma distância em toda pista, mais voltas nas curtas e menos nas compridas",
+      "Vidas em voltas inteiras: macio 3, médio 4, duro 5, intermediário 6 e chuva 8",
+      "Robôs planejam com o desgaste de verdade: não param mais cedo do que precisam",
+      "Plano do domingo: arriscar dá +15% de potência e +3% de aderência (o pneu gasta 50% mais); seguro poupa motor e pneu",
+      "Eventos novos na carreira que mudam o fim de semana: pacote novo, motor no limite (punição de grid), calor, chassi reserva, provocação do rival, aposta do patrocinador e sondagem de outra equipe",
+      "Falas novas do engenheiro sobre os eventos e a pista, e mais variações nas de sempre"
+    ]
+  },
+  {
     "id": "controle-celular-2026-11-21",
     "data": "2026-11-21",
     "itens": [
@@ -30,12 +43,12 @@
     "itens": [
       "Robôs com a linha de corrida de verdade: usam a pista inteira, abrindo e fechando nas curvas (antes andavam quase no meio) e ficaram de 0,3 a 2,8 s mais rápidos por volta",
       "Nível 100 mais difícil, e os robôs não ligam mais o ERS no meio da curva",
-    "Menos batidas entre robôs: eles enxergam o carro lento à frente na curva",
+      "Menos batidas entre robôs: eles enxergam o carro lento à frente na curva",
       "Pneu com desgaste uniforme: perde 1% a cada 10% de vida e mais 20% quando zera",
       "Chuva: chance de 35% em média, conforme o lugar; o céu fecha antes de chover; a chuva para mais e dura menos",
       "MFD: o Próximo pneu só aparece quando a equipe sugere a parada, e o pneu sempre em %",
       "Mônaco: o carro bate nos guard-rails e muros colocados no editor, sem muro invisível (nem o da curva antes do grampo)",
-    "Na chuva os robôs trocam o pneu antes de ele acabar"
+      "Na chuva os robôs trocam o pneu antes de ele acabar"
     ]
   },
   {

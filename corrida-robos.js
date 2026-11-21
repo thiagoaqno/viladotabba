@@ -1016,7 +1016,7 @@ function trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator) {
     // (2026-11-21, o Thiago: "às vezes eles esticam o pneu até o fim na chuva, principalmente o intermediário") parava só depois do penhasco, e sem jogo
     // novo do mesmo composto não parava nunca. Agora para quando a próxima volta já passaria do penhasco (como no seco), com o jogo que ainda tiver (o
     // outro de chuva se o mesmo acabou)
-    const taxaChuva = taxaDoPneu(pneu.composto, fator);
+    const taxaChuva = taxaDoPneu(pneu.composto, fator * F1.relDaPista(room.config.pista));
     if (restam >= 1 && pneu.desgaste + taxaChuva > F1.PENHASCO) {
       const disponiveis = ["chuva", "intermediario"].filter((c) => F1.podeUsar(p, c));
       if (disponiveis.length) return F1.compostoPorAgua(room.config.pista, agua, disponiveis);
@@ -1033,12 +1033,12 @@ function decidirParada(room, p, ia, car, spec, cl) {
   if (!p.started || feitas + 1 >= voltas || car.box?.fase) return null; // na última volta o corredor passa pela chegada: sem box
   const chuvoso = !!(room.clima && room.clima.chove); // corrida com chuva: a regra dos dois compostos não vale e o plano de pneus seco fica de lado
   const planejada = !chuvoso && ia.plano && ia.plano.paradas[(p.paradas || []).length];
-  const pneu = car.pneu, fator = (spec.desgaste || 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste, taxa = taxaDoPneu(pneu.composto, fator);
+  const pneu = car.pneu, fator = (spec.desgaste || 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste, fv = fator * F1.relDaPista(room.config.pista), taxa = taxaDoPneu(pneu.composto, fv); // (fv: o gasto por volta DESTA pista, o pneu por distância; a tabela já vem em voltas desta pista)
   const restam = voltas - feitas - 1, usados = new Set(p.compostos || [p.pneu || F1.COMPOSTO_PADRAO]);
   if (chuvoso && cl) { const pelaAgua = trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator); if (pelaAgua) return pelaAgua; if (!F1.SECOS.includes(pneu.composto) && cl.agua + (ia.vies || 0) > 0.3) return null; }
   // carro avariado (mais de 10% de dano): para no box para consertar. Com o pneu ainda bom, só conserta ("manter", sem trocar); gasto, troca
   // também (o serviço do box conserta o dano em toda parada, concluirParada em corrida.js)
-  if ((p.dano || 0) > 10 && restam >= 1) { if (pneu.desgaste < F1.PENHASCO * 0.6) return "manter"; return escolherComposto(restam, usados, fator, p); }
+  if ((p.dano || 0) > 10 && restam >= 1) { if (pneu.desgaste < F1.PENHASCO * 0.6) return "manter"; return escolherComposto(restam, usados, fv, p); }
   const chega = pneu.desgaste + taxa * (restam + 0.35) <= F1.PENHASCO; // o resto da corrida e o começo da volta de chegada
   const passaNaProxima = pneu.desgaste + taxa > F1.PENHASCO; // a volta que vem já passaria do penhasco
   // a volta planejada, ajustada pelo jeito: o undercut para uma volta antes se está colado no da frente; o overcut estica uma volta em
@@ -1047,7 +1047,7 @@ function decidirParada(room, p, ia, car, spec, cl) {
   const noPlano = !!planejada && feitas + 1 >= voltaPlano;
   // o plano vale mesmo quando o pneu chegaria ao fim: antes o robô só parava na última chance (a regra dos dois compostos) e quase todos
   // paravam juntos, na penúltima volta. Só não para pelo plano se o composto previsto não aguenta o resto.
-  const planoAguenta = !!planejada && F1.vidaEmVoltas(planejada.composto, fator * MARGEM_PNEU) >= restam - 0.5;
+  const planoAguenta = !!planejada && F1.vidaEmVoltas(planejada.composto, fv * MARGEM_PNEU) >= restam - 0.5;
   const scLimite = estilo === "oportunista" ? 0.15 : 0.3;
   let para = false;
   if (!chega) para = passaNaProxima || noPlano || (room.direcao?.safety && pneu.desgaste > scLimite);
@@ -1056,7 +1056,7 @@ function decidirParada(room, p, ia, car, spec, cl) {
   if (para && restam <= 3 && !(room.direcao?.safety)) {
     const RP = ritmoDosPneus(), tab = RP && RP.tabelaDe(room.config.pista), comp = tab && tab.compostos[pneu.composto];
     if (comp) {
-      let ficar = 0, trocar = tab.parada, d = pneu.desgaste, dn = 0; const novo = tab.compostos[escolherComposto(restam, usados, fator, p)] || comp;
+      let ficar = 0, trocar = tab.parada, d = pneu.desgaste, dn = 0; const novo = tab.compostos[escolherComposto(restam, usados, fv, p)] || comp;
       for (let k = 0; k < restam; k++) { const d1 = Math.min(1, d + taxa), dn1 = Math.min(1, dn + novo.gasto * fator); ficar += RP.tempoDaVolta(comp, d, d1); trocar += RP.tempoDaVolta(novo, dn, dn1) + (k === 0 ? novo.frio : 0); d = d1; dn = dn1; }
       if (ficar < trocar) para = false;
     }
@@ -1064,8 +1064,8 @@ function decidirParada(room, p, ia, car, spec, cl) {
   else if (noPlano && planoAguenta && estilo !== "overcut") para = true; // (o overcut, com o pneu aguentando até o fim, estica sem parar)
   else if (estilo === "oportunista" && room.direcao?.safety && pneu.desgaste > 0.45 && restam >= 3) para = true; // parada barata sob SC, com pneu já gasto
   if (!para) return null;
-  const aguentaPlano = planejada && planejada.composto !== pneu.composto && F1.podeUsar(p, planejada.composto) && F1.vidaEmVoltas(planejada.composto, fator * MARGEM_PNEU) >= restam;
-  return aguentaPlano ? planejada.composto : escolherComposto(restam, usados, fator, p);
+  const aguentaPlano = planejada && planejada.composto !== pneu.composto && F1.podeUsar(p, planejada.composto) && F1.vidaEmVoltas(planejada.composto, fv * MARGEM_PNEU) >= restam;
+  return aguentaPlano ? planejada.composto : escolherComposto(restam, usados, fv, p);
 }
 // Depois da bandeirada: fantasma (não bate e ninguém bate nele), no piloto automático da física a 70 u/s pela beira da pista. Antes ele
 // ficava congelado onde cruzou a linha de chegada, e a galera que ainda corria dava de cara com um paredão de robôs parados.
@@ -1369,7 +1369,7 @@ function passo(room, dt, setor, emit) {
       ia.s = (ia.s + (ia.v * dt) / STEP) % pf.n;
       entrarNoBox(room, p, ia, pf);
       // o pneu gasta pela distância; escorrega quando a curva pede mais que o grip do carro
-      if (ia.pneu) F1.gastarPneu(ia.pneu, { dist: ia.v * dt, volta: pf.n * STEP, slip: Math.max(0, (ia.v * ia.v * pf.linha.k[i]) / c.grip - 0.9) * 120, v: ia.v, vmax: c.vmax, dt, fator: c.desgaste });
+      if (ia.pneu) F1.gastarPneu(ia.pneu, { dist: ia.v * dt, volta: pf.n * STEP, rel: F1.relDaPista(room.config.pista), slip: Math.max(0, (ia.v * ia.v * pf.linha.k[i]) / c.grip - 0.9) * 120, v: ia.v, vmax: c.vmax, dt, fator: c.desgaste });
       // depois da largada (~600 de reta), sai da faixa do grid e vai aos poucos para o traçado; antes disso, não desvia de ninguém
       const saida = Math.min(1, ((ia.s - ia.s0 + pf.n) % pf.n) / 100), largando = saida < 1;
       ia.desvio += (desvio - ia.desvio) * Math.min(1, dt * 2.2);

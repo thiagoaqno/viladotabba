@@ -54,6 +54,7 @@ function previsaoDoGP(semente, ano, gp, pista = null) { const F = root.F1Regras;
 // o nome oficial, a bandeira, a cidade, os km, as voltas e as curvas, e a previsão do tempo para escolher o pneu.
 function mapaGP(id, etapa, ativo = false, previsao = null, voltas = 0) {
   const pista = root.Pistas?.PISTAS[id]; if (!pista) return "";
+  if (voltas && root.F1Regras?.voltasDoGP) voltas = root.F1Regras.voltasDoGP(voltas, id); // (as voltas de cada GP: a distância da corrida, f1-regras.js)
   const G = root.GpInfo, info = G ? G.get(id) : null, real = !!(info && info.real);
   const oficial = real ? info.gp : pista.name, nome = h(oficial);
   const traco = root.GpSobre ? root.GpSobre.mapaSvg(id, "gp-traco", info || undefined) : "";

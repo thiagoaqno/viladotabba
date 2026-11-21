@@ -8,7 +8,7 @@
 // ---------- os pneus ----------
 // Três compostos secos e o de chuva. `pico` é a aderência lateral do pneu novo e quente sobre o grip do carro (1,35 é a referência
 // original da dirigibilidade); `vida` é quantas VOLTAS ele dura, pilotado limpo, até o penhasco (não depende do tamanho da corrida:
-// o macio dura 2,95 voltas em qualquer GP; 2026-11-15, o Thiago: todas as vidas terminam em ,95); `aquece` é o quanto esquenta rápido e `perdaAntes` o que perde de
+// o macio dura 3 voltas em qualquer GP; 2026-11-15, o Thiago: todas as vidas terminam em ,95; 2026-11-21, o Thiago: o ,95 arredonda para cima, 3/4/5/6/8 voltas); `aquece` é o quanto esquenta rápido e `perdaAntes` o que perde de
 // aderência até o fim da vida. As cores são as da Pirelli. Os números saem da calibração de `tests/corrida-f1-estrategia.test.js`
 // (o simulador de stint com a física do carro: ver `ferramentas/pneus-fisica.js`).
 // `molhado` é quanto da aderência sobra com a pista encharcada (água 1; seco é 1 e no meio interpola): os secos ficam com a
@@ -19,11 +19,11 @@
 // voltaFixa, pneu novo e quente) em Mônaco: macio 77,17 s, médio 79,48 s, duro 81,41 s (antes 78,77 / 79,48 / 80,26; o Thiago pediu o macio
 // uns 5% mais forte e o duro mais fraco: velocidade final e aceleração +5% no macio, −3% e −5% no duro).
 const PNEUS = {
-  macio: { nome: "Macio", cor: "#e8202a", pico: 1.40, final: 1.05, potencia: 1.05, vida: 2.95, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
-  medio: { nome: "Médio", cor: "#ffd100", pico: 1.36, vida: 3.95, aquece: 1.1, perdaAntes: 0.03, molhado: 0.5 },
-  duro: { nome: "Duro", cor: "#f4f4f4", pico: 1.32, final: 0.97, potencia: 0.95, vida: 4.95, aquece: 0.85, perdaAntes: 0.02, molhado: 0.5 },
-  chuva: { nome: "Chuva", cor: "#1e7fd6", pico: 1.126, vida: 7.95, aquece: 0.5, perdaAntes: 0.02, molhado: 0.9, derrete: 2.8, esquenta: 0.4 },
-  intermediario: { nome: "Intermediário", cor: "#39c85a", pico: 1.126, vida: 5.95, aquece: 0.5, perdaAntes: 0.02, molhado: 1, derrete: 2, esquenta: 0.4 },
+  macio: { nome: "Macio", cor: "#e8202a", pico: 1.40, final: 1.05, potencia: 1.05, vida: 3, aquece: 1.7, perdaAntes: 0.03, molhado: 0.5 },
+  medio: { nome: "Médio", cor: "#ffd100", pico: 1.36, vida: 4, aquece: 1.1, perdaAntes: 0.03, molhado: 0.5 },
+  duro: { nome: "Duro", cor: "#f4f4f4", pico: 1.32, final: 0.97, potencia: 0.95, vida: 5, aquece: 0.85, perdaAntes: 0.02, molhado: 0.5 },
+  chuva: { nome: "Chuva", cor: "#1e7fd6", pico: 1.126, vida: 8, aquece: 0.5, perdaAntes: 0.02, molhado: 0.9, derrete: 2.8, esquenta: 0.4 },
+  intermediario: { nome: "Intermediário", cor: "#39c85a", pico: 1.126, vida: 6, aquece: 0.5, perdaAntes: 0.02, molhado: 1, derrete: 2, esquenta: 0.4 },
 };
 const SECOS = ["macio", "medio", "duro"]; // os compostos de pista seca (a estratégia e a tabela de ritmo só conhecem estes)
 const COMPOSTO_PADRAO = "medio";

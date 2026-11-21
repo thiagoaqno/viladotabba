@@ -1,5 +1,12 @@
 [
   {
+    "id": "pneus-inteiros-2026-11-21",
+    "data": "2026-11-21",
+    "itens": [
+      "Pneus com vida em voltas inteiras: macio 3, médio 4, duro 5, intermediário 6 e chuva 8 (eram 2,95, 3,95...). Os robôs planejam com a vida nova."
+    ]
+  },
+  {
     "id": "controle-celular-2026-11-21",
     "data": "2026-11-21",
     "itens": [
@@ -30,12 +37,12 @@
     "itens": [
       "Robôs com a linha de corrida de verdade: usam a pista inteira, abrindo e fechando nas curvas (antes andavam quase no meio) e ficaram de 0,3 a 2,8 s mais rápidos por volta",
       "Nível 100 mais difícil, e os robôs não ligam mais o ERS no meio da curva",
-    "Menos batidas entre robôs: eles enxergam o carro lento à frente na curva",
+      "Menos batidas entre robôs: eles enxergam o carro lento à frente na curva",
       "Pneu com desgaste uniforme: perde 1% a cada 10% de vida e mais 20% quando zera",
       "Chuva: chance de 35% em média, conforme o lugar; o céu fecha antes de chover; a chuva para mais e dura menos",
       "MFD: o Próximo pneu só aparece quando a equipe sugere a parada, e o pneu sempre em %",
       "Mônaco: o carro bate nos guard-rails e muros colocados no editor, sem muro invisível (nem o da curva antes do grampo)",
-    "Na chuva os robôs trocam o pneu antes de ele acabar"
+      "Na chuva os robôs trocam o pneu antes de ele acabar"
     ]
   },
   {

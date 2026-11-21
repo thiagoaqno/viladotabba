@@ -1,28 +1,10 @@
-# Todo piloto com o uniforme completo da equipe
+# Pneus com vida em voltas inteiras
 
-Pedido do Thiago de 2026-11-21: "trabalhe nos uniformes das equipes: para todo piloto usar o uniforme completo".
+Pedido do Thiago (2026-11-21): as vidas que terminavam em ,95 arredondam para cima.
 
-## O que era
-- O uniforme de verdade de cada equipe (`f1-uniformes.js`, `UNIFORMES`: a cor base, a faixa dos ombros, a do lado do tronco, as costas, a luva e as marcas) só aparecia no pódio e nos mecânicos do box.
-- O piloto dentro do carro (`f1-piloto.js`) usava um macacão genérico: as duas cores da pintura do carro numa faixa simples, e a luva pela cor do carro.
+- `f1-regras.js`: macio 2,95 → 3, médio 3,95 → 4, duro 4,95 → 5, intermediário 5,95 → 6, chuva 7,95 → 8 voltas.
+- `f1-pneus-tabela.js` (o que os robôs usam para planejar): o `gasto` por volta de cada composto foi multiplicado por vida antiga / vida nova (o desgaste é proporcional a 1/vida em `gastarPneu`, então a conta é a mesma que rodar o gerador de novo; os tempos não dependem da vida).
+- `tests/corrida-f1-pneus.test.js`: as vidas esperadas viraram 3/4/5.
+- `novidades.json`: entrada nova.
 
-## O que mudou
-- **O piloto de todo carro** (o seu, os dos robôs e os dos amigos) veste o uniforme da equipe, o mesmo do pódio:
-  - **tronco:** a base, as costas (quando diferem: a McLaren tem as costas em antracito), a faixa do lado, a faixa dos ombros, a marca do peito e a do cinto;
-  - **braços:** a faixa do ombro e a marca do braço;
-  - **antebraços:** o punho na cor da faixa;
-  - **luvas:** a cor da luva da equipe, com o painel na cor da faixa.
-- As folhas são feitas uma vez por equipe e divididas por todos os carros dela.
-- `carros.js` passa a equipe da pintura para o piloto.
-- **Sem equipe ("Sua cor"):** o macacão vai na cor do carro com a faixa branca ou preta, como no pódio. As luvas ficam como antes.
-- O macacão genérico de antes (`traje`) saiu.
-
-## Conferido no navegador (servidor de teste)
-- **Ferrari:** a base `#c8101c` com o branco nos lados e nos ombros, e a luva vermelha.
-- **McLaren:** papaia com o antracito.
-- **"Sua cor":** a base na cor do carro com a faixa clara.
-- A marca do peito sai desenhada na folha.
-
-Não foi testado jogando, nem visto em imagem (regra do projeto: sem prints).
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Medido na tabela (mediana das 57 pistas, voltas até o penhasco do piloto ideal): macio 2,16 → 2,20, médio 2,89 → 2,93, duro 3,63 → 3,66. O robô gasta o pneu ~1,37× mais rápido que a vida nominal (o carro de referência e o escorregão do piloto ideal), então o arredondamento muda pouco o plano dele.

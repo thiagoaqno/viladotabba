@@ -149,7 +149,7 @@ export function executarJeff(cmd, falado = "") {
     const c = cmd.composto || (B.pedido && B.pedido !== "decidir" ? B.pedido : proximo());
     if (B.pedido === c) { jeff(um("japedido", [`box já pedido, pneu ${nome(c)}.`, `já está confirmado: ${nome(c)} nesta volta.`, `copiado, o ${nome(c)} já está separado.`])); R?.dizer("box" + c, { forcar: true, reserva: "box" }); return; }
     escolherComposto(c); // (box.js recusa sozinho a última volta e o pneu esgotado, com o aviso dele)
-    if (race.box.pedido === c) { mfd.prox = null; jeff(um("box", [`box nesta volta, pneu ${nome(c)}.`, `entendido. Box, box, vamos de ${nome(c)}.`, `confirmado: entre nesta volta, ${nome(c)} pronto.`, `a equipe está pronta com o ${nome(c)}. Box nesta volta.`])); R?.dizer("box" + c, { forcar: true, reserva: "box" }); mexeu(); atualizarLinhas(); }
+    if (race.box.pedido === c) { mfd.prox = null; jeff(um("box", [`box nesta volta, pneu ${nome(c)}.`, `entendido. Box, box, vamos de ${nome(c)}.`, `confirmado: entre nesta volta, ${nome(c)} pronto.`, `a equipe está pronta com o ${nome(c)}. Box nesta volta.`])); mexeu(); atualizarLinhas(); } // (a fala de box confirmado sai do box.js avisar)
     return;
   }
   if (cmd.tipo === "pneus" || cmd.tipo === "carro") { const t = pedirRadio(cmd.tipo); if (t) jeff(t); return; }
@@ -440,7 +440,7 @@ function atualizarSugestao(ctx, agora) {
   const d = dadosDaSugestao(ctx), r = d ? d.EB.gerirSugestao(sugEst, d.EB.sugerirBox(d.e), { agora, volta: d.e.voltaAtual }) : { est: sugEst, mostrar: false, restante: 0, sug: null };
   sugEst = r.est;
   if (r.mostrar && r.sug) {
-    if (!sugVisivel) { sugVisivel = true; abrir(true); mfd.pagina = "box"; paginaVista = null; /* (2026-11-16, o Thiago: o cartão novo do Próximo pneu substitui o antigo) */ try { if (window.Radio) window.Radio.dizer("box" + r.sug.composto, { reserva: "box" }); } catch (e) {} } // abre sozinho e o engenheiro fala junto, com o nome do pneu
+    if (!sugVisivel) { sugVisivel = true; abrir(true); mfd.pagina = "box"; paginaVista = null; /* (2026-11-16, o Thiago: o cartão novo do Próximo pneu substitui o antigo) */ try { if (window.Radio) window.Radio.dizer("sugere" + r.sug.composto, { reserva: "sugerebox" }); } catch (e) {} } // abre sozinho e o engenheiro PERGUNTA, com o nome do pneu (2026-11-21: antes falava "box, box", como se já estivesse confirmado)
     sugAtual = r.sug; mexeu(); // enquanto o cartão está na tela o painel não recolhe
     const F = F1U(), tipo = F.PNEUS[r.sug.composto], R = refs.mfd;
     R.sug.hidden = true; set(R.sgLetra, "t", window.HudTorre.LETRA[r.sug.composto] || "M"); set(R.sgLetra, "style", `--c:${tipo.cor}`); set(R.sgNome, "t", tipo.nome.toUpperCase());

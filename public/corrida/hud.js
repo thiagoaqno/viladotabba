@@ -117,7 +117,7 @@ export function hud() {
   else if (race.wrong > 1) msg = "⚠️ CONTRAMÃO! (aperte ↺)";
   else if (race.perdeu >= 0 && m && m.finish == null) msg = "⟲ CHECKPOINT PERDIDO: volte nele ou aperte ↺";
   else if (m && m.finish == null && m.started && m.laps === cfg.voltas - 1 && cfg.voltas > 1 && race.lastLapMsg > now - 2500) msg = "ÚLTIMA VOLTA!";
-  else if (race.pneu && race.pneu.desgaste > window.F1Regras.PENHASCO && m && m.finish == null && m.started) { msg = "PNEU NO FIM: segura nas curvas"; radioF1("box"); }
+  else if (race.pneu && race.pneu.desgaste > window.F1Regras.PENHASCO && m && m.finish == null && m.started) { msg = "PNEU NO FIM: segura nas curvas"; radioF1("pneufim"); } // (2026-11-21: era a fala de "box, box", que soava como box confirmado)
   else if (E.S.endAt && m && m.finish == null) msg = `⏱️ ${Math.max(0, Math.ceil((E.S.endAt - now) / 1000))} s para cruzar`;
   if (!msg && race.newRecord > now - 3000) msg = "🏆 NOVO RECORDE!";
   if (B) { // o botão do box no estilo da TV: o rótulo, a tecla B e, com a parada pedida (ou em andamento), a bolinha e o nome do pneu

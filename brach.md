@@ -1,30 +1,14 @@
-# Robôs montando o carro direito, e o nível de 0 a 150
+# O assobio do motor, o motor elétrico, e as falas do box que pareciam confirmar sozinhas
 
-O Thiago (2026-11-21): "eu to amassando de Racing Bulls". Lido no banco do programa dele: no Difícil, a melhor volta dele foi 0,8 a 2,4 s mais rápida que a do melhor robô nos 5 GPs, vencendo todos, quatro deles com "Jogar seguro".
+Pedido do Thiago (2026-11-21): "tem um assobio que sobe junto com o motor sempre; o motor elétrico não tem som" e "às vezes parece que confirmou o box, mas eu não escolhi ir". Não foi ouvido: conferido com `node --check`.
 
-## O carro dos robôs (`temporada/regras.js`)
-- **O carro dele era mais rápido.** Medido com o piloto ideal (`ferramentas/pneus-fisica.js voltaFixa`), o Racing Bulls dele (asa 6, motor 5) era 0,9 s mais rápido que o melhor rival em Bahrein e 1,3 s em Melbourne. Os rivais punham quase tudo no motor, com a asa em 1 a 3, e 3 níveis em freios e confiabilidade.
-- **O ganho de cada nível**, medido igual em Bahrein, Monza e Hungaroring: asa −0,41 a −0,58 s, motor −0,30 a −0,35, chassi −0,12 a −0,16, suspensão −0,11 a −0,14, freios ~0, confiabilidade 0.
-- **O rival agora monta do zero**, com o orçamento inteiro, como quem joga. Antes partia do padrão da equipe e só punha os pontos novos por cima.
-- **Escolhe pelo ganho dividido pelo custo** (`GANHO_PECA`), com as travas de `specDaMontagem`. Perto da trava, a peça que segura ganha o valor da que destrava. Cada equipe mantém um pouco do estilo dela.
-- **Resultado**, medido: o McLaren dos robôs fica a −0,12 s (Bahrein) e +0,07 s (Melbourne) do carro dele no GP 5. Antes, +0,88 e +1,25 s.
+## Som (`motor-v6.js`)
+- **O assobio do turbo** ficava ligado o tempo todo e alto até em marcha lenta (0,008 + 0,032 × turbo²). Agora vai com o cubo do turbo: quase some com o turbo baixo e, no máximo, fica num terço do volume de antes. O sopro de tirar o pé não mudou. O dos outros carros caiu de 0,05 para 0,02.
+- **O motor elétrico (MGU-K)** estava em 0,016, enterrado embaixo do turbo. Agora soa claro quando entrega (o ERS ligado) e quando recarrega (no freio e no super clipping), e fica mudo no resto. O tom segue a velocidade, de ~600 Hz parado a ~3,3 kHz a 330 km/h, sem os degraus das marchas que confundiam com o motor.
+- **O chiado do câmbio** ficou um terço mais baixo.
 
-## O nível de 0 a 150 (`corrida-robos.js`, carreira e salas)
-- A régua vai até 150 (pedido dele: "o nível é uma escala... até na carreira"). Até 100, o de antes. De 100 a 150:
-  - a folga do ritmo vai de +0,5% a −1%;
-  - o acerto vai para o ideal e os erros caem;
-  - o carro do robô ganha até +5% de aderência e +6% de potência (`reforcoDoNivel`, pelo `gpMods` do `sim.js`).
-- Só pedir ritmo não bastava, porque no Difícil o robô já anda no limite do carro. Medido com um robô sozinho em Bahrein (`klk/medir/voltas.js`):
-
-  | Nível | Voltas 2 e 3 |
-  |---|---|
-  | 100 | 45,45 / 45,95 |
-  | 100 com folga de −1%, sem o carro a mais | 45,15 / 45,70 |
-  | 150 | 44,40 / 44,85 |
-
-- A carreira aceita o número (`nivelValido`). Os nomes dos saves antigos seguem valendo.
-- A tela de criar e o ajuste da Central viraram régua. As salas (`menu.js`, `menus.js`) vão até 150.
-- A temporada com os amigos continua com os nomes.
-
-## Vozes
-- As 18 que o Thiago gerou: os planos novos de #875 e as respostas do Jeff de #879.
+## Rádio do box
+- A sugestão do MFD tocava "Box, box. Vamos de pneu macio", a mesma fala de quando você confirma. Agora ela pergunta: `sugere<pneu>`, "Sugerimos o box nesta volta, com pneu macio. Confirma?".
+- O pneu no fim (`hud.js`) tocava "Box, box. Entre nesta volta". Agora avisa: `pneufim`, "Os pneus acabaram. Se quiser parar, estamos prontos.".
+- "Box, box, vamos de <pneu>" só sai quando o box foi pedido de verdade (`box.js avisar`: a tecla, o MFD, a sugestão confirmada, o Jeff), 0,9 s depois de parar no mesmo pneu. Quem passa pelos pneus na tecla ouve só o último. O Jeff não fala mais duas vezes.
+- 22 falas novas: rodar o `Falas novas da Corrida.bat` (1.101 caracteres).

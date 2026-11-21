@@ -163,9 +163,9 @@ export function criarMotorF1(c, saida, eco) {
   const ondaExp = onda("explosaoBarata", 0.6), ondaBx = onda("baixoBarato", 1.4), vozes = [];
   for (let i = 0; i < VOZES; i++) {
     const soma2 = ganho(1), f = no("lowpass", 1500, 0.9), g = ganho(0), p = c.createStereoPanner ? c.createStereoPanner() : null;
-    const ge = ganho(0.85), gb = ganho(0.75), gt = ganho(0.05), a = oscOnda(ondaExp, ge), b = oscOnda(ondaBx, gb), w = osc("sine", gt); ge.connect(soma2); gb.connect(soma2);
+    const ge = ganho(0.85), gb = ganho(0.75), gt = ganho(0.02), a = oscOnda(ondaExp, ge), b = oscOnda(ondaBx, gb), w = osc("sine", gt); ge.connect(soma2); gb.connect(soma2);
     const r1 = no("peaking", 430, 2, 7), r2 = no("peaking", 1700, 2.4, 5); soma2.connect(r1); r1.connect(r2); r2.connect(f);
-    f.connect(g); gt.connect(g); // o assobio do turbo passa fora do passa-baixas da voz (só pela distância)
+    f.connect(g); gt.connect(g); // o assobio do turbo passa fora do passa-baixas da voz (só pela distância; 2026-11-21: 0,05 → 0,02, o assobio que acompanhava todo carro)
     if (p) { g.connect(p); p.connect(camLp1); } else g.connect(camLp1);
     vozes.push({ a, b, w, f, g, p, fino: 1 + (i - 1) * 0.004 + (Math.random() - 0.5) * 0.03, tFino: 0.85 + Math.random() * 0.3 }); // (cada voz com o tom e o turbo um pouco diferentes: os carros não soam iguais)
   }
@@ -241,16 +241,22 @@ export function criarMotorF1(c, saida, eco) {
     turbo += (alvoTurbo - turbo) * (1 - Math.exp(-dt / (alvoTurbo > turbo ? 0.45 : 0.9)));
     const fT = TURBO_HZ[0] + (TURBO_HZ[1] - TURBO_HZ[0]) * Math.min(1, turbo);
     tu1.frequency.setTargetAtTime(fT, t, 0.03); tu2.frequency.setTargetAtTime(fT * 1.498, t, 0.03); tuAr.frequency.setTargetAtTime(fT, t, 0.03); tuFiltro.frequency.setTargetAtTime(fT, t, 0.05);
-    turboG.gain.setTargetAtTime(ativo ? (gas ? 0.008 + 0.032 * turbo * turbo : 0.007 + 0.014 * turbo * turbo) * K.turbo : 0, t, gas ? 0.08 : 0.2);
+    // (2026-11-21, o Thiago: "tem um assobio que sobe junto com o motor sempre") o assobio ficava ligado o tempo todo, alto até em marcha lenta: agora quase
+    // some com o turbo baixo e só aparece com o turbo cheio (o cubo), num terço do volume de antes no máximo; o sopro de tirar o pé continua igual
+    const tC = turbo * turbo * turbo;
+    turboG.gain.setTargetAtTime(ativo ? (gas ? 0.0012 + 0.011 * tC : 0.0008 + 0.004 * tC) * K.turbo : 0, t, gas ? 0.08 : 0.2);
     // o MGU-K: zumbe na ordem 8 da rotação; entrega (ERS ligado) forte, recarrega na frenagem mais fraco e um pouco mais grave
-    const recarga = (!!freio && !gas && r > 0.3) || clip > 0.3, nivelK = ers && gas ? 1 : recarga ? 0.55 * Math.max(clip, freio ? 1 : 0) : 0.05;
-    const fK = rpmV6(r) / 60 * MGU_ORDEM * (recarga ? 0.9 : 1);
+    // (2026-11-21, o Thiago: "o motor elétrico não tem som") ficava em 0,016, enterrado embaixo do assobio do turbo: agora soa claro quando entrega (o ERS
+    // ligado) e quando recarrega, e fica mudo no resto. O tom segue a VELOCIDADE (o MGU-K gira com o carro, sem os degraus das marchas, que eram o motor
+    // a combustão e o turbo): de ~600 Hz parado a ~3,3 kHz a 330 km/h, mais grave na recarga.
+    const recarga = (!!freio && !gas && r > 0.3) || clip > 0.3, nivelK = ers && gas ? 1 : recarga ? 0.55 * Math.max(clip, freio ? 1 : 0) : 0;
+    const fK = (600 + Math.max(0, kmh) * 8.2) * (recarga ? 0.85 : 1);
     mg1.frequency.setTargetAtTime(fK, t, 0.04); mg2.frequency.setTargetAtTime(fK * 2, t, 0.04); mguBp.frequency.setTargetAtTime(Math.min(3500, fK * 1.4), t, 0.1);
-    mguG.gain.setTargetAtTime(ativo ? nivelK * (0.4 + 0.6 * r) * 0.016 * K.mgu : 0, t, nivelK > 0.9 ? 0.06 : 0.15); // (religado em 2026-11-20 bem mais baixo: textura, não zumbido)
+    mguG.gain.setTargetAtTime(ativo ? nivelK * (0.5 + 0.5 * Math.min(1, kmh / 200)) * 0.05 * K.mgu : 0, t, nivelK > 0.9 ? 0.05 : 0.15);
     // o câmbio: mais claro sem acelerador (o motor não cobre) e só com o carro andando
     const fC = CAMBIO_HZ(kmh), andaC = Math.min(1, kmh / 60);
     cb1.frequency.setTargetAtTime(fC, t, 0.05); cb2.frequency.setTargetAtTime(fC * 1.37, t, 0.05); cbBp.frequency.setTargetAtTime(fC * 1.1, t, 0.08);
-    cbG.gain.setTargetAtTime(ativo ? andaC * (pe ? 0.006 : 0.011) * K.cambio : 0, t, 0.1);
+    cbG.gain.setTargetAtTime(ativo ? andaC * (pe ? 0.004 : 0.008) * K.cambio : 0, t, 0.1); // (2026-11-21: um terço mais baixo, também subia junto com o carro)
   }
   function silenciar(t) {
     for (const g of [saidaMotor, fogoG, combG, bxG, mdG, vibG, admG, arG, lfoAmp, turboG, mguG, cbG]) g.gain.setTargetAtTime(0, t, 0.05);

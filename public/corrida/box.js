@@ -40,7 +40,11 @@ export function escolherComposto(composto) {
   B.pedido = race.pedidoBox = composto; avisar();
 }
 // (a previsão do GP entra no aviso quando há chance de chuva: é quando a escolha do pneu mais pesa)
-function avisar() { const B = race.box, cor = F1().PNEUS[B.pedido], sg = me() && me().stopGo; if (sg) { const atual = race.pneu ? race.pneu.composto : "medio"; toast(`🛑 Stop-and-go ${sg.s} s na próxima passagem pelo box ${B.pedido === atual ? "(sem trocar o pneu)" : `e, em seguida, troca para o ${cor.nome}`}`, 2400); Sound.pop(); return; }
+// (2026-11-21, o Thiago: "às vezes parece que confirmou o box, mas eu não escolhi ir") a fala "Box, box, vamos de <pneu>" agora só sai aqui, quando o box
+// foi pedido de verdade; a sugestão do MFD pergunta (as falas "sugere<pneu>", mfd.js) e o pneu no fim avisa (pneufim, hud.js)
+// (espera 0,9 s parado no mesmo pneu: quem passa pelos pneus na tecla ouve só o último escolhido)
+function falarConfirmado(composto) { clearTimeout(race.boxFalaT); race.boxFalaT = setTimeout(() => { const B = race && race.box; if (!B || B.fase || B.pedido !== composto) return; try { window.Radio?.dizer("box" + composto, { forcar: true, reserva: "box" }); } catch (e) { /* sem rádio */ } }, 900); }
+function avisar() { const B = race.box, cor = F1().PNEUS[B.pedido], sg = me() && me().stopGo; if (cor) falarConfirmado(B.pedido); if (sg) { const atual = race.pneu ? race.pneu.composto : "medio"; toast(`🛑 Stop-and-go ${sg.s} s na próxima passagem pelo box ${B.pedido === atual ? "(sem trocar o pneu)" : `e, em seguida, troca para o ${cor.nome}`}`, 2400); Sound.pop(); return; }
   const pv = E.S.previsao, chuva = pv && pv.p >= 0.1 ? ` · previsão: chuva ${Math.round(pv.p * 100)}%` : ""; toast(`🔧 Box na próxima passagem: ${cor.nome} (${textoJogos(me())})${chuva}`, 2000); Sound.pop(); }
 // cancela o pedido de parada sem passar pela fila do B (o MFD usa); dentro do corredor já não dá
 export function cancelarPedido() {

@@ -210,6 +210,14 @@ Object.assign(SITUACOES, {
   riscolargada: ["Plano de largada forte. Tudo nas primeiras voltas, depois administramos.", "Ataque no começo. Ganhe posição enquanto o carro está no máximo.", "Primeiro terço com tudo. Depois o carro vai cair um pouco.", "Largada forte confirmada. É agora que se ganha posição."],
   riscofinal: ["Plano de guardar para o fim. Poupe agora, ataque depois.", "Paciência no começo. O carro vai estar no máximo no final.", "Cuide do pneu agora. A partir da metade a gente libera tudo.", "Guardamos para o fim. A corrida começa de verdade lá na frente."],
   riscopneu: ["Plano de esticar os pneus. Stint longo, sem forçar a borracha.", "Hoje é pneu. Quanto mais você durar, menos paradas.", "Cuide da borracha. A estratégia é parar menos que os outros.", "Stint longo hoje. Use pouco o ERS e poupe os pneus."],
+  // (2026-11-21) a sugestão do box é PERGUNTA (mfd.js); "Box, box" só depois de você confirmar (box.js). E o pneu no fim (hud.js), um aviso.
+  sugerebox: ["Sugerimos o box nesta volta. Confirma?", "Estamos prontos para parar nesta volta, se você quiser.", "Pensando no box nesta volta. A decisão é sua."],
+  sugeremacio: ["Sugerimos o box nesta volta, com pneu macio. Confirma?", "Temos o macio pronto. Quer parar nesta volta?", "Que tal parar agora e ir de macio? Você confirma."],
+  sugeremedio: ["Sugerimos o box nesta volta, com pneu médio. Confirma?", "Temos o médio pronto. Quer parar nesta volta?", "Que tal parar agora e ir de médio? Você confirma."],
+  sugereduro: ["Sugerimos o box nesta volta, com pneu duro. Confirma?", "Temos o duro pronto. Quer parar nesta volta?", "Que tal parar agora e ir de duro? Você confirma."],
+  sugereintermediario: ["Sugerimos o box nesta volta, com intermediário. Confirma?", "Temos o intermediário pronto. Quer parar nesta volta?", "Que tal parar agora e ir de intermediário? Você confirma."],
+  sugerechuva: ["Sugerimos o box nesta volta, com pneu de chuva. Confirma?", "Temos o pneu de chuva pronto. Quer parar nesta volta?", "Que tal parar agora e ir de pneu de chuva? Você confirma."],
+  pneufim: ["Os pneus acabaram. Se quiser parar, estamos prontos.", "Pneu no fim. Cuidado nas curvas, a decisão do box é sua.", "A borracha acabou. Avise se vai parar.", "Pneus sem aderência nenhuma. Pense no box."],
   pistacurta: ["Pista curta. O pneu aguenta mais voltas aqui.", "Volta curta nesta pista. Dá para esticar o stint.", "Aqui o pneu dura mais. Talvez dê para parar menos.", "Circuito curto. O pneu rende mais voltas."],
 });
 for (const [q, textos] of Object.entries({
@@ -226,7 +234,7 @@ for (const [q, textos] of Object.entries({
 })) if (SITUACOES[q]) SITUACOES[q].push(...textos);
 
 // situações que passam na frente do intervalo mínimo entre falas
-const URGENTES = ["box", "boxmacio", "boxmedio", "boxduro", "boxintermediario", "boxchuva", "safety", "spotesq", "spotdir", "spotlivre"];
+const URGENTES = ["box", "boxmacio", "boxmedio", "boxduro", "boxintermediario", "boxchuva", "sugerebox", "sugeremacio", "sugeremedio", "sugereduro", "sugereintermediario", "sugerechuva", "pneufim", "safety", "spotesq", "spotdir", "spotlivre"];
 const lista = [];
 for (const [quando, textos] of Object.entries(SITUACOES)) textos.forEach((texto, i) => lista.push({ id: `${quando}-${i + 1}`, texto, quando }));
 

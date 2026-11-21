@@ -143,26 +143,32 @@ function estrelaGemini(c, a, b, h) {
   c.closePath(); c.fillStyle = "#7cc4ff"; c.fill(); c.restore();
 }
 DESENHOS.mclaren = {
-  numero: "#ffffff", carbono: 1, numPos: [3.46, 0.7, 9, 9],
+  // (2026-11-20, refeita pelas nove imagens de Carros F1/2026/Mclaren) papaia; o preto só na frente da tampa (de trás do cockpit até a barbatana, onde
+  // vai o Gemini), descendo em diagonal pela caixa lateral até o assoalho (OKX e Mastercard nele); a traseira da tampa e a barbatana papaia (DELL
+  // preto, o número preto); a entrada de ar azul-petróleo com o allwyn; o bico papaia com a fila de patrocínios e a ponta escura com a estrela do Gemini
+  numero: "#141518", carbono: 1, numPos: [3.62, 0.82, 9, 9],
   pintar(ctx) {
     const PAP = "#ff8000", PRETO = "#141518", PETROLEO = "#1d4048", AZUL_DP = "#1d2a5c";
     base(ctx, PAP);
     lados(ctx, (c) => {
-      // a tampa preta, que desce em diagonal até a asa, e a entrada de ar azul-petróleo
-      c.beginPath(); c.moveTo(2.0, 1.1); c.lineTo(3.88, 1.1); c.lineTo(3.88, 0.42); c.quadraticCurveTo(3.2, 0.7, 2.6, 0.66); c.lineTo(2.0, 0.6); c.closePath(); c.fillStyle = PRETO; c.fill();
-      ret(c, 2.02, 0.8, 2.58, 1.1, PETROLEO);
-      // a faixa preta em diagonal na frente da caixa lateral, descendo para trás
-      poli(c, [[1.55, 0.2], [1.55, 0.56], [2.45, 0.56], [3.05, 0.18], [2.3, 0.12]], PRETO);
+      // o preto: de trás do cockpit até a barbatana em cima, descendo em diagonal pela caixa até o assoalho
+      poli(c, [[1.95, 1.1], [3.3, 1.1], [3.42, 0.95], [3.05, 0.6], [3.38, 0.12], [2.55, 0.12], [2.12, 0.5], [1.95, 0.6]], PRETO);
+      poli(c, [[1.5, 0.12], [2.4, 0.12], [2.2, 0.3], [1.5, 0.34]], PRETO); // a frente da caixa, embaixo, escura
+      ret(c, 2.02, 0.8, 2.58, 1.1, PETROLEO); // a entrada de ar
       baixo(c, PRETO);
       poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO); // a asa dianteira
-      ret(c, 3.86, 0.3, 4.45, 0.55, PRETO); // a parte de baixo da asa traseira (as placas papaia, com o Dropbox)
-      ret(c, 1.05, 0.39, 1.48, 0.47, AZUL_DP); marca(c, "dpworld", 1.26, 0.43, 0.03);
-      marca(c, "gemini", 3.0, 0.78, 0.085); marca(c, "allwyn", 2.3, 0.94, 0.045); marca(c, "velo", 2.02, 0.44, 0.06); marca(c, "okx", 2.55, 0.32, 0.06);
-      marca(c, "mastercard", 2.95, 0.3, 0.065); marca(c, "dell", 3.2, 0.52, 0.045, { tinta: PRETO });
-      marca(c, "dropbox", 4.15, 0.74, 0.05, { tinta: PRETO }); marca(c, "groq", 4.15, 0.42, 0.035);
+      ret(c, 3.86, 0.3, 4.45, 0.55, PRETO); // a parte de baixo das placas da asa traseira (em cima, papaia com o Dropbox)
+      ret(c, 1.05, 0.39, 1.48, 0.47, AZUL_DP); marca(c, "dpworld", 1.26, 0.43, 0.03); marca(c, "richardmille", 1.26, 0.51, 0.02, { tinta: PRETO });
+      marca(c, "gemini", 2.98, 0.8, 0.085); estrelaGemini(c, 2.66, 0.8, 0.07); marca(c, "allwyn", 2.3, 0.94, 0.05);
+      marca(c, "velo", 2.0, 0.44, 0.06, { tinta: PRETO }); marca(c, "okx", 2.6, 0.32, 0.06); marca(c, "mastercard", 2.95, 0.24, 0.06);
+      marca(c, "okta", 2.0, 0.66, 0.025); marca(c, "cisco", 2.1, 0.58, 0.02, { tinta: PRETO });
+      marca(c, "dell", 3.32, 0.52, 0.05, { tinta: PRETO });
+      marca(c, "dropbox", 4.15, 0.76, 0.05, { tinta: PRETO }); marca(c, "groq", 4.15, 0.42, 0.035);
+      marca(c, "workday", 0.3, 0.12, 0.03, { tinta: PRETO });
     });
     vista(ctx, "T", (c) => {
-      ret(c, 2.0, -0.26, 3.9, 0.26, PRETO); ret(c, 2.0, -0.15, 2.5, 0.15, PETROLEO); // a tampa e a entrada de ar
+      ret(c, 1.95, -0.26, 3.35, 0.26, PRETO); ret(c, 2.0, -0.15, 2.5, 0.15, PETROLEO); // a tampa preta (a traseira papaia) e a entrada de ar
+      for (const l of [-1, 1]) poli(c, [[2.3, l * 0.26], [2.75, l * 0.26], [3.3, l * 0.66], [2.85, l * 0.66]], PRETO); // a diagonal preta no alto das caixas
       asasT(c, PRETO, PAP, PAP);
       poli(c, [[0, -0.09], [0.26, -0.11], [0.26, 0.11], [0, 0.09]], PRETO); estrelaGemini(c, 0.14, 0, 0.08); // a ponta do bico
       const f = { giro: DE_FRENTE };
@@ -170,9 +176,9 @@ DESENHOS.mclaren = {
         poli(c, [[0.02, l * 0.18], [0.13, l * 0.18], [0.13, l * 0.78], [0.02, l * 0.78]], PAP); marca(c, "oneflight", 0.075, l * 0.48, 0.07, { giro: DE_FRENTE, tinta: PRETO });
         marca(c, "mastercard", 0.32, l * 0.42, 0.075, f);
       }
-      marca(c, "hilton", 1.22, 0, 0.04, { giro: DE_FRENTE, tinta: PRETO }); // (de 0,25 a 1,15 o bico leva o atlas do nariz: texturaDoCockpit)
-      marca(c, "allwyn", 2.25, 0, 0.05, f); marca(c, "gemini", 3.0, 0, 0.08, f);
-      marca(c, "etihad", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: PRETO }); // (a asa traseira é lida por quem vem atrás: -DE_FRENTE, como nas outras equipes)
+      marca(c, "hilton", 1.22, 0, 0.04, { giro: DE_FRENTE, tinta: PRETO }); // (a fila DELL..PIRELLI do bico é o atlas do nariz: texturaDoCockpit)
+      marca(c, "allwyn", 2.25, 0, 0.05, f); marca(c, "gemini", 2.9, 0, 0.08, f);
+      marca(c, "okx", 4.12, 0, 0.09, { giro: -DE_FRENTE, tinta: PRETO }); // (a asa traseira, lida por quem vem atrás; o ETIHAD vai atrás dela: ASA_BAIXO)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.55, 0, 0.55, 0.15, PRETO); ret(c, -0.16, 0.8, 0.16, 1.1, PETROLEO); });
     vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.8, 0.64, 0.8, 1.1, PRETO); });
@@ -251,7 +257,9 @@ function estrelas(c, s0, s1, y0, y1, n, cor, semente) {
   }
 }
 DESENHOS.mercedes = {
-  numero: "#00d7b6", carbono: 1, numPos: [3.42, 0.68, 9, 9],
+  // (2026-11-20, as imagens de Carros F1/2026/Mercedes) o 63 verde-água na barbatana, a parte de baixo da caixa preta com o PETRONAS branco e o
+  // filete verde-água em cima dela, o Petronas verde-água no bico, a Snapdragon, o CROWDSTRIKE e o PETRONAS PRIMAX nas placas da asa traseira
+  numero: "#00d7b6", carbono: 1, numPos: [3.56, 0.88, 9, 9],
   pintar(ctx) {
     const PRATA = "#c5cacf", PRATA_CL = "#e2e5e8", PRETO = "#0c0d0f", GRAFITE = "#26292d", VERDE = "#00d2be", ESTRELA = "#22262b";
     base(ctx, PRATA);
@@ -268,11 +276,15 @@ DESENHOS.mercedes = {
       baixo(c, PRETO);
       poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], GRAFITE); // a asa dianteira
       ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); // a asa traseira
-      marca(c, "petronas", 2.9, 0.27, 0.08, { tinta: PRETO });
+      // a parte de baixo da caixa, preta, com o filete verde-água em cima e o PETRONAS branco
+      c.beginPath(); c.moveTo(2.05, 0.12); c.lineTo(2.05, 0.3); c.quadraticCurveTo(2.9, 0.36, 3.75, 0.3); c.lineTo(3.75, 0.12); c.closePath(); c.fillStyle = PRETO; c.fill();
+      c.beginPath(); c.moveTo(2.05, 0.3); c.quadraticCurveTo(2.9, 0.36, 3.75, 0.3); c.lineWidth = 0.018; c.strokeStyle = VERDE; c.stroke();
+      marca(c, "petronas", 2.9, 0.22, 0.07);
       marca(c, "microsoft", 2.78, 0.8, 0.05); marca(c, "teamviewer", 2.6, 0.67, 0.034); marca(c, "solera", 3.15, 0.66, 0.03);
       marca(c, "amg", 1.2, 0.32, 0.045, { tinta: PRETO }); marca(c, "signify", 1.72, 0.27, 0.032, { tinta: PRETO }); marca(c, "ineos", 1.62, 0.5, 0.03, { tinta: PRETO });
       marca(c, "iwc", 0.36, 0.11, 0.04);
-      marca(c, "snapdragon", 4.15, 0.8, 0.034); marca(c, "crowdstrike", 4.15, 0.7, 0.03); marca(c, "gota", 4.18, 0.5, 0.13);
+      marca(c, "snapdragon", 4.15, 0.84, 0.034); marca(c, "crowdstrike", 4.15, 0.74, 0.03); marca(c, "petronas", 4.15, 0.6, 0.02); marca(c, "primax", 4.15, 0.56, 0.028);
+      marca(c, "gota", 4.18, 0.42, 0.1);
     });
     vista(ctx, "T", (c) => {
       // as faixas pretas no alto das caixas laterais, em diagonal para fora e para trás
@@ -290,6 +302,7 @@ DESENHOS.mercedes = {
       const f = { giro: DE_FRENTE };
       marca(c, "estrela", 0.12, 0, 0.075, { giro: DE_FRENTE, tinta: PRETO }); // a ponta do bico (o resto do bico é o atlas do nariz, f1-pintura texturaDoCockpit)
       marca(c, "syntium", 1.2, 0, 0.05, { giro: DE_FRENTE, tinta: PRETO });
+      marca(c, "gota", 0.84, 0, 0.09, { giro: DE_FRENTE }); // o Petronas verde-água no bico
       for (const l of [-1, 1]) { marca(c, "teamviewer", 0.2, l * 0.47, 0.045, f); marca(c, "syntium", 0.4, l * 0.45, 0.04, f); }
       marca(c, "petronas", 4.12, 0, 0.09, { giro: -DE_FRENTE }); // (lida por quem vem atrás)
     });

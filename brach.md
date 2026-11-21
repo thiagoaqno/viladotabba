@@ -22,15 +22,35 @@ Medido com `klk/medir/voltas.js` (os robôs sem tela, a física do servidor) e c
   - Com o alvo a −2%, todos batiam no teto da conta e andavam igual.
 - **ERS:** só na reta (com o ERS na curva, 274 batidas em Suzuka; só na reta, 74). A curvatura do ponto de agora e a de ~2 carros adiante têm de estar abaixo de 1/1500. Vale na ultrapassagem e também no ERS automático colado no da frente (`usarErsAuto`, que era `reta || perto`).
 - **Fim de corrida:** a 3 voltas ou menos do fim, o robô compara, pela tabela da pista, ficar no pneu gasto com parar. Com o penhasco mais suave, às vezes ficar sai mais barato.
-- **Batidas no pelotão:** ficaram no nível da main (Melbourne, 3 sementes: 302 contra 324; Mônaco: 249 contra 204, com 15 batidas de muro a mais porque agora os muros estão onde as peças estão). Testei e **descartei**, porque não reduziram:
-  - freio de emergência pelo tempo até a batida (0,5 a 1 s): 90 a 124 batidas contra 74 a 86, porque o freio brusco leva o de trás junto;
-  - a distância segura supondo que o da frente freia no máximo: 348 batidas (152 fortes) contra 322 (142), em 4 sementes;
-  - o atacante só seguir fechando com o alvo 80% de lado: 136 contra 74.
-- **Ainda não resolvido:** no pelotão a média por volta quase não muda (Melbourne ~48 s contra 39 s sozinho). Quem segura é o trânsito, as paradas e as batidas. É o próximo PR: as linhas variadas por piloto (para não virar fila indiana) e a freada no pelotão.
+- **Batidas no pelotão (o carro adiante numa curva):** o robô descartava o carro da frente quando, no quadro dele, ele aparecia a mais de 90 u de lado. Numa curva, 300 u adiante, é o que acontece. Então ele só via o carro lento (rodado ou batido) a ~60 u e entrava na traseira a 100–150 u/s a mais. Agora o lado longe é medido pela pista.
+  - Medido com 21 robôs, 5 voltas e 4 sementes, as batidas fortes (força ≥ 60, as que acabam a corrida) e o total:
+    - Suzuka: main 72 fortes (300 no total) → **40** (134);
+    - Melbourne: main 130 (390) → **42** (206).
+  - **Mônaco piorou e ainda não está resolvido:** main 60 e 84 fortes (sementes 1–4 e 5–8) → 132 e 138.
+    - Lá o trânsito já usava o lado pela pista, então essa correção nem entra em Mônaco.
+    - Testei voltar cada mudança, uma por vez, e nenhuma sozinha devolve o número da main (sempre 114 a 168): a colisão pelas peças, o `LAT_ALEM`, o nível 92, o pneu antigo, o ERS na curva, a correção de muro e a tabela de pneus antigas.
+- **Testado e descartado** (não reduziram as batidas):
+  - freio de emergência pelo tempo até a batida;
+  - a distância segura supondo que o da frente freia no máximo;
+  - o atacante só fechar com o alvo 80% de lado;
+  - limitar o mergulho na freada (`antec`);
+  - linhas variadas por piloto (±6 u: 194 batidas contra 158; ±12 u, pior);
+  - folga de lado menor na disputa.
+- **Estratégia:** a tabela de pneus usava um piloto ideal antigo, bem mais lento que o robô (Suzuka 70 s contra 44,7 s). Nessa proporção, parar parecia custar 9% de uma volta. Medido com um robô sozinho, custa ~21% (8,7 a 9,0 s em Suzuka, Melbourne e Monza).
+  - Agora `ferramentas/pneus-tabela.js` põe a tabela na escala do robô: a parada sai com 8,2 a 8,6 s nessas pistas.
+  - Isso também conserta a duração estimada da corrida, que o clima usa, e por isso a chuva caía tarde e ia até o fim.
+  - Em Suzuka, 22 robôs agora fazem 14 estratégias diferentes antes do penhasco de 20% (eram 6) e 6 depois dele, todas com 3 paradas.
+- **Perfil dos pilotos:** medido sem tela, o Hadjar não sobra. No qualify fica em 10º em média (Red Bull, ritmo 85) e na corrida perde 3,5 lugares. Quem mais ganha é quem cuida do pneu: Pérez +6 e Albon +5,3.
+- **Testes apagados** (fixavam o comportamento antigo; pedido do Thiago):
+  - a chuva de no mínimo 2 minutos;
+  - a linha no ápice de Interlagos;
+  - os dois da estratégia com o penhasco antigo;
+  - 8 robôs parando em voltas diferentes;
+  - todas as pistas fechando a volta no modo clássico (o `gp-monaco` passa quando roda sozinho).
 
 ## Pneu (item 3)
 - **Degradação uniforme:** a vida que o HUD mostra (100% novo, 0% no penhasco) tira 1% a cada 10%. Vale para a aderência, o freio e a tração (`PERDA_VIDA` = 0,10).
-  - Passou do penhasco: mais 10% de uma vez (`PERDA_RUINA`). Antes eram 3% até o penhasco e 60% da aderência na ruína.
+  - Passou do penhasco: mais 20% de uma vez (`PERDA_RUINA`; o Thiago pediu 20% para forçar a parada: com 10%, o macio em ruína perdia só 5 s por volta em Suzuka contra ~9 s da parada). Antes eram 3% até o penhasco e 60% da aderência na ruína.
 - Medido em Melbourne com o médio: 0,4 de desgaste deixa a volta 3% mais lenta, e 0,79 deixa 7% mais lenta.
 - `f1-pneus-tabela.js` refeito (`ferramentas/pneus-tabela.js`), para a estratégia dos robôs usar a degradação nova.
 

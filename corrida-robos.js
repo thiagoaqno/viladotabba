@@ -671,7 +671,10 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     if (distancia * STEP < -220 || distancia * STEP > 470) continue; // (até 470 adiante: o rastro do vácuo vai até 450)
     const dx = o.pos.x - p.pos.x, dy = o.pos.y - p.pos.y;
     const frente = dx * tx + dy * ty, lado = dx * -ty + dy * tx;
-    if (frente < -210 || frente > 460 || Math.abs(lado) > 90 || (o.box && !p.box)) continue;
+    // (2026-11-21) numa curva, o carro 300 u adiante aparece a mais de 90 u de lado no MEU quadro e era descartado: o robô só via o carro lento (rodado,
+    // batido) a 60 u e entrava na traseira dele a 100-150 u/s a mais. O lado longe é o da pista (o dele no ponto dele contra o meu no meu).
+    if (frente < -210 || frente > 460 || (o.box && !p.box)) continue;
+    if (Math.abs(lado) > 90 && (monaco || Math.abs(ondeEsta(o, distancia).lat - (ia.lat || 0)) > 90)) continue;
     const temV = o.pos.vx !== undefined, ov = temV ? o.pos.vx * tx + o.pos.vy * ty : (o.pos.v || 0), vlatO = temV ? o.pos.vx * -ty + o.pos.vy * tx : 0;
     let latOutro = (o.pos.x - ponto.x) * -ty + (o.pos.y - ponto.y) * tx, iO = i, frentePista = frente;
     // Mônaco: o alvo adiante (100 a 260 u) costuma estar do outro lado de uma curva, e o lateral medido no quadro do MEU ponto não tem sentido ali

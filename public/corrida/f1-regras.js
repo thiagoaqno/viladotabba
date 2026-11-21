@@ -39,8 +39,8 @@ const PENHASCO = 0.8, PERDA_FIM = 0.215, FINAL_FIM = 0.04;
 const RUINA_GRIP = 0.6, RUINA_ACEL = 1, RUINA_FINAL = 1; // (2026-11-16, o Thiago: "tem que ser o carro normal só que com 60% do grip, apenas"; era 0,2 de aderência e 0,6 de aceleração e de final)
 // A DEGRADAÇÃO UNIFORME (2026-11-21, o Thiago: "a cada 10% de desgaste ele perde 1% de desempenho... quando chega em 0% aí ele perde mais 10% dos
 // atributos"): a vida que o HUD mostra (100% novo, 0% no penhasco) tira PERDA_VIDA da aderência, do freio e da tração em linha reta (1% a cada 10%);
-// passou do penhasco, mais PERDA_RUINA de uma vez. Substitui o `perdaAntes` de cada composto (3% no penhasco) e o RUINA_GRIP (60% da aderência).
-const PERDA_VIDA = 0.10, PERDA_RUINA = 0.10;
+// passou do penhasco, mais PERDA_RUINA (20%) de uma vez. Substitui o `perdaAntes` de cada composto (3% no penhasco) e o RUINA_GRIP (60% da aderência).
+const PERDA_VIDA = 0.10, PERDA_RUINA = 0.20; // (o Thiago, no mesmo dia: "faz o penhasco piorar 20% a mais, aí força os robôs a pararem": com 10%, o macio em ruína perdia só 5 s por volta em Suzuka contra ~9 s da parada)
 // Pneu frio (saindo do box ou na largada) segura FRIO do normal e fica bom aos poucos: a temperatura vai de TEMP_SAIDA a
 // TEMP_BOA em alguns segundos (mais rápido no macio, mais devagar no duro).
 const TEMP_SAIDA = 0.6, TEMP_BOA = 0.75, FRIO = 0.72, AQUECE = 0.12;

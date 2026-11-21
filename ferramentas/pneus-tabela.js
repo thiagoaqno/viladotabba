@@ -33,6 +33,18 @@ if (!isMainThread) {
     const w = new Worker(__filename, { workerData: { ids: fila } });
     w.on("message", (m) => { Object.assign(novas, m.feito); semTabela.push(...m.falhas); ok(); }); w.on("error", erro);
   }))).then(() => {
+    // (2026-11-21) a escala do robô: o piloto ideal do simulador de stint é bem mais lento que o robô de hoje (Suzuka 70 s contra 44,7 s do
+    // `idealDe` da McLaren), mas a parada sai em segundos: a conta achava que parar custava 9% de uma volta, e medido com um robô sozinho custa
+    // ~21% (8,7 a 9,0 s em Suzuka, Melbourne e Monza). Os tempos de volta vão para a escala do robô (k = ideal / volta) e o trecho do corredor
+    // (`semParada`, medido contra a volta lenta) é dividido por k; o tempo parado fica. A conta dá 8,6 / 8,2 / 8,6 s contra os 8,9 / 8,7 / 9,0 medidos.
+    try {
+      const Robos = require("../corrida-robos.js"), Equipes = require("../public/corrida/f1-equipes.js"), r3 = (x) => Math.round(x * 1000) / 1000;
+      for (const [id, tab] of Object.entries(novas)) {
+        const k = Robos.idealDe(id, Equipes.specDaEquipe("mclaren")) / tab.volta; if (!(k > 0.3 && k < 1.5)) continue;
+        for (const c of Object.values(tab.compostos)) { c.tempos = c.tempos.map((x) => r3(x * k)); c.frio = r3(c.frio * k); }
+        const parado = tab.parada - tab.semParada; tab.semParada = r3(tab.semParada / k); tab.parada = r3(parado + tab.semParada); tab.volta = r3(tab.volta * k); tab.escala = r3(k);
+      }
+    } catch (e) { console.warn("sem a escala do robô:", e.message); }
     const todas = { ...atual, ...novas }; for (const id of semTabela) delete todas[id];
     const ordem = Object.keys(T.PISTAS).filter((id) => todas[id]);
     const linhas = ordem.map((id) => `  ${/^[A-Za-z_$][\w$]*$/.test(id) ? id : JSON.stringify(id)}: ${JSON.stringify(todas[id])},`);

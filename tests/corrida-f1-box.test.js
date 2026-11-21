@@ -116,14 +116,7 @@ test("robôs: cada um faz as paradas da estratégia pelo corredor, no limitador"
   assert.equal(eventos.length, robos.reduce((a, r) => a + r.paradas.length, 0));
 });
 
-test("robôs: oito pilotos fazem cinco voltas, param em momentos diferentes e a semente fixa as estratégias", { timeout: 60000 }, () => {
-  const a = corridaDosRobos(5, 8327, 8), b = corridaDosRobos(5, 8327, 8);
-  const planos = ({ robos }) => robos.map((r) => r.ia.plano);
-  assert.deepEqual(planos(a), planos(b));
-  assert.equal(a.robos.length, 8);
-  assert.ok(a.robos.every((r) => r.finish != null && r.paradas.length <= 3));
-  assert.ok(new Set(a.robos.map((r) => r.paradas[0]?.volta ?? 0)).size >= 2, "paradas em voltas diferentes");
-});
+// (2026-11-21, apagado: "robôs: oito pilotos fazem cinco voltas…" fixava o comportamento antigo; o Thiago pediu para tirar esses testes)
 
 test("robôs: sem as regras de F1 não existe box", () => {
   const room = { config: { pista: "interlagos", caixas: false, robos: 2, nivel: "medio", voltas: 1, regras: "galera" }, players: {}, order: [], phase: "race", startAt: Date.now() };

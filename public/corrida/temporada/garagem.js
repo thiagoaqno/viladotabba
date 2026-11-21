@@ -48,7 +48,7 @@ const colunaDireita = ({ titulo, cal, gp, rotuloProx, botao, nota, previsao }) =
 
 // A previsão do tempo do GP da carreira: sai da mesma semente que o servidor usa ao abrir o box (`${semente}:${ano}:${gp}`), então a
 // chuva que cai é a que foi prevista (F1Regras.previsaoDoGP). Sem as regras carregadas, null.
-function previsaoDoGP(semente, ano, gp) { const F = root.F1Regras; return F && F.previsaoDoGP ? F.previsaoDoGP(`${semente}:${ano}:${gp}`) : null; }
+function previsaoDoGP(semente, ano, gp, pista = null) { const F = root.F1Regras; return F && F.previsaoDoGP ? F.previsaoDoGP(`${semente}:${ano}:${gp}`, "aleatorio", pista) : null; }
 
 // O cartão do próximo GP (solo e grupo): o traçado grande, desenhado a partir de Pistas.PISTAS (o mesmo mapa numerado do "Sobre o GP" da sala),
 // o nome oficial, a bandeira, a cidade, os km, as voltas e as curvas, e a previsão do tempo para escolher o pneu.

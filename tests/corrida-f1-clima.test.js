@@ -23,25 +23,7 @@ test("a chuva cai dentro da janela prevista e a previsão e o sorteio batem", ()
   assert.ok(comChuva > 100);
 });
 
-test("a chuva dura pelo menos 2 minutos (ou até o fim) e pode começar e parar no meio de uma corrida de 5 voltas", () => {
-  let comecaNoMeio = 0, paraNoMeio = 0, ambas = 0;
-  for (const dur of [100, 200, CORRIDA, 1800]) for (const s of sementes(800)) {
-    const c = F.sortearClima(s, { corrida: dur, quali: dur });
-    for (const r of [c.corrida, c.quali]) {
-      if (!r.chove) continue;
-      const ini = r.trechos[0][0], fim = Math.min(r.trechos[r.trechos.length - 1][1], dur);
-      assert.ok(fim - ini >= Math.min(F.CHUVA_MIN_S, dur - ini) - 1, `dur ${dur}: chuva de ${fim - ini} s`);
-      for (let i = 1; i < r.trechos.length; i++) assert.equal(r.trechos[i][0], r.trechos[i - 1][1], "os trechos se emendam");
-      if (dur === CORRIDA && r === c.corrida) {
-        const a = ini > 0, b = r.trechos[r.trechos.length - 1][1] < dur;
-        if (a) comecaNoMeio++; if (b) paraNoMeio++; if (a && b) ambas++;
-      }
-    }
-  }
-  assert.ok(comecaNoMeio > 20, "começa a chover no meio de uma corrida de 5 voltas");
-  assert.ok(paraNoMeio > 10, "a chuva para no meio de uma corrida de 5 voltas");
-  assert.ok(ambas > 3, "começa e para na mesma corrida");
-});
+// (2026-11-21, apagado: "a chuva dura pelo menos 2…" fixava o comportamento antigo; o Thiago pediu para tirar esses testes)
 
 test("a força da chuva e a água na pista nunca dão degrau", () => {
   let vistos = 0;

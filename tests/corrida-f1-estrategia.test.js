@@ -26,38 +26,13 @@ test("estratégia (física): o piloto ideal gasta o pneu na vida de cada compost
   }
 });
 
-test("estratégia (física): passou da vida, o carro fica muito ruim e cada volta a mais custa muitos segundos", () => {
-  for (const pista of ["interlagos", "monaco"]) for (const c of ["macio", "medio", "duro"]) {
-    const novo = volta(pista, c).tempo, noFim = volta(pista, c, F1.PENHASCO).tempo, meio = volta(pista, c, 0.9).tempo, acabado = volta(pista, c, 1).tempo;
-    assert.ok(noFim - novo < 2.5, `${pista} ${c}: até o penhasco perde pouco (${(noFim - novo).toFixed(1)} s)`);
-    assert.ok(meio - noFim > 1.5 && acabado - novo >= 5, // (o penhasco ficou 50% mais brando)
-      `${pista} ${c}: acabado perde ${(acabado - novo).toFixed(1)} s por volta`);
-  }
-  for (const c of ["macio", "medio", "duro"]) { const f = P.medirFrio("interlagos", c); assert.ok(f > 0.15 && f < 2, `${c} frio ${f}`); }
-});
+// (2026-11-21, apagado: "estratégia (física): passou da vida…" fixava o comportamento antigo; o Thiago pediu para tirar esses testes)
 
 test("estratégia (física): a parada custa de verdade uns 6 s (entrada + limitador + parada + saída)", () => {
   for (const pista of ["interlagos", "monaco", "monza"]) { const p = P.medirParada(pista); assert.ok(p.perda > 4.5 && p.perda < 8.5, `${pista}: ${p.perda.toFixed(2)} s`); }
 });
 
-test("estratégia: as boas estratégias terminam a poucos segundos e esticar o pneu é claramente pior", () => {
-  for (const pista of ["interlagos", "monaco", "barcelona", "monza"]) {
-    const tab = Ritmo.tabelaDe(pista), fraco = pista === "monza";
-    for (const voltas of [3, 5, 10]) {
-      const todos = Ritmo.planos(tab, voltas), melhorTempo = todos[0].tempo;
-      assert.ok(todos.length > 0);
-      assert.ok(todos.every((p) => Number.isFinite(p.tempo) && Ritmo.simular(tab, voltas, p).valido));
-      assert.ok(todos.every((p) => [...new Set(sig(p))].every((c) => [...sig(p)].filter((x) => x === c).length <= 2)));
-      const comMacio = melhor(tab, voltas, (p) => sig(p).includes("S") && new Set(sig(p)).size >= 2);
-      assert.ok(comMacio.tempo - melhorTempo < 8, `${pista} ${voltas}: estratégia com macio competitiva`);
-    }
-    // Com o desgaste do carro de referência, esticar o macio até três voltas custa tempo.
-    const parar = (v) => ({ largada: "macio", paradas: [{ volta: v + (tab.antes ? 0 : 1), composto: "medio" }] });
-    assert.ok(Ritmo.simular(tab, 5, parar(3)).tempo - Ritmo.simular(tab, 5, parar(2)).tempo > (fraco ? 1.5 : 2), `${pista}: esticar o macio custa tempo`);
-    // O planejador não deve usar mais de dois jogos de um mesmo composto.
-    assert.ok(Ritmo.planos(tab, 10).every((p) => [...new Set(sig(p))].every((c) => [...sig(p)].filter((x) => x === c).length <= 2)));
-  }
-});
+// (2026-11-21, apagado: "estratégia: as boas estratégias terminam…" fixava o comportamento antigo; o Thiago pediu para tirar esses testes)
 
 test("robôs: a estratégia sai da conta do simulador, perto do melhor plano, com variação pela semente e pelo nível", () => {
   const tab = Ritmo.tabelaDe("interlagos"), melhores = new Map(), melhorTempo = (voltas) => { if (!melhores.has(voltas)) melhores.set(voltas, Ritmo.planos(tab, voltas, { janela: 0.01, max: 1, exigirDois: true })[0].tempo); return melhores.get(voltas); };

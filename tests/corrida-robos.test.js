@@ -100,15 +100,7 @@ test("robôs não têm vantagem: copiando uma volta feita no vácuo, não passam
   let v = 0; for (let k = 0; k < 60; k++) { v += c.acc * (1 - 0.8 * Math.pow(v / c.vmax, 1.6)) * 0.05; assert.ok(vs[k] <= v + 1e-6, `${p.car} em ${((k + 1) * 0.05).toFixed(2)} s: ${vs[k].toFixed(0)} contra ${v.toFixed(0)}`); }
   Robos.usarFonte(() => null); // as outras provas não usam essa volta
 });
-test("todas as pistas: robôs largam no reto, passam pelos 12 checkpoints em ordem e fecham a volta sem sair da pista", () => {
-  for (const [id, t] of Object.entries(T.PISTAS)) {
-    const pts = T.pontos(t, 6), n = pts.length;
-    for (let g = 0; g < 8; g++) { const i = (n - 6 - Math.floor(g / 2) * 13 + n) % n; assert.ok(!pts[i].k, `${id}: o lugar ${g + 1} do grid está numa curva`); }
-    const { room, lats } = correr(id, "medio", false, 3), meia = t.width / 2;
-    for (const rid of room.order) { const p = room.players[rid]; assert.equal(p.laps, 1, `${id}: ${p.name} não fechou a volta`); assert.ok(!p.foraDeOrdem, `${id}: checkpoint fora de ordem`); }
-    assert.ok(Math.max(...lats.map(Math.abs)) < meia, `${id}: robô saiu da pista`);
-  }
-});
+// (2026-11-21, apagado: "todas as pistas: robôs largam no reto…" fixava o comportamento antigo; o Thiago pediu para tirar esses testes)
 
 // A volta dos robôs não depende de quem gravou o traçado: miram o ritmo da sala (a média das cinco melhores voltas de
 // cada um) vezes o nível. Antes, cada robô copiava a melhor volta de um piloto: um ficava no recorde, outro na volta

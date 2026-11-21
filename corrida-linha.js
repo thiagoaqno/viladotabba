@@ -60,8 +60,45 @@ function otimizar(pts, max0, externas = 40) {
   }
   return l;
 }
+// (2026-11-21) A curvatura mínima de verdade. O gradiente conjugado acima não converge com os pontos de 6 em 6 u (o problema é de quarta ordem: o número de
+// condição passa de 10^13), e a linha saía quase no eixo da pista: em Suzuka só 6 dos 2389 pontos chegavam na beira e 67% deles ficavam a menos de 1/5 da
+// meia-largura do centro. Aqui o mesmo problema (soma dos quadrados da segunda diferença) é resolvido do grosso para o fino: nós a cada `passo` pontos
+// (32, 16, 8, 4, 2, 1), Gauss-Seidel projetado (cada nó vai para o lugar que zera a sua parte do gradiente, preso entre as beiras) e o resultado de um passo
+// é o começo do seguinte. Devolve Float64Array(lat) por ponto.
+function curvaturaMinima(pts, lim, op = {}) {
+  const n = pts.length, Hi = (i) => lim.hi[i], Lo = (i) => lim.lo[i];
+  let lat = new Float64Array(n);
+  for (const passo of op.passos || [32, 16, 8, 4, 2, 1]) {
+    const m = Math.floor(n / passo); if (m < 8) continue;
+    const idx = Array.from({ length: m }, (_, a) => Math.round((a * n) / m) % n);
+    const cx = idx.map((i) => pts[i].x), cy = idx.map((i) => pts[i].y), nx = idx.map((i) => -pts[i].ty), ny = idx.map((i) => pts[i].tx);
+    const l = Float64Array.from(idx, (i) => lat[i]), hi = idx.map(Hi), lo = idx.map(Lo);
+    const X = (a) => cx[a] + nx[a] * l[a], Y = (a) => cy[a] + ny[a] * l[a];
+    const varre = op.varreduras ?? (passo >= 8 ? 600 : passo >= 2 ? 400 : 250), omega = op.omega ?? 1.6;
+    for (let v = 0; v < varre; v++) {
+      let maior = 0;
+      for (let a = 0; a < m; a++) {
+        const am = (a - 1 + m) % m, ap = (a + 1) % m, am2 = (a - 2 + m) % m, ap2 = (a + 2) % m;
+        // as três segundas diferenças em que o nó a entra (pesos 1, -2, 1), sem a parte dele
+        const Xa = cx[a], Ya = cy[a];
+        const r1x = X(am2) - 2 * X(am) + Xa, r1y = Y(am2) - 2 * Y(am) + Ya;
+        const r2x = X(am) - 2 * Xa + X(ap), r2y = Y(am) - 2 * Ya + Y(ap);
+        const r3x = Xa - 2 * X(ap) + X(ap2), r3y = Ya - 2 * Y(ap) + Y(ap2);
+        const alvo = -((nx[a] * r1x + ny[a] * r1y) - 2 * (nx[a] * r2x + ny[a] * r2y) + (nx[a] * r3x + ny[a] * r3y)) / 6;
+        const novo = Math.max(lo[a], Math.min(hi[a], l[a] + omega * (alvo - l[a])));
+        maior = Math.max(maior, Math.abs(novo - l[a])); l[a] = novo;
+      }
+      if (maior < 1e-3) break;
+    }
+    // do nó para todos os pontos (linear: o passo seguinte alisa)
+    const cheio = new Float64Array(n);
+    for (let a = 0; a < m; a++) { const i0 = idx[a], i1 = idx[(a + 1) % m], len = ((i1 - i0 + n) % n) || n; for (let k = 0; k < len; k++) { const u = k / len; cheio[(i0 + k) % n] = Math.max(Lo((i0 + k) % n), Math.min(Hi((i0 + k) % n), l[a] * (1 - u) + l[(a + 1) % m] * u)); } }
+    lat = cheio;
+  }
+  return lat;
+}
 function linhaDaPista(pista, pts, W, folga = require("./public/corrida/pistas.js").PISTAS[pista]?.real ? 10 : 18) { // (Formula GP: a folga da beira do carro real, meio carro e um respiro)
   const k = pista + "|" + folga; if (CACHE.has(k)) return CACHE.get(k);
   const lat = otimizar(pts, Math.max(4, W / 2 - folga)); CACHE.set(k, lat); return lat;
 }
-module.exports = { otimizar, linhaDaPista };
+module.exports = { otimizar, curvaturaMinima, linhaDaPista };

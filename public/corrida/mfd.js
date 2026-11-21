@@ -58,9 +58,9 @@ const HTML = {
   // embaixo, o carro da frente, a diferença para ele e o carro de trás. Cada bloco leva à sua página.
   resumo: `<div class="rs3">
     <div class="rs3-l">
-      <button type="button" class="rs3-c rs3-pn" data-ir="box" title="Pneus e box"><span class="rs3-anel"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" class="tr"/><circle cx="22" cy="22" r="18" class="vl" data-r="rpAnel"/></svg><b data-r="rpL">M</b></span><em data-r="rpV">—</em></button>
+      <button type="button" class="rs3-c rs3-pn" data-ir="jogos" title="Pneus e box"><span class="rs3-anel"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" class="tr"/><circle cx="22" cy="22" r="18" class="vl" data-r="rpAnel"/></svg><b data-r="rpL">M</b></span><em data-r="rpV">—</em></button>
       <button type="button" class="rs3-c rs3-dn" data-ir="danos" title="Danos"><svg class="rs3-carro" viewBox="0 0 30 46" aria-hidden="true"><rect x="6" y="1" width="18" height="4" rx="1" class="asa"/><path d="M15 3 L18 15 L19 33 L21 42 L9 42 L11 33 L12 15 Z" class="corpo" data-r="rdCorpo"/><rect x="1" y="9" width="6" height="9" rx="2" class="rd"/><rect x="23" y="9" width="6" height="9" rx="2" class="rd"/><rect x="1" y="30" width="6" height="9" rx="2" class="rd"/><rect x="23" y="30" width="6" height="9" rx="2" class="rd"/></svg><span><strong data-r="rdT">100%</strong><i class="rs3-b"><i data-r="rdB"></i></i></span></button>
-      <button type="button" class="rs3-c rs3-cl" data-ir="box" title="Condições"><span class="rs3-ic" data-r="rlI"></span><strong data-r="rlT">—</strong></button>
+      <button type="button" class="rs3-c rs3-cl" data-ir="condicoes" title="Condições"><span class="rs3-ic" data-r="rlI"></span><strong data-r="rlT">—</strong></button>
       <div class="rs3-c rs3-mp"><svg viewBox="0 0 120 60" aria-hidden="true"><path class="pista" data-r="mpP"/><g data-r="mpCh"><rect width="5" height="5" fill="#fff"/><rect x="2.5" width="2.5" height="2.5" fill="#111"/><rect y="2.5" width="2.5" height="2.5" fill="#111"/></g><circle r="3" class="lid" data-r="mpL"/><circle r="3.6" class="eu" data-r="mpE"/></svg></div>
     </div>
     <button type="button" class="rs3-pe" data-ir="tempos" title="Tempos"><span><b data-r="frP">—</b><i></i><em data-r="frN"></em></span><span class="rs3-gap" data-r="gap">—</span><span><b data-r="trP">—</b><i></i><em data-r="trN"></em></span></button>
@@ -322,7 +322,7 @@ export function abrirPedidos() { if (!raiz) return; if (!mfd.aberto) abrir(true)
 export function abrirBoxMfd() {
   if (!ativo() || !race.box) return;
   if (!mfd.aberto) abrir(true);
-  mfd.pagina = "box"; mfd.linha.box = 0; paginaVista = null; mexeu();
+  mfd.pagina = sugVisivel ? "box" : "jogos"; mfd.linha.box = 0; paginaVista = null; mexeu(); // (o Próximo pneu só existe com a sugestão da equipe)
 }
 function alternarAberto() { mexeu(); abrir(!mfd.aberto); }
 function irPara(id) { if (mfd.lista.includes(id)) { mfd.pagina = id; paginaVista = null; mexeu(); } }
@@ -394,7 +394,7 @@ function atualizarLinhas() {
 }
 // a lista de páginas e as abas (só reconstruídas quando mudam)
 function listaDePaginas(ctx) {
-  const m = ctx.m, lista = M().paginasDisponiveis({ f1: true, pneu: !!race.pneu, eu: !!m, ers: !!race.ers, box: !!race.box, compacta: ctx.compacta, total: ctx.st.length });
+  const m = ctx.m, lista = M().paginasDisponiveis({ f1: true, pneu: !!race.pneu, eu: !!m, ers: !!race.ers, box: !!race.box, sugestao: sugVisivel, compacta: ctx.compacta, total: ctx.st.length });
   if (lista.join() !== mfd.lista.join()) mfd.lista = lista;
   if (!lista.includes(mfd.pagina)) { mfd.pagina = lista[0]; paginaVista = null; }
   const chave = lista.join();
@@ -500,10 +500,9 @@ const ATU = {
     const m = ctx.m, pn = race.pneu, F = F1U(), M_ = M(); if (!m || !pn) return;
     const e = M_.estadoDoPneu(pn, F), tipo = F.PNEUS[pn.composto] || F.PNEUS[F.COMPOSTO_PADRAO], COR = { bom: "#2ee08a", medio: "#ffb02e", baixo: "#ff6a3d", fim: "#ff3d4a" };
     if (r._pneu !== pn) { r._pneu = pn; r._volta0 = m.laps || 0; }
-    const noPneu = Math.max(0, (m.laps || 0) - r._volta0), v = ctx.tp, aguenta = v && v.voltas < 90 ? Math.max(0, Math.floor(v.voltas)) : null;
     set(r.rpL, "t", window.HudTorre.LETRA[pn.composto] || "M"); set(r.rpL, "style", `color:${tipo.cor}`);
     set(r.rpAnel, "style", `stroke:${tipo.cor};stroke-dasharray:${(e.vida / 100 * 113).toFixed(1)} 113`);
-    set(r.rpV, "t", aguenta == null ? `${e.vida}%` : `${noPneu}/${noPneu + aguenta}`); set(r.rpV, "c", e.nivel === "fim" || e.nivel === "baixo" ? "alerta" : "");
+    set(r.rpV, "t", `${e.vida}%`); // (2026-11-21, o Thiago: "sempre contar o pneu em %, nunca em voltas") set(r.rpV, "c", e.nivel === "fim" || e.nivel === "baixo" ? "alerta" : "");
     const dano = Math.max(0, Math.min(100, m.dano || 0)), cond = Math.round(100 - dano), nv = cond > 66 ? "bom" : cond > 33 ? "medio" : "fim";
     set(r.rdT, "t", cond + "%"); set(r.rdB, "w", cond + "%"); set(r.rdB, "bg", cond > 66 ? "#fff" : COR[nv]); set(r.rdCorpo, "style", `fill:${cond > 66 ? "#3a3f4b" : COR[nv]}`);
     const tc = temperaturas(); htm(r.rlI, tc.icone); set(r.rlT, "t", tc.ar + "°C");
@@ -520,7 +519,7 @@ const ATU = {
     set(r.a0, "style", `--r:${e.vida};--c:${COR[e.nivel]}`); set(r.a0.firstChild, "t", e.vida + "%");
     set(r.pLetra, "t", window.HudTorre.LETRA[pn.composto] || "M"); set(r.pLetra, "style", `--c:${tipo.cor}`); set(r.pNome, "t", tipo.nome.toUpperCase());
     const v = ctx.tp, n = v ? Math.max(0, Math.floor(v.voltas)) : null;
-    set(r.pVoltas, "t", n == null || v.voltas >= 90 ? "—" : e.nivel === "fim" ? "NO LIMITE" : `Aguenta ~${n} volta${n === 1 ? "" : "s"}`); set(r.pVoltas, "c", "pn2-voltas " + e.nivel);
+    set(r.pVoltas, "t", e.nivel === "fim" ? "NO LIMITE" : `${e.vida}% de vida`); set(r.pVoltas, "c", "pn2-voltas " + e.nivel);
     set(r.pTempT, "t", "Temperatura: " + e.temp);
     set(r.pProx, "t", B && !B.fase ? (B.pedido === "decidir" ? "NA GARAGEM" : F.PNEUS[B.pedido || proximo()].nome.toUpperCase()) : "—");
     set(r.pNota, "t", e.nivel === "fim" ? "Passou do limite: faça a parada." : v && v.medida ? "(no seu ritmo)" : "");

@@ -46,10 +46,11 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
     socket.use((_, next) => { Anos.usarAno(Anos.ANO_PADRAO); next(); }); // cada pedido começa em 2026; carregar() troca para o ano do save
     socket.on("criar", (d = {}, resposta) => {
       try {
-        const nome = limparNome(d.nome);
-        if (!nome) throw Error("Escreva seu nome.");
         const anoF1 = Anos.usarAno(d.anoF1); // a temporada escolhida (2023 a 2026): o calendário, as equipes e os pilotos daquele ano
-        const dados = Regras.criar(nome, d.equipe, Number(d.tamanho), Number(d.voltas), undefined, d.nivel || "medio");
+        const real = d.piloto && d.piloto !== "eu" ? String(d.piloto) : null; // (2026-11-21) jogar como um piloto de verdade da equipe: o nome é o dele
+        const nome = real ? "piloto" : limparNome(d.nome);
+        if (!nome) throw Error("Escreva seu nome.");
+        const dados = Regras.criar(nome, d.equipe, Number(d.tamanho), Number(d.voltas), undefined, d.nivel || "medio", real);
         dados.anoF1 = anoF1;
         const nova = bd.criarTemporadaCorrida(nome, dados);
         entrar(socket, { id: nova.id, dados }, nova.token, resposta, nova.recuperacao); subir(nova.token, { id: nova.id });

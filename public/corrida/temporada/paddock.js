@@ -591,7 +591,8 @@ const MANCHETES = {
 // substituiu na sua equipe); na falta, o mais lento de todos
 function substituto(s) {
   const atual = Pilotos.PILOTOS.find((p) => p.id === s.piloto2), titulares = Pilotos.PILOTOS.filter((p) => p.equipe === s.equipe);
-  const livres = Pilotos.PILOTOS.filter((p) => p.id !== s.piloto2 && p.id !== (titulares[1] && titulares[1].id) && p.equipe !== s.equipe);
+  const vaga = Reg().vagaDe ? Reg().vagaDe(s) : titulares[1];
+  const livres = Pilotos.PILOTOS.filter((p) => p.id !== s.piloto2 && p.id !== (vaga && vaga.id) && p.id !== s.pilotoReal && p.equipe !== s.equipe);
   const abaixo = livres.filter((p) => !atual || p.ritmo <= atual.ritmo).sort((a, b) => b.ritmo - a.ritmo || a.id.localeCompare(b.id));
   return abaixo[0] || livres.sort((a, b) => a.ritmo - b.ritmo)[0] || null;
 }

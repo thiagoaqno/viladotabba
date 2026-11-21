@@ -22,7 +22,7 @@ function inicial({ equipes, primeira, todas, grupo, amigos }) {
   const opcoes = Object.entries(equipes).map(([id, e]) => `<option value="${h(id)}"${id === primeira ? " selected" : ""}>${h(e.nome)}</option>`).join("");
   const faixa = `<nav class="cxe-equipes" aria-label="Equipes">${Object.entries(equipes).map(([id, e]) => `<button type="button" class="cxe-eq ${id === primeira ? "on" : ""}" style="--c:${h(e.cor)}" data-vitrine="${h(id)}" aria-pressed="${id === primeira}" aria-label="${h(e.nome)}" title="${h(e.nome)}">${logo(id)}</button>`).join("")}</nav>`;
   const painel = `<div class="cxe-abas" role="tablist" aria-label="Como começar">${ABAS.map(([id, nome]) => `<button type="button" role="tab" id="cxeAba-${id}" class="${id === aberta ? "on" : ""}" aria-selected="${id === aberta}" aria-controls="cxePainel-${id}" data-en-aba="${id}">${h(nome)}</button>`).join("")}</div>
-    <div class="cxe-corpo" role="tabpanel" id="cxePainel-nova" aria-labelledby="cxeAba-nova"${aberta === "nova" ? "" : " hidden"}><form id="nova"><label for="nome">Seu nome no grid</label><input id="nome" name="nome" maxlength="40" required autocomplete="name" placeholder="Seu nome">
+    <div class="cxe-corpo" role="tabpanel" id="cxePainel-nova" aria-labelledby="cxeAba-nova"${aberta === "nova" ? "" : " hidden"}><form id="nova"><label for="piloto">Quem pilota</label><select id="piloto" name="piloto"><option value="eu">Eu, com o meu nome</option></select><div id="cxeNome"><label for="nome">Seu nome no grid</label><input id="nome" name="nome" maxlength="40" required autocomplete="name" placeholder="Seu nome"></div>
       <select id="equipe" name="equipe" class="cxe-oculto" tabindex="-1" aria-hidden="true">${opcoes}</select>
       <div class="cxe-duo"><div><label for="tamanho">Calendário</label><select id="tamanho" name="tamanho"><option value="8">8 GPs</option><option value="4">4 GPs</option><option value="${todas}">${todas} GPs</option></select></div>
       <div><label for="voltas" title="Cada GP tem as voltas da mesma distância: mais nas pistas curtas, menos nas compridas">Tamanho da corrida</label><select id="voltas" name="voltas"><option value="10">Longa (~10 voltas)</option><option value="5">Média (~5 voltas)</option><option value="3">Curta (~3 voltas)</option><option value="2">Sprint (~2 voltas)</option></select></div></div>
@@ -44,6 +44,16 @@ function ligarInicial(primeira, equipes) {
     sel.querySelectorAll("option").forEach((o) => { const e = E[o.value]; o.hidden = o.disabled = !e; if (e) o.textContent = e.nome; });
     if (!E[sel.value]) document.querySelector("[data-vitrine]:not([hidden])")?.click();
   });
+  // (2026-11-21, o Thiago: "escolher ir com o nosso nick ou jogar a carreira com um piloto já existente") quem pilota: você, com o seu nome, ou um
+  // dos dois pilotos da equipe escolhida (do ano escolhido); com um piloto de verdade o nome é o dele (regras.js criar)
+  const piloto = document.getElementById("piloto"), caixaNome = document.getElementById("cxeNome"), campoNome = document.getElementById("nome");
+  const pilotos = () => {
+    const antes = piloto.value, lista = (root.F1Pilotos.PILOTOS || []).filter((p) => p.equipe === sel.value);
+    piloto.innerHTML = `<option value="eu">Eu, com o meu nome</option>${lista.map((p) => `<option value="${h(p.id)}">${h(p.nome)} (#${h(p.numero)})</option>`).join("")}`;
+    piloto.value = lista.some((p) => p.id === antes) ? antes : "eu"; nomeOuPiloto();
+  };
+  const nomeOuPiloto = () => { const eu = piloto.value === "eu"; caixaNome.hidden = !eu; campoNome.required = eu; };
+  piloto.addEventListener("change", nomeOuPiloto); ano?.addEventListener("change", pilotos); pilotos();
   document.querySelectorAll("[data-en-aba]").forEach((b) => b.addEventListener("click", () => {
     const id = b.dataset.enAba;
     document.querySelectorAll("[data-en-aba]").forEach((x) => { const on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on); document.getElementById(`cxePainel-${x.dataset.enAba}`).hidden = !on; });
@@ -55,6 +65,7 @@ function ligarInicial(primeira, equipes) {
     document.getElementById("cxeFaixa").textContent = e.nome; document.getElementById("cxeLogo").innerHTML = logo(id);
     document.getElementById("cxeFicha").outerHTML = fichaDoCarro(id, e.nome);
     document.querySelectorAll("[data-vitrine]").forEach((x) => { const on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-pressed", on); });
+    pilotos(); // (os pilotos da equipe nova)
   }));
   ligarTema();
 }

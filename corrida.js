@@ -618,6 +618,7 @@ module.exports = function attachCorrida(io) {
     const eq = Pilotos.EQUIPES[temporada.equipe], id = rid(6), token = rid();
     room.players[id] = { id, name: temporada.nome, token, pawn: "🏎️", color: eq.cor, skin: "padrao", car: "equilibrado", equipe: temporada.equipe,
       mods: { ...T.MODS_PADRAO, pintura: eq.pintura }, pneu: F1.COMPOSTO_PADRAO, grid: 0, laps: 0, sector: T.SECTORS - 1,
+      ...(() => { const r = temporada.pilotoReal && Pilotos.PILOTOS.find((x) => x.id === temporada.pilotoReal); return r ? { numero: r.numero, sigla: r.sigla, nomeCompleto: r.nome, pilotoReal: r.id } : {}; })(), // (2026-11-21) a carreira como um piloto de verdade: o número e o capacete dele
       started: false, finish: null, best: null, last: null, sockets: new Set() };
     room.players[id].plano = ((temporada.paddock || {}).decisoes || {})[`${temporada.ano}:${temporada.gp}:plano`] || null; // (2026-11-16) o plano da corrida (paddock.js): sim.js PLANO
     try { const Pd = require("./public/corrida/temporada/paddock.js"), m = Pd.modificadores(temporada), est = Pd.estrategiaEscolhida(temporada); if (m) room.players[id].gpMods = m; if (est) { room.players[id].pneu = est.largada; room.players[id].paradasEquipe = est.paradas; } } catch (e) { console.warn("Paddock: modificadores do GP:", e.message); } // (2026-11-21) os eventos do fim de semana no seu carro (sim.js) e no grid

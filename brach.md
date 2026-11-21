@@ -1,10 +1,9 @@
-# O Jeff responde "qual a estratégia?"
+# Carreira com um piloto de verdade
 
-Pedido do Thiago (2026-11-21): "pergunta e resposta de: qual a estratégia? e o Jeff poder responder".
+Pedido do Thiago (2026-11-21): "escolher ir com o nosso nick ou jogar a carreira com um piloto já existente".
 
-- `jeff-comandos.js`: o tipo novo `estrategia`, para "qual a estratégia", "qual o plano", "quando eu paro", "quantas paradas faltam". Vem antes do box, então "quando eu paro" não pede o box. Conferido: "box box", "colocar macio", "quem está na frente" e "como estão meus pneus" seguem como antes.
-- `mfd.js executarJeff`:
-  - **Com o plano de paradas da equipe** (`m.paradasEquipe`, de #875), o Jeff diz a próxima parada, as seguintes, a vida do pneu de agora e o plano do domingo (nos de duas fases, a volta em que ele vira).
-  - **Sem plano**, ele diz que a decisão é sua e lê os pneus.
-  - O rádio emenda os pedaços: "a próxima parada do plano é na" + "volta N" + o pneu, ou o fim do plano, ou sem plano.
-- `radio/falas.js`: 6 pedaços novos. O `Falas novas da Corrida.bat` gera eles junto com os 12 dos planos de #875 (18 falas, 973 caracteres).
+- **Criar** (`entrada.js`, `corrida-temporada.js`, `regras.js criar`): "Quem pilota" mostra "Eu, com o meu nome" ou os dois pilotos da equipe escolhida, do ano escolhido. A lista muda com a equipe e com o ano. Com um piloto de verdade, o campo do nome some e o nome é o dele. O save guarda `pilotoReal`.
+- **A vaga** (`vagaDe`): com o piloto real na equipe dele, você ocupa o lugar dele e o outro titular é o companheiro. Sem ele, continua o segundo titular, como antes. O grid (`pilotosNoGrid`), o mercado (`contratarPiloto`), o substituto do Paddock e a troca de equipe usam isso.
+- **O piloto real nunca aparece como robô nem na tabela** (`tabelas`): ele é o "voce". Se ele troca de equipe, quem você tirou da equipe nova ocupa a vaga dele na antiga.
+- **No carro** (`corrida.js abrirGP`, `jogo.js`): o número, a sigla (o capacete dele, `f1-capacetes.js`) e o nome completo dele.
+- Conferido na memória (`pilotosNoGrid`): Leclerc na Ferrari, Hamilton na Ferrari, nick na Ferrari e Leclerc depois de ir para a Williams. Sempre 21 robôs, nenhum repetido, o piloto real fora do grid e da tabela, e cada equipe com dois carros. Criar Norris na Ferrari dá erro; contratar a si mesmo também.

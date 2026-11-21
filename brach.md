@@ -30,6 +30,12 @@ Pelas telas que o Thiago gerou (2026-11-21).
 
 Conferido no navegador do app, sem erros no console nem no servidor: as 5 etapas, a barra do nível (o servidor guardou 70), a troca de pista e a troca de câmera. O e2e (que não roda no CI) foi posto na ordem nova.
 
-Falta nesta leva: o pós-corrida no estilo novo.
+**Pós-corrida** no mesmo estilo:
+- No alto, as abas Pós-corrida, Replay e Análise. As duas últimas abrem a aba certa da análise e rolam até ela.
+- À esquerda, o pódio e a classificação com as colunas da transmissão à vista: posição, equipe com a sigla, piloto, tempo/diferença, pit stops, melhor volta (roxo na mais rápida), punição e dano. O grid de largada e os pneus de cada parada aparecem no hover.
+- À direita, a análise.
+- Embaixo, "Correr de novo", "Voltar à sala" e "Voltar ao menu" (o menu da Corrida, não a Vila).
+- A análise ganhou a aba **Setores**: os 3 setores da melhor volta de você e do piloto comparado, em roxo (melhor da corrida), verde (melhor dele) ou amarelo, e embaixo a faixa de setores de cada volta.
+- Conferido com o resultado de exemplo (`#debug`, `resultadoFalso`), sem erros. A análise só aparece numa corrida de verdade.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

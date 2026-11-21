@@ -79,14 +79,19 @@ function linhaV2(r, i, ctx) {
   const { S, m, F, vencedor } = ctx, p = S.players.find((x) => x.id === r.id), eq = infoEquipe(p), eu = !!(m && r.id === m.id), fora = r.nc || r.dnf || r.dsq;
   const g = r.grid + 1, d = g - r.pos, pun = punicaoDe(S, p, r), danoPct = Math.round(r.dano || 0);
   const final = r.dsq ? "DSQ" : r.dnf ? "DNF" : r.nc ? "NC" : r.tempo == null ? `+${Math.max(1, S.config.voltas - r.voltas)} volta${S.config.voltas - r.voltas > 1 ? "s" : ""}` : r === vencedor ? fmt(r.tempo) : `+${(r.tempo - vencedor.tempo).toFixed(3)}`;
-  const sob = String(nomeDe(p)).trim().split(/\s+/), sobrenome = sob.length > 1 ? sob.slice(1).join(" ") : sob[0];
-  return `<li class="rg2-l ${eu ? "eu" : ""} ${fora ? "nc" : ""} ${r.pos <= 3 && !fora ? "p" + r.pos : ""}" tabindex="0" data-id="${h(r.id)}" style="${estiloEq(eq.cor)};--i:${Math.min(i, 21)}">
+  // (2026-11-21, as telas novas do Thiago) as colunas da transmissão à vista; com o mouse (ou o foco), abre o grid de largada e os pneus de cada parada
+  return `<li class="rg2-l ${eu ? "eu" : ""} ${fora ? "nc" : ""} ${r.pos <= 3 && !fora ? "p" + r.pos : ""}" tabindex="0" data-id="${h(r.id)}" style="${estiloEq(eq.cor)};--i:${Math.min(i, 21)}" title="Clique para comparar com você na análise">
     <span class="rg2-pos">${fora ? "—" : r.pos}</span>
-    <span class="rg2-nome"><b>${h(sobrenome.toUpperCase())}</b>${pun.secs > 0 ? `<span class="rg-alerta" title="${h(pun.titulo)}">${ICONE.alerta}</span>` : ""}${r.voltaRapida ? `<i class="rg-vr" title="Volta mais rápida: +1 ponto">${ICONE.rapida}</i>` : ""}${eu ? `<em class="rg-voce">você</em>` : ""}</span>
-    <span class="rg2-eq">${marca(eq)}<span>${h(eq.nome || "")}</span></span>
+    <span class="rg2-eq">${marca(eq)}<span class="rg-sigla">${h(siglaDe(p))}</span></span>
+    <span class="rg2-nome"><b>${h(nomeDe(p))}</b>${r.voltaRapida ? `<i class="rg-vr" title="Volta mais rápida: +1 ponto">${ICONE.rapida}</i>` : ""}${eu ? `<em class="rg-voce">você</em>` : ""}</span>
     <span class="rg2-t">${final}${r.estimado ? ` <abbr class="rg-est" title="Tempo estimado: o robô ainda estava na pista quando o GP acabou">est.</abbr>` : ""}</span>
-    <span class="rg2-pts">${r.pontos ? `+${r.pontos}` : "—"}</span>
-    <span class="rg2-extra"><span>Largou ${g}º ${d ? `<small class="${d > 0 ? "sobe" : "desce"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</small>` : ""}</span><span>Paradas ${pneusHTML(r, F)}</span><span>Melhor ${r.melhor != null ? fmt(r.melhor) : "—"}</span>${danoPct >= 1 ? `<span>Dano ${danoPct}%</span>` : ""}${pun.titulo ? `<span class="rg2-pun">${h(pun.titulo)}</span>` : ""}</span></li>`;
+    <span class="rg2-par">${r.paradas || 0}</span>
+    <span class="rg2-mv ${r.voltaRapida ? "roxo" : ""}">${r.melhor != null ? fmt(r.melhor) : "—"}</span>
+    <span class="rg2-pun">${pun.secs > 0 ? `<span title="${h(pun.titulo)}">${pun.secs}s${ICONE.alerta}</span>` : pun.titulo ? `<span title="${h(pun.titulo)}">${ICONE.alerta}</span>` : "—"}</span>
+    <span class="rg2-dano">${danoPct}%</span>
+    <span class="rg2-pts">${r.pontos ? `+${r.pontos}` : ""}</span>
+    <span class="rg2-extra"><span>Largou ${g}º ${d ? `<small class="${d > 0 ? "sobe" : "desce"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</small>` : ""}</span><span>Pneus ${pneusHTML(r, F)}</span>${eq.nome ? `<span>${h(eq.nome)}</span>` : ""}${pun.titulo ? `<span class="rg2-pun-t">${h(pun.titulo)}</span>` : ""}</span>
+  </li>`;
 }
 const SVG = (d) => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const IB = { voltar: SVG('<path d="m15 5-7 7 7 7"/>'), bandeira: SVG('<path d="M5 21V4"/><path d="M5 4h13l-2 4 2 4H5"/>'), mapa: SVG('<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'), casa: SVG('<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>') };
@@ -104,19 +109,19 @@ export function htmlResultado(S, m, isHost, aviso) {
   const meu = m && R.find((r) => r.id === m.id), eqM = infoEquipe(m || S.players.find((x) => x.id === vencedor.id));
   const selo = !meu ? "" : meu.dsq ? "Desclassificado" : meu.dnf ? "Abandono" : meu.nc ? "Não classificado" : meu.pos === 1 ? "Vitória" : meu.pos <= 3 ? "Pódio" : `${meu.pos}º lugar`;
   const bandeira = window.GpInfo?.bandeira ? window.GpInfo.bandeira(S.config.pista) : "";
-  const botoes = S.temporada ? `<button class="primary" id="rSede">${IB.voltar}Voltar à sede</button>` : isHost ? `<button class="primary" id="rAgain">${IB.bandeira}Novo GP</button><button id="rLobby">${IB.mapa}Trocar pista</button>` : `<span class="muted">Esperando o organizador…</span>`;
+  const botoes = S.temporada ? `<button class="primary" id="rSede">${IB.voltar}Voltar à sede</button>` : isHost ? `<button class="primary" id="rAgain">${IB.bandeira}Correr de novo</button><button id="rLobby">${IB.mapa}Voltar à sala</button>` : `<span class="muted">Esperando o organizador…</span>`;
   return `<div class="placa gp rg-placa rg2" style="${estiloEq(eqM.cor)}"><div class="in">
-    <header class="rg2-topo"><span class="rg2-tit">${ICONE.copa}<b>Resultado da corrida</b></span><span class="rg2-gp">GP · ${h(pista.name)}${bandeira ? `<span class="rg2-band">${bandeira}</span>` : ""}</span></header>
+    <header class="rg2-topo"><nav class="rg2-abas" aria-label="Pós-corrida"><button class="on" data-rg-ir="topo">${ICONE.copa}<b>Pós-corrida</b></button>${S.config.regras === "f1" ? `<button data-rg-ir="replay"><b>Replay</b></button><button data-rg-ir="posicoes"><b>Análise</b></button>` : ""}</nav><span class="rg2-gp">GP · ${h(pista.name)}${bandeira ? `<span class="rg2-band">${bandeira}</span>` : ""}</span></header>
     <div class="av-item av-fixo rg2-aviso" style="--fundo:#f2f2f5;--txt:#0a0c12;--bloco:#0a0c12">${aviso}</div>
     <div class="rg2-grade">
       <section class="rg2-col rg2-podio"><h3>Pódio</h3>${alto}</section>
       <section class="rg2-col rg2-class"><h3>Classificação</h3>
-        <div class="rg2-cab" aria-hidden="true"><span>Pos</span><span>Piloto</span><span>Equipe</span><span>Tempo</span><span>Pts</span></div>
+        <div class="rg2-cab" aria-hidden="true"><span>Pos.</span><span>Equipe</span><span>Piloto</span><span>Tempo / Dif.</span><span>Pit stops</span><span>Melhor volta</span><span>Punição</span><span>Dano</span><span>Pts</span></div>
         <ol class="rg2-tab">${R.map((r, i) => linhaV2(r, i, ctx)).join("")}</ol></section>
       <section class="rg2-col rg2-ana"><h3>Análise da corrida</h3><div class="rg-ana-tema" style="${estiloEq(eqM.cor)}">${htmlAnalise(S)}</div></section>
     </div>
     <footer class="rg2-pe">${selo ? `<span class="rg2-selo ${meu && meu.pos === 1 && !meu.dnf && !meu.dsq ? "ouro" : ""}">${ICONE.copa}<b>${h(selo)}</b></span><span class="rg2-quem"><b>${h(nomeDe(m))}</b><small>${h(eqM.nome || "")}</small></span>` : `<span class="rg2-quem"><b>Vencedor: ${h(nomeDe(S.players.find((x) => x.id === vencedor.id)))}</b></span>`}
-      <span class="rg2-botoes">${botoes}${S.temporada ? "" : `<button class="ghost" onclick="location.href='/'">${IB.casa}Vila</button>`}</span></footer></div></div>`;
+      <span class="rg2-botoes">${botoes}${S.temporada ? "" : `<button class="ghost" onclick="location.href='/corrida/'">${IB.casa}Voltar ao menu</button>`}</span></footer></div></div>`;
 }
 
 // ---- depois de desenhar: os 3 carros do pódio (ou os logos grandes), o confete de quem ganhou ----
@@ -133,7 +138,17 @@ function carrosNoPodio(el, S, m) {
   }
   try { podio3d.montar(podio, itens); } catch (e) { console.warn("Corrida: pódio 3D", e); podio3d.soltar(); } // sem WebGL (ou erro): ficam os logos grandes
 }
+// as abas do alto (Pós-corrida, Replay, Análise): as duas últimas abrem a aba da análise da corrida e rolam até ela
+function ligarAbasDoTopo(el) {
+  el.querySelectorAll("[data-rg-ir]").forEach((b) => b.addEventListener("click", () => {
+    el.querySelectorAll("[data-rg-ir]").forEach((x) => x.classList.toggle("on", x === b));
+    const k = b.dataset.rgIr; if (k === "topo") { el.querySelector(".rg2")?.scrollIntoView({ block: "start", behavior: "smooth" }); return; }
+    const aba = el.querySelector(`[data-ra-aba="${k}"]`); if (aba) aba.click();
+    el.querySelector(".rg2-ana")?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }));
+}
 export function aposResultado(el, S, m) {
+  ligarAbasDoTopo(el);
   carrosNoPodio(el, S, m);
   const fonte = { analise: () => new Promise((ok) => socket.emit("analise", ok)), replay: () => new Promise((ok) => socket.emit("replay", ok)), sNow }; // (a sala da Corrida: o servidor responde pelo socket)
   try { montarAnalise(el, S, m, fonte, { abas: [["replay", "Replay"], ["ritmo", "Ritmo"], ["posicoes", "Posições"], ["pneus", "Pneus"]], compacto: true }); } catch (e) { console.warn("Corrida: análise do GP", e); } // um extra: um erro nela não pode tirar o resultado da tela

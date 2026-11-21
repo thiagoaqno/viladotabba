@@ -311,3 +311,54 @@ body.sv-on.sn-nav .sn.sf :focus{outline:2px solid var(--sv-at);outline-offset:2p
   .sn.sf .sn-continuar,.sn.sf .sn-largar{min-width:0;flex:1}.sn.sf .sf-dicas{display:none}
 }
 @media (prefers-reduced-motion:reduce){.sn.sf *{transition:none!important;animation:none!important}}
+
+/* ---------- o pós-corrida (resultado-gp.js .rg2), no mesmo estilo: as abas no alto, o pódio e a classificação à esquerda, a análise à direita ---------- */
+.results .placa.gp.rg-placa.rg2{--sf-cond:"Barlow Condensed","Titillium Web",Manrope,sans-serif;width:min(1680px,100%);background:radial-gradient(120% 80% at 70% 0%,#1a2030 0%,#0b0d12 60%);border:1px solid #ffffff17}
+.rg2 .rg2-topo{gap:0;padding:0;border-bottom:1px solid #ffffff17}
+.rg2 .rg2-abas{display:flex;align-items:stretch}
+.rg2 .rg2-abas button{position:relative;display:flex;align-items:center;gap:9px;height:52px;padding:0 22px;border:0;border-radius:0;background:none;color:#98a1b0;font:700 15px/1 var(--sf-cond);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:color .16s,background .16s}
+.rg2 .rg2-abas button+button{border-left:1px solid #ffffff17}
+.rg2 .rg2-abas button svg{width:18px;height:18px}
+.rg2 .rg2-abas button::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:3px;background:var(--eq);transform:scaleX(0);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.rg2 .rg2-abas button:hover{color:#fff;background:#ffffff08}.rg2 .rg2-abas button:hover::after{transform:scaleX(.5)}
+.rg2 .rg2-abas button.on{color:#fff}.rg2 .rg2-abas button.on::after{transform:scaleX(1)}
+.rg2 .rg2-gp{padding-right:6px}
+.rg2 .rg2-grade{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-areas:"podio ana" "class ana";gap:14px}
+.rg2 .rg2-podio{grid-area:podio}.rg2 .rg2-class{grid-area:class}.rg2 .rg2-ana{grid-area:ana}
+.rg2 .rg2-col{border-radius:6px;background:#151922d9;border:1px solid #ffffff17}
+.rg2 .rg2-col>h3{font:800 17px var(--sf-cond);letter-spacing:.06em}
+.rg2 .rg2-cab,.rg2 .rg2-l{grid-template-columns:34px 66px minmax(0,1fr) 86px 58px 86px 60px 46px 34px}
+.rg2 .rg2-cab{font:700 12px var(--sf-cond);letter-spacing:.08em;color:#98a1b0}
+.rg2 .rg2-cab span:nth-child(n+4){text-align:right}
+.rg2 .rg2-l{min-height:34px;font:500 14px Manrope,sans-serif;transition:background .15s,transform .15s,box-shadow .15s}
+.rg2 .rg2-l:hover,.rg2 .rg2-l:focus-visible{transform:translateX(3px);box-shadow:inset 3px 0 0 var(--eq)}
+.rg2 .rg2-l.eu{box-shadow:inset 0 0 0 1.5px var(--eq);background:linear-gradient(90deg,var(--eq6),#ffffff08 70%)}
+.rg2 .rg2-eq{gap:6px;font:700 13px var(--sf-cond);color:#cfd6df}.rg2 .rg2-eq .rg-marca{width:24px;height:18px}
+.rg2 .rg2-nome b{font:600 14.5px Manrope,sans-serif;letter-spacing:0;text-transform:none}
+.rg2 .rg2-t,.rg2 .rg2-par,.rg2 .rg2-mv,.rg2 .rg2-pun,.rg2 .rg2-dano{text-align:right;font:700 14.5px var(--sf-cond);font-variant-numeric:tabular-nums;color:#eef1f6}
+.rg2 .rg2-mv.roxo{color:#c9a2ff}
+.rg2 .rg2-pun span{display:inline-flex;align-items:center;gap:4px;color:#ffd23f}.rg2 .rg2-pun svg{width:14px;height:14px}
+.rg2 .rg2-dano{color:#98a1b0}
+.rg2 .rg2-extra{padding-left:108px}
+.rg2 .ra-abas button{transition:color .15s,background .15s,transform .15s,border-color .15s}
+.rg2 .ra-abas button:hover{transform:translateY(-2px);background:#ffffff14;color:#fff}
+.rg2 .ra-abas button.on{background:var(--eq);border-color:var(--eq);color:#fff}
+.rg2 .rg2-pe{border-radius:6px}
+.rg2 .rg2-botoes button{min-height:48px;padding:0 22px;font:800 17px var(--sf-cond);letter-spacing:.04em;text-transform:uppercase;transition:transform .16s,filter .16s,box-shadow .16s,background .16s}
+.rg2 .rg2-botoes button.primary{background:var(--eq);border-color:var(--eq);color:#fff;clip-path:polygon(12px 0,100% 0,100% 100%,0 100%);padding-left:30px}
+.rg2 .rg2-botoes button:hover{transform:translateY(-2px);filter:brightness(1.12);box-shadow:0 10px 26px -12px var(--eq)}
+/* a aba Setores (resultado-analise.js melhoresSetoresHTML) */
+.ra-melhores-par{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ra-melhor{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid #ffffff17;border-radius:6px;background:#ffffff06;transition:border-color .15s,background .15s}
+.ra-melhor:hover{border-color:#ffffff45;background:#ffffff0d}
+.ra-melhor header{display:flex;align-items:center;gap:8px}.ra-melhor header b{font:700 15px "Barlow Condensed",sans-serif}.ra-melhor header small{margin-left:auto;color:#98a1b0;font-size:12px}
+.ra-melhor ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.ra-melhor li{display:flex;justify-content:space-between;padding:4px 8px;border-radius:4px;background:#ffffff08;font:700 15px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums}
+.ra-melhor li b{color:#98a1b0}
+.ra-melhor li.s-roxo{background:#8b3dd433;box-shadow:inset 3px 0 0 #a560f0}.ra-melhor li.s-roxo span{color:#d7b8ff}
+.ra-melhor li.s-verde{background:#2fd27a22;box-shadow:inset 3px 0 0 #2fd27a}.ra-melhor li.s-verde span{color:#8ff0b8}
+.ra-melhor li.s-amarelo{box-shadow:inset 3px 0 0 #ffd100}
+.ra-melhor strong{align-self:flex-end;font:800 26px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;color:#fff}
+.ra-corpo .ra-melhores~.ra-setores .ra-legenda{display:none}
+@media (max-width:1150px){.rg2 .rg2-grade{grid-template-columns:minmax(0,1fr);grid-template-areas:"podio" "class" "ana"}.rg2 .rg2-cab,.rg2 .rg2-l{grid-template-columns:30px 56px minmax(0,1fr) 80px 46px 80px 50px 40px 30px}}
+@media (max-width:760px){.rg2 .rg2-cab,.rg2 .rg2-l{grid-template-columns:30px minmax(0,1fr) 76px 30px}.rg2 .rg2-eq,.rg2 .rg2-par,.rg2 .rg2-mv,.rg2 .rg2-pun,.rg2 .rg2-dano,.rg2 .rg2-cab span:nth-child(2),.rg2 .rg2-cab span:nth-child(n+5):not(:last-child){display:none}.rg2 .rg2-cab span:nth-child(3),.rg2 .rg2-cab span:nth-child(4){display:block}}

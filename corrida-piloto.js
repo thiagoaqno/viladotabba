@@ -15,9 +15,16 @@ const MARGEM_MURO = 4; // quantos u antes do ponto em que o centro do carro enco
 
 // Até onde o centro do carro pode ir para cada lado em cada ponto: a mesma conta da física (sim.js: largura/2 + recuo - muroFolga), lado por
 // lado. O limite simétrico de antes deixava o muro de um lado encolher o outro, e a linha ficava no meio.
+// (2026-11-21, o Thiago: "os hitbox de Mônaco não fazem sentido") a pista com a colisão pelas peças do editor (cenario/<id>.json com colisao "pecas",
+// a mesma conta de sim.js): a linha dos robôs respeita os muros e guard-rails que foram colocados, não os muros antigos da pista
+function murosDasPecas(t, pts) {
+  const id = Object.keys(T.PISTAS).find((k) => T.PISTAS[k] === t); if (!id) return null;
+  try { const cen = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "public", "corrida", "cenario", id + ".json"), "utf8")); if (cen.colisao !== "pecas") return null;
+    const m = T.murosDoCenario(pts, t.width, cen), n = pts.length, longe = 600; for (const l of [1, -1]) for (let i = 0; i < n; i++) if (!m[l][i]) m[l][i] = longe; return m; } catch (e) { return null; }
+}
 function limitesDaPista(t, pts, margem = t.margemLinha ?? MARGEM_MURO) { // (`margemLinha`: a pista real do Formula GP que pede outra)
   const n = pts.length, lo = new Float64Array(n), hi = new Float64Array(n), W = t.width, beira = W / 2 - margem;
-  const m = t.muros || t.escapeLivre ? T.murosDoEscape(pts, W, null, t) : null, folga = t.muroFolga ?? 8;
+  const m = murosDasPecas(t, pts) || (t.muros || t.escapeLivre ? T.murosDoEscape(pts, W, null, t) : null), folga = t.muroFolga ?? 8;
   for (let i = 0; i < n; i++) {
     const noLado = (lado) => (m && m[lado][i] ? Math.min(beira, W / 2 + m[lado][i] - folga - margem) : beira);
     hi[i] = Math.max(2, noLado(1)); lo[i] = -Math.max(2, noLado(-1));
@@ -159,8 +166,10 @@ function arquivoDeLinhas() { if (!ARQUIVO) { try { ARQUIVO = require("./corrida-
 const CAP_LINHA = (spec, ref) => capacidade(spec, { rel: ref.rel, ext: { freio: ref.freio, grip: ref.grip, tracao: ref.tracao, potencia: 1.12 } });
 function calcularLinha(t, pts, spec, ref, op = {}) {
   const { lo, hi } = limitesDaPista(t, pts), cap = CAP_LINHA(spec, ref);
-  const inicio = Linha.otimizar(pts, { lo, hi }, op.externas ?? 500); // a curvatura mínima é a base: abre, encosta no ápice e sai abrindo
-  return linhaDeCorrida(pts, lo, hi, cap, { janela: JANELA_K, inicio, etapas: [[8, 4]], ...op }).lat;
+  // (2026-11-21) a curvatura mínima é a base, medida no grosso (nós de 48 a 12 pontos: a de 6 em 6 u só alisava o tremido do eixo e a linha ficava no
+  // meio da pista); depois o tempo de volta desce do grosso para o fino. Antes começava do eixo e só andava ±21 u (passos 4, 2 e 1 em [[8, 4]]).
+  const inicio = op.externas != null && op.externas < 100 ? Linha.otimizar(pts, { lo, hi }, op.externas) : Linha.curvaturaMinima(pts, { lo, hi }, { passos: [48, 24, 12] });
+  return linhaDeCorrida(pts, lo, hi, cap, { janela: JANELA_K, inicio, etapas: [[32, 16], [16, 8], [8, 4]], ...op }).lat;
 }
 // A linha da pista (Float64Array por ponto): do arquivo, se está lá e bate com o traçado; senão, calcula uma versão rápida.
 function linhaDaPista(pista, t, pts, spec, ref) {
@@ -172,13 +181,16 @@ const temLinhaPronta = (pista, n) => { const a = arquivoDeLinhas()[pista]; retur
 // O ritmo de um nível `f` sobre o caminho `lat` (índice da pista): o `f` multiplica a velocidade de curva e a frenagem usada.
 // Os dois param no limite do pneu (1): acima dele o robô mirava curva que o pneu não segura, rodava e batia (o difícil 1,2 do
 // #692 dava 58 a 66 s em Mônaco com 4 a 6 batidas por volta, contra 50,1 s do nível 1).
+// (2026-11-21, o Thiago: "tá muito fácil, mesmo no 100") acima do nível 1 o robô passa um pouco do limite calculado (o cálculo é conservador: quem joga
+// bem faz a volta mais rápido que ele). Medido em Suzuka e Melbourne, um robô sozinho com a linha nova: 1,04 tira 0,05 e 0,4 s sem batida; 1,06 já escorrega (46,2 s em Suzuka contra 42,9).
+const LAT_ALEM = 1.04;
 function perfilDoNivel(pts, lat, spec, ref, f, janela = JANELA_RITMO) {
   const g = geometria(pts, lat, janela), cap = CAP_LINHA(spec, ref);
-  return perfilNoCaminho(g.k, g.ds, cap, { latK: Math.min(1, f * f), freioK: Math.min(1, f), soFreio: true }).v;
+  return perfilNoCaminho(g.k, g.ds, cap, { latK: Math.min(LAT_ALEM, f * f), freioK: Math.min(LAT_ALEM, f), soFreio: true }).v;
 }
 // O que os comandos precisam de um perfil, calculado uma vez
 function contexto(spec, ref) {
   return { p: D.parametros(spec), cap: CAP_LINHA(spec, ref), teto: Infinity };
 }
 
-module.exports = { MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, contexto, jeitoDe, comandos, naTabela };
+module.exports = { murosDasPecas, MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, contexto, jeitoDe, comandos, naTabela };

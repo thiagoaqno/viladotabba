@@ -449,7 +449,7 @@ export function passoClima(dt, race, cam, mode, src, c) {
 
   // céu, luz e neblina (some tudo, voltando à base, quando I chega a 0)
   // (Nublado: o céu fica fechado como numa garoa, com a luz baixa e quente de umas 16h, mas sem gota nenhuma)
-  const N = clima.nublado ? 0.62 : 0, Iv = Math.max(I, N);
+  const N = 0.62 * (+clima.nublado || 0), Iv = Math.max(I, N);
   if (Iv > 0 || ativoAntes) {
     const fog = scene.fog;
     if (fog !== fogRef) { fogRef = fog; eNear.u = eFar.u = NaN; eCorFog.ok = false; }

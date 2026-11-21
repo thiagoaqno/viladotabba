@@ -1,11 +1,45 @@
 [
   {
+    "id": "alpine-audi-2026-11-20",
+    "data": "2026-11-20",
+    "itens": [
+      "Alpine refeita: o bico rosa, o BWT rosa enorme na caixa, o eni na tampa e o A branco atrás",
+      "Audi: os anéis vermelhos grandes em cima da asa traseira e a fila de patrocínios do bico como na foto"
+    ]
+  },
+  {
+    "id": "racingbulls-aston-2026-11-20",
+    "data": "2026-11-20",
+    "itens": [
+      "Racing Bulls refeita: branca com as faixas azuis, o touro rosa na tampa e o VISA grande na caixa",
+      "Aston Martin: o verde mais vivo, o painel preto com o aramco na caixa e a asa traseira azul-clara"
+    ]
+  },
+  {
+    "id": "haas-williams-2026-11-20",
+    "data": "2026-11-20",
+    "itens": [
+      "Haas refeita: a frente branca com o filete vermelho, o MoneyGram na tampa, o HAAS na caixa e o 87 vermelho",
+      "Williams: o 55 na barbatana, o ATLASSIAN com o A, a entrada de ar cobre e a fila de patrocínios do bico"
+    ]
+  },
+  {
+    "id": "mclaren-mercedes-2026-11-20",
+    "data": "2026-11-20",
+    "itens": [
+      "McLaren refeita: o preto só na frente da tampa e descendo pela caixa, a traseira papaia com a DELL e o número preto",
+      "Mercedes: o PETRONAS branco no preto da caixa, o 63 na barbatana e o Petronas verde-água no bico"
+    ]
+  },
+  {
     "id": "pintura-visivel-2026-11-20",
     "data": "2026-11-20",
     "itens": [
       "Carros de 2026 com a pintura mais nítida (o triplo no seu carro e na garagem)",
       "O adesivo da asa traseira não desce mais para as peças embaixo dela",
-      "Cadillac nova: preta, com o CADILLAC e o brasão em prata"
+      "Cadillac nova: preta, com o CADILLAC e o brasão em prata",
+      "Red Bull refeita: o touro nítido na tampa e no bico, a camuflagem digital e os patrocínios de 2026",
+      "Os patrocínios de baixo da asa traseira agora ficam atrás dela, à vista de quem vem atrás"
     ]
   },
   {

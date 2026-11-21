@@ -90,8 +90,8 @@ const EVENTOS = {
       { id: "arriscar", rotulo: "Ataque total: +12% de potência e +3% de aderência; pneu +15% e as batidas dão 50% mais dano", efeito: { torcida: 2 } },
       { id: "largada", rotulo: "Largada forte: +15% de potência e +4% de aderência no primeiro terço, depois o carro cai um pouco", efeito: { torcida: 1 } },
       { id: "final", rotulo: "Guardar para o fim: poupa pneu e motor até 60% da prova, depois +15% de potência e +4% de aderência", efeito: {} },
-      { id: "pneu", rotulo: "Esticar os pneus: o pneu gasta 40% menos, com +2% de potência", efeito: { diretoria: 1 } },
-      { id: "seguro", rotulo: "Jogar seguro: −3% de potência; pneu −30% e as batidas dão 40% menos dano", efeito: { diretoria: 1 } },
+      { id: "pneu", rotulo: "Esticar os pneus: o pneu gasta 25% menos, com +2% de potência", efeito: { diretoria: 1 } },
+      { id: "seguro", rotulo: "Jogar seguro: −3% de potência; pneu −15% e as batidas dão 40% menos dano", efeito: { diretoria: 1 } },
       { id: "normal", rotulo: "Sem plano especial", efeito: {} },
     ],
   },
@@ -253,8 +253,8 @@ const EVENTOS = {
     titulo: (c) => `Onda de calor${c.proximo ? ` em ${c.proximo.nome}` : ""}`,
     texto: () => "A previsão é de asfalto fervendo no domingo. Os engenheiros querem saber se mudam o acerto para proteger o pneu.",
     opcoes: [
-      { id: "poupar", rotulo: "Acerto para o calor: −1,5% de aderência e o pneu gasta 25% menos", efeito: {} },
-      { id: "manter", rotulo: "Manter o acerto: o pneu gasta 30% mais", efeito: { torcida: 1 } },
+      { id: "poupar", rotulo: "Acerto para o calor: −1,5% de aderência e o pneu gasta 15% menos", efeito: {} },
+      { id: "manter", rotulo: "Manter o acerto: o pneu gasta 20% mais", efeito: { torcida: 1 } },
     ],
   },
   chassiReserva: {
@@ -393,7 +393,7 @@ Object.assign(EVENTOS, {
     quem: "Estrategista", fase: "domingo",
     quando: (c, s) => !!c.proximo && estrategiasDoGP(s).length > 0,
     titulo: () => "A estratégia de paradas",
-    texto: (c, s) => `O estrategista montou os planos para as ${voltasDoGP(s)} voltas. Com um deles, a equipe chama o seu box na volta certa e você larga com o pneu do plano.`,
+    texto: (c, s) => `O estrategista montou os planos para as ${voltasDoGP(s)} voltas, já contando o pneu do plano do domingo e dos eventos que você decidiu. Com um deles, a equipe chama o seu box na volta certa e você larga com o pneu do plano.`,
     opcoes: [
       { id: "equilibrada", rotulo: (c, s) => rotuloDaEstrategia(s, "equilibrada"), pode: (s) => !!estrategiaDe(s, "equilibrada"), efeito: {} },
       { id: "agressiva", rotulo: (c, s) => rotuloDaEstrategia(s, "agressiva"), pode: (s) => !!estrategiaDe(s, "agressiva"), efeito: { torcida: 1 } },
@@ -421,9 +421,13 @@ const CACHE_EST = new Map();
 function estrategiasDoGP(s) {
   const g = s.calendario && s.calendario[s.gp], R = Ritmo(); if (!g || !R) return [];
   const tab = R.tabelaDe(g.pista), voltas = voltasDoGP(s); if (!tab || voltas < 2) return [];
-  const k = `${g.pista}:${voltas}`; if (CACHE_EST.has(k)) return CACHE_EST.get(k);
+  // (2026-11-21) o pneu do seu carro neste GP: o plano do domingo já escolhido vezes o dos eventos (o mesmo limite de sim.js), para as voltas das
+  // paradas baterem com o pneu de verdade (em Jeddah o plano "conservador" chamava o box na 7, com o médio ainda em 60%)
+  const Fr = Regras1(), lim = Fr && Fr.DESGASTE_SOMADO ? Fr.DESGASTE_SOMADO : [0.8, 1.4], idPlano = garantir(s).decisoes[`${s.ano}:${s.gp}:plano`], mods = modificadores(s);
+  const fator = Math.round(Math.max(lim[0], Math.min(lim[1], (Fr && Fr.desgasteDoPlano ? Fr.desgasteDoPlano(idPlano) : 1) * ((mods && mods.desgaste) || 1))) * 20) / 20;
+  const k = `${g.pista}:${voltas}:${fator}`; if (CACHE_EST.has(k)) return CACHE_EST.get(k);
   const F = Regras1(), teto = (F ? F.PENHASCO : 0.8) + 0.05; // (nenhum stint passa do penhasco: o plano que a equipe sugere nunca deixa o pneu acabar)
-  const l = R.planos(tab, voltas, { janela: 40, max: 400 }).filter((x) => R.simular(tab, voltas, x).desgaste.every((d) => d <= teto)), melhor = l[0], out = [];
+  const l = R.planos(tab, voltas, { janela: 40, max: 400, fator }).filter((x) => R.simular(tab, voltas, x, { fator }).desgaste.every((d) => d <= teto)), melhor = l[0], out = [];
   if (melhor) {
     out.push({ id: "equilibrada", ...melhor });
     const mais = l.find((x) => x.paradas.length > melhor.paradas.length), menos = l.find((x) => x.paradas.length < melhor.paradas.length);
@@ -460,7 +464,7 @@ function modificadores(s, ano = s.ano, gp = s.gp) {
   const mot = de("motorNoLimite");
   if (mot === "trocar") { m.potencia *= 1.05; m.grid += 5; } else if (mot === "seguir") m.potencia *= 0.97;
   const cal = de("calor");
-  if (cal === "poupar") { m.grip *= 0.985; m.desgaste *= 0.75; } else if (cal === "manter") m.desgaste *= 1.3;
+  if (cal === "poupar") { m.grip *= 0.985; m.desgaste *= 0.85; } else if (cal === "manter") m.desgaste *= 1.2;
   if (de("chassiReserva") === "reserva") { m.grip *= 0.98; m.potencia *= 0.99; }
   if (de("contaDaOficina") === "basico") { m.grip *= 0.985; m.potencia *= 0.99; }
   const com = de("comissarios"); if (com === "aceitar") m.grid += 3; else if (com === "recorrer" && gerador(`recurso:${s.semente}:${ano}:${gp}`)() >= 0.5) m.grid += 5;

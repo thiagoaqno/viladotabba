@@ -122,7 +122,7 @@ export function renderQuali() {
     </footer></div>`;
   relogio();
   el.querySelectorAll("[data-pq-vista]").forEach((b) => { b.onclick = () => { vista = b.dataset.pqVista; chaveHtml = ""; renderQuali(); }; });
-  el.querySelector("[data-pq-acerto]")?.addEventListener("click", () => alternarAcerto(true));
+  el.querySelector("[data-pq-acerto]")?.addEventListener("click", () => alternarAcerto(true, { sala: true }));
   const conf = el.querySelector("#confirmarLargada"); if (conf && !confirmado) conf.onclick = () => act("confirmarLargada");
   if (ultima && m && !confirmado) el.querySelectorAll("[data-pneu-largada]").forEach((b) => { b.onclick = () => act("pneu", { pneu: b.dataset.pneuLargada }); });
   if (montagem && !confirmado) el.querySelectorAll("[data-ponto], [data-ponto-zerar]").forEach((b) => { b.onclick = () => { const nova = window.F1Garagem.cliquePonto(b, montagem, m.equipe, S.bonusMontagem[m.equipe] || 0); if (nova) act("montagemGrid", { montagem: nova }); }; });

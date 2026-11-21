@@ -98,7 +98,7 @@ module.exports = function attachCorrida(io) {
       cambio: c.cambio === "manual" ? "manual" : "auto",
       ers: f1 && c.ers === "auto" ? "auto" : "manual", // o ERS é MANUAL por padrão (pedido do Thiago, 2026-11-10): segura E para usar; "auto" só se a sala escolher
       clima: f1 && F1.OPCOES_DE_CLIMA.includes(c.clima) ? c.clima : "aleatorio", // F1: aleatório (a previsão do GP), seco, chuva ou variável (começa seco e chove no meio)
-      nivel: Robos.NIVEIS[c.nivel] ? c.nivel : "medio",
+      nivel: Robos.NIVEIS[c.nivel] ? c.nivel : Number.isFinite(Number(c.nivel)) && c.nivel !== "" && c.nivel !== null ? Math.round(Robos.forcaDoNivel(Number(c.nivel))) : "medio", // (0 a 100, ou um dos nomes antigos)
       contrarrelogio: f1 && c.contrarrelogio === true, // sozinho na pista, com o fantasma da sua melhor volta correndo junto (jogo.js)
     };
   };

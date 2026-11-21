@@ -1,5 +1,5 @@
 // Corrida da Galera — telas fora da corrida: a sala de espera e o "como jogar".
-import { E, PISTAS, CARROS, specDaEquipe, carOf, COLORS, PAWNS, $, h, me, act, fmt } from "./estado.js";
+import { E, PISTAS, CARROS, specDaEquipe, carOf, COLORS, PAWNS, $, h, me, act, fmt, store } from "./estado.js";
 import { THEMES } from "./pista.js";
 import { MODS3, MODS_PADRAO, carPreview } from "./carros.js";
 import { loadBest } from "./fantasma.js";
@@ -50,8 +50,9 @@ export function show(id) {
 // controle) avança, Esc ou B voltam; as setas e o direcional movem o foco (sala-controle.js). Fora das regras de F1 não há a etapa da
 // equipe; quem só assiste vê o GP e o grid; numa sala da carreira só o grid. Cada trecho só mexe no HTML quando ele muda (`trocar`),
 // para o foco e as animações não se perderem a cada estado que chega do servidor.
-const ORDEM = ["equipe", "carro", "ajustes", "gp", "grid"];
-const NOMES = { equipe: "Equipe", carro: "Carro e pneu", ajustes: "Câmera", gp: "GP", grid: "Grid" };
+// (2026-11-21, as telas novas do Thiago) GP → Configurações → Carro (a equipe, o pneu e os atalhos) → Piloto (câmera e HUD) → Grid
+const ORDEM = ["gp", "config", "carro", "piloto", "grid"];
+const NOMES = { gp: "GP", config: "Configurações", carro: "Carro", piloto: "Piloto", grid: "Grid" };
 const NIVEL = { facil: "fácil", medio: "médio", dificil: "difícil" };
 const DESC_PNEU = { macio: "Mais aderência. Dura cerca de 2,8 voltas.", medio: "Equilíbrio entre aderência e vida útil. Dura cerca de 3,8 voltas.", duro: "Menos aderência, maior vida útil. Dura cerca de 4,8 voltas.", chuva: "Melhor na chuva forte. Dura até 7 voltas na pista encharcada e 2 a 3 no seco.", intermediario: "Melhor na garoa. Dura 4 voltas no molhado e 2 no seco." };
 const el = (k) => document.querySelector(`.sn-etapa[data-etapa="${k}"]`);
@@ -71,14 +72,14 @@ function temaDaSala(cor) {
 }
 $("btnTemaSala")?.addEventListener("click", () => { const escuro = !temaEscuro(); try { localStorage.setItem(CHAVE_TEMA, escuro ? "escuro" : "claro"); } catch {} aplicarTemaSala(); });
 const chip = (txt, cls = "") => `<span class="sn-chip ${cls}">${txt}</span>`;
-let etapa = "equipe", gavetaAberta = false, focoAntes = null, pendente = null, tEquipe = 0;
+let etapa = "gp", gavetaAberta = false, focoAntes = null, pendente = null, tEquipe = 0;
 
 const etapasAtivas = () => {
   const S = E.S, m = me();
   if (!S) return ["grid"];
-  if (S.temporada) return m ? ["ajustes", "grid"] : ["grid"]; // a sede da carreira controla o resto
+  if (S.temporada) return m ? ["piloto", "grid"] : ["grid"]; // a sede da carreira controla o resto
   if (!m) return ["gp", "grid"]; // só assistindo
-  return S.config.regras === "f1" ? ["equipe", "carro", "ajustes", "gp", "grid"] : ["carro", "ajustes", "gp", "grid"];
+  return ORDEM;
 };
 // troca o HTML de um trecho só se ele mudou, e devolve o foco ao mesmo botão (quando o trecho refaz os botões)
 const chaveDe = (e) => { const d = Object.entries(e.dataset).map(([k, v]) => `${k}=${v}`).join("&"); return `${e.tagName}|${d || (e.id || "") + e.textContent.trim().slice(0, 30)}`; };
@@ -158,96 +159,133 @@ function enviarEquipe() {
   clearTimeout(tEquipe); tEquipe = 0; const m = me();
   if (pendente && m && m.equipe !== pendente.id && E.S && E.S.phase === "lobby") act("equipe", { id: pendente.id });
 }
+// ----- Carro: a equipe (regras de F1), o carro na vitrine, o pneu da largada, a previsão e os atalhos (acerto, peças, pintura, capacete) -----
+// (2026-11-21, as telas novas do Thiago: as etapas Equipe e Carro e pneu viraram uma só)
 function renderEquipe(m) {
   const F = window.F1Equipes, FP = window.F1Pilotos, GA = window.F1Garagem, vista = equipeVista(m), e = FP.EQUIPES[vista], q = F.EQUIPES[vista];
   const ids = Object.keys(F.EQUIPES);
   trocar($("eqFaixa"), ids.map((id) => {
     const x = FP.EQUIPES[id], gente = humanos(id), cheia = lotada(id, m), on = id === vista;
-    return `<button class="sn-eq ${on ? "on" : ""} ${m.equipe === id ? "minha" : ""}" data-equipe="${id}" ${cheia ? "disabled" : ""} aria-pressed="${on}" aria-label="${h(x.nome)}${cheia ? ", lotada" : ""}${m.equipe === id ? ", sua equipe" : ""}" style="--equipe:${x.cor}">${marcaEquipe(id)}<span class="sn-eq-nome">${h(x.nome)}</span>${gente.length ? `<span class="sn-eq-gente" title="${gente.map((p) => h(p.name)).join(" e ")}">${gente.length}</span>` : ""}${m.equipe === id ? `<i class="sn-eq-ok" aria-hidden="true">✓</i>` : ""}</button>`;
+    return `<button class="sn-eq ${on ? "on" : ""} ${m.equipe === id ? "minha" : ""}" data-equipe="${id}" ${cheia ? "disabled" : ""} aria-pressed="${on}" aria-label="${h(x.nome)}${cheia ? ", lotada" : ""}${m.equipe === id ? ", sua equipe" : ""}" title="${h(x.nome)}${cheia ? " · lotada" : ""}" style="--equipe:${x.cor}">${marcaEquipe(id)}${gente.length ? `<span class="sn-eq-gente" title="${gente.map((p) => h(p.name)).join(" e ")}">${gente.length}</span>` : ""}${cheia ? `<i class="sf-cadeado" aria-hidden="true"></i>` : ""}</button>`;
   }).join(""));
   const faixa = $("eqFaixa"), ativo = faixa.querySelector(".sn-eq.on");
   if (ativo && faixa._vista !== vista) { faixa._vista = vista; faixa.scrollTo({ left: ativo.offsetLeft - (faixa.clientWidth - ativo.offsetWidth) / 2, behavior: reduz() ? "auto" : "smooth" }); }
-  // a ficha: logo, nota do carro em barras, o orçamento de peças e quem mais está na equipe
-  const spec = specDaEquipe(vista), ficha = F.ficha(spec), mont = (E.S.montagens && E.S.montagens[vista]) || F.montagemPadrao(vista), usado = F.custoDaMontagem(mont), orc = q.orcamento, sobra = orc - usado;
-  const gente = humanos(vista), pilotos = (FP.PILOTOS || []).filter((p) => p.equipe === vista);
-  const quem = gente.length ? gente.map((p) => `<li><span class="av">${p.pawn}</span><b>${h(p.name)}</b>${p.id === m.id ? "<small>você</small>" : ""}</li>`).join("") : `<li class="vazio">Ninguém ainda: a vaga é sua.</li>`;
+  const spec = specDaEquipe(vista), ficha = F.ficha(spec), mont = (E.S.montagens && E.S.montagens[vista]) || F.montagemPadrao(vista), usado = F.custoDaMontagem(mont), orc = q.orcamento;
+  const gente = humanos(vista), pilotos = (FP.PILOTOS || []).filter((p) => p.equipe === vista), ano = window.F1Temporadas?.anoAtual?.() || 2026;
   temaDaSala(e.cor);
-  trocar($("eqFicha"), `<div class="sn-ficha-logo" style="--equipe:${e.cor}">${marcaEquipe(vista)}<div><small>Equipe</small><b>${h(e.nome)}</b></div></div>
-    <div class="sn-nota"><strong class="num">${GA.notaGeral(ficha)}</strong><span>Nota do carro</span></div>
-    <ul class="sn-barras">${ficha.map((f) => `<li><span>${h(f.rotulo)}</span><i class="sn-barra" role="img" aria-label="${f.nota} de 10"><u style="width:${f.nota * 10}%"></u></i><b class="num">${f.nota}</b></li>`).join("")}</ul>
-    <div class="sn-orc"><div class="topo"><span>Orçamento de peças</span><b class="num">${usado}/${orc} pts</b></div><i class="sn-barra" role="img" aria-label="${usado} de ${orc} pontos usados"><u style="width:${(usado / orc) * 100}%"></u></i><small>${sobra ? `Sobram ${plural(sobra, "ponto")}` : "Orçamento todo usado"}</small></div>
-    <div class="sn-quem"><small>Na equipe</small><ul>${quem}</ul>${pilotos.length ? `<p>Pilotos de ${window.F1Temporadas?.anoAtual?.() || 2026}: ${pilotos.map((p) => h(p.curto)).join(" e ")}</p>` : ""}</div>`);
-  trocar($("eqNomeGrande"), `<small>${h(q.nota || "Carro da equipe")}</small><b>${h(e.nome)}</b>`);
+  trocar($("eqFicha"), `<div class="sn-ficha-logo" style="--equipe:${e.cor}">${marcaEquipe(vista)}<b>${h(e.nome)}</b></div>
+    <div class="sn-nota"><span>Nota do carro</span><strong class="num">${(GA.notaGeral(ficha) / 10).toFixed(1).replace(".", ",")}<small>/10</small></strong></div>
+    <ul class="sn-barras">${ficha.map((f) => `<li title="${h(f.rotulo)}: ${f.nota} de 10"><span>${h(f.rotulo)}</span><i class="sn-barra" role="img" aria-label="${f.nota} de 10"><u style="width:${f.nota * 10}%"></u></i><b class="num">${f.nota}</b></li>`).join("")}</ul>
+    <div class="sn-orc" title="${orc - usado ? `Sobram ${plural(orc - usado, "ponto")}` : "Orçamento todo usado"}"><div class="topo"><span>Orçamento de peças</span><b class="num">${usado} / ${orc} pts</b></div><i class="sn-barra" role="img" aria-label="${usado} de ${orc} pontos usados"><u style="width:${(usado / orc) * 100}%"></u></i></div>
+    ${pilotos.length ? `<div class="sf-pilotos"><small>Pilotos de ${ano}</small><ul>${pilotos.map((p) => `<li><b>${h(p.nome)}</b></li>`).join("")}</ul></div>` : ""}
+    <div class="sn-quem"><small>Na equipe (galera)</small><ul>${gente.length ? gente.map((p) => `<li title="${h(p.name)}${p.id === m.id ? " (você)" : ""}"><span class="av">${p.pawn}</span></li>`).join("") : `<li class="vazio">Ninguém ainda: a vaga é sua.</li>`}</ul></div>`);
+  trocar($("eqNomeGrande"), "");
   return vista;
 }
-
-// ----- carro e pneu -----
 function renderCarro(m, f1, c) {
   const k = carOf(m), PN = window.F1Regras && window.F1Regras.PNEUS;
-  trocar($("carroInfo"), `<small>${h(f1 && m.equipe ? window.F1Pilotos.EQUIPES[m.equipe].nome : k.inspo || "Seu carro")}</small><b>${h(k.name)}</b><span class="sn-piloto"><span class="av">${m.pawn}</span>${h(m.name)}</span>`);
+  let vista = null;
+  $("eqFicha").classList.toggle("hidden", !f1); $("eqFaixa").classList.toggle("hidden", !f1);
+  if (f1) vista = renderEquipe(m);
+  trocar($("carroInfo"), f1 ? "" : `<small>${h(k.inspo || "Seu carro")}</small><b>${h(k.name)}</b>`);
   $("pneuCartao").classList.toggle("hidden", !f1); $("prevCartao").classList.toggle("hidden", !(f1 && E.S.previsao && window.PrevisaoUI)); $("carroLista").classList.toggle("hidden", f1);
   if (f1) {
     const atual = m.pneu || "medio";
-    trocar($("pneuCartao"), `<h3 class="sn-tit"><span>Pneu da largada</span><em>${h(PN[atual].nome)}</em></h3><div class="sn-pneus" role="group" aria-label="Pneu da largada">${Object.entries(PN).map(([v, p]) => `<button class="sn-pneu ${atual === v ? "on" : ""}" data-pneu="${v}" aria-pressed="${atual === v}" style="--c:${p.cor}"><span class="sn-roda" aria-hidden="true"><i></i></span><b>${h(p.nome)}</b><small>${DESC_PNEU[v] || ""}</small>${v === "medio" ? `<em>Padrão</em>` : ""}</button>`).join("")}</div>
-      <p class="sn-obs">Com chuva na largada, quem não escolher larga de pneu de chuva. Cada piloto tem 2 jogos de cada composto na corrida, contando o da largada.</p>`);
-    trocar($("prevCartao"), E.S.previsao && window.PrevisaoUI ? window.PrevisaoUI.html(E.S.previsao, { voltas: c.voltas, titulo: "Previsão do tempo do GP" }) : "");
+    trocar($("pneuCartao"), `<h3 class="sf-tit">Pneu da largada</h3><div class="sn-pneus" role="group" aria-label="Pneu da largada">${Object.entries(PN).map(([v, p]) => `<button class="sn-pneu ${atual === v ? "on" : ""}" data-pneu="${v}" aria-pressed="${atual === v}" title="${h(DESC_PNEU[v] || "")}" style="--c:${p.cor}"><span class="sn-roda" aria-hidden="true"><i></i></span><b>${h(p.nome)}</b></button>`).join("")}</div><p class="sf-dica-pneu">${h(DESC_PNEU[atual] || "")}</p>`);
+    trocar($("prevCartao"), E.S.previsao && window.PrevisaoUI ? `<h3 class="sf-tit">Previsão do tempo</h3>` + window.PrevisaoUI.html(E.S.previsao, { voltas: c.voltas, titulo: "" }) : "");
   } else {
-    const lista = Object.entries(CARROS).map(([id, kk]) => `<button class="sn-car ${m.car === id ? "on" : ""}" data-car="${id}" aria-pressed="${m.car === id}"><canvas data-carprev="${id}" width="240" height="135"></canvas><span><b>${h(kk.name)}</b><small>${h(kk.inspo || "")}</small></span></button>`).join("");
-    if (trocar($("carroLista"), `<h3 class="sn-tit"><span>Seu carro</span><em>${h(k.inspo || "")}</em></h3><div class="sn-cars">${lista}</div><p class="sn-obs">${h(k.desc || "")}</p>`)) $("carroLista").querySelectorAll("[data-carprev]").forEach((cv) => carPreview(cv, m.color, cv.dataset.carprev, m.mods));
+    const lista = Object.entries(CARROS).map(([id, kk]) => `<button class="sn-car ${m.car === id ? "on" : ""}" data-car="${id}" aria-pressed="${m.car === id}" title="${h(kk.desc || "")}"><canvas data-carprev="${id}" width="240" height="135"></canvas><span><b>${h(kk.name)}</b><small>${h(kk.inspo || "")}</small></span></button>`).join("");
+    if (trocar($("carroLista"), `<h3 class="sf-tit">Seu carro</h3><div class="sn-cars">${lista}</div>`)) $("carroLista").querySelectorAll("[data-carprev]").forEach((cv) => carPreview(cv, m.color, cv.dataset.carprev, m.mods));
   }
-  const pint = MODS3.pintura[(m.mods || MODS_PADRAO).pintura] || MODS3.pintura.propria;
-  // o acerto do carro (asa e altura, um por pista: acerto-carro.js) já na sala, para a pista escolhida: o mesmo painel da tecla P na corrida (acerto.js),
-  // com a proposta do engenheiro e a sugestão do estrategista. Só nas regras de F1 (na carreira, a Central tem a aba Acerto)
-  { const b = $("btnAcertoSala"); if (b) { b.hidden = !f1; const pn = PISTAS[E.S.config.pista]; if (f1) $("acertoSalaSub").textContent = `Asa e altura para ${pn ? pn.name : "esta pista"} · engenheiro e estrategista`; } }
+  // o acerto do carro (asa e altura, um por pista: acerto-carro.js), o mesmo painel da tecla P na corrida (acerto.js). Só nas regras de F1
+  { const b = $("btnAcertoSala"); if (b) { b.hidden = !f1; const pn = PISTAS[E.S.config.pista]; if (f1) $("acertoSalaSub").textContent = `asa e altura para ${pn ? pn.name : "esta pista"}`; } }
   renderCapacete();
-  $("garagemSub").textContent = `${f1 && m.equipe ? "Peças do carro · " : "Carro e cor · "}pintura ${pint.name}`;
+  $("garagemSub").textContent = f1 && m.equipe ? "do carro da equipe" : "carro e cor";
+  return vista;
 }
 
-// ----- o GP: a pista, as voltas, o clima, o horário, os robôs e as regras avançadas -----
+// ----- GP: a grade de circuitos à esquerda e a ficha do escolhido à direita (mapa com os setores e o DRS, o perfil de altura, os mais rápidos
+// de cada setor, os seus melhores setores com a volta ideal e a previsão do tempo) -----
+const NOME_CLIMA = { aleatorio: "Aleatório", seco: "Seco", nublado: "Nublado", chuva: "Chuva", variavel: "Variável" };
+const MARCA_NIVEL = { facil: 60, medio: 92, dificil: 100 }; // (o nível de 0 a 100: corrida-robos.js porNivel; os nomes antigos valem a marca deles)
+const nivelNum = (n) => (typeof n === "number" ? n : MARCA_NIVEL[n] ?? 92);
+const chaveSetores = (pista) => "corrida:setores:" + pista; // (a mesma chave de hud-painel.js, que guarda os seus melhores setores; sem importar de lá: o hud puxa o jogo)
+const meusSetores = (pista) => { try { const v = store.get(chaveSetores(pista)); return Array.isArray(v) ? v : [null, null, null]; } catch { return [null, null, null]; } };
+const fotoCss = (id) => { const f = window.GpInfo?.fundoDe(id); return f ? `url(&quot;${f}&quot;)` : "none"; };
 function renderGP(m, isHost, f1, c, t) {
-  const dis = isHost ? "" : "disabled", recorde = loadBest(c.pista), temporada = !!E.S.temporada;
-  const dados = chip(plural(c.voltas, "volta")) + chip(c.hora === "noite" ? "Noite" : "Dia") + (f1 && !temporada && c.clima && c.clima !== "aleatorio" ? chip({ seco: "Seco", chuva: "Chuva", variavel: "Variável" }[c.clima] || "") : "") + (recorde ? chip(`Seu recorde ${fmt(recorde.t)}`, "ouro") : "");
-  // a pista selecionada já mostra os setores, o DRS, a altura e quem é o mais rápido (o quadro chega do servidor e redesenha)
-  const recPista = window.GpSobre.recordesDa(c.pista, () => { if (E.S && E.S.phase === "lobby") renderLobby(); }) || { top: null, setores: [] };
-  trocar($("gpMapa"), `<div class="sn-mapa-corpo">${window.GpSobre.mapaSvg(c.pista, "sn-sobre-svg sn-gp-svg", null, null, true)}<div class="sn-mapa-txt"><small>${h(t.sub)}</small><b>${h(t.name)}</b><div class="sn-chips">${dados}</div>${window.GpSobre.fichaDetalhe(c.pista, undefined, recPista)}<button class="sn-sobre-btn" data-sobre><span>Sobre o GP</span><small>${sobreResumo(c.pista)}</small><i aria-hidden="true">›</i></button>${isHost ? "" : `<p class="sn-so-org">Só o organizador escolhe o GP.</p>`}</div></div>`);
-  const fundoGp = window.GpInfo && window.GpInfo.fundoDe(c.pista); $("gpMapa").style.setProperty("--foto", fundoGp ? `url("${fundoGp}")` : "none"); // a foto do GP por trás do mapa
+  const dis = isHost && !E.S.temporada ? "" : "disabled", G = window.GpInfo, GS = window.GpSobre, g = G.get(c.pista);
+  const recPista = GS.recordesDa(c.pista, () => { if (E.S && E.S.phase === "lobby") renderLobby(); }) || { top: null, top3: [], setores: [] };
   const gpReal = !!(t && t.real), idsPistas = gpReal ? window.Pistas.idsReais() : window.Pistas.idsNaEscolha(); // Formula GP: só as pistas no tamanho real
-  const pistas = idsPistas.map((id) => [id, PISTAS[id]]).map(([id, p]) => `<button class="sn-pista ${c.pista === id ? "on" : ""}" data-pista="${id}" ${dis} aria-pressed="${c.pista === id}"><i class="sn-pista-foto" aria-hidden="true" style="--foto:${window.GpInfo?.fundoDe(id) ? `url(&quot;${window.GpInfo.fundoDe(id)}&quot;)` : "none"}"></i><canvas data-prev="${id}" width="160" height="160" aria-hidden="true"></canvas><span><b>${h(p.name)}</b><small>${h(p.sub)}</small></span>${loadBest(id) ? `<em>Recorde ${fmt(loadBest(id).t)}</em>` : ""}</button>`).join("");
-  if (trocar($("gpPistas"), `<h3 class="sn-tit"><span>Pistas</span><em>${idsPistas.length} circuitos${gpReal ? " · tamanho real" : ""}</em></h3><div class="sn-pistas">${pistas}</div>`)) $("gpPistas").querySelectorAll("[data-prev]").forEach((cv) => drawPreview(cv, cv.dataset.prev));
-  const seg = (itens, atual, attr, rot, dsb = dis) => `<div class="sn-seg" role="group" aria-label="${rot}">${itens.map(([v, l]) => { const on = String(atual) === String(v); return `<button class="sn-opt ${on ? "on" : ""}" data-${attr}="${v}" aria-pressed="${on}" ${dsb}>${l}</button>`; }).join("")}</div>`;
-  const campo = (rot, corpo, nota) => `<div class="sn-grupo"><span class="sn-rot">${rot}</span>${corpo}${nota ? `<small>${nota}</small>` : ""}</div>`;
-  const robos = Math.min(c.robos || 0, (f1 ? 22 : 8) - E.S.players.length);
-  const OPC_CLIMA = [["aleatorio", "Aleatório"], ["seco", "Seco"], ["nublado", "Nublado"], ["chuva", "Chuva"], ["variavel", "Variável"]];
-  trocar($("gpOpcoes"), `<h3 class="sn-tit"><span>O GP</span><em>${isHost ? "Você é o organizador" : "Só o organizador muda"}</em></h3><div class="sn-opcoes">`
+  const cartoes = idsPistas.map((id) => {
+    const p = PISTAS[id], best = loadBest(id), on = c.pista === id;
+    return `<button class="sf-pista ${on ? "on" : ""}" data-pista="${id}" ${dis} aria-pressed="${on}" title="${h(G.get(id).gp || p.name)}"><i class="sf-pista-foto" aria-hidden="true" style="--foto:${fotoCss(id)}"></i><canvas data-prev="${id}" width="220" height="124" aria-hidden="true"></canvas><span class="sf-pista-pe">${G.bandeira(id)}<b>${h(p.name)}</b>${best ? `<em class="num" title="Seu recorde">${fmt(best.t)}</em>` : ""}</span></button>`;
+  }).join("");
+  if (trocar($("gpPistas"), `<h2 class="sf-h">Escolha o GP</h2><div class="sf-pistas-grade">${cartoes}</div>`)) $("gpPistas").querySelectorAll("[data-prev]").forEach((cv) => drawPreview(cv, cv.dataset.prev));
+  const drs = GS.zonasDrs(c.pista).length, info = GS.setoresInfo(c.pista, g), meus = meusSetores(c.pista), best = loadBest(c.pista), T = GS.fmtT;
+  const ideal = meus.every((x) => x > 0) ? meus.reduce((a, b) => a + b, 0) : null;
+  const chips = [g.km ? `<span class="sf-chip" title="Comprimento"><i class="sf-ico ico-km"></i>${g.km.toFixed(3).replace(".", ",")} km</span>` : "", g.curvas.length ? `<span class="sf-chip"><i class="sf-ico ico-curva"></i>${plural(g.curvas.length, "curva")}</span>` : "", drs ? `<span class="sf-chip"><i class="sf-drs">DRS</i>${plural(drs, "zona")} de DRS</span>` : "", `<span class="sf-chip"><i class="sf-ico ico-${c.hora === "noite" ? "lua" : "sol"}"></i>${c.hora === "noite" ? "Noite" : "Dia"}</span>`].join("");
+  const rapidos = info.map((s, i) => { const r = recPista.setores?.[i]; return `<li style="--c:${s.cor}" title="${r ? `${h(r.piloto)} · ${T(r.tempo)}` : "Ninguém marcou este setor ainda"}"><i></i><span>Setor ${i + 1}${s.curvas ? ` · ${h(s.curvas)}` : ""}</span><b class="num">${r ? T(r.tempo) : "—"}</b><em>${r ? h(r.piloto) : ""}</em></li>`; }).join("")
+    + `<li class="rec" title="O recorde da volta nesta pista"><i class="sf-estrela"></i><span>Recorde da volta</span><b class="num">${recPista.top ? T(recPista.top.tempo) : "—"}</b><em>${recPista.top ? h(recPista.top.piloto) : "sem tempo ainda"}</em></li>`;
+  const voce = info.map((s, i) => `<li style="--c:${s.cor}"><i></i><span>Melhor setor ${i + 1}</span><b class="num">${meus[i] > 0 ? T(meus[i]) : "—"}</b></li>`).join("")
+    + `<li class="volta"><span>Melhor volta</span><b class="num">${best ? fmt(best.t) : "—"}</b></li><li class="ideal" title="A soma dos seus melhores setores"><span>Volta ideal</span><b class="num">${ideal ? T(ideal) : "—"}</b></li>`;
+  const prev = f1 && E.S.previsao && window.PrevisaoUI ? window.PrevisaoUI.html(E.S.previsao, { voltas: c.voltas, titulo: "" }) : "";
+  trocar($("gpMapa"), `<header class="sf-ficha-cab">${G.bandeira(c.pista)}<div class="sf-ficha-nome"><b>${h(t.name)}</b><small>${h(g.real ? g.circuito || t.sub || "" : t.sub || "")}</small></div><div class="sf-chips">${chips}</div><button class="sf-sobre" data-sobre title="${h(sobreResumo(c.pista))}">Sobre o GP</button></header>
+    <div class="sf-mapa" style="--foto:${fotoCss(c.pista)}">${GS.mapaSvg(c.pista, "sn-sobre-svg sf-mapa-svg", null, null, true)}</div>${GS.perfilHtml(c.pista)}
+    <div class="sf-quadros"><section class="sf-quadro"><h3 class="sf-tit">Mais rápidos</h3><ul class="sf-linhas">${rapidos}</ul></section>
+    <section class="sf-quadro sf-voce"><h3 class="sf-tit">Você</h3><ul class="sf-linhas">${voce}</ul></section>
+    ${prev ? `<section class="sf-quadro sf-prev"><h3 class="sf-tit">Previsão do tempo</h3>${prev}</section>` : ""}</div>`);
+}
+
+// ----- Configurações: as regras da corrida num painel por cima da escolha do GP (só o organizador mexe) -----
+function renderConfig(m, isHost, f1, c, t) {
+  const dis = isHost && !E.S.temporada ? "" : "disabled", temporada = !!E.S.temporada, gpReal = !!(t && t.real);
+  const seg = (itens, atual, attr, rot, dsb = dis) => `<div class="sn-seg" role="group" aria-label="${rot}">${itens.map(([v, l, d]) => { const on = String(atual) === String(v); return `<button class="sn-opt ${on ? "on" : ""}" data-${attr}="${v}" aria-pressed="${on}" ${dsb}>${l}${d ? `<small>${d}</small>` : ""}</button>`; }).join("")}</div>`;
+  const campo = (rot, corpo, nota, cls = "") => `<div class="sn-grupo ${cls}"${nota ? ` title="${h(nota)}"` : ""}><span class="sn-rot">${rot}</span>${corpo}</div>`;
+  const nv = nivelNum(c.nivel), robos = c.robos || 0;
+  const OPC_CLIMA = Object.entries(NOME_CLIMA);
+  trocar($("gpResumoLinha"), `${window.GpInfo.bandeira(c.pista)}<b>${h(t.name)} · ${plural(c.voltas, "volta")}${f1 && !temporada ? ` · ${NOME_CLIMA[c.clima || "aleatorio"]}` : ""} · ${robos ? `${plural(robos, "robô")} nível ${nv}` : "sem robôs"}${f1 ? ` · ${c.classificacao === "pular" ? "direto para a corrida" : "com classificação"}` : ""}</b>${isHost ? "" : `<small>Só o organizador muda</small>`}`);
+  trocar($("gpOpcoes"), `<div class="sn-opcoes">`
     + (f1 ? campo("Temporada", seg(window.F1Temporadas.ANOS.map((a) => [a, String(a)]), window.F1Temporadas.anoValido(c.ano), "ano", "Temporada"), "As equipes, os pilotos e a força dos carros daquele ano.") : "")
-    + campo("Regras", seg([["f1", "Fórmula 1"], ["formulagp", "Formula GP"], ["galera", "Corrida da Galera"]], gpReal && f1 ? "formulagp" : c.regras || "galera", "regras", "Regras"), gpReal && f1 ? "A Fórmula 1 com as pistas no tamanho real: traçado, largura de 12 m e relevo de verdade." : f1 ? "Pneus, paradas nos boxes, classificação e robôs com os pilotos de 2026." : "Caixas de itens e a ajuda do pelotão, sem pneus.")
+    + campo("Regras", seg([["f1", "Fórmula 1"], ["formulagp", "Formula GP", "pistas no tamanho real"], ["galera", "Corrida da Galera", "com itens"]], gpReal && f1 ? "formulagp" : c.regras || "galera", "regras", "Regras"))
     + campo("Voltas", seg([1, 2, 3, 5, 10, 21].map((v) => [v, v]), c.voltas, "v", "Voltas"))
-    + campo("Horário", seg([["dia", "Dia"], ["noite", "Noite"]], c.hora === "noite" ? "noite" : "dia", "hora", "Horário"))
+    + campo("Horário", seg([["dia", "Dia"], ["noite", "Noite"]], c.hora === "noite" ? "noite" : "dia", "hora", "Horário"), "", "sf-curto")
     + (f1 && !temporada ? campo("Clima", seg(OPC_CLIMA, c.clima || "aleatorio", "clima", "Clima"), "Aleatório segue a previsão do GP. Nublado fecha o céu sem chover. Chuva larga molhado; Variável larga seco e a chuva vem no meio.") : "")
-    + campo("Robôs", seg((f1 ? [0, 1, 3, 7, 11, 21] : [0, 1, 3, 5, 7]).map((v) => [v, v === 21 && f1 ? "Grid de 22" : v ? v : "Sem"]), c.robos || 0, "robos", "Robôs")
-      + (c.robos ? seg([["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]], c.nivel || "medio", "nivel", "Nível dos robôs") : ""),
-      f1 ? `Os robôs são os pilotos reais de ${window.F1Temporadas?.anoAtual?.() || 2026}, com as cores das equipes. "Grid de 22" completa o que faltar.` : "Pilotos do computador completam o grid (até 8 carros) e usam itens.")
+    + `<div class="sf-linha2">` + campo("Robôs", seg((f1 ? [0, 1, 3, 7, 11, 21] : [0, 1, 3, 5, 7]).map((v) => [v, v === 21 && f1 ? "Grid de 22" : v ? v : "Sem"]), robos, "robos", "Robôs"), f1 ? `Os robôs são os pilotos reais de ${window.F1Temporadas?.anoAtual?.() || 2026}. "Grid de 22" completa o que faltar.` : "Pilotos do computador completam o grid (até 8 carros).")
+      + campo("Nível", `<div class="sf-faixa-nivel"><input type="range" min="0" max="100" step="1" value="${nv}" data-nivel-faixa aria-label="Nível dos robôs, de 0 a 100" ${dis} ${robos ? "" : "disabled"}><output class="num">${nv}</output></div>`, "De 0 a 100. 92 é o de sempre; 100, o mais difícil.", "sf-nivel") + `</div>`
+    + (f1 ? campo("Fim de semana", seg([["pular", "Direto para a corrida"], ["completa", "Q1, Q2 e Q3"]], c.classificacao === "pular" ? "pular" : "completa", "quali", "Fim de semana"), "Q1 tira os 5 mais lentos, o Q2 mais 5 e o Q3 decide a pole.") : "")
     + `</div>`);
   trocar($("gpMaisCorpo"), `<div class="sn-opcoes">`
-    + campo("Câmbio", seg([["auto", "Automático"], ["manual", "Manual"]], c.cambio || "auto", "cambio", "Câmbio"), "Manual para todo mundo: Shift sobe a marcha, Ctrl direito reduz (no celular, os botões + e −). Os robôs continuam no automático.")
-    + (f1 ? campo("ERS", seg([["auto", "Automático"], ["manual", "Manual (Shift)"]], c.ers === "auto" ? "auto" : "manual", "ers", "ERS"), "A bateria recarrega na frenagem. No manual, segure Shift esquerdo (ou a tecla escolhida em Controles) ou o botão ERS do controle para desdobrar.")
-      + campo("Classificação", seg([["completa", "Q1, Q2 e Q3"], ["pular", "Pular"]], c.classificacao === "pular" ? "pular" : "completa", "quali", "Classificação"), "Voltas lançadas com o relógio: o Q1 tira os 5 mais lentos, o Q2 mais 5 e o Q3 decide a pole. Pulando, o grid segue a ordem dos pilotos da sala.")
-      + (E.S.previsao && window.PrevisaoUI && !temporada ? `<div class="sn-grupo sn-prev">${window.PrevisaoUI.html(E.S.previsao, { voltas: c.voltas })}</div>` : "")
+    + campo("Câmbio", seg([["auto", "Automático"], ["manual", "Manual"]], c.cambio || "auto", "cambio", "Câmbio"), "Manual para todo mundo: Shift sobe a marcha, Ctrl direito reduz. Os robôs continuam no automático.")
+    + (f1 ? campo("ERS", seg([["auto", "Automático"], ["manual", "Manual"]], c.ers === "auto" ? "auto" : "manual", "ers", "ERS"), "No manual, segure Shift esquerdo (ou a tecla escolhida em Controles) ou o botão ERS do controle para desdobrar.")
       : campo("Caixas de itens", seg([["true", "Ligadas"], ["false", "Desligadas"]], String(!!c.caixas), "caixas", "Caixas de itens"), "Banana, cascos, cogumelo, estrela e bomba espalhados pela pista.")
       + campo("Equilíbrio", seg([["true", "Ligado"], ["false", "Desligado"]], String(c.equilibrio !== false), "equilibrio", "Equilíbrio"), "Pequena ajuda de velocidade para quem ficou longe do pelotão.")) + `</div>`);
-  return robos;
 }
 
-// ----- o grid e a largada -----
+// ----- Grid: a lista de largada no estilo da torre da TV, o resumo do GP, o código da sala e os mais rápidos da galera na pista -----
+// (os robôs: com o grid completo, são todos os pilotos do ano que sobram, como no servidor, F1Pilotos.escolher; com menos, o servidor sorteia na
+// largada, então a lista mostra só quantos são. A ordem de largada sai da classificação, ou da ordem dos pilotos: aqui é a ordem da sala.)
 function renderGrid(m, isHost, f1, c, t, robos, total) {
-  const FP = window.F1Pilotos, PN = window.F1Regras && window.F1Regras.PNEUS, prontos = E.S.players.filter((p) => p.online).length, max = f1 ? 22 : 8;
-  const equipeDe = (p) => (f1 && p.equipe && FP && FP.EQUIPES[p.equipe]) ? `${marcaEquipe(p.equipe)}<span>${h(FP.EQUIPES[p.equipe].nome)}</span>` : `<span>${h(carOf(p).name)}</span>`;
-  const linhas = E.S.players.map((p, i) => `<li class="sn-linha ${m && p.id === m.id ? "eu" : ""}" style="--c:${p.color}"><span class="n">${i + 1}</span><span class="av">${p.pawn}</span><span class="nome"><b>${h(p.name)}</b>${m && p.id === m.id ? "<small>você</small>" : ""}</span><span class="eq">${equipeDe(p)}</span>${f1 && PN && PN[p.pneu] ? `<span class="pn" title="Pneu da largada: ${PN[p.pneu].nome}" style="--c:${PN[p.pneu].cor}"><i></i>${h(PN[p.pneu].nome)}</span>` : `<span class="pn"></span>`}<span class="est">${p.id === E.S.host ? `<em class="org">Org.</em>` : ""}${p.online ? `<em class="ok">Pronto</em>` : `<em class="off">Offline</em>`}${isHost && m && p.id !== m.id ? `<button class="sn-x" data-kick="${p.id}" title="Tirar da sala" aria-label="Tirar ${h(p.name)} da sala">✕</button>` : ""}</span></li>`).join("")
-    + (robos ? `<li class="sn-linha robo" style="--c:#9aa1ad"><span class="n">+</span><span class="av">R</span><span class="nome"><b>${plural(robos, "robô")}</b><small>nível ${NIVEL[c.nivel] || "médio"}</small></span><span class="eq"><span>${f1 ? "Pilotos de 2026" : "Computador"}</span></span><span class="pn"></span><span class="est"><em class="ok">Na largada</em></span></li>` : "");
-  trocar($("gridLista"), `<h3 class="sn-tit"><span>Grid</span><em>${total}/${max} · ${plural(prontos, "pronto")}</em></h3><ul class="sn-linhas">${linhas}</ul>`);
-  const meuPn = m && f1 && PN ? PN[m.pneu || "medio"] : null;
-  trocar($("gridResumo"), `<h3 class="sn-tit"><span>O GP</span><em>${E.S.code}</em></h3><dl class="sn-resumo"><div><dt>Pista</dt><dd>${h(t.name)}</dd></div><div><dt>Voltas</dt><dd>${c.voltas}</dd></div><div><dt>Horário</dt><dd>${c.hora === "noite" ? "Noite" : "Dia"}</dd></div><div><dt>Regras</dt><dd>${f1 ? "Fórmula 1" : "Corrida da Galera"}</dd></div><div><dt>Robôs</dt><dd>${robos ? `${robos} · ${NIVEL[c.nivel] || "médio"}` : "Sem"}</dd></div>${meuPn ? `<div><dt>Seu pneu</dt><dd class="pn" style="--c:${meuPn.cor}"><i></i>${h(meuPn.nome)}</dd></div>` : ""}</dl>
-    <p class="sn-obs">${!m ? "Você está assistindo." : E.S.temporada ? "A sede da temporada dá a largada." : isHost ? "Tudo certo? Aperte LARGAR." : "Esperando o organizador largar."} Mande o código <b>${E.S.code}</b> para a galera: dá para correr sozinho, contra o relógio ou contra robôs.</p>`);
+  const FP = window.F1Pilotos, PN = window.F1Regras && window.F1Regras.PNEUS, max = f1 ? 22 : 8, ano = window.F1Temporadas?.anoAtual?.() || 2026;
+  const sigla = (id) => (EQUIPES_F1[id] && EQUIPES_F1[id].sigla) || "";
+  const pneu = (v) => (f1 && PN && PN[v] ? `<i class="sf-pn" style="--c:${PN[v].cor}" title="${h(PN[v].nome)}">${h(PN[v].nome[0])}</i>` : `<i class="sf-pn vazio" title="O pneu sai na largada">—</i>`);
+  let n = 0;
+  const linhas = E.S.players.map((p) => {
+    n++; const eu = m && p.id === m.id, eq = f1 && p.equipe;
+    return `<tr class="${eu ? "eu" : ""}" style="--c:${eq && FP.EQUIPES[p.equipe] ? FP.EQUIPES[p.equipe].cor : p.color}"><td class="num">${n}</td><td class="lg">${eq ? marcaEquipe(p.equipe) : `<span class="av">${p.pawn}</span>`}</td><td class="sg">${eq ? h(sigla(p.equipe)) : ""}</td><td class="nm"><b>${h(p.name)}</b>${p.id === E.S.host ? `<small>organizador</small>` : ""}</td><td>${pneu(p.pneu || "medio")}</td><td class="st">${p.online ? `<span class="ok">Pronto</span>` : `<span class="off">Fora</span>`}</td><td class="fim">${eu ? `<em class="sf-voce-chip">Você</em>` : isHost && m ? `<button class="sn-x" data-kick="${p.id}" title="Tirar da sala" aria-label="Tirar ${h(p.name)} da sala">✕</button>` : ""}</td></tr>`;
+  });
+  if (robos > 0) {
+    const ocup = {}; for (const p of E.S.players) if (f1 && p.equipe) ocup[p.equipe] = (ocup[p.equipe] || 0) + 1;
+    const todos = f1 && FP && FP.escolher ? FP.escolher(999, 1, ocup) : [];
+    if (f1 && todos.length && robos >= todos.length) for (const p of todos) { n++; linhas.push(`<tr class="robo" style="--c:${FP.EQUIPES[p.equipe]?.cor || "#9aa1ad"}"><td class="num">${n}</td><td class="lg">${marcaEquipe(p.equipe)}</td><td class="sg">${h(sigla(p.equipe))}</td><td class="nm"><b>${h(p.nome)}</b></td><td>${pneu(null)}</td><td class="st"><span class="robo">Robô</span></td><td></td></tr>`); }
+    else linhas.push(`<tr class="robo"><td class="num">+</td><td class="lg"><span class="av">R</span></td><td></td><td class="nm"><b>${plural(robos, "robô")}</b><small>${f1 ? `sorteados entre os pilotos de ${ano}` : "computador"} · nível ${nivelNum(c.nivel)}</small></td><td></td><td class="st"><span class="robo">Robôs</span></td><td></td></tr>`);
+  }
+  trocar($("gridLista"), `<h2 class="sf-h">Grid de largada <small>${total}/${max}</small></h2><div class="sf-tabela-rolo"><table><thead><tr><th>Pos.</th><th colspan="2">Equipe</th><th>Piloto</th><th>Pneu</th><th>Status</th><th></th></tr></thead><tbody>${linhas.join("")}</tbody></table></div>`);
+  const G = window.GpInfo, g = G.get(c.pista), GS = window.GpSobre;
+  trocar($("gridResumo"), `<header class="sf-ficha-cab">${G.bandeira(c.pista)}<div class="sf-ficha-nome"><b>${h(g.real && g.gp ? g.gp : t.name)}</b><small>${h(g.real ? g.circuito || "" : t.sub || "")}</small></div><div class="sf-chips"><span class="sf-chip"><i class="sf-ico ico-bandeira"></i>${plural(c.voltas, "volta")}</span>${f1 && !E.S.temporada ? `<span class="sf-chip"><i class="sf-ico ico-sol"></i>${NOME_CLIMA[c.clima || "aleatorio"]}</span>` : ""}<span class="sf-chip"><i class="sf-ico ico-gente"></i>${robos ? plural(robos, "robô") : "sem robôs"}</span></div></header><div class="sf-mapa mini" style="--foto:${fotoCss(c.pista)}">${GS.mapaSvg(c.pista, "sn-sobre-svg sf-mapa-svg", null, null, true)}</div>`);
+  trocar($("gridCodigo"), `<small>Código da sala</small><b class="sf-cod">${h(E.S.code)}</b><button class="sf-copiar" data-copiar="${h(E.S.code)}" title="Copiar o código para mandar para a galera"><i class="sf-ico ico-copiar"></i>Copiar</button>`);
+  const rec = GS.recordesDa(c.pista, () => { if (E.S && E.S.phase === "lobby") renderLobby(); }) || { top3: [] };
+  const top3 = rec.top3 || [];
+  trocar($("gridQuem"), `<h3 class="sf-tit">Quem anda mais aqui</h3>${top3.length ? `<ol class="sf-linhas">${top3.map((r, i) => `<li title="${h(r.piloto)} · ${GS.fmtT(r.tempo)}"><span class="num">${i + 1}</span>${r.carro && EQUIPES_F1[r.carro] ? marcaEquipe(r.carro) : "<i></i>"}<b>${h(r.piloto)}</b><em class="num">${GS.fmtT(r.tempo)}</em></li>`).join("")}</ol>` : `<p class="sf-vazio">Ninguém marcou tempo nesta pista ainda.</p>`}`);
   const podeLargar = isHost && !E.S.temporada;
   $("tLargarTit").textContent = podeLargar ? "Largar" : E.S.temporada ? "Aguarde" : "No grid";
   $("tLargarTxt").textContent = podeLargar ? `${t.name} · ${plural(c.voltas, "volta")}` : E.S.temporada ? "A sede dá a largada" : "Esperando o organizador";
@@ -335,11 +373,12 @@ function mudarPistaSobre(d) {
 })();
 
 // ----- a gaveta das peças e da pintura (um atalho da etapa Carro e pneu) -----
-function abrirGaveta() {
+function abrirGaveta(secao) {
   const m = me(); if (!m || gavetaAberta) return;
   gavetaAberta = true; focoAntes = document.activeElement;
   $("snGaveta").classList.remove("hidden"); $("sn").inert = true; document.body.classList.add("sn-gaveta-on");
   renderGaveta();
+  const alvo = typeof secao === "string" && $(secao); if (alvo && !alvo.classList.contains("hidden")) { alvo.scrollIntoView({ block: "start", behavior: "auto" }); const b = alvo.querySelector("button:not(:disabled)"); if (b) { b.focus({ preventScroll: true }); return; } }
   const l = [...$("snGaveta").querySelectorAll("button:not(:disabled)")], i = l.find((x) => x.matches(".sn-pint.on,.peca-card.sel")) || l[0];
   if (i) i.focus({ preventScroll: true });
 }
@@ -366,8 +405,13 @@ function renderGaveta() {
   trocar($("colorPick"), COLORS.map((col) => { const taken = E.S.players.some((p) => p.color === col && p.id !== m.id); return `<button class="${col === m.color ? "on" : ""}" data-c="${col}" ${taken ? "disabled" : ""} aria-pressed="${col === m.color}" style="background:${col}" aria-label="Cor ${col}${taken ? " (em uso)" : ""}"></button>`; }).join(""));
   trocar($("pawnPick"), PAWNS.map((pw) => { const taken = E.S.players.some((p) => p.pawn === pw && p.id !== m.id); return `<button class="${pw === m.pawn ? "on" : ""}" data-p="${pw}" ${taken ? "disabled" : ""} aria-pressed="${pw === m.pawn}">${pw}</button>`; }).join(""));
 }
-$("btnGaragem").onclick = abrirGaveta;
-$("btnAcertoSala").onclick = () => { if (!E.S) return; usarPista(E.S.config.pista); alternarAcerto(true); };
+document.querySelectorAll("[data-gaveta]").forEach((b) => (b.onclick = () => abrirGaveta(b.dataset.gaveta))); // Peças, Pintura e Capacete abrem a gaveta na seção de cada um
+$("btnAcertoSala").onclick = () => { // o painel grande (acerto.js, modo sala), com o carro da equipe de lado
+  if (!E.S) return; usarPista(E.S.config.pista);
+  const m = me(), eqInfo = m && m.equipe && window.F1Pilotos?.EQUIPES[m.equipe];
+  const mods = eqInfo && MODS3.pintura[eqInfo.pintura] ? { ...(m.mods || MODS_PADRAO), pintura: eqInfo.pintura } : m && m.mods;
+  alternarAcerto(true, { sala: true, desenhar: m ? (cv) => carPreview(cv, m.color, m.car, mods) : null, logo: m && m.equipe ? marcaEquipe(m.equipe) : "", cor: eqInfo ? eqInfo.cor : null });
+};
 $("gavetaFechar").onclick = fecharGaveta;
 
 // ----- os cliques de toda a sala (um ouvinte só, lendo o estado de agora) -----
@@ -395,7 +439,7 @@ $("lobby").addEventListener("click", (e) => {
   if ((b = t.closest("[data-ers]"))) return cfg({ ers: b.dataset.ers });
   if ((b = t.closest("[data-quali]"))) return cfg({ classificacao: b.dataset.quali });
   if ((b = t.closest("[data-robos]"))) return cfg({ robos: +b.dataset.robos });
-  if ((b = t.closest("[data-nivel]"))) return cfg({ nivel: b.dataset.nivel });
+  if ((b = t.closest("[data-copiar]"))) { const cod = b.dataset.copiar; try { navigator.clipboard?.writeText(cod); } catch (_) {} const txt = b.lastChild; if (txt && txt.nodeType === 3) { txt.textContent = "Copiado"; setTimeout(() => { if (b.isConnected) txt.textContent = "Copiar"; }, 1600); } return; }
   if ((b = t.closest("[data-caixas]"))) return cfg({ caixas: b.dataset.caixas === "true" });
   if ((b = t.closest("[data-equilibrio]"))) return cfg({ equilibrio: b.dataset.equilibrio === "true" });
   if ((b = t.closest("[data-car]"))) return act("car", { car: b.dataset.car });
@@ -411,22 +455,25 @@ $("lobby").addEventListener("click", (e) => {
   }
 });
 
-// ----- LB e RB (Q e E): a equipe na etapa Equipe, o composto na etapa Carro e pneu -----
+// a barra do nível dos robôs: o número acompanha o arraste, e o servidor recebe quando solta
+$("lobby").addEventListener("input", (e) => { const x = e.target.closest && e.target.closest("[data-nivel-faixa]"); if (x) { const o = x.parentNode.querySelector("output"); if (o) o.textContent = x.value; } });
+$("lobby").addEventListener("change", (e) => { const x = e.target.closest && e.target.closest("[data-nivel-faixa]"); if (x && E.S) cfg({ nivel: Math.round(+x.value) }); });
+
+// ----- LB e RB (Q e E): o GP na escolha do GP (o organizador), a equipe (ou o carro, fora da F1) na etapa Carro -----
 function lateral(d) {
   if (sobreAberto) return mudarPistaSobre(d);
   const m = me(), S = E.S; if (!m || !S || gavetaAberta) return;
   const f1 = S.config.regras === "f1";
-  if (etapa === "equipe" && f1) {
+  if (etapa === "gp") return mudarPistaSobre(d);
+  if (etapa === "carro" && f1) {
     const ids = Object.keys(window.F1Equipes.EQUIPES).filter((id) => !lotada(id, m)), i = ids.indexOf(equipeVista(m));
     if (!ids.length) return; const prox = ids[(i + d + ids.length * 2) % ids.length]; escolherEquipe(prox);
     const b = $("eqFaixa").querySelector(`[data-equipe="${prox}"]`); if (b && document.body.classList.contains("sn-nav")) b.focus({ preventScroll: true });
-  } else if (etapa === "carro" && f1) {
-    const ks = Object.keys(window.F1Regras.PNEUS), i = ks.indexOf(m.pneu || "medio"); act("pneu", { pneu: ks[(i + d + ks.length) % ks.length] });
   } else if (etapa === "carro") {
     const ks = Object.keys(CARROS), i = ks.indexOf(m.car); act("car", { car: ks[(i + d + ks.length) % ks.length] });
   }
 }
-const INICIAL = { equipe: ".sn-eq.on", carro: ".sn-pneu.on,.sn-car.on", gp: "#gpOpcoes .sn-opt.on", grid: "#btnStart" };
+const INICIAL = { gp: ".sf-pista.on", config: "#gpOpcoes .sn-opt.on", carro: ".sn-eq.on,.sn-pneu.on,.sn-car.on", piloto: ".sf-cam.on", grid: "#btnStart" };
 const inicial = (lista) => {
   if (sobreAberto) return lista.find((x) => x.matches(".sn-curva")) || lista.find((x) => x.matches("[data-sobre-fechar]")) || null;
   if (gavetaAberta) return lista.find((x) => x.matches(".sn-pint.on,.peca-card.sel")) || null;
@@ -452,36 +499,37 @@ export function renderLobby() {
   // o topo: o código da sala, as etapas (clicáveis) e o Continuar (que na última etapa é o Largar)
   $("slCodigo").textContent = S.code; $("hubSala").textContent = `${plural(total, "carro")} no grid`;
   const idx = ativas.indexOf(etapa), ultima = idx === ativas.length - 1;
-  trocar($("snEtapas"), ativas.map((k, i) => `<button class="sn-et ${k === etapa ? "on" : ""} ${i < idx ? "feita" : ""}" data-etapa-ir="${k}" ${k === etapa ? 'aria-current="step"' : ""}><span class="n">${i + 1}</span><span class="t">${NOMES[k]}</span></button>`).join(""));
+  trocar($("snEtapas"), ativas.map((k, i) => `<button class="sn-et ${k === etapa ? "on" : ""} ${i < idx ? "feita" : ""}" data-etapa-ir="${k}" ${k === etapa ? 'aria-current="step"' : ""}><i class="sf-ico ico-${k}" aria-hidden="true"></i><span class="t">${NOMES[k]}</span></button>`).join(""));
   const podeLargar = isHost && !S.temporada;
   $("btnContinuar").disabled = ultima && !podeLargar;
   $("snContTit").textContent = !ultima ? "Continuar" : podeLargar ? "Largar" : S.temporada ? "Aguarde" : "No grid";
   $("snContSub").textContent = !ultima ? `Próximo: ${NOMES[ativas[idx + 1]]}` : podeLargar ? `${t.name} · ${plural(c.voltas, "volta")}` : "Esperando o organizador";
   $("btnContinuar").classList.toggle("largar", ultima);
   // as dicas dos botões que mudam com a etapa
-  const lat = sobreAberto ? "trocar de GP" : etapa === "equipe" && f1 ? "trocar de equipe" : etapa === "carro" ? (f1 ? "trocar o pneu" : "trocar de carro") : "";
+  const lat = sobreAberto || (etapa === "gp" && isHost && !S.temporada) ? "Trocar de GP" : etapa === "carro" ? (f1 ? "Trocar de equipe" : "Trocar de carro") : "";
+  trocar($("sfEquipeTopo"), f1 && m && m.equipe ? marcaEquipe(m.equipe) : "");
   for (const id of ["dicaLat", "dicaLatKb"]) { $(id).classList.toggle("nada", !lat); $(id).querySelector("em").textContent = lat; }
   $("dicaY").classList.toggle("nada", !(etapa === "carro" && m));
   // a etapa de agora
   let vista = null;
-  if (etapa === "equipe" && m && f1) vista = renderEquipe(m);
-  else if (etapa === "carro" && m) renderCarro(m, f1, c);
+  if (etapa === "carro" && m) vista = renderCarro(m, f1, c);
   else if (etapa === "gp") renderGP(m, isHost, f1, c, t);
+  else if (etapa === "config") { renderGP(m, isHost, f1, c, t); renderConfig(m, isHost, f1, c, t); } // (a escolha do GP fica por trás do painel)
   else if (etapa === "grid") renderGrid(m, isHost, f1, c, t, robos, total);
   if (gavetaAberta) renderGaveta();
   if (sobreAberto) renderSobre();
-  if (etapa === "ajustes" && m) {
+  if (etapa === "piloto" && m) {
     palco.parar();
     const eqInfo = f1 && m.equipe && window.F1Pilotos.EQUIPES[m.equipe];
     const mods = eqInfo && MODS3.pintura[eqInfo.pintura] ? { ...(m.mods || MODS_PADRAO), pintura: eqInfo.pintura } : m.mods;
     montarAjustes($("alPreview"), m, mods); return;
   }
   pararAjustes();
-  // o palco 3D: o carro girando na vitrine da etapa (Equipe e Carro e pneu); nas outras etapas ele descansa
-  const vitrine = etapa === "equipe" && m && f1 ? $("vitrineEquipe") : etapa === "carro" && m ? $("vitrineCarro") : null;
+  // o palco 3D: o carro girando na vitrine da etapa Carro (com a equipe à vista na faixa); nas outras etapas ele descansa
+  const vitrine = etapa === "carro" && m ? $("vitrineCarro") : null;
   if (!vitrine) { palco.parar(); return; }
-  const FP = window.F1Pilotos, eqId = etapa === "equipe" ? vista : m.equipe, eqInfo = f1 && eqId && FP.EQUIPES[eqId];
-  const mods = etapa === "equipe" && eqInfo && eqId !== m.equipe && MODS3.pintura[eqInfo.pintura] ? { ...(m.mods || MODS_PADRAO), pintura: eqInfo.pintura } : m.mods;
+  const FP = window.F1Pilotos, eqId = f1 ? vista || m.equipe : null, eqInfo = f1 && eqId && FP.EQUIPES[eqId];
+  const mods = eqInfo && eqId !== m.equipe && MODS3.pintura[eqInfo.pintura] ? { ...(m.mods || MODS_PADRAO), pintura: eqInfo.pintura } : m.mods;
   if (palco.ok && palco.montarEm(vitrine)) palco.mostrar({ cor: m.color, modelo: m.car, mods, corEquipe: eqInfo ? eqInfo.cor : m.color, prontoF1: f1Carregou });
   if (!palco.ok) { // sem WebGL: a foto parada de sempre
     let foto = vitrine.querySelector(".sn-foto"); if (!foto) { foto = document.createElement("canvas"); foto.className = "sn-foto"; foto.width = 720; foto.height = 405; vitrine.prepend(foto); }

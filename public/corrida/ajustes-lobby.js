@@ -6,7 +6,7 @@ import { EDITAVEIS, camposDe, ajusteDe, definir, restaurarCamera } from "./camer
 import { medidas } from "./cameras.js";
 import { ajusteEspelho, definirEspelho, restaurarEspelhos } from "./retrovisores-ajuste.js";
 import { NOMES } from "./cameras.js";
-import { estiloHud, definirEstiloHud, htmlHudTelemetria, atualizarHudTelemetria, posicionarHudNoHalo } from "./hud-telemetria.js";
+import { estiloHud, definirEstiloHud, htmlHudTelemetria, atualizarHudTelemetria, posicionarHudNoHalo, ESTILOS_HUD } from "./hud-telemetria.js";
 
 let renderer, cena, camera, kart, host, raf = 0, chave = "", modo = "cockpit", controles;
 const $ = (s) => document.querySelector(s);
@@ -32,7 +32,15 @@ function iniciar() {
   }
   return true;
 }
+// (2026-11-21, a sala nova: a etapa Piloto) a câmera e o estilo do HUD em botões, no lugar das listas (as listas continuam escondidas: o resto lê delas)
+const CURTO = { cockpit: "Cockpit", onboard: "Onboard T-cam", bico: "Bico", perto: "Perseguição próxima", longe: "Perseguição afastada", cima: "Aérea", tv: "TV" };
+function botoes() {
+  const cams = $("#sfCams"), huds = $("#sfHuds");
+  if (cams) cams.innerHTML = EDITAVEIS.map(k => `<button type="button" class="sf-cam ${k === modo ? "on" : ""}" data-cam="${k}" aria-pressed="${k === modo}" title="${NOMES[k] || k}"><i class="sf-ico ico-cam-${k}" aria-hidden="true"></i><span>${CURTO[k] || NOMES[k] || k}</span></button>`).join("");
+  if (huds) huds.innerHTML = ESTILOS_HUD.map(([k, n]) => `<button type="button" class="sf-hud ${k === estiloHud() ? "on" : ""}" data-hud="${k}" aria-pressed="${k === estiloHud()}"><i class="sf-hud-mini ${k}" aria-hidden="true"><b>8</b><u></u></i><span>${n}</span></button>`).join("");
+}
 function linhas() {
+  botoes();
   const a = ajusteDe(modo);
   $("#alCamCampos").innerHTML = camposDe(modo).map(c => `<label><span>${c.nome} <b>${a[c.id]}${c.un}</b></span><input type="range" data-campo="${c.id}" min="${c.min}" max="${c.max}" step="${c.passo}" value="${a[c.id]}"><small>${c.dica}</small></label>`).join("");
   $("#alModo").value = modo;
@@ -48,6 +56,8 @@ function iniciarControles() {
   $("#alEspCampos").addEventListener("input", e => { const x = e.target; if (!x.dataset.esp) return; definirEspelho(x.dataset.lado, x.dataset.esp, x.value); x.parentNode.querySelector("b").textContent = ajusteEspelho(x.dataset.lado)[x.dataset.esp] + "°"; });
   $("#alRestCam").addEventListener("click", () => { restaurarCamera(modo); linhas(); });
   $("#alRestEsp").addEventListener("click", () => { restaurarEspelhos(); linhas(); });
+  $("#sfCams")?.addEventListener("click", e => { const b = e.target.closest("[data-cam]"); if (!b) return; modo = b.dataset.cam; linhas(); $("#sfCams").querySelector(`[data-cam="${modo}"]`)?.focus({ preventScroll: true }); });
+  $("#sfHuds")?.addEventListener("click", e => { const b = e.target.closest("[data-hud]"); if (!b) return; definirEstiloHud(b.dataset.hud); $("#alHud").value = estiloHud(); if (host) host.dataset.hud = estiloHud(); botoes(); $("#sfHuds").querySelector(`[data-hud="${estiloHud()}"]`)?.focus({ preventScroll: true }); });
 }
 export function montarAjustes(el, jogador, mods) {
   if (!el || !jogador) return;

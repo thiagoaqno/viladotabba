@@ -13,12 +13,15 @@ test('a entrada da Carreira F1 cria sala, passa pelas etapas da sala, escolhe M�
   await page.locator('#hName').fill('Piloto');
   await page.locator('#btnCreate').click();
   await expect(page.locator('#lobby')).toBeVisible();
-  // a sala nova nasce com as regras de F1, 5 voltas e o pneu médio; o fluxo é em etapas (sem abas): Equipe, Carro e pneu, GP e Grid
-  await expect(page.locator('#snEtapas [data-etapa-ir]')).toHaveCount(4);
+  // a sala nova nasce com as regras de F1, 5 voltas e o pneu médio; o fluxo é em etapas: GP, Configurações, Carro, Piloto e Grid
+  await expect(page.locator('#snEtapas [data-etapa-ir]')).toHaveCount(5);
+  await page.locator('[data-pista="monaco"]').click();
+  await page.locator('#btnContinuar').click();
+  await expect(page.locator('[data-v="5"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#btnContinuar').click();
   await expect(page.locator('#eqFaixa [data-equipe]')).toHaveCount(11);
   await page.locator('#eqFaixa [data-equipe="ferrari"]').click();
   await expect(page.locator('#eqFaixa [data-equipe="ferrari"]')).toHaveAttribute('aria-pressed', 'true');
-  await page.locator('#btnContinuar').click();
   await expect(page.locator('#pneuCartao [data-pneu="medio"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#pneuCartao [data-pneu="macio"]').click();
   await expect(page.locator('#pneuCartao [data-pneu="macio"]')).toHaveAttribute('aria-pressed', 'true');
@@ -28,9 +31,6 @@ test('a entrada da Carreira F1 cria sala, passa pelas etapas da sala, escolhe M�
   await expect(page.locator('#modPick [data-pintura="rosso"]')).toHaveClass(/on/);
   await page.keyboard.press('Escape');
   await expect(page.locator('#snGaveta')).toBeHidden();
-  await page.locator('#snEtapas [data-etapa-ir="gp"]').click();
-  await page.locator('[data-pista="monaco"]').click();
-  await expect(page.locator('[data-v="5"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#snEtapas [data-etapa-ir="grid"]').click();
   await page.locator('#btnStart').click();
   await expect(page.locator('#race')).toBeVisible({ timeout: 30000 });

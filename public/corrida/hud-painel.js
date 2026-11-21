@@ -2,7 +2,7 @@
 // ERS), o quadro de tempos do alto à direita (setores S1/S2/S3, posição, volta atual e BEST), o minimapa do traçado inteiro e o banner
 // de avisos de punição. Tudo em DOM criado uma vez e atualizado só no que mudou (hud.js chama a ~10x por segundo; o minimapa a cada
 // poucos quadros). As contas puras estão em hud-mfd.js (HudMfd).
-import { E, $, carOf, checkpoint } from "./estado.js";
+import { E, $, carOf, checkpoint, store } from "./estado.js";
 import { race } from "./jogo.js";
 import { clima } from "./clima.js";
 import { htmlHudTelemetria, atualizarHudTelemetria, estiloHud } from "./hud-telemetria.js";
@@ -66,6 +66,13 @@ export function montarTempo() {
     <div class="ht-linha"><b id="htPos">1<small>/1</small></b><span id="htVolta">0:00.000</span></div><div class="ht-linha ht-best"><span>BEST</span><span id="htBest">—:--.---</span></div><div class="ht-linha ht-best ht-corrida"><span>CORRIDA</span><span id="htCorrida">0:00.0</span></div>`;
 }
 // Segue os setores (12 checkpoints, 4 por setor) e o desgaste por volta do pneu. Guardado em `race.hudT` (zera sozinho a cada corrida).
+// (2026-11-21, a sala nova: o quadro "Você" da escolha do GP) o seu melhor tempo em cada setor de cada pista, neste aparelho, nas regras de F1
+// e fora da classificação (como o recorde da volta: fantasma.js)
+export const chaveSetores = (pista) => "corrida:setores:" + pista;
+function guardarSetor(k, tempo) {
+  const S = E.S; if (!S || S.config.regras !== "f1" || race.quali || !(tempo > 1)) return;
+  try { const c = chaveSetores(S.config.pista), v = store.get(c) || [null, null, null]; if (!(v[k] > 0) || tempo < v[k]) { v[k] = Math.round(tempo * 1000) / 1000; store.set(c, v); } } catch (_) {}
+}
 function seguir(m, pneu) {
   const T = race.hudT || (race.hudT = { sector: race.sector, lapIni: race.startAt, t: [null, null, null], cor: ["off", "off", "off"], melhor: [null, null, null], desgIni: pneu ? pneu.desgaste : 0, comp: pneu && pneu.composto, taxa: null });
   if (race.quali && T.sessao !== race.startAt) { T.sessao = race.startAt; T.qAberta = false; T.lapIni = race.startAt; } // (cada Q começa com o relógio parado)
@@ -80,7 +87,7 @@ function seguir(m, pneu) {
   if (race.quali && s === 0 && antes === 11) { T.qAberta = true; T.lapIni = race.cpT; T.t = [null, null, null]; T.cor = ["off", "off", "off"]; return T; }
   if (!m || !m.started) return T;
   const t = race.cpT, voltasFeitas = (race.voltaLocal || 0) - (s === 0 ? 1 : 0), valido = voltasFeitas >= 1; // a volta de largada não serve de comparação
-  const fim = (k, soFar) => { const tempo = (t - T.lapIni) / 1000 - soFar; T.t[k] = tempo; T.cor[k] = M().corDoSetor(tempo, T.melhor[k], valido); if (valido && (!(T.melhor[k] > 0) || tempo < T.melhor[k])) T.melhor[k] = tempo; };
+  const fim = (k, soFar) => { const tempo = (t - T.lapIni) / 1000 - soFar; T.t[k] = tempo; T.cor[k] = M().corDoSetor(tempo, T.melhor[k], valido); if (valido && (!(T.melhor[k] > 0) || tempo < T.melhor[k])) T.melhor[k] = tempo; if (valido) guardarSetor(k, tempo); };
   if (s === 4 && antes === 3) { T.cor[1] = T.cor[2] = "off"; T.t[1] = T.t[2] = null; fim(0, 0); }
   else if (s === 8 && antes === 7) fim(1, T.t[0] || 0);
   else if (s === 0 && antes === 11) {

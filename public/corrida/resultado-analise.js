@@ -156,9 +156,9 @@ const seletor = (papel, s, L) => `<label class="ra-sel ${papel}">${s ? logoDe(s.
   <select data-ra-sel="${papel}">${papel === "b" && !s ? `<option value="">Comparar com…</option>` : ""}${L.map((x) => `<option value="${h(x.id)}" ${s && x.id === s.id ? "selected" : ""}>${h(x.nome)}${x.r.dnf ? " (abandonou)" : ` · ${x.r.pos}º`}</option>`).join("")}</select></label>`;
 function html(S, A, L, idA, idB) {
   const a = L.find((s) => s.id === idA), bb = L.find((s) => s.id === idB) || null;
-  const abas = modo.abas || [["replay", "Replay"], ["momentos", "Momentos"], ["posicoes", "Posições"], ["ultrapassagens", "Ultrapassagens"], ["ritmo", "Ritmo"], ["pneus", "Pneus"]];
+  const abas = modo.abas || [["replay", "Replay"], ["momentos", "Momentos"], ["posicoes", "Posições"], ["ultrapassagens", "Ultrapassagens"], ["ritmo", "Ritmo"], ["pneus", "Pneus"], ["setores", "Setores"]];
   const corpo = aba === "ritmo" ? `<div class="ra-par">${cartao(A, a, "a")}${bb ? cartao(A, bb, "b") : ""}</div>${graficoRitmo(A, a, bb)}<p class="ra-legenda">Escolha outro piloto clicando no gráfico das posições, nos pneus ou na tabela acima.</p>`
-    : aba === "pneus" ? pneus(L, idA, idB) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A, L, a) : aba === "ultrapassagens" ? ultrapassagensHTML(A, L) : aba === "replay" ? replayHTML(replayAgora, L) : aba === "mapa" ? mapaHTML(replayAgora || null) : graficoPosicoes(L, A, idA, idB);
+    : aba === "pneus" ? pneus(L, idA, idB) : aba === "setores" ? melhoresSetoresHTML(L, a, bb) + setoresHTML(a, L) : aba === "momentos" ? momentosHTML(momentos(S, A, L), A, L, a) : aba === "ultrapassagens" ? ultrapassagensHTML(A, L) : aba === "replay" ? replayHTML(replayAgora, L) : aba === "mapa" ? mapaHTML(replayAgora || null) : graficoPosicoes(L, A, idA, idB);
   const resumo = [A.safeties ? `${A.safeties} safety car${A.safeties > 1 ? "s" : ""}` : "", A.amarelas ? `${A.amarelas} bandeira${A.amarelas > 1 ? "s" : ""} amarela${A.amarelas > 1 ? "s" : ""}` : "", A.chuva ? "chuva" : ""].filter(Boolean).join(" · ");
   return `${modo.semCab ? "" : `<header class="ra-cab"><div><h3>Análise da corrida</h3><small>${A.voltas} volta${A.voltas > 1 ? "s" : ""}${resumo ? ` · ${resumo}` : ""}</small></div>
     <div class="ra-abas" role="tablist">${abas.map(([k, r]) => `<button type="button" role="tab" data-ra-aba="${k}" class="${aba === k ? "on" : ""}" aria-selected="${aba === k}">${r}</button>`).join("")}</div></header>`}
@@ -290,6 +290,20 @@ function momentos(S, A, L) {
   return { lista, fim: Math.max(fim, ...lista.map((e) => e.t)), cum };
 }
 const fora = (e) => (filtro !== "tudo" && filtro !== e.tipo) || (voltaFiltro != null && e.v !== voltaFiltro);
+// (2026-11-21, as telas novas do Thiago: a aba Setores) os setores da melhor volta de A e de B, lado a lado, com a mesma cor de cada setor: roxo = o
+// melhor da corrida naquele setor, verde = o melhor dele na corrida, amarelo = os outros; embaixo, a faixa de cada volta de A (setoresHTML)
+function melhoresSetoresHTML(L, a, bb) {
+  const melhorGeral = [0, 1, 2].map((k) => Math.min(...L.flatMap((s) => (s.d.sv || []).filter(Boolean).map((x) => x[k]))));
+  const bloco = (x) => {
+    if (!x) return "";
+    const s3 = x.d.s, sv = (x.d.sv || []).filter(Boolean), melhorDele = [0, 1, 2].map((k) => Math.min(...sv.map((y) => y[k])));
+    const linhas = [0, 1, 2].map((k) => { const t = s3 && s3[k]; const cls = !(t > 0) ? "s-sem" : t <= melhorGeral[k] + 1e-6 ? "s-roxo" : t <= melhorDele[k] + 1e-6 ? "s-verde" : "s-amarelo";
+      return `<li class="${cls}" title="Setor ${k + 1} da melhor volta${t > 0 ? `: ${t.toFixed(3)} s` : ""}"><b>S${k + 1}</b><span>${t > 0 ? t.toFixed(3) : "—"}</span></li>`; }).join("");
+    const volta = s3 && s3.every((t) => t > 0) ? s3.reduce((p, q) => p + q, 0) : null;
+    return `<div class="ra-melhor"><header>${logoDe(x.eqId)}<b>${h(x.nome)}</b><small>${x.d.mv ? `melhor volta: V${x.d.mv}` : "sem volta completa"}</small></header><ul>${linhas}</ul><strong>${volta ? tempo(volta) : "—"}</strong></div>`;
+  };
+  return `<section class="ra-card ra-melhores"><header><h4>Setores da melhor volta</h4><span class="ra-set-leg"><i class="s-roxo"></i>Melhor da corrida<i class="s-verde"></i>Melhor dele<i class="s-amarelo"></i>Mais lento</span></header><div class="ra-melhores-par">${bloco(a)}${bloco(bb)}</div></section>`;
+}
 // os setores de cada volta do piloto `a`: roxo = o melhor da corrida naquele setor, verde = o melhor dele, amarelo = os outros
 function setoresHTML(a, L) {
   const melhorGeral = [0, 1, 2].map((k) => Math.min(...L.flatMap((s) => (s.d.sv || []).filter(Boolean).map((x) => x[k]))));

@@ -58,11 +58,26 @@ function fichaDetalhe(id, g = window.GpInfo.get(id), rec = null) {
   const drs = zonasDrs(t);
   return `<div class="sn-sobre-ficha"><ul class="sn-sobre-setores">${setores}${drs.length ? `<li><i class="drs"></i><b>DRS</b><span>${plural(drs.length, "zona")}</span></li>` : ""}${rec ? `<li class="recorde"><i></i><b>Recorde</b><span></span><em>${rec.top ? `${fmtT(rec.top.tempo)} · ${h(rec.top.piloto)}` : "sem tempo ainda"}</em></li>` : ""}</ul>${perfil}</div>`;
 }
+// (2026-11-21, a sala nova) as peças da ficha separadas: o perfil de altura (sem metros: o relevo das pistas está em unidades do jogo e algumas
+// têm exagero) e, de cada setor, a faixa de curvas
+function perfilHtml(id) {
+  const mapa = mapaSobre(id), hs = mapa.alturas, N = hs.length, mn = Math.min(...hs), mx = Math.max(...hs), amp = Math.max(1, mx - mn), W = 300, A = 46;
+  if (amp < 4) return "";
+  const faixa = (i0, i1) => { let s = ""; for (let i = i0; i <= i1; i += 3) s += `${s ? "L" : "M"}${((i / N) * W).toFixed(1)} ${(A - 3 - ((hs[i % N] - mn) / amp) * (A - 8)).toFixed(1)}`; return s; };
+  const area = (i0, i1, cor) => `<path fill="${cor}" fill-opacity=".16" stroke="none" d="${faixa(i0, i1)}L${((i1 / N) * W).toFixed(1)} ${A}L${((i0 / N) * W).toFixed(1)} ${A}Z"/>`;
+  return `<figure class="sf-perfil"><figcaption><b>alto</b><b>baixo</b></figcaption><svg viewBox="0 0 ${W} ${A}" preserveAspectRatio="none" role="img" aria-label="Perfil de altura da volta">${SETORES.map(([a, b], i) => area(Math.floor(a * N), Math.floor(b * N), COR_SETOR[i]) + `<path fill="none" stroke="${COR_SETOR[i]}" stroke-width="2.5" vector-effect="non-scaling-stroke" d="${faixa(Math.floor(a * N), Math.floor(b * N))}"/>`).join("")}</svg></figure>`;
+}
+function setoresInfo(id, g = window.GpInfo.get(id)) {
+  return SETORES.map(([a, b], i) => {
+    const cs = g.curvas.filter((c) => c.f >= a && c.f < b);
+    return { cor: COR_SETOR[i], curvas: cs.length ? (cs.length > 1 ? `Curvas ${cs[0].n} a ${cs[cs.length - 1].n}` : `Curva ${cs[0].n}`) : "" };
+  });
+}
 const fmtKm = (km) => km.toFixed(3).replace(".", ",");
 // o quadro de recordes (setores e volta) de todas as pistas, guardado por um minuto; `aoChegar` redesenha quem pediu
 let quadro = null, quadroEm = 0, buscando = null;
 function recordesDa(id, aoChegar) {
-  if (Date.now() - quadroEm > 60000 && !buscando) buscando = fetch("/api/recordes-corrida").then((r) => r.json()).then((d) => { quadro = {}; for (const p of d.pistas || []) quadro[p.id] = { top: p.top?.[0] || null, setores: p.setores || [] }; quadroEm = Date.now(); buscando = null; aoChegar?.(); }).catch(() => { buscando = null; quadroEm = Date.now(); });
+  if (Date.now() - quadroEm > 60000 && !buscando) buscando = fetch("/api/recordes-corrida").then((r) => r.json()).then((d) => { quadro = {}; for (const p of d.pistas || []) quadro[p.id] = { top3: (p.top || []).slice(0, 3), top: p.top?.[0] || null, setores: p.setores || [] }; quadroEm = Date.now(); buscando = null; aoChegar?.(); }).catch(() => { buscando = null; quadroEm = Date.now(); });
   return quadro && quadro[id] || null;
 }
 function corpo(id, rec = null, tituloId = "sobreTit") {
@@ -75,5 +90,5 @@ function corpo(id, rec = null, tituloId = "sobreTit") {
     : `<p class="sn-sobre-vazio">${h(t.sub)}</p>`;
   return `<div class="sn-sobre-conteudo"><header class="sn-sobre-cab"><div class="sn-sobre-lugar">${lugar}</div><h2 ${tituloId ? `id="${tituloId}"` : ""}>${h(g.gp)}</h2>${g.real ? `<p class="sn-sobre-circ">${h(g.circuito)}</p>` : ""}<div class="sn-chips">${chips}</div></header><div class="sn-sobre-meio"><figure class="sn-sobre-mapa">${svg}</figure><div class="sn-sobre-lado">${fichaDetalhe(id, g, recordesDa(id))}${lista}</div></div></div>`;
 }
-root.GpSobre = { corpo, mapaSvg, fichaDetalhe, recordesDa };
+root.GpSobre = { corpo, mapaSvg, fichaDetalhe, recordesDa, perfilHtml, setoresInfo, zonasDrs: (id) => zonasDrs(PISTAS[id]), fmtT, COR_SETOR };
 })(window);

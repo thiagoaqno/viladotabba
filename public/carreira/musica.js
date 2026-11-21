@@ -3,6 +3,7 @@
 (() => {
   const barra = document.getElementById("barra") || document.querySelector(".utilbar") || document.querySelector(".bar-in");
   if (!barra) return;
+  if (new URLSearchParams(location.search).has("replay")) return; // (o replay 3D da Corrida abre a página do jogo num quadro: a música já toca na de fora)
   const css = document.createElement("style");
   css.textContent = `
 .musica-bt{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--b1,#ffffff33);background:transparent;color:var(--t2,#d1d7e0);font:inherit;font-size:13px;font-weight:500;cursor:pointer;margin-left:auto}

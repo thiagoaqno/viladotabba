@@ -476,6 +476,7 @@ function replayHTML(D, L) {
       <div class="ra-tele" data-rep-tele></div>
       <div class="ra-mom-barra"><button type="button" class="ra-play" data-rep-play aria-label="Tocar">${ICO.play}</button><span class="ra-rep-vel" role="group" aria-label="Velocidade do replay">${vel}</span>
         <button type="button" class="ra-chip ${rep.seguir ? "on" : ""}" data-rep-seguir>Seguir</button><button type="button" class="ra-chip ${rep.calor ? "on" : ""}" data-rep-calor title="A velocidade na melhor volta do piloto escolhido">Mapa de calor</button>
+        <button type="button" class="ra-chip ra-rep-3d" data-rep-3d title="A corrida na pista do jogo, na câmera de qualquer piloto">Replay 3D</button>
         <button type="button" class="ra-ico-bt ra-rep-tela" data-rep-tela aria-label="Tela cheia" title="Tela cheia">${ICO.tela}</button></div></div>
     <div class="ra-mom-lado"><small class="ra-legenda">Clique num carro (na pista ou na torre) para ver a telemetria dele; o anterior fica para comparar.</small><ol class="ra-torre" data-rep-torre></ol></div>
     <div class="ra-rep-tempo"><input type="range" min="0" max="${D.n - 1}" value="${rep.j}" step="1" data-rep-tempo aria-label="Momento do replay"><div class="ra-graf ra-rep-graf" data-rep-graf></div></div></div>`;
@@ -558,6 +559,14 @@ function ligarReplay(box, S, m, A, L, idA) {
   box.querySelector("[data-rep-seguir]").onclick = (ev) => { rep.seguir = !rep.seguir; ev.currentTarget.classList.toggle("on", rep.seguir); if (!rep.seguir) mini.focar(null); };
   box.querySelector("[data-rep-calor]").onclick = (ev) => { rep.calor = !rep.calor; ev.currentTarget.classList.toggle("on", rep.calor); calor(); };
   barra.oninput = () => { rep.j = +barra.value; rep.janela = null; desenharTudo(true); };
+  // o replay 3D (replay-3d.js): a página do jogo num quadro por cima, a partir de agora e seguindo o piloto escolhido
+  box.querySelector("[data-rep-3d]").onclick = () => {
+    rep.tocando = false; tocarIco(play, false);
+    const { t0, passo, campos, mundo, pista, ids, n, dados } = D;
+    const pil = L.map((s) => ({ id: s.id, nome: s.nome, sigla: s.sigla, cor: s.cor, eqId: s.eqId, numero: s.p && s.p.numero, mods: s.p && s.p.mods, stints: s.d ? stints(s.d) : null }));
+    import("/corrida/replay-3d-abrir.js").then((m) => m.abrirReplay3D({ replay: { t0, passo, campos, mundo, pista, ids, n, dados }, pista: A.pista || S.config.pista, ano: S.config.ano, hora: S.config.hora, voltas: A.voltas, pilotos: pil, j: rep.j, sel: rep.sel }))
+      .catch((e) => console.warn("Corrida: replay 3D", e));
+  };
   // passar o mouse num piloto da torre acende o carro dele na pista
   torre.onpointerover = (ev) => { const li = ev.target.closest("[data-carro]"); sobTorre = li ? li.dataset.carro : null; };
   torre.onpointerleave = () => { sobTorre = null; };

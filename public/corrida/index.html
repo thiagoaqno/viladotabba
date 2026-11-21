@@ -416,6 +416,8 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
 <div class="toast hidden" id="toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script>// o replay 3D (replay-3d.js, `?replay=1`): a página do jogo só com a pista e os carros gravados; o socket não conecta, e nada mexe na sala
+if (new URLSearchParams(location.search).has("replay") && window.io) { const io0 = window.io; window.io = (ns, op) => io0(ns, { ...(op || {}), autoConnect: false }); }</script>
 <script src="/corrida/pc.js"></script>
 <script src="/noite.js"></script>
 <script src="/comum.js"></script>
@@ -472,6 +474,7 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
   addEventListener("load", () => { mostrar(); new MutationObserver(mostrar).observe(document.getElementById("home") || document.body, { attributes: true, attributeFilter: ["class"] }); });
 })();
 </script>
+<script type="module">if (new URLSearchParams(location.search).has("replay")) import("/corrida/replay-3d.js"); // o replay 3D de um GP (replay-3d-abrir.js abre num quadro)</script>
 <script type="module">if (new URLSearchParams(location.search).has("editor")) import("/corrida/editor/editor.js"); // o editor de cenário das pistas (corrida-editor.js)</script>
 </body>
 </html>

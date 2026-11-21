@@ -111,8 +111,10 @@ function quebraDaConfiab(confiab) {
 // `m` já tem que ter passado por `validar` (ou ser uma padrão); níveis fora de 0..MAX_NIVEL são cortados mesmo assim.
 function specDaMontagem(m, nome = "Carro de F1") {
   const n = rendimento(m); // (o nível que rende: ver `rendimento`)
-  // carros mais parelhos: cada nível conta 60% da distância até o nível médio (3), então a equipe forte e a fraca ficam mais perto
-  const PARELHO = 0.6, c = (x) => 3 + (x - 3) * PARELHO;
+  // carros mais parelhos: cada nível conta PARELHO da distância até o nível médio (3), então a equipe forte e a fraca ficam mais perto.
+  // (2026-11-21, o Thiago: "aumentar a diferença entre os carros") era 0,6; agora 1 (cada nível conta inteiro). Medido com o piloto ideal em Bahrein
+  // (ferramentas/pneus-fisica.js voltaFixa, os carros dos robôs de temporada/regras.js): do McLaren ao Cadillac, 1,51% com 0,6, 2,29% com 0,9, 2,57% com 1
+  const PARELHO = 1, c = (x) => 3 + (x - 3) * PARELHO;
   const motor = c(n.motor), aero = c(n.aero), chassi = c(n.chassi), freios = c(n.freios), suspensao = c(n.suspensao), confiab = c(n.confiab), e = estilo(n);
   return {
     name: nome, inspo: ESTILOS[e].inspo, desc: ESTILOS[e].nome, estilo: e, chave: ORDEM.map((k) => Math.max(0, Math.min(MAX_NIVEL, Math.round(+m[k] || 0)))).join("-"),

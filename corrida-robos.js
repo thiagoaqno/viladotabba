@@ -19,17 +19,24 @@ const { SKINS } = require("./public/pelada/campo.js");
 
 const NOMES = ["Faísca", "Pistão", "Graxa", "Biela", "Vácuo", "Turbo", "Chicane"];
 const DIFICIL_ANTIGO = !!process.env.ROBO_DIFICIL_ANTIGO; // (só para medir o de antes)
-const NIVEIS = { facil: 0.80, medio: 0.87, dificil: 0.93 }; // modo clássico: fração da velocidade do traçado
+const NIVEIS = { facil: 0.80, medio: 0.87, dificil: 0.93, lendario: 0.96 }; // modo clássico: fração da velocidade do traçado
 // (2026-11-21, o Thiago: "queria que o nível fosse uma barra que vai de 0-100") o nível da sala é um número de 0 a 100; as tabelas por nível continuam
 // com as três marcas de antes, e o número mistura as duas vizinhas: Fácil = 60, Médio = 92 (o de sempre: o padrão da sala) e Difícil = 100. Abaixo
 // de 60 a reta continua, mais fácil ainda. Os nomes antigos ("facil", "medio", "dificil": a carreira usa) valem o número da marca deles.
-const MARCA_NIVEL = { facil: 60, medio: 92, dificil: 100 };
+// (2026-11-21, o Thiago vencendo tudo de Racing Bulls no Difícil: "o nível é uma escala... coloca a escala de 0-150, até na carreira") a régua vai de 0
+// a 150. Até 100, o de antes. De 100 a 150 (o "lendario" é o 150) a folga do ritmo vai de +0,5% a −1% da volta ideal do traçado (FOLGA_F1), o acerto
+// vai para o ideal, os erros caem e o carro do robô ganha aderência e potência (reforcoDoNivel): só pedir ritmo não bastava, porque no Difícil o
+// robô já anda no limite do carro (medido: sozinho em Bahrein, 45,45 s no 100 e 45,15 s com a folga de −1% e o carro de sempre).
+const MARCA_NIVEL = { facil: 60, medio: 92, dificil: 100, lendario: 150 };
+// o carro a mais dos robôs acima de 100 (sim.js gpMods): no 150, +5% de aderência e +6% de potência
+function reforcoDoNivel(room) { const k = Math.max(0, Math.min(1, (forcaDoNivel(room.config.nivel) - 100) / 50)); return k > 0 ? { grip: 1 + 0.05 * k, potencia: 1 + 0.06 * k, desgaste: 1, grid: 0 } : null; }
 function forcaDoNivel(nivel) {
   const n = typeof nivel === "number" ? nivel : MARCA_NIVEL[nivel];
-  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : MARCA_NIVEL.medio;
+  return Number.isFinite(n) ? Math.max(0, Math.min(MARCA_NIVEL.lendario, n)) : MARCA_NIVEL.medio;
 }
 function porNivel(T, nivel) { // o valor da tabela { facil, medio, dificil } para o nível
   const n = forcaDoNivel(nivel), M = MARCA_NIVEL;
+  if (n > M.dificil) return T.dificil + ((T.lendario ?? T.dificil) - T.dificil) * (n - M.dificil) / (M.lendario - M.dificil); // (o Lendário: a coluna dele, ou a do Difícil)
   return n >= M.medio ? T.medio + (T.dificil - T.medio) * (n - M.medio) / (M.dificil - M.medio) : T.medio + (T.facil - T.medio) * (M.medio - n) / (M.medio - M.facil);
 }
 const nomeDoNivel = (nivel) => { const n = forcaDoNivel(nivel); return n >= 96 ? "dificil" : n >= 76 ? "medio" : "facil"; }; // (o que só tem as três: o plano de box)
@@ -331,7 +338,7 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0.005 }, // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil"; depois do Catar: "tira só mais meio por cento, não quero que virem lendas") (2026-11-21: o difícil mais difícil veio da linha de corrida nova, que usa a pista toda; mirar abaixo do limite fazia todos baterem no teto e andarem igual)
+const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0.005, lendario: -0.01 }, // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil"; depois do Catar: "tira só mais meio por cento, não quero que virem lendas") (2026-11-21: o difícil mais difícil veio da linha de corrida nova, que usa a pista toda; mirar abaixo do limite fazia todos baterem no teto e andarem igual)
   FOLGA_F1_ANTIGA = { ...FOLGA_F1 }, FOLGA_F1_REAL = { facil: 0.13, medio: 0.08, dificil: 0 }; // (Formula GP: os de antes de #665, afinados na escala real) // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
 // por nível, a fração do limite das curvas e da frenagem que o robô usa, por cima do nível que dá o ideal. 1 é o limite do pneu:
 // o perfil (Piloto.perfilDoNivel) para nele, então acima de 1 não muda nada.
@@ -493,7 +500,7 @@ function largar(room) {
 // pouco de cambagem e o resto no meio, sem exagero no desgaste. O nível da sala diz o quanto o robô chega perto disso: difícil 100%,
 // médio 75%, fácil 40% (o resto fica no acerto padrão), e cada piloto erra um pouco a asa (±0,05, fixo por piloto e sala).
 let IDEAIS_AC = null;
-const PERTO_DO_IDEAL = { facil: 0.4, medio: 0.75, dificil: DIFICIL_ANTIGO ? 1 : 0.9 }; // (2026-11-16, o Thiago: "o difícil está insano": era 1)
+const PERTO_DO_IDEAL = { facil: 0.4, medio: 0.75, dificil: DIFICIL_ANTIGO ? 1 : 0.9, lendario: 1 }; // (2026-11-16, o Thiago: "o difícil está insano": era 1)
 function acertoDoRobo(pista, nivel, id) {
   if (IDEAIS_AC == null) { try { IDEAIS_AC = require("./public/corrida/acerto-ideal.json"); } catch { IDEAIS_AC = {}; } }
   const id0 = IDEAIS_AC[pista] || IDEAIS_AC[T.baseDe ? T.baseDe(pista) : pista], P = Sim.ACERTO_PADRAO;
@@ -1182,7 +1189,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   if (proxima && antesDaEntrada && !car.box?.fase) p.boxFant = Math.max(p.boxFant || 0, now + 250);
   const estavaNoBox = !!p.box;
   const pedirBox = !!proxima; // (o composto pedido)
-  const amb = { spec, dano: p.dano || 0, drsZona: p.drsZona ?? -1, safety: !!room.direcao?.safety,
+  const amb = { spec, dano: p.dano || 0, drsZona: p.drsZona ?? -1, safety: !!room.direcao?.safety, gpMods: reforcoDoNivel(room), // (o nível acima de 100: o carro a mais)
     // Em pista livre usa a bateria nas retas; no trânsito reserva energia e só aciona forte ao tentar passar.
     amarela: room.direcao?.amarelo?.setor === Math.floor(i / (n / T.SECTORS)), ersAuto: !ia.ult && !tf.encontrou && !tf.tras && now - room.startAt > 6000,
     voltas: room.config.voltas, laps: p.laps || 0, paradas: (p.paradas || []).length,
@@ -1198,7 +1205,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; if (volta > 0) bonusDeUltrapassagem(room, p, ia, car); }
     ritmoDaVolta = ia.ritmoDaVolta;
     if (ia.erroAte > now) erroK = ia.erroK;
-    else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * Math.max(0.3, porNivel({ facil: 1.4, medio: 1, dificil: DIFICIL_ANTIGO ? 0.7 : 0.85 }, room.config.nivel))) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
+    else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * Math.max(0.3, porNivel({ facil: 1.4, medio: 1, dificil: DIFICIL_ANTIGO ? 0.7 : 0.85, lendario: 0.65 }, room.config.nivel))) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
   }
   if (encalhou(room, ia, car, now, dt, tf.atras < 140)) { // preso (parado, rodado, de lado no muro ou sem andar): o "↺ Pista" do robô, do lado livre
     Sim.voltarParaPista(car, tr, ev);

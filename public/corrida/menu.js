@@ -189,7 +189,7 @@ function desenharSecao(nome) {
   if (nome === "rapida") {
     $("mnRapida").innerHTML = carrossel(rapida.pista, "rp")
       + seg([[1, "1"], [3, "3"], [5, "5"], [10, "10"]], rapida.voltas, "rp-voltas", "Voltas")
-      + `<div class="mn-campo mn-nivel" title="De 0 a 100. 92 é o de sempre; 100, o mais difícil."><span class="mn-rot">Nível dos robôs · grid de 22</span><div class="mn-faixa"><input type="range" min="0" max="100" step="1" value="${rapida.nivel}" data-rp-nivel-faixa aria-label="Nível dos robôs, de 0 a 100"><output>${rapida.nivel}</output></div></div>`
+      + `<div class="mn-campo mn-nivel" title="De 0 a 150. 92 é o de sempre, 100 o antigo Difícil; acima de 100 os robôs ganham carro."><span class="mn-rot">Nível dos robôs · grid de 22</span><div class="mn-faixa"><input type="range" min="0" max="150" step="1" value="${rapida.nivel}" data-rp-nivel-faixa aria-label="Nível dos robôs, de 0 a 150"><output>${rapida.nivel}</output></div></div>`
       + seg([["aleatorio", "Aleatório"], ["seco", "Seco"], ["chuva", "Chuva"], ["variavel", "Variável"]], rapida.clima, "rp-clima", "Clima")
       + seg([["pular", "Direto"], ["completa", "Com classificação"]], rapida.classificacao, "rp-quali", "Fim de semana")
       + `<button type="button" class="mn-link" id="mnAcerto">Acerto do carro: asa e altura para ${h(PISTAS[rapida.pista]?.name || "a pista")}</button>`

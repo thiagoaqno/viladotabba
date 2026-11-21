@@ -1,5 +1,14 @@
 [
   {
+    "id": "robos-montagem-2026-11-21",
+    "data": "2026-11-21",
+    "itens": [
+      "Os robôs da carreira montam o carro do zero com o orçamento inteiro e põem os pontos onde rende (asa e motor, sem desperdiçar em freios): o McLaren deles fica no ritmo do seu carro",
+      "Nível dos robôs de 0 a 150, também na carreira: até 100 como antes; acima de 100 eles ganham ritmo e carro (no 150, ~1 s por volta mais rápidos que no 100)",
+      "As vozes dos planos novos e da resposta do Jeff sobre a estratégia"
+    ]
+  },
+  {
     "id": "carreira-piloto-real-2026-11-21",
     "data": "2026-11-21",
     "itens": [

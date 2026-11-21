@@ -204,26 +204,8 @@ test("a dificuldade dos robôs vai no save, com médio como padrão", () => {
 });
 
 // As rivais evoluem de forma determinística, sem substituir a montagem humana ou mudar ao reabrir um GP.
-test("equipes rivais desenvolvem os dois carros ao longo da temporada", () => {
-  const s = R.criar("Thiago", "cadillac", 8, 5, 170);
-  const inicial = R.desenvolvimentoRivais(s, [s.equipe]);
-  assert.equal(inicial.montagens.cadillac, undefined);
-  for (const id of Object.keys(inicial.montagens)) {
-    assert.deepEqual(inicial.montagens[id], E.montagemPadrao(id));
-    assert.equal(inicial.bonus[id], 0);
-  }
-  s.gp = 4;
-  const meio = R.desenvolvimentoRivais(s, [s.equipe]);
-  assert.deepEqual(meio, R.desenvolvimentoRivais(s, [s.equipe]));
-  for (const [id, m] of Object.entries(meio.montagens)) {
-    assert.ok(meio.bonus[id] > 0 && meio.bonus[id] <= 4);
-    assert.ok(E.validar(id, m, meio.bonus[id]).ok);
-    assert.equal(E.custoDaMontagem(m), E.custoDaMontagem(E.montagemPadrao(id)) + meio.bonus[id]);
-  }
-  s.gp = s.tamanho; const fim = R.desenvolvimentoRivais(s, [s.equipe]);
-  R.proximaTemporada(s);
-  assert.deepEqual(R.desenvolvimentoRivais(s, [s.equipe]), fim, "a virada preserva os desenvolvimentos");
-});
+// (2026-11-21, apagado: "equipes rivais desenvolvem os dois carros ao longo da temporada" fixava a montagem antiga dos rivais, que partia do padrão
+// da equipe; agora eles montam do zero pelo que rende (#881). Pedido do Thiago: testes velhos que quebram se apagam)
 
 test("o GP usa o carro desenvolvido das rivais e o mesmo carro para companheiros de equipe", () => {
   const Robos = require("../corrida-robos.js");

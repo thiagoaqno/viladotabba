@@ -45,14 +45,16 @@ const ENGENHEIROS = {
 };
 const teto = 140;
 const inteiro = (n) => Number.isInteger(n) && n >= 0;
-const NIVEIS = ["facil", "medio", "dificil"];
+const NIVEIS = ["facil", "medio", "dificil", "lendario"];
+// (2026-11-21) o nível dos robôs na carreira é a régua de 0 a 150 (corrida-robos.js MARCA_NIVEL); os nomes dos saves antigos continuam valendo
+const nivelValido = (v) => { if (NIVEIS.includes(v)) return v; const n = Number(v); return v !== "" && v != null && Number.isFinite(n) && n >= 0 && n <= 150 ? Math.round(n) : null; };
 // (2026-11-21, o Thiago: "escolher ir com o nosso nick ou jogar a carreira com um piloto já existente") `real`: o id de um piloto da equipe
 // (f1-pilotos-2026.js, do ano da carreira). Você é ele: o nome, o número e o capacete dele, a vaga dele no carro (o outro titular é o seu
 // companheiro) e ele some do grid dos robôs (pilotosNoGrid, tabelas). Sem `real`, o de sempre: você entra no lugar do segundo titular.
 function criar(nome, equipe, tamanho = 8, voltas = 3, semente = Date.now(), nivel = "medio", real = null) {
   if (!Pilotos.EQUIPES[equipe] || !Equipes.EQUIPES[equipe]) throw Error("Equipe inválida.");
   if (![4, 8, PISTAS_TRABALHADAS.length].includes(tamanho) || ![2, 3, 5, 10].includes(voltas)) throw Error("Formato inválido.");
-  if (!NIVEIS.includes(nivel)) throw Error("Nível dos robôs inválido.");
+  nivel = nivelValido(nivel); if (nivel == null) throw Error("Nível dos robôs inválido.");
   const titulares = Pilotos.PILOTOS.filter((p) => p.equipe === equipe);
   const eu = real ? titulares.find((p) => p.id === real) : null; if (real && !eu) throw Error("Esse piloto não corre por essa equipe.");
   if (eu) nome = eu.nome;
@@ -89,8 +91,8 @@ function contratarPiloto(s, id) {
 }
 // a dificuldade dos robôs no meio da carreira: vale a partir do próximo GP (cada GP lê s.nivel quando abre a sala)
 function mudarNivel(s, nivel) {
-  if (!NIVEIS.includes(nivel)) throw Error("Nível dos robôs inválido.");
-  s.nivel = nivel; return s;
+  const n = nivelValido(nivel); if (n == null) throw Error("Nível dos robôs inválido.");
+  s.nivel = n; return s;
 }
 function contratarEngenheiro(s, area, nivel) {
   const lista = ENGENHEIROS[area];
@@ -129,7 +131,8 @@ function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipe
     // (2026-11-16, corrigido o comentário, que dizia o contrário; o Thiago quer as pequenas acompanhando). As peças seguem prioridadeDaPeca.
     const atraso = Math.floor(tamanho * [0, 0.25, 0.5][faixaDe(id)]);
     const pontos = Math.min(Equipes.BONUS_MAX, Math.floor((rodadas * Equipes.BONUS_POR_TEMPORADA + atraso) / tamanho));
-    const m = { ...equipe.padrao }, limite = equipe.orcamento + pontos; // (2026-11-15: os níveis altos custam mais; o rival gasta do mesmo jeito que você)
+    // (2026-11-21) o rival monta o carro do zero com o orçamento inteiro, como você (antes partia do padrão da equipe, com freios e confiabilidade em 3, e só punha os pontos novos por cima)
+    const m = Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])), limite = equipe.orcamento + pontos; // (2026-11-15: os níveis altos custam mais; o rival gasta do mesmo jeito que você)
     for (let k = 0; k < 200; k++) {
       let melhor = null, nota = Infinity;
       for (const p of Equipes.ORDEM) {
@@ -146,16 +149,21 @@ function desenvolvimentoRivais({ semente, ano = 1, gp = 0, tamanho = 8 }, equipe
   }
   return { montagens, bonus, engenheiros, bonusBox };
 }
-// Onde o rival põe o próximo ponto (a menor nota ganha): no nível mais baixo e mais barato, puxado para o forte da equipe (a Ferrari
-// cuida do motor, a Red Bull da asa) e para o que mais dá tempo de volta (motor e asa, depois chassi e suspensão). Nunca passa das
-// travas de specDaMontagem: a asa só rende até a suspensão + 4 e o motor até a confiabilidade + 4; quando a peça bate na trava, sobe a
-// que segura ela (o rival não joga ponto fora como antes, quando a confiabilidade nem entrava na lista).
-const PESO_PECA = { motor: 0.6, aero: 0.6, chassi: 0.3, suspensao: 0.3, freios: 0.2, confiab: 0.1 };
+// Onde o rival põe o próximo ponto (a menor nota ganha). (2026-11-21, o Thiago "amassando de Racing Bulls" no Difícil: a sua volta 0,8 a 2,4 s
+// mais rápida que a do melhor robô em 5 GPs) Os rivais punham quase tudo no motor e 3 níveis em freios e confiabilidade, que não dão tempo; o carro
+// dele (asa 6) era 0,9 a 1,3 s mais rápido por volta que o melhor rival, medido com o piloto ideal (ferramentas/pneus-fisica.js voltaFixa, a mesma
+// conta em Bahrein e Melbourne). O GANHO de cada nível, medido igual (Bahrein, Monza e Hungaroring, a média, em segundos do piloto ideal): asa
+// 0,47, motor 0,32, chassi 0,13, suspensão 0,12, freios 0,03, confiabilidade 0. A nota é o ganho pelo custo do nível, com as travas de
+// specDaMontagem (a asa só rende até a suspensão + 4 e o motor até a confiabilidade + 4: perto da trava, a peça que segura ganha o valor da que
+// destrava) e um pouco do estilo da equipe (o padrão dela: a Ferrari ainda gosta mais do motor).
+const GANHO_PECA = { aero: 0.47, motor: 0.32, chassi: 0.13, suspensao: 0.12, freios: 0.03, confiab: 0 };
 function prioridadeDaPeca(m, p, padrao) {
   if (p === "aero" && m.aero >= m.suspensao + 4) return Infinity;
   if (p === "motor" && m.motor >= m.confiab + 4) return Infinity;
-  const trava = (p === "suspensao" && m.aero >= m.suspensao + 3) || (p === "confiab" && m.motor >= m.confiab + 3) ? 1 : 0;
-  return m[p] + 1.5 * (Equipes.custoDoNivel(m[p] + 1) - 1) - 0.5 * ((padrao[p] || 0) - 3) - PESO_PECA[p] - trava;
+  let ganho = GANHO_PECA[p] + 0.02 * ((padrao[p] || 0) - 3);
+  if (p === "suspensao" && m.aero >= m.suspensao + 3) ganho += GANHO_PECA.aero; // (destrava a asa)
+  if (p === "confiab" && m.motor >= m.confiab + 3) ganho += GANHO_PECA.motor; // (destrava o motor)
+  return ganho > 0 ? Equipes.custoDoNivel(m[p] + 1) / ganho : Infinity;
 }
 // o acerto ideal de asa da pista (0 a 1), medido por ferramentas/acerto-ideal.js; null se a pista não tem medição
 let IDEAIS = null;

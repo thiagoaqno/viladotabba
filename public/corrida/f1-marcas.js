@@ -72,7 +72,7 @@ const SO_LETRA = {
   revolut: ["Revolut", { peso: 800, h: 1.1 }], nexo: ["NEXO", { peso: 900, esp: 4 }], ninjaone: ["ninjaOne", { peso: 700 }], visitqatar: ["visit QATAR", { peso: 800 }],
   bwt: ["BWT", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#ff7ab8" }], msc: ["MSC", { peso: 800, fam: SERIFA, esp: 3 }], alpine: ["ALPINE", { peso: 800, esp: 5 }],
   toyota: ["TOYOTA", { peso: 900, esp: 4 }], haas: ["HAAS", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#101114" }], zoomex: ["ZOOMEX", { peso: 800, esp: 2 }], twg: ["TWG", { peso: 800, fam: SERIFA, esp: 5, h: 1.1 }],
-  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }], cadillacw: ["CADILLAC", { peso: 500, esp: 16, h: 0.95 }],
+  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }], cadillacw: ["CADILLAC", { peso: 500, esp: 16, h: 0.95 }], indeed: ["indeed", { peso: 700 }], siemens: ["SIEMENS", { peso: 800, esp: 2 }], hexagon: ["HEXAGON", { peso: 700, esp: 3 }], clear: ["CLEAR", { peso: 400, esp: 4 }],
 };
 for (const [id, [str, o]] of Object.entries(SO_LETRA)) MARCAS[id] = (c, { tinta } = {}) => letra(c, str, { ...o, cor: tinta || o.tinta || "#fff" });
 // As da McLaren MCL40 (os prints de 2026-11-13)
@@ -101,6 +101,19 @@ Object.assign(MARCAS, {
   jimbeam(c, { tinta = "#fff" } = {}) { letra(c, "JIM BEAM", { h: 0.9, peso: 700, fam: SERIFA, cor: tinta, esp: 3 }); },
   corescientific(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.12; c.beginPath(); c.arc(-3.3, 0, 0.36, 0.6, Math.PI * 2 - 0.6); c.stroke(); letra(c, "CORE SCIENTIFIC", { x: 0.2, h: 0.8, peso: 700, cor: tinta, esp: 3 }); },
   // o brasão da Cadillac: o escudo com a grade de quadros
+  // (2026-11-20, as imagens da Red Bull do Thiago) o touro investindo, em vetor (o recorte do logo de 512 px saía borrado na tampa): olha para +x,
+  // a cabeça baixa com o chifre para a frente, uma pata da frente esticada e a de trás empurrando; vermelho com o contorno amarelo
+  touro(c, { tinta = "#d3112f", fundo = "#f7c600" } = {}) {
+    const P = [[-1.32, -0.36], [-1.2, -0.3], [-1.12, -0.18], [-1.02, -0.3], [-0.62, -0.4], [-0.1, -0.43], [0.32, -0.5], [0.58, -0.44], [0.78, -0.33], [0.92, -0.5], [1.22, -0.62],
+      [1.02, -0.4], [1.08, -0.3], [1.18, -0.12], [1.32, 0.04], [1.2, 0.13], [1.0, 0.1], [0.82, 0.06], [0.9, 0.18], [1.26, 0.32], [1.28, 0.44], [1.12, 0.42], [0.74, 0.3],
+      [0.56, 0.2], [0.6, 0.34], [0.7, 0.46], [0.54, 0.5], [0.4, 0.4], [0.3, 0.2], [-0.32, 0.18], [-0.52, 0.22], [-0.88, 0.42], [-1.04, 0.44], [-1.0, 0.34], [-0.76, 0.16],
+      [-0.94, 0.02], [-1.08, -0.12], [-1.24, -0.26]];
+    c.beginPath(); P.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.closePath();
+    c.lineJoin = "round"; c.lineWidth = 0.07; c.strokeStyle = fundo; c.stroke(); c.fillStyle = tinta; c.fill();
+    c.fillStyle = fundo; c.beginPath(); c.ellipse(0.98, -0.14, 0.05, 0.035, 0, 0, Math.PI * 2); c.fill(); // o olho
+  },
+  // o 1Password: o redondo com o "1" e o nome
+  onepassword(c, { tinta = "#fff", fundo = "#1b2452" } = {}) { disco(c, -2.15, 0, 0.42, tinta); letra(c, "1", { x: -2.15, y: 0.02, h: 0.62, peso: 900, cor: fundo }); letra(c, "Password", { x: 0.35, h: 0.9, peso: 700, cor: tinta }); },
   // (2026-11-20, a imagem do Thiago) o brasão da Cadillac de agora: o escudo de contorno fino com o xadrez de blocos dentro, em uma cor só
   crest(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.05; c.lineJoin = "round";
     const escudo = () => { c.beginPath(); c.moveTo(-0.62, -0.44); c.lineTo(0.62, -0.44); c.lineTo(0.56, 0.12); c.quadraticCurveTo(0.3, 0.38, 0, 0.5); c.quadraticCurveTo(-0.3, 0.38, -0.56, 0.12); c.closePath(); };

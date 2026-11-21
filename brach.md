@@ -17,6 +17,19 @@ O Thiago mandou o print da Cadillac na garagem: resolução baixa, partes borrad
   - o Mobil 1 e o número na caixa.
 - `f1-marcas.js`: as marcas `crest` e `cadillacw`.
 
+- **Os adesivos de baixo da asa traseira vão para trás dela** (pedido do Thiago). As marcas de `ASA_BAIXO` passam a ser desenhadas na vista R, na face de trás do flap, e embaixo fica só a cor. A face de trás foi medida nos modelos: y 0,66 a 0,84 e x ±0,46 no de 2026; y 0,68 a 0,78 e x ±0,37 no de 2022. Elas ficam centradas em y 0,735, com no máximo 0,085 m de altura, para caber nos dois.
+  - Saíram as marcas repetidas que já estavam na vista R, mais altas que o flap: McLaren, Ferrari, Mercedes, Racing Bulls, Aston Martin, Williams e Audi. As faixas de cor desceram para a altura do flap.
+  - A zona "Asa traseira" do Studio, na vista R, agora começa em y 0,64.
+- **Red Bull refeita pelas oito imagens** de `Carros F1/2026/Redbull`:
+  - o azul-marinho com a camuflagem digital;
+  - o touro em vetor (marca nova `touro`; antes era um recorte borrado do logo de 512 px) na tampa, no bico e em cima da tampa;
+  - o sol e a entrada de ar amarelos, o bico amarelo e o número no vermelho da barbatana;
+  - o Red Bull vermelho de contorno branco, o ORACLE na caixa e atrás da asa;
+  - CARLYLE, 1Password, ROKT, indeed, Clear, Siemens, Hexagon e a Ford Racing;
+  - as placas da asa traseira azuis com o Mobil 1 e a Heineken, e o oval do número no bico.
+  - Marcas novas: `touro`, `onepassword`, `indeed`, `siemens`, `hexagon` e `clear`.
+  - No Studio, o touro espelhado de um lado vira uma camada própria (`espelhar`).
+
 Sem print (só `node --check`): o Thiago testa jogando.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

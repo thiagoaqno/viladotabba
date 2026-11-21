@@ -271,7 +271,7 @@ function passo(c, ent, amb, tr, ev) {
   amb2.chao = estrada; amb2.superficie = superficie; amb2.subida = (h1 - h0) / 10; amb2.ar = c.air; amb2.manual = !!amb.manual; amb2.marchaManual = ent.marcha || c.marcha;
   amb2.pn = pn; amb2.dano = dano; amb2.drs = drs; amb2.ers = ersAtivo; amb2.vacuo = vac; amb2.curva = curva;
   amb2.extra = c.acerto ? extraDoAcerto(c.acerto, Math.abs(c.v || 0), amb2.extraAc || (amb2.extraAc = {})) : null; // o acerto do carro (asa e altura)
-  const plano = !amb.quali && PLANO[amb.plano]; // (2026-11-16) o plano da corrida da carreira (paddock.js, "plano"): aderência contra desgaste
+  const plano = !amb.quali && planoAgora(PLANO[amb.plano], amb); // (2026-11-16) o plano da corrida da carreira (paddock.js, "plano"): aderência contra desgaste
   if (plano) { const b = amb2.extra, e = amb2.planoEx || (amb2.planoEx = {}); for (const k in e) delete e[k]; if (b) Object.assign(e, b); e.grip = (e.grip || 1) * plano.grip; e.potencia = (e.potencia || 1) * (plano.potencia || 1); e.desgaste = (e.desgaste || 1) * plano.desgaste; amb2.extra = e; }
   const gm = amb.gpMods; // (2026-11-21) os eventos do fim de semana da carreira (paddock.js modificadores: o pacote novo, o motor, o calor, o chassi reserva), também na classificação
   if (gm) { const b = amb2.extra, e = amb2.gpEx || (amb2.gpEx = {}); for (const k in e) delete e[k]; if (b) Object.assign(e, b); e.grip = (e.grip || 1) * (gm.grip || 1); e.potencia = (e.potencia || 1) * (gm.potencia || 1); e.desgaste = (e.desgaste || 1) * (gm.desgaste || 1); amb2.extra = e; }
@@ -321,7 +321,7 @@ function passo(c, ent, amb, tr, ev) {
       if (vn > 0) { c.vx -= q.nx * s * vn * 1.2; c.vy -= q.ny * s * vn * 1.2; const ca = Math.cos(c.a), sa = Math.sin(c.a); c.v = c.vx * ca + c.vy * sa; c.vl = -c.vx * sa + c.vy * ca; if (vn > 60 && ev) ev.push({ t: "bump", forca: vn }); }
     }
   }
-  if (amb.f1 !== false) F1.gastarPneu(c.pneu, { dist: Math.hypot(nx - xAnt, ny - yAnt), volta: n * 6, rel: F1.relDaPista(tr.pistaId || tr.id), slip: c.slip, travada: c.travada, patina: c.patina, zebra: Math.max(0, Math.min(1, (Math.abs(fr.lat) - (tr.W / 2 - 10)) / 10)), v: c.v, vmax: spec.vmax, dt, fator: (spec.desgaste || 1) * (amb.fatorDesgastePneu ?? 1) * ((amb2.extra && amb2.extra.desgaste) || 1), agua: amb.agua }); // (zebra: os últimos 10 da borda e além)
+  if (amb.f1 !== false) F1.gastarPneu(c.pneu, { dist: Math.hypot(nx - xAnt, ny - yAnt), volta: n * 6, rel: F1.relDaPista(tr.pistaId || tr.id), ers: !!ersAtivo, slip: c.slip, travada: c.travada, patina: c.patina, zebra: Math.max(0, Math.min(1, (Math.abs(fr.lat) - (tr.W / 2 - 10)) / 10)), v: c.v, vmax: spec.vmax, dt, fator: (spec.desgaste || 1) * (amb.fatorDesgastePneu ?? 1) * ((amb2.extra && amb2.extra.desgaste) || 1), agua: amb.agua }); // (zebra: os últimos 10 da borda e além)
   c.x = nx; c.y = ny;
   // altura: no chão acompanha o relevo; se o chão some (lombada rápida), voa e cai com a gravidade
   const gh = alturaDoChao(tr, c.x, c.y, c.idx);
@@ -733,9 +733,19 @@ function reconciliar(c, st, tr, ctx) {
 //   cambagem (pouca 0 · muita 1): a aderência na curva contra a frenagem e a tração em linha reta e o desgaste (até ±4% e +12% de desgaste);
 //   pressão dos pneus (baixa 0 · alta 1): baixa agarra mais e gasta mais; alta gasta menos e agarra menos (até ±4% e ±15% de desgaste);
 //   rigidez da suspensão (macia 0 · dura 1): dura segura a plataforma da asa (mais carga) e sofre nas zebras e lombadas (menos aderência mecânica).
-// (2026-11-21, o Thiago: "o de arriscar nem vale a pena... valeria se trouxesse mais potência, como 15%": algo que compense parar mais) o motor
-// no modo de ataque e o carro no limite: +15% de potência e +3% de aderência, e o pneu gasta 50% mais; o seguro poupa o motor e o pneu.
-const PLANO = { arriscar: { grip: 1.03, potencia: 1.15, desgaste: 1.5 }, seguro: { grip: 0.98, potencia: 0.96, desgaste: 0.65 } };
+// (2026-11-21, o Thiago: "um pneu que gasta 50% mais para ter só mais 15% de potência não me parece nada vantajoso... quero mais variedade
+// de planos") Os planos do domingo da carreira (paddock.js "plano"), no seu carro (fora da classificação). `dano` multiplica o dano das batidas
+// (corrida-f1-direcao.js: o carro no limite quebra mais). Os de duas fases (`ate`: a fração da corrida) mudam no meio da prova. Escolhidos para
+// sentir jogando: não medidos (o piloto ideal de ferramentas/pneus-fisica.js não aproveita a potência a mais na reta).
+const PLANO = {
+  arriscar: { grip: 1.03, potencia: 1.12, desgaste: 1.15, dano: 1.5 }, // ataque o tempo todo: rápido, mas a batida custa caro
+  seguro: { grip: 0.985, potencia: 0.97, desgaste: 0.7, dano: 0.6 }, // poupa motor, pneu e carro
+  largada: { ate: 0.35, antes: { grip: 1.04, potencia: 1.15, desgaste: 1.25 }, depois: { grip: 0.99, potencia: 0.98, desgaste: 0.85 } }, // tudo no primeiro terço, para ganhar posição
+  final: { ate: 0.6, antes: { grip: 0.99, potencia: 0.97, desgaste: 0.75 }, depois: { grip: 1.04, potencia: 1.15, desgaste: 1.2 } }, // guarda o carro e ataca no fim
+  pneu: { grip: 1, potencia: 1.02, desgaste: 0.6 }, // estender o stint: pneu bem gasto devagar, um pouco mais de motor para compensar
+};
+// o plano de agora: os de duas fases trocam na fração `ate` da corrida (pelas voltas completas)
+const planoAgora = (pl, amb) => (pl && pl.ate != null ? ((amb.laps || 0) < pl.ate * (amb.voltas || 1) ? pl.antes : pl.depois) : pl);
 const ACERTO_PADRAO = Object.freeze({ asa: 0.5, altura: 0.5, cambio: 0.5, freio: 0.5, diferencial: 0.5, cambagem: 0.5, pressao: 0.5, rigidez: 0.5 });
 const meio = (v) => (Number.isFinite(v) ? v : 0.5) - 0.5; // −0,5 a +0,5
 const alturaParada = (a) => 0.025 + a.altura * 0.05;

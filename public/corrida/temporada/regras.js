@@ -182,7 +182,9 @@ function pilotosNoGrid(s) {
   // (2026-11-16, a rivalidade) o rival da temporada (imersao: com quem você mais disputou posição no ano) vai marcado, com a rixa (as batidas
   // entre vocês nos GPs de antes, paddock.js): corrida-robos.js rivalNaPista
   const rivalId = (() => { try { return imersao(s).rival?.id || null; } catch { return null; } })(), rixa = (pd && pd.rixas && pd.rixas[rivalId]) || 0;
-  const marcar = (r) => (r.id === rivalId ? { ...r, rival: true, ...(rixa ? { rixa } : {}) } : r);
+  // (2026-11-21) e o piloto que você provocou depois de um toque (paddock.js toquePiloto): rival só neste GP, com a rixa no máximo
+  const inimigo = pd && pd.inimigo && pd.inimigo.ano === s.ano && pd.inimigo.gp === s.gp ? pd.inimigo.id : null;
+  const marcar = (r) => (r.id === rivalId ? { ...r, rival: true, ...(rixa ? { rixa } : {}) } : r.id === inimigo ? { ...r, rival: true, rixa: 3 } : r);
   return [{ ...companheiro, equipe: s.equipe, ritmo, ...(relacao ? { relacao } : {}), ...(pers ? { constancia: pers.constancia, largada: pers.largada, ...(pers.perfil ? { perfil: pers.perfil } : {}) } : {}) }, ...rivais.map(marcar)].slice(0, 21);
 }
 // Metas dependem da força inicial da equipe, não do resultado que acabou de acontecer.

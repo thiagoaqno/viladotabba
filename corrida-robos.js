@@ -1369,7 +1369,7 @@ function passo(room, dt, setor, emit) {
       ia.s = (ia.s + (ia.v * dt) / STEP) % pf.n;
       entrarNoBox(room, p, ia, pf);
       // o pneu gasta pela distância; escorrega quando a curva pede mais que o grip do carro
-      if (ia.pneu) F1.gastarPneu(ia.pneu, { dist: ia.v * dt, volta: pf.n * STEP, rel: F1.relDaPista(room.config.pista), slip: Math.max(0, (ia.v * ia.v * pf.linha.k[i]) / c.grip - 0.9) * 120, v: ia.v, vmax: c.vmax, dt, fator: c.desgaste });
+      if (ia.pneu) F1.gastarPneu(ia.pneu, { dist: ia.v * dt, volta: pf.n * STEP, rel: F1.relDaPista(room.config.pista), ers: usaErs, slip: Math.max(0, (ia.v * ia.v * pf.linha.k[i]) / c.grip - 0.9) * 120, v: ia.v, vmax: c.vmax, dt, fator: c.desgaste });
       // depois da largada (~600 de reta), sai da faixa do grid e vai aos poucos para o traçado; antes disso, não desvia de ninguém
       const saida = Math.min(1, ((ia.s - ia.s0 + pf.n) % pf.n) / 100), largando = saida < 1;
       ia.desvio += (desvio - ia.desvio) * Math.min(1, dt * 2.2);

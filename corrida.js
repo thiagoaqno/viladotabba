@@ -125,7 +125,7 @@ module.exports = function attachCorrida(io) {
       boxReady: Itens.publicBoxes(room), ...(room.config.regras === "f1" ? { estrategistas: room.estrategistas || null, tvAte: room.tvAte || null, tv: room.tvAte && Date.now() < room.tvAte ? room.tv || null : null, clima: room.clima || null, previsao: F1.previsaoDoGP(sementeDoClima(room), room.config.clima, room.config.pista), montagens: room.montagens || {}, bonusMontagem: room.bonusMontagem || {}, pecasEq: room.pecasEq || {}, chefes: chefes(room), semente: room.semente || null, direcao: Direcao.publico(room), luzes: room.luzes || null, quali: Quali.publico(room), resultado: room.resultado || null } : {}),
       players: room.order.map((id) => {
         const p = room.players[id];
-        return { id, bot: !!p.bot, ...(p.assumido ? { assumido: true } : {}), ...(p.plano ? { plano: p.plano } : {}), ...(p.gpMods ? { gpMods: p.gpMods } : {}), name: p.name, nomeCompleto: p.nomeCompleto || null, equipe: p.equipe || null, numero: p.numero || null, sigla: p.sigla || null, pawn: p.pawn, color: p.color, skin: p.skin, car: p.car, mods: p.mods, pneu: p.pneu || F1.COMPOSTO_PADRAO, pneuAtual: p.pneuAtual || p.pneu || F1.COMPOSTO_PADRAO, paradas: (p.paradas || []).length, desg: Math.round((((p.sim && p.sim.c && p.sim.c.pneu) || (p.ia && p.ia.pneu) || {}).desgaste || 0) * 100), jogos: room.config.regras === "f1" ? F1.jogosRestantes(p) : null, noBox: !!p.box, fantBox: Contato.fantasmaDoBox(p), fantasma: Date.now() < (p.fantAte || 0), quebrou: !!p.quebrou, acrescimo: p.acrescimo || 0, penal: p.penal || 0, dsq: !!p.dsq, causadas: p.causadas || 0, stopGo: p.stopGo ? { s: p.stopGo.s, v: Direcao.stopGoRestante(p, room.config.voltas) } : null, boxFase: Sim.faseDoBox((p.sim ? p.sim.c : p.ia && p.ia.sim)?.box), dano: p.dano || 0, dnf: !!p.dnf, ultimaBatida: p.ultimaBatida || null, avisosLimite: p.avisosLimite || 0, azul: !!p.azul, drsZona: p.drsZona ?? -1, ers: p.ia?.ers?.carga ?? p.ers?.carga ?? null, grid: p.grid, online: p.sockets.size > 0, laps: p.laps, sector: p.sector, started: p.started, finish: p.finish, best: p.best, last: p.last,
+        return { id, bot: !!p.bot, ...(p.assumido ? { assumido: true } : {}), ...(p.plano ? { plano: p.plano } : {}), ...(p.gpMods ? { gpMods: p.gpMods } : {}), ...(p.paradasEquipe ? { paradasEquipe: p.paradasEquipe } : {}), name: p.name, nomeCompleto: p.nomeCompleto || null, equipe: p.equipe || null, numero: p.numero || null, sigla: p.sigla || null, pawn: p.pawn, color: p.color, skin: p.skin, car: p.car, mods: p.mods, pneu: p.pneu || F1.COMPOSTO_PADRAO, pneuAtual: p.pneuAtual || p.pneu || F1.COMPOSTO_PADRAO, paradas: (p.paradas || []).length, desg: Math.round((((p.sim && p.sim.c && p.sim.c.pneu) || (p.ia && p.ia.pneu) || {}).desgaste || 0) * 100), jogos: room.config.regras === "f1" ? F1.jogosRestantes(p) : null, noBox: !!p.box, fantBox: Contato.fantasmaDoBox(p), fantasma: Date.now() < (p.fantAte || 0), quebrou: !!p.quebrou, acrescimo: p.acrescimo || 0, penal: p.penal || 0, dsq: !!p.dsq, causadas: p.causadas || 0, stopGo: p.stopGo ? { s: p.stopGo.s, v: Direcao.stopGoRestante(p, room.config.voltas) } : null, boxFase: Sim.faseDoBox((p.sim ? p.sim.c : p.ia && p.ia.sim)?.box), dano: p.dano || 0, dnf: !!p.dnf, ultimaBatida: p.ultimaBatida || null, avisosLimite: p.avisosLimite || 0, azul: !!p.azul, drsZona: p.drsZona ?? -1, ers: p.ia?.ers?.carga ?? p.ers?.carga ?? null, grid: p.grid, online: p.sockets.size > 0, laps: p.laps, sector: p.sector, started: p.started, finish: p.finish, best: p.best, last: p.last,
           item: p.item || null, cargas: p.cargas || 0, rolling: p.rolling || 0, boostUntil: p.boostUntil || 0, starUntil: p.starUntil || 0, spinUntil: p.spinUntil || 0,
           shrinkUntil: p.shrinkUntil || 0, inkUntil: p.inkUntil || 0, balaUntil: p.balaUntil || 0 };
       }),
@@ -560,6 +560,7 @@ module.exports = function attachCorrida(io) {
   // ainda corria, a corrida pode ter acabado para todos
   function aplicarBatida(room, p, forca, tipo, quando = Date.now(), chave = tipo) {
     if (room.temporada && String(chave).startsWith("carro:")) anotarRixa(room, p, room.players[String(chave).slice(6)], quando);
+    if (room.temporada) anotarToque(room, p, String(chave).startsWith("carro:") ? room.players[String(chave).slice(6)] : null, tipo, quando);
     const b = Direcao.bater(room, p, forca, tipo, quando, (s) => log(room, s), chave);
     if (!b) return false;
     if (p.dnf && !room.order.some((id) => { const q = room.players[id]; return q.finish == null && !q.dnf && (q.sockets.size || q.bot); })) endRace(room);
@@ -577,6 +578,19 @@ module.exports = function attachCorrida(io) {
     const i = Contato.impactoDe(room, eu.id, rival.id); r.t = quando; r.n++;
     if (i && i.culpado === eu.id) r.culpaSua++; else if (i && i.culpado === rival.id) r.culpaDele++;
     nsp.to(room.code).emit("radio:equipe", { para: eu.id, sit: "rivalbatida" });
+  }
+  // (2026-11-21, o Thiago: "eventos ligados ao que acontece na corrida: quantidade de batidas, dano no carro, toque com pilotos específicos")
+  // os toques de quem joga na carreira: no muro (um a cada 2 s) e em cada piloto (um por par a cada 3 s, com quem causou). Vão para a análise
+  // do GP (corrida-temporada.js, `corrida`) e o Paddock (paddock.js) tira os acontecimentos do fim de semana seguinte deles.
+  function anotarToque(room, p, o, tipo, quando) {
+    if (!p) return;
+    const eu = !p.bot ? p : o && !o.bot ? o : null; if (!eu) return;
+    const t = room.toques || (room.toques = { muros: 0, carros: 0, por: {}, tm: 0 });
+    if (!o) { if (eu === p && tipo === "muro" && quando - t.tm >= 2000) { t.muros++; t.tm = quando; } return; }
+    const outro = eu === p ? o : p, id = outro.bot && outro.piloto ? outro.piloto.id : null; if (!id) return;
+    const r = t.por[id] || (t.por[id] = { n: 0, culpaSua: 0, culpaDele: 0, t: 0 }); if (quando - r.t < 3000) return;
+    const i = Contato.impactoDe(room, eu.id, outro.id); r.t = quando; r.n++; t.carros++;
+    if (i && i.culpado === eu.id) r.culpaSua++; else if (i && i.culpado === outro.id) r.culpaDele++;
   }
   // O que a transmissão de TV mostra do campeonato (só em temporada): os 10 primeiros pilotos (mais os humanos que ficaram
   // de fora) e as 11 equipes, com os pontos de antes deste GP. `tab` é o `tabelas` da temporada (solo ou em grupo); no 1º GP
@@ -603,7 +617,7 @@ module.exports = function attachCorrida(io) {
       mods: { ...T.MODS_PADRAO, pintura: eq.pintura }, pneu: F1.COMPOSTO_PADRAO, grid: 0, laps: 0, sector: T.SECTORS - 1,
       started: false, finish: null, best: null, last: null, sockets: new Set() };
     room.players[id].plano = ((temporada.paddock || {}).decisoes || {})[`${temporada.ano}:${temporada.gp}:plano`] || null; // (2026-11-16) o plano da corrida (paddock.js): sim.js PLANO
-    try { const m = require("./public/corrida/temporada/paddock.js").modificadores(temporada); if (m) room.players[id].gpMods = m; } catch (e) { console.warn("Paddock: modificadores do GP:", e.message); } // (2026-11-21) os eventos do fim de semana no seu carro (sim.js) e no grid
+    try { const Pd = require("./public/corrida/temporada/paddock.js"), m = Pd.modificadores(temporada), est = Pd.estrategiaEscolhida(temporada); if (m) room.players[id].gpMods = m; if (est) { room.players[id].pneu = est.largada; room.players[id].paradasEquipe = est.paradas; } } catch (e) { console.warn("Paddock: modificadores do GP:", e.message); } // (2026-11-21) os eventos do fim de semana no seu carro (sim.js) e no grid
     room.order.push(id); room.host = id; rooms.set(room.code, room); log(room, `🏁 GP de ${gp.nome}: box da temporada aberto.`);
     return { code: room.code, id, token, phase: room.phase };
   }

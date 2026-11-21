@@ -20,7 +20,7 @@ export function montarNaCentral(el, { r, nomes = {}, meu = "voce", aba, pedirRep
   const players = linhas.map((l) => ({ id: l.piloto, name: nomeDe(l.piloto), nomeCompleto: nomeDe(l.piloto), equipe: l.equipe, sigla: siglaDe(l.piloto), color: corOk(FP.EQUIPES[l.equipe] && FP.EQUIPES[l.equipe].cor) }));
   const resultado = linhas.map((l) => ({ id: l.piloto, pos: l.pos, grid: Math.max(0, ((A.pilotos[l.piloto] && A.pilotos[l.piloto].g) || l.pos) - 1), dnf: !!l.dnf, nc: !!l.nc, dsq: false }));
   const chave = `salvo:${r.ano}:${r.gp}:${r.pista}`;
-  const S = { startAt: chave, config: { pista: r.pista, regras: "f1", voltas: A.voltas }, players, resultado };
+  const S = { startAt: chave, config: { pista: r.pista, regras: "f1", voltas: A.voltas, ano: window.F1Temporadas?.anoAtual?.() } /* (o ano: o carro e as pinturas do replay 3D) */, players, resultado };
   const meuEq = (linhas.find((l) => l.piloto === meu) || {}).equipe, cor = corOk(FP.EQUIPES[meuEq] && FP.EQUIPES[meuEq].cor);
   el.style.setProperty("--eq-ra", cor);
   const fonte = { analise: () => Promise.resolve(A), replay: () => (pedirReplay ? Promise.resolve(pedirReplay()) : Promise.resolve(null)), sNow: () => Date.now() };

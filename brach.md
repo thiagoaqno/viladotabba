@@ -21,4 +21,5 @@ Pedido do Thiago (2026-11-21): "rever os contratos para ter opções mais vantaj
 
 ## Vozes
 - Os 68 mp3 das falas de #874 (eventos, pista comprida ou curta, as variações), gerados pelo Thiago com o `Falas novas da Corrida.bat`, entram com `git add -f`.
+- Testes: apagados "renovar exige confiança e estende o contrato" e "as propostas abrem nas últimas etapas e só assinam depois do último GP" (`corrida-temporada-contrato.test.js`), que fixavam o contrato antigo.
 - Faltam 12, as dos planos novos de #875 (`riscolargada`, `riscofinal`, `riscopneu`): é rodar o atalho de novo.

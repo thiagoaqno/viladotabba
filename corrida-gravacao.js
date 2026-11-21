@@ -2,10 +2,20 @@
 // A cada 250 ms (o laço de 100 ms das regras de F1 em corrida.js chama `passo`), uma amostra de cada carro em 6 bytes:
 //   fração da volta (2 bytes, 0 a 65 535; 65 535 = fora da pista: abandonou ou já recebeu a bandeirada), velocidade (1 byte, km/h ÷ 2 na
 //   escala do velocímetro, v × 0,75), acelerador e freio (1 byte cada, 0 a 255) e marcha (1 byte; +128 quando está no box).
-// Com 22 carros dá 132 bytes por amostra, 528 bytes por segundo (a conta, não medido); o limite é 1 hora de corrida (14 400 amostras).
+// Desde o replay 3D (2026-11-21) cada amostra leva mais 6 bytes: x e y do carro (2 bytes cada, de `mundo.x0`/`mundo.y0` em passos de `mundo.e`,
+//   a pista e uma margem de meio mundo em volta) e a direção do carro (2 bytes com sinal, −π a π). O replay antigo, de 6 bytes, continua lido
+//   (o `campos` vai junto): a miniatura usa só os 6 primeiros.
+// Com 22 carros dá 264 bytes por amostra, 1 056 bytes por segundo (a conta, não medido); o limite é 1 hora de corrida (14 400 amostras).
 // As ultrapassagens saem da mesma amostra: a ordem na pista (voltas + fração) de cada par que troca de lugar fora do box e continua trocado
 // 1,5 s depois. A volta de um retardatário (diferença de mais de meia volta) não conta.
-const PASSO_MS = 250, MAX_AMOSTRAS = 14400, CAMPOS = 6, FORA = 65535, CONFIRMA_MS = 1500, KMH_POR_U = 0.75;
+const PASSO_MS = 250, MAX_AMOSTRAS = 14400, CAMPOS = 12, FORA = 65535, CONFIRMA_MS = 1500, KMH_POR_U = 0.75;
+let T = null; try { T = require("./public/corrida/pistas.js"); } catch (e) { T = null; }
+// o quadro das posições: o mundo da pista com meio mundo de margem para cada lado (o box e as áreas de escape ficam dentro), em 65 534 passos
+function mundoDe(pista) {
+  const w = (T && T.PISTAS[pista] && T.PISTAS[pista].world) || 1600 * 8;
+  return { x0: -w / 2, y0: -w / 2, e: (w * 2) / 65534 };
+}
+const u16 = (v, x0, e) => Math.max(0, Math.min(65534, Math.round((v - x0) / e)));
 
 function limpar(room) { room.grav = null; }
 
@@ -20,7 +30,7 @@ function progresso(p, f, agora) {
 
 function passo(room, agora, onde) {
   if (room.phase !== "race" || !room.startAt || agora < room.startAt) return;
-  const g = (room.grav ||= { t0: room.startAt, ids: room.order.slice(), amostras: [], ordem: new Map(), cand: new Map(), ultrapassagens: [] });
+  const g = (room.grav ||= { t0: room.startAt, ids: room.order.slice(), amostras: [], ordem: new Map(), cand: new Map(), ultrapassagens: [], mundo: mundoDe(room.config.pista) });
   // a próxima amostra é marcada no relógio (t0 + k × 250 ms), não 250 ms depois da última: o laço é de 100 ms, e "250 ms depois" virava 300 ms,
   // o que atrasava o replay em relação ao tempo da corrida (o "Ver no replay" caía segundos depois da ultrapassagem)
   if (g.amostras.length >= MAX_AMOSTRAS || agora < g.t0 + g.amostras.length * PASSO_MS) return;
@@ -36,6 +46,11 @@ function passo(room, agora, onde) {
     b[o + 3] = Math.round(Math.max(0, Math.min(1, (c && c.gasP) || 0)) * 255);
     b[o + 4] = Math.round(Math.max(0, Math.min(1, (c && c.brkP) || 0)) * 255);
     b[o + 5] = Math.min(127, (c && c.marcha) || 0) + (p.box ? 128 : 0);
+    // a posição e a direção (o replay 3D): do carro da física, ou da última posição mandada
+    const x = (c && Number.isFinite(c.x)) ? c.x : p.pos && p.pos.x, y = (c && Number.isFinite(c.y)) ? c.y : p.pos && p.pos.y, a = (c && Number.isFinite(c.a)) ? c.a : p.pos && p.pos.a;
+    if (Number.isFinite(x) && Number.isFinite(y)) { const M = g.mundo; b.writeUInt16LE(u16(x, M.x0, M.e), o + 6); b.writeUInt16LE(u16(y, M.y0, M.e), o + 8); }
+    else { b.writeUInt16LE(FORA, o + 6); b.writeUInt16LE(FORA, o + 8); }
+    b.writeInt16LE(Number.isFinite(a) ? Math.round(Math.atan2(Math.sin(a), Math.cos(a)) / Math.PI * 32767) : 0, o + 10);
     if (!p.box) prog.set(id, { pr: progresso(p, f, agora), f });
   });
   g.amostras.push(b);
@@ -73,7 +88,7 @@ const listaUltrapassagens = (room) => (room.grav ? room.grav.ultrapassagens.slic
 // o replay para o navegador: os ids na ordem das colunas e todas as amostras juntas em base64
 function replay(room) {
   const g = room.grav; if (!g || !g.amostras.length) return null;
-  return { t0: g.t0, passo: PASSO_MS, campos: CAMPOS, ids: g.ids, n: g.amostras.length, dados: Buffer.concat(g.amostras).toString("base64") };
+  return { t0: g.t0, passo: PASSO_MS, campos: CAMPOS, mundo: g.mundo, pista: room.config.pista, ids: g.ids, n: g.amostras.length, dados: Buffer.concat(g.amostras).toString("base64") };
 }
 
 // para o save da carreira: os ids da sala viram os do save (`chave(p)`: "voce", "h:<pessoa>" ou o id do piloto real) nas ultrapassagens e nas
@@ -83,7 +98,7 @@ function paraSave(room, chave) {
   for (const id of room.order) { const p = room.players[id]; if (p) { try { troca.set(id, chave(p)); } catch (e) { troca.set(id, id); } } }
   const novo = (id) => troca.get(id) || id;
   const ultrapassagens = g ? g.ultrapassagens.map((u) => ({ ...u, a: novo(u.a), b: novo(u.b) })) : [];
-  const replay = g && g.amostras.length ? { t0: g.t0, passo: PASSO_MS, campos: CAMPOS, ids: g.ids.map(novo), n: g.amostras.length, dados: Buffer.concat(g.amostras) } : null;
+  const replay = g && g.amostras.length ? { t0: g.t0, passo: PASSO_MS, campos: CAMPOS, mundo: g.mundo, pista: room.config.pista, ids: g.ids.map(novo), n: g.amostras.length, dados: Buffer.concat(g.amostras) } : null;
   return { ultrapassagens, replay };
 }
 

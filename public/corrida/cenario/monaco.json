@@ -1,5 +1,6 @@
 {
  "pista": "monaco",
+ "colisao": "pecas",
  "itens": [
   {
    "tipo": "kit",

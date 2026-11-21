@@ -175,7 +175,7 @@ DESENHOS.mclaren = {
       marca(c, "etihad", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: PRETO }); // (a asa traseira é lida por quem vem atrás: -DE_FRENTE, como nas outras equipes)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.55, 0, 0.55, 0.15, PRETO); ret(c, -0.16, 0.8, 0.16, 1.1, PETROLEO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.8, 0.78, 0.8, 1.1, PRETO); marca(c, "etihad", 0, 0.9, 0.09); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PAP); ret(c, -0.8, 0.64, 0.8, 1.1, PRETO); });
   },
 };
 
@@ -236,7 +236,7 @@ DESENHOS.ferrari = {
       for (const l of [-1, 1]) marca(c, "hp", 4.18, l * 0.45, 0.1, { giro: DE_FRENTE });
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ESCURO); ret(c, -0.8, 0, 0.8, 0.24, AZUL); ret(c, -0.16, 0.06, 0.16, 0.5, VERM); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.3, 0.36, 0.3, 0.72, VERM); ret(c, -0.8, 0.8, 0.8, 1.0, "#2341b3"); marca(c, "ibm", 0, 0.9, 0.1, { tinta: "#d8dce6", fundo: "#2341b3" }); }); // (atrás, a asa é azul vivo com o IBM prateado, como no modelo)
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.3, 0.36, 0.3, 0.72, VERM); ret(c, -0.8, 0.64, 0.8, 0.86, "#2341b3"); }); // (atrás, a asa é azul vivo com o IBM prateado, como no modelo)
   },
 };
 
@@ -294,13 +294,25 @@ DESENHOS.mercedes = {
       marca(c, "petronas", 4.12, 0, 0.09, { giro: -DE_FRENTE }); // (lida por quem vem atrás)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.2, 0.15, 0.2, 0.5, PRATA); ret(c, -0.2, 0.15, 0.2, 0.17, VERDE); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); marca(c, "crowdstrike", 0, 0.85, 0.08); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); });
   },
 };
 
-// Red Bull RB22, pelos prints do Thiago (2026-11-13): azul-marinho com manchas mais escuras, o touro vermelho grande na tampa com o sol amarelo
-// na entrada de ar, o bico amarelo com a chama vermelha, as asas de carbono com o "Red Bull" vermelho grande e o VISA na dianteira, o Mobil 1 nas
-// placas da traseira, o ORACLE atrás e na caixa lateral, a TAG Heuer na frente do cockpit. Tudo desenhado no canvas (nenhuma imagem nova).
+// Red Bull RB22, refeita pelas oito imagens do Thiago (Carros F1/2026/Redbull, 2026-11-20): azul-marinho com a camuflagem digital (quadradinhos
+// mais escuros e mais claros), o touro vermelho grande na tampa investindo para a frente com o sol amarelo e a entrada de ar amarela, o bico
+// amarelo com o touro, o Red Bull vermelho de contorno branco atrás da caixa, o ORACLE branco grande na caixa e atrás da asa, CARLYLE e 1Password
+// na frente da caixa, ROKT em cima, indeed embaixo, a Ford na tampa, o número no vermelho da barbatana, as placas da asa traseira azuis com o
+// Mobil 1 e a Heineken 0.0, a asa dianteira de carbono com o Red Bull grande e o VISA, e a Gate em cima da asa traseira.
+// (o touro agora é vetor, f1-marcas.js `touro`: o recorte do logo de 512 px saía borrado esticado na tampa)
+function quadradinhos(c, s0, s1, y0, y1, n, cores, semente) { // a camuflagem digital: quadrados de 1 a 4 cm
+  const r = mulberry(semente);
+  for (let i = 0; i < n; i++) { const l = 0.01 + r() * 0.03; c.fillStyle = cores[i % cores.length]; c.fillRect(s0 + r() * (s1 - s0), y0 + r() * (y1 - y0), l, l * (0.6 + r() * 0.8)); }
+}
+// o touro (f1-marcas.js) em (a, b) com altura h, olhando para dx = ±1 na folha (e dy = −1 vira de cabeça para baixo, para a vista de cima)
+function touroEm(c, a, b, h, dx, dy = 1) {
+  if (GRAVANDO) { GRAVANDO.push({ v: VISTA_ATUAL, id: "touro", a, b, h, giro: dy < 0 ? Math.PI : 0, espelhar: dx * dy < 0 }); return; }
+  const [x, y] = pt(c, a, b), e = h * PX(); c.save(); c.setTransform(1, 0, 0, 1, x, y); c.scale(dx * e, dy * e); desenharMarca(c, "touro"); c.restore();
+}
 function manchas(c, s0, s1, y0, y1, n, cor, semente) {
   const r = mulberry(semente); c.fillStyle = cor;
   for (let i = 0; i < n; i++) { c.beginPath(); c.ellipse(s0 + r() * (s1 - s0), y0 + r() * (y1 - y0), 0.01 + r() * 0.03, 0.008 + r() * 0.02, r() * Math.PI, 0, Math.PI * 2); c.fill(); }
@@ -312,38 +324,50 @@ function letreiro(c, str, a, b, h, cor, borda, giro = 0) {
   c.strokeStyle = borda; c.lineWidth = Math.max(2, h * PX() * 0.16); c.lineJoin = "round"; c.strokeText(str, 0, 0); c.fillStyle = cor; c.fillText(str, 0, 0); c.restore();
 }
 DESENHOS["red-bull"] = {
-  numero: "#ffffff", carbono: 1, numPos: [3.5, 0.62, 9, 9],
+  numero: "#ffffff", carbono: 1, numPos: [3.56, 0.92, 9, 9],
   pintar(ctx) {
-    const AZUL = "#1b2452", ESC = "#0e1430", MANCHA = "#131a3e", VERM = "#d3112f", AMAR = "#f7c600", CARB = "#25272b";
+    const AZUL = "#1a2160", CAMO = ["#121850", "#232f78", "#0f1442"], ESC = "#0e1338", VERM = "#d3112f", AMAR = "#f7c600", CARB = "#25272b", BRANCO = "#ffffff";
     base(ctx, AZUL);
-    lados(ctx, (c) => {
-      manchas(c, 1.1, 3.9, 0.15, 1.05, 140, MANCHA, 22);
-      // o sol amarelo na entrada de ar e o touro grande na tampa
-      ret(c, 2.18, 0.86, 2.52, 1.1, AMAR); c.beginPath(); c.arc(2.46, 0.84, 0.19, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill();
-      touros(c, 2.42, 0.6, 3.48, 1.02);
+    lados(ctx, (c, lado) => {
+      quadradinhos(c, 1.0, 3.9, 0.12, 1.08, 900, CAMO, 22);
+      // a entrada de ar amarela, o sol e o touro grande investindo para a frente
+      ret(c, 2.18, 0.84, 2.52, 1.1, AMAR); c.beginPath(); c.arc(2.5, 0.86, 0.17, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill();
+      touroEm(c, 2.98, 0.82, 0.3, lado);
       baixo(c, ESC);
-      // o bico: amarelo na ponta, a chama vermelha atrás
-      poli(c, [[0, 0.17], [0.7, 0.17], [0.58, 0.32], [0, 0.24]], AMAR); poli(c, [[0.55, 0.17], [1.05, 0.17], [0.92, 0.38], [0.58, 0.32]], VERM);
+      // o bico amarelo com o touro
+      poli(c, [[0, 0.16], [1.0, 0.16], [0.9, 0.42], [0, 0.26]], AMAR); touroEm(c, 0.66, 0.27, 0.12, lado);
       poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], CARB); // a asa dianteira
-      ret(c, 3.82, 0.3, 4.45, 1.1, CARB); // a asa traseira
-      marca(c, "redbull", 2.98, 0.57, 0.075, { tinta: VERM }); marca(c, "oracle", 2.7, 0.33, 0.105); marca(c, "rokt", 2.28, 0.63, 0.035);
-      marca(c, "carlyle", 1.72, 0.5, 0.03); marca(c, "mobil1", 1.05, 0.28, 0.035); marca(c, "mobil1", 0.32, 0.1, 0.035);
-      marca(c, "mobil1", 4.15, 0.8, 0.07); marca(c, "redbull", 4.15, 0.62, 0.04, { tinta: VERM });
+      // a barbatana com o vermelho do número
+      poli(c, [[3.4, 0.82], [3.7, 0.82], [3.74, 1.03], [3.44, 1.03]], VERM);
+      // a asa traseira de carbono, a placa azul com o Mobil 1 e a Heineken 0.0
+      ret(c, 3.82, 0.3, 4.45, 1.1, CARB); ret(c, 3.93, 0.56, 4.42, 0.97, AZUL);
+      marca(c, "mobil1", 4.17, 0.86, 0.065); marca(c, "heineken", 4.17, 0.66, 0.06);
+      texto(c, "Red Bull", 3.12, 0.56, 0.075, VERM, { estilo: "normal", peso: 900, borda: BRANCO });
+      marca(c, "oracle", 2.62, 0.34, 0.1); marca(c, "rokt", 2.25, 0.64, 0.04);
+      marca(c, "carlyle", 1.72, 0.5, 0.03); marca(c, "onepassword", 1.72, 0.44, 0.026, { fundo: AZUL });
+      marca(c, "indeed", 1.75, 0.2, 0.035);
+      marca(c, "clear", 2.62, 0.13, 0.017); marca(c, "siemens", 2.92, 0.13, 0.017); marca(c, "hexagon", 3.22, 0.13, 0.017);
+      marca(c, "ford", 3.56, 0.62, 0.04); texto(c, "RACING", 3.56, 0.575, 0.017, BRANCO, { estilo: "normal", peso: 800, esp: 0.004 });
+      marca(c, "mobil1", 0.3, 0.12, 0.04);
     });
     vista(ctx, "T", (c) => {
-      manchas(c, 1.2, 3.9, -0.65, 0.65, 160, MANCHA, 7);
-      c.beginPath(); c.arc(2.42, 0, 0.17, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill(); // o sol, de cima
-      touros(c, 2.55, 0.26, 3.45, 0.62); touros(c, 2.55, -0.62, 3.45, -0.26); // os touros no alto das caixas
-      asasT(c, CARB, CARB, AZUL);
-      poli(c, [[0, -0.09], [0.45, -0.12], [0.45, 0.12], [0, 0.09]], AMAR); poli(c, [[0.45, -0.12], [0.78, -0.14], [0.78, 0.14], [0.45, 0.12]], VERM); // o bico
+      quadradinhos(c, 1.1, 3.9, -0.7, 0.7, 900, CAMO, 7);
+      c.beginPath(); c.arc(2.42, 0, 0.16, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill(); // o sol, de cima
+      touroEm(c, 2.98, 0.3, 0.2, -1, -1); touroEm(c, 2.98, -0.3, 0.2, -1); // o touro no alto da tampa, dos dois lados, investindo para a frente
+      asasT(c, CARB, CARB, AMAR);
+      poli(c, [[0, -0.09], [1.0, -0.13], [1.0, 0.13], [0, 0.09]], AMAR); // o bico amarelo
+      c.beginPath(); c.ellipse(1.02, 0, 0.13, 0.11, 0, 0, Math.PI * 2); c.fillStyle = BRANCO; c.fill(); // o oval branco do número no bico
+      c.beginPath(); c.ellipse(1.02, 0, 0.115, 0.095, 0, 0, Math.PI * 2); c.fillStyle = AZUL; c.fill(); ret(c, 0.95, -0.07, 1.09, 0.07, VERM);
       const f = { giro: DE_FRENTE };
-      for (const l of [-1, 1]) { letreiro(c, "Red Bull", 0.16, l * 0.47, 0.1, VERM, "#ffffff", DE_FRENTE); marca(c, "visa", 0.42, l * 0.46, 0.05, f); }
-      marca(c, "visa", 0.82, 0, 0.03, f); marca(c, "att", 0.88, 0, 0.026, f); marca(c, "tagheuer", 1.22, 0, 0.075, f);
-      marca(c, "oracle", 2.0, 0.42, 0.04, { giro: DE_FRENTE }); marca(c, "oracle", 2.0, -0.42, 0.04, { giro: DE_FRENTE });
-      marca(c, "gate", 4.12, 0, 0.09, { ...f, giro: -DE_FRENTE }); // (lida por quem vem atrás)
+      for (const l of [-1, 1]) { letreiro(c, "Red Bull", 0.16, l * 0.47, 0.1, VERM, BRANCO, DE_FRENTE); marca(c, "visa", 0.42, l * 0.46, 0.05, f); }
+      marca(c, "visa", 0.8, 0, 0.028, f); marca(c, "gate", 0.86, 0, 0.026, f); marca(c, "att", 0.92, 0, 0.024, f);
+      marca(c, "tagheuer", 1.24, 0, 0.075, f); marca(c, "oracle", 1.42, 0, 0.035, f);
+      marca(c, "oracle", 2.0, 0.42, 0.04, f); marca(c, "oracle", 2.0, -0.42, 0.04, f);
+      marca(c, "gate", 4.12, 0, 0.09, { giro: -DE_FRENTE }); // (lida por quem vem atrás)
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.14, 0.1, 0.14, 0.4, AMAR); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); touros(c, -0.45, 0.42, 0.45, 0.76); ret(c, -0.8, 0.8, 0.8, 1.1, CARB); marca(c, "oracle", 0, 0.9, 0.08); });
+    // de trás: o azul, o Red Bull no fim das caixas e a asa de carbono (o ORACLE de trás da asa vem de ASA_BAIXO)
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.8, 0.62, 0.8, 1.1, CARB); for (const l of [-1, 1]) marca(c, "redbull", l * 0.3, 0.5, 0.045, { tinta: VERM }); });
   },
 };
 
@@ -377,7 +401,7 @@ DESENHOS["racing-bulls"] = {
       marca(c, "cashapp", 4.12, 0, 0.07, { giro: -DE_FRENTE, tinta: BRANCO });
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.15, 0.2, 0.15, 0.45, BRANCO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); ret(c, -0.8, 0.8, 0.8, 1.1, PRETO); marca(c, "cashapp", 0, 0.9, 0.08, { tinta: BRANCO }); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); ret(c, -0.8, 0.64, 0.8, 1.1, PRETO); });
   },
 };
 
@@ -424,7 +448,7 @@ DESENHOS["aston-martin"] = {
       marca(c, "maaden", 2.9, 0, 0.045, { giro: 0 }); marca(c, "aramco", 4.12, 0, 0.09, { giro: -DE_FRENTE, tinta: PRETO });
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERDE); ret(c, -0.75, 0, 0.75, 0.12, PRETO); ret(c, -0.75, 0.12, 0.75, 0.13, LIMAO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.45, 0.45, 0.45, 0.75, VERDE); marca(c, "valvoline", 0, 0.9, 0.08); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.45, 0.45, 0.45, 0.64, VERDE); });
   },
 };
 
@@ -461,7 +485,7 @@ DESENHOS.williams = {
       marca(c, "atlassiana", 1.18, 0, 0.06, f); marca(c, "santander", 1.28, 0, 0.022, f); marca(c, "duracell", 2.4, 0, 0.03, f);
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, ROYAL); ret(c, -0.6, 0, 0.6, 0.12, MARINHO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MARINHO); ret(c, -0.45, 0.35, 0.45, 0.7, ROYAL_ESC); ret(c, -0.5, 0.82, 0.5, 0.98, "#5741d9"); marca(c, "kraken", 0, 0.9, 0.08); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MARINHO); ret(c, -0.45, 0.35, 0.45, 0.7, ROYAL_ESC); });
   },
 };
 
@@ -499,7 +523,7 @@ DESENHOS.audi = {
       marca(c, "revolut", 4.12, 0, 0.08, { giro: -DE_FRENTE, tinta: TIT });
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, TIT); ret(c, -0.55, 0, 0.55, 0.12, PRETO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, GRAF); for (const l of [-1, 1]) ret(c, l * 0.25, 0.2, l * 0.52, 0.55, LAR); ret(c, -0.8, 0.8, 0.8, 1.1, PRETO); marca(c, "revolut", 0, 0.9, 0.09, { tinta: TIT }); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, GRAF); for (const l of [-1, 1]) ret(c, l * 0.25, 0.2, l * 0.52, 0.55, LAR); ret(c, -0.8, 0.64, 0.8, 1.1, PRETO); });
   },
 };
 
@@ -590,7 +614,7 @@ DESENHOS.cadillac = {
       marca(c, "cadillacw", 4.15, 0, 0.075, { giro: -DE_FRENTE, tinta: PRATA }); // a asa traseira, lida de trás
     });
     vista(ctx, "F", (c) => ret(c, -0.8, 0, 0.8, 1.1, PRETO));
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); marca(c, "crest", 0, 0.88, 0.08, { tinta: PRATA }); });
+    vista(ctx, "R", (c) => ret(c, -0.8, 0, 0.8, 1.1, PRETO)); // (o CADILLAC de trás da asa vem de ASA_BAIXO)
   },
 };
 
@@ -1136,16 +1160,27 @@ export function aplicarCockpit(sh, textura) {
 
 // ---------------------------------------------------------------- embaixo da asa traseira (a vista U): o que se vê do carro da frente
 // Pelos prints do Thiago (2026-11-13). A marca vai em metros no carro (x, t = s − 3,7: a asa vai de t 0 a 0,65 e de x −0,47 a 0,47).
-function marcaU(c, id, x, t, h, op) { if (GRAVANDO) { GRAVANDO.push({ v: "U", id, a: x, b: t, h, giro: 0, tinta: op?.tinta, fundo: op?.fundo }); return; } c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
+// (2026-11-20, o Thiago: "todos os adesivos que estão embaixo da asa ficarem na parte de trás da asa") com TRAS, as marcas de ASA_BAIXO vão para a
+// face de trás do flap (vista R). Medida a face que olha para trás: y 0,66..0,84 e x ±0,46 no carro de 2026, y 0,68..0,78 e x ±0,37 no de 2022.
+// t = 0,32 (o meio da vista U) vira y 0,735, e a marca tem no máximo 0,085 m de altura, para caber nos dois.
+let TRAS = false;
+const yTras = (t) => 0.735 - (t - 0.32) * 0.5;
+function retU(c, x0, t0, x1, t1, cor) { if (TRAS) ret(c, x0, yTras(t1), x1, yTras(t0), cor); else ret(c, x0, t0, x1, t1, cor); }
+function asaBaixo(ctx, eq) {
+  const d = ASA_BAIXO[eq];
+  vista(ctx, "U", (c) => ret(c, -0.6, -0.05, 0.6, 0.75, d?.cor || "#101113")); // embaixo: só a cor
+  if (d?.marcas) { TRAS = true; try { vista(ctx, "R", (c) => d.marcas(c)); } finally { TRAS = false; } }
+}
+function marcaU(c, id, x, t, h, op) { if (TRAS) return marca(c, id, x, yTras(t), Math.min(h * 0.75, 0.085), op); if (GRAVANDO) { GRAVANDO.push({ v: "U", id, a: x, b: t, h, giro: 0, tinta: op?.tinta, fundo: op?.fundo }); return; } c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
 const ASA_BAIXO = {
   mercedes: { cor: "#0c0d0f", marcas: (c) => marcaU(c, "crowdstrike", 0, 0.32, 0.1) },
   ferrari: { cor: "#2341b3", marcas: (c) => marcaU(c, "ibm", 0, 0.32, 0.16, { tinta: "#d8dce6", fundo: "#2341b3" }) }, // (o modelo do Sketchfab: azul vivo com o IBM prateado)
   "red-bull": { cor: "#25272b", marcas: (c) => marcaU(c, "oracle", 0, 0.32, 0.11) },
   mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
   audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },
-  cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillac", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
+  cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillacw", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
   "aston-martin": { cor: "#0a1210", marcas: (c) => marcaU(c, "valvoline", 0, 0.32, 0.11) },
-  williams: { cor: "#0b1140", marcas: (c) => { ret(c, -0.45, 0.2, 0.45, 0.44, "#5741d9"); marcaU(c, "kraken", 0, 0.32, 0.12); } },
+  williams: { cor: "#0b1140", marcas: (c) => { retU(c, -0.45, 0.2, 0.45, 0.44, "#5741d9"); marcaU(c, "kraken", 0, 0.32, 0.12); } },
   "haas@2024": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "haas@2025": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "racing-bulls@2024": { cor: "#101114", marcas: (c) => marcaU(c, "cashapp", 0, 0.32, 0.1) },
@@ -1179,7 +1214,7 @@ export function folhaDaEquipe(equipe, alta = false, original = false) {
   ESC = alta ? ESC_ALTA : ESC_OUTROS;
   const cv = document.createElement("canvas"); cv.width = FW * ESC; cv.height = FH * ESC;
   const ctx = cv.getContext("2d"); DESENHOS[equipe].pintar(ctx);
-  vista(ctx, "U", (c) => { const d = ASA_BAIXO[equipe]; ret(c, -0.6, -0.05, 0.6, 0.75, d?.cor || "#101113"); d?.marcas?.(c); });
+  asaBaixo(ctx, equipe);
   lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO)); // a entrada de ar das caixas laterais é escura em qualquer pintura
   ESC = 1;
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = alta ? 8 : 4; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
@@ -1443,7 +1478,7 @@ export const ZONAS = {
   cockpit: { nome: "Cockpit", L: [[1.3, 0.45, 2.05, 1.1]], T: [[1.3, -0.3, 2.05, 0.3]] },
   laterais: { nome: "Laterais (sidepods)", L: [[2.05, 0.1, 3.5, 0.5]], T: [[2.05, -0.75, 3.5, -0.26], [2.05, 0.26, 3.5, 0.75]] },
   tampa: { nome: "Tampa do motor", L: [[2.05, 0.5, 3.88, 1.1]], T: [[2.05, -0.26, 3.88, 0.26]], R: [[-0.3, 0.4, 0.3, 0.78]] },
-  asaT: { nome: "Asa traseira", L: [[3.86, 0.3, 4.45, 1.1]], T: [[3.82, -0.62, 4.45, 0.62]], R: [[-0.8, 0.78, 0.8, 1.1]] },
+  asaT: { nome: "Asa traseira", L: [[3.86, 0.3, 4.45, 1.1]], T: [[3.82, -0.62, 4.45, 0.62]], R: [[-0.8, 0.64, 0.8, 1.1]] }, // (R: a face de trás do flap começa em y 0,66)
   assoalho: { nome: "Assoalho", L: [[0, 0, 4.45, 0.1]] },
 };
 // os retângulos de uma zona numa vista, só do lado pedido ("A" = +x, "B" = −x, senão os dois)
@@ -1536,15 +1571,15 @@ export function separarMarcas(equipe, esc = 1) {
   GRAVANDO = [];
   try {
     DESENHOS[eq].pintar(ctx);
-    vista(ctx, "U", (c) => { const d = ASA_BAIXO[eq]; ret(c, -0.6, -0.05, 0.6, 0.75, d?.cor || "#101113"); d?.marcas?.(c); });
+    asaBaixo(ctx, eq);
     lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO));
   } finally { var gravadas = GRAVANDO; GRAVANDO = null; ESC = 1; }
-  const camadas = [], usadas = new Set(), igual = (x, y) => x.id === y.id && Math.abs(x.a - y.a) < 1e-6 && Math.abs(x.b - y.b) < 1e-6 && x.h === y.h && x.giro === y.giro && x.tinta === y.tinta;
+  const camadas = [], usadas = new Set(), igual = (x, y) => x.id === y.id && !x.espelhar === !y.espelhar && Math.abs(x.a - y.a) < 1e-6 && Math.abs(x.b - y.b) < 1e-6 && x.h === y.h && x.giro === y.giro && x.tinta === y.tinta;
   for (const [i, m] of gravadas.entries()) {
     if (usadas.has(i)) continue; usadas.add(i);
     let vista0 = m.v, lado = "ambos";
     if (m.v === "A" || m.v === "B") { const par = gravadas.findIndex((o, j) => !usadas.has(j) && o.v === (m.v === "A" ? "B" : "A") && igual(o, m)); if (par >= 0) usadas.add(par); else lado = m.v; vista0 = "L"; }
-    camadas.push({ tipo: "logo", zona: "carro", marca: m.id, vista: vista0, lado, a: +m.a.toFixed(3), b: +m.b.toFixed(3), altura: +m.h.toFixed(3), giro: Math.round((m.giro * 180) / Math.PI), tinta: m.tinta, fundo: m.fundo, daEquipe: true });
+    camadas.push({ tipo: "logo", zona: "carro", marca: m.id, vista: vista0, lado, a: +m.a.toFixed(3), b: +m.b.toFixed(3), altura: +m.h.toFixed(3), giro: Math.round((m.giro * 180) / Math.PI), tinta: m.tinta, fundo: m.fundo, ...(m.espelhar ? { espelhar: true } : {}), daEquipe: true });
   }
   const r0 = { folha: cv, camadas }; SEPARADAS.set(chave, r0); return r0;
 }

@@ -46,15 +46,20 @@ const ENGENHEIROS = {
 const teto = 140;
 const inteiro = (n) => Number.isInteger(n) && n >= 0;
 const NIVEIS = ["facil", "medio", "dificil"];
-function criar(nome, equipe, tamanho = 8, voltas = 3, semente = Date.now(), nivel = "medio") {
+// (2026-11-21, o Thiago: "escolher ir com o nosso nick ou jogar a carreira com um piloto já existente") `real`: o id de um piloto da equipe
+// (f1-pilotos-2026.js, do ano da carreira). Você é ele: o nome, o número e o capacete dele, a vaga dele no carro (o outro titular é o seu
+// companheiro) e ele some do grid dos robôs (pilotosNoGrid, tabelas). Sem `real`, o de sempre: você entra no lugar do segundo titular.
+function criar(nome, equipe, tamanho = 8, voltas = 3, semente = Date.now(), nivel = "medio", real = null) {
   if (!Pilotos.EQUIPES[equipe] || !Equipes.EQUIPES[equipe]) throw Error("Equipe inválida.");
   if (![4, 8, PISTAS_TRABALHADAS.length].includes(tamanho) || ![2, 3, 5, 10].includes(voltas)) throw Error("Formato inválido.");
   if (!NIVEIS.includes(nivel)) throw Error("Nível dos robôs inválido.");
   const titulares = Pilotos.PILOTOS.filter((p) => p.equipe === equipe);
+  const eu = real ? titulares.find((p) => p.id === real) : null; if (real && !eu) throw Error("Esse piloto não corre por essa equipe.");
+  if (eu) nome = eu.nome;
   const sorteado = sortearCalendario(tamanho, semente);
   return { v: 1, nome: String(nome || "").trim().slice(0, 40), equipe, ano: 1, gp: 0, tamanho, voltas, nivel, semente,
     montagem: Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])), bonus: 0, caixa: 42, gasto: 0, patrocinio: verbaBase(equipe),
-    piloto2: titulares[0].id, engenheiros: { mecanico: 0, estrategista: 0 },
+    piloto2: (eu ? titulares.find((p) => p.id !== eu.id) : titulares[0]).id, ...(eu ? { pilotoReal: eu.id } : {}), engenheiros: { mecanico: 0, estrategista: 0 },
     resultados: [], calendario: sorteado.calendario, calendarioSemente: sorteado.semente };
 }
 // monta o carro: a carreira usa `d.montagem` (pontos livres); `d.pecas` segue aceito em saves antigos.
@@ -76,7 +81,7 @@ function gastar(s, quantia) {
 function contratarPiloto(s, id) {
   if (s.gp >= s.tamanho) throw Error("A temporada terminou.");
   const p = Pilotos.PILOTOS.find((x) => x.id === id);
-  if (!p || p.equipe === s.equipe && p.id === Pilotos.PILOTOS.filter((x) => x.equipe === s.equipe)[1].id) throw Error("Piloto indisponível.");
+  if (!p || p.id === vagaDe(s).id || p.id === s.pilotoReal) throw Error("Piloto indisponível.");
   if (s.piloto2 === id) return s;
   if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; } // (companheiro novo, humor novo)
   const custo = Math.max(5, Math.round((p.ritmo - 70) * 0.7));
@@ -164,15 +169,25 @@ function ajustarParaPista(m, asa) {
   for (let i = 0; i < 2 && m[de] > 1 && m[para] < Equipes.MAX_NIVEL; i++) { m[de]--; m[para]++; }
   return m;
 }
+// o titular que você substitui na equipe de agora: o próprio piloto real (na equipe dele), senão o segundo titular que não é o seu companheiro
+const pilotoRealDe = (s) => (s && s.pilotoReal ? Pilotos.PILOTOS.find((p) => p.id === s.pilotoReal) || null : null);
+function vagaDe(s) {
+  const titulares = Pilotos.PILOTOS.filter((p) => p.equipe === s.equipe), real = pilotoRealDe(s);
+  if (real && real.equipe === s.equipe) return real;
+  return titulares.find((p) => p.id !== s.piloto2 && p.id !== titulares[0].id) || titulares[1] || titulares[0];
+}
 function pilotosNoGrid(s) {
   const titulares = Pilotos.PILOTOS.filter((p) => p.equipe === s.equipe);
   const companheiro = Pilotos.PILOTOS.find((p) => p.id === s.piloto2);
-  const removidos = new Set([titulares[1].id, companheiro.id]);
+  const vaga = vagaDe(s), real = pilotoRealDe(s);
+  const removidos = new Set([vaga.id, companheiro.id, ...(real ? [real.id] : [])]);
   const disponiveis = Pilotos.PILOTOS.filter((p) => !removidos.has(p.id) && p.equipe !== s.equipe);
+  // o piloto real que trocou de equipe deixou a vaga dele na equipe antiga: quem você tirou da equipe nova vai para lá
+  if (real && real.equipe !== s.equipe && vaga.id !== real.id) disponiveis.push({ ...vaga, equipe: real.equipe });
   // Se o companheiro veio de outra equipe, o titular deslocado ocupa a vaga deixada por ele.
   const rivais = disponiveis.slice();
   if (companheiro.equipe !== s.equipe) {
-    const deslocado = titulares.find((p) => p.id !== companheiro.id);
+    const deslocado = titulares.find((p) => p.id !== companheiro.id && p.id !== vaga.id && p.id !== s.pilotoReal);
     if (deslocado) rivais.push({ ...deslocado, equipe: companheiro.equipe });
   }
   const ritmo = companheiro.ritmo + (s.paddock ? Paddock.ajusteDeRitmo(s) : 0); // (a moral do Paddock: ±2 pontos de ritmo nos extremos)
@@ -246,7 +261,7 @@ function registrarResultado(s, linhas, analise = null) {
 }
 function tabelas(s) {
   const pilotos = new Map(), equipes = new Map();
-  for (const p of Pilotos.PILOTOS) pilotos.set(p.id, { id: p.id, nome: p.nome, equipe: p.equipe, pontos: 0, vitorias: 0, colocacoes: Array(22).fill(0) });
+  for (const p of Pilotos.PILOTOS) if (p.id !== s.pilotoReal) pilotos.set(p.id, { id: p.id, nome: p.nome, equipe: p.equipe, pontos: 0, vitorias: 0, colocacoes: Array(22).fill(0) }); // (o piloto real da carreira é "voce")
   if (pilotos.has(s.piloto2)) pilotos.get(s.piloto2).equipe = s.equipe;
   pilotos.set("voce", { id: "voce", nome: s.nome, equipe: s.equipe, pontos: 0, vitorias: 0, colocacoes: Array(22).fill(0) });
   for (const [id, eq] of Object.entries(Pilotos.EQUIPES)) equipes.set(id, { id, nome: eq.nome, pontos: 0, vitorias: 0, colocacoes: Array(22).fill(0) });
@@ -356,7 +371,7 @@ function propostas(s) {
 function trocarDeEquipe(s, id, termos, inicio) {
   const titulares = Pilotos.PILOTOS.filter((x) => x.equipe === id);
   if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; s.paddock.patrocinador = 60; s.paddock.salarioComp = 0; s.paddock.salarioStaff = 0; s.paddock.demitido = null; s.paddock.ultimato = null; s.paddock.diretoria = 0; } // (equipe nova: o humor e a conta com a diretoria recomeçam)
-  s.equipe = id; s.piloto2 = titulares[0].id; s.montagem = Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])); s.pecas = null; s.bonus = 0;
+  s.equipe = id; s.piloto2 = (titulares.find((x) => x.id !== s.pilotoReal) || titulares[0]).id; s.montagem = Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])); s.pecas = null; s.bonus = 0;
   s.patrocinio = termos.verbaGP; s.contrato = { inicio, fim: inicio, bonusVitoria: termos.bonusVitoria };
 }
 function aceitarProposta(s, id) {
@@ -419,7 +434,7 @@ function proximaTemporada(s) {
   const sorteado = sortearCalendario(s.tamanho, s.semente, s.calendario.map((g) => g.pista));
   s.calendario = sorteado.calendario; s.calendarioSemente = sorteado.semente; return s;
 }
-const api = { verbaBase, demissaoNoMeio, limiteDoAno, custoDoDesenvolvimento, ajustarParaPista, CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
+const api = { vagaDe, pilotoRealDe, verbaBase, demissaoNoMeio, limiteDoAno, custoDoDesenvolvimento, ajustarParaPista, CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Temporada = api;
 })(typeof window !== "undefined" ? window : globalThis);

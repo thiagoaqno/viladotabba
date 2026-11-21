@@ -78,7 +78,7 @@ document.addEventListener("keydown", (e) => {
 // câmeras (cameras.js): cockpit, onboard (T-cam), bico, perseguição próxima, perseguição afastada, aérea e TV. C (ou o botão 🎥,
 // ou Y no controle) troca, mostra o nome da câmera e o jogo lembra a última escolhida (os ids antigos "perto", "longe", "cockpit" e "cima" seguem valendo).
 export let camMode = ORDEM.includes(store.get("corrida:cam")) ? store.get("corrida:cam") : "perto";
-function nextCam(d = 1) {
+export function nextCam(d = 1) {
   // segue a partir da câmera que se vê (quem só assiste ou já recebeu a bandeirada está na TV sem ter escolhido), pulando as que quem só assiste não tem
   let i = ORDEM.indexOf(camEstado.modo || camMode);
   for (let k = 0; k < ORDEM.length; k++) { i = (i + (d < 0 ? ORDEM.length - 1 : 1)) % ORDEM.length; if (usavel(ORDEM[i], camEstado.assistindo)) break; }
@@ -108,6 +108,8 @@ document.querySelectorAll(".pad button[data-k]").forEach((b) => {
 // controle (Xbox/PlayStation): analógico esquerdo vira (com a força exata), RT acelera, LT freia/ré,
 // A também acelera e B/X também freiam (para quem prefere botão), Y troca a câmera, Back/Select (ou LB) volta para a pista.
 export const pad = { steer: 0, on: false, prev: [], olharTras: false };
+// o controle no celular (controle-celular.js põe aqui o que chega, até 60 vezes por segundo): enquanto ele manda, vale como um controle de verdade
+export const celular = { ate: 0, v: 0, g: 0, f: 0, ers: false, olhar: false, usando: false };
 // a direção que a física recebe: o analógico (já com a curva, direto) ou o teclado/toque em RAMPA (pelo relógio, para dar o mesmo resultado
 // chamada a 120 Hz pela física ou a cada quadro); só muda a entrada do jogador, não a física nem os robôs
 const rampaVol = { v: 0, t: 0 };
@@ -120,6 +122,12 @@ export const direcao = () => {
   return rampaVol.v;
 };
 export function pollPad() {
+  if (celular.ate > performance.now()) { // (o celular para de mandar por mais de 0,4 s: solta tudo)
+    celular.usando = true; pad.on = true; pad.steer = Math.max(-1, Math.min(1, +celular.v || 0)); pad.olharTras = !!celular.olhar;
+    keys.gas = celular.g > 0.3; keys.brake = celular.f > 0.3 && !keys.gas; if (E.S?.config.regras === "f1") keys.ers = !!celular.ers;
+    return;
+  }
+  if (celular.usando) { celular.usando = false; pad.on = false; pad.steer = 0; pad.olharTras = false; keys.gas = keys.brake = keys.ers = false; }
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find((g) => g && g.connected);
   if (!gp) { pad.olharTras = false; if (pad.on) { pad.on = false; keys.gas = keys.brake = false; } return; }
   const b = (i) => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.3)), hit = (i) => b(i) && !pad.prev[i];

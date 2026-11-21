@@ -28,3 +28,19 @@ export function montarNaCentral(el, { r, nomes = {}, meu = "voce", aba, pedirRep
   montarAnaliseSalva(el, S, { id: meu }, A, fonte, chave, { semCab: true, tema, aba, aoAba });
   return true;
 }
+
+// o replay 3D (replay-3d.js) de um GP guardado, direto do menu da carreira (a aba Replay 3D da Central, central-analise.js): busca o replay e abre
+// o quadro. Devolve false quando o GP não tem replay gravado.
+export async function abrir3dSalvo({ r, nomes = {}, meu = "voce", pedirReplay }) {
+  const R = pedirReplay ? await pedirReplay() : null; if (!R || !R.dados) return false;
+  const A = (r && r.analise) || {}, FP = window.F1Pilotos || { EQUIPES: {}, PILOTOS: [] };
+  const piloto = (id) => FP.PILOTOS.find((p) => p.id === id);
+  const nomeDe = (id) => nomes[id] || (piloto(id) && piloto(id).nome) || id;
+  const siglaDe = (id) => (piloto(id) && piloto(id).sigla) || String(nomeDe(id)).replace(/[^A-Za-zÀ-ú]/g, "").slice(0, 3).toUpperCase() || "???";
+  const stints = (d) => { if (!d || !d.v) return null; const fim = d.v.length, l = []; let de = 1, c = d.c0; for (const b of d.b || []) { const ate = Math.max(de, Math.min(fim, b.v || de)); l.push({ c, de, ate }); de = ate + 1; c = b.c; } if (de <= fim) l.push({ c, de, ate: fim }); return l; };
+  const pilotos = [...(r.linhas || [])].sort((a, b) => a.pos - b.pos).map((l) => ({ id: l.piloto, nome: nomeDe(l.piloto), sigla: siglaDe(l.piloto), cor: corOk(FP.EQUIPES[l.equipe] && FP.EQUIPES[l.equipe].cor), eqId: l.equipe || null, stints: stints(A.pilotos && A.pilotos[l.piloto]) }));
+  const { t0, passo, campos, mundo, pista, ids, n, dados } = R;
+  const m = await import("/corrida/replay-3d-abrir.js");
+  m.abrirReplay3D({ replay: { t0, passo, campos, mundo, pista, ids, n, dados }, pista: r.pista, ano: window.F1Temporadas?.anoAtual?.(), voltas: A.voltas, pilotos, j: 0, sel: ids.includes(meu) ? meu : ids[0] });
+  return true;
+}

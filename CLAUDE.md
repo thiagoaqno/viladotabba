@@ -4,7 +4,7 @@ Site de jogos com os amigos, tudo em português. Hoje o projeto principal é **s
 
 ## Como trabalhar (regras do Thiago)
 
-- **Internet de plano:** nunca `git clone` nem `npm ci`. Os worktrees ficam em `C:\Users\thiag\Downloads\lts\klk\`, criados da `main` (`git worktree add -b <branch> ..\<pasta> origin/main`), com o `node_modules` ligado por junção ao de `klk\robos-pedal` (`mklink /J`).
+- **Internet de plano:** nunca `git clone` nem `npm ci`. Os worktrees ficam em `C:\Users\thiag\Downloads\lts\klk\`, criados da `main` (`git worktree add -b <branch> ..\<pasta> origin/main`), com o `node_modules` ligado por junção ao de `klk\luz-estourada`, o `node_modules` de verdade (`mklink /J`; o `klk\robos-pedal` não existe mais).
 - **Nunca apagar o `node_modules` compartilhado.** Para remover um worktree, primeiro rode `cmd /c rmdir <worktree>\node_modules`, confira que sumiu, e só depois `git worktree remove`. O `--force` com a junção no lugar já apagou o `node_modules` de todos.
 - **Testes:** não crie testes e não rode a suíte; só `node --check` (os arquivos de `public/corrida/` são módulos: confira com `node --input-type=module --check < arquivo.js`). A suíte roda no CI do GitHub. Teste antigo que quebra só porque um número mudou: apague e anote.
 - **Sem número inventado:** todo número anotado é medido.

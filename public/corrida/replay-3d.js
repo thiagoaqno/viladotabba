@@ -28,10 +28,13 @@ const rm = matchMedia("(prefers-reduced-motion: reduce)");
 const fechar = () => parent !== window ? parent.postMessage({ tipo: "replay3d-fechar" }, location.origin) : history.back();
 
 // ---------- a tela: só o 3D e os controles do replay ----------
+// (2026-11-21, o Thiago: "apertei em replay 3d e ficou carregando infinito") a tela "preparando a corrida" (index.html, #preparoCorrida) só sai quando
+// o jogo conecta, e aqui o socket não conecta: ela ficava por cima do replay pronto. Sai na hora, e o CSS abaixo a esconde se voltar
+document.getElementById("preparoCorrida")?.remove();
 for (const id of ["home", "lobby", "bar"]) document.getElementById(id)?.classList.add("hidden");
 document.body.classList.add("modo-editor", "modo-replay"); // (menu.js não ouve as teclas no modo-editor: o Esc dele levava para a página inicial)
 const css = document.createElement("style");
-css.textContent = `body.modo-replay #home,body.modo-replay #lobby,body.modo-replay #bar,body.modo-replay #results,body.modo-replay .modal,body.modo-replay dialog{display:none!important}
+css.textContent = `body.modo-replay #home,body.modo-replay #lobby,body.modo-replay #bar,body.modo-replay #results,body.modo-replay #preparoCorrida,body.modo-replay .modal,body.modo-replay dialog{display:none!important}
 body.modo-replay #race{display:block!important;visibility:visible!important}body.modo-replay #race>:not(canvas){display:none!important}body.modo-replay #screen{display:block!important}body.modo-replay #climaGotas{display:none!important}
 #r3{position:fixed;inset:0;z-index:60;pointer-events:none;font:600 14px "Titillium Web",Barlow,system-ui,sans-serif;color:#eef1f6}
 #r3 button{font:inherit;color:inherit;cursor:pointer;pointer-events:auto;border:1px solid #ffffff26;background:#0b0f16d9;border-radius:8px;transition:background .12s,border-color .12s,transform .12s}
@@ -150,7 +153,7 @@ function pinturaDe(p) {
 }
 function montar(id, leve) {
   const p = info.get(id), eq = p.eqId && window.EQUIPES_F1?.[p.eqId];
-  return makeKart(corOk(eq ? eq.cor : p.cor), "equilibrado", false, "", pinturaDe(p), undefined, leve, { numero: p.numero, sigla: leve ? p.sigla : null });
+  return makeKart(corOk(eq ? eq.cor : p.cor), "equilibrado", false, "", pinturaDe(p), undefined, leve, { numero: p.numero, sigla: leve ? p.sigla : null, volante: !leve });
 }
 // o carro seguido ganha o modelo completo (o cockpit e a T-cam precisam dele); o leve dele some
 function seguir(id) {
@@ -186,8 +189,8 @@ function laco(t) {
   const real = Math.min(0.25, (t - (st.ant || t)) / 1000); st.ant = t; const dt = Math.min(1 / 30, real);
   if (st.tocando) {
     st.s += (real * 1000 * st.vel) / D.passo;
-    if (st.s >= D.n - 1) { st.s = D.n - 1; st.tocando = false; marcarPlay(); }
-    if (st.s <= 0) { st.s = 0; st.tocando = false; marcarPlay(); }
+    if (st.vel > 0 && st.s >= D.n - 1) { st.s = D.n - 1; st.tocando = false; marcarPlay(); }
+    if (st.vel < 0 && st.s <= 0) { st.s = 0; st.tocando = false; marcarPlay(); } // (só tocando para trás: no primeiro quadro o tempo ainda é 0)
   }
   const dtv = dt * (st.tocando ? Math.sign(st.vel) * Math.min(4, Math.abs(st.vel)) : 0); // (as rodas e a suspensão andam com o replay)
   let alvo = null;
@@ -196,7 +199,9 @@ function laco(t) {
     if (!e) { c.kart.g.visible = false; if (principal && principal.id === c.id) principal.kart.g.visible = false; continue; }
     if (principal && principal.id === c.id) { // o seguido: o modelo completo, sempre desenhado
       c.kart.g.visible = false; principal.kart.g.visible = true;
-      const { z } = porNoChao(c, e, principal.kart, dtv || dt * 0.001); alvo = { ...e, z }; R.idx = c.idx;
+      // (2026-11-21, o Thiago: "as câmeras em primeira pessoa do replay estão quebradas") as de dentro do carro (cameras.js pov) inclinam a cabeça com
+      // o volante (c.steer) e sobem com a inclinação (R.pitch, R.dyChao): sem eles a conta dava NaN e a câmera sumia
+      const { z, inc } = porNoChao(c, e, principal.kart, dtv || dt * 0.001); alvo = { ...e, z, steer: c.vira, air: false }; R.idx = c.idx; R.pitch = inc.pitch || 0; R.dyChao = inc.dy || 0;
       continue;
     }
     const aparece = carroVisivel(tr, cam, e.x, e.y, c.idx); c.kart.g.visible = true; mostrarCarro(c.kart, aparece);

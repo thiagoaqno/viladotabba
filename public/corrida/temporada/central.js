@@ -6,7 +6,7 @@
 const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const Pilotos = () => root.F1Pilotos, Eq = () => root.F1Equipes, Reg = () => root.F1Temporada, Gi = () => root.GpInfo, Gar = () => root.F1Garagem;
 const dois = (n) => String(n).padStart(2, "0");
-const ABAS = [["central", "Central"], ["paddock", "Paddock"], ["calendario", "Calendário"], ["classif", "Classificação"], ["analise", "Análise"], ["carro", "Carro"], ["capacete", "Capacete"], ["contratos", "Contratos"]];
+const ABAS = [["central", "Central"], ["paddock", "Paddock"], ["calendario", "Calendário"], ["classif", "Classificação"], ["analise", "Análise"], ["replays", "Replay 3D"], ["carro", "Carro"], ["capacete", "Capacete"], ["contratos", "Contratos"]];
 const ATTR = [["aero", "Aerodinâmica", "Asa dianteira"], ["chassi", "Chassi", "Assoalho"], ["motor", "Unidade de potência", "Motor"], ["freios", "Freios", "Freio dianteiro"], ["suspensao", "Suspensão", "Suspensão"], ["confiab", "Confiabilidade", "Câmbio"]];
 // onde cada peça fica no carro (metros, sistema do modelo; o bico aponta para -z) e para onde o rótulo vai, em px da tela
 const PONTOS = { aero: { p: [0.25, 0.12, -2.05], dx: -150, dy: 80 }, chassi: { p: [-0.55, 0.14, 0.2], dx: -190, dy: 110 }, motor: { p: [0, 0.82, 0.6], dx: -120, dy: -110 }, freios: { p: [0.72, 0.3, -1.42], dx: 130, dy: 96 }, suspensao: { p: [-0.72, 0.42, 1.35], dx: -170, dy: -40 }, confiab: { p: [0, 0.5, 1.85], dx: -30, dy: -130 } };
@@ -257,7 +257,7 @@ function html(c) {
   ctxAtual = c; const { s, eq, codigoHTML } = c;
   const rotulo = (id, nome) => (c.grupo && id === "contratos" ? "Equipe" : nome);
   // (a aba Capacete: um lugar marcado que `depois` troca pelo editor, capacete-editor-ui.js, montado uma vez só e reaproveitado)
-  const corpo = aba === "paddock" ? (c.grupo || !root.CentralPaddock ? `<section class="cx-card cx-an-vazio"><h3>Paddock</h3><p>O Paddock é da carreira solo.</p></section>` : root.CentralPaddock.html(c)) : aba === "capacete" ? `<div data-cx-capacete class="cx-card cx-capacete">Carregando o capacete…</div>` : aba === "calendario" ? calendario(c) : aba === "classif" ? classificacao(c) : aba === "carro" ? carro(c) : aba === "contratos" ? root.CentralContrato.html(c) : aba === "analise" ? root.CentralAnalise.html(c) : central(c);
+  const corpo = aba === "paddock" ? (c.grupo || !root.CentralPaddock ? `<section class="cx-card cx-an-vazio"><h3>Paddock</h3><p>O Paddock é da carreira solo.</p></section>` : root.CentralPaddock.html(c)) : aba === "capacete" ? `<div data-cx-capacete class="cx-card cx-capacete">Carregando o capacete…</div>` : aba === "calendario" ? calendario(c) : aba === "classif" ? classificacao(c) : aba === "carro" ? carro(c) : aba === "contratos" ? root.CentralContrato.html(c) : aba === "analise" ? root.CentralAnalise.html(c) : aba === "replays" ? root.CentralAnalise.replays(c) : central(c);
   // a dificuldade dos robôs, mudável no meio da carreira (vale a partir do próximo GP); na temporada com os amigos, só o anfitrião muda
   const NIV = [["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]];
   const nivelHTML = c.mudarNivel ? `<label class="cx-tema" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>Dificuldade dos robôs</span><select data-cx-nivel aria-label="Dificuldade dos robôs">${NIV.map(([v, n]) => `<option value="${v}" ${(s.nivel || "medio") === v ? "selected" : ""}>${n}</option>`).join("")}</select></label>` : "";

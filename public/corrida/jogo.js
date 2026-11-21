@@ -282,7 +282,10 @@ let quadrosPasse = 0;
 function loop(t) {
   raf = requestAnimationFrame(loop);
   if (!race) { raf && cancelAnimationFrame(raf); raf = 0; return; }
-  const real = Math.min(0.25, (t - (lastT || t)) / 1000), dt = Math.min(1 / 30, real); lastT = t;
+  const bruto = (t - (lastT || t)) / 1000, real = Math.min(0.25, bruto), dt = Math.min(1 / 30, real); lastT = t; // (bruto: o quadro de verdade, para o log das travadas)
+  // (2026-11-21, o servidor.log do Thiago: no pós-corrida, quadros de 76 a 250 ms o tempo todo) com a tela do resultado aberta, a corrida atrás do
+  // painel (escurecida) é desenhada a 10 quadros por segundo: a análise, a miniatura 3D e o pódio ficam com a placa de vídeo
+  if (E.S?.phase === "results" && !$("results").classList.contains("hidden")) { if (t - (race.ultDesenhoResultado || 0) < 100) return; race.ultDesenhoResultado = t; }
   pollPad();
   // os materiais TRANSPARENTES de dois lados (as marcas do grid, a borracha, os decalques) numa passada só: por padrão o Three.js desenha cada um
   // duas vezes (o verso e a frente) e marca o material como mudado a cada vez, o que refazia o shader dele em todo quadro, na cena e nos espelhos
@@ -328,14 +331,14 @@ function loop(t) {
   draw(dt);
   medirQuadro();
   hud();
-  contarTravada(real);
+  contarTravada(bruto);
 }
 // (2026-11-16) no programa de PC, cada quadro de mais de 70 ms vai para o servidor.log com o que aconteceu nele: shaders novos (renderer.info),
 // batida, safety car, câmera, quantos carros na tela. Medida para achar a travadinha da batida antes de mexer no carro.
 let progAntes = 0, geoAntes = 0, texAntes = 0, travadaEnviada = 0;
 function contarTravada(real) {
   const info = renderer.info, prog = info.programs ? info.programs.length : 0, geo = info.memory.geometries, tex = info.memory.textures;
-  const ms = real * 1000;
+  const ms = Math.round(real * 1000); // (o tempo de verdade do quadro: antes ia o cortado em 250 ms, e uma travada de 3 s aparecia como 250)
   if (ms > 70 && window.CORRIDA_PC?.pc && performance.now() - travadaEnviada > 1500 && race) {
     travadaEnviada = performance.now();
     const oque = [prog > progAntes ? `${prog - progAntes} shader(s) novo(s)` : "", geo !== geoAntes ? `geometrias ${geoAntes}→${geo}` : "", tex !== texAntes ? `texturas ${texAntes}→${tex}` : "",

@@ -322,9 +322,9 @@ function quadradinhos(c, s0, s1, y0, y1, n, cores, semente) { // a camuflagem di
   for (let i = 0; i < n; i++) { const l = 0.01 + r() * 0.03; c.fillStyle = cores[i % cores.length]; c.fillRect(s0 + r() * (s1 - s0), y0 + r() * (y1 - y0), l, l * (0.6 + r() * 0.8)); }
 }
 // o touro (f1-marcas.js) em (a, b) com altura h, olhando para dx = ±1 na folha (e dy = −1 vira de cabeça para baixo, para a vista de cima)
-function touroEm(c, a, b, h, dx, dy = 1) {
-  if (GRAVANDO) { GRAVANDO.push({ v: VISTA_ATUAL, id: "touro", a, b, h, giro: dy < 0 ? Math.PI : 0, espelhar: dx * dy < 0 }); return; }
-  const [x, y] = pt(c, a, b), e = h * PX(); c.save(); c.setTransform(1, 0, 0, 1, x, y); c.scale(dx * e, dy * e); desenharMarca(c, "touro"); c.restore();
+function touroEm(c, a, b, h, dx, dy = 1, tinta) {
+  if (GRAVANDO) { GRAVANDO.push({ v: VISTA_ATUAL, id: "touro", a, b, h, giro: dy < 0 ? Math.PI : 0, espelhar: dx * dy < 0, tinta }); return; }
+  const [x, y] = pt(c, a, b), e = h * PX(); c.save(); c.setTransform(1, 0, 0, 1, x, y); c.scale(dx * e, dy * e); desenharMarca(c, "touro", tinta ? { tinta } : {}); c.restore();
 }
 function manchas(c, s0, s1, y0, y1, n, cor, semente) {
   const r = mulberry(semente); c.fillStyle = cor;
@@ -384,37 +384,59 @@ DESENHOS["red-bull"] = {
   },
 };
 
-// Racing Bulls (2026), a pedido do Thiago igual ao modelo do VCARB 01 do Sketchfab (o de 2024), olhado de lado, de cima e de trás: azul-royal
-// escurecendo embaixo, o branco do lado do cockpit (com a HUGO) e no meio do bico (com a TUDOR, o VISA e o Cash App), o filete vermelho, a
-// faixa branca no alto da caixa com a HONDA vermelha, o VISA grande na caixa, o touro na tampa, o Red Bull na frente do cockpit, a asa dianteira
-// branca com a HUGO vermelha e o Cash App atrás e embaixo da asa traseira. (Medidas do carro de 2026; a de 2024 está em racing-bulls@2024.)
+// Racing Bulls (2026), refeita pelas nove imagens de Carros F1/2026/Racing Bulls (2026-11-20): BRANCA, com as faixas azuis em curva; a entrada de
+// ar amarela e o touro rosa grande na tampa (de cima, um de cada lado da espinha); o bico com a ponta amarela e o touro; a parte de baixo do
+// chassi e da caixa de carbono preto (Mobil, vugo, octave); a folha branca na caixa com o VISA azul-marinho grande; o Red Bull vermelho na tampa,
+// a Ford Racing atrás; a asa dianteira branca com a HUGO e o Red Bull vermelhos; a asa traseira branca em cima (TUDOR e Cash App) e as placas
+// pretas com o VISA e o RB. (Medidas do carro de 2026; a de 2024 está em racing-bulls@2024.)
 DESENHOS["racing-bulls"] = {
-  numero: "#e2001a", carbono: 1, numPos: [3.5, 0.72, 9, 9],
+  numero: "#ffffff", carbono: 1, numPos: [3.56, 0.88, 9, 9],
   pintar(ctx) {
-    const AZUL = "#1f3fd0", MAR = "#14248a", BRANCO = "#f4f5f8", VERM = "#e2001a", PRETO = "#101114";
-    base(ctx, AZUL);
-    lados(ctx, (c) => {
-      c.fillStyle = degrade(c, 0, 0.45, 0, 0.12, [[0, "rgba(20,36,138,0)"], [1, "rgba(20,36,138,0.85)"]]); c.fillRect(0.3, 0.1, 3.6, 0.35); // escurece embaixo
-      c.beginPath(); c.moveTo(0.9, 0.3); c.lineTo(1.05, 0.5); c.lineTo(1.95, 0.55); c.lineTo(1.95, 0.32); c.closePath(); c.fillStyle = BRANCO; c.fill(); // o branco do lado do cockpit
-      c.beginPath(); c.moveTo(0.9, 0.3); c.lineTo(1.95, 0.32); c.lineWidth = 0.012; c.strokeStyle = VERM; c.stroke(); // o filete vermelho embaixo dele
-      ret(c, 2.05, 0.5, 3.6, 0.53, BRANCO); ret(c, 2.05, 0.495, 3.6, 0.502, VERM); // a faixa branca no alto da caixa, com o filete
-      touros(c, 2.55, 0.62, 3.3, 0.88);
-      baixo(c, MAR);
-      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO); // as placas da asa dianteira, pretas com o Cash App
-      ret(c, 3.82, 0.3, 4.45, 1.1, MAR);
-      marca(c, "hugo", 1.4, 0.43, 0.06, { tinta: VERM }); marca(c, "visa", 2.5, 0.3, 0.12, { tinta: BRANCO }); marca(c, "cashapp", 2.4, 0.64, 0.035, { tinta: BRANCO });
-      marca(c, "honda", 3.1, 0.515, 0.026, { tinta: VERM }); marca(c, "orlen", 1.75, 0.13, 0.045); marca(c, "cashapp", 0.3, 0.1, 0.035, { tinta: BRANCO });
+    const AZUL = "#1f3fd0", MAR = "#14248a", BRANCO = "#f4f5f8", VERM = "#e2001a", PRETO = "#101114", AMAR = "#f7c600", ROSA = "#e6267d";
+    base(ctx, BRANCO);
+    lados(ctx, (c, lado) => {
+      // embaixo: o chassi e a caixa de carbono preto
+      c.beginPath(); c.moveTo(0.9, 0.1); c.lineTo(0.9, 0.3); c.lineTo(2.1, 0.44); c.quadraticCurveTo(2.9, 0.2, 3.85, 0.42); c.lineTo(3.85, 0.1); c.closePath(); c.fillStyle = PRETO; c.fill();
+      // a folha branca da caixa com o VISA, e a faixa azul que a contorna embaixo e sobe pela tampa
+      c.beginPath(); c.moveTo(2.15, 0.5); c.quadraticCurveTo(2.9, 0.48, 3.45, 0.3); c.quadraticCurveTo(2.9, 0.18, 2.3, 0.3); c.closePath(); c.fillStyle = BRANCO; c.fill();
+      c.beginPath(); c.moveTo(2.3, 0.3); c.quadraticCurveTo(2.9, 0.18, 3.45, 0.3); c.lineWidth = 0.03; c.strokeStyle = AZUL; c.stroke();
+      c.beginPath(); c.moveTo(2.55, 0.56); c.quadraticCurveTo(3.2, 0.5, 3.85, 0.44); c.lineTo(3.85, 0.5); c.quadraticCurveTo(3.2, 0.57, 2.55, 0.6); c.closePath(); c.fillStyle = AZUL; c.fill();
+      poli(c, [[1.95, 0.7], [2.15, 0.76], [2.15, 0.72], [2.0, 0.67]], MAR); // o risco azul atrás do halo
+      // a entrada de ar amarela, o sol e o touro rosa
+      ret(c, 2.18, 0.8, 2.55, 1.1, AMAR); c.beginPath(); c.arc(2.6, 0.84, 0.15, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill();
+      touroEm(c, 2.92, 0.84, 0.24, lado, 1, ROSA);
+      baixo(c, PRETO);
+      // o bico: a ponta amarela com o touro; a asa dianteira branca
+      poli(c, [[0, 0.16], [0.7, 0.18], [0.6, 0.36], [0, 0.26]], AMAR); touroEm(c, 0.42, 0.26, 0.1, lado, 1, VERM);
+      poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], BRANCO); // as placas da asa dianteira, brancas com o Cash App
+      // a asa traseira: as placas pretas com a borda azul em cima, o VISA e o RB
+      ret(c, 3.82, 0.3, 4.45, 1.1, PRETO); ret(c, 3.92, 0.9, 4.42, 0.95, AZUL);
+      marca(c, "visa", 4.17, 0.82, 0.04); texto(c, "RB", 4.17, 0.74, 0.05, BRANCO, { estilo: "normal", peso: 900 }); touroEm(c, 4.17, 0.66, 0.05, lado, 1, BRANCO); marca(c, "cashapp", 4.17, 0.59, 0.022);
+      marca(c, "visa", 2.78, 0.36, 0.12, { tinta: MAR }); marca(c, "redbull", 2.95, 0.66, 0.05, { tinta: VERM }); marca(c, "cashapp", 2.28, 0.68, 0.032, { tinta: PRETO });
+      marca(c, "hugo", 1.45, 0.5, 0.045, { tinta: VERM }); marca(c, "mobil", 1.5, 0.38, 0.04);
+      marca(c, "vugo", 1.98, 0.27, 0.05); marca(c, "octave", 2.05, 0.15, 0.025);
+      marca(c, "ford", 3.55, 0.42, 0.035); texto(c, "RACING", 3.55, 0.375, 0.016, BRANCO, { estilo: "normal", peso: 800 });
+      marca(c, "cashapp", 0.3, 0.1, 0.035, { tinta: MAR });
     });
     vista(ctx, "T", (c) => {
-      asasT(c, BRANCO, PRETO, AZUL);
-      poli(c, [[0.45, -0.11], [1.25, -0.13], [1.25, 0.13], [0.45, 0.11]], BRANCO); // o meio do bico branco
-      for (const l of [-1, 1]) { ret(c, 1.9, l * 0.3, 3.2, l * 0.33, BRANCO); marca(c, "hugo", 0.3, l * 0.45, 0.06, { giro: DE_FRENTE, tinta: VERM }); marca(c, "cashapp", 1.4, l * 0.24, 0.025, { giro: DE_FRENTE }); }
-      marca(c, "tudor", 0.55, 0, 0.022, { giro: DE_FRENTE, tinta: AZUL }); marca(c, "visa", 0.68, 0, 0.04, { giro: DE_FRENTE, tinta: AZUL }); marca(c, "cashapp", 0.8, 0, 0.025, { giro: DE_FRENTE, tinta: AZUL });
-      marca(c, "redbull", 1.22, 0, 0.04, { giro: DE_FRENTE, tinta: VERM }); marca(c, "visa", 0.2, 0, 0.03, { giro: DE_FRENTE });
-      marca(c, "cashapp", 4.12, 0, 0.07, { giro: -DE_FRENTE, tinta: BRANCO });
+      asasT(c, BRANCO, BRANCO, BRANCO);
+      for (const l of [-1, 1]) {
+        c.beginPath(); c.moveTo(2.1, l * 0.5); c.quadraticCurveTo(3.0, l * 0.6, 3.6, l * 0.36); c.lineTo(3.6, l * 0.42); c.quadraticCurveTo(3.0, l * 0.68, 2.1, l * 0.56); c.closePath(); c.fillStyle = AZUL; c.fill(); // a borda azul das caixas
+        marca(c, "confluent", 2.45, l * 0.5, 0.03, { giro: l > 0 ? Math.PI : 0 });
+        marca(c, "hugo", 0.3, l * 0.45, 0.06, { giro: DE_FRENTE, tinta: VERM }); marca(c, "redbull", 0.18, l * 0.45, 0.04, { giro: DE_FRENTE, tinta: VERM });
+      }
+      c.beginPath(); c.arc(2.42, 0, 0.15, 0, Math.PI * 2); c.fillStyle = AMAR; c.fill(); ret(c, 2.1, -0.09, 2.45, 0.09, AMAR); // a entrada de ar e o sol
+      touroEm(c, 2.9, 0.16, 0.2, -1, -1, ROSA); touroEm(c, 2.9, -0.16, 0.2, -1, 1, ROSA); // os dois touros na tampa
+      poli(c, [[0, -0.09], [0.5, -0.12], [0.5, 0.12], [0, 0.09]], AMAR); // a ponta do bico
+      const f = { giro: DE_FRENTE }, fa = { giro: DE_FRENTE, tinta: MAR };
+      // a fila do bico, da ponta para trás: NEFT, PIRELLI, octave, dynatrace, Cash App, VISA e a TUDOR
+      marca(c, "neft", 0.56, 0, 0.022, fa); marca(c, "pirelli", 0.62, 0, 0.018, fa); marca(c, "octave", 0.68, 0, 0.02, fa); marca(c, "dynatrace", 0.74, 0, 0.018, fa);
+      marca(c, "cashapp", 0.8, 0, 0.02, fa); marca(c, "visa", 0.88, 0, 0.035, fa); marca(c, "tudor", 1.12, 0, 0.026, fa);
+      marca(c, "visa", 1.24, 0, 0.035, fa); marca(c, "redbull", 1.3, 0, 0.03, { giro: DE_FRENTE, tinta: VERM });
+      marca(c, "tudor", 4.06, 0, 0.05, { giro: -DE_FRENTE, tinta: PRETO }); marca(c, "cashapp", 4.2, 0, 0.05, { giro: -DE_FRENTE, tinta: PRETO }); // em cima da asa traseira
     });
-    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, AZUL); ret(c, -0.15, 0.2, 0.15, 0.45, BRANCO); });
-    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, MAR); ret(c, -0.8, 0.64, 0.8, 1.1, PRETO); });
+    vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); ret(c, -0.15, 0.1, 0.15, 0.4, AMAR); });
+    vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, BRANCO); ret(c, -0.8, 0, 0.8, 0.4, PRETO); ret(c, -0.8, 0.64, 0.8, 1.1, PRETO); });
   },
 };
 
@@ -422,14 +444,13 @@ DESENHOS["racing-bulls"] = {
 // trás): o verde-petróleo do carro (mais claro que o de antes), a barriga e o assoalho pretos com o filete limão na borda, o alto das caixas
 // laterais preto com os pontinhos limão (meio-tom) e o aramco, a asa dianteira e o alto da asa traseira cinza-prata com o aramco, o bico com a
 // fileira Valvoline, Pirelli, NetApp, xerox, NexGen e o H da Honda, o número limão; embaixo da asa traseira, o Valvoline no carbono.
-function meioTom(c, s0, s1, x0, x1, cor, semente) { // os pontinhos que somem para dentro (de x1 para x0)
-  const r = mulberry(semente); c.fillStyle = cor;
-  for (let s = s0; s < s1; s += 0.03) for (let x = x0; x < x1; x += 0.03) { const f = (x - x0) / (x1 - x0), rr = 0.011 * f; if (rr < 0.002 || r() > 0.92) continue; c.beginPath(); c.arc(s, x, rr, 0, Math.PI * 2); c.fill(); }
-}
+// (2026-11-20, acertada pelas cinco imagens de Carros F1/2026/Aston Martin: o verde-azulado mais vivo, o painel preto na caixa com o aramco e o
+// BOSS na frente dele, o ASTON MARTIN e o HRC com o Valvoline na tampa, o alto das caixas verde com a borda preta e o MAADEN, a asa dianteira de
+// carbono com o aramco e o Cognizant brancos, o alto da asa traseira azul-claro com o aramco e, atrás dela, o aramco no degradê verde e azul)
 DESENHOS["aston-martin"] = {
-  numero: "#d7e600", carbono: 1, numPos: [3.5, 0.66, 9, 9],
+  numero: "#d7e600", carbono: 1, numPos: [3.56, 0.88, 9, 9],
   pintar(ctx) {
-    const VERDE = "#0f6a5f", VERDE_CL = "#14806f", LIMAO = "#cedc00", PRETO = "#0a1210", PRATA = "#8f979b";
+    const VERDE = "#0e7782", VERDE_CL = "#1797a2", LIMAO = "#cedc00", PRETO = "#0a1210", PRATA = "#8f979b";
     base(ctx, VERDE);
     lados(ctx, (c) => {
       // o verde fica mais claro em cima da caixa (o reflexo da pintura do modelo)
@@ -440,25 +461,27 @@ DESENHOS["aston-martin"] = {
       baixo(c, PRETO);
       poli(c, [[0, 0], [0.62, 0], [0.62, 0.17], [0.34, 0.2], [0, 0.2]], PRETO); // as placas da asa dianteira
       ret(c, 3.82, 0.3, 4.45, 0.55, PRETO); // embaixo da placa traseira (a placa é verde, com o coinbase)
-      marca(c, "aramco", 2.4, 0.39, 0.1); marca(c, "boss", 1.89, 0.57, 0.034); marca(c, "coherent", 2.28, 0.6, 0.03); marca(c, "coreweave", 2.6, 0.83, 0.028);
-      marca(c, "maaden", 2.83, 0.71, 0.04); marca(c, "aramco", 3.39, 0.75, 0.045); marca(c, "honda", 3.27, 0.59, 0.034); marca(c, "valvoline", 3.27, 0.44, 0.034);
+      // o painel preto da caixa, da boca até trás, com o aramco branco
+      c.beginPath(); c.moveTo(2.12, 0.47); c.quadraticCurveTo(2.9, 0.47, 3.45, 0.3); c.lineTo(3.45, 0.2); c.quadraticCurveTo(2.7, 0.24, 2.12, 0.26); c.closePath(); c.fillStyle = PRETO; c.fill();
+      marca(c, "aramco", 2.62, 0.37, 0.09); marca(c, "boss", 1.98, 0.47, 0.04); marca(c, "coherent", 2.28, 0.6, 0.03); marca(c, "coreweave", 2.42, 0.92, 0.028);
+      marca(c, "maaden", 2.8, 0.78, 0.045); marca(c, "astonmartin", 3.22, 0.86, 0.026); marca(c, "hrc", 3.25, 0.6, 0.05); marca(c, "valvoline", 3.25, 0.5, 0.03);
       marca(c, "proforce", 3.07, 0.3, 0.026); marca(c, "cognizant", 1.5, 0.15, 0.034); marca(c, "pepperstone", 1.3, 0.58, 0.026); marca(c, "astonmartin", 1.34, 0.47, 0.03);
       marca(c, "coinbase", 4.13, 0.77, 0.06); marca(c, "glenfiddich", 0.3, 0.1, 0.03);
     });
     vista(ctx, "T", (c) => {
       // o alto das caixas: preto por fora, com o meio-tom limão e o aramco ao longo da caixa
       for (const l of [-1, 1]) {
-        c.beginPath(); c.moveTo(1.95, l * 0.42); c.quadraticCurveTo(2.6, l * 0.36, 3.4, l * 0.3); c.lineTo(3.4, l * 0.72); c.lineTo(1.95, l * 0.72); c.closePath(); c.fillStyle = PRETO; c.fill();
-        c.save(); c.scale(1, l); meioTom(c, 2.0, 3.3, 0.3, 0.46, LIMAO, l > 0 ? 3 : 4); c.restore();
-        marca(c, "aramco", 2.65, l * 0.56, 0.07, { giro: l > 0 ? Math.PI : 0 });
+        // o alto das caixas fica verde, com a borda de fora preta e o MAADEN na frente
+        c.beginPath(); c.moveTo(1.95, l * 0.6); c.quadraticCurveTo(2.7, l * 0.56, 3.4, l * 0.4); c.lineTo(3.4, l * 0.72); c.lineTo(1.95, l * 0.72); c.closePath(); c.fillStyle = PRETO; c.fill();
+        marca(c, "maaden", 2.05, l * 0.5, 0.035, { giro: l > 0 ? Math.PI : 0 });
       }
       ret(c, 2.0, -0.09, 2.45, 0.09, PRETO); // a entrada de ar
-      asasT(c, PRATA, PRATA, VERDE);
+      asasT(c, PRETO, "#3fb2dc", VERDE); // a asa dianteira de carbono e o alto da traseira azul-claro
       const f = { giro: DE_FRENTE };
       for (const l of [-1, 1]) { marca(c, "aramco", 0.32, l * 0.46, 0.06, f); marca(c, "cognizant", 0.18, l * 0.46, 0.03, f); marca(c, "cw", 1.3, l * 0.07, 0.03, f); }
       marca(c, "valvoline", 0.16, 0, 0.026, f); marca(c, "pirelli", 0.27, 0, 0.026, f); marca(c, "netapp", 0.37, 0, 0.03, f); marca(c, "xerox", 0.48, 0, 0.03, f);
       marca(c, "nexgen", 0.58, 0, 0.03, f); marca(c, "hhonda", 0.76, 0, 0.06, f); marca(c, "cognizant", 1.2, 0, 0.03, f);
-      marca(c, "maaden", 2.9, 0, 0.045, { giro: 0 }); marca(c, "aramco", 4.12, 0, 0.09, { giro: -DE_FRENTE, tinta: PRETO });
+      marca(c, "maaden", 2.9, 0, 0.045, { giro: 0 }); marca(c, "aramco", 4.12, 0, 0.09, { giro: -DE_FRENTE });
     });
     vista(ctx, "F", (c) => { ret(c, -0.8, 0, 0.8, 1.1, VERDE); ret(c, -0.75, 0, 0.75, 0.12, PRETO); ret(c, -0.75, 0.12, 0.75, 0.13, LIMAO); });
     vista(ctx, "R", (c) => { ret(c, -0.8, 0, 0.8, 1.1, PRETO); ret(c, -0.45, 0.45, 0.45, 0.64, VERDE); });
@@ -1216,7 +1239,7 @@ const ASA_BAIXO = {
   mclaren: { cor: "#141518", marcas: (c) => marcaU(c, "etihad", 0, 0.32, 0.12) },
   audi: { cor: "#141518", marcas: (c) => marcaU(c, "revolut", 0, 0.32, 0.13, { tinta: "#c9ced3" }) },
   cadillac: { cor: "#0e0f12", marcas: (c) => marcaU(c, "cadillacw", 0, 0.32, 0.12, { tinta: "#d4d7da" }) },
-  "aston-martin": { cor: "#0a1210", marcas: (c) => marcaU(c, "valvoline", 0, 0.32, 0.11) },
+  "aston-martin": { cor: "#0a1210", marcas: (c) => { retU(c, -0.42, 0.2, 0.0, 0.44, "#3aa54a"); retU(c, 0.0, 0.2, 0.42, 0.44, "#2f86c8"); marcaU(c, "aramco", 0, 0.32, 0.11, { tinta: "#e8ecef" }); } }, // (2026-11-20, as imagens: o aramco no degradê verde e azul atrás da asa)
   williams: { cor: "#0b1140", marcas: (c) => { retU(c, -0.45, 0.2, 0.45, 0.44, "#5741d9"); marcaU(c, "kraken", 0, 0.32, 0.12); } },
   "haas@2024": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },
   "haas@2025": { cor: "#141518", marcas: (c) => marcaU(c, "haas", 0, 0.32, 0.12) },

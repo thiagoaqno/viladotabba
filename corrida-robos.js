@@ -20,6 +20,19 @@ const { SKINS } = require("./public/pelada/campo.js");
 const NOMES = ["Faísca", "Pistão", "Graxa", "Biela", "Vácuo", "Turbo", "Chicane"];
 const DIFICIL_ANTIGO = !!process.env.ROBO_DIFICIL_ANTIGO; // (só para medir o de antes)
 const NIVEIS = { facil: 0.80, medio: 0.87, dificil: 0.93 }; // modo clássico: fração da velocidade do traçado
+// (2026-11-21, o Thiago: "queria que o nível fosse uma barra que vai de 0-100") o nível da sala é um número de 0 a 100; as tabelas por nível continuam
+// com as três marcas de antes, e o número mistura as duas vizinhas: Fácil = 60, Médio = 92 (o de sempre: o padrão da sala) e Difícil = 100. Abaixo
+// de 60 a reta continua, mais fácil ainda. Os nomes antigos ("facil", "medio", "dificil": a carreira usa) valem o número da marca deles.
+const MARCA_NIVEL = { facil: 60, medio: 92, dificil: 100 };
+function forcaDoNivel(nivel) {
+  const n = typeof nivel === "number" ? nivel : MARCA_NIVEL[nivel];
+  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : MARCA_NIVEL.medio;
+}
+function porNivel(T, nivel) { // o valor da tabela { facil, medio, dificil } para o nível
+  const n = forcaDoNivel(nivel), M = MARCA_NIVEL;
+  return n >= M.medio ? T.medio + (T.dificil - T.medio) * (n - M.medio) / (M.dificil - M.medio) : T.medio + (T.facil - T.medio) * (M.medio - n) / (M.medio - M.facil);
+}
+const nomeDoNivel = (nivel) => { const n = forcaDoNivel(nivel); return n >= 96 ? "dificil" : n >= 76 ? "medio" : "facil"; }; // (o que só tem as três: o plano de box)
 // Com voltas guardadas: o tempo de volta que o robô mira, em relação ao ritmo de quem joga (a média das cinco
 // melhores voltas de cada um). No médio, um pouco mais lento que essa média; no difícil, um pouco mais rápido.
 const RITMO = { facil: 1.12, medio: 1.03, dificil: 0.98 };
@@ -331,11 +344,11 @@ function referenciaF1(room) {
   const ideal = tempoDaVolta(pf, 1, aderRef());
   let recorde = null;
   try { const v = fonteRecorde(pista); if (v && Number.isFinite(v.tempo) && v.tempo >= T.PISTAS[pista].minLap) recorde = v.tempo; } catch (e) { /* banco indisponível: usa o traçado */ }
-  return { tempo: ideal * (1 + (FOLGA_F1[room.config.nivel] ?? FOLGA_F1.medio)), ideal, recorde, origem: false, proteger: !!recorde && recorde <= ideal * 1.01 };
+  return { tempo: ideal * (1 + porNivel(FOLGA_F1, room.config.nivel)), ideal, recorde, origem: false, proteger: !!recorde && recorde <= ideal * 1.01 };
 }
 function alvoF1(room, p, pf) {
   const ref = room.referenciaF1 || referenciaF1(room);
-  const folga = FOLGA_F1[room.config.nivel] ?? FOLGA_F1.medio, piloto = p.piloto ? Math.min(0.012, Math.max(0, 96 - p.piloto.ritmo) * 0.0006) : 0.006;
+  const folga = porNivel(FOLGA_F1, room.config.nivel), piloto = p.piloto ? Math.min(0.012, Math.max(0, 96 - p.piloto.ritmo) * 0.0006) : 0.006;
   return Math.max(ref.proteger ? ref.recorde * 1.025 : 0, tempoDaVolta(pf, 1, aderRef()) * (1 + folga + piloto));
 }
 function largada(pts, g, W, f1) { // mesma posição usada pela física e pelas marcas na pista
@@ -346,12 +359,12 @@ function largada(pts, g, W, f1) { // mesma posição usada pela física e pelas 
 // montagem do carro e ritmo do piloto; no modo clássico, continua seguindo a média das voltas da sala.
 function nivelDe(room, p, tracadoId, nBots, pf) {
   if (room.config.regras === "f1") {
-    return Math.min(1.5, escalaPara(pf, alvoF1(room, p, pf), aderRef(), 8) * (EMPURRAO_F1[room.config.nivel] || 1)); // o nível é do piloto; o pneu de cada momento (macio, gasto, frio) mexe no ritmo de verdade, em passoF1
+    return Math.min(1.5, escalaPara(pf, alvoF1(room, p, pf), aderRef(), 8) * porNivel(EMPURRAO_F1, room.config.nivel)); // o nível é do piloto; o pneu de cada momento (macio, gasto, frio) mexe no ritmo de verdade, em passoF1
   }
   const pil = p.piloto, ritmo = room.ritmoRobos;
   const sorte = rnd;
   const espalha = pil ? Pilotos.fatorDeRitmo(pil.ritmo) - 1 : nBots > 1 ? (tracadoId / (nBots - 1) - 0.5) * 0.03 : 0;
-  return ritmo ? escalaPara(pf, ritmo * (1 + espalha)) : (NIVEIS[room.config.nivel] || NIVEIS.medio) * sorte(0.98, 1.02) * (pil ? 2 - Pilotos.fatorDeRitmo(pil.ritmo) : 1);
+  return ritmo ? escalaPara(pf, ritmo * (1 + espalha)) : porNivel(NIVEIS, room.config.nivel) * sorte(0.98, 1.02) * (pil ? 2 - Pilotos.fatorDeRitmo(pil.ritmo) : 1);
 }
 // o ritmo da sala (o tempo que os robôs miram), guardado em room.ritmoRobos
 function ritmoDosRobos(room) {
@@ -361,7 +374,7 @@ function ritmoDosRobos(room) {
     return room.ritmoRobos;
   }
   const ritmo = ritmoDaSala(room);
-  room.ritmoRobos = ritmo ? ritmo.tempo * (RITMO[room.config.nivel] || RITMO.medio) : null;
+  room.ritmoRobos = ritmo ? ritmo.tempo * porNivel(RITMO, room.config.nivel) : null;
   return room.ritmoRobos;
 }
 // Depois da primeira chegada, quem ainda corre tem 1 minuto para terminar (em todos os modos; passou disso, o resultado fecha).
@@ -444,7 +457,7 @@ function largar(room) {
     p.pos = null; // a posição da corrida passada não vale (o bico seria calculado a partir dela)
     // na largada: sai na própria faixa do grid, com um tempo de reação diferente, e cada um tem o seu jeito de fazer as curvas
     // regras de F1: a estratégia de parada do robô (o composto da largada e as paradas) e o mesmo pneu de quem joga
-    const f1 = room.config.regras === "f1", plano = f1 ? F1.estrategia(room.config.voltas, room.config.nivel, `${room.semente}:${id}`, room.config.pista, (p.spec ? p.spec.desgaste : 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste) : null;
+    const f1 = room.config.regras === "f1", plano = f1 ? F1.estrategia(room.config.voltas, nomeDoNivel(room.config.nivel), `${room.semente}:${id}`, room.config.pista, (p.spec ? p.spec.desgaste : 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste) : null;
     // chuva: o quanto cada robô "sente" a água a mais ou a menos (±0,1, fixo no GP): não trocam todos de pneu juntos
     const vies = f1 ? Math.round((F1.sorteio(`vies:${room.semente}:${id}`)() - 0.5) * 20) / 100 : 0, aguaLargada = f1 && room.clima ? F1.climaEm(room.clima, room.startAt).agua : 0;
     if (plano && aguaLargada > 0) { const melhor = F1.compostoPorAgua(room.config.pista, Math.max(0, Math.min(1, aguaLargada + vies)), [...F1.SECOS, "chuva", "intermediario"], plano.largada); if (!F1.SECOS.includes(melhor)) { plano.largada = melhor; plano.paradas = []; } } // larga molhado: sai de chuva
@@ -486,7 +499,7 @@ function acertoDoRobo(pista, nivel, id) {
   let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   const ideal = { asa: Math.max(0, Math.min(1, asa + ((h % 11) - 5) * 0.01)), altura: Number.isFinite(id0.altura) ? id0.altura : 0.5,
     cambio: 0.5 - curva * 0.4, freio: 0.5, diferencial: 0.5, cambagem: 0.6, pressao: 0.5, rigidez: 0.5 + curva * 0.4 };
-  const k = PERTO_DO_IDEAL[nivel] ?? PERTO_DO_IDEAL.medio, o = {};
+  const k = Math.max(0, Math.min(1, porNivel(PERTO_DO_IDEAL, nivel))), o = {};
   for (const c of Object.keys(P)) o[c] = P[c] + ((ideal[c] ?? P[c]) - P[c]) * k;
   return o;
 }
@@ -542,7 +555,7 @@ function preaquecerNiveis(room) {
 // anda para um lado da linha), `look` (quantos pontos antes da curva ele começa a frear: 2 freia tarde, 5 cedo) e `erroK`
 // (o quanto erra: o nível e a constância do piloto contam). Os erros saem de um sorteio da semente, como o resto do GP.
 function estiloDe(room, p, rng) {
-  const pil = p.piloto, nivel = { facil: 1.5, medio: 1, dificil: 0.6 }[room.config.nivel] || 1;
+  const pil = p.piloto, nivel = Math.max(0.3, porNivel({ facil: 1.5, medio: 1, dificil: 0.6 }, room.config.nivel));
   const estreita = T.PISTAS[room.config.pista].width <= LARGURA_ESTREITA;
   return { dentro: (rng() * 2 - 1) * (estreita ? 0.5 : 1), lado: (rng() * 2 - 1) * (estreita ? 2 : 9), look: pil && Estilos.PERFIS[pil.id] ? 2 + Math.min(3, Math.floor((1 - Estilos.dePiloto(pil).frenagem) * 4)) : 2 + Math.floor(rng() * 4), erroK: nivel * (pil ? 0.5 + (100 - pil.constancia) / 40 : 1), erros: F1.sorteio(`erros:${room.semente}:${p.id}`) };
 }
@@ -629,7 +642,9 @@ function ordemDaPassagem(pf, i, latOutro, margem, baseLat, dentro) {
 }
 function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
   const ponto = pf.pts[i], c = pf.c, k = pf.kf, n = pf.n, now = Date.now();
-  const niv = TRANSITO_NIVEL[room.config.nivel] || TRANSITO_NIVEL.medio;
+  const nv = room.config.nivel; // (o nível de 0 a 100: porNivel; a conta fica guardada na sala, porque isto roda a cada passo de cada robô)
+  if (!room._transitoNivel || room._transitoNivel.nv !== nv) { const T = TRANSITO_NIVEL; room._transitoNivel = { nv, v: Object.fromEntries(["margem", "antec", "defende"].map((k) => [k, Math.max(0, porNivel({ facil: T.facil[k], medio: T.medio[k], dificil: T.dificil[k] }, nv))])) }; }
+  const niv = room._transitoNivel.v;
   const estilo = Estilos.parametros(room, p, niv);
   // a folga lateral entre carros acompanha a largura da pista: nas de 104 ou mais vale a de sempre; numa mais estreita (Mônaco, 84) a faixa em que o robô anda (maxLat = W/2 - 18) cabe menos, e uma folga de 44 jogava o carro de lado contra o muro
   const monaco = T.baseDe(room.config.pista) === "monaco";
@@ -1120,7 +1135,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const ins = car.inst > 0 ? car.inst : 0;
   if (ins > (ia.susto || 0)) ia.vSusto = Math.max(car.v, 60); // a velocidade em que levou a pancada: o ritmo cai a partir dela e volta aos poucos
   ia.susto = Math.max(ins, (ia.susto || 0) - dt * 0.35);
-  const medo = ia.susto * ({ facil: 1.2, medio: 1, dificil: 1 }[room.config.nivel] || 1);
+  const medo = ia.susto * porNivel({ facil: 1.2, medio: 1, dificil: 1 }, room.config.nivel);
   if (medo > 0.01) { alvo = Math.min(alvo * (1 - 0.4 * Math.min(1, medo)), ia.vSusto * (1 - 0.4 * Math.min(1, medo))); tetoPiloto = Math.min(tetoPiloto, ia.vSusto * (1 - 0.4 * Math.min(1, medo))); }
   if (p.quebrou) { alvo = Math.min(alvo, spec.vmax * F1Equipes.EMERGENCIA); tetoPiloto = Math.min(tetoPiloto, spec.vmax * F1Equipes.EMERGENCIA); }
   if (p.incidenteAte > now) { alvo = Math.min(alvo, spec.vmax * 0.24); tetoPiloto = Math.min(tetoPiloto, spec.vmax * 0.24); }
@@ -1153,7 +1168,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; if (volta > 0) bonusDeUltrapassagem(room, p, ia, car); }
     ritmoDaVolta = ia.ritmoDaVolta;
     if (ia.erroAte > now) erroK = ia.erroK;
-    else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * ({ facil: 1.4, medio: 1, dificil: DIFICIL_ANTIGO ? 0.7 : 0.85 }[room.config.nivel] || 1)) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
+    else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * Math.max(0.3, porNivel({ facil: 1.4, medio: 1, dificil: DIFICIL_ANTIGO ? 0.7 : 0.85 }, room.config.nivel))) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
   }
   if (encalhou(room, ia, car, now, dt, tf.atras < 140)) { // preso (parado, rodado, de lado no muro ou sem andar): o "↺ Pista" do robô, do lado livre
     Sim.voltarParaPista(car, tr, ev);
@@ -1344,4 +1359,4 @@ function passo(room, dt, setor, emit) {
 }
 function possivel(pista, spec) { return perfilF1(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0), 1); }
 possivel.topo = (pista, spec) => topoDe(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0));
-module.exports = { preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };
+module.exports = { forcaDoNivel, nomeDoNivel, MARCA_NIVEL, preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };

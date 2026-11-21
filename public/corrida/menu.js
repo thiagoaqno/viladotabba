@@ -16,7 +16,9 @@ const lerStore = (k, padrao) => { try { return { ...padrao, ...(store.get(k) || 
 const seta = '<i class="mn-seta" aria-hidden="true"></i>';
 
 let garagem = null, naTela = false, resumoMenu = null, carreira = null, grupos = [], timerResumo = 0, timerPad = 0, painel = null, modGaragem = null, focoAntes = null, recordes = null;
-const rapida = lerStore(CHAVE_RAPIDA, { pista: "monaco", voltas: 3, nivel: "medio", clima: "aleatorio", classificacao: "pular" });
+const rapida = lerStore(CHAVE_RAPIDA, { pista: "monaco", voltas: 3, nivel: 92, clima: "aleatorio", classificacao: "pular" });
+// (2026-11-21, o Thiago: o nível dos robôs numa barra de 0 a 100) o que ficou guardado com o nome antigo vira o número dele (corrida-robos.js MARCA_NIVEL)
+if (typeof rapida.nivel !== "number") rapida.nivel = { facil: 60, medio: 92, dificil: 100 }[rapida.nivel] ?? 92;
 const contra = lerStore(CHAVE_CONTRA, { pista: "monaco", voltas: 3 });
 const equipeEscolhida = () => { const e = store.get(CHAVE_EQUIPE); return e && FP()?.EQUIPES[e] ? e : null; };
 const equipeDoCarro = () => equipeEscolhida() || carreira?.dados?.equipe || "ferrari";
@@ -187,7 +189,7 @@ function desenharSecao(nome) {
   if (nome === "rapida") {
     $("mnRapida").innerHTML = carrossel(rapida.pista, "rp")
       + seg([[1, "1"], [3, "3"], [5, "5"], [10, "10"]], rapida.voltas, "rp-voltas", "Voltas")
-      + seg([["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"]], rapida.nivel, "rp-nivel", "Robôs · grid de 22")
+      + `<div class="mn-campo mn-nivel" title="De 0 a 100. 92 é o de sempre; 100, o mais difícil."><span class="mn-rot">Nível dos robôs · grid de 22</span><div class="mn-faixa"><input type="range" min="0" max="100" step="1" value="${rapida.nivel}" data-rp-nivel-faixa aria-label="Nível dos robôs, de 0 a 100"><output>${rapida.nivel}</output></div></div>`
       + seg([["aleatorio", "Aleatório"], ["seco", "Seco"], ["chuva", "Chuva"], ["variavel", "Variável"]], rapida.clima, "rp-clima", "Clima")
       + seg([["pular", "Direto"], ["completa", "Com classificação"]], rapida.classificacao, "rp-quali", "Fim de semana")
       + `<button type="button" class="mn-link" id="mnAcerto">Acerto do carro: asa e altura para ${h(PISTAS[rapida.pista]?.name || "a pista")}</button>`
@@ -370,6 +372,9 @@ function ligarUmaVez() {
   if (ligado) return; ligado = true;
   montarCapa();
   $("mn").addEventListener("click", aoClicar);
+  // a barra do nível dos robôs da corrida rápida: o número acompanha o arraste e fica guardado quando solta
+  $("mn").addEventListener("input", (e) => { const x = e.target.closest && e.target.closest("[data-rp-nivel-faixa]"); if (x) x.parentNode.querySelector("output").textContent = x.value; });
+  $("mn").addEventListener("change", (e) => { const x = e.target.closest && e.target.closest("[data-rp-nivel-faixa]"); if (x) { rapida.nivel = Math.round(+x.value); store.set(CHAVE_RAPIDA, rapida); } });
   $("mn").addEventListener("pointermove", aoMoverBrilho, { passive: true });
   addEventListener("keydown", aoTeclar);
   $("hName").addEventListener("input", () => { const n = $("hName").value.trim(); $("mnNomeTopo").textContent = n || "Piloto"; store.set("galera:name", n); });

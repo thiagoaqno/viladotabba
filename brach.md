@@ -1,67 +1,35 @@
-# As pinturas de 2026 refeitas pelas imagens do Thiago e os adesivos de baixo da asa atrás dela
+# Sala nova no estilo do jogo da F1 e o nível dos robôs de 0 a 100
 
-Continuação do #865, que trouxe o mapa de visibilidade, a folha mais nítida e a Cadillac. O merge do #865 entrou antes do segundo commit dele, então a Red Bull e a asa vêm aqui. Tudo num PR só, a pedido do Thiago. As imagens de cada equipe estão em `Downloads\Carros F1\2026\<equipe>`.
+Pelas telas que o Thiago gerou (2026-11-21).
 
-## Os adesivos de baixo da asa traseira vão para trás dela
-- As marcas de `ASA_BAIXO` passam a ser desenhadas na vista R, na face de trás do flap. Embaixo da asa fica só a cor.
-- A face de trás foi medida nos modelos: y 0,66 a 0,84 e x ±0,46 no de 2026; y 0,68 a 0,78 e x ±0,37 no de 2022. As marcas ficam centradas em y 0,735, com no máximo 0,085 m de altura.
-- Saíram as marcas repetidas que já estavam na vista R, mais altas que o flap. A zona "Asa traseira" do Studio, na vista R, começa em y 0,64.
+**As etapas da sala:** GP → Configurações → Carro → Piloto → Grid. As abas ficam no alto, com ícone. Embaixo ficam as dicas do controle e o Continuar (no Grid, o LARGAR).
+- **GP:** a grade dos circuitos, com a foto, o traçado, a bandeira e o seu recorde. Ao lado, a ficha do escolhido:
+  - o comprimento, as curvas, as zonas de DRS e o horário;
+  - o mapa com os 3 setores coloridos e o DRS, e o perfil de altura (sem metros: o relevo está em unidades do jogo);
+  - **Mais rápidos**: o recorde de cada setor e o da volta, do placar do servidor;
+  - **Você**: os seus melhores setores, a melhor volta e a **volta ideal** (a soma dos setores);
+  - a previsão do tempo;
+  - LB/RB trocam de GP.
+- **Configurações:** um painel por cima da escolha do GP, com um resumo de uma linha. Temporada, regras, voltas, horário, clima, robôs, nível e fim de semana. O Avançado guarda o câmbio e o ERS (ou os itens e o equilíbrio, fora da F1). As descrições saíram da tela e foram para o hover.
+- **Carro:** as etapas Equipe e Carro e pneu viraram uma só.
+  - À esquerda, a ficha da equipe: a nota com as 6 barras, o orçamento, os pilotos do ano e quem da galera está nela.
+  - No meio, o carro girando. Embaixo, a faixa dos 11 logos (as lotadas com cadeado).
+  - À direita, o pneu da largada, a previsão e os atalhos Acerto, Peças, Pintura e Capacete. O capacete foi para a gaveta, junto com as peças e a pintura.
+- **Piloto:** a câmera e o estilo do HUD em botões, com a prévia ao vivo à esquerda.
+- **Grid:** a lista no estilo da torre da TV (equipe, sigla, piloto, pneu e status). Com o grid completo, os robôs aparecem com o nome real: é a mesma conta do servidor, `F1Pilotos.escolher`. Com menos robôs, o servidor sorteia na largada e a lista mostra só quantos são. Ao lado: o resumo do GP com o mini mapa, o código da sala com o botão Copiar e **Quem anda mais aqui** (os 3 melhores tempos da pista).
+- **O mouse:** tudo o que é clicável reage. Cartões e botões sobem um pouco, a borda acende na cor da equipe e o fundo clareia. As linhas das tabelas e das listas acendem, e as barras brilham.
+- Visual em `sala-f1.css` (novo, carregado por último). A sala fica sempre no tema escuro.
 
-## As equipes
-- **Red Bull** (8 imagens):
-  - a camuflagem digital;
-  - o touro em vetor (marca `touro`; antes era um recorte borrado do logo de 512 px) na tampa, no bico e em cima;
-  - o sol, o bico amarelo e o número no vermelho da barbatana;
-  - o Red Bull de contorno branco, o ORACLE e os patrocínios de 2026;
-  - as placas da asa traseira azuis com o Mobil 1 e a Heineken.
-- **McLaren** (9):
-  - o preto só na frente da tampa, descendo em diagonal pela caixa até o assoalho (OKX e Mastercard);
-  - a traseira e a barbatana papaia, com a DELL e o número pretos;
-  - o OKX em cima da asa traseira.
-- **Mercedes** (9):
-  - o PETRONAS branco no preto embaixo da caixa, com o filete verde-água;
-  - o 63 na barbatana e o Petronas no bico;
-  - Snapdragon, CROWDSTRIKE e PETRONAS PRIMAX nas placas.
-- **Haas** (7), do zero:
-  - a frente branca com o filete vermelho, em cunha até embaixo do halo;
-  - a faixa branca da tampa com o MoneyGram e o MGM Rewards;
-  - o HAAS na caixa e em cima, o 87 vermelho;
-  - o TOYOTA GAZOO Racing nas asas.
-- **Williams** (6), acertos:
-  - o 55 na barbatana, o A da Atlassian, a entrada de ar cobre;
-  - KOMATSU e brillio nas placas, ATLASSIAN em cima da asa;
-  - a fila do bico como na foto.
-- **Racing Bulls** (9), do zero:
-  - branca, com as faixas azuis;
-  - o touro rosa na tampa, a ponta do bico amarela;
-  - o carbono embaixo e o VISA azul-marinho grande na caixa;
-  - a asa traseira branca com TUDOR e Cash App, as placas pretas com o VISA e o RB.
-- **Aston Martin** (5), acertos:
-  - o verde-azulado mais vivo;
-  - o painel preto da caixa com o aramco;
-  - ASTON MARTIN, HRC e Valvoline na tampa;
-  - a asa dianteira de carbono e o alto da traseira azul-claro;
-  - atrás da asa, o aramco no degradê verde e azul.
-- **Alpine** (6), do zero:
-  - o marinho embaixo e o royal em cima;
-  - o bico e o chassi rosa até o cockpit, com a fila de patrocínios;
-  - o BWT rosa enorme de borda azul-marinho na caixa, o eni na tampa;
-  - o bloco rosa com o "A" branco;
-  - os painéis rosa da asa dianteira com o BWT de borda branca;
-  - o BWT em cima da asa traseira e o ALPINE atrás dela.
-- **Audi** (6), acertos:
-  - o Revolut, o Castrol e o NEXO no lugar das fotos, o bp;
-  - os anéis vermelhos grandes em cima da asa traseira;
-  - a fila do bico: anéis, R, Libertex, visit QATAR, PIRELLI, perk+ e adidas;
-  - o 5 na barbatana.
+**Os seus melhores setores:** `hud-painel.js` guarda o melhor tempo de cada setor por pista neste aparelho (`corrida:setores:<pista>`), nas regras de F1 e fora da classificação, como o recorde da volta.
 
-Nas McLaren e Mercedes, a fila do bico já está no atlas do nariz (`texturaDoCockpit`) e ficou como estava.
+**O nível dos robôs de 0 a 100** (pedido do Thiago):
+- Na sala e na corrida rápida do menu, uma barra com o número.
+- No servidor (`corrida-robos.js`), cada tabela por nível continua com as três marcas de antes, e o número mistura as duas vizinhas: Fácil = 60, Médio = 92 (o de sempre, padrão) e Difícil = 100. Abaixo de 60, a reta continua, mais fácil.
+- Os nomes antigos continuam valendo (a carreira usa). O plano de box, que só tem as três, pega a mais perto (`nomeDoNivel`).
+- `cleanConfig` aceita o número de 0 a 100.
 
-## Marcas novas (`f1-marcas.js`)
-touro, onepassword, indeed, siemens, hexagon, clear, workday, deloitte, cisco, dewalt, rubrik, okta, primax, sap, akkodis, einhell, gazoo, mgm, haash, oakberry, playngo, brillio, reviva, ingenuity, confluent, octave, dynatrace, neft, mobil, hrc, vugo, binance, apecoin, modocasino, ada, changeworld, infinox, businessolver, mntn, brb, arcticwolf, mobilize, moserwatch, perk, libertex, bwtc e alpinea.
+Conferido no navegador do app, sem erros no console nem no servidor: as 5 etapas, a barra do nível (o servidor guardou 70), a troca de pista e a troca de câmera. O e2e (que não roda no CI) foi posto na ordem nova.
 
-O touro do Studio, quando espelhado num lado, vira uma camada própria (`espelhar`). Saiu a função `meioTom`, que ficou sem uso.
-
-Sem print: só `node --check` e as 11 folhas desenhadas num canvas de mentira no node, com todas as marcas aparecendo. O Thiago testa jogando.
+Falta nesta leva: o pós-corrida no estilo novo.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

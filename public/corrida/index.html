@@ -152,6 +152,7 @@
 <link rel="stylesheet" href="/corrida/capacete.css">
 <link rel="stylesheet" href="/corrida/sala-visual.css">
 <link rel="stylesheet" href="/corrida/menu.css">
+<link rel="stylesheet" href="/corrida/sala-f1.css">
 </head>
 <body>
 <div id="preparoCorrida" class="preparo-corrida" role="status" aria-live="polite">
@@ -254,82 +255,102 @@ window.timerPreparoCorrida = setTimeout(function () { document.getElementById("p
   </section>
 
   <section id="lobby" class="hidden">
-    <div class="sn" id="sn" data-etapa="equipe">
+    <div class="sn sf" id="sn" data-etapa="gp">
+      <!-- (2026-11-21, as telas novas do Thiago) a sala no estilo do jogo da F1: as abas no alto (GP, Configurações, Carro, Piloto e Grid), o
+           corpo de cada etapa e, embaixo, as dicas do controle à esquerda e o Continuar (ou o LARGAR) à direita. sala-f1.css desenha. -->
       <header class="sn-topo">
-        <div class="sn-sala"><small>Sala</small><b id="slCodigo"></b><span id="hubSala"></span></div>
+        <div class="sn-sala"><span class="sf-marca" aria-hidden="true"></span><small>Sala</small><b id="slCodigo"></b><span id="hubSala"></span></div>
         <nav class="sn-etapas" id="snEtapas" aria-label="Etapas da sala"></nav>
-        <button class="sn-continuar" id="btnContinuar"><span class="sn-cont-t"><small id="snContSub"></small><b id="snContTit">Continuar</b></span><i class="setas" aria-hidden="true"></i></button>
+        <div class="sf-equipe-topo" id="sfEquipeTopo" aria-hidden="true"></div>
       </header>
 
       <div class="sn-corpo" id="snCorpo">
-        <section class="sn-etapa" data-etapa="equipe" aria-label="Escolher a equipe">
-          <div class="sn-equipe">
-            <aside class="sn-ficha" id="eqFicha"></aside>
-            <div class="sn-vitrine" id="vitrineEquipe"><div class="sn-vitrine-nome" id="eqNomeGrande"></div></div>
+        <section class="sn-etapa" data-etapa="gp" aria-label="Escolha do GP">
+          <div class="sf-gp">
+            <section class="sf-pistas" id="gpPistas"></section>
+            <section class="sf-ficha" id="gpMapa"></section>
           </div>
-          <div class="sn-faixa" id="eqFaixa" role="group" aria-label="Equipes de 2026"></div>
         </section>
 
-        <section class="sn-etapa" data-etapa="carro" aria-label="Carro e pneu">
-          <div class="sn-carro">
-            <div class="sn-vitrine" id="vitrineCarro"><div class="sn-vitrine-info" id="carroInfo"></div></div>
-            <div class="sn-coluna sn-cascata">
-              <section class="sn-cartao" id="pneuCartao"></section>
-              <section class="sn-cartao sn-previsao" id="prevCartao"></section>
-              <section class="sn-cartao" id="carroLista"></section>
-              <section class="sn-cartao cp-cartao" id="capaceteCartao"></section>
-              <button class="sn-atalho" id="btnGaragem"><span><b>Peças e pintura</b><small id="garagemSub"></small></span><i aria-hidden="true">›</i></button>
-              <button class="sn-atalho" id="btnAcertoSala" hidden><span><b>Acerto do carro</b><small id="acertoSalaSub"></small></span><i aria-hidden="true">›</i></button>
+        <section class="sn-etapa" data-etapa="config" aria-label="Regras da corrida">
+          <aside class="sf-painel">
+            <header class="sf-painel-cab"><i class="sf-ico ico-bandeira" aria-hidden="true"></i><h2>Regras da corrida</h2></header>
+            <div class="sf-resumo" id="gpResumoLinha"></div>
+            <section id="gpOpcoes"></section>
+            <details class="sn-mais sf-avancado" id="gpMais"><summary><span>Avançado</span></summary><div class="sn-mais-corpo" id="gpMaisCorpo"></div></details>
+          </aside>
+        </section>
+
+        <section class="sn-etapa" data-etapa="carro" aria-label="Equipe e carro">
+          <div class="sf-carro">
+            <aside class="sn-ficha sf-cartao" id="eqFicha"></aside>
+            <div class="sn-vitrine sf-vitrine" id="vitrineCarro"><div class="sn-vitrine-info" id="carroInfo"></div><div class="sn-vitrine-nome" id="eqNomeGrande"></div></div>
+            <div class="sf-lado">
+              <section class="sn-cartao sf-cartao" id="pneuCartao"></section>
+              <section class="sn-cartao sf-cartao sn-previsao" id="prevCartao"></section>
+              <section class="sn-cartao sf-cartao" id="carroLista"></section>
+              <div class="sf-atalhos">
+                <button class="sf-atalho" id="btnAcertoSala" hidden><i class="sf-ico ico-chave" aria-hidden="true"></i><b>Acerto</b><small id="acertoSalaSub"></small></button>
+                <button class="sf-atalho" id="btnGaragem" data-gaveta="gPecasSec"><i class="sf-ico ico-engrenagem" aria-hidden="true"></i><b>Peças</b><small id="garagemSub"></small></button>
+                <button class="sf-atalho" data-gaveta="gPinturaSec"><i class="sf-ico ico-pincel" aria-hidden="true"></i><b>Pintura</b></button>
+                <button class="sf-atalho" data-gaveta="gCapaceteSec"><i class="sf-ico ico-capacete" aria-hidden="true"></i><b>Capacete</b></button>
+              </div>
+            </div>
+          </div>
+          <div class="sn-faixa sf-faixa" id="eqFaixa" role="group" aria-label="Equipes"></div>
+        </section>
+
+        <section class="sn-etapa" data-etapa="piloto" aria-label="Câmera e HUD">
+          <div class="al-layout sf-piloto">
+            <div class="al-visual"><div id="alPreview" class="al-preview" aria-label="Prévia da câmera e dos retrovisores"></div></div>
+            <div class="sf-cartao al-controles">
+              <header class="sf-painel-cab"><i class="sf-ico ico-camera" aria-hidden="true"></i><h2>Câmera e HUD</h2></header>
+              <h3 class="sf-sub">Câmera</h3>
+              <div class="sf-cams" id="sfCams" role="group" aria-label="Câmera a ajustar"></div>
+              <select id="alModo" class="sf-oculto" tabindex="-1" aria-hidden="true"></select>
+              <div id="alCamCampos"></div>
+              <button type="button" id="alRestCam" class="sn-ghost sf-restaurar">Restaurar esta câmera</button>
+              <h3 class="sf-sub">Retrovisores</h3>
+              <div id="alEspCampos"></div>
+              <button type="button" id="alRestEsp" class="sn-ghost sf-restaurar">Restaurar retrovisores</button>
+              <h3 class="sf-sub">Estilo do HUD</h3>
+              <div class="sf-huds" id="sfHuds" role="group" aria-label="Estilo do HUD"></div>
+              <select id="alHud" class="sf-oculto" tabindex="-1" aria-hidden="true"><option value="classico">Novo (F1)</option><option value="compacto">Compacto</option><option value="telemetria">Telemetria</option></select>
             </div>
           </div>
         </section>
 
-        <section class="sn-etapa" data-etapa="ajustes" aria-label="Câmera e retrovisores">
-          <div class="al-layout">
-            <div class="al-visual"><div id="alPreview" class="al-preview" aria-label="Prévia da câmera e dos retrovisores"></div><p>Prévia parada em uma pista. Os ajustes ficam salvos neste navegador.</p></div>
-            <div class="sn-cartao al-controles"><h2>Câmera e retrovisores</h2><label class="al-seletor">Estilo do HUD <select id="alHud"><option value="classico">Novo (F1)</option><option value="compacto">Compacto</option><option value="telemetria">Telemetria</option></select></label><label class="al-seletor">Câmera a ajustar <select id="alModo"></select></label><div id="alCamCampos"></div><button type="button" id="alRestCam" class="sn-ghost">Restaurar esta câmera</button><div id="alEspCampos"></div><button type="button" id="alRestEsp" class="sn-ghost">Restaurar retrovisores</button></div>
-          </div>
-        </section>
-
-        <section class="sn-etapa" data-etapa="gp" aria-label="O GP">
-          <div class="sn-gp">
-            <div class="sn-gp-esq sn-cascata">
-              <section class="sn-cartao sn-mapa" id="gpMapa"></section>
-              <section class="sn-cartao" id="gpPistas"></section>
-            </div>
-            <div class="sn-gp-dir sn-cascata">
-              <section class="sn-cartao" id="gpOpcoes"></section>
-              <details class="sn-mais" id="gpMais"><summary><span>Mais regras</span><small>câmbio, ERS, classificação, caixas</small></summary><div class="sn-mais-corpo" id="gpMaisCorpo"></div></details>
-            </div>
-          </div>
-        </section>
-
-        <section class="sn-etapa" data-etapa="grid" aria-label="Grid e largada">
-          <div class="sn-grid">
-            <section class="sn-cartao sn-jogadores sn-cascata" id="gridLista"></section>
-            <aside class="sn-grid-lado sn-cascata">
-              <section class="sn-cartao" id="gridResumo"></section>
-              <button class="sn-largar" id="btnStart"><span class="sn-cont-t"><small id="tLargarTxt"></small><b id="tLargarTit">Largar</b></span><i class="setas" aria-hidden="true"></i></button>
+        <section class="sn-etapa" data-etapa="grid" aria-label="Grid de largada">
+          <div class="sf-grid">
+            <section class="sf-cartao sf-tabela" id="gridLista"></section>
+            <aside class="sf-grid-lado">
+              <section class="sf-cartao sf-gpcard" id="gridResumo"></section>
+              <section class="sf-cartao sf-codigo" id="gridCodigo"></section>
+              <section class="sf-cartao sf-quem" id="gridQuem"></section>
             </aside>
           </div>
         </section>
       </div>
 
       <footer class="sn-dicas" id="snDicas">
-        <span class="gp"><kbd class="b a">A</kbd> confirmar</span><span class="gp"><kbd class="b b2">B</kbd> voltar</span><span class="gp" id="dicaLat"><kbd class="b">LB</kbd><kbd class="b">RB</kbd> <em></em></span><span class="gp" id="dicaY"><kbd class="b y">Y</kbd> peças</span><span class="gp"><kbd class="b st">Start</kbd> continuar</span>
-        <span class="kb"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> mover</span><span class="kb"><kbd>Enter</kbd> confirmar</span><span class="kb"><kbd>Esc</kbd> voltar</span><span class="kb" id="dicaLatKb"><kbd>Q</kbd><kbd>E</kbd> <em></em></span>
+        <div class="sf-dicas">
+          <span class="gp"><kbd class="b a">A</kbd> Confirmar</span><span class="gp"><kbd class="b b2">B</kbd> Voltar</span><span class="gp" id="dicaLat"><kbd class="b">LB</kbd><kbd class="b">RB</kbd> <em></em></span><span class="gp" id="dicaY"><kbd class="b y">Y</kbd> Peças</span>
+          <span class="kb"><kbd>Enter</kbd> Confirmar</span><span class="kb"><kbd>Esc</kbd> Voltar</span><span class="kb" id="dicaLatKb"><kbd>Q</kbd><kbd>E</kbd> <em></em></span>
+        </div>
+        <button class="sn-continuar" id="btnContinuar"><span class="sn-cont-t"><b id="snContTit">Continuar</b><small id="snContSub"></small></span><i class="setas" aria-hidden="true"></i></button>
+        <button class="sn-largar" id="btnStart"><span class="sn-cont-t"><b id="tLargarTit">Largar</b><small id="tLargarTxt"></small></span><i class="setas" aria-hidden="true"></i></button>
       </footer>
     </div>
 
     <div class="sn-gaveta hidden" id="snGaveta" role="dialog" aria-modal="true" aria-labelledby="gavetaTit">
       <div class="sn-gaveta-fundo" data-fechar></div>
       <div class="sn-gaveta-painel">
-        <header><h2 id="gavetaTit">Peças e pintura</h2><button id="gavetaFechar" aria-label="Fechar (Esc ou B)">✕</button></header>
+        <header><h2 id="gavetaTit">Peças, pintura e capacete</h2><button id="gavetaFechar" aria-label="Fechar (Esc ou B)">✕</button></header>
         <div class="sn-gaveta-corpo">
           <canvas id="gavetaCarro" width="720" height="405" aria-hidden="true"></canvas>
           <section class="sn-g-sec" id="gPecasSec"><h3>Peças do carro</h3><div id="equipePainel"></div></section>
-          <section class="sn-g-sec"><h3>Pintura</h3><div class="sn-pinturas" id="modPick"></div></section>
-          <section class="sn-g-sec"><h3>Sua cor</h3><div class="sn-cores" id="colorPick"></div><h3>Seu avatar</h3><div class="sn-avatares" id="pawnPick"></div></section>
+          <section class="sn-g-sec" id="gPinturaSec"><h3>Pintura</h3><div class="sn-pinturas" id="modPick"></div><h3>Sua cor</h3><div class="sn-cores" id="colorPick"></div><h3>Seu avatar</h3><div class="sn-avatares" id="pawnPick"></div></section>
+          <section class="sn-g-sec" id="gCapaceteSec"><h3>Capacete</h3><section class="sn-cartao cp-cartao" id="capaceteCartao"></section></section>
         </div>
       </div>
     </div>

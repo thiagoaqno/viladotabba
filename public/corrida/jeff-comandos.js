@@ -5,6 +5,7 @@
 //   box (ir para os boxes; `composto` se disse o pneu junto) · pneu (colocar o pneu `composto`) · completa (atualização completa)
 //   frente / tras (o piloto da frente ou de trás) · pneus (o estado dos pneus) · carro (a condição do carro) · previsao (o tempo)
 //   gapFrente (a diferença para o da frente) · gapCompanheiro (a diferença para o companheiro de equipe)
+//   estrategia (2026-11-21, o Thiago: "qual a estratégia?": a próxima parada do plano da equipe e o plano do domingo)
 (function (root) {
 const limpar = (t) => " " + String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]+/g, " ")
   .replace(/\b(jeff?|jefe|djeff?|chefe|geff?|jeffe|jefi)\b/g, " ").replace(/\s+/g, " ").trim() + " ";
@@ -27,6 +28,8 @@ function entender(texto) {
   const composto = compostoDe(t), falaPneu = tem(t, ...PNEU), falaBox = tem(t, ...BOX);
   // "atualização completa" (e "me atualiza", "resumo", "como está a corrida")
   if (tem(t, "atualizacao", "atualiza", "atualizar", "resumo", "relatorio") || (tem(t, "corrida") && tem(t, "como", "situacao"))) return { tipo: "completa" };
+  // a estratégia: "qual a estratégia", "qual o plano", "quando eu paro", "quantas paradas" (antes do box: "quando eu paro" não é pedir o box)
+  if (tem(t, "estrategia", "estrategias", "plano", "planejamento") || (tem(t, "quando", "qual", "quantas", "quantos", "falta", "faltam") && tem(t, "paro", "parar", "parada", "paradas", "box", "pit"))) return { tipo: "estrategia" };
   // as diferenças: para o companheiro de equipe ou para o da frente
   if (tem(t, "companheiro", "parceiro", "colega", "companheira") || (tem(t, "diferenca", "gap", "distancia") && tem(t, "equipe", "time"))) return { tipo: "gapCompanheiro" };
   if (tem(t, "diferenca", "gap", "distancia", "intervalo") && tem(t, "frente", "fente")) return { tipo: "gapFrente" };

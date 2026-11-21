@@ -169,6 +169,24 @@ export function executarJeff(cmd, falado = "") {
     return;
   }
   if (cmd.tipo === "previsao") { jeff(textoPrevisao(m)); return; }
+  if (cmd.tipo === "estrategia") { // (2026-11-21) a próxima parada do plano da equipe (paddock.js estrategia: m.paradasEquipe) e o plano do domingo
+    const voltas = E.S.config.voltas, agora = Math.min(voltas, (m.laps || 0) + 1), pl = m.paradasEquipe || null, prox = pl ? pl.find((q) => q.volta >= agora) : null;
+    const PLANOS = { arriscar: "ataque total", seguro: "jogar seguro", largada: "largada forte", final: "guardar para o fim", pneu: "esticar os pneus" }, PD = F().PLANOS_DOMINGO || {};
+    const fase = m.plano && PD[m.plano] && PD[m.plano].ate != null ? Math.floor(PD[m.plano].ate * voltas) + 1 : null;
+    const domingo = m.plano && PLANOS[m.plano] ? ` Plano do domingo: ${PLANOS[m.plano]}${fase ? (m.plano === "final" ? `, ataque a partir da volta ${fase}` : `, até a volta ${fase - 1}`) : ""}.` : "";
+    const vida = race.pneu ? ` Pneu ${nome(race.pneu.composto)} com ${Math.round(F().vidaRestante(race.pneu) * 100)}% de vida.` : "";
+    if (pl) {
+      const resto = prox ? pl.filter((q) => q.volta > prox.volta) : [];
+      jeff(prox ? `${prox.volta === agora ? "box nesta volta" : `próxima parada na volta ${prox.volta}`}, pneu ${nome(prox.composto)}${resto.length ? `; depois, ${resto.map((q) => `na ${q.volta} (${nome(q.composto)})`).join(" e ")}` : ""}.${vida}${domingo}`
+        : `o plano não tem mais parada: leve até o fim.${vida}${domingo}`, 7000);
+      if (R) R.frase(prox ? ["estrategiaparada", `volta-${Math.min(60, prox.volta)}`, `estrategia${prox.composto}`] : ["estrategiafim"], "objetivo", { forcar: true });
+    } else {
+      const t = pedirRadio("pneus");
+      jeff(`não fechamos um plano de paradas: quem decide é você.${vida}${domingo}${t ? " " + t : ""}`, 7000);
+      R?.frase?.(["estrategialivre"], "objetivo", { forcar: true });
+    }
+    return;
+  }
   if (cmd.tipo === "completa") {
     const st = LEITURA.st || [], pos = st.findIndex((r) => r.id === m.id) + 1, fr = acoes.infoRival && acoes.infoRival("frente"), tr = acoes.infoRival && acoes.infoRival("tras");
     const vida = race.pneu ? Math.round(F().vidaRestante(race.pneu) * 100) : null, voltas = E.S.config.voltas, falta = Math.max(0, voltas - (m.laps || 0));

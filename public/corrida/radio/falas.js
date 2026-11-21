@@ -269,7 +269,12 @@ const PECAS_TEXTO = {
 // o estrategista (a volta da chuva) e o engenheiro (o objetivo desta corrida): abertura + número
 const VOLTAS_PECA = 60, TOPS_PECA = 20;
 const PECAS = [{ id: "chuvavolta", texto: "Aqui é o estrategista. A previsão é de chuva na" }, { id: "secavolta", texto: "Aqui é o estrategista. A chuva deve parar na" },
-  { id: "objetivo", texto: "O objetivo desta corrida: terminar entre os" }, { id: "objetivovencer", texto: "O objetivo desta corrida é vencer. Vamos buscar." }, { id: "objetivofim", texto: "Vamos em frente." }];
+  { id: "objetivo", texto: "O objetivo desta corrida: terminar entre os" },
+  // (2026-11-21) o Jeff respondendo "qual a estratégia?" (mfd.js executarJeff): abertura + volta + o pneu, ou o fim do plano, ou sem plano
+  { id: "estrategiaparada", texto: "Aqui é o estrategista. A próxima parada do plano é na" }, { id: "estrategiamacio", texto: "Vamos de pneu macio." },
+  { id: "estrategiamedio", texto: "Vamos de pneu médio." }, { id: "estrategiaduro", texto: "Vamos de pneu duro." },
+  { id: "estrategiafim", texto: "Aqui é o estrategista. Não tem mais parada no plano: leve o carro até o fim." },
+  { id: "estrategialivre", texto: "Aqui é o estrategista. Hoje não fechamos plano de paradas: a decisão é sua." }, { id: "objetivovencer", texto: "O objetivo desta corrida é vencer. Vamos buscar." }, { id: "objetivofim", texto: "Vamos em frente." }];
 for (let v = 1; v <= VOLTAS_PECA; v++) PECAS.push({ id: `volta-${v}`, texto: `volta ${v}.` });
 for (let n = 2; n <= TOPS_PECA; n++) PECAS.push({ id: `top-${n}`, texto: `${n} primeiros.` });
 for (const [id, texto] of Object.entries(NOMES)) PECAS.push({ id: `nome-${id}`, texto });

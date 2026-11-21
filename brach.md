@@ -16,10 +16,8 @@ Medido com `klk/medir/voltas.js` (os robôs sem tela, a física do servidor) e c
     - México 39,9 → 38,2; Las Vegas 45,5 → 44; Catar 45,65 → 44,05; Abu Dhabi 43,85 → 42,95; Mônaco 50,9 → 50,05
 - **"Na minha faixa" medido pela pista:** com a linha usando a pista toda, o lado do carro da frente medido no quadro do próprio robô errava numa curva (o outro já tinha ido para o ápice e parecia estar de lado). Aí o robô não freava por trânsito e batia na traseira. Agora, com o outro a mais de 1,5 carro, a faixa compara o lateral dele no ponto dele com o meu no meu (como já era em Mônaco).
   - Suzuka, 21 robôs, 5 voltas, sementes 1 e 2: 232 e 162 batidas → 74 e 86 (a main: 74 e 48).
-- **Nível 100:** o robô pode passar um pouco do limite calculado da curva e da freada (`LAT_ALEM` = 1,04 em `corrida-piloto.js`), e o difícil mira 0,5% abaixo do ideal do carro (`FOLGA_F1.dificil`, era +0,5%).
-  - Medido: com 1,04, Suzuka 42,85 s e Melbourne 39,25 s.
-  - Com 1,06 ele escorrega: 46,2 s em Suzuka.
-  - Com o alvo a −2%, todos batiam no teto da conta e andavam igual.
+- **Nível 100:** testei deixar o robô passar um pouco do limite calculado da curva (1,04). O Thiago viu os robôs "entrando rápido demais na curva", e isso também dobrava as batidas em Mônaco, então foi tirado. O alvo do difícil voltou ao de antes. O 100 ficou mais difícil pela linha nova.
+  - Em Mônaco, no difícil, todos andam no limite do próprio carro. Com a diferença de ritmo de cada piloto, eles viviam tentando passar e batiam: 116 → 88 batidas fortes.
 - **ERS:** só na reta (com o ERS na curva, 274 batidas em Suzuka; só na reta, 74). A curvatura do ponto de agora e a de ~2 carros adiante têm de estar abaixo de 1/1500. Vale na ultrapassagem e também no ERS automático colado no da frente (`usarErsAuto`, que era `reta || perto`).
 - **Fim de corrida:** a 3 voltas ou menos do fim, o robô compara, pela tabela da pista, ficar no pneu gasto com parar. Com o penhasco mais suave, às vezes ficar sai mais barato.
 - **Batidas no pelotão (o carro adiante numa curva):** o robô descartava o carro da frente quando, no quadro dele, ele aparecia a mais de 90 u de lado. Numa curva, 300 u adiante, é o que acontece. Então ele só via o carro lento (rodado ou batido) a ~60 u e entrava na traseira a 100–150 u/s a mais. Agora o lado longe é medido pela pista.
@@ -31,9 +29,14 @@ Medido com `klk/medir/voltas.js` (os robôs sem tela, a física do servidor) e c
     - o nível 100 passando do limite da curva (`LAT_ALEM`) numa rua colada no muro.
   - Agora em Mônaco:
     - os robôs planejam pelos muros de antes, com a correção da main;
-    - o 100 não passa do limite;
     - a física bate nas peças.
-  - Mônaco, 8 sementes: 1028 batidas no total (main 1258), 381 no muro (main 405) e 172 fortes (main 144). Ainda sobram ~19% de fortes a mais.
+  - Mônaco, 4 sementes: 634 batidas no total (main 632), 195 no muro (main 193) e 88 fortes (main 60).
+- **Números finais, 21 robôs, 5 voltas, 4 sementes**, batidas fortes (total):
+  - Suzuka: main 72 (300) → **34** (160);
+  - Melbourne: main 130 (390) → **44** (146);
+  - Mônaco: main 60 (632) → **88** (634).
+- **Pneu de chuva até o fim** (o Thiago viu, sobretudo o intermediário): com mais de 30% de água o robô só parava depois do penhasco, e sem jogo novo do mesmo composto nunca parava. Agora ele para quando a próxima volta passaria do penhasco, com o jogo de chuva que ainda tiver.
+  - Suzuka, chuva a corrida inteira, 10 voltas, 21 robôs: na main todos os 21 passaram do penhasco (até 1,0); agora nenhum passa (o maior desgaste foi 0,78).
 - **Testado e descartado** (não reduziram as batidas):
   - freio de emergência pelo tempo até a batida;
   - a distância segura supondo que o da frente freia no máximo;
@@ -68,6 +71,7 @@ Medido com `klk/medir/voltas.js` (os robôs sem tela, a física do servidor) e c
   - Medido: em vários trechos o muro ficava mais de 10 u fora do guard-rail colocado no editor (dá para atravessar).
   - Em outros havia muro onde não tem peça nenhuma (o muro invisível).
 - Agora `colisao: "pecas"` está ligado (a física, a do jogo e a do servidor).
+- **A parede invisível antes do grampo:** o desenho do canteiro do grampo (`monaco-canteiro`) foi movido ~41 u no editor, mas a colisão ficava no lugar de sempre, sozinha na curva. Agora a colisão segue o ajuste do editor: a posição e a escala da malha, e sem colisão se ela estiver escondida (`Pistas.obstaculosComAjustes`, no servidor e no jogo). O canteiro ficou a 30 u da beira.
 - Os robôs continuam planejando a linha pelos muros de antes, com a correção de muro da main: com as peças na conta deles, a linha ganhava quinas e eles derrapavam (ver Robôs).
 - A correção de muro de Baku foi refeita para a linha nova.
 

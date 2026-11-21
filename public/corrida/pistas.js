@@ -2247,6 +2247,17 @@ function obstaculosDaPista(t, pts) {
   const raio = Math.min(12, dmin - t.width / 2 - 3.6);
   return raio < 8 ? [] : [{ x: cx, y: cy, r: raio + 1.5, raio, z: hmin, alt: 3.0 }];
 }
+// (2026-11-21, o Thiago: "uma hitbox bugada na curva antes do grampo sempre me faz bater numa parede invisível") o canteiro do grampo (kit/monaco/grampo.js,
+// a malha "monaco-canteiro") pode ser movido, escalado ou escondido no editor (os `ajustes` de cenario/<pista>.json), mas a colisão ficava no lugar de
+// sempre: em Mônaco ele foi movido ~41 u e a colisão sobrou sozinha na curva. Agora ela segue o ajuste: o centro na posição da malha, o raio na escala
+// dela, e escondido não bate.
+function obstaculosComAjustes(obs, cen) {
+  const aj = cen && Array.isArray(cen.ajustes) ? cen.ajustes.find((a) => a && /^monaco-canteiro#0$/.test(a.chave || "")) : null;
+  if (!aj || !obs || !obs.length) return obs || [];
+  if (aj.oculto) return [];
+  const o = obs[0], k = Math.max(0.1, Math.max(Math.abs(+aj.sx || 1), Math.abs(+aj.sz || 1)));
+  return [{ ...o, x: Number.isFinite(+aj.x) ? +aj.x : o.x, y: Number.isFinite(+aj.z) ? +aj.z : o.y, r: o.r * k, raio: o.raio * k, z: o.z + (Number.isFinite(+aj.y) ? +aj.y : 0) }, ...obs.slice(1)];
+}
 function limiteViaduto(t, n, i, largura) {
   if (!t.muroViaduto || !t.cruza?.length) return Infinity;
   const [baixo, cima] = t.cruza[0], distancia = k => { const d = Math.abs(i - Math.floor(k * n)); return Math.min(d, n - d); };
@@ -2382,7 +2393,7 @@ function murosDoCenario(pts, largura, cen) {
   }
   return lados;
 }
-const api = { murosDoCenario, usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
+const api = { obstaculosComAjustes, murosDoCenario, usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Pistas = api;
 })(typeof window !== "undefined" ? window : globalThis);

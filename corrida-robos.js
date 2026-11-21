@@ -232,7 +232,7 @@ function perfil(pista, carro, tracadoId = 0) { // `carro`: o nome de um dos cinc
 // com a raiz do grip, a velocidade final com `final` e a arrancada com `tracao`.
 function tempoDaVolta(pf, escala, ader) {
   if (pf.c.chave) { // classificação e ritmo da F1: o mesmo perfil de velocidade dos carros em movimento (tabela por nível, interpolada)
-    const tab = tabelaF1(pf, ader), f = Math.min(1.5, Math.max(0.3, escala)); // (acima de 1: o difícil passa do limite calculado, até LAT_ALEM de corrida-piloto.js)
+    const tab = tabelaF1(pf, ader), f = Math.min(1, Math.max(0.3, escala));
     let j = 1; while (j < NIVEIS_F1.length - 1 && f > NIVEIS_F1[j]) j++;
     const u = (f - NIVEIS_F1[j - 1]) / (NIVEIS_F1[j] - NIVEIS_F1[j - 1]);
     return tab[j - 1] + (tab[j] - tab[j - 1]) * u;
@@ -255,9 +255,7 @@ function tempoDaVolta(pf, escala, ader) {
 const NIVEIS_F1 = [0.3, 0.5, 0.65, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5]; // (acima de 1: o difícil passa um pouco do ideal medido, como quem joga bem)
 function topoDe(pf) { return pf.topo || (pf.topo = D.velocidadeFinal(pf.c)); }
 function perfilF1(pf, f) {
-  // (2026-11-21) em Mônaco o robô não passa do limite calculado (LAT_ALEM de corrida-piloto.js): na rua colada no muro, passar dele dobrava as batidas
-  // fortes (medido com 21 robôs, 4 sementes: 98 → 72, a main 60) e a volta nem ficava mais rápida
-  const q = Math.round(Math.min(T.baseDe(pf.pista) === "monaco" ? 1 : 1.5, Math.max(0.3, f)) * 100) / 100, mapa = pf.perfisF1 || (pf.perfisF1 = new Map());
+  const q = Math.round(Math.min(1.5, Math.max(0.3, f)) * 100) / 100, mapa = pf.perfisF1 || (pf.perfisF1 = new Map());
   let v = mapa.get(q);
   if (!v && pf.linha.hi) { // pistas de GP: o ritmo do piloto novo (corrida-piloto.js), com os limites de verdade do carro
     const lat = Float64Array.from({ length: pf.n }, (_, i) => pf.lat[(i + 2) % pf.n]);
@@ -333,7 +331,7 @@ const aderRef = () => ADER_REF || (ADER_REF = F1.aderencia({ composto: "medio", 
 function idealDe(pista, spec) { return tempoDaVolta(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren")), 1, aderRef()); }
 // Folga sobre o ideal do carro: difícil 0, médio 1,5% e fácil 5,5%, além da pequena diferença do piloto.
 // O tráfego e o controle dos pedais ainda custam tempo na corrida real.
-const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: -0.005 }, // (2026-11-21, o Thiago: "tá muito fácil, mesmo no 100": o difícil mira 0,5% abaixo do limite calculado, até LAT_ALEM de corrida-piloto.js; com -2% todos batiam no teto e andavam igual) // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil"; depois do Catar: "tira só mais meio por cento, não quero que virem lendas") os 2,5% de folga no médio e no difícil foram desfeitos no mesmo dia: o difícil insano era só em Baku, pelo ajuste do qualify de lá; nas outras pistas o Thiago passou a fazer a pole sempre)
+const FOLGA_F1 = { facil: 0.04, medio: 0, dificil: 0.005 }, // (2026-11-16, o Thiago: "deixa o difícil só 1% mais fácil"; depois do Catar: "tira só mais meio por cento, não quero que virem lendas") (2026-11-21: o difícil mais difícil veio da linha de corrida nova, que usa a pista toda; mirar abaixo do limite fazia todos baterem no teto e andarem igual)
   FOLGA_F1_ANTIGA = { ...FOLGA_F1 }, FOLGA_F1_REAL = { facil: 0.13, medio: 0.08, dificil: 0 }; // (Formula GP: os de antes de #665, afinados na escala real) // (de volta à escala antiga, 2026-11-11: os números de antes; os de #620 e #621 eram afinados na escala real)
 // por nível, a fração do limite das curvas e da frenagem que o robô usa, por cima do nível que dá o ideal. 1 é o limite do pneu:
 // o perfil (Piloto.perfilDoNivel) para nele, então acima de 1 não muda nada.
@@ -361,6 +359,9 @@ function largada(pts, g, W, f1) { // mesma posição usada pela física e pelas 
 // montagem do carro e ritmo do piloto; no modo clássico, continua seguindo a média das voltas da sala.
 function nivelDe(room, p, tracadoId, nBots, pf) {
   if (room.config.regras === "f1") {
+    // (2026-11-21) Mônaco no difícil (96 ou mais): todos no limite do próprio carro. Com a diferença de ritmo de cada piloto, na rua colada no muro eles viviam
+    // tentando passar e batiam: medido com 21 robôs, 4 sementes, 116 batidas fortes; com todos no limite, 88 (a main, 60)
+    if (T.baseDe(room.config.pista) === "monaco" && forcaDoNivel(room.config.nivel) >= 96) return 1;
     return Math.min(1.5, escalaPara(pf, alvoF1(room, p, pf), aderRef(), 8) * porNivel(EMPURRAO_F1, room.config.nivel)); // o nível é do piloto; o pneu de cada momento (macio, gasto, frio) mexe no ritmo de verdade, em passoF1
   }
   const pil = p.piloto, ritmo = room.ritmoRobos;
@@ -1012,7 +1013,15 @@ function trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator) {
   if (F1.SECOS.includes(pneu.composto)) return !F1.SECOS.includes(melhor) ? melhor : null;
   if (!F1.SECOS.includes(melhor)) {
     if (melhor !== pneu.composto) return melhor;
-    if (pneu.desgaste > F1.PENHASCO) { const disponiveis = ["chuva", "intermediario"].filter((c) => F1.podeUsar(p, c)); return disponiveis.length ? F1.compostoPorAgua(room.config.pista, agua, disponiveis) : null; }
+    // (2026-11-21, o Thiago: "às vezes eles esticam o pneu até o fim na chuva, principalmente o intermediário") parava só depois do penhasco, e sem jogo
+    // novo do mesmo composto não parava nunca. Agora para quando a próxima volta já passaria do penhasco (como no seco), com o jogo que ainda tiver (o
+    // outro de chuva se o mesmo acabou)
+    const taxaChuva = taxaDoPneu(pneu.composto, fator);
+    if (restam >= 1 && pneu.desgaste + taxaChuva > F1.PENHASCO) {
+      const disponiveis = ["chuva", "intermediario"].filter((c) => F1.podeUsar(p, c));
+      if (disponiveis.length) return F1.compostoPorAgua(room.config.pista, agua, disponiveis);
+      return null; // (os quatro jogos de chuva acabaram: um seco na água é pior que o de chuva gasto)
+    }
     return null;
   }
   return escolherComposto(restam, usados, fator, p); // secou: volta ao seco que aguenta o resto da corrida

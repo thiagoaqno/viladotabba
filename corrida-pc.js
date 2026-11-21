@@ -75,11 +75,13 @@ function attach(app) {
     console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC (tela): quadro de ${Math.round(+d.ms || 0)} ms · ${t(d.pista)} · ${t(d.fase)} · ${t(d.oque)}`);
     res.json({ ok: true });
   });
+  // (2026-11-21, o Thiago: o piloto real pedindo nome e o nível 150 inválido) a atualização trouxe a tela nova, mas o servidor rodando era o velho
+  let precisaReabrir = false;
   app.get("/corrida/pc.js", async (req, res) => {
     await Promise.race([conferindo, new Promise((ok) => setTimeout(ok, 4000))]); // (a primeira página espera a conferência, até 4 s)
     const atualizacao = pendente && (pendente.grande ? { grande: true, link: pendente.link, notas: pendente.notas } : { n: pendente.arquivos.length, mb: Math.max(0.1, Math.round(pendente.bytes / 1e5) / 10), reabrir: pendente.servidor, notas: pendente.notas });
     res.set("Cache-Control", "no-store").type("application/javascript");
-    res.send(`window.CORRIDA_PC = ${JSON.stringify({ pc: !!SITE, servidor: online ? SITE : "", aviso: ultimoAviso, atualizacao })};\n${PC_JS}`);
+    res.send(`window.CORRIDA_PC = ${JSON.stringify({ pc: !!SITE, servidor: online ? SITE : "", aviso: ultimoAviso, atualizacao, reabrir: precisaReabrir })};\n${PC_JS}`);
   });
   if (!SITE) return;
   let baixando = null;
@@ -88,6 +90,7 @@ function attach(app) {
     try {
       const p = pendente, feitos = await (baixando ||= Atualizar.baixar(SITE, p).finally(() => { baixando = null; }));
       if (feitos === p.arquivos.length) pendente = null;
+      if (feitos > 0 && p.servidor) precisaReabrir = true; // (2026-11-21) o servidor que roda é o velho até reabrir: a faixa de aviso (PC_JS)
       res.json({ ok: feitos === p.arquivos.length, feitos, total: p.arquivos.length, reabrir: p.servidor });
     } catch (e) { res.json({ ok: false, erro: e.message }); }
   });
@@ -210,6 +213,7 @@ const PC_JS = `(function () {
   // como sem internet (a sala, os robôs, a carreira); os recordes sobem sozinhos quando voltar ao online. Liga e desliga no botão do canto do menu.
   var OFF = false; try { OFF = localStorage.getItem("corrida:pc:offline") === "1"; } catch (e) {}
   if (C && C.pc && OFF) { C.local = true; C.offline = true; S = ""; }
+  if (C && C.reabrir) addEventListener("DOMContentLoaded", function () { var f = document.createElement("div"); f.setAttribute("role", "alert"); f.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:2147483646;padding:8px 14px;background:#c8101c;color:#fff;font:700 14px system-ui,sans-serif;text-align:center"; f.textContent = "Atualização instalada: feche e abra o jogo. Até lá, parte do jogo é a versão antiga."; document.body.appendChild(f); });
   // no programa, um selo discreto no canto: online (salas do site), no PC (sozinho, ou sem internet) e o aviso de atualização quando houver
   if (C && C.pc && location.pathname === "/corrida/" && !/[?&](sala|solo|treino)=/.test(location.search)) addEventListener("DOMContentLoaded", function () { // o botão do modo offline, no menu
     var k = document.createElement("button"); k.type = "button"; k.textContent = OFF ? "📴 Offline: tudo no seu PC (clique para ficar online)" : "🌐 Online (clique para jogar offline, tudo no seu PC)";

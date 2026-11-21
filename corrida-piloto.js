@@ -118,6 +118,49 @@ function linhaDeCorrida(pts, lo, hi, cap, op = {}) {
   return { lat, tempo: melhor, passes };
 }
 
+// (2026-11-21, o Thiago: "essa última curva que o bot faz em Suzuka me incomoda muito: dava para só passar reto, mas ele freia MUITO para fazer umas
+// curvas que não precisava") A descida de linhaDeCorrida mexe UM nó por vez e só aceita o que baixa o tempo: numa chicane, desfazer o "S" pede mexer
+// vários nós juntos, e ela empacava (em Suzuka, a 89% da volta, a linha ia para dentro, voltava e entrava de novo: raio de 117 u num trecho em que o
+// eixo da pista tem 330 a 460). Esta passada experimenta, em cada janela de nós (de 4 a 25), trocar o miolo pela reta entre as pontas (inteira ou
+// até a metade) e fica com o que baixa o tempo de volta do mesmo modelo; depois a descida fina acerta o resto.
+function esticarLinha(pts, lo, hi, cap, lat0, op = {}) {
+  const n = pts.length, passo = op.passo || 8, m = Math.floor(n / passo), nos = new Float64Array(m), tenta = new Float64Array(n);
+  const k = new Float64Array(n), ds = new Float64Array(n), sv = new Float64Array(n);
+  const tempo = (l) => { geometria(pts, l, op.janela || 8, k, ds); let liso = 0; for (let i = 0; i < n; i++) liso += k[i] * k[i] * ds[i]; return perfilNoCaminho(k, ds, cap, { saida: sv }).t + (op.lisura ?? LISURA) * liso; };
+  for (let a = 0; a < m; a++) nos[a] = lat0[Math.round((a * n) / m) % n];
+  interpolar(nos, n / m, n, lo, hi, tenta); const antes = tempo(tenta); let melhor = antes, trocas = 0;
+  const no = (a) => Math.round((a * n) / m) % n, guarda = new Float64Array(32);
+  // a reta DE VERDADE (no mundo) entre o carro no nó a e no nó b, cortando a normal do ponto i: o lateral nesse ponto. (A reta no lateral não é reta
+  // numa chicane: o eixo vira para um lado e para o outro.) Se a normal não corta a reta (quase paralelas), vale a conta no lateral
+  const ondeNo = (a) => { const i = no(a), p = pts[i]; return [p.x - p.ty * nos[a], p.y + p.tx * nos[a]]; };
+  const retaNo = (a, b, i, u) => {
+    const [ax, ay] = ondeNo(a), [bx, by] = ondeNo(b), p = pts[i], nx = -p.ty, ny = p.tx, dx = bx - ax, dy = by - ay;
+    const det = nx * -dy - ny * -dx; if (Math.abs(det) < 1e-6) return nos[a] + (nos[b] - nos[a]) * u;
+    return ((ax - p.x) * -dy - (ay - p.y) * -dx) / det; // p + s·normal = a + v·(b − a): o s
+  };
+  for (let rodada = 0; rodada < (op.rodadas || 3); rodada++) {
+    let ganhou = false;
+    for (const w of op.janelas || [4, 6, 9, 13, 18, 25]) for (let a = 0; a < m; a++) {
+      const b = (a + w) % m;
+      for (let j = 1; j < w; j++) guarda[j] = nos[(a + j) % m];
+      for (const mistura of [1, 0.5]) {
+        for (let j = 1; j < w; j++) { const q = (a + j) % m, i = no(q), reta = retaNo(a, b, i, j / w); nos[q] = Math.max(lo[i], Math.min(hi[i], guarda[j] + (reta - guarda[j]) * mistura)); }
+        interpolar(nos, n / m, n, lo, hi, tenta); const t = tempo(tenta);
+        if (t < melhor - 1e-4) { melhor = t; ganhou = true; trocas++; for (let j = 1; j < w; j++) guarda[j] = nos[(a + j) % m]; break; }
+        for (let j = 1; j < w; j++) nos[(a + j) % m] = guarda[j];
+      }
+    }
+    if (!ganhou) break;
+  }
+  const lat = interpolar(nos, n / m, n, lo, hi);
+  return { lat, antes, tempo: melhor, trocas };
+}
+// a linha salva (corrida-linhas-f1.json) esticada (ferramentas/esticar-linhas-f1.js)
+function esticarLinhaDaPista(t, pts, spec, ref, lat0, op = {}) {
+  const { lo, hi } = limitesDaPista(t, pts);
+  return esticarLinha(pts, lo, hi, CAP_LINHA(spec, ref), lat0, { janela: JANELA_K, ...op });
+}
+
 // ---------- os comandos (120 Hz) ----------
 // O volante mira a linha 0,5 a 0,6 s adiante: é o que deixa a direção fluida (mais perto, o carro oscila e bate) e rende volta mais rápida. Os pedais: a aceleração
 // que falta para chegar, `antecipa` segundos adiante, à velocidade pedida ali; o gás e o freio são a fração disso sobre o que o carro dá.
@@ -183,4 +226,4 @@ function contexto(spec, ref) {
   return { p: D.parametros(spec), cap: CAP_LINHA(spec, ref), teto: Infinity };
 }
 
-module.exports = { MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, contexto, jeitoDe, comandos, naTabela };
+module.exports = { MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, esticarLinhaDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, contexto, jeitoDe, comandos, naTabela };

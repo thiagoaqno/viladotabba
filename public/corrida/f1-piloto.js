@@ -15,6 +15,8 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { pintarFolha, capacetePorSigla, acabamentoDoCasco, extraDoCapacete, folhaDeRelevo, VISEIRAS_FURTACOR } from "./f1-capacetes.js";
+import { uniformeDe } from "./f1-uniformes.js";
+import { desenharMarca } from "./f1-marcas.js";
 
 const menosMovimento = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 const lim = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -230,17 +232,40 @@ const tecido = (cor, escurece = 0) => {
 };
 // a luva na cor da equipe que se vê: a cor 1, ou a cor 2 se a 1 é escura demais (o preto e o azul-marinho somem contra o carbono do volante)
 function corDaLuva(c1, c2) { const c = new THREE.Color(c2); return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b < 0.06 ? c1 : c2; } // (a cor 2, que se destaca do macacão de cor 1; se ela for escura demais, a 1)
-// o macacão: a cor 1 com uma faixa de cor 2 (em volta do peito, do braço e do antebraço, perto do cotovelo e do punho); um material por equipe
-const TRAJES = new Map();
-function traje(c1, c2) {
-  const k = c1 + "|" + c2; let m = TRAJES.get(k);
-  if (!m) {
-    const cv = document.createElement("canvas"); cv.width = 8; cv.height = 64; const x = cv.getContext("2d");
-    x.fillStyle = c1; x.fillRect(0, 0, 8, 64); x.fillStyle = c2; x.fillRect(0, 18, 8, 9); x.fillRect(0, 50, 8, 4);
-    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
-    m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.75, metalness: 0 }); TRAJES.set(k, m);
-  }
-  return m;
+// (2026-11-21, o Thiago: "trabalhe nos uniformes das equipes: todo piloto com o uniforme completo") o macacão de verdade da equipe, o MESMO do pódio e
+// dos mecânicos (f1-uniformes.js UNIFORMES: a cor base, a faixa dos ombros, a do lado do tronco, as costas, a luva e as marcas), nas malhas do piloto do
+// carro. Três folhas por equipe, guardadas e divididas por todos os carros dela:
+//  - o tronco (a cápsula: em volta, u = 0 nas costas, 0,25 e 0,75 nos lados, 0,5 no peito; v = 0 embaixo e 1 no pescoço): a base, as costas, a faixa
+//    do lado, a faixa dos ombros, a marca do peito e a do cinto;
+//  - o braço: a base, a faixa do ombro e a marca do braço nos dois lados;
+//  - o antebraço: a base e o punho na cor da faixa (o topo da folha é o pulso).
+// Quem não tem equipe (a "Sua cor") fica com o macacão na cor do carro e a faixa branca ou preta (uniformeDe, como no pódio).
+const UNIF = new Map();
+const marcaEm = (x, id, cx, cy, h, tinta) => { if (!id) return; x.save(); x.translate(cx, cy); x.scale(h, h); try { desenharMarca(x, id, { tinta }); } catch (e) { /* sem desenho: fica sem */ } x.restore(); };
+const claraHex = (hex) => { const c = new THREE.Color(hex); return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b > 0.55; };
+function uniformeDoCarro(equipe, c1) {
+  const u = uniformeDe(equipe, c1), k = (equipe || "") + "|" + u.base + "|" + u.faixa; let m = UNIF.get(k);
+  if (m) return m;
+  const folha = (w, h, pintar) => { const cv = document.createElement("canvas"); cv.width = w; cv.height = h; pintar(cv.getContext("2d"), w, h); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return new THREE.MeshStandardMaterial({ map: t, roughness: 0.78, metalness: 0 }); };
+  const tintaFaixa = claraHex(u.faixa) ? "#14161a" : "#ffffff";
+  const tronco = folha(512, 256, (x, W, H) => {
+    x.fillStyle = u.base; x.fillRect(0, 0, W, H);
+    if (u.costas) { x.fillStyle = u.costas; x.fillRect(0, 0, W * 0.16, H); x.fillRect(W * 0.84, 0, W * 0.16, H); }
+    x.fillStyle = u.lado || u.faixa; x.fillRect(W * 0.21, 0, W * 0.08, H); x.fillRect(W * 0.71, 0, W * 0.08, H); // a faixa do lado do tronco
+    x.fillStyle = u.faixa; x.fillRect(0, 0, W, H * 0.13); // a faixa dos ombros, em volta do pescoço (o topo da cápsula)
+    marcaEm(x, u.peito, W * 0.5, H * 0.38, 30, u.tinta); marcaEm(x, u.cinto, W * 0.5, H * 0.78, 20, u.tinta);
+  });
+  const braco = folha(256, 128, (x, W, H) => {
+    x.fillStyle = u.base; x.fillRect(0, 0, W, H);
+    x.fillStyle = u.faixa; x.fillRect(0, 0, W, H * 0.3); // o ombro (o topo da folha é o lado do ombro)
+    for (const cx of [0.25, 0.75]) marcaEm(x, u.braco, W * cx, H * 0.15, 14, tintaFaixa);
+  });
+  const antebraco = folha(128, 64, (x, W, H) => {
+    x.fillStyle = u.base; x.fillRect(0, 0, W, H);
+    x.fillStyle = u.faixa; x.fillRect(0, 0, W, H * 0.22); // o punho
+  });
+  m = { tronco, braco, antebraco, luva: u.luva || u.faixa, painel: (u.luva || u.faixa) === u.faixa ? u.base : u.faixa };
+  UNIF.set(k, m); return m;
 }
 // a cor da faixa do capacete: branco, ou quase preto se as cores da equipe já são claras
 function corDaFaixa(c1, c2) {
@@ -299,14 +324,15 @@ export function criarPiloto(kt, op) {
   const capacete = solta(new THREE.Mesh(g.capacete, materialDoCapacete(cor1, cor2, op.numero, op.sigla ? capacetePorSigla(op.sigla) : null, op.capacete || null))); capacete.name = "capacete"; capacete.position.y = 0.14; cab.add(capacete);
   const viseira = solta(new THREE.Mesh(g.viseira, VISEIRA(op.capacete?.viseira))); viseira.name = "viseira"; viseira.position.y = 0.14; cab.add(viseira);
   const moldura = solta(new THREE.Mesh(g.moldura, materialDaMoldura())); moldura.name = "viseira-moldura"; moldura.position.y = 0.14; cab.add(moldura);
-  const tronco = solta(new THREE.Mesh(g.tronco, traje(cor1, cor2))); tronco.name = "tronco"; tronco.position.set(0, 0.45, 0.16); tronco.rotation.x = 0.6; corpo.add(tronco); // o piloto deitado: o peito inclinado para trás
-  const bracos = [-1, 1].map((l) => { const m = solta(new THREE.Mesh(g.braco, traje(cor1, cor2))); m.name = "braco"; m.position.set(l * OMBRO.x, OMBRO.y, OMBRO.z); corpo.add(m); return m; });
+  const U = uniformeDoCarro(op.equipe || null, cor1); // o macacão completo da equipe (ou o da "Sua cor")
+  const tronco = solta(new THREE.Mesh(g.tronco, U.tronco)); tronco.name = "tronco"; tronco.position.set(0, 0.45, 0.16); tronco.rotation.x = 0.6; corpo.add(tronco); // o piloto deitado: o peito inclinado para trás
+  const bracos = [-1, 1].map((l) => { const m = solta(new THREE.Mesh(g.braco, U.braco)); m.name = "braco"; m.position.set(l * OMBRO.x, OMBRO.y, OMBRO.z); corpo.add(m); return m; });
   // os antebraços ficam fora do corpo: aparecem também na primeira pessoa, junto das luvas
   const antebracos = new THREE.Group(); antebracos.name = "antebracos"; kt.carro.add(antebracos);
-  const foreBracos = [-1, 1].map(() => { const m = solta(new THREE.Mesh(g.antebraco, traje(cor1, cor2))); m.name = "antebraco"; antebracos.add(m); return m; });
+  const foreBracos = [-1, 1].map(() => { const m = solta(new THREE.Mesh(g.antebraco, U.antebraco)); m.name = "antebraco"; antebracos.add(m); return m; });
   // as mãos (ficam no volante e aparecem também na primeira pessoa): uma malha só, com as duas luvas, num pivô que gira com o volante
   const maos = new THREE.Group(); maos.name = "maos"; maos.position.copy(centro); kt.carro.add(maos);
-  garantirMao(); const corLuva = corDaLuva(cor1, cor2), corPainel = corLuva === cor2 ? cor1 : cor2; // as luvas: a mão fechada do modelo (ou, enquanto ela não chega, cápsulas)
+  garantirMao(); const corLuva = op.equipe ? U.luva : corDaLuva(cor1, cor2), corPainel = op.equipe ? U.painel : corLuva === cor2 ? cor1 : cor2; // (a luva do uniforme da equipe) // as luvas: a mão fechada do modelo (ou, enquanto ela não chega, cápsulas)
   const luvas = solta(new THREE.Mesh(MAO3D.base ? maosDe(corLuva, corPainel) : luvasDe(corLuva), LUVA())); luvas.name = "luvas"; maos.add(luvas);
   let aro = null; if (!kt.volante) { aro = solta(new THREE.Mesh(g.aro, CARBONO())); aro.name = "luvas-aro"; maos.add(aro); }
   const agit = 0.7 + r() * 0.7; // quão mexida é a cabeça deste piloto (uns são mais calmos)

@@ -12,7 +12,8 @@ import { ajusteEspelho } from "./retrovisores-ajuste.js";
 const LARG = 160, FOV_H = 34 * Math.PI / 180, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]), PERTO = 120; // PERTO: até onde (unidades) uma câmera de fora ainda refaz o espelho
 const GEO = new THREE.PlaneGeometry(1, 1);
 const v = new THREE.Vector3(), d = new THREE.Vector3(), cima = new THREE.Vector3(), olho = new THREE.Vector3(), M = new THREE.Matrix4();
-let contador = 0;
+let contador = 0, ultimo = 0;
+const DESENHOS_S = 40; // desenhos de espelho por segundo, os dois juntos (20 cada um): um retrovisor de 160 px não precisa de mais
 
 function criar(kart) {
   const kt = kart.kt, lista = kt.espelhos; if (!lista || !lista.length || !kt.carro) return null;
@@ -62,11 +63,15 @@ export function quadroEspelhos(kart, modo) {
   if (!dentro && modo !== "perto" && modo !== "longe") { for (const it of E.itens) it.painel.visible = it.feito; return; } // aérea e TV: ficam com a última imagem
   const primeiro = E.itens.some((it) => !it.feito);
   if (primeiro) { for (const it of E.itens) if (!it.feito) desenhar(it, kart, E.itens); return; } // o primeiro desenho de cada um sai na hora
+  // (2026-11-21, o Thiago: "os retrovisores parecem vilões do desempenho") "um espelho por quadro" era por QUADRO: num monitor de 144 Hz, 144 desenhos
+  // da cena a mais por segundo. Agora é pelo relógio: no máximo DESENHOS_S desenhos de espelho por segundo (os dois juntos), seja qual for a tela
+  const agora = performance.now(); if (agora - ultimo < 1000 / (dentro ? DESENHOS_S : DESENHOS_S / 2)) { for (const it of E.itens) it.painel.visible = true; return; }
+  ultimo = agora;
   contador++;
   if (!dentro) { // de fora o espelho é pequeno: só perto do carro e um desenho a cada quatro quadros
-    olho.setFromMatrixPosition(kart.kt.carro.matrixWorld); if (olho.distanceTo(cam.position) > PERTO || contador % 2) { for (const it of E.itens) it.painel.visible = true; return; }
+    olho.setFromMatrixPosition(kart.kt.carro.matrixWorld); if (olho.distanceTo(cam.position) > PERTO) { for (const it of E.itens) it.painel.visible = true; return; }
   }
-  desenhar(E.itens[(contador >> (dentro ? 0 : 1)) % E.itens.length], kart, E.itens);
+  desenhar(E.itens[contador % E.itens.length], kart, E.itens);
 }
 
 export function soltarEspelhos(kart) {

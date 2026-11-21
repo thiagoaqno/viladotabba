@@ -8,7 +8,7 @@ import { renderer, scene } from "./cena.js";
 import { graficos } from "./qualidade.js";
 
 const L = 512, A = 84, ALCANCE = 550, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]);
-let rt = null, camTras = null, cenaQuadro = null, camQuadro = null, molde = null, contador = 0, medidas = null;
+let ultimoDesenho = 0, rt = null, camTras = null, cenaQuadro = null, camQuadro = null, molde = null, contador = 0, medidas = null;
 const v = new THREE.Vector3(), d = new THREE.Vector3(), cima = new THREE.Vector3(), tam = new THREE.Vector2();
 
 function montar() {
@@ -37,7 +37,9 @@ export function quadroRetrovisor(kart, modo) {
   const carro = kart.kt.carro;
   if (!medidas || medidas.carro !== carro) { const md = medir(carro); if (!md) return; medidas = { carro, ...md }; }
   // a cada dois quadros, a imagem nova (atrás da asa, olhando para trás: +z no carro é para trás, como em espelhos.js)
-  if (contador++ % 2 === 0) {
+  // (2026-11-21) a cada 1/30 s pelo relógio, e não a cada dois quadros: num monitor de 144 Hz eram 72 desenhos da cena por segundo
+  const agora = performance.now();
+  if (agora - ultimoDesenho >= 1000 / 30) { ultimoDesenho = agora; contador++;
     v.set(0, medidas.y + medidas.alt * 0.15, medidas.z * 1.05).applyMatrix4(carro.matrixWorld);
     d.set(0, -0.05, 1).transformDirection(carro.matrixWorld);
     cima.set(0, 1, 0).transformDirection(carro.matrixWorld);

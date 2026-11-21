@@ -199,7 +199,10 @@ export function animarVida(tr, dt, foco) {
   const parado = reduz.matches; V.tempo += dt; const t = V.tempo;
   for (const a of V.agua) if (a.map && !parado) { a.map.offset.x = (t * 0.012) % 1; a.map.offset.y = (t * 0.02) % 1; }
   // torcida: só mexe quem está perto da câmera (a de longe fica parada; ninguém vê a diferença)
-  for (const T of [V.torcida, ...(V.torcidas || []), ...(V.torcidasArq || [])]) {
+  // (2026-11-21, o Thiago: "suspeito das bandeiras que se mexem tirando FPS") a torcida e as bandeiras mandam as matrizes de todos para a placa de vídeo
+  // a cada atualização: 30 vezes por segundo pelo relógio basta (num monitor de 144 Hz eram 144); o tempo (t) segue o mesmo, só se refaz menos
+  const agoraMs = performance.now(), mexe = agoraMs - (V.ultMexe || 0) >= 33; if (mexe) V.ultMexe = agoraMs;
+  for (const T of mexe ? [V.torcida, ...(V.torcidas || []), ...(V.torcidasArq || [])] : []) {
     if (!T || parado) continue;
     if (foco && !T.primeira && (T.x - foco.x) ** 2 + (T.z - foco.y) ** 2 > 1000 ** 2) continue;
     if (!T.primeira && (V.vezT = (V.vezT || 0) + 1) % 2) continue; // longe da vista o pulo não precisa de 60 quadros
@@ -213,7 +216,7 @@ export function animarVida(tr, dt, foco) {
     });
     corpo.instanceMatrix.needsUpdate = cabeca.instanceMatrix.needsUpdate = bracos.instanceMatrix.needsUpdate = true;
   }
-  for (const b of V.bandeiras) {
+  for (const b of mexe ? V.bandeiras : []) {
     b.base.forEach((o, k) => { d.position.set(o.x, o.y, o.z); d.rotation.set(parado ? 0 : Math.sin(t * 5 + o.f) * 0.45, o.ry, 0, "YXZ"); d.scale.setScalar(1); d.updateMatrix(); b.m.setMatrixAt(k, d.matrix); });
     b.m.instanceMatrix.needsUpdate = true;
   }

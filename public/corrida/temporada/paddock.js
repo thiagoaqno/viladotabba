@@ -220,14 +220,110 @@ const EVENTOS = {
       { id: "extra", rotulo: "Pagar uma sessão extra no simulador (−1 milhão)", efeito: { moral: 3, caixa: -1, diretoria: 1 } },
     ],
   },
+  // ---------- (2026-11-21, o Thiago: "os atuais são muito repetitivos e pouco impactam") os que mudam o fim de semana de verdade ----------
+  // O que cada escolha faz no SEU carro neste GP está em modificadores() (sim.js: aderência, potência, desgaste do pneu; corrida.js: as
+  // posições perdidas no grid). Os sorteios (o evento aparecer, a peça nova funcionar) saem da semente da carreira.
+  pacoteNovo: {
+    quem: "Engenheiros", fase: "sexta",
+    quando: (c, s) => s.gp >= 1 && chance(s, "pacote", 0.45),
+    titulo: () => "O pacote novo chegou da fábrica",
+    texto: () => "Um assoalho novo ficou pronto antes do previsto. No túnel de vento ele é mais rápido, mas ninguém sabe se vai funcionar na pista.",
+    opcoes: [
+      { id: "estrear", rotulo: "Estrear já: +2,5% de aderência se funcionar, −1,5% se não", efeito: { diretoria: 1 } },
+      { id: "tunel", rotulo: "Pagar mais testes e estrear certo: +2,5% de aderência (−2 milhões)", efeito: { caixa: -2 } },
+      { id: "esperar", rotulo: "Deixar para o próximo GP", efeito: { diretoria: -1 } },
+    ],
+  },
+  motorNoLimite: {
+    quem: "Engenheiros", fase: "sexta",
+    quando: (c, s) => s.gp >= 2 && chance(s, "motor", 0.3),
+    titulo: () => "O motor está no limite",
+    texto: () => "A telemetria mostra o motor perdendo pressão. Um motor novo é mais forte, mas a troca fora da cota custa 5 posições no grid.",
+    opcoes: [
+      { id: "trocar", rotulo: "Trocar o motor: +5% de potência e 5 posições a menos no grid", efeito: {} },
+      { id: "seguir", rotulo: "Seguir com o motor velho: −3% de potência", efeito: { diretoria: 1 } },
+    ],
+  },
+  calor: {
+    quem: "Engenheiros", fase: "sexta",
+    quando: (c, s) => !!c.proximo && chance(s, "calor", 0.25),
+    titulo: (c) => `Onda de calor${c.proximo ? ` em ${c.proximo.nome}` : ""}`,
+    texto: () => "A previsão é de asfalto fervendo no domingo. Os engenheiros querem saber se mudam o acerto para proteger o pneu.",
+    opcoes: [
+      { id: "poupar", rotulo: "Acerto para o calor: −1,5% de aderência e o pneu gasta 25% menos", efeito: {} },
+      { id: "manter", rotulo: "Manter o acerto: o pneu gasta 30% mais", efeito: { torcida: 1 } },
+    ],
+  },
+  chassiReserva: {
+    quem: "Engenheiros", fase: "sexta",
+    quando: (c, s) => s.gp >= 1 && chance(s, "chassi", 0.12),
+    titulo: () => "Batida no treino livre",
+    texto: () => "Você bateu no TL2 e o chassi trincou. Dá para correr com o reserva, mais velho, ou virar a noite consertando o titular.",
+    opcoes: [
+      { id: "reserva", rotulo: "Correr com o chassi reserva: −2% de aderência e −1% de potência", efeito: { diretoria: -1 } },
+      { id: "consertar", rotulo: "Virar a noite consertando (−2 milhões)", efeito: { caixa: -2, moral: -2 } },
+    ],
+  },
+  provocacao: {
+    quem: "Rival", fase: "pos",
+    quando: (c, s) => !!rivalDe(s) && !!c.ultimo && chance(s, "provoca", 0.4),
+    titulo: (c, s) => `${rivalDe(s).nome} provoca você`,
+    texto: (c, s) => `Na entrevista depois do GP, ${rivalDe(s).nome} disse que você "só anda rápido sem ninguém por perto". Os jornalistas querem a sua resposta.`,
+    opcoes: [
+      { id: "responder", rotulo: "Responder à altura: a rixa esquenta e ele aperta mais na pista", efeito: { torcida: 6, diretoria: -1 }, acao: "rixa" },
+      { id: "desafio", rotulo: "Desafiar: chegar na frente dele no próximo GP (vale torcida e patrocinador)", efeito: { torcida: 3 } },
+      { id: "ignorar", rotulo: "Ignorar e falar do trabalho da equipe", efeito: { torcida: -2, diretoria: 2 } },
+    ],
+  },
+  apostaPatrocinador: {
+    quem: "Patrocinador", fase: "sexta",
+    quando: (c, s) => !!c.proximo && s.gp >= 1 && chance(s, "aposta", 0.3),
+    titulo: () => "O patrocinador aposta alto",
+    texto: (c, s) => `A marca oferece um bônus de 5 milhões se você chegar no top ${alvoDaAposta(s)} neste GP. Se falhar, ela vai cobrar.`,
+    opcoes: [
+      { id: "aceitar", rotulo: "Aceitar a aposta (+5 milhões, ou o patrocinador bravo)", efeito: {} },
+      { id: "recusar", rotulo: "Recusar com educação", efeito: { patrocinador: -2 } },
+    ],
+  },
+  propostaRival: {
+    quem: "Diretoria", fase: "pos",
+    quando: (c, s) => !!c.eu && bem(c.eu) && c.eu.pos <= (c.faixa === 0 ? 4 : 8) && s.gp >= Math.floor(s.tamanho / 2) && chance(s, "sonda", 0.35),
+    titulo: () => "Uma rival sonda você",
+    texto: () => "O empresário recebeu uma ligação de outra equipe interessada em você para o ano que vem. A diretoria já ficou sabendo.",
+    opcoes: [
+      { id: "renegociar", rotulo: "Usar a proposta para renegociar", efeito: { diretoria: -4 }, acao: "aumentoVoce" },
+      { id: "lealdade", rotulo: "Dizer que fica: a diretoria e a torcida gostam", efeito: { diretoria: 5, torcida: 4 } },
+    ],
+  },
 };
+// (2026-11-21) os que mexem no fim de semana passam na frente no sorteio dos dois do GP
+const NOVOS = new Set(["pacoteNovo", "motorNoLimite", "calor", "chassiReserva", "provocacao", "apostaPatrocinador", "propostaRival"]);
+// um sorteio fixo da carreira para este GP (o mesmo save vê sempre o mesmo)
+const chance = (s, tag, p) => gerador(`${tag}:${s.semente}:${s.ano}:${s.gp}`)() < p;
+const rivalDe = (s) => { try { const r = Reg().imersao(s).rival; return r && r.id ? (Pilotos.PILOTOS.find((x) => x.id === r.id) || null) : null; } catch (e) { return null; } };
+const alvoDaAposta = (s) => { try { return Math.max(1, Reg().imersao(s).meta.gp - 1); } catch (e) { return 5; } };
+const pacoteFunciona = (s, ano, gp) => gerador(`pacote-ok:${s.semente}:${ano}:${gp}`)() < 0.7;
+// O que as decisões do GP fazem no SEU carro (fora do plano do domingo, que é o PLANO de sim.js): { grip, potencia, desgaste, grid }, ou null.
+// O pacote "estrear" funciona em 70% das vezes (pelo sorteio da carreira).
+function modificadores(s, ano = s.ano, gp = s.gp) {
+  const d = garantir(s).decisoes, de = (id) => d[`${ano}:${gp}:${id}`], m = { grip: 1, potencia: 1, desgaste: 1, grid: 0 };
+  const pac = de("pacoteNovo");
+  if (pac === "tunel") m.grip *= 1.025;
+  else if (pac === "estrear") m.grip *= pacoteFunciona(s, ano, gp) ? 1.025 : 0.985;
+  const mot = de("motorNoLimite");
+  if (mot === "trocar") { m.potencia *= 1.05; m.grid += 5; } else if (mot === "seguir") m.potencia *= 0.97;
+  const cal = de("calor");
+  if (cal === "poupar") { m.grip *= 0.985; m.desgaste *= 0.75; } else if (cal === "manter") m.desgaste *= 1.3;
+  if (de("chassiReserva") === "reserva") { m.grip *= 0.98; m.potencia *= 0.99; }
+  return m.grip === 1 && m.potencia === 1 && m.desgaste === 1 && !m.grid ? null : m;
+}
 // os acontecimentos deste GP: até dois, sorteados pela semente entre os que fazem sentido (os já decididos continuam na lista, com a escolha)
 function acontecimentos(s) {
   garantir(s);
   if (!s.calendario || s.gp >= s.tamanho) return [];
   const c = contexto(s), base = `${s.ano}:${s.gp}`;
   const candidatos = Object.keys(EVENTOS).filter((id) => id !== "plano" && (s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s)));
-  const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r(), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+  const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r() * (NOVOS.has(id) ? 0.45 : 1), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   const decididos = embaralhados.filter((id) => s.paddock.decisoes[`${base}:${id}`]), resto = embaralhados.filter((id) => !s.paddock.decisoes[`${base}:${id}`]);
   const comPlano = [...[...decididos, ...resto].slice(0, 2), ...(EVENTOS.plano.quando(c, s) || s.paddock.decisoes[`${base}:plano`] ? ["plano"] : [])]; // (o plano do domingo vem sempre, fora dos dois sorteados)
   return comPlano.map((id) => {
@@ -304,6 +400,20 @@ const MANCHETES = {
   "reuniaoTecnica:juntos": ["{eq} divide o programa entre os dois carros", "Os engenheiros vão testar as peças nos dois pilotos em {gp}."],
   "reuniaoTecnica:voce": ["{eq} concentra os testes no primeiro carro", "{comp} fica com o programa secundário em {gp}."],
   "reuniaoTecnica:extra": ["{eq} paga sessão extra no simulador", "Os pilotos chegam a {gp} com horas a mais de preparação."],
+  "pacoteNovo:estrear": ["{eq} estreia assoalho novo em {gp}", "A peça chegou da fábrica antes do previsto e vai direto para a pista."],
+  "pacoteNovo:tunel": ["{eq} paga testes extras e estreia pacote em {gp}", "A equipe gastou 2 milhões para chegar com a peça já aprovada."],
+  "motorNoLimite:trocar": ["{eq} troca o motor e perde 5 posições no grid", "Com a unidade nova, o carro chega mais forte para a corrida em {gp}."],
+  "motorNoLimite:seguir": ["{eq} arrisca o motor velho em {gp}", "A equipe evita a punição, mas o carro perde potência."],
+  "calor:poupar": ["{eq} muda o acerto para o calor de {gp}", "Os engenheiros sacrificaram aderência para proteger os pneus."],
+  "calor:manter": ["{eq} ignora o calor e mantém o acerto", "A aposta é andar rápido e parar mais vezes nos boxes."],
+  "chassiReserva:reserva": ["Batida no treino: {eq} corre com o chassi reserva", "O carro titular trincou no TL2 e ficou na garagem."],
+  "chassiReserva:consertar": ["Mecânicos da {eq} viram a noite consertando o carro", "O chassi titular foi salvo, mas custou 2 milhões."],
+  "provocacao:responder": ["Troca de farpas na imprensa esquenta a rivalidade", "O piloto da {eq} respondeu à provocação, e a torcida adorou."],
+  "provocacao:desafio": ["Piloto da {eq} desafia o rival para {gp}", "Quem chegar na frente no próximo GP fica com a razão."],
+  "provocacao:ignorar": ["{eq} não entra na provocação", "O piloto preferiu falar do trabalho da equipe."],
+  "apostaPatrocinador:aceitar": ["Patrocinador da {eq} promete bônus por resultado em {gp}", "São 5 milhões se a meta for batida."],
+  "propostaRival:renegociar": ["Piloto da {eq} usa proposta rival e ganha aumento", "A diretoria cedeu, mas não gostou da pressão."],
+  "propostaRival:lealdade": ["Piloto da {eq} recusa sondagem e fica", "A torcida e a diretoria comemoraram a lealdade."],
 };
 // o substituto quando o companheiro é demitido: o piloto de ritmo mais perto (e não acima) do dele, de outra equipe (nunca o titular que você
 // substituiu na sua equipe); na falta, o mais lento de todos
@@ -324,6 +434,7 @@ function previaDaAcao(s, a) {
   if (a === "perderMecanico") return `O chefe dos mecânicos sai: o box cai para ${E.mecanico[Math.max(0, s.engenheiros.mecanico - 1)].nome.toLowerCase()}`;
   if (a === "aumentoVoce") return `Bônus por vitória +1 milhão (hoje ${Reg().contrato(s).bonusVitoria})`;
   if (a === "ultimato") return `Top ${Reg().imersao(s).meta.gp} no próximo GP; falhar é ser demitido no fim do ano`;
+  if (a === "rixa") { const r = rivalDe(s); return r ? `${r.nome} aperta mais o ritmo perto de você` : null; }
   void p; return null;
 }
 // a ação de verdade; devolve a frase do mural
@@ -341,6 +452,7 @@ function acao(s, a) {
   if (a === "perderMecanico") { const n = s.engenheiros.mecanico; if (!n) return null; s.engenheiros.mecanico = n - 1; return `O chefe dos mecânicos pediu demissão: o box caiu para "${E.mecanico[n - 1].nome}" e as paradas ficam mais lentas.`; }
   if (a === "aumentoVoce") { const c = Reg().contrato(s); s.contrato = { inicio: c.inicio, fim: c.fim, bonusVitoria: c.bonusVitoria + 1 }; return `Você ganhou aumento: o bônus por vitória subiu para ${c.bonusVitoria + 1} milhões.`; }
   if (a === "ultimato") { const alvo = Reg().imersao(s).meta.gp; p.ultimato = { ano: s.ano, gp: s.gp, alvo }; return `Agora é top ${alvo} no próximo GP.`; }
+  if (a === "rixa") { const r = rivalDe(s); if (!r) return null; if (!p.rixas || typeof p.rixas !== "object") p.rixas = {}; p.rixas[r.id] = (p.rixas[r.id] || 0) + 1; return `A rixa com ${r.nome} esquentou: ele vai apertar o ritmo quando estiver perto de você.`; }
   return null;
 }
 // Depois de cada GP (regras.js registrarResultado): o resultado mexe no humor da equipe. `meta`: a posição-alvo do GP.
@@ -365,6 +477,19 @@ function aoResultado(s, resultado, meta) {
     const passou = bem(eu) && eu.pos <= p.ultimato.alvo; p.ultimato = null;
     if (passou) { p.diretoria = lim(p.diretoria + 8, -20, 20); notas.push("o ultimato foi cumprido"); }
     else { p.demitido = { ano: resultado.ano }; s.paddock.ultimaMudanca = { ano: s.ano, gp: s.gp, quem: "Diretoria", texto: "Você foi demitido: a equipe não renova o seu contrato. No fim do ano, você vai para a equipe mais fraca que fizer proposta." }; anotar(s, "Diretoria", "O ultimato não foi cumprido: você foi demitido. A equipe não renova o seu contrato no fim do ano."); }
+  }
+  const de = (id) => p.decisoes[`${resultado.ano}:${resultado.gp}:${id}`];
+  if (de("pacoteNovo") === "estrear") notas.push(pacoteFunciona(s, resultado.ano, resultado.gp) ? "o pacote novo funcionou" : "o pacote novo não funcionou na pista");
+  if (de("motorNoLimite") === "trocar") notas.push("o motor novo custou 5 posições no grid");
+  if (de("apostaPatrocinador") === "aceitar") {
+    if (bem(eu) && eu.pos <= Math.max(1, meta - 1)) { s.caixa += 5; ef.patrocinador += 8; notas.push("a aposta do patrocinador rendeu 5 milhões"); }
+    else { ef.patrocinador -= 12; notas.push("a aposta com o patrocinador foi perdida"); }
+  }
+  const desafio = p.decisoes[`${resultado.ano}:${resultado.gp - 1}:provocacao`] === "desafio" ? rivalDe(s) : null; // (o desafio vale no GP seguinte ao da provocação)
+  if (desafio) {
+    const ele = resultado.linhas.find((l) => l.piloto === desafio.id);
+    if (bem(eu) && (!ele || !bem(ele) || eu.pos < ele.pos)) { ef.torcida += 8; ef.patrocinador += 8; notas.push(`você venceu o desafio contra ${desafio.nome}`); }
+    else { ef.torcida -= 8; ef.patrocinador -= 6; notas.push(`${desafio.nome} ganhou o desafio`); }
   }
   const plano = p.decisoes[`${resultado.ano}:${resultado.gp}:plano`];
   if (plano === "arriscar") { if (cumpriu) { p.diretoria = lim(p.diretoria + 3, -20, 20); ef.torcida += 3; notas.push("o risco valeu a pena"); } else if (!bem(eu)) { p.diretoria = lim(p.diretoria - 4, -20, 20); notas.push("o risco custou o carro"); } }
@@ -440,7 +565,7 @@ function novaTemporada(s) {
   for (const k of Object.keys(p.decisoes)) if (Number(k.split(":")[0]) < s.ano - 1) delete p.decisoes[k];
 }
 const salarios = (s) => (s.paddock ? (s.paddock.salarioComp || 0) + (s.paddock.salarioStaff || 0) : 0);
-const api = { MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
+const api = { modificadores, MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Paddock = api;
 })(typeof window !== "undefined" ? window : globalThis);

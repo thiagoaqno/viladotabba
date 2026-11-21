@@ -273,6 +273,8 @@ function passo(c, ent, amb, tr, ev) {
   amb2.extra = c.acerto ? extraDoAcerto(c.acerto, Math.abs(c.v || 0), amb2.extraAc || (amb2.extraAc = {})) : null; // o acerto do carro (asa e altura)
   const plano = !amb.quali && PLANO[amb.plano]; // (2026-11-16) o plano da corrida da carreira (paddock.js, "plano"): aderência contra desgaste
   if (plano) { const b = amb2.extra, e = amb2.planoEx || (amb2.planoEx = {}); for (const k in e) delete e[k]; if (b) Object.assign(e, b); e.grip = (e.grip || 1) * plano.grip; e.potencia = (e.potencia || 1) * (plano.potencia || 1); e.desgaste = (e.desgaste || 1) * plano.desgaste; amb2.extra = e; }
+  const gm = amb.gpMods; // (2026-11-21) os eventos do fim de semana da carreira (paddock.js modificadores: o pacote novo, o motor, o calor, o chassi reserva), também na classificação
+  if (gm) { const b = amb2.extra, e = amb2.gpEx || (amb2.gpEx = {}); for (const k in e) delete e[k]; if (b) Object.assign(e, b); e.grip = (e.grip || 1) * (gm.grip || 1); e.potencia = (e.potencia || 1) * (gm.potencia || 1); e.desgaste = (e.desgaste || 1) * (gm.desgaste || 1); amb2.extra = e; }
   // SEM teto de velocidade (pedido do Thiago, 2026-11-10): a velocidade final sai da potência contra o arrasto (dinamica.js). O teto fixo
   // (spec.vmax × TETO_VELOCIDADE) escondia o arrasto da asa (a asa cheia ganhava em quase toda pista) e o ganho de DRS, ERS e vácuo na reta.
   amb2.tetoV = Infinity;

@@ -1,33 +1,48 @@
-# Pneus, voltas por GP, plano do domingo, eventos da carreira e falas novas
+# Eventos que saem da corrida, estratégia da equipe, planos novos, ERS no pneu e voltas perto de 10
 
-Pedido do Thiago (2026-11-21): "precisamos aumentar a escala de tudo... um mega PR". Não foi jogado: conferido com `node --check` e com as medições abaixo.
+Pedido do Thiago (2026-11-21). Não foi jogado: conferido com `node --check`, com uma carreira na memória e com o robô medido (`klk/medir/desgaste.js`).
 
-## Pneus
-- **Vidas inteiras** (`f1-regras.js`): macio 3, médio 4, duro 5, intermediário 6, chuva 8 voltas (eram 2,95 / 3,95 / 4,95 / 5,95 / 7,95).
-- **O robô planejava com o desgaste errado.** Medido com `klk/medir/desgaste.js` (o robô na corrida, sem box): em Bahrein ele gasta o médio em 3,69 voltas e o macio em 2,80, mas a tabela de planos (`f1-pneus-tabela.js`, o piloto ideal) dizia 2,93 e 2,19, e ele parava cedo. Agora o `gasto` dos secos na tabela é o nominal × 1,08 (o medido) × o comprimento da pista. Conferido depois da troca: Singapura, médio de verdade 2,80 voltas e plano 2,77; México, 4,06 e 4,02.
-- **Pneu por distância**: a `vida` é em voltas de Bahrein (na Formula GP, da gp-bahrein); `REL_PISTA` guarda o comprimento de cada volta sobre o da referência (medido com `sim.js criarPista`). O desgaste (`gastarPneu`, opção `rel`) e as contas de vida (`vidaEmVoltas(c, fator, agua, pista)`) usam isso: no servidor, na previsão do navegador, nos robôs (paradas e chuva), no MFD e no menu do box. Exemplo: macio 3,25 voltas no México, 3 em Bahrein, 2,24 em Singapura.
+## Eventos ligados à corrida (`paddock.js`)
+- O servidor anota os toques de quem joga na carreira (`corrida.js anotarToque`: no muro, um a cada 2 s; em cada piloto, um por par a cada 3 s, com a culpa de `Contato.impactoDe`), e o resumo vai para a análise do GP (`corrida-temporada.js`, `analise.corrida`): toques, dano no fim, segundos de punição, stop-and-go, ultrapassagens feitas e sofridas, paradas.
+- Oito acontecimentos saem disso, para o GP seguinte:
+  - **conta da oficina** (dano 20%+ ou 4+ toques): conserto completo, que custa 1 milhão a cada 12% de dano, ou básico (−1,5% de aderência, −1% de potência);
+  - **comissários** (2+ toques causados por você): aceitar 3 posições no grid, ou recorrer por 1 milhão (metade das vezes anula, senão 5 posições);
+  - **o piloto em quem você mais bateu reclama**: pedir desculpas, ignorar ou provocar; provocar faz dele um rival neste GP (`regras.js`, rixa 3: ele aperta o ritmo perto de você);
+  - **batida com o companheiro**: assumir, culpar ou ordem de equipe (a agressividade dele cai);
+  - **corrida limpa**: os dados dão +1,5% de aderência;
+  - **show de ultrapassagens** (6+): +2 milhões ou +8 de torcida;
+  - **depois do abandono**: revisão completa por 2 milhões, ou rápida com −2% de potência;
+  - **punições demais**: treinar no simulador ou reclamar dos comissários.
+- Três acontecimentos por GP (eram dois). Os da corrida passam na frente no sorteio, depois os de #874.
 
-## Voltas de cada GP
-- `F1.voltasDoGP(base, pista)`: o tamanho escolhido na carreira (2, 3, 5 ou 10, agora "Sprint / Curta / Média / Longa") vira as voltas da mesma distância em cada pista (mínimo 2). Com 10: Singapura 7, Spa 8, Bahrein 10, México 11. Vale na carreira solo e na com os amigos (`corrida.js`, que aceita de 1 a 40 voltas só para essas salas); a Central, os stories, o Paddock e o mapa do GP mostram as voltas do GP.
+## Estratégia de paradas da equipe
+- Em todo GP, junto do plano do domingo: "Equilibrada" (o melhor plano da conta, `f1-pneus-ritmo.js`), "Agressiva" (uma parada a mais), "Conservadora" (uma a menos) ou "Sem plano". Nenhum plano sugerido deixa um stint passar do penhasco.
+- O plano escolhido define o pneu da largada (`corrida.js abrirGP`). O MFD chama o box na volta dele, com o pneu dele (`estrategia-box.js`), menos na chuva.
+- A página da carreira passou a carregar `f1-pneus-tabela.js` e `f1-pneus-ritmo.js`.
 
-## Plano do domingo
-- `sim.js PLANO`: arriscar agora dá +15% de potência e +3% de aderência, com o pneu gastando 50% mais; seguro, −4% de potência, −2% de aderência e 35% menos pneu (eram ±2% de aderência e ±20% de pneu). Com o piloto ideal em Bahrein (`klk/medir/plano.js`) a volta foi 0,175 s mais rápida no arriscar e 0,108 s mais lenta no seguro, com o pneu ×1,50 e ×0,65; o piloto ideal não aproveita toda a potência na reta, então o ganho jogando deve ser maior (não medido).
+## Planos do domingo (`sim.js PLANO`)
 
-## Eventos da carreira (`paddock.js`)
-Sete novos, que passam na frente dos antigos no sorteio dos dois do GP e mudam o fim de semana:
-- **Pacote novo**: estrear (70% funciona: +2,5% de aderência; senão −1,5%), pagar testes (−2 milhões, +2,5% certo) ou esperar.
-- **Motor no limite**: trocar (+5% de potência e 5 posições a menos no grid) ou seguir (−3% de potência).
-- **Onda de calor**: acerto para o calor (−1,5% de aderência, pneu −25%) ou manter (pneu +30%).
-- **Batida no treino**: chassi reserva (−2% de aderência, −1% de potência) ou consertar (−2 milhões).
-- **Provocação do rival**: responder (a rixa sobe e ele aperta mais na pista), desafiar (no GP seguinte: na frente dele, +8 de torcida e patrocinador; atrás, −8 e −6) ou ignorar.
-- **Aposta do patrocinador**: top (meta − 1) vale +5 milhões; falhar, −12 de patrocinador.
-- **Sondagem de outra equipe**: renegociar (bônus por vitória +1, diretoria −4) ou ficar (diretoria +5, torcida +4).
+| Plano | Potência | Aderência | Pneu | Dano nas batidas |
+|---|---|---|---|---|
+| Ataque total | +12% | +3% | +15% | +50% |
+| Largada forte, no primeiro terço | +15% | +4% | +25% | |
+| Largada forte, depois | −2% | −1% | −15% | |
+| Guardar para o fim, até 60% | −3% | −1% | −25% | |
+| Guardar para o fim, depois | +15% | +4% | +20% | |
+| Esticar os pneus | +2% | | −40% | |
+| Jogar seguro | −3% | −1,5% | −30% | −40% |
 
-O efeito no carro sai de `Paddock.modificadores(s)`, vai para `room.players[id].gpMods` (`corrida.js`, junto do plano) e o `sim.js` aplica no servidor e na previsão do navegador, também na classificação. A punição de grid entra em `startRace`, depois da classificação.
+- O dano entra em `corrida-f1-direcao.js`.
+- Cada plano tem uma fala nova do engenheiro na largada.
 
-## Falas novas e o .bat
-- `radio/falas.js`: 11 situações novas (os eventos na largada, pista comprida ou curta) e mais variações no fim das de sempre (os números dos mp3 que já existem não mudam). O `hud.js` fala os eventos e a pista na largada; o `sede.js` guarda os eventos do GP para a corrida.
-- **`FALAS-NOVAS-CORRIDA.bat`** (CRLF): mostra quantas faltam (hoje 68, 3.537 caracteres), pede a chave sem mostrar e gera só as que faltam com a voz do engenheiro. Os mp3 entram no git com `git add -f`.
+## ERS no pneu (`f1-regras.js gastarPneu`)
+- Com o ERS ligado, o pneu gasta 15% mais e o alvo da temperatura sobe 0,04. Com ele desligado, gasta 15% menos.
+- Sem a opção (as contas de vida), nada muda.
+- Medido no robô de Bahrein. Com 1,3× e +0,12 de temperatura, o médio caiu de 3,69 para 3,07 voltas, forte demais. Com os números finais ficou macio 2,79 (era 2,80) e médio 3,85.
 
-## Testes
-- `tests/corrida-f1-pneus.test.js`: as vidas esperadas viraram 3/4/5.
+## Voltas
+- `voltasDoGP` ajusta pela raiz do comprimento: com 10 voltas, todo o calendário fica entre 9 e 10.
+- "Longa (~10 voltas)" é o padrão da carreira.
+
+## Fora do código
+- O atalho `Downloads\lts\Falas novas da Corrida.bat` roda o `FALAS-NOVAS-CORRIDA.bat` em `klk\falas`, uma pasta própria que se atualiza com a `main`.

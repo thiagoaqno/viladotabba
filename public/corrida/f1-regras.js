@@ -59,6 +59,11 @@ function pneuNovo(composto = COMPOSTO_PADRAO) {
 // d: { dist (andado neste passo), volta (o comprimento de uma volta), slip, travada (0..1), patina (0..1), zebra (0..1, opcional), v, vmax, dt,
 //      fator (opcional: o quanto o carro gasta o pneu, `desgaste` de f1-equipes.js), agua (opcional: a água na pista, 0 a 1),
 //      rel (opcional: relDaPista, o comprimento da volta sobre o da referência: o pneu por distância) }
+// (2026-11-21, o Thiago: "a temperatura do pneu deve aumentar com o uso do ERS... aí você pode fazer o pneu durar mais se não usa o ERS") com o
+// ERS ligado (`ers: true`) o pneu esquenta um pouco mais (o alvo sobe ERS_ESQUENTA) e gasta ERS_GASTA_PNEU vezes; desligado (`ers: false`), ERS_POUPA_PNEU.
+// Quem usa o ERS em metade da volta gasta como antes; poupar o ERS estica o stint. Sem `ers` (as contas de vida), 1. (Escolhidos para equilibrar
+// o robô, que usa o ERS em boa parte da volta: com 1,3 e +0,12 de temperatura o médio dele em Bahrein caiu de 3,69 para 3,07 voltas, medido.)
+const ERS_GASTA_PNEU = 1.15, ERS_POUPA_PNEU = 0.85, ERS_ESQUENTA = 0.04;
 function gastarPneu(pneu, d) {
   const pn = PNEUS[pneu.composto] || PNEUS[COMPOSTO_PADRAO];
   const escorrega = limite((d.slip || 0) / 60, 0, 1), seca = pneu.composto === "intermediario" ? 1 - limite((d.agua || 0) / 0.3, 0, 1) : secaDaPista(d.agua);
@@ -66,10 +71,10 @@ function gastarPneu(pneu, d) {
     const quente = pn.esquenta ? 0 : limite(((pneu.temp || 0) - QUENTE) / 0.2, 0, 1); // (o de chuva tem o próprio superaquecimento)
     const estresse = (ESTRESSE_BASE + ESTRESSE_LADO * escorrega + ESTRESSE_TRAVA * limite(d.travada || 0, 0, 1) + ESTRESSE_PATINA * limite(d.patina || 0, 0, 1)
       + ESTRESSE_ZEBRA * limite(d.zebra || 0, 0, 1) + ESTRESSE_QUENTE * quente) / ESTRESSE_NORMAL;
-    pneu.desgaste = Math.min(1, pneu.desgaste + (d.dist / d.volta) * (d.rel || 1) * (PENHASCO / pn.vida) * estresse * (d.fator || 1) * (1 + ((pn.derrete || 1) - 1) * seca));
+    pneu.desgaste = Math.min(1, pneu.desgaste + (d.dist / d.volta) * (d.rel || 1) * (d.ers === true ? ERS_GASTA_PNEU : d.ers === false ? ERS_POUPA_PNEU : 1) * (PENHASCO / pn.vida) * estresse * (d.fator || 1) * (1 + ((pn.derrete || 1) - 1) * seca));
   }
   const vel = d.vmax > 0 ? limite(Math.abs(d.v || 0) / d.vmax, 0, 1) : 0;
-  const alvo = Math.min(1 + (pn.esquenta || 0) * seca, 0.65 + 0.35 * vel + 0.15 * escorrega + (pn.esquenta || 0) * seca); // (o de chuva no seco passa de 1: superaquece)
+  const alvo = Math.min(1 + (pn.esquenta || 0) * seca + (d.ers === true ? ERS_ESQUENTA : 0), 0.65 + 0.35 * vel + 0.15 * escorrega + (d.ers === true ? ERS_ESQUENTA : 0) + (pn.esquenta || 0) * seca); // (o de chuva no seco passa de 1: superaquece)
   pneu.temp += (alvo - pneu.temp) * Math.min(1, (d.dt || 0) * AQUECE * pn.aquece);
   return pneu;
 }
@@ -120,9 +125,11 @@ function aderencia(pneu, agua = 0) {
 const REL_PISTA = { abudhabi: 0.996, arcoiris: 0.93, austin: 1.169, bahrein: 1, baku: 1.016, barcelona: 0.997, catar: 1.012, deserto: 0.935, "gp-abudhabi": 0.976, "gp-austin": 1.018, "gp-bahrein": 1, "gp-baku": 1.085, "gp-barcelona": 0.86, "gp-catar": 1.001, "gp-hungaroring": 0.809, "gp-interlagos": 0.796, "gp-jeddah": 1.141, "gp-lasvegas": 1.145, "gp-madri": 1.011, "gp-melbourne": 0.975, "gp-mexico": 0.795, "gp-miami": 1, "gp-monaco": 0.616, "gp-montreal": 0.806, "gp-monza": 1.07, "gp-redbullring": 0.798, "gp-silverstone": 1.088, "gp-singapura": 0.909, "gp-spa": 1.289, "gp-suzuka": 1.073, "gp-xangai": 1.007, "gp-zandvoort": 0.787, hungaroring: 0.939, interlagos: 0.968, jeddah: 1.057, laguna: 0.897, lasvegas: 1.066, losangeles: 0.933, luigi: 0.932, madri: 0.999, melbourne: 0.999, mexico: 0.922, miami: 0.998, monaco: 1.093, montreal: 0.934, monza: 1.068, nurburgring: 1.257, redbullring: 0.929, rio: 0.932, serra: 0.934, silverstone: 1.048, singapura: 1.338, sorvete: 0.933, spa: 1.253, suzuka: 1.03, tokyo: 0.936, xangai: 1.154, zandvoort: 0.928 };
 const relDaPista = (pista) => (pista && REL_PISTA[pista]) || 1;
 // As VOLTAS DE CADA GP (2026-11-21, o Thiago: "cada pista ter uma quantidade de voltas específica"): a carreira escolhe o tamanho da corrida
-// (2, 3, 5 ou 10 voltas) em voltas de Bahrein, e cada GP tem as voltas que dão essa distância (como na F1, ~305 km): mais voltas nas pistas
-// curtas, menos nas compridas. Nunca menos de 2 (com 1 volta não há estratégia).
-const voltasDoGP = (base, pista) => { base = Math.round(+base || 0); return base <= 1 ? base : Math.max(2, Math.round(base / relDaPista(pista))); };
+// (2, 3, 5 ou 10 voltas) em voltas de Bahrein, e cada GP ajusta para mais voltas nas pistas curtas e menos nas compridas. Nunca menos de 2.
+// (2026-11-21, o Thiago: "a gente jogava a carreira com 10 voltas, o ajuste tinha que ser próximo disso, considerando os pneus por distância")
+// o ajuste é pela raiz do comprimento: com 10, de 9 voltas (Singapura, Spa) a 11 (Laguna); a distância que sobra numa pista comprida vira
+// pneu gasto (o pneu por distância), então ela ainda pede mais paradas.
+const voltasDoGP = (base, pista) => { base = Math.round(+base || 0); return base <= 1 ? base : Math.max(2, Math.round(base / Math.sqrt(relDaPista(pista)))); };
 // Em quantas voltas o pneu chega ao penhasco, pilotado como o piloto ideal e com um gasto `fator` do carro
 function vidaEmVoltas(composto, fator = 1, agua = null, pista = null) {
   const pn = PNEUS[composto] || PNEUS[COMPOSTO_PADRAO];

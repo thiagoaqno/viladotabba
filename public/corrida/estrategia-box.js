@@ -23,6 +23,13 @@ function sugerirBox(e) {
   if (e.voltaAtual >= e.voltas) return null; // a última volta não tem box
   // a sugestão só aparece com o pneu abaixo de 20% de vida (F.vidaRestante: 1 novo, 0 no penhasco), e o motivo diz quanto sobra
   const vida = F.vidaRestante ? F.vidaRestante(e.pneu) : 1;
+  // (2026-11-21) a estratégia que a equipe planejou na carreira (paddock.js estrategia): o box na volta do plano, com o pneu dele, com a pista seca
+  // (na chuva vale a conta de sempre). A `volta` do plano é a de entrar no corredor: no fim dela se a entrada fica antes da linha, senão no começo.
+  if (e.paradasEquipe && !((e.chuva || 0) > 0.05 || (e.agua || 0) > 0.3)) {
+    const tab = e.ritmo && e.pista && e.ritmo.tabelaDe(e.pista), desloc = tab && tab.antes === false ? 1 : 0;
+    const q = e.paradasEquipe.find((x) => x.volta - desloc === e.voltaAtual);
+    if (q && (!e.jogos || e.jogos[q.composto] == null || e.jogos[q.composto] > 0)) return { composto: q.composto, motivo: `Plano da equipe: box nesta volta, pneu ${(F.PNEUS[q.composto] || {}).nome || q.composto}`, razao: "plano", urgencia: 2, chave: `plano:${q.volta}:${q.composto}`, stopGo: !!e.stopGo };
+  }
   if (vida >= 0.2) return null;
   const sugestao = sugerirBoxAgora(e);
   if (sugestao) sugestao.motivo = `Pneu ${(F.PNEUS[e.pneu.composto] || {}).nome || ""} com ${Math.round(vida * 100)}% de vida · ${sugestao.motivo}`;

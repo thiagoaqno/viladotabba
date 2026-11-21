@@ -123,6 +123,12 @@ module.exports = function attachTemporadaCorrida(io, corrida) {
           try { gravado = require("./corrida-gravacao.js").paraSave(room, chave); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); }
           try { analise = require("./corrida-analise.js").resumo(room, chave); if (gravado) analise.ultrapassagens = gravado.ultrapassagens; } catch (e) { console.warn("Temporada F1: análise do GP não salva:", e.message); }
           if (room.rixa) { (analise ||= {}).rixa = { id: room.rixa.id, n: room.rixa.n, culpaSua: room.rixa.culpaSua, culpaDele: room.rixa.culpaDele }; } // (a rivalidade: paddock.js aoResultado)
+          try { // (2026-11-21) o que aconteceu com você na corrida: os toques (corrida.js anotarToque), o dano no fim, as punições e as ultrapassagens (paddock.js: os acontecimentos que vêm daí)
+            const eu = Object.values(room.players).find((q) => !q.bot), t = room.toques || { muros: 0, carros: 0, por: {} }, us = gravado ? gravado.ultrapassagens : [];
+            const por = {}; for (const [id, r] of Object.entries(t.por || {})) por[id] = { n: r.n, culpaSua: r.culpaSua, culpaDele: r.culpaDele };
+            (analise ||= {}).corrida = { muros: t.muros, carros: t.carros, por, dano: Math.round((eu && eu.dano) || 0), acrescimo: Math.round((eu && eu.acrescimo) || 0), stopGo: (eu && eu.sgFeitos) || 0,
+              passou: us.filter((u) => u.a === "voce").length, passaram: us.filter((u) => u.b === "voce").length, paradas: eu && eu.paradas ? eu.paradas.length : 0 };
+          } catch (e) { console.warn("Temporada F1: o resumo da corrida não foi salvo:", e.message); }
           Regras.registrarResultado(fresco.dados, linhas, analise);
           if (gravado && gravado.replay) { try { bd.guardarReplayCorrida("solo:" + fresco.id, ano, indice, gravado.replay); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); } }
           if (bd.salvarTemporadaCorrida(fresco.id, fresco.dados, indice)) {

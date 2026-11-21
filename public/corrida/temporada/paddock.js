@@ -85,10 +85,13 @@ const EVENTOS = {
     quem: "Engenheiros", fase: "domingo",
     quando: (c) => !!c.proximo,
     titulo: () => "O plano para a corrida",
-    texto: () => "Os engenheiros querem saber como você vai correr: arriscar liga o motor no modo de ataque (mais potência e aderência, e para mais no box); jogar seguro poupa o motor e o pneu.",
+    texto: () => "Os engenheiros querem saber como você vai correr. Cada plano muda o motor, a aderência e o pneu, e alguns mudam no meio da prova.",
     opcoes: [
-      { id: "arriscar", rotulo: "Arriscar: +15% de potência e +3% de aderência, pneu gasta 50% mais", efeito: { torcida: 2 } },
-      { id: "seguro", rotulo: "Jogar seguro: −4% de potência e −2% de aderência, pneu gasta 35% menos", efeito: { diretoria: 1 } },
+      { id: "arriscar", rotulo: "Ataque total: +12% de potência e +3% de aderência; pneu +15% e as batidas dão 50% mais dano", efeito: { torcida: 2 } },
+      { id: "largada", rotulo: "Largada forte: +15% de potência e +4% de aderência no primeiro terço, depois o carro cai um pouco", efeito: { torcida: 1 } },
+      { id: "final", rotulo: "Guardar para o fim: poupa pneu e motor até 60% da prova, depois +15% de potência e +4% de aderência", efeito: {} },
+      { id: "pneu", rotulo: "Esticar os pneus: o pneu gasta 40% menos, com +2% de potência", efeito: { diretoria: 1 } },
+      { id: "seguro", rotulo: "Jogar seguro: −3% de potência; pneu −30% e as batidas dão 40% menos dano", efeito: { diretoria: 1 } },
       { id: "normal", rotulo: "Sem plano especial", efeito: {} },
     ],
   },
@@ -298,6 +301,150 @@ const EVENTOS = {
 };
 // (2026-11-21) os que mexem no fim de semana passam na frente no sorteio dos dois do GP
 const NOVOS = new Set(["pacoteNovo", "motorNoLimite", "calor", "chassiReserva", "provocacao", "apostaPatrocinador", "propostaRival"]);
+// ---------- (2026-11-21, o Thiago: "eventos ligados ao que acontece na corrida: batidas, dano no carro, toque com pilotos específicos") ----------
+// Saem do resumo do último GP (corrida-temporada.js `analise.corrida`: os toques no muro e em cada piloto, com a culpa, o dano no fim, as punições
+// e as ultrapassagens). Valem para o GP que vem (as decisões ficam na chave dele, como as outras).
+Object.assign(EVENTOS, {
+  contaDaOficina: {
+    quem: "Engenheiros", fase: "pos",
+    quando: (c) => { const r = corridaDe(c); return !!r && (r.dano >= 20 || r.carros + r.muros >= 4); },
+    titulo: () => "A conta da oficina",
+    texto: (c) => { const r = corridaDe(c); return `O carro voltou com ${r.dano}% de dano depois de ${r.carros} toque${r.carros === 1 ? "" : "s"} em carros e ${r.muros} no muro. Os mecânicos querem saber até onde consertar.`; },
+    opcoes: [
+      { id: "completo", rotulo: (c) => `Conserto completo: o carro 100% (−${custoDoConserto(c)} milhões)`, custo: (c) => custoDoConserto(c), efeito: {} },
+      { id: "basico", rotulo: "Conserto básico: −1,5% de aderência e −1% de potência no próximo GP", efeito: { diretoria: 1 } },
+    ],
+  },
+  comissarios: {
+    quem: "Direção de prova", fase: "pos",
+    quando: (c) => { const r = corridaDe(c); return !!r && culpasSuas(r) >= 2; },
+    titulo: () => "Os comissários chamam você",
+    texto: (c) => `Você causou ${culpasSuas(corridaDe(c))} toques no último GP. Os comissários abriram uma investigação e falam em punição no grid.`,
+    opcoes: [
+      { id: "aceitar", rotulo: "Aceitar a advertência: 3 posições a menos no grid", efeito: { diretoria: 1 } },
+      { id: "recorrer", rotulo: "Recorrer (−1 milhão): metade das vezes anula, senão são 5 posições", efeito: { caixa: -1, torcida: 2 } },
+    ],
+  },
+  toquePiloto: {
+    quem: "Piloto", fase: "pos",
+    quando: (c, s) => !!quemTocou(c, s),
+    titulo: (c, s) => `${quemTocou(c, s).nome} reclama de você`,
+    texto: (c, s) => { const q = quemTocou(c, s); return `${q.nome} ${q.culpaSua ? "disse que você jogou o carro em cima dele" : "acha que você não deu espaço"} no último GP${q.n > 1 ? ` (${q.n} toques)` : ""}.`; },
+    opcoes: [
+      { id: "desculpas", rotulo: "Pedir desculpas em público", efeito: { torcida: -1, diretoria: 2 } },
+      { id: "provocar", rotulo: (c, s) => `Provocar de volta: ${quemTocou(c, s).nome} vem com tudo para cima de você no próximo GP`, efeito: { torcida: 5 } },
+      { id: "ignorar", rotulo: "Ignorar", efeito: {} },
+    ],
+  },
+  batidaCompanheiro: {
+    quem: "Piloto", fase: "pos",
+    quando: (c, s) => { const r = corridaDe(c); return !!r && !!(r.por && r.por[s.piloto2] && r.por[s.piloto2].n); },
+    titulo: () => "Batida entre os carros da equipe",
+    texto: (c) => `Você e ${c.nomeComp} se tocaram no último GP. A garagem está dividida e o chefe quer uma posição sua.`,
+    opcoes: [
+      { id: "assumir", rotulo: "Assumir a culpa", efeito: { moral: 8, lealdade: 5, diretoria: -2 } },
+      { id: "culpar", rotulo: "Dizer que a culpa foi dele", efeito: { moral: -12, lealdade: -8, diretoria: 1, agressividade: 10 } },
+      { id: "ordem", rotulo: "Pedir ordem de equipe: ele não disputa com você", efeito: { moral: -4, agressividade: -25 } },
+    ],
+  },
+  corridaLimpa: {
+    quem: "Engenheiros", fase: "pos",
+    quando: (c, s) => { const r = corridaDe(c); return !!r && bem(c.eu) && r.carros === 0 && r.muros === 0 && chance(s, "limpa", 0.7); },
+    titulo: () => "Corrida sem um arranhão",
+    texto: () => "Nenhum toque o GP inteiro. Os engenheiros têm dados limpos de todas as voltas e querem usá-los.",
+    opcoes: [
+      { id: "dados", rotulo: "Usar os dados no acerto: +1,5% de aderência no próximo GP", efeito: {} },
+      { id: "folga", rotulo: "Dar folga para a garagem", efeito: { moral: 3, diretoria: 2 } },
+    ],
+  },
+  showUltrapassagens: {
+    quem: "Patrocinador", fase: "pos",
+    quando: (c) => { const r = corridaDe(c); return !!r && r.passou >= 6; },
+    titulo: () => "Show de ultrapassagens",
+    texto: (c) => `Foram ${corridaDe(c).passou} ultrapassagens suas no último GP. O vídeo viralizou e o patrocinador quer aproveitar.`,
+    opcoes: [
+      { id: "video", rotulo: "Gravar um comercial com a marca (+2 milhões)", efeito: { caixa: 2, patrocinador: 4 } },
+      { id: "fas", rotulo: "Fazer uma live com os fãs", efeito: { torcida: 8 } },
+    ],
+  },
+  depoisDoAbandono: {
+    quem: "Engenheiros", fase: "pos",
+    quando: (c) => !!c.eu && !!c.eu.dnf,
+    titulo: () => "Depois do abandono",
+    texto: () => "O carro voltou destruído. Os engenheiros querem trocar o que pode ter sido afetado antes do próximo GP.",
+    opcoes: [
+      { id: "revisao", rotulo: "Revisão completa (−2 milhões)", efeito: { caixa: -2 } },
+      { id: "rapida", rotulo: "Revisão rápida: −2% de potência no próximo GP", efeito: { diretoria: 1 } },
+    ],
+  },
+  punicoes: {
+    quem: "Direção de prova", fase: "pos",
+    quando: (c) => { const r = corridaDe(c); return !!r && (r.acrescimo >= 10 || r.stopGo >= 1); },
+    titulo: () => "Punições demais",
+    texto: (c) => { const r = corridaDe(c); return `Foram ${r.acrescimo} s de punição${r.stopGo ? ` e ${r.stopGo} stop-and-go` : ""} no último GP. A diretoria cobra disciplina.`; },
+    opcoes: [
+      { id: "simulador", rotulo: "Treinar largadas e disputas no simulador (−1 milhão)", efeito: { caixa: -1, diretoria: 3 } },
+      { id: "reclamar", rotulo: "Reclamar dos comissários na imprensa", efeito: { torcida: 3, diretoria: -3 } },
+    ],
+  },
+  // a estratégia de paradas que a equipe planeja (vem em todo GP, junto do plano do domingo): o engenheiro chama o box nas voltas dela (o MFD,
+  // estrategia-box.js) e você larga com o pneu dela (corrida.js abrirGP). As opções saem da conta dos planos (f1-pneus-ritmo.js) desta pista.
+  estrategia: {
+    quem: "Estrategista", fase: "domingo",
+    quando: (c, s) => !!c.proximo && estrategiasDoGP(s).length > 0,
+    titulo: () => "A estratégia de paradas",
+    texto: (c, s) => `O estrategista montou os planos para as ${voltasDoGP(s)} voltas. Com um deles, a equipe chama o seu box na volta certa e você larga com o pneu do plano.`,
+    opcoes: [
+      { id: "equilibrada", rotulo: (c, s) => rotuloDaEstrategia(s, "equilibrada"), pode: (s) => !!estrategiaDe(s, "equilibrada"), efeito: {} },
+      { id: "agressiva", rotulo: (c, s) => rotuloDaEstrategia(s, "agressiva"), pode: (s) => !!estrategiaDe(s, "agressiva"), efeito: { torcida: 1 } },
+      { id: "conservadora", rotulo: (c, s) => rotuloDaEstrategia(s, "conservadora"), pode: (s) => !!estrategiaDe(s, "conservadora"), efeito: {} },
+      { id: "livre", rotulo: "Sem plano: eu decido as paradas", efeito: {} },
+    ],
+  },
+});
+const CORRIDA = new Set(["contaDaOficina", "comissarios", "toquePiloto", "batidaCompanheiro", "corridaLimpa", "showUltrapassagens", "depoisDoAbandono", "punicoes"]);
+const corridaDe = (c) => (c.ultimo && c.ultimo.analise && c.ultimo.analise.corrida) || null;
+const culpasSuas = (r) => Object.values((r && r.por) || {}).reduce((a, x) => a + (x.culpaSua || 0), 0);
+const custoDoConserto = (c) => Math.max(1, Math.round(((corridaDe(c) || {}).dano || 0) / 12));
+// o piloto (de outra equipe) em quem você mais encostou no último GP
+function quemTocou(c, s) {
+  const r = corridaDe(c); if (!r || !r.por) return null;
+  const l = Object.entries(r.por).filter(([id, x]) => x.n > 0 && id !== s.piloto2).sort((a, b) => b[1].n - a[1].n || b[1].culpaSua - a[1].culpaSua);
+  if (!l.length) return null;
+  const p = Pilotos.PILOTOS.find((x) => x.id === l[0][0]); return p ? { id: p.id, nome: p.nome, ...l[0][1] } : null;
+}
+// as estratégias da equipe para o próximo GP: a melhor da conta, a melhor com uma parada a mais (agressiva) e com uma a menos (conservadora)
+const Ritmo = () => { try { return root.F1PneusRitmo || require("../f1-pneus-ritmo.js"); } catch (e) { return null; } };
+const Regras1 = () => { try { return root.F1Regras || require("../f1-regras.js"); } catch (e) { return null; } };
+const voltasDoGP = (s) => { const g = s.calendario && s.calendario[s.gp], F = Regras1(); return g && F && F.voltasDoGP ? F.voltasDoGP(s.voltas, g.pista) : s.voltas; };
+const CACHE_EST = new Map();
+function estrategiasDoGP(s) {
+  const g = s.calendario && s.calendario[s.gp], R = Ritmo(); if (!g || !R) return [];
+  const tab = R.tabelaDe(g.pista), voltas = voltasDoGP(s); if (!tab || voltas < 2) return [];
+  const k = `${g.pista}:${voltas}`; if (CACHE_EST.has(k)) return CACHE_EST.get(k);
+  const F = Regras1(), teto = (F ? F.PENHASCO : 0.8) + 0.05; // (nenhum stint passa do penhasco: o plano que a equipe sugere nunca deixa o pneu acabar)
+  const l = R.planos(tab, voltas, { janela: 40, max: 400 }).filter((x) => R.simular(tab, voltas, x).desgaste.every((d) => d <= teto)), melhor = l[0], out = [];
+  if (melhor) {
+    out.push({ id: "equilibrada", ...melhor });
+    const mais = l.find((x) => x.paradas.length > melhor.paradas.length), menos = l.find((x) => x.paradas.length < melhor.paradas.length);
+    if (mais) out.push({ id: "agressiva", ...mais }); if (menos) out.push({ id: "conservadora", ...menos });
+  }
+  const r = out.map((x) => ({ id: x.id, largada: x.largada, paradas: x.paradas.map((q) => ({ volta: q.volta, composto: q.composto })), tempo: Math.round((x.tempo - melhor.tempo) * 10) / 10 }));
+  if (CACHE_EST.size > 50) CACHE_EST.clear(); CACHE_EST.set(k, r); return r;
+}
+const estrategiaDe = (s, id) => estrategiasDoGP(s).find((x) => x.id === id) || null;
+const NOME_PNEU = { macio: "macio", medio: "médio", duro: "duro" };
+function rotuloDaEstrategia(s, id) {
+  const e = estrategiaDe(s, id); if (!e) return "";
+  const nome = { equilibrada: "Equilibrada", agressiva: "Agressiva", conservadora: "Conservadora" }[id], n = e.paradas.length;
+  const paradas = n ? `, box ${e.paradas.map((q) => `na ${q.volta} (${NOME_PNEU[q.composto] || q.composto})`).join(" e ")}` : ", sem parar";
+  return `${nome}: ${n} parada${n === 1 ? "" : "s"}, largar de ${NOME_PNEU[e.largada] || e.largada}${paradas}${e.tempo > 0 ? ` · +${String(e.tempo).replace(".", ",")} s na conta` : " · a mais rápida na conta"}`;
+}
+// a estratégia escolhida para o GP (corrida.js: o pneu da largada e as paradas que o MFD chama), ou null
+function estrategiaEscolhida(s, ano = s.ano, gp = s.gp) {
+  const id = garantir(s).decisoes[`${ano}:${gp}:estrategia`]; if (!id || id === "livre") return null;
+  return estrategiaDe(s, id);
+}
 // um sorteio fixo da carreira para este GP (o mesmo save vê sempre o mesmo)
 const chance = (s, tag, p) => gerador(`${tag}:${s.semente}:${s.ano}:${s.gp}`)() < p;
 const rivalDe = (s) => { try { const r = Reg().imersao(s).rival; return r && r.id ? (Pilotos.PILOTOS.find((x) => x.id === r.id) || null) : null; } catch (e) { return null; } };
@@ -315,6 +462,10 @@ function modificadores(s, ano = s.ano, gp = s.gp) {
   const cal = de("calor");
   if (cal === "poupar") { m.grip *= 0.985; m.desgaste *= 0.75; } else if (cal === "manter") m.desgaste *= 1.3;
   if (de("chassiReserva") === "reserva") { m.grip *= 0.98; m.potencia *= 0.99; }
+  if (de("contaDaOficina") === "basico") { m.grip *= 0.985; m.potencia *= 0.99; }
+  const com = de("comissarios"); if (com === "aceitar") m.grid += 3; else if (com === "recorrer" && gerador(`recurso:${s.semente}:${ano}:${gp}`)() >= 0.5) m.grid += 5;
+  if (de("corridaLimpa") === "dados") m.grip *= 1.015;
+  if (de("depoisDoAbandono") === "rapida") m.potencia *= 0.98;
   return m.grip === 1 && m.potencia === 1 && m.desgaste === 1 && !m.grid ? null : m;
 }
 // os acontecimentos deste GP: até dois, sorteados pela semente entre os que fazem sentido (os já decididos continuam na lista, com a escolha)
@@ -322,13 +473,13 @@ function acontecimentos(s) {
   garantir(s);
   if (!s.calendario || s.gp >= s.tamanho) return [];
   const c = contexto(s), base = `${s.ano}:${s.gp}`;
-  const candidatos = Object.keys(EVENTOS).filter((id) => id !== "plano" && (s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s)));
-  const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r() * (NOVOS.has(id) ? 0.45 : 1), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+  const candidatos = Object.keys(EVENTOS).filter((id) => id !== "plano" && id !== "estrategia" && (s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s)));
+  const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r() * (CORRIDA.has(id) ? 0.3 : NOVOS.has(id) ? 0.45 : 1), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   const decididos = embaralhados.filter((id) => s.paddock.decisoes[`${base}:${id}`]), resto = embaralhados.filter((id) => !s.paddock.decisoes[`${base}:${id}`]);
-  const comPlano = [...[...decididos, ...resto].slice(0, 2), ...(EVENTOS.plano.quando(c, s) || s.paddock.decisoes[`${base}:plano`] ? ["plano"] : [])]; // (o plano do domingo vem sempre, fora dos dois sorteados)
+  const comPlano = [...[...decididos, ...resto].slice(0, 3), ...(EVENTOS.estrategia.quando(c, s) || s.paddock.decisoes[`${base}:estrategia`] ? ["estrategia"] : []), ...(EVENTOS.plano.quando(c, s) || s.paddock.decisoes[`${base}:plano`] ? ["plano"] : [])]; // (o plano do domingo vem sempre, fora dos dois sorteados)
   return comPlano.map((id) => {
     const e = EVENTOS[id], escolha = s.paddock.decisoes[`${base}:${id}`] || null, fixo = escolha && s.paddock.textos && s.paddock.textos[`${base}:${id}`]; // (decidido: o texto da hora da decisão, mesmo que o companheiro tenha mudado)
-    return { id, quem: e.quem, fase: e.fase, titulo: fixo ? fixo.titulo : e.titulo(c, s), texto: fixo ? fixo.texto : e.texto(c, s), escolha, resultado: fixo ? fixo.resultado : null, opcoes: e.opcoes.filter((o) => !o.pode || o.pode(s)).map((o) => ({ id: o.id, rotulo: o.rotulo, efeito: o.efeito, consequencia: o.acao ? previaDaAcao(s, o.acao) : null })) };
+    return { id, quem: e.quem, fase: e.fase, titulo: fixo ? fixo.titulo : e.titulo(c, s), texto: fixo ? fixo.texto : e.texto(c, s), escolha, resultado: fixo ? fixo.resultado : null, opcoes: e.opcoes.filter((o) => !o.pode || o.pode(s)).map((o) => ({ id: o.id, rotulo: typeof o.rotulo === "function" ? o.rotulo(c, s) : o.rotulo, efeito: o.custo ? { ...o.efeito, caixa: -o.custo(c, s) } : o.efeito, consequencia: o.acao ? previaDaAcao(s, o.acao) : null })) };
   });
 }
 const NOMES = { moral: "moral do companheiro", lealdade: "lealdade", patrocinador: "patrocinador", torcida: "torcida", diretoria: "diretoria", caixa: "caixa" };
@@ -343,9 +494,11 @@ function decidir(s, id, opcao) {
   if (s.gp >= s.tamanho) throw Error("A temporada terminou.");
   const ev = acontecimentos(s).find((e) => e.id === id); if (!ev) throw Error("Este acontecimento não está mais aberto.");
   if (ev.escolha) throw Error("Você já decidiu isso.");
-  const o = EVENTOS[id].opcoes.find((x) => x.id === opcao); if (!o) throw Error("Opção inválida.");
+  const o0 = EVENTOS[id].opcoes.find((x) => x.id === opcao); if (!o0 || (o0.pode && !o0.pode(s))) throw Error("Opção inválida.");
+  const c = contexto(s), o = { ...o0, rotulo: typeof o0.rotulo === "function" ? o0.rotulo(c, s) : o0.rotulo, efeito: o0.custo ? { ...o0.efeito, caixa: -o0.custo(c, s) } : o0.efeito };
   if (o.efeito.caixa < 0 && s.caixa < -o.efeito.caixa) throw Error("Caixa insuficiente para essa decisão.");
   aplicar(s, o.efeito);
+  if (id === "toquePiloto" && opcao === "provocar") { const q = quemTocou(c, s); if (q) s.paddock.inimigo = { ano: s.ano, gp: s.gp, id: q.id }; }
   if (o.promessa) s.paddock.promessa = { ano: s.ano, gp: s.gp };
   s.paddock.decisoes[`${s.ano}:${s.gp}:${id}`] = opcao;
   const antesComp = Pilotos.PILOTOS.find((x) => x.id === s.piloto2);
@@ -414,6 +567,21 @@ const MANCHETES = {
   "apostaPatrocinador:aceitar": ["Patrocinador da {eq} promete bônus por resultado em {gp}", "São 5 milhões se a meta for batida."],
   "propostaRival:renegociar": ["Piloto da {eq} usa proposta rival e ganha aumento", "A diretoria cedeu, mas não gostou da pressão."],
   "propostaRival:lealdade": ["Piloto da {eq} recusa sondagem e fica", "A torcida e a diretoria comemoraram a lealdade."],
+  "contaDaOficina:completo": ["{eq} gasta milhões para reconstruir o carro", "Depois das batidas, os mecânicos trocaram tudo o que estava torto."],
+  "contaDaOficina:basico": ["{eq} faz só o conserto básico", "O carro chega a {gp} remendado e um pouco mais lento."],
+  "comissarios:aceitar": ["Piloto da {eq} aceita advertência e perde 3 posições", "Os comissários puniram os toques do último GP."],
+  "comissarios:recorrer": ["{eq} recorre da punição dos comissários", "A equipe gastou 1 milhão com advogados para tentar anular a perda de posições."],
+  "toquePiloto:desculpas": ["Piloto da {eq} pede desculpas pelo toque", "O gesto agradou a diretoria."],
+  "toquePiloto:provocar": ["Clima quente: piloto da {eq} provoca adversário", "A promessa é de briga dura na pista em {gp}."],
+  "batidaCompanheiro:assumir": ["Piloto da {eq} assume a culpa na batida com {comp}", "O gesto acalmou a garagem."],
+  "batidaCompanheiro:culpar": ["Racha na {eq}: piloto culpa {comp} pela batida", "O clima entre os dois carros ficou pesado."],
+  "batidaCompanheiro:ordem": ["{eq} impõe ordem de equipe depois da batida", "{comp} não poderá disputar posição com o companheiro em {gp}."],
+  "corridaLimpa:dados": ["{eq} usa os dados de uma corrida limpa no acerto", "O carro chega a {gp} mais afinado."],
+  "showUltrapassagens:video": ["Ultrapassagens do piloto da {eq} viram comercial", "O vídeo rendeu 2 milhões para o caixa."],
+  "showUltrapassagens:fas": ["Live do piloto da {eq} bate recorde de audiência", "Os fãs reviram as ultrapassagens ao vivo."],
+  "depoisDoAbandono:revisao": ["{eq} revisa o carro inteiro depois do abandono", "A equipe gastou 2 milhões para não repetir o problema."],
+  "punicoes:simulador": ["Piloto da {eq} treina disputas no simulador", "A diretoria quer menos punições a partir de {gp}."],
+  "punicoes:reclamar": ["Piloto da {eq} critica os comissários", "A torcida apoiou, mas a diretoria não gostou."],
 };
 // o substituto quando o companheiro é demitido: o piloto de ritmo mais perto (e não acima) do dele, de outra equipe (nunca o titular que você
 // substituiu na sua equipe); na falta, o mais lento de todos
@@ -565,7 +733,7 @@ function novaTemporada(s) {
   for (const k of Object.keys(p.decisoes)) if (Number(k.split(":")[0]) < s.ano - 1) delete p.decisoes[k];
 }
 const salarios = (s) => (s.paddock ? (s.paddock.salarioComp || 0) + (s.paddock.salarioStaff || 0) : 0);
-const api = { modificadores, MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
+const api = { estrategiasDoGP, estrategiaEscolhida, modificadores, MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Paddock = api;
 })(typeof window !== "undefined" ? window : globalThis);

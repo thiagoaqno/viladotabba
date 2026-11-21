@@ -322,7 +322,7 @@ function objetivoDaCorrida() {
     if (falaEv) setTimeout(() => { const f = window.Radio?.dizer(falaEv, { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 15000);
     if (ev.desafio || ev.apostaPatrocinador === "aceitar") setTimeout(() => { const f = window.Radio?.dizer(ev.desafio ? "evdesafio" : "evaposta", { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 26000);
     { const rel = window.F1Regras?.relDaPista ? window.F1Regras.relDaPista(E.S?.config?.pista) : 1; if (E.S?.config?.regras === "f1" && (rel >= 1.15 || rel <= 0.95)) setTimeout(() => { const f = window.Radio?.dizer(rel >= 1.15 ? "pistalonga" : "pistacurta"); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 34000); }
-    if (p && Date.now() - p.em <= 3 * 60 * 60 * 1000 && (p.plano === "arriscar" || p.plano === "seguro")) setTimeout(() => { const f = window.Radio?.dizer(p.plano === "arriscar" ? "riscoarriscar" : "riscoseguro", { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 9000);
+    if (p && Date.now() - p.em <= 3 * 60 * 60 * 1000 && ["arriscar", "seguro", "largada", "final", "pneu"].includes(p.plano)) setTimeout(() => { const f = window.Radio?.dizer({ arriscar: "riscoarriscar", seguro: "riscoseguro", largada: "riscolargada", final: "riscofinal", pneu: "riscopneu" }[p.plano], { forcar: true }); if (f && f.texto) toast("📻 " + f.texto, 6000); }, 9000);
   }
   let o = null; try { o = JSON.parse(localStorage.getItem("corrida:objetivoGP")); } catch { /* sem armazenamento */ }
   if (!o || !(o.gp >= 1) || Date.now() - o.em > 3 * 60 * 60 * 1000) return;

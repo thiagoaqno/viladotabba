@@ -207,6 +207,9 @@ Object.assign(SITUACOES, {
   evdesafio: ["Lembra do desafio na imprensa? Hoje é chegar na frente dele.", "O rival está na pista. O desafio vale muito para a torcida.", "Todo mundo viu o desafio. Agora é provar na pista.", "Hoje é você contra ele. Não deixe o rival na frente."],
   evaposta: ["O patrocinador apostou em você hoje. Cinco milhões se batermos a meta.", "A marca está de olho. A aposta só vale com o resultado.", "Tem bônus em jogo hoje. Vamos buscar a meta.", "O patrocinador quer resultado. A aposta está de pé."],
   pistalonga: ["Pista comprida. O pneu dura menos voltas aqui.", "Volta longa nesta pista. Cuide do pneu desde o começo.", "Aqui o pneu gasta mais por volta. Pense numa parada a mais.", "Circuito longo. A estratégia vai ter mais paradas."],
+  riscolargada: ["Plano de largada forte. Tudo nas primeiras voltas, depois administramos.", "Ataque no começo. Ganhe posição enquanto o carro está no máximo.", "Primeiro terço com tudo. Depois o carro vai cair um pouco.", "Largada forte confirmada. É agora que se ganha posição."],
+  riscofinal: ["Plano de guardar para o fim. Poupe agora, ataque depois.", "Paciência no começo. O carro vai estar no máximo no final.", "Cuide do pneu agora. A partir da metade a gente libera tudo.", "Guardamos para o fim. A corrida começa de verdade lá na frente."],
+  riscopneu: ["Plano de esticar os pneus. Stint longo, sem forçar a borracha.", "Hoje é pneu. Quanto mais você durar, menos paradas.", "Cuide da borracha. A estratégia é parar menos que os outros.", "Stint longo hoje. Use pouco o ERS e poupe os pneus."],
   pistacurta: ["Pista curta. O pneu aguenta mais voltas aqui.", "Volta curta nesta pista. Dá para esticar o stint.", "Aqui o pneu dura mais. Talvez dê para parar menos.", "Circuito curto. O pneu rende mais voltas."],
 });
 for (const [q, textos] of Object.entries({

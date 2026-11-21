@@ -1392,4 +1392,7 @@ function passo(room, dt, setor, emit) {
 }
 function possivel(pista, spec) { return perfilF1(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0), 1); }
 possivel.topo = (pista, spec) => topoDe(perfil(pista, spec || F1Equipes.specDaEquipe("mclaren"), 0));
+// (2026-11-21, o servidor.log do Thiago: 879 ms parado no começo da classificação, carregando arquivo: wrapResolveFilename / package.json) os
+// arquivos que os robôs só liam na primeira classificação vão para a memória logo depois da abertura, fora de qualquer corrida
+setImmediate(() => { try { fatorDoQuali("interlagos"); acertoDoRobo("interlagos", "medio", 0); ritmoDosPneus(); } catch (e) { /* (só aquece: o uso de verdade tenta de novo) */ } });
 module.exports = { forcaDoNivel, nomeDoNivel, MARCA_NIVEL, preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };

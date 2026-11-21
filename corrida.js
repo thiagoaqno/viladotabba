@@ -73,6 +73,9 @@ function limparCapacete(c) {
   return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome, variante, acabamento, patrocinio, patrocinios, fundoPatrocinio };
 }
 
+// (2026-11-21) os módulos que a sala só carregava na hora (a carreira, o Paddock, a análise, a gravação, os planos de pneu) vão para a memória logo
+// depois da abertura: carregar arquivo no Windows chegou a parar o servidor 879 ms no começo da classificação (servidor.log do Thiago)
+setImmediate(() => { for (const m of ["./public/corrida/temporada/regras.js", "./public/corrida/temporada/paddock.js", "./public/corrida/f1-pneus-ritmo.js", "./corrida-contato.js", "./corrida-gravacao.js", "./corrida-analise.js"]) { try { require(m); } catch (e) { /* (só aquece) */ } } });
 module.exports = function attachCorrida(io) {
   const nsp = io.of("/corrida");
   const rooms = new Map();

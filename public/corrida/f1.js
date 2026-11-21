@@ -10,7 +10,7 @@ import { temDesenho, folhaDaEquipe, corDoNumero, numPosDe, carbonoDe, texturaDas
 import { lerHalo } from "./f1-capacetes.js";
 import { pinturasProntas } from "./f1-pintura.js";
 import { marcasReaisProntas } from "./f1-marcas.js";
-import { construir2026 } from "./f1-2026.js";
+import { construir2026, visibilidade } from "./f1-2026.js";
 import { construir2022 } from "./f1-2022.js";
 import { texturaUV, temPinturaUV } from "./f1-uv.js";
 import "./f1-uv-equipes.js"; // (as equipes e anos que já têm pintura na textura) // a pintura na textura do carro de 2022 a 2025 (as equipes que já têm)
@@ -127,7 +127,10 @@ function montarCorpoNovo(k) {
   const dupla = (m) => { m.side = THREE.DoubleSide; return m; };
   const carbono = () => dupla(new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.62, metalness: 0 })); // (carbono acetinado: com menos que isso ele espelha o céu e o assoalho fica claro)
   const mat = {
-    corpo: () => M("corpo", () => pintura(carbono(), k.cores[0], k.cores[1], k.equipe, num, false, true, D.numPos, !k.leve, !!k.volanteVivo)), // (o carro do jogador e o da garagem levam a folha em 2×; os outros, a de 1×)
+    corpo: () => M("corpo", () => { const m = pintura(carbono(), k.cores[0], k.cores[1], k.equipe, num, false, true, D.numPos, !k.leve, !!k.volanteVivo);
+      // o mapa de visibilidade da pintura (f1-2026.js): um por modelo carregado (o de 2026, o de 2022, o leve de cada um), feito na primeira vez
+      if (m.userData.liv) { if (!D.vis && D.corpo) D.vis = visibilidade([D.corpo, D.flap?.geo]); m.userData.liv.vis = { value: D.vis }; }
+      return m; }), // (o carro do jogador e o da garagem levam a folha em 3×; os outros, a de 1,5×)
     detalhes: () => M("detalhes", () => { const m = D.mats[D.nomes?.detalhes || "sauber_detail"].clone(); m.metalness = Math.min(m.metalness, 0.2); m.roughness = Math.max(m.roughness, 0.6); m.color.multiplyScalar(0.3); return m; }), // (o assoalho do arquivo é claro e brilhante: no carro de verdade é carbono escuro)
     mecanica: () => M("mecanica", () => { const m = D.mats[D.nomes?.mecanica || "generics"].clone(); m.metalness = Math.min(m.metalness, 0.4); return m; }),
     miudezas: () => M("miudezas", () => dupla(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.25 }))),

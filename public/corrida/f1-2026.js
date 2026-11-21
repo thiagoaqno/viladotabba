@@ -138,6 +138,48 @@ export function camadas(P, NN, N) {
   return F;
 }
 
+// O MAPA DE VISIBILIDADE da pintura (2026-11-20, o print do Thiago: o adesivo da asa traseira "fica indo pra baixo da asa toda vez"). A folha
+// (f1-pintura.js) é projetada de cinco vistas: tudo o que está na mesma coluna pega o mesmo desenho, então a vista de cima pintava a asa traseira E
+// a beam wing e o difusor embaixo dela, e a de lado pintava a placa de fora e a de dentro. Aqui, uma vez por modelo, o corpo (com o flap) é
+// rasterizado nas cinco vistas, na metade da resolução lógica da folha (512 x 576, ~8,6 mm por célula, no MESMO lugar de cada vista na folha), e
+// cada célula guarda a superfície mais de fora: o maior x (lado A), o maior −x (lado B), o maior y (de cima), o maior −s (de frente) e o maior s
+// (de trás). O shader só usa a vista onde o ponto é o de fora (até uns 3 cm); o que nenhuma vista vê fica no carbono, como num carro de verdade.
+export function visibilidade(geos) {
+  const W = 512, H = 576, Kh = 1024 / 4.4 / 2, D = new Float32Array(W * H).fill(-1000);
+  const pontos = [
+    (x, y, s) => [(4.4 - s) * Kh, (1.1 - y) * Kh, x],                 // A (rows 0..128)
+    (x, y, s) => [s * Kh, 128 + (1.1 - y) * Kh, -x],                  // B (128..256)
+    (x, y, s) => [s * Kh, 352 - x * Kh, y],                           // de cima (256..448)
+    (x, y, s) => [128 - x * Kh, 448 + (1.1 - y) * Kh, -s],            // de frente (x 0..256)
+    (x, y, s) => [384 + x * Kh, 448 + (1.1 - y) * Kh, s],             // de trás (x 256..512)
+  ];
+  const caixas = [[0, 0, 512, 128], [0, 128, 512, 256], [0, 256, 512, 448], [0, 448, 256, 576], [256, 448, 512, 576]];
+  const por = (v, px, py, d) => { if (px < v[0] || px >= v[2] || py < v[1] || py >= v[3]) return; const k = (H - 1 - py) * W + px; if (d > D[k]) D[k] = d; }; // (linha 0 da textura é o v = 0, embaixo)
+  for (const g of geos) {
+    if (!g) continue;
+    const P = g.attributes.pcar, I = g.index ? g.index.array : null, n = I ? I.length : P.count;
+    for (let t = 0; t < n; t += 3) {
+      const ia = I ? I[t] : t, ib = I ? I[t + 1] : t + 1, ic = I ? I[t + 2] : t + 2;
+      for (let vi = 0; vi < 5; vi++) {
+        const f = pontos[vi], v = caixas[vi];
+        const A = f(P.getX(ia), P.getY(ia), P.getZ(ia)), B = f(P.getX(ib), P.getY(ib), P.getZ(ib)), C = f(P.getX(ic), P.getY(ic), P.getZ(ic));
+        for (const q of [A, B, C]) por(v, Math.floor(q[0]), Math.floor(q[1]), q[2]);
+        const x0 = Math.max(v[0], Math.floor(Math.min(A[0], B[0], C[0]))), x1 = Math.min(v[2] - 1, Math.ceil(Math.max(A[0], B[0], C[0])));
+        const y0 = Math.max(v[1], Math.floor(Math.min(A[1], B[1], C[1]))), y1 = Math.min(v[3] - 1, Math.ceil(Math.max(A[1], B[1], C[1])));
+        const d = (B[1] - C[1]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[1] - C[1]); if (Math.abs(d) < 1e-9) continue;
+        for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
+          const qx = px + 0.5, qy = py + 0.5;
+          const a = ((B[1] - C[1]) * (qx - C[0]) + (C[0] - B[0]) * (qy - C[1])) / d, b = ((C[1] - A[1]) * (qx - C[0]) + (A[0] - C[0]) * (qy - C[1])) / d, c = 1 - a - b;
+          if (a < 0 || b < 0 || c < 0) continue;
+          por(v, px, py, a * A[2] + b * B[2] + c * C[2]);
+        }
+      }
+    }
+  }
+  const tx = new THREE.DataTexture(D, W, H, THREE.RedFormat, THREE.FloatType);
+  tx.minFilter = tx.magFilter = THREE.NearestFilter; tx.generateMipmaps = false; tx.needsUpdate = true; return tx;
+}
+
 // ---------- o carro: tudo o que f1.js precisa, pronto e no quadro do carro ----------
 // `raiz`: a cena do arquivo; `tam`: o comprimento do carro (m); `leve`: o modelo dos outros carros (sem o cockpit)
 export function construir2026(raiz, tam, leve) {

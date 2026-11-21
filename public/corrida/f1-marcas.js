@@ -72,7 +72,7 @@ const SO_LETRA = {
   revolut: ["Revolut", { peso: 800, h: 1.1 }], nexo: ["NEXO", { peso: 900, esp: 4 }], ninjaone: ["ninjaOne", { peso: 700 }], visitqatar: ["visit QATAR", { peso: 800 }],
   bwt: ["BWT", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#ff7ab8" }], msc: ["MSC", { peso: 800, fam: SERIFA, esp: 3 }], alpine: ["ALPINE", { peso: 800, esp: 5 }],
   toyota: ["TOYOTA", { peso: 900, esp: 4 }], haas: ["HAAS", { peso: 900, ital: true, fam: PESADA, h: 1.1, tinta: "#101114" }], zoomex: ["ZOOMEX", { peso: 800, esp: 2 }], twg: ["TWG", { peso: 800, fam: SERIFA, esp: 5, h: 1.1 }],
-  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }],
+  ifs: ["IFS", { peso: 900, esp: 3, h: 1.05 }], claro: ["Claro", { peso: 800, tinta: "#2ee66b" }], cadillac: ["Cadillac", { peso: 400, ital: true, fam: SERIFA, h: 1.1 }], cadillacw: ["CADILLAC", { peso: 500, esp: 16, h: 0.95 }],
 };
 for (const [id, [str, o]] of Object.entries(SO_LETRA)) MARCAS[id] = (c, { tinta } = {}) => letra(c, str, { ...o, cor: tinta || o.tinta || "#fff" });
 // As da McLaren MCL40 (os prints de 2026-11-13)
@@ -101,6 +101,12 @@ Object.assign(MARCAS, {
   jimbeam(c, { tinta = "#fff" } = {}) { letra(c, "JIM BEAM", { h: 0.9, peso: 700, fam: SERIFA, cor: tinta, esp: 3 }); },
   corescientific(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.12; c.beginPath(); c.arc(-3.3, 0, 0.36, 0.6, Math.PI * 2 - 0.6); c.stroke(); letra(c, "CORE SCIENTIFIC", { x: 0.2, h: 0.8, peso: 700, cor: tinta, esp: 3 }); },
   // o brasão da Cadillac: o escudo com a grade de quadros
+  // (2026-11-20, a imagem do Thiago) o brasão da Cadillac de agora: o escudo de contorno fino com o xadrez de blocos dentro, em uma cor só
+  crest(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.05; c.lineJoin = "round";
+    const escudo = () => { c.beginPath(); c.moveTo(-0.62, -0.44); c.lineTo(0.62, -0.44); c.lineTo(0.56, 0.12); c.quadraticCurveTo(0.3, 0.38, 0, 0.5); c.quadraticCurveTo(-0.3, 0.38, -0.56, 0.12); c.closePath(); };
+    escudo(); c.stroke(); c.save(); escudo(); c.clip(); c.fillStyle = tinta;
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2 === 0) c.fillRect(-0.55 + i * 0.22, -0.37 + j * 0.22, 0.19, 0.18);
+    c.restore(); },
   brasao(c, { tinta = "#fff" } = {}) { c.strokeStyle = tinta; c.lineWidth = 0.06; c.beginPath(); c.moveTo(-0.62, -0.42); c.lineTo(0.62, -0.42); c.lineTo(0.5, 0.2); c.lineTo(0, 0.46); c.lineTo(-0.5, 0.2); c.closePath(); c.stroke();
     c.fillStyle = tinta; for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) if ((i + j) % 2) c.fillRect(-0.5 + i * 0.25, -0.32 + j * 0.24, 0.22, 0.2); },
   // a bandeirinha da Tommy Hilfiger

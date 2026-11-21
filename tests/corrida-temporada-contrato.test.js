@@ -28,31 +28,8 @@ test("save antigo sem contrato abre e o contrato segue sozinho na virada", () =>
   assert.strictEqual(s.ano, 2); assert.strictEqual(R.contrato(s).restam, 4);
 });
 
-test("renovar exige confiança e estende o contrato", () => {
-  const s = R.criar("Piloto", "mclaren", 4, 3, 7);
-  R.renovar(s, 2);
-  assert.strictEqual(R.contrato(s).fim, 3);
-  assert.throws(() => R.renovar(s, 1), /já cobre/);
-  const fraca = R.criar("Piloto", "mclaren", 8, 3, 7);
-  for (let i = 0; i < 7; i++) R.registrarResultado(fraca, resultado(fraca, 20));
-  assert.ok(R.perspectiva(fraca).confianca < 25);
-  assert.throws(() => R.renovar(fraca, 1), /diretoria/);
-});
-
-test("as propostas abrem nas últimas etapas e só assinam depois do último GP", () => {
-  const s = R.criar("Piloto", "cadillac", 4, 3, 7);
-  assert.deepStrictEqual(R.propostas(s), []);
-  for (let i = 0; i < 3; i++) R.registrarResultado(s, resultado(s, 1));
-  const [p] = R.propostas(s);
-  assert.ok(p);
-  assert.throws(() => R.aceitarProposta(s, p.equipe), /último GP/);
-  R.registrarResultado(s, resultado(s, 1));
-  R.aceitarProposta(s, p.equipe);
-  assert.strictEqual(s.equipe, p.equipe);
-  assert.ok(R.tabelas(s).pilotos.some((x) => x.id === s.piloto2));
-  assert.strictEqual(s.bonus, 0);
-  assert.throws(() => R.aceitarProposta(s, "nao-existe"), /proposta/);
-});
+// (2026-11-21, apagados: "renovar exige confiança e estende o contrato" e "as propostas abrem nas últimas etapas e só assinam depois do último GP"
+// fixavam o contrato antigo; agora a verba sobe pela confiança e as propostas abrem no meio do ano como pré-contrato. Pedido do Thiago: testes velhos que quebram se apagam)
 
 test("a análise anota voltas, setores, posição e safety car e faz um resumo do GP", () => {
   const a = { id: "a", laps: 0, bot: false, grid: 2, compostos: ["medio", "duro"], paradas: [{ volta: 1, tempo: 22.1, composto: "duro" }], finish: 180, acrescimo: 5 };

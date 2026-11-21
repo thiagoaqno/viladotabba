@@ -53,7 +53,7 @@ function criar(nome, equipe, tamanho = 8, voltas = 3, semente = Date.now(), nive
   const titulares = Pilotos.PILOTOS.filter((p) => p.equipe === equipe);
   const sorteado = sortearCalendario(tamanho, semente);
   return { v: 1, nome: String(nome || "").trim().slice(0, 40), equipe, ano: 1, gp: 0, tamanho, voltas, nivel, semente,
-    montagem: Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])), bonus: 0, caixa: 42, gasto: 0, patrocinio: 6,
+    montagem: Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])), bonus: 0, caixa: 42, gasto: 0, patrocinio: verbaBase(equipe),
     piloto2: titulares[0].id, engenheiros: { mecanico: 0, estrategista: 0 },
     resultados: [], calendario: sorteado.calendario, calendarioSemente: sorteado.semente };
 }
@@ -200,6 +200,7 @@ function imersao(s) {
   const duelos = new Map();
   for (const r of resultados) {
     const eu = r.linhas.find((x) => x.piloto === "voce"); if (!eu) continue;
+    if (eu.equipe && eu.equipe !== s.equipe) continue; // (2026-11-21) a confiança é da diretoria da equipe de agora: trocou de equipe, a conta recomeça
     const alvo = r.objetivoGP || meta.gp, cumpriu = !eu.dnf && !eu.nc && eu.pos <= alvo;
     confianca = Math.max(0, Math.min(100, confianca + (cumpriu ? 6 : -4)));
     if (r.gp === s.tamanho - 1) {
@@ -240,6 +241,7 @@ function registrarResultado(s, linhas, analise = null) {
   resultado.financas = { patrocinio: s.patrocinio, premio, salarios, bonus };
   const receita = s.patrocinio + premio + bonus - salarios;
   Paddock.aoResultado(s, resultado, objetivo.gp); // (o humor da equipe depois do GP; a verba nova do patrocinador vale a partir do próximo)
+  demissaoNoMeio(s);
   return { resultado, receita };
 }
 function tabelas(s) {
@@ -263,13 +265,19 @@ function tabelas(s) {
 const ordemDeForca = () => Object.keys(Equipes.EQUIPES).sort((a, b) => Equipes.EQUIPES[b].orcamento - Equipes.EQUIPES[a].orcamento || a.localeCompare(b));
 const faixaDe = (equipe) => { const i = ordemDeForca().indexOf(equipe); return i < 3 ? 0 : i < 7 ? 1 : 2; };
 const BONUS_VITORIA = [1, 2, 3], VERBA_FAIXA = [8, 6, 5];
+// (2026-11-21, o Thiago: "rever os contratos para ter opções mais vantajosas e receber oportunidades de outras equipes; o salário e os requisitos
+// têm que ser diferentes; tem que rolar demissões, até a minha") O contrato é o que entra no caixa da equipe (não há caixa do piloto): a verba por
+// GP de cada equipe vai da mais rica (9 milhões) à mais pobre (4), e a proposta de quem quer você soma pela sua posição no campeonato (até +3).
+// As exigências são as metas da equipe nova (metas(): top no GP e no campeonato). Escolhidos para o jogo, não medidos.
+const verbaBase = (equipe) => { const i = Math.max(0, ordemDeForca().indexOf(equipe)); return Math.max(4, Math.round(9 - i * 0.5)); };
+const extraPelaPosicao = (pos) => (pos <= 3 ? 3 : pos <= 6 ? 2 : pos <= 10 ? 1 : 0);
 function garantirContrato(s) {
   if (!s.contrato) s.contrato = { inicio: s.ano, fim: s.ano, bonusVitoria: BONUS_VITORIA[faixaDe(s.equipe)] };
   return s.contrato;
 }
 function contrato(s) {
   const c = s.contrato || { inicio: s.ano, fim: s.ano, bonusVitoria: BONUS_VITORIA[faixaDe(s.equipe)] };
-  return { ...c, verbaGP: s.patrocinio, restam: Math.max(0, (c.fim - s.ano) * s.tamanho + s.tamanho - s.gp) };
+  return { ...c, verbaGP: s.patrocinio, restam: Math.max(0, (c.fim - s.ano) * s.tamanho + s.tamanho - s.gp), precontrato: s.precontrato || null };
 }
 function numerosDoAno(s) {
   const n = { vitorias: 0, podios: 0, pontuou: 0, poles: 0, top5: 0, top10: 0 };
@@ -327,41 +335,91 @@ function renovar(s, anos) {
   if (c.fim > s.ano) throw Error("Seu contrato já cobre a próxima temporada.");
   if (s.paddock && s.paddock.demitido && s.paddock.demitido.ano === s.ano) throw Error("Você foi demitido: a equipe não renova. Escolha uma das propostas.");
   if (p.confianca < 25) throw Error("A diretoria não quer conversar agora. Melhore os resultados primeiro.");
+  if (s.precontrato) throw Error("Você já assinou com outra equipe para a próxima temporada.");
   c.fim = s.ano + anos;
-  if (p.confianca >= 70) s.patrocinio = Math.min(12, s.patrocinio + 1); // boa fase: a verba por GP sobe na assinatura
+  if (p.confianca >= 70) s.patrocinio = Math.min(14, s.patrocinio + 2); else if (p.confianca >= 50) s.patrocinio = Math.min(14, s.patrocinio + 1); // boa fase: a verba por GP sobe na assinatura
   return s;
 }
-// As propostas abrem nas 2 últimas etapas e só valem depois do último GP: uma equipe mais forte (se a temporada foi boa), uma parecida e uma para liderar.
+// As propostas (2026-11-21): do meio do ano em diante as equipes mais fortes sondam quem vai bem (pré-contrato para a próxima temporada); nas 2
+// últimas etapas vêm todas: uma mais forte (se a temporada foi boa), uma parecida e uma para liderar. Cada uma com a verba dela, o extra pela sua
+// posição, o bônus por vitória e as exigências (as metas da equipe nova).
 function propostas(s) {
-  if (s.gp < s.tamanho - 2) return [];
+  const meio = s.gp >= Math.ceil(s.tamanho / 2), fim = s.gp >= s.tamanho - 2; if (!meio) return [];
   const ordem = ordemDeForca(), i = ordem.indexOf(s.equipe), pos = tabelas(s).pilotos.findIndex((p) => p.id === "voce") + 1;
   const passo = pos <= 5 ? 3 : pos <= 10 ? 2 : pos <= 15 ? 1 : 0;
-  const alvos = [i - passo, i + 1, i + 3].map((k) => ordem[Math.max(0, Math.min(ordem.length - 1, k))]);
-  return [...new Set(alvos)].filter((id) => id !== s.equipe).map((id) => ({ equipe: id, verbaGP: VERBA_FAIXA[faixaDe(id)], bonusVitoria: BONUS_VITORIA[faixaDe(id)], orcamento: Equipes.EQUIPES[id].orcamento }));
+  const alvos = fim ? [i - passo, i + 1, i + 3] : passo >= 2 ? [i - passo, i - passo + 1] : [];
+  return [...new Set(alvos.map((k) => ordem[Math.max(0, Math.min(ordem.length - 1, k))]))].filter((id) => id !== s.equipe).map((id) => ({
+    equipe: id, verbaGP: Math.min(14, verbaBase(id) + extraPelaPosicao(pos)), bonusVitoria: BONUS_VITORIA[faixaDe(id)], exige: metas({ ...s, equipe: id }),
+    orcamento: Equipes.EQUIPES[id].orcamento, antecipada: !fim }));
+}
+// troca de equipe (a proposta assinada, ou a demissão): o carro novo, o companheiro novo, o humor da equipe do zero
+function trocarDeEquipe(s, id, termos, inicio) {
+  const titulares = Pilotos.PILOTOS.filter((x) => x.equipe === id);
+  if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; s.paddock.patrocinador = 60; s.paddock.salarioComp = 0; s.paddock.salarioStaff = 0; s.paddock.demitido = null; s.paddock.ultimato = null; s.paddock.diretoria = 0; } // (equipe nova: o humor e a conta com a diretoria recomeçam)
+  s.equipe = id; s.piloto2 = titulares[0].id; s.montagem = Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])); s.pecas = null; s.bonus = 0;
+  s.patrocinio = termos.verbaGP; s.contrato = { inicio, fim: inicio, bonusVitoria: termos.bonusVitoria };
 }
 function aceitarProposta(s, id) {
-  if (s.gp < s.tamanho) throw Error("Você assina com outra equipe só depois do último GP.");
   const p = propostas(s).find((x) => x.equipe === id);
   if (!p) throw Error("Esta equipe não fez proposta.");
-  const titulares = Pilotos.PILOTOS.filter((x) => x.equipe === id);
-  if (s.paddock) { s.paddock.moral = 55; s.paddock.lealdade = 50; s.paddock.patrocinador = 60; s.paddock.salarioComp = 0; s.paddock.salarioStaff = 0; s.paddock.demitido = null; } // (equipe nova: o humor recomeça)
-  s.equipe = id; s.piloto2 = titulares[0].id; s.montagem = Object.fromEntries(Equipes.ORDEM.map((k) => [k, 0])); s.pecas = null; s.bonus = 0;
-  s.patrocinio = p.verbaGP; s.contrato = { inicio: s.ano + 1, fim: s.ano + 1, bonusVitoria: p.bonusVitoria };
+  if (s.gp < s.tamanho) { // antes do último GP: pré-contrato, vale na virada do ano
+    if (s.precontrato) throw Error("Você já assinou um pré-contrato.");
+    s.precontrato = { ano: s.ano, equipe: p.equipe, verbaGP: p.verbaGP, bonusVitoria: p.bonusVitoria };
+    noticia(s, `Pré-contrato: você vai para a ${nomeDaEquipe(p.equipe)}`, `A mudança vale a partir da temporada ${s.ano + 1}. A diretoria atual não gostou.`, "Diretoria");
+    if (s.paddock) s.paddock.diretoria = Math.max(-20, (s.paddock.diretoria || 0) - 6);
+    return s;
+  }
+  trocarDeEquipe(s, id, p, s.ano + 1);
   return s;
+}
+const nomeDaEquipe = (id) => (Pilotos.EQUIPES[id] && Pilotos.EQUIPES[id].nome) || id;
+function noticia(s, t, x, quem) {
+  const p = Paddock.garantir(s); (p.noticias ||= []).push({ ano: s.ano, gp: s.gp, t, x, eq: s.equipe, quem });
+  if (p.noticias.length > 12) p.noticias.splice(0, p.noticias.length - 12);
+  p.ultimaMudanca = { ano: s.ano, gp: s.gp, quem, texto: x };
+}
+// A DEMISSÃO NO MEIO DO ANO: a confiança da diretoria abaixo de DEMITE_MEIO, com 3 GPs seguidos fora da meta, a partir do 3º GP do ano: você
+// vai para a equipe mais fraca que tiver vaga (uma das 3 de trás, pela semente) e a temporada segue de lá. Não antes de 2 GPs na equipe nova.
+const DEMITE_MEIO = 35, DEMITE_FIM = 30;
+function demissaoNoMeio(s) {
+  if (s.gp >= s.tamanho || s.gp < 3 || s.precontrato) return false;
+  const doAno = s.resultados.filter((r) => r.ano === s.ano), ult = doAno.slice(-3);
+  const naEquipe = doAno.filter((r) => { const e = r.linhas.find((x) => x.piloto === "voce"); return e && e.equipe === s.equipe; }).length;
+  if (ult.length < 3 || naEquipe < 2) return false;
+  const falhou = ult.every((r) => { const e = r.linhas.find((x) => x.piloto === "voce"); return !e || e.dnf || e.nc || e.pos > (r.objetivoGP || 99); });
+  if (!falhou || imersao(s).confianca >= DEMITE_MEIO) return false;
+  const ordem = ordemDeForca(), fracas = ordem.slice(-3).filter((id) => id !== s.equipe), r = gerador(`demissao:${s.semente}:${s.ano}:${s.gp}`);
+  const nova = fracas[Math.floor(r() * fracas.length)] || ordem[ordem.length - 1]; if (!nova || nova === s.equipe) return false;
+  const antiga = s.equipe;
+  trocarDeEquipe(s, nova, { verbaGP: verbaBase(nova), bonusVitoria: BONUS_VITORIA[faixaDe(nova)] }, s.ano);
+  s.demissoes = (s.demissoes || 0) + 1;
+  noticia(s, `Você foi demitido da ${nomeDaEquipe(antiga)}`, `Três GPs fora da meta e a diretoria perdeu a paciência. A ${nomeDaEquipe(nova)} tinha uma vaga e você corre por ela a partir do próximo GP.`, "Diretoria");
+  return true;
 }
 function proximaTemporada(s) {
   if (s.gp !== s.tamanho) throw Error("Termine o calendário primeiro.");
   garantirContrato(s);
-  // demitido no Paddock e sem ter assinado com outra: vai para a equipe mais fraca que fez proposta
-  if (s.paddock && s.paddock.demitido && s.paddock.demitido.ano === s.ano) { const ps = propostas(s); if (ps.length) aceitarProposta(s, ps[ps.length - 1].equipe); if (s.paddock) s.paddock.demitido = null; }
-  if (s.contrato.fim <= s.ano) s.contrato.fim = s.ano + 1; // sem conversa, o contrato segue por mais um ano nos mesmos termos
+  // o pré-contrato assinado no meio do ano vale agora
+  if (s.precontrato && s.precontrato.ano === s.ano && Pilotos.EQUIPES[s.precontrato.equipe]) trocarDeEquipe(s, s.precontrato.equipe, s.precontrato, s.ano + 1);
+  else {
+    // demitido no Paddock (o ultimato) ou, sem contrato para o ano que vem, com a confiança abaixo de DEMITE_FIM: a equipe não renova e você
+    // vai para a equipe mais fraca que fez proposta
+    const semContrato = s.contrato.fim <= s.ano, confianca = imersao(s).confianca;
+    if ((s.paddock && s.paddock.demitido && s.paddock.demitido.ano === s.ano) || (semContrato && confianca < DEMITE_FIM)) {
+      const ps = propostas(s), antiga = s.equipe, nova = ps.length ? ps[ps.length - 1] : null;
+      if (nova) { trocarDeEquipe(s, nova.equipe, nova, s.ano + 1); s.demissoes = (s.demissoes || 0) + 1; noticia(s, `A ${nomeDaEquipe(antiga)} não renova com você`, `A diretoria encerrou o contrato. Você corre pela ${nomeDaEquipe(nova.equipe)} na temporada ${s.ano + 1}.`, "Diretoria"); }
+      if (s.paddock) s.paddock.demitido = null;
+    }
+  }
+  s.precontrato = null;
+  if (s.contrato.fim <= s.ano) s.contrato.fim = s.ano + 1; // sem conversa (e com a confiança boa), o contrato segue por mais um ano nos mesmos termos
   for (const r of s.resultados) if (r.ano < s.ano) delete r.analise; // o detalhe volta a volta só vale para o ano atual e o anterior (o save não cresce sem fim)
   s.ano++; s.gp = 0; s.gasto = 0; s.semente = Number(s.semente) + 937;
   Paddock.novaTemporada(s);
   const sorteado = sortearCalendario(s.tamanho, s.semente, s.calendario.map((g) => g.pista));
   s.calendario = sorteado.calendario; s.calendarioSemente = sorteado.semente; return s;
 }
-const api = { limiteDoAno, custoDoDesenvolvimento, ajustarParaPista, CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
+const api = { verbaBase, demissaoNoMeio, limiteDoAno, custoDoDesenvolvimento, ajustarParaPista, CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Temporada = api;
 })(typeof window !== "undefined" ? window : globalThis);

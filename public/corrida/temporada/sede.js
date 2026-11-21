@@ -137,7 +137,7 @@ app.addEventListener("click", async (e) => {
   if (window.Central.clique(b, renderizar)) return;
   const nova = window.F1Garagem.cliquePonto(b, s.montagem, s.equipe, s.bonus); if (nova) { const r = await pedir("montagem", { montagem: nova }); if (r && r.ok && window.Radio) window.Radio.dizer("pecas"); }
   if (b.dataset.renovar) { const r = await pedir("renovar", { anos: Number(b.dataset.renovar) }); if (r?.ok) falar("Contrato renovado."); return; }
-  if (b.dataset.proposta) { if (confirm("Trocar de equipe? O carro novo começa sem pontos distribuídos.")) { const r = await pedir("aceitarProposta", { equipe: b.dataset.proposta }); if (r?.ok) falar("Contrato assinado. Bem-vindo à equipe nova!"); } return; }
+  if (b.dataset.proposta) { const ja = s.gp >= s.tamanho; if (confirm(ja ? "Trocar de equipe? O carro novo começa sem pontos distribuídos." : "Assinar o pré-contrato? Você muda de equipe na próxima temporada, e a diretoria atual vai ficar sabendo.")) { const r = await pedir("aceitarProposta", { equipe: b.dataset.proposta }); if (r?.ok) falar(ja ? "Contrato assinado. Bem-vindo à equipe nova!" : "Pré-contrato assinado."); } return; }
   if (b.id === "desenvolver") await pedir("desenvolver");
   if (b.id === "contratarPiloto") await pedir("piloto", { id: document.getElementById("piloto2").value });
   if (b.dataset.engenheiro) await pedir("engenheiro", { area: b.dataset.engenheiro, nivel: document.getElementById(b.dataset.engenheiro).value });

@@ -570,10 +570,12 @@ function compostoPorAgua(pista, agua, candidatos, atual = null, margem = 0.8) {
 // ---------- o fim de semana: classificação e pontos ----------
 // Q1, Q2 e Q3: o Q1 tem todos os carros e deixa 15, o Q2 deixa 10 e o Q3 decide o resto. Com menos carros, as sessões
 // que não eliminam ninguém não existem (20 carros: [20, 15, 10]; 12: [12, 10]; 8: [8]).
+// quem segue para o Q2 e o Q3. (2026-11-21, o Thiago: "no Q1 passam 16!") Na F1 de 2026, com 22 carros, o Q1 elimina 6 (passam 16) e o Q2 mais 6
+// (passam 10); com 20 carros (2023 a 2025), o Q1 elimina 5 (passam 15). Com menos carros, os mesmos cortes, só os que couberem.
 const SEGUEM_NA_CLASSIFICACAO = [15, 10];
 function sessoesDeClassificacao(n) {
-  const t = [Math.max(0, n)];
-  for (const k of SEGUEM_NA_CLASSIFICACAO) if (t[t.length - 1] > k) t.push(k);
+  const t = [Math.max(0, n)], cortes = n >= 21 ? [16, 10] : SEGUEM_NA_CLASSIFICACAO;
+  for (const k of cortes) if (t[t.length - 1] > k) t.push(k);
   return t;
 }
 // `tabela`: [{ id, tempo (s, ou null se não fez volta), quando (ms em que fez o melhor tempo) }]. Vale o menor tempo; quem

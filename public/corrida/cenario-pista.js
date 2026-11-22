@@ -198,6 +198,50 @@ function telaComArame(g, d, y0, ht) {
   const b = new THREE.Mesh(new THREE.BoxGeometry(0.9 * UM, 0.06 * UM, 0.06 * UM), poste); b.position.set(0.15 * UM, y0 + ht + 0.3 * UM, -d / 2); b.rotation.z = 0.6; g.add(b);
   for (let k = 0; k < 3; k++) { const a = new THREE.Mesh(new THREE.BoxGeometry(0.02 * UM, 0.02 * UM, d), fio); a.position.set(0.2 * UM + k * 0.12 * UM, y0 + ht + 0.2 * UM + k * 0.2 * UM, 0); g.add(a); }
 }
+// (2026-11-21, o Thiago: "as barreiras de patrocínio com arame triplo fazerem curvas e se moldarem com a inclinação... melhorar as emendas, e não serem
+// pedaços quadrados") a FAIXA e a FAIXA COM TELA viraram uma fita: cada ponto da linha é um vértice, na altura do chão dele (a beira da pista: o
+// relevo), e os dois pedaços vizinhos usam o MESMO vértice (o lado é a média das duas direções: o canto fecha, sem vão por fora nem um entrando no
+// outro por dentro). Antes era um bloco reto por pedaço, na altura média dos dois pontos e virado só no plano: na subida virava degrau.
+const ladoDaLinha = (l, i) => { const a = l[Math.max(0, i - 1)], b = l[Math.min(l.length - 1, i + 1)]; let tx = b.x - a.x, tz = b.z - a.z; const L = Math.hypot(tx, tz) || 1; tx /= L; tz /= L; return [tz, -tx]; };
+// um quadrilátero de p a q, deslocado `off` para o lado (n: o lado de cada ponta), de y0 a y1 acima do chão de cada ponta; u0/u1: a textura de p a q
+function quadDaFita(p, q, np, nq, off, y0, y1, mat, u0 = 0, u1 = 1) {
+  const P = (o, n, y) => [o.x + n[0] * off, (o.y || 0) + y, o.z + n[1] * off];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute([...P(p, np, y0), ...P(q, nq, y0), ...P(q, nq, y1), ...P(p, np, y1)], 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute([u0, 0, u1, 0, u1, 1, u0, 1], 2)); g.setIndex([0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2]); g.computeVertexNormals();
+  const m = new THREE.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true; return m;
+}
+// uma barra fina de a até b (os fios de arame: seguem a subida)
+function barraEntre(a, b, esp, mat) {
+  const d = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]), L = d.length(); if (L < 1e-4) return null;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(esp, esp, L), mat); m.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d.normalize()); return m;
+}
+function fitaDePatrocinio(it, lista, comTela) {
+  const g = new THREE.Group(), alt = Math.max(0.3, +it.altura || 3) * UM, elev = Math.max(0, +it.elev || 0) * UM, lado = ML(0x1d1f22), ns = lista.map((_, i) => ladoDaLinha(lista, i));
+  const ht = (+it.alturaTela || 3.2) * UM, tela = comTela ? ML(0x8f969c, { metalness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }) : null;
+  const poste = comTela ? ML(0x2c3036, { roughness: 0.6, metalness: 0.3 }) : null, fio = comTela ? ML(0xc7ccd1, { metalness: 0.6, roughness: 0.35 }) : null;
+  for (let i = 0; i + 1 < lista.length; i++) {
+    const p = lista[i], q = lista[i + 1], d = Math.hypot(q.x - p.x, q.z - p.z); if (d < 0.2 * UM) continue;
+    const np = ns[i], nq = ns[i + 1], alterna = i % 2 && (it.marca2 || it.fundo2), marca = alterna ? it.marca2 || it.marca : it.marca, fundo = alterna ? it.fundo2 || it.fundo : it.fundo;
+    const prop = Math.max(1, Math.min(16, Math.round((d / alt) * 2) / 2)), [a, b] = texDaFaixa(marca, fundo, prop);
+    // as duas faces (de cada lado, a marca lida de fora) e a tampa de cima, escura
+    g.add(quadDaFita(p, q, np, nq, 0.031 * UM, elev, elev + alt, a, 1, 0)); g.add(quadDaFita(p, q, np, nq, -0.031 * UM, elev, elev + alt, b, 0, 1));
+    const P = (o, n, off, y) => [o.x + n[0] * off, (o.y || 0) + y, o.z + n[1] * off];
+    { const tg = new THREE.BufferGeometry(); tg.setAttribute("position", new THREE.Float32BufferAttribute([...P(p, np, 0.031 * UM, elev + alt), ...P(q, nq, 0.031 * UM, elev + alt), ...P(q, nq, -0.031 * UM, elev + alt), ...P(p, np, -0.031 * UM, elev + alt)], 3));
+      tg.setIndex([0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2]); tg.computeVertexNormals(); g.add(new THREE.Mesh(tg, lado)); }
+    if (comTela) {
+      const y0 = elev + alt; g.add(quadDaFita(p, q, np, nq, -0.15 * UM, y0, y0 + ht, tela));
+      for (let k = 0; k < 3; k++) { const y = y0 + ht + 0.2 * UM + k * 0.2 * UM, off = 0.2 * UM + k * 0.12 * UM, f = barraEntre(P(p, np, off, y), P(q, nq, off, y), 0.02 * UM, fio); if (f) g.add(f); }
+    }
+  }
+  if (comTela) for (let i = 0; i < lista.length; i++) { // os postes (um em cada ponto, de pé) com o braço dobrado para a pista
+    const p = lista[i], n = ns[i], y0 = elev + alt, h = new THREE.Group(); h.position.set(p.x + n[0] * -0.15 * UM, (p.y || 0) + y0, p.z + n[1] * -0.15 * UM); h.rotation.y = Math.atan2(-n[1], n[0]); // (o x do poste aponta para o lado `n`: o braço vai para a pista, como antes)
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.07 * UM, 0.07 * UM, ht + 0.6 * UM, 6), poste); c.position.y = (ht + 0.6 * UM) / 2; c.castShadow = true; h.add(c);
+    const br = new THREE.Mesh(new THREE.BoxGeometry(0.9 * UM, 0.06 * UM, 0.06 * UM), poste); br.position.set(0.3 * UM, ht + 0.3 * UM, 0); br.rotation.z = 0.6; h.add(br); g.add(h);
+  }
+  return g;
+}
 const compKit = new Map(); // o comprimento de uma peça da biblioteca ao longo do x (o que ela ocupa na fileira)
 function comprimentoDoKit(id) { if (!compKit.has(id)) { const o = montarKit(id), b = new THREE.Box3().setFromObject(o); compKit.set(id, Math.max(0.5 * 4.8, b.max.x - b.min.x)); } return compKit.get(id); }
 function montarLinha(it, tr) {
@@ -228,7 +272,8 @@ function montarLinha(it, tr) {
   }
   // (2026-11-17, o Thiago: "um entra dentro do outro") as barreiras (pneus e as peças de Contenção) vão EMENDADAS: cada módulo vai de um ponto ao
   // próximo, no meio deles, virado pela corda e esticado ao comprimento dela. Na curva elas não se cruzam mais nem deixam vão.
-  const emenda = modelo === "faixa" || modelo === "faixaTela" || modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
+  if (modelo === "faixa" || modelo === "faixaTela") return fitaDePatrocinio(it, lista, modelo === "faixaTela"); // (a fita contínua, moldada à pista)
+  const emenda = modelo === "pneus" || (modelo.startsWith("kit:") && filtroDoKit(modelo.slice(4)) === "Contenção");
   if (emenda) {
     const kit = modelo.startsWith("kit:") ? modelo.slice(4) : null, L = kit ? comprimentoDoKit(kit) : 0;
     for (let i = 0; i + 1 < lista.length; i++) {

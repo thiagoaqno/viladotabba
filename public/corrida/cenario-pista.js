@@ -13,6 +13,7 @@ import { aplicarAcabamento } from "./acabamentos.js";
 import { aplicarLuz } from "./luz-item.js";
 import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { fundirEstaticos } from "./kit/fundir.js";
 
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), modelos = new Map();
 // os arquivos chegam logo que a página abre (a pista é montada sem esperar a rede: os ajustes precisam estar prontos até lá)
@@ -208,7 +209,7 @@ function quadDaFita(p, q, np, nq, off, y0, y1, mat, u0 = 0, u1 = 1) {
   const P = (o, n, y) => [o.x + n[0] * off, (o.y || 0) + y, o.z + n[1] * off];
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute([...P(p, np, y0), ...P(q, nq, y0), ...P(q, nq, y1), ...P(p, np, y1)], 3));
-  g.setAttribute("uv", new THREE.Float32BufferAttribute([u0, 0, u1, 0, u1, 1, u0, 1], 2)); g.setIndex([0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2]); g.computeVertexNormals();
+  g.setAttribute("uv", new THREE.Float32BufferAttribute([u0, 0, u1, 0, u1, 1, u0, 1], 2)); g.setIndex([0, 1, 2, 0, 2, 3]); g.computeVertexNormals(); // (2026-11-21: um lado só; os dois lados nos mesmos vértices zeravam a normal e a barreira saía com manchas pretas: o material é que desenha os dois lados)
   const m = new THREE.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true; return m;
 }
 // uma barra fina de a até b (os fios de arame: seguem a subida)
@@ -218,18 +219,19 @@ function barraEntre(a, b, esp, mat) {
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d.normalize()); return m;
 }
 function fitaDePatrocinio(it, lista, comTela) {
-  const g = new THREE.Group(), alt = Math.max(0.3, +it.altura || 3) * UM, elev = Math.max(0, +it.elev || 0) * UM, lado = ML(0x1d1f22), ns = lista.map((_, i) => ladoDaLinha(lista, i));
+  const g = new THREE.Group(), alt = Math.max(0.3, +it.altura || 3) * UM, elev = Math.max(0, +it.elev || 0) * UM, ladoDuplo = ML(0x1d1f22, { side: THREE.DoubleSide }), ns = lista.map((_, i) => ladoDaLinha(lista, i));
   const ht = (+it.alturaTela || 3.2) * UM, tela = comTela ? ML(0x8f969c, { metalness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }) : null;
   const poste = comTela ? ML(0x2c3036, { roughness: 0.6, metalness: 0.3 }) : null, fio = comTela ? ML(0xc7ccd1, { metalness: 0.6, roughness: 0.35 }) : null;
   for (let i = 0; i + 1 < lista.length; i++) {
     const p = lista[i], q = lista[i + 1], d = Math.hypot(q.x - p.x, q.z - p.z); if (d < 0.2 * UM) continue;
     const np = ns[i], nq = ns[i + 1], alterna = i % 2 && (it.marca2 || it.fundo2), marca = alterna ? it.marca2 || it.marca : it.marca, fundo = alterna ? it.fundo2 || it.fundo : it.fundo;
-    const prop = Math.max(1, Math.min(16, Math.round((d / alt) * 2) / 2)), [a, b] = texDaFaixa(marca, fundo, prop);
+    // (uma textura só por marca e fundo: o painel de 4 × 1 repetido ao longo do pedaço; antes era uma por proporção de pedaço, e Mônaco tinha 458 materiais)
+    const [a, b] = texDaFaixa(marca, fundo, 4), rep = d / (alt * 4); a.side = b.side = THREE.DoubleSide;
     // as duas faces (de cada lado, a marca lida de fora) e a tampa de cima, escura
-    g.add(quadDaFita(p, q, np, nq, 0.031 * UM, elev, elev + alt, a, 1, 0)); g.add(quadDaFita(p, q, np, nq, -0.031 * UM, elev, elev + alt, b, 0, 1));
+    g.add(quadDaFita(p, q, np, nq, 0.031 * UM, elev, elev + alt, a, rep, 0)); g.add(quadDaFita(p, q, np, nq, -0.031 * UM, elev, elev + alt, b, 0, rep));
     const P = (o, n, off, y) => [o.x + n[0] * off, (o.y || 0) + y, o.z + n[1] * off];
     { const tg = new THREE.BufferGeometry(); tg.setAttribute("position", new THREE.Float32BufferAttribute([...P(p, np, 0.031 * UM, elev + alt), ...P(q, nq, 0.031 * UM, elev + alt), ...P(q, nq, -0.031 * UM, elev + alt), ...P(p, np, -0.031 * UM, elev + alt)], 3));
-      tg.setIndex([0, 1, 2, 0, 2, 3, 0, 2, 1, 0, 3, 2]); tg.computeVertexNormals(); g.add(new THREE.Mesh(tg, lado)); }
+      tg.setAttribute("uv", new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2)); tg.setIndex([0, 1, 2, 0, 2, 3]); tg.computeVertexNormals(); g.add(new THREE.Mesh(tg, ladoDuplo)); }
     if (comTela) {
       const y0 = elev + alt; g.add(quadDaFita(p, q, np, nq, -0.15 * UM, y0, y0 + ht, tela));
       for (let k = 0; k < 3; k++) { const y = y0 + ht + 0.2 * UM + k * 0.2 * UM, off = 0.2 * UM + k * 0.12 * UM, f = barraEntre(P(p, np, off, y), P(q, nq, off, y), 0.02 * UM, fio); if (f) g.add(f); }
@@ -475,6 +477,12 @@ export async function carregarCenario(tr) {
   if (window.Pistas?.obstaculosComAjustes) tr.obstaculos = window.Pistas.obstaculosComAjustes(tr.obstaculos, dados); // (o canteiro do grampo segue o ajuste do editor, como no servidor)
   const objs = await Promise.all(dados.itens.map((it) => montarItem(it, tr)));
   for (const o of objs) if (o) g.add(o);
+  // (2026-11-21, o servidor.log do Thiago em Mônaco: 1.900 a 2.800 chamadas de desenho e 70 a 99 ms só de desenho por quadro) o cenário do editor
+  // chega DEPOIS de a pista juntar as malhas (pista.js fundirEstaticos), e ficava peça por peça: 1.825 malhas em Mônaco, 464 delas nos dois Hotel de
+  // Paris (um .glb com 232 malhas). Agora ele junta do mesmo jeito, por material e por região. No editor, não (cada peça fica clicável).
+  // E por cima, o grupo inteiro por material, numa malha só cada (é tudo parado: o que pesava eram as chamadas de desenho, não os triângulos; as linhas
+  // compridas e o Hotel de Paris passam do tamanho que a junção por região aceita)
+  if (!window.__editorCenario) { try { fundirEstaticos({ grp: g }); enxugar(g); } catch (e) { console.warn("Cenário: não juntou as malhas do editor", e); } }
   return g;
 }
 export const colisaoDaPista = (tr) => dadosDe.get(tr.pistaId || tr.id)?.colisao || "";

@@ -1,7 +1,12 @@
-# Classificação com os cortes da F1 de 2026
+# Quatro engenheiros no rádio, para escolher a voz
 
-Pedido do Thiago (2026-11-21): "precisa revisar quem sai no Q1, Q2 e Q3, pra ficar igual na F1. No Q1 passam 16!"
+Pedido do Thiago (2026-11-21): "e se a gente criasse 4 tipos de treinadores? aí podemos escolher a voz; posso gerar com a ElevenLabs".
 
-- `f1-regras.js sessoesDeClassificacao`: com 21 ou 22 carros (o grid de 2026), os cortes são 16 e 10: o Q1 elimina 6, o Q2 mais 6 e o Q3 tem os 10. Antes eram 15 e 10 sempre, a regra dos 20 carros.
-- Com 20 carros (2023 a 2025) e grids menores, nada muda: [20, 15, 10], [16, 15, 10], [12, 10], [8], os mesmos do teste `corrida-f1-fim-de-semana`.
-- O resto da classificação (os eliminados no log, a torre, as sessões) já lê esses números.
+- `radio.js`: `ENGENHEIROS` são Jeff (o de sempre, `radio/<fala>.mp3`), Marcos (veterano, calmo), Bia (empolgada) e Rafa (técnico, direto), em `radio/<engenheiro>/<fala>.mp3`.
+  - As falas são as mesmas: a personalidade é a voz que o Thiago escolher.
+  - A fala que o escolhido ainda não tem toca com o Jeff. O observador (`spot*`) é sempre a voz dele.
+  - A escolha fica no navegador (`corrida:engenheiro`).
+- `configuracoes.js` (Áudio, Rádio): "Engenheiro", com os quatro. Ao trocar, toca uma fala de boas-vindas para ouvir a voz.
+- `ferramentas/radio-engenheiro.js --pasta <engenheiro>`: grava em `radio/<engenheiro>/`, sem as falas do observador. São 957 falas, ~35,5 mil caracteres por engenheiro.
+- `VOZES-ENGENHEIROS.bat` (CRLF): escolhe o engenheiro, mostra quanto vai gastar, pede o Voice ID e a chave (sem mostrar) e gera só as que faltam. O atalho fica fora do repositório: `Downloads\lts\Vozes dos engenheiros.bat`, em `klk\falas`.
+- Não foi ouvido: as vozes ainda não existem.

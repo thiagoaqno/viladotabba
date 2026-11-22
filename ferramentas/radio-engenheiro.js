@@ -6,9 +6,12 @@
 const fs = require("fs");
 const path = require("path");
 const F = require("../public/corrida/radio/falas.js");
-const FALAS = F.FALAS.concat(F.PECAS || []); // as falas inteiras e os pedaços que o rádio emenda (nomes, distâncias, comentários)
+// (2026-11-21) `--pasta <engenheiro>`: a voz de um dos outros engenheiros (radio.js ENGENHEIROS: marcos, bia, rafa) em radio/<engenheiro>/, sem as do
+// observador (spot*, que são sempre a mesma voz)
+const argv0 = process.argv.slice(2), ip = argv0.indexOf("--pasta"), SUB = ip >= 0 ? String(argv0[ip + 1] || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "") : "";
+const FALAS = F.FALAS.concat(F.PECAS || []).filter((f) => !SUB || !String(f.id).startsWith("spot")); // as falas inteiras e os pedaços que o rádio emenda (nomes, distâncias, comentários)
 
-const PASTA = path.join(__dirname, "..", "public", "corrida", "radio");
+const PASTA = path.join(__dirname, "..", "public", "corrida", "radio", SUB);
 // a voz: --voz <id> (o GERAR-VOZES-CORRIDA.bat passa), senão ELEVENLABS_VOICE_ID, senão a padrão do engenheiro
 const argv = process.argv.slice(2), iv = argv.indexOf("--voz");
 const VOZ = (iv >= 0 ? String(argv[iv + 1] || "").trim() : "") || (process.env.ELEVENLABS_VOICE_ID || "").trim() || "oCWW6YTSEVFt26dBO8vU"; // (a voz do engenheiro que o Thiago escolheu na ElevenLabs)
@@ -32,7 +35,7 @@ async function main() {
   if (estimar) {
     const fazer = FALAS.filter((f) => refazer || !fs.existsSync(path.join(PASTA, `${f.id}.mp3`)));
     const chars = (l) => l.reduce((a, f) => a + f.texto.length, 0), milhar = (n) => n.toLocaleString("pt-BR");
-    console.log(`Falas do engenheiro: ${FALAS.length} · a gerar: ${fazer.length} · ${milhar(chars(fazer))} caracteres no plano da ElevenLabs (tudo de novo: ${milhar(chars(FALAS))})`);
+    console.log(`Falas do engenheiro${SUB ? ` (${SUB})` : ""}: ${FALAS.length} · a gerar: ${fazer.length} · ${milhar(chars(fazer))} caracteres no plano da ElevenLabs (tudo de novo: ${milhar(chars(FALAS))})`);
     return;
   }
   const chave = (process.env.ELEVENLABS_API_KEY || "").trim();

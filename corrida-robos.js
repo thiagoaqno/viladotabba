@@ -450,6 +450,11 @@ function remover(room) {
   room.order = room.order.filter((id) => room.players[id]);
 }
 // depois do grid sorteado: cada robô no seu lugar, parado
+// o plano do domingo de um robô na carreira: o normal (35%), o ataque, o seguro, a largada forte e o fim forte (14% cada) e esticar os pneus (9%)
+function planoDoRobo(room, id) {
+  const r = F1.sorteio(`plano-robo:${room.semente}:${id}`)();
+  return r < 0.35 ? null : r < 0.49 ? "arriscar" : r < 0.63 ? "seguro" : r < 0.77 ? "largada" : r < 0.91 ? "final" : "pneu";
+}
 function largar(room) {
   const t = T.PISTAS[room.config.pista], bots = room.order.filter((id) => room.players[id].bot);
   // A conta do ritmo de cada robô (o perfil de velocidade da pista para o carro e o traçado dele) leva de 25 a 40 ms por robô numa pista
@@ -467,7 +472,10 @@ function largar(room) {
     p.pos = null; // a posição da corrida passada não vale (o bico seria calculado a partir dela)
     // na largada: sai na própria faixa do grid, com um tempo de reação diferente, e cada um tem o seu jeito de fazer as curvas
     // regras de F1: a estratégia de parada do robô (o composto da largada e as paradas) e o mesmo pneu de quem joga
-    const f1 = room.config.regras === "f1", plano = f1 ? F1.estrategia(room.config.voltas, nomeDoNivel(room.config.nivel), `${room.semente}:${id}`, room.config.pista, (p.spec ? p.spec.desgaste : 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste) : null;
+    // (2026-11-21, o Thiago: "cada bot deve escolher uma estratégia também, assim fica justo pra todo mundo") na carreira, cada robô tem o plano do domingo
+    // dele (f1-regras.js PLANOS_DOMINGO), sorteado pela semente do GP; a estratégia de box já conta o pneu do plano
+    if (room.config.regras === "f1" && room.temporada) p.plano = planoDoRobo(room, id); else delete p.plano;
+    const f1 = room.config.regras === "f1", plano = f1 ? F1.estrategia(room.config.voltas, nomeDoNivel(room.config.nivel), `${room.semente}:${id}`, room.config.pista, (p.spec ? p.spec.desgaste : 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste * F1.desgasteDoPlano(p.plano)) : null;
     // chuva: o quanto cada robô "sente" a água a mais ou a menos (±0,1, fixo no GP): não trocam todos de pneu juntos
     const vies = f1 ? Math.round((F1.sorteio(`vies:${room.semente}:${id}`)() - 0.5) * 20) / 100 : 0, aguaLargada = f1 && room.clima ? F1.climaEm(room.clima, room.startAt).agua : 0;
     if (plano && aguaLargada > 0) { const melhor = F1.compostoPorAgua(room.config.pista, Math.max(0, Math.min(1, aguaLargada + vies)), [...F1.SECOS, "chuva", "intermediario"], plano.largada); if (!F1.SECOS.includes(melhor)) { plano.largada = melhor; plano.paradas = []; } } // larga molhado: sai de chuva
@@ -1040,7 +1048,7 @@ function decidirParada(room, p, ia, car, spec, cl) {
   if (!p.started || feitas + 1 >= voltas || car.box?.fase) return null; // na última volta o corredor passa pela chegada: sem box
   const chuvoso = !!(room.clima && room.clima.chove); // corrida com chuva: a regra dos dois compostos não vale e o plano de pneus seco fica de lado
   const planejada = !chuvoso && ia.plano && ia.plano.paradas[(p.paradas || []).length];
-  const pneu = car.pneu, fator = (spec.desgaste || 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste, fv = fator * F1.relDaPista(room.config.pista), taxa = taxaDoPneu(pneu.composto, fv); // (fv: o gasto por volta DESTA pista, o pneu por distância; a tabela já vem em voltas desta pista)
+  const pneu = car.pneu, fator = (spec.desgaste || 1) * Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste * F1.desgasteDoPlano(p.plano), fv = fator * F1.relDaPista(room.config.pista), taxa = taxaDoPneu(pneu.composto, fv); // (fv: o gasto por volta DESTA pista, o pneu por distância; a tabela já vem em voltas desta pista)
   const restam = voltas - feitas - 1, usados = new Set(p.compostos || [p.pneu || F1.COMPOSTO_PADRAO]);
   if (chuvoso && cl) { const pelaAgua = trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator); if (pelaAgua) return pelaAgua; if (!F1.SECOS.includes(pneu.composto) && cl.agua + (ia.vies || 0) > 0.3) return null; }
   // carro avariado (mais de 10% de dano): para no box para consertar. Com o pneu ainda bom, só conserta ("manter", sem trocar); gasto, troca
@@ -1189,7 +1197,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   if (proxima && antesDaEntrada && !car.box?.fase) p.boxFant = Math.max(p.boxFant || 0, now + 250);
   const estavaNoBox = !!p.box;
   const pedirBox = !!proxima; // (o composto pedido)
-  const amb = { spec, dano: p.dano || 0, drsZona: p.drsZona ?? -1, safety: !!room.direcao?.safety, gpMods: reforcoDoNivel(room), // (o nível acima de 100: o carro a mais)
+  const amb = { spec, dano: p.dano || 0, drsZona: p.drsZona ?? -1, safety: !!room.direcao?.safety, gpMods: reforcoDoNivel(room), plano: room.phase === "race" ? p.plano || null : null, // (o nível acima de 100: o carro a mais; o plano do domingo do robô, na carreira)
     // Em pista livre usa a bateria nas retas; no trânsito reserva energia e só aciona forte ao tentar passar.
     amarela: room.direcao?.amarelo?.setor === Math.floor(i / (n / T.SECTORS)), ersAuto: !ia.ult && !tf.encontrou && !tf.tras && now - room.startAt > 6000,
     voltas: room.config.voltas, laps: p.laps || 0, paradas: (p.paradas || []).length,

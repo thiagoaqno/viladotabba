@@ -1,10 +1,7 @@
-# Tira a estratégia de paradas da equipe
+# Classificação com os cortes da F1 de 2026
 
-Pedido do Thiago (2026-11-21): "as estratégias de box atuais não fazem muito sentido, acho que devemos tirar".
+Pedido do Thiago (2026-11-21): "precisa revisar quem sai no Q1, Q2 e Q3, pra ficar igual na F1. No Q1 passam 16!"
 
-- `temporada/paddock.js`: saem o evento "A estratégia de paradas" (Equilibrada, Agressiva, Conservadora) e as contas dele (`estrategiasDoGP`, `estrategiaEscolhida`). As decisões antigas desse GP ficam no save, sem efeito.
-- `corrida.js`: a carreira não escolhe mais o pneu da largada nem manda `paradasEquipe` para o carro.
-- `estrategia-box.js` e `mfd.js`: o MFD não chama mais o box pelo plano. Fica a sugestão de sempre, pelo pneu, pela chuva e pelo stop-and-go.
-- O Jeff ("qual a estratégia?") segue respondendo com o pneu de agora e o plano do domingo, e diz que as paradas são decisão sua.
-- `temporada/index.html`: a Central não carrega mais `f1-pneus-tabela.js` e `f1-pneus-ritmo.js`, que estavam lá só para isso.
-- Conferido numa carreira simulada: oito GPs com até três acontecimentos e o plano do domingo, sem a estratégia.
+- `f1-regras.js sessoesDeClassificacao`: com 21 ou 22 carros (o grid de 2026), os cortes são 16 e 10: o Q1 elimina 6, o Q2 mais 6 e o Q3 tem os 10. Antes eram 15 e 10 sempre, a regra dos 20 carros.
+- Com 20 carros (2023 a 2025) e grids menores, nada muda: [20, 15, 10], [16, 15, 10], [12, 10], [8], os mesmos do teste `corrida-f1-fim-de-semana`.
+- O resto da classificação (os eliminados no log, a torre, as sessões) já lê esses números.

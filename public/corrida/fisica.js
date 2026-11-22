@@ -122,7 +122,7 @@ export function physics(dt, spec = carOf(me())) {
   const limite = Math.min(window.Pistas.limiteViaduto(tr.t, tr.n, race.idx, tr.W), tr.murosCenario ? (tr.murosCenario[ladoMuro][race.idx] ? tr.W / 2 + tr.murosCenario[ladoMuro][race.idx] - (tr.t.muroFolga ?? 8) : Infinity) : tr.murosEscape?.[ladoMuro]?.[race.idx] ? tr.W / 2 + tr.murosEscape[ladoMuro][race.idx] - (tr.t.muroFolga ?? 8) : pneu && ladoMuro === pneu ? tr.W / 2 + 26 : lim);
   if (Math.abs(fr.lat) > limite || nx < 2 || ny < 2 || nx > tr.t.world - 2 || ny > tr.t.world - 2) {
     const p = tr.pts[race.idx], s = Math.sign(fr.lat) || 1, over = Math.abs(fr.lat) - limite;
-    if (over > 0) { nx -= p.nx * s * over; ny -= p.ny * s * over; }
+    if (over > 0) { const o = Math.min(over, window.Sim?.EMPURRAO_MURO ?? 10); nx -= p.nx * s * o; ny -= p.ny * s * o; } // (2026-11-22: o mesmo limite do servidor, sim.js EMPURRAO_MURO)
     nx = Math.max(2, Math.min(tr.t.world - 2, nx)); ny = Math.max(2, Math.min(tr.t.world - 2, ny));
     const vn = c.vx * p.nx * s + c.vy * p.ny * s, hit = Math.abs(vn);
     // a batida tira a velocidade que ia contra o muro (com um quiquezinho) e, do resto, perde mais quanto mais de frente

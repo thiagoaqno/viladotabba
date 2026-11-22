@@ -228,6 +228,7 @@ function pilotoLinha(c, tr, spec, vAlvo, latAlvo, saida = {}, op = PILOTO_LINHA)
 //   quali (classificação: com box desde 2026-11-16), f1 (regras de F1: pneu, DRS, ERS), agua (a água na pista, 0 a 1: F1.climaEm)
 // ev (opcional): lista onde o passo põe o que aconteceu: { t: "muro"|"bump"|"setor"|"box"|"pouso"|"respawn", ... }
 const SAIDA = {}, ENT_AUTO = {};
+const EMPURRAO_MURO = 10; // (u por passo: o muro empurra o carro de volta no máximo isso de uma vez; fisica.js usa o mesmo)
 function passo(c, ent, amb, tr, ev) {
   const dt = PASSO, spec = amb.spec, p = D.parametros(spec), n = tr.n;
   c.tick++;
@@ -294,7 +295,7 @@ function passo(c, ent, amb, tr, ev) {
   const limiteL = Math.min(P.limiteViaduto(tr.t, tr.n, c.idx, tr.W), tr.murosCenario ? (tr.murosCenario[lado][c.idx] ? tr.W / 2 + tr.murosCenario[lado][c.idx] - (tr.t.muroFolga ?? 8) : Infinity) : tr.murosEscape?.[lado]?.[c.idx] ? tr.W / 2 + tr.murosEscape[lado][c.idx] - (tr.t.muroFolga ?? 8) : pneu && lado === pneu ? tr.W / 2 + 26 : lim);
   if (Math.abs(fr.lat) > limiteL || nx < 2 || ny < 2 || nx > tr.t.world - 2 || ny > tr.t.world - 2) {
     const q = tr.pts[c.idx], s = Math.sign(fr.lat) || 1, over = Math.abs(fr.lat) - limiteL;
-    if (over > 0) { nx -= q.nx * s * over; ny -= q.ny * s * over; }
+    if (over > 0) { const o = Math.min(over, EMPURRAO_MURO); nx -= q.nx * s * o; ny -= q.ny * s * o; } // (2026-11-22: no máximo EMPURRAO_MURO por passo: um salto de muro vira um deslize rápido, não um teleporte; fisica.js igual)
     nx = limite(nx, 2, tr.t.world - 2); ny = limite(ny, 2, tr.t.world - 2);
     const vn = c.vx * q.nx * s + c.vy * q.ny * s, hit = Math.abs(vn);
     // a batida tira a velocidade que ia contra o muro (com um quiquezinho) e, do resto, perde mais quanto mais de frente bateu
@@ -759,7 +760,7 @@ function extraDoAcerto(a, v, o = {}) {
   o.raspa = raspa;
   return o;
 }
-const api = { vacuoRastro, viradaMax, ACERTO_PADRAO, alturaParada, forcaDaAsa, afundaAero, extraDoAcerto, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+const api = { EMPURRAO_MURO, vacuoRastro, viradaMax, ACERTO_PADRAO, alturaParada, forcaDaAsa, afundaAero, extraDoAcerto, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

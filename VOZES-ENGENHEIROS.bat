@@ -3,7 +3,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 chcp 65001 >nul
 cd /d "%~dp0"
 rem As vozes dos outros engenheiros do radio (Marcos, Bia, Rafa: public/corrida/radio.js ENGENHEIROS), com a ElevenLabs. Cada um tem as mesmas
-rem falas do Jeff, na voz que voce escolher, em public\corrida\radio\<engenheiro>\. Gera so as que faltam: pode parar e rodar de novo.
+rem falas do Jeff (ate 3 variacoes de cada, ~17 mil caracteres por engenheiro), na voz que voce escolher, em public\corrida\radio\<engenheiro>\. Gera so as que faltam: pode parar e rodar de novo.
 rem A chave e pedida aqui, sem aparecer na tela, e vive so nesta janela: nunca vai para arquivo nem para log.
 set "ELEVENLABS_API_KEY="
 where node >nul 2>nul || (echo Node nao encontrado. Instale o Node 22 ou mais novo: https://nodejs.org & echo. & pause & exit /b 1)
@@ -25,7 +25,7 @@ if "%O%"=="3" set "P=rafa"
 if "%P%"=="" ( echo Opcao invalida. & pause & exit /b 1 )
 
 echo.
-node ferramentas\radio-engenheiro.js --estimar --pasta %P%
+node ferramentas\radio-engenheiro.js --estimar --pasta %P% --variacoes 3
 echo.
 set "VZ="
 set /p "VZ=Voice ID da ElevenLabs para %P%: "
@@ -39,7 +39,7 @@ for /f "usebackq delims=" %%k in (`powershell -NoProfile -ExecutionPolicy Bypass
 if "%ELEVENLABS_API_KEY%"=="" ( echo Sem chave. Nada foi gerado. & pause & exit /b 1 )
 
 echo.
-node ferramentas\radio-engenheiro.js --pasta %P% --voz "!VZ!"
+node ferramentas\radio-engenheiro.js --pasta %P% --variacoes 3 --voz "!VZ!"
 set "RC=%ERRORLEVEL%"
 set "ELEVENLABS_API_KEY="
 

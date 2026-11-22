@@ -16,7 +16,8 @@ function escolher(situacao, ultimoId, rnd = Math.random) {
   // as falas da temporada em uso (radio/falas.js POR_ANO): somam às de sempre, ou ficam sozinhas nas de SO_DO_ANO
   const ano = root.F1Temporadas && root.F1Temporadas.anoAtual ? root.F1Temporadas.anoAtual() : null, doAno = ano ? F.porSituacao(`${situacao}-${ano}`) : [];
   const todas = doAno.length && (F.SO_DO_ANO || []).includes(situacao) ? doAno : F.porSituacao(situacao).concat(doAno); if (!todas.length) return null;
-  const opcoes = todas.length > 1 ? todas.filter((f) => f.id !== ultimoId) : todas;
+  const daVoz = engenheiro ? todas.filter((f) => variacao(f.id) <= VARIACOES_ENG) : todas, base = daVoz.length ? daVoz : todas; // (os outros engenheiros: só as primeiras variações)
+  const opcoes = base.length > 1 ? base.filter((f) => f.id !== ultimoId) : base;
   return opcoes[Math.min(opcoes.length - 1, Math.floor(rnd() * opcoes.length))];
 }
 
@@ -74,6 +75,9 @@ const ENGENHEIROS = [
   { id: "bia", nome: "Bia", estilo: "Empolgada" },
   { id: "rafa", nome: "Rafa", estilo: "Técnico, direto" },
 ];
+// (2026-11-21, o Thiago: "só tenho 83.200 caracteres") os outros engenheiros têm só as VARIACOES_ENG primeiras variações de cada fala (~17 mil caracteres
+// cada um, em vez de ~35 mil): com um deles escolhido, o rádio sorteia só entre elas
+const VARIACOES_ENG = 3, variacao = (id) => { const m = String(id).match(/-(\d+)$/); return m ? +m[1] : 1; };
 let engenheiro = ""; try { const e = localStorage.getItem("corrida:engenheiro") || ""; if (ENGENHEIROS.some((x) => x.id === e)) engenheiro = e; } catch {}
 function escolherEngenheiro(id) {
   if (!ENGENHEIROS.some((x) => x.id === id)) return engenheiro;
@@ -197,7 +201,7 @@ function frase(partes, quando, op = {}) {
 // um pedaço de um grupo (frente, tras, chegando...), sem repetir o último do mesmo grupo
 const ultimoPedaco = {};
 function pedaco(quando) {
-  const l = F.pecasDe ? F.pecasDe(quando) : []; if (!l.length) return null;
+  const l0 = F.pecasDe ? F.pecasDe(quando) : [], l1 = engenheiro ? l0.filter((p) => variacao(p.id) <= VARIACOES_ENG) : l0, l = l1.length ? l1 : l0; if (!l.length) return null;
   const op = l.length > 1 ? l.filter((p) => p.id !== ultimoPedaco[quando]) : l, p = op[Math.floor(Math.random() * op.length)];
   ultimoPedaco[quando] = p.id; return p.id;
 }

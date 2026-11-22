@@ -9,7 +9,9 @@ const F = require("../public/corrida/radio/falas.js");
 // (2026-11-21) `--pasta <engenheiro>`: a voz de um dos outros engenheiros (radio.js ENGENHEIROS: marcos, bia, rafa) em radio/<engenheiro>/, sem as do
 // observador (spot*, que são sempre a mesma voz)
 const argv0 = process.argv.slice(2), ip = argv0.indexOf("--pasta"), SUB = ip >= 0 ? String(argv0[ip + 1] || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "") : "";
-const FALAS = F.FALAS.concat(F.PECAS || []).filter((f) => !SUB || !String(f.id).startsWith("spot")); // as falas inteiras e os pedaços que o rádio emenda (nomes, distâncias, comentários)
+// `--variacoes N`: só as N primeiras variações de cada fala (as que o rádio usa com os outros engenheiros: radio.js VARIACOES_ENG)
+const iv0 = argv0.indexOf("--variacoes"), VAR = iv0 >= 0 ? Math.max(1, Math.round(+argv0[iv0 + 1] || 0)) : 0, nVar = (id) => { const m = String(id).match(/-(\d+)$/); return m ? +m[1] : 1; };
+const FALAS = F.FALAS.concat(F.PECAS || []).filter((f) => (!SUB || !String(f.id).startsWith("spot")) && (!VAR || !f.quando || nVar(f.id) <= VAR)); // as falas inteiras e os pedaços que o rádio emenda (nomes, distâncias, comentários)
 
 const PASTA = path.join(__dirname, "..", "public", "corrida", "radio", SUB);
 // a voz: --voz <id> (o GERAR-VOZES-CORRIDA.bat passa), senão ELEVENLABS_VOICE_ID, senão a padrão do engenheiro

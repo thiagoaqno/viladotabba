@@ -387,20 +387,6 @@ Object.assign(EVENTOS, {
       { id: "reclamar", rotulo: "Reclamar dos comissários na imprensa", efeito: { torcida: 3, diretoria: -3 } },
     ],
   },
-  // a estratégia de paradas que a equipe planeja (vem em todo GP, junto do plano do domingo): o engenheiro chama o box nas voltas dela (o MFD,
-  // estrategia-box.js) e você larga com o pneu dela (corrida.js abrirGP). As opções saem da conta dos planos (f1-pneus-ritmo.js) desta pista.
-  estrategia: {
-    quem: "Estrategista", fase: "domingo",
-    quando: (c, s) => !!c.proximo && estrategiasDoGP(s).length > 0,
-    titulo: () => "A estratégia de paradas",
-    texto: (c, s) => `O estrategista montou os planos para as ${voltasDoGP(s)} voltas, já contando o pneu do plano do domingo e dos eventos que você decidiu. Com um deles, a equipe chama o seu box na volta certa e você larga com o pneu do plano.`,
-    opcoes: [
-      { id: "equilibrada", rotulo: (c, s) => rotuloDaEstrategia(s, "equilibrada"), pode: (s) => !!estrategiaDe(s, "equilibrada"), efeito: {} },
-      { id: "agressiva", rotulo: (c, s) => rotuloDaEstrategia(s, "agressiva"), pode: (s) => !!estrategiaDe(s, "agressiva"), efeito: { torcida: 1 } },
-      { id: "conservadora", rotulo: (c, s) => rotuloDaEstrategia(s, "conservadora"), pode: (s) => !!estrategiaDe(s, "conservadora"), efeito: {} },
-      { id: "livre", rotulo: "Sem plano: eu decido as paradas", efeito: {} },
-    ],
-  },
 });
 const CORRIDA = new Set(["contaDaOficina", "comissarios", "toquePiloto", "batidaCompanheiro", "corridaLimpa", "showUltrapassagens", "depoisDoAbandono", "punicoes"]);
 const corridaDe = (c) => (c.ultimo && c.ultimo.analise && c.ultimo.analise.corrida) || null;
@@ -413,42 +399,8 @@ function quemTocou(c, s) {
   if (!l.length) return null;
   const p = Pilotos.PILOTOS.find((x) => x.id === l[0][0]); return p ? { id: p.id, nome: p.nome, ...l[0][1] } : null;
 }
-// as estratégias da equipe para o próximo GP: a melhor da conta, a melhor com uma parada a mais (agressiva) e com uma a menos (conservadora)
-const Ritmo = () => { try { return root.F1PneusRitmo || require("../f1-pneus-ritmo.js"); } catch (e) { return null; } };
-const Regras1 = () => { try { return root.F1Regras || require("../f1-regras.js"); } catch (e) { return null; } };
-const voltasDoGP = (s) => { const g = s.calendario && s.calendario[s.gp], F = Regras1(); return g && F && F.voltasDoGP ? F.voltasDoGP(s.voltas, g.pista) : s.voltas; };
-const CACHE_EST = new Map();
-function estrategiasDoGP(s) {
-  const g = s.calendario && s.calendario[s.gp], R = Ritmo(); if (!g || !R) return [];
-  const tab = R.tabelaDe(g.pista), voltas = voltasDoGP(s); if (!tab || voltas < 2) return [];
-  // (2026-11-21) o pneu do seu carro neste GP: o plano do domingo já escolhido vezes o dos eventos (o mesmo limite de sim.js), para as voltas das
-  // paradas baterem com o pneu de verdade (em Jeddah o plano "conservador" chamava o box na 7, com o médio ainda em 60%)
-  const Fr = Regras1(), lim = Fr && Fr.DESGASTE_SOMADO ? Fr.DESGASTE_SOMADO : [0.8, 1.4], idPlano = garantir(s).decisoes[`${s.ano}:${s.gp}:plano`], mods = modificadores(s);
-  const fator = Math.round(Math.max(lim[0], Math.min(lim[1], (Fr && Fr.desgasteDoPlano ? Fr.desgasteDoPlano(idPlano) : 1) * ((mods && mods.desgaste) || 1))) * 20) / 20;
-  const k = `${g.pista}:${voltas}:${fator}`; if (CACHE_EST.has(k)) return CACHE_EST.get(k);
-  const F = Regras1(), teto = (F ? F.PENHASCO : 0.8) + 0.05; // (nenhum stint passa do penhasco: o plano que a equipe sugere nunca deixa o pneu acabar)
-  const l = R.planos(tab, voltas, { janela: 40, max: 400, fator }).filter((x) => R.simular(tab, voltas, x, { fator }).desgaste.every((d) => d <= teto)), melhor = l[0], out = [];
-  if (melhor) {
-    out.push({ id: "equilibrada", ...melhor });
-    const mais = l.find((x) => x.paradas.length > melhor.paradas.length), menos = l.find((x) => x.paradas.length < melhor.paradas.length);
-    if (mais) out.push({ id: "agressiva", ...mais }); if (menos) out.push({ id: "conservadora", ...menos });
-  }
-  const r = out.map((x) => ({ id: x.id, largada: x.largada, paradas: x.paradas.map((q) => ({ volta: q.volta, composto: q.composto })), tempo: Math.round((x.tempo - melhor.tempo) * 10) / 10 }));
-  if (CACHE_EST.size > 50) CACHE_EST.clear(); CACHE_EST.set(k, r); return r;
-}
-const estrategiaDe = (s, id) => estrategiasDoGP(s).find((x) => x.id === id) || null;
-const NOME_PNEU = { macio: "macio", medio: "médio", duro: "duro" };
-function rotuloDaEstrategia(s, id) {
-  const e = estrategiaDe(s, id); if (!e) return "";
-  const nome = { equilibrada: "Equilibrada", agressiva: "Agressiva", conservadora: "Conservadora" }[id], n = e.paradas.length;
-  const paradas = n ? `, box ${e.paradas.map((q) => `na ${q.volta} (${NOME_PNEU[q.composto] || q.composto})`).join(" e ")}` : ", sem parar";
-  return `${nome}: ${n} parada${n === 1 ? "" : "s"}, largar de ${NOME_PNEU[e.largada] || e.largada}${paradas}${e.tempo > 0 ? ` · +${String(e.tempo).replace(".", ",")} s na conta` : " · a mais rápida na conta"}`;
-}
-// a estratégia escolhida para o GP (corrida.js: o pneu da largada e as paradas que o MFD chama), ou null
-function estrategiaEscolhida(s, ano = s.ano, gp = s.gp) {
-  const id = garantir(s).decisoes[`${ano}:${gp}:estrategia`]; if (!id || id === "livre") return null;
-  return estrategiaDe(s, id);
-}
+// (2026-11-21, o Thiago: "as estratégias de box atuais não fazem muito sentido, acho que devemos tirar") a estratégia de paradas da equipe saiu:
+// a Central não sugere mais paradas nem o pneu da largada, e o MFD não chama o box por ela (as decisões antigas desse GP ficam no save, sem efeito)
 // um sorteio fixo da carreira para este GP (o mesmo save vê sempre o mesmo)
 const chance = (s, tag, p) => gerador(`${tag}:${s.semente}:${s.ano}:${s.gp}`)() < p;
 const rivalDe = (s) => { try { const r = Reg().imersao(s).rival; return r && r.id ? (Pilotos.PILOTOS.find((x) => x.id === r.id) || null) : null; } catch (e) { return null; } };
@@ -477,10 +429,10 @@ function acontecimentos(s) {
   garantir(s);
   if (!s.calendario || s.gp >= s.tamanho) return [];
   const c = contexto(s), base = `${s.ano}:${s.gp}`;
-  const candidatos = Object.keys(EVENTOS).filter((id) => id !== "plano" && id !== "estrategia" && (s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s)));
+  const candidatos = Object.keys(EVENTOS).filter((id) => id !== "plano" && (s.paddock.decisoes[`${base}:${id}`] || EVENTOS[id].quando(c, s)));
   const r = gerador(`paddock:${s.semente}:${base}`), embaralhados = candidatos.map((id) => [r() * (CORRIDA.has(id) ? 0.3 : NOVOS.has(id) ? 0.45 : 1), id]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   const decididos = embaralhados.filter((id) => s.paddock.decisoes[`${base}:${id}`]), resto = embaralhados.filter((id) => !s.paddock.decisoes[`${base}:${id}`]);
-  const comPlano = [...[...decididos, ...resto].slice(0, 3), ...(EVENTOS.estrategia.quando(c, s) || s.paddock.decisoes[`${base}:estrategia`] ? ["estrategia"] : []), ...(EVENTOS.plano.quando(c, s) || s.paddock.decisoes[`${base}:plano`] ? ["plano"] : [])]; // (o plano do domingo vem sempre, fora dos dois sorteados)
+  const comPlano = [...[...decididos, ...resto].slice(0, 3), ...(EVENTOS.plano.quando(c, s) || s.paddock.decisoes[`${base}:plano`] ? ["plano"] : [])]; // (o plano do domingo vem sempre, fora dos dois sorteados)
   return comPlano.map((id) => {
     const e = EVENTOS[id], escolha = s.paddock.decisoes[`${base}:${id}`] || null, fixo = escolha && s.paddock.textos && s.paddock.textos[`${base}:${id}`]; // (decidido: o texto da hora da decisão, mesmo que o companheiro tenha mudado)
     return { id, quem: e.quem, fase: e.fase, titulo: fixo ? fixo.titulo : e.titulo(c, s), texto: fixo ? fixo.texto : e.texto(c, s), escolha, resultado: fixo ? fixo.resultado : null, opcoes: e.opcoes.filter((o) => !o.pode || o.pode(s)).map((o) => ({ id: o.id, rotulo: typeof o.rotulo === "function" ? o.rotulo(c, s) : o.rotulo, efeito: o.custo ? { ...o.efeito, caixa: -o.custo(c, s) } : o.efeito, consequencia: o.acao ? previaDaAcao(s, o.acao) : null })) };
@@ -738,7 +690,7 @@ function novaTemporada(s) {
   for (const k of Object.keys(p.decisoes)) if (Number(k.split(":")[0]) < s.ano - 1) delete p.decisoes[k];
 }
 const salarios = (s) => (s.paddock ? (s.paddock.salarioComp || 0) + (s.paddock.salarioStaff || 0) : 0);
-const api = { estrategiasDoGP, estrategiaEscolhida, modificadores, MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
+const api = { modificadores, MARCOS, marcos, personalidade, experiencia, garantir, acontecimentos, decidir, aoResultado, novaTemporada, ajusteDeRitmo, salarios, substituto, EVENTOS, NOMES };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Paddock = api;
 })(typeof window !== "undefined" ? window : globalThis);

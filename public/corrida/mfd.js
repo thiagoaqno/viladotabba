@@ -433,7 +433,7 @@ function dadosDaSugestao(ctx) {
   const mud = S.clima && S.clima.chove && F.proximaMudanca && clima.t >= 0 ? F.proximaMudanca(S.clima, clima.t) : null;
   const e = { F, ritmo: window.F1PneusRitmo, pista: S.config.pista, pneu: race.pneu, voltaAtual: Math.min(voltas, (m.laps || 0) + 1), voltas, jogos, janela: ctx.janela,
     compostosUsados: ["macio", "medio", "duro"].filter((c) => jogos[c] != null && jogos[c] < F.JOGOS_POR_COMPOSTO).length,
-    agua: clima.agua, chuva: clima.chuva, mudanca: mud, tempoVolta: m.last || m.best || 0, taxaPneu: ctx.tp && ctx.tp.taxa, stopGo: m.stopGo || null, pedido: B.pedido, emBox: !!B.fase, fator: (carOf(m) || {}).desgaste || 1, paradasEquipe: m.paradasEquipe || null };
+    agua: clima.agua, chuva: clima.chuva, mudanca: mud, tempoVolta: m.last || m.best || 0, taxaPneu: ctx.tp && ctx.tp.taxa, stopGo: m.stopGo || null, pedido: B.pedido, emBox: !!B.fase, fator: (carOf(m) || {}).desgaste || 1 };
   return { e, EB };
 }
 function atualizarSugestao(ctx, agora) {

@@ -88,6 +88,9 @@ function bater(room, p, forca, tipo, agora, log, chave = tipo) {
   if (agora < (cd[chave] || 0)) return null;
   const b = F1.batida(forca);
   if (!b) return null;
+  // (2026-11-21, o Thiago: "o cara bate em mim, eu saio da pista e ganho +5 porque quando voltei ultrapassei alguém") todo toque com outro carro fica
+  // anotado com a culpa, antes de qualquer regra: quem é jogado para fora (registrar) não leva o limite de pista nem a punição de ganhar posição
+  if (tipo !== 'muro' && String(chave).startsWith('carro:')) { const it = Contato.impactoDe(room, p.id, String(chave).slice(6)); p.toqueCarro = { at: agora, culpa: !!(it && it.culpado === p.id) }; }
   // ACIDENTE DE CORRIDA: o ATINGIDO derrapou (rodou, atravessou) e o causador bateu nele em seguida, sem ter como desviar. Ninguém é
   // punido e ninguém leva dano. O impacto guardado (as velocidades de antes do impulso) ou o histórico dos últimos ACIDENTE_MS dizem se o
   // atingido estava derrapando. Se quem derrapou foi o CAUSADOR (rodou e acertou alguém), a batida segue abaixo como qualquer outra:
@@ -180,6 +183,7 @@ function passo(room, agora, log) {
   }
   return mudou;
 }
+const EMPURRADO_MS = 3000; // (o tempo, depois de um toque sem culpa, em que sair da pista é "ser jogado para fora")
 function registrar(room, p, pos, agora, log) {
   const d = room.direcao; if (!d || !Number.isFinite(pos.prog) || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
   largada(room, p, pos, agora, log);
@@ -188,13 +192,18 @@ function registrar(room, p, pos, agora, log) {
   const lat = (pos.x - pt.x) * -pt.ty + (pos.y - pt.y) * pt.tx;
   // Um aviso por saída completa. O limite inclui a zebra e a largura inteira do carro.
   const fora = Math.abs(lat) > t.width / 2 + 13;
-  if (fora && !p.fora && !p.box) {
+  // jogado para fora: saiu até EMPURRADO_MS depois de um toque em que a culpa não foi dele (ou levou o toque já fora da pista)
+  const empurrado = !!(p.toqueCarro && !p.toqueCarro.culpa && agora - p.toqueCarro.at < EMPURRADO_MS);
+  if (fora && p.fora && empurrado) p.foraEmpurrado = true;
+  if (fora && !p.fora && !p.box && empurrado) { p.foraEmpurrado = true; p.frenteAoSair = null; log(`⚫⚪ ${p.name}: fora da pista depois de um toque (sem limite de pista).`); }
+  else if (fora && !p.fora && !p.box) {
     // Guarda apenas os carros próximos que estavam à frente ao sair da pista.
     p.frenteAoSair = room.order.map((id) => room.players[id]).filter((q) => q && q.id !== p.id && !q.dnf && q.finish == null && !q.box && q.pos && progresso(q, n) > pr && progresso(q, n) - pr < 0.02).map((q) => q.id);
     p.avisosLimite++;
     log(`⚫⚪ ${p.name}: limite de pista (${p.avisosLimite}/4).`);
     if (p.avisosLimite === 4) penalizar(p, 5, 'quatro saídas de pista', log);
   }
+  if (!fora && p.fora) { if (p.foraEmpurrado) p.frenteAoSair = null; p.foraEmpurrado = false; } // (quem foi jogado para fora volta sem a punição de ganhar posição)
   if (!fora && p.fora && p.frenteAoSair && !p.box) {
     const ganhou = p.frenteAoSair.some((id) => { const q = room.players[id]; return q && !q.dnf && q.finish == null && !q.box && q.pos && pr > progresso(q, n) + 0.0005; });
     if (ganhou) penalizar(p, 5, 'ganhou posição fora da pista', log);

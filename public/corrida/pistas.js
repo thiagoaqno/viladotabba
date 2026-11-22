@@ -2391,6 +2391,20 @@ function murosDoCenario(pts, largura, cen) {
     }
     if (it.tipo === "placa" || it.tipo === "kit") { const meio = it.tipo === "placa" ? (+it.w || 60) / 2 : 3 * 4.8; const [x0, y0] = noMundo(-meio, 0), [x1, y1] = noMundo(meio, 0); reta(x0, y0, x1, y1); } // (o kit: 6 m de comprimento, girado como ele)
   }
+  return suavizarMuros(lados, n);
+}
+// (2026-11-22, o Thiago: "toda vez que bate numa parede em Mônaco o carro fica travado e teletransportando") onde uma barreira começa ou muda de
+// distância, o muro chegava até 48 u mais perto de um ponto da pista para o vizinho (~6 u): o carro encostado era jogado para dentro de uma vez
+// (sim.js e fisica.js empurram até o limite). Agora, entre dois pontos com muro, ele chega no máximo MURO_RAMPA mais perto por ponto: perto da
+// emenda o muro fica um pouco mais LONGE (nunca mais perto, sem muro invisível). Onde não há muro, nada muda.
+const MURO_RAMPA = 6;
+function suavizarMuros(lados, n) {
+  for (const a of [lados[1], lados[-1]]) {
+    for (let volta = 0; volta < 2; volta++) {
+      for (let k = 1; k <= n; k++) { const i = k % n, ant = a[(k - 1) % n]; if (a[i] && ant && a[i] < ant - MURO_RAMPA) a[i] = ant - MURO_RAMPA; }
+      for (let k = n - 2; k >= -1; k--) { const i = ((k % n) + n) % n, dep = a[(i + 1) % n]; if (a[i] && dep && a[i] < dep - MURO_RAMPA) a[i] = dep - MURO_RAMPA; }
+    }
+  }
   return lados;
 }
 const api = { obstaculosComAjustes, murosDoCenario, usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };

@@ -1,5 +1,12 @@
 [
   {
+    "id": "muros-monaco-2026-11-22",
+    "data": "2026-11-22",
+    "itens": [
+      "Batida nos muros do editor (Mônaco) sem o carro travado e teleportando: o muro não muda mais de distância de uma vez entre um ponto e outro, e empurra o carro de volta aos poucos"
+    ]
+  },
+  {
     "id": "fora-pista-batido-2026-11-22",
     "data": "2026-11-22",
     "itens": [

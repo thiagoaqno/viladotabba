@@ -20,6 +20,11 @@ const dadosDe = new Map();
 const pronto = fetch("/corrida/cenario/index.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : [])).catch(() => [])
   .then((ids) => Promise.all((Array.isArray(ids) ? ids : []).map((id) => fetch(`/corrida/cenario/${id}.json`, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) dadosDe.set(id, d); }).catch(() => {}))));
 export const cenarioPronto = pronto;
+// (2026-11-21, o Thiago: "você mudou completamente minha Mônaco, com barreiras onde eu tirei... no replay fica exatamente como eu fiz") os ajustes do
+// editor só valem ANTES de juntar as malhas: a pista montada antes de o cenario/<pista>.json chegar (o lobby monta a pista assim que abre:
+// jogo.js prepararPista) ficava sem eles, guardada assim para a corrida. O replay abre depois, com o arquivo já aqui.
+let carregado = false; pronto.then(() => { carregado = true; }, () => { carregado = true; });
+export const cenarioCarregado = () => carregado;
 
 export function modeloDoAsset(nome) {
   if (!modelos.has(nome)) modelos.set(nome, loader.loadAsync(`/corrida/assets/${nome}.glb`).then((g) => g.scene).catch((e) => { console.warn("Cenário: asset não carregou", nome, e); return null; }));

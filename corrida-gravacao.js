@@ -33,28 +33,55 @@ function passo(room, agora, onde) {
   const g = (room.grav ||= { t0: room.startAt, ids: room.order.slice(), amostras: [], ordem: new Map(), cand: new Map(), ultrapassagens: [], mundo: mundoDe(room.config.pista) });
   // a próxima amostra é marcada no relógio (t0 + k × 250 ms), não 250 ms depois da última: o laço é de 100 ms, e "250 ms depois" virava 300 ms,
   // o que atrasava o replay em relação ao tempo da corrida (o "Ver no replay" caía segundos depois da ultrapassagem)
-  if (g.amostras.length >= MAX_AMOSTRAS || agora < g.t0 + g.amostras.length * PASSO_MS) return;
-  const b = Buffer.alloc(g.ids.length * CAMPOS), prog = new Map();
-  g.ids.forEach((id, k) => {
-    const p = room.players[id], o = k * CAMPOS;
-    if (!p || p.dnf || p.finish != null) { b.writeUInt16LE(FORA, o); return; }
+  // (2026-11-21, o Thiago: "o replay 3D é travoso, parece que o carro teleporta") a amostra saía no primeiro passo do laço depois da hora dela: até
+  // 100 ms atrasada (150 a 280 ms quando o laço atrasava, no servidor.log dele), e o replay punha a posição atrasada na hora certa: o carro pulava.
+  // Com o laço atrasado mais de 250 ms, a amostra do meio nem existia e o tempo do replay encolhia. Agora cada amostra é a posição NA HORA dela,
+  // entre o estado do passo de antes e o de agora (interpolada), e todas as que ficaram para trás são escritas.
+  const agoraE = estados(room, g, onde, agora), ant = g.ant; g.ant = agoraE;
+  while (g.amostras.length < MAX_AMOSTRAS && agora >= g.t0 + g.amostras.length * PASSO_MS) {
+    const T = g.t0 + g.amostras.length * PASSO_MS, b = Buffer.alloc(g.ids.length * CAMPOS), prog = new Map();
+    g.ids.forEach((id, k) => {
+      const o = k * CAMPOS, e1 = agoraE.lista[k], e0 = ant && ant.lista[k];
+      if (!e1) { b.writeUInt16LE(FORA, o); return; }
+      const u = e0 && agoraE.t > ant.t ? Math.max(0, Math.min(1, (T - ant.t) / (agoraE.t - ant.t))) : 1, e = e0 ? misturar(e0, e1, u) : e1;
+      escrever(b, o, e, g.mundo);
+      if (!e.box) prog.set(id, { pr: progresso(room.players[id], e.f, T), f: e.f });
+    });
+    g.amostras.push(b);
+    ultrapassagens(room, g, prog, T);
+  }
+}
+// o estado de cada carro neste passo (null: fora da pista, chegou ou abandonou)
+function estados(room, g, onde, agora) {
+  return { t: agora, lista: g.ids.map((id) => {
+    const p = room.players[id];
+    if (!p || p.dnf || p.finish != null) return null;
     let f = null; try { const pt = onde(p); if (Number.isFinite(pt.idx) && pt.n) f = (((pt.idx / pt.n) % 1) + 1) % 1; } catch (e) { f = null; }
-    if (f == null) { b.writeUInt16LE(FORA, o); return; }
-    const c = (p.sim && p.sim.c) || (p.ia && p.ia.sim) || null, v = Math.abs((c && c.v) ?? (p.pos && p.pos.v) ?? 0) * KMH_POR_U;
-    b.writeUInt16LE(Math.min(FORA - 1, Math.round(f * (FORA - 1))), o);
-    b[o + 2] = Math.min(255, Math.round(v / 2));
-    b[o + 3] = Math.round(Math.max(0, Math.min(1, (c && c.gasP) || 0)) * 255);
-    b[o + 4] = Math.round(Math.max(0, Math.min(1, (c && c.brkP) || 0)) * 255);
-    b[o + 5] = Math.min(127, (c && c.marcha) || 0) + (p.box ? 128 : 0);
-    // a posição e a direção (o replay 3D): do carro da física, ou da última posição mandada
+    if (f == null) return null;
+    const c = (p.sim && p.sim.c) || (p.ia && p.ia.sim) || null;
     const x = (c && Number.isFinite(c.x)) ? c.x : p.pos && p.pos.x, y = (c && Number.isFinite(c.y)) ? c.y : p.pos && p.pos.y, a = (c && Number.isFinite(c.a)) ? c.a : p.pos && p.pos.a;
-    if (Number.isFinite(x) && Number.isFinite(y)) { const M = g.mundo; b.writeUInt16LE(u16(x, M.x0, M.e), o + 6); b.writeUInt16LE(u16(y, M.y0, M.e), o + 8); }
-    else { b.writeUInt16LE(FORA, o + 6); b.writeUInt16LE(FORA, o + 8); }
-    b.writeInt16LE(Number.isFinite(a) ? Math.round(Math.atan2(Math.sin(a), Math.cos(a)) / Math.PI * 32767) : 0, o + 10);
-    if (!p.box) prog.set(id, { pr: progresso(p, f, agora), f });
-  });
-  g.amostras.push(b);
-  ultrapassagens(room, g, prog, agora);
+    return { f, v: Math.abs((c && c.v) ?? (p.pos && p.pos.v) ?? 0) * KMH_POR_U, gas: Math.max(0, Math.min(1, (c && c.gasP) || 0)), brk: Math.max(0, Math.min(1, (c && c.brkP) || 0)),
+      marcha: Math.min(127, (c && c.marcha) || 0), box: !!p.box, x, y, a };
+  }) };
+}
+// entre dois estados: a fração da volta e o giro pelo caminho mais curto; um salto grande (o carro voltou para a pista) não mistura
+function misturar(e0, e1, u) {
+  if (u >= 1) return e1;
+  const temPos = Number.isFinite(e0.x) && Number.isFinite(e1.x) && Number.isFinite(e0.y) && Number.isFinite(e1.y);
+  if (temPos && Math.hypot(e1.x - e0.x, e1.y - e0.y) > 400) return u < 0.5 ? e0 : e1;
+  let df = e1.f - e0.f; if (df > 0.5) df -= 1; else if (df < -0.5) df += 1;
+  const da = Number.isFinite(e0.a) && Number.isFinite(e1.a) ? Math.atan2(Math.sin(e1.a - e0.a), Math.cos(e1.a - e0.a)) : 0, L = (a, b) => a + (b - a) * u;
+  return { f: ((e0.f + df * u) % 1 + 1) % 1, v: L(e0.v, e1.v), gas: L(e0.gas, e1.gas), brk: L(e0.brk, e1.brk), marcha: u < 0.5 ? e0.marcha : e1.marcha, box: u < 0.5 ? e0.box : e1.box,
+    x: temPos ? L(e0.x, e1.x) : e1.x, y: temPos ? L(e0.y, e1.y) : e1.y, a: Number.isFinite(e0.a) ? e0.a + da * u : e1.a };
+}
+function escrever(b, o, e, M) {
+  b.writeUInt16LE(Math.min(FORA - 1, Math.round(e.f * (FORA - 1))), o);
+  b[o + 2] = Math.min(255, Math.round(e.v / 2));
+  b[o + 3] = Math.round(e.gas * 255); b[o + 4] = Math.round(e.brk * 255);
+  b[o + 5] = e.marcha + (e.box ? 128 : 0);
+  if (Number.isFinite(e.x) && Number.isFinite(e.y)) { b.writeUInt16LE(u16(e.x, M.x0, M.e), o + 6); b.writeUInt16LE(u16(e.y, M.y0, M.e), o + 8); }
+  else { b.writeUInt16LE(FORA, o + 6); b.writeUInt16LE(FORA, o + 8); }
+  b.writeInt16LE(Number.isFinite(e.a) ? Math.round(Math.atan2(Math.sin(e.a), Math.cos(e.a)) / Math.PI * 32767) : 0, o + 10);
 }
 
 function ultrapassagens(room, g, prog, agora) {

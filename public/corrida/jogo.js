@@ -14,6 +14,7 @@ import { atualizarClima } from "./clima.js";
 import { passoClima, limparClima, exercitarChuva, ligarChuvaDeEnsaio } from "./clima-visual.js";
 import { updateGhosts } from "./rede.js";
 import { gridSpot, buildTrack, groundH, useTrack } from "./pista.js";
+import { cenarioPronto, cenarioCarregado } from "./cenario-pista.js"; // (2026-11-21: a pista só é montada com o cenário do editor)
 import { inclinacao as inclinacaoDoCarro } from "./inclinacao.js";
 import { renderer, scene, cam, sun, V3 } from "./cena.js";
 import { CARS3, KS, usarEscalaCarros, makeKart, poseKart, fantasmaVisual, lodKart, ocultarPiloto, dropKart, puff, stepPuffs, amostraDeFumaca } from "./carros.js";
@@ -55,6 +56,7 @@ export const keys = { gas: false, brake: false, left: false, right: false, ers: 
 // derrapagem, cacos, explosão, "POW!" e os itens) entram escondidos na cena só durante essa preparação. Depois, um
 // quadro fora da tela com a pista inteira (subirMalhas) manda as malhas para a placa e compila a sombra.
 export function prepararPista(id, hora = "dia") {
+  if (!cenarioCarregado()) { cenarioPronto.then(() => prepararPista(id, hora)); return; } // (2026-11-21) monta só com o cenário do editor (cenario-pista.js)
   const tr = buildTrack(id);
   ceuPronto(id, hora === "noite").catch(() => {});
   subirTexturas(tr.grp);

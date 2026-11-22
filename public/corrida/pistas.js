@@ -2397,7 +2397,7 @@ function murosDoCenario(pts, largura, cen) {
 // distância, o muro chegava até 48 u mais perto de um ponto da pista para o vizinho (~6 u): o carro encostado era jogado para dentro de uma vez
 // (sim.js e fisica.js empurram até o limite). Agora, entre dois pontos com muro, ele chega no máximo MURO_RAMPA mais perto por ponto: perto da
 // emenda o muro fica um pouco mais LONGE (nunca mais perto, sem muro invisível). Onde não há muro, nada muda.
-const MURO_RAMPA = 6;
+const MURO_RAMPA = 18; // (2026-11-22: era 6; com 6 o muro ficava mais longe por até 8 pontos perto da emenda e o carro entrava na barreira: o EMPURRAO_MURO de sim.js já evita o teleporte)
 function suavizarMuros(lados, n) {
   for (const a of [lados[1], lados[-1]]) {
     for (let volta = 0; volta < 2; volta++) {

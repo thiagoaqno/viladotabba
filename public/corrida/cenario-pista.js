@@ -467,6 +467,23 @@ export function aplicarAjustes(tr) {
   const d = dadosDe.get(tr.pistaId || tr.id); if (!d || !Array.isArray(d.ajustes)) return;
   for (const a of d.ajustes) aplicarAjuste(pecaDaChave(tr, a.chave), a);
 }
+// (2026-11-22, o Thiago: "a hitbox de Mônaco não é condizente com as barreiras e o fim das zebras que coloquei") VER A BATIDA (Configurações, Geral):
+// uma linha vermelha na pista onde o LADO do carro encosta no muro do editor (a distância do muro de cada ponto, murosDoCenario, menos a folga da
+// pista, mais a meia largura do carro: sim.js), para conferir com as barreiras e corrigir no editor. Vale ao abrir a pista.
+export const verMuros = () => { try { return localStorage.getItem("corrida:verMuros") === "1"; } catch { return false; } };
+function desenharMuros(tr) {
+  const folga = tr.t.muroFolga ?? 8, meio = 8, mat = new THREE.LineBasicMaterial({ color: 0xff2030, depthTest: false, transparent: true, opacity: 0.9 }), g = new THREE.Group(); g.name = "ver-muros";
+  for (const lado of [1, -1]) {
+    const a = tr.murosCenario[lado]; let pedaco = [];
+    const fechar = () => { if (pedaco.length > 1) { const geo = new THREE.BufferGeometry().setFromPoints(pedaco); const l = new THREE.Line(geo, mat); l.renderOrder = 999; g.add(l); } pedaco = []; };
+    for (let i = 0; i <= tr.n; i++) {
+      const k = i % tr.n, r = a[k]; if (!r) { fechar(); continue; }
+      const p = tr.pts[k], lat = (tr.W / 2 + r - folga + meio) * lado; pedaco.push(new THREE.Vector3(p.x + p.nx * lat, (p.h || 0) + 1.5, p.y + p.ny * lat));
+    }
+    fechar();
+  }
+  tr.grp.add(g);
+}
 export async function carregarCenario(tr) {
   if (tr.cenarioEditor) return tr.cenarioEditor;
   const g = new THREE.Group(); g.name = "cenario-editor"; tr.cenarioEditor = g; tr.grp.add(g);
@@ -474,6 +491,7 @@ export async function carregarCenario(tr) {
   const dados = dadosDe.get(tr.pistaId || tr.id);
   if (!dados || !Array.isArray(dados.itens)) return g;
   if (dados.colisao === "pecas" && window.Pistas?.murosDoCenario) tr.murosCenario = window.Pistas.murosDoCenario(tr.pts, tr.W, dados); // (a mesma conta do servidor, sim.js)
+  if (tr.murosCenario && verMuros()) desenharMuros(tr);
   if (window.Pistas?.obstaculosComAjustes) tr.obstaculos = window.Pistas.obstaculosComAjustes(tr.obstaculos, dados); // (o canteiro do grampo segue o ajuste do editor, como no servidor)
   const objs = await Promise.all(dados.itens.map((it) => montarItem(it, tr)));
   for (const o of objs) if (o) g.add(o);

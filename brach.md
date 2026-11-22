@@ -1,9 +1,11 @@
-# Muros do editor sem o carro preso e teleportando (Mônaco)
+# Ver a batida dos muros do editor, e emendas mais perto do desenho
 
-O Thiago (2026-11-22): "toda vez que bate numa parede em Mônaco meu carro fica travado e teletransportando... quando derrapei na chuva e bati isso aconteceu".
+O Thiago (2026-11-22): "a hitbox de Mônaco não é condizente com as barreiras e o fim das zebras que coloquei".
 
-- A batida nos muros do editor (`murosDoCenario`, `colisao: "pecas"`) é uma distância do muro em cada ponto da pista, de cada lado. Quem passa dela é empurrado de volta até ela, de uma vez (`sim.js`, e igual na previsão do navegador, `fisica.js`).
-- Em Mônaco, onde uma barreira começa ou muda de distância, essa distância caía até 48 u de um ponto para o vizinho (~6 u). Foram 12 lugares, medidos com `criarPista("monaco")`. O carro encostado ali era jogado para dentro da pista num passo: o teleporte, e preso quando ia e voltava.
-- `pistas.js suavizarMuros`: entre dois pontos com muro, ele chega no máximo 6 u mais perto por ponto (`MURO_RAMPA`). Perto da emenda o muro fica um pouco mais longe, nunca mais perto: sem muro invisível. Onde não há muro, nada muda. Medido de novo: nenhum salto acima de 6 u nos dois lados.
-- `sim.js` e `fisica.js`: o empurrão de volta é de no máximo 10 u por passo (`EMPURRAO_MURO`, o mesmo nos dois lados). Um caso estranho, como o carro rodando perto de outro trecho da pista, vira um deslize rápido, não um salto.
-- Não foi jogado. No programa de PC, vale ao reabrir (é servidor).
+- A conta do muro bate com o carro: ele tem 16 u de largura (`sim.js DIMENSOES`), e a folga de Mônaco (9) faz o lado dele encostar na linha da barreira.
+- Onde ela se afasta do desenho:
+  - as peças soltas (placas e kits) viram muro pelo ponto central delas, esticado alguns pontos para cada lado;
+  - o alisamento de #900 deixava o muro mais longe por até 8 pontos nas emendas.
+- `pistas.js MURO_RAMPA` 6 → 18: o muro mais longe nas emendas agora vai por 2 a 3 pontos. O teleporte continua evitado pelo empurrão de no máximo 10 u por passo (`sim.js EMPURRAO_MURO`, #900). Medido em Mônaco: o maior salto entre vizinhos ficou em 18 u (eram 48 antes de #900).
+- `cenario-pista.js` e `configuracoes.js`: Configurações, Geral, Pistas do editor, "Ver a batida dos muros". Desenha na pista uma linha vermelha onde o lado do carro encosta no muro do editor, para conferir com as barreiras e acertar no editor. Vale na próxima pista que abrir.
+- Não foi visto na tela.

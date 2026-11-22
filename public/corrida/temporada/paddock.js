@@ -87,11 +87,11 @@ const EVENTOS = {
     titulo: () => "O plano para a corrida",
     texto: () => "Os engenheiros querem saber como você vai correr. Cada plano muda o motor, a aderência e o pneu, e alguns mudam no meio da prova.",
     opcoes: [
-      { id: "arriscar", rotulo: "Ataque total: +12% de potência e +3% de aderência; pneu +15% e as batidas dão 50% mais dano", efeito: { torcida: 2 } },
-      { id: "largada", rotulo: "Largada forte: +15% de potência e +4% de aderência no primeiro terço, depois o carro cai um pouco", efeito: { torcida: 1 } },
-      { id: "final", rotulo: "Guardar para o fim: poupa pneu e motor até 60% da prova, depois +15% de potência e +4% de aderência", efeito: {} },
-      { id: "pneu", rotulo: "Esticar os pneus: o pneu gasta 25% menos, com +2% de potência", efeito: { diretoria: 1 } },
-      { id: "seguro", rotulo: "Jogar seguro: −3% de potência; pneu −15% e as batidas dão 40% menos dano", efeito: { diretoria: 1 } },
+      { id: "arriscar", rotulo: "Ataque total: +2,5% de potência e +0,5% de aderência; pneu +10% e as batidas dão 30% mais dano", efeito: { torcida: 2 } },
+      { id: "largada", rotulo: "Largada forte: +3% de potência e +0,8% de aderência no primeiro terço, depois o carro cai um pouco", efeito: { torcida: 1 } },
+      { id: "final", rotulo: "Guardar para o fim: poupa pneu e motor até 60% da prova, depois +3% de potência e +0,8% de aderência", efeito: {} },
+      { id: "pneu", rotulo: "Esticar os pneus: o pneu gasta 15% menos", efeito: { diretoria: 1 } },
+      { id: "seguro", rotulo: "Jogar seguro: −1% de potência; pneu −10% e as batidas dão 30% menos dano", efeito: { diretoria: 1 } },
       { id: "normal", rotulo: "Sem plano especial", efeito: {} },
     ],
   },
@@ -232,8 +232,8 @@ const EVENTOS = {
     titulo: () => "O pacote novo chegou da fábrica",
     texto: () => "Um assoalho novo ficou pronto antes do previsto. No túnel de vento ele é mais rápido, mas ninguém sabe se vai funcionar na pista.",
     opcoes: [
-      { id: "estrear", rotulo: "Estrear já: +2,5% de aderência se funcionar, −1,5% se não", efeito: { diretoria: 1 } },
-      { id: "tunel", rotulo: "Pagar mais testes e estrear certo: +2,5% de aderência (−2 milhões)", efeito: { caixa: -2 } },
+      { id: "estrear", rotulo: "Estrear já: +0,6% de aderência se funcionar, −0,4% se não", efeito: { diretoria: 1 } },
+      { id: "tunel", rotulo: "Pagar mais testes e estrear certo: +0,6% de aderência (−2 milhões)", efeito: { caixa: -2 } },
       { id: "esperar", rotulo: "Deixar para o próximo GP", efeito: { diretoria: -1 } },
     ],
   },
@@ -243,8 +243,8 @@ const EVENTOS = {
     titulo: () => "O motor está no limite",
     texto: () => "A telemetria mostra o motor perdendo pressão. Um motor novo é mais forte, mas a troca fora da cota custa 5 posições no grid.",
     opcoes: [
-      { id: "trocar", rotulo: "Trocar o motor: +5% de potência e 5 posições a menos no grid", efeito: {} },
-      { id: "seguir", rotulo: "Seguir com o motor velho: −3% de potência", efeito: { diretoria: 1 } },
+      { id: "trocar", rotulo: "Trocar o motor: +1,2% de potência e 5 posições a menos no grid", efeito: {} },
+      { id: "seguir", rotulo: "Seguir com o motor velho: −0,8% de potência", efeito: { diretoria: 1 } },
     ],
   },
   calor: {
@@ -253,8 +253,8 @@ const EVENTOS = {
     titulo: (c) => `Onda de calor${c.proximo ? ` em ${c.proximo.nome}` : ""}`,
     texto: () => "A previsão é de asfalto fervendo no domingo. Os engenheiros querem saber se mudam o acerto para proteger o pneu.",
     opcoes: [
-      { id: "poupar", rotulo: "Acerto para o calor: −1,5% de aderência e o pneu gasta 15% menos", efeito: {} },
-      { id: "manter", rotulo: "Manter o acerto: o pneu gasta 20% mais", efeito: { torcida: 1 } },
+      { id: "poupar", rotulo: "Acerto para o calor: −0,3% de aderência e o pneu gasta 10% menos", efeito: {} },
+      { id: "manter", rotulo: "Manter o acerto: o pneu gasta 12% mais", efeito: { torcida: 1 } },
     ],
   },
   chassiReserva: {
@@ -263,7 +263,7 @@ const EVENTOS = {
     titulo: () => "Batida no treino livre",
     texto: () => "Você bateu no TL2 e o chassi trincou. Dá para correr com o reserva, mais velho, ou virar a noite consertando o titular.",
     opcoes: [
-      { id: "reserva", rotulo: "Correr com o chassi reserva: −2% de aderência e −1% de potência", efeito: { diretoria: -1 } },
+      { id: "reserva", rotulo: "Correr com o chassi reserva: −0,5% de aderência e −0,3% de potência", efeito: { diretoria: -1 } },
       { id: "consertar", rotulo: "Virar a noite consertando (−2 milhões)", efeito: { caixa: -2, moral: -2 } },
     ],
   },
@@ -312,7 +312,7 @@ Object.assign(EVENTOS, {
     texto: (c) => { const r = corridaDe(c); return `O carro voltou com ${r.dano}% de dano depois de ${r.carros} toque${r.carros === 1 ? "" : "s"} em carros e ${r.muros} no muro. Os mecânicos querem saber até onde consertar.`; },
     opcoes: [
       { id: "completo", rotulo: (c) => `Conserto completo: o carro 100% (−${custoDoConserto(c)} milhões)`, custo: (c) => custoDoConserto(c), efeito: {} },
-      { id: "basico", rotulo: "Conserto básico: −1,5% de aderência e −1% de potência no próximo GP", efeito: { diretoria: 1 } },
+      { id: "basico", rotulo: "Conserto básico: −0,4% de aderência e −0,3% de potência no próximo GP", efeito: { diretoria: 1 } },
     ],
   },
   comissarios: {
@@ -353,7 +353,7 @@ Object.assign(EVENTOS, {
     titulo: () => "Corrida sem um arranhão",
     texto: () => "Nenhum toque o GP inteiro. Os engenheiros têm dados limpos de todas as voltas e querem usá-los.",
     opcoes: [
-      { id: "dados", rotulo: "Usar os dados no acerto: +1,5% de aderência no próximo GP", efeito: {} },
+      { id: "dados", rotulo: "Usar os dados no acerto: +0,4% de aderência no próximo GP", efeito: {} },
       { id: "folga", rotulo: "Dar folga para a garagem", efeito: { moral: 3, diretoria: 2 } },
     ],
   },
@@ -374,7 +374,7 @@ Object.assign(EVENTOS, {
     texto: () => "O carro voltou destruído. Os engenheiros querem trocar o que pode ter sido afetado antes do próximo GP.",
     opcoes: [
       { id: "revisao", rotulo: "Revisão completa (−2 milhões)", efeito: { caixa: -2 } },
-      { id: "rapida", rotulo: "Revisão rápida: −2% de potência no próximo GP", efeito: { diretoria: 1 } },
+      { id: "rapida", rotulo: "Revisão rápida: −0,5% de potência no próximo GP", efeito: { diretoria: 1 } },
     ],
   },
   punicoes: {
@@ -459,17 +459,17 @@ const pacoteFunciona = (s, ano, gp) => gerador(`pacote-ok:${s.semente}:${ano}:${
 function modificadores(s, ano = s.ano, gp = s.gp) {
   const d = garantir(s).decisoes, de = (id) => d[`${ano}:${gp}:${id}`], m = { grip: 1, potencia: 1, desgaste: 1, grid: 0 };
   const pac = de("pacoteNovo");
-  if (pac === "tunel") m.grip *= 1.025;
-  else if (pac === "estrear") m.grip *= pacoteFunciona(s, ano, gp) ? 1.025 : 0.985;
+  if (pac === "tunel") m.grip *= 1.006; // (2026-11-21: todos os efeitos daqui caíram para um quarto, a pedido do Thiago)
+  else if (pac === "estrear") m.grip *= pacoteFunciona(s, ano, gp) ? 1.006 : 0.996;
   const mot = de("motorNoLimite");
-  if (mot === "trocar") { m.potencia *= 1.05; m.grid += 5; } else if (mot === "seguir") m.potencia *= 0.97;
+  if (mot === "trocar") { m.potencia *= 1.012; m.grid += 5; } else if (mot === "seguir") m.potencia *= 0.992;
   const cal = de("calor");
-  if (cal === "poupar") { m.grip *= 0.985; m.desgaste *= 0.85; } else if (cal === "manter") m.desgaste *= 1.2;
-  if (de("chassiReserva") === "reserva") { m.grip *= 0.98; m.potencia *= 0.99; }
-  if (de("contaDaOficina") === "basico") { m.grip *= 0.985; m.potencia *= 0.99; }
+  if (cal === "poupar") { m.grip *= 0.997; m.desgaste *= 0.9; } else if (cal === "manter") m.desgaste *= 1.12;
+  if (de("chassiReserva") === "reserva") { m.grip *= 0.995; m.potencia *= 0.997; }
+  if (de("contaDaOficina") === "basico") { m.grip *= 0.996; m.potencia *= 0.997; }
   const com = de("comissarios"); if (com === "aceitar") m.grid += 3; else if (com === "recorrer" && gerador(`recurso:${s.semente}:${ano}:${gp}`)() >= 0.5) m.grid += 5;
-  if (de("corridaLimpa") === "dados") m.grip *= 1.015;
-  if (de("depoisDoAbandono") === "rapida") m.potencia *= 0.98;
+  if (de("corridaLimpa") === "dados") m.grip *= 1.004;
+  if (de("depoisDoAbandono") === "rapida") m.potencia *= 0.995;
   return m.grip === 1 && m.potencia === 1 && m.desgaste === 1 && !m.grid ? null : m;
 }
 // os acontecimentos deste GP: até dois, sorteados pela semente entre os que fazem sentido (os já decididos continuam na lista, com a escolha)

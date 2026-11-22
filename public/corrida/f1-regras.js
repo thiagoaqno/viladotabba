@@ -136,14 +136,16 @@ const voltasDoGP = (base, pista) => { base = Math.round(+base || 0); return base
 // (2026-11-21, a corrida do Thiago em Jeddah: "Jogar seguro" com "Acerto para o calor" deu 10% de desgaste por volta no médio, 7 voltas com um
 // jogo, a metade do normal) os planos poupam menos pneu (seguro 0,7 → 0,85, esticar 0,6 → 0,75) e o pneu do plano vezes o dos eventos do fim de
 // semana fica entre DESGASTE_SOMADO (sim.js).
+// (2026-11-21, o Thiago de Haas na frente de todo mundo: "essas decisões que afetam quebram um pouco o game... dosar para serem bem menores") os
+// bônus caíram para um quarto (o ataque era +12% de potência e +3% de aderência; a largada e o fim, +15% e +4%), e os do pneu para menos da metade
 const PLANOS_DOMINGO = {
-  arriscar: { grip: 1.03, potencia: 1.12, desgaste: 1.15, dano: 1.5 }, // ataque o tempo todo: rápido, mas a batida custa caro
-  seguro: { grip: 0.985, potencia: 0.97, desgaste: 0.85, dano: 0.6 }, // poupa motor, pneu e carro
-  largada: { ate: 0.35, antes: { grip: 1.04, potencia: 1.15, desgaste: 1.25 }, depois: { grip: 0.99, potencia: 0.98, desgaste: 0.9 } }, // tudo no primeiro terço
-  final: { ate: 0.6, antes: { grip: 0.99, potencia: 0.97, desgaste: 0.85 }, depois: { grip: 1.04, potencia: 1.15, desgaste: 1.2 } }, // guarda o carro e ataca no fim
-  pneu: { grip: 1, potencia: 1.02, desgaste: 0.75 }, // estender o stint
+  arriscar: { grip: 1.005, potencia: 1.025, desgaste: 1.1, dano: 1.3 }, // ataque o tempo todo
+  seguro: { grip: 0.997, potencia: 0.99, desgaste: 0.9, dano: 0.7 }, // poupa motor, pneu e carro
+  largada: { ate: 0.35, antes: { grip: 1.008, potencia: 1.03, desgaste: 1.15 }, depois: { grip: 0.998, potencia: 0.995, desgaste: 0.95 } }, // o primeiro terço
+  final: { ate: 0.6, antes: { grip: 0.998, potencia: 0.99, desgaste: 0.9 }, depois: { grip: 1.008, potencia: 1.03, desgaste: 1.12 } }, // guarda e ataca no fim
+  pneu: { grip: 1, potencia: 1, desgaste: 0.85 }, // estender o stint
 };
-const DESGASTE_SOMADO = [0.8, 1.4]; // o pneu do plano × o dos eventos (o pacote, o calor...): nunca menos que 0,8 nem mais que 1,4
+const DESGASTE_SOMADO = [0.85, 1.25]; // o pneu do plano × o dos eventos (o pacote, o calor...): nunca menos que 0,8 nem mais que 1,4
 // o desgaste médio de um plano na corrida inteira (os de duas fases pesam cada fase pelo tamanho dela)
 const desgasteDoPlano = (id) => { const p = PLANOS_DOMINGO[id]; return !p ? 1 : p.ate != null ? p.antes.desgaste * p.ate + p.depois.desgaste * (1 - p.ate) : p.desgaste || 1; };
 // Em quantas voltas o pneu chega ao penhasco, pilotado como o piloto ideal e com um gasto `fator` do carro

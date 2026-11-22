@@ -113,7 +113,7 @@ function bater(room, p, forca, tipo, agora, log, chave = tipo) {
   // a gravidade vem da VELOCIDADE RELATIVA no impacto (o causador menos o atingido, na direção do contato, medida antes do impulso): `imp.forca`
   const grav = outroId ? F1.gravidadeDaBatida(imp ? imp.forca : forca) : null;
   const culpa = !!(grav && imp && imp.culpado === p.id), batido = !!(grav && imp && imp.culpado && imp.culpado !== p.id);
-  const dano = (culpa ? DANO_CAUSADOR[grav] : batido ? DANO_BATIDO[grav] : b.dano) * (p.plano === "arriscar" ? 1.5 : p.plano === "seguro" ? 0.6 : 1); // (2026-11-21) o plano do domingo: o carro no limite quebra mais (sim.js PLANO)
+  const dano = (culpa ? DANO_CAUSADOR[grav] : batido ? DANO_BATIDO[grav] : b.dano) * ((F1.PLANOS_DOMINGO && F1.PLANOS_DOMINGO[p.plano] && F1.PLANOS_DOMINGO[p.plano].dano) || 1); // (2026-11-21) o plano do domingo: o carro no limite quebra mais (sim.js PLANO)
   p.dano = Math.min(100, Math.round(((p.dano || 0) + dano) * 10) / 10);
   p.ultimaBatida = { at: agora, nivel: grav || b.nivel, dano, tipo, ...(culpa ? { culpa: true } : batido ? { batido: true } : {}) };
   const nivel = grav ? ROTULO[grav] : { leve: 'leve', media: 'média', forte: 'forte' }[b.nivel];

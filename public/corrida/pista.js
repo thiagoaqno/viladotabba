@@ -31,7 +31,7 @@ import { boxesGP } from "./kit/corredor-boxes.js";
 import { parque } from "./kit/parque.js";
 import { fundirEstaticos } from "./kit/fundir.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { carregarCenario, aplicarAjustes, relevoDoEditor } from "./cenario-pista.js";
+import { carregarCenario, aplicarAjustes, relevoDoEditor, cenarioCarregado } from "./cenario-pista.js";
 
 // ---------- temas das pistas: cores, chão, enfeites e o horizonte ----------
 export const THEMES = {
@@ -148,6 +148,7 @@ export function buildTrack(id) {
   }
   buildWorld(tr); tr.comProps = !!PROPS.pronto;
   carregarCenario(tr); // (o cenário do editor de pistas, cenario/<pista>.json: chega depois, sem segurar a pista)
+  if (!cenarioCarregado()) return tr; // (sem o cenário do editor ainda: não guarda; a próxima montagem, com ele, é a que vale)
   return (TRACKS[id] = tr);
 }
 // altura do chão: em cima da pista e um pouco para os lados é a altura da pista; mais longe, desce até o nível 0

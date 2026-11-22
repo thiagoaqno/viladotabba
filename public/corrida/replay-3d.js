@@ -10,7 +10,9 @@
 import { renderer, scene, cam, sun } from "./cena.js";
 import { buildTrack, useTrack, groundH } from "./pista.js";
 import { makeKart, poseKart, lodKart, dropKart, usarEscalaCarros, ocultarPiloto, CARS3, KS } from "./carros.js";
-import { quadroCamera, ORDEM, NOMES } from "./cameras.js";
+import { quadroCamera, ORDEM, NOMES, somDaCamera } from "./cameras.js";
+import { Sound } from "./sons.js";
+import { rotacao } from "./cambio.js";
 import { nearest } from "./jogo.js";
 import { desenhar, ajustarTela, definirEstacao } from "./pos.js";
 import { ceuPronto, luzPendente } from "./ceu.js";
@@ -210,6 +212,10 @@ function laco(t) {
     lodKart(c.kart, Math.hypot(e.x - cam.position.x, e.y - cam.position.z));
   }
   if (alvo) src = alvo;
+  // (2026-11-21, o Thiago: "o replay 3D não tem som") o motor do carro seguido, o mesmo som do jogo: a rotação sai da velocidade e da marcha gravadas;
+  // pausado, procurando ou rápido demais (acima de 2×), fica mudo
+  { const soa = !!alvo && st.tocando && Math.abs(st.vel) <= 2 && st.vel > 0, vU = Math.abs(src.v || 0), m = src.marcha || 1, vmax = (CARS3.equilibrado && CARS3.equilibrado.vmax) || 440;
+    try { Sound.engine(soa ? vU : 0, soa, soa && (src.gas || 0) > 0.4, m, soa ? Math.max(0, Math.min(1.05, rotacao(vU, vmax, m))) : 0, { cam: somDaCamera(st.modo), lim: 0, ers: false, freio: (src.freio || 0) > 0.3, kmh: src.kmh || vU * 0.75 }); } catch (e) { /* sem som */ } }
   animarVida(tr, dt, src);
   const mode = quadroCamera(R, { dt, tr, c: src, src, nearest, rm: rm.matches, escolha: st.modo, assistindo: false, acabou: false, spec: CARS3.equilibrado, olharTras: false });
   if (principal) ocultarPiloto(principal.kart, mode === "cockpit");

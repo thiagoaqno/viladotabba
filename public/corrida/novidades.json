@@ -1,5 +1,14 @@
 [
   {
+    "id": "replay-monaco-2026-11-21",
+    "data": "2026-11-21",
+    "itens": [
+      "Mônaco (e toda pista com cenário do editor) monta só depois de o cenário chegar: na corrida não voltam mais as barreiras que foram tiradas no editor",
+      "Replay 3D mais fluido: cada posição é gravada na hora certa, sem os pulos do carro (vale para as corridas novas)",
+      "Replay 3D com o som do motor do carro seguido"
+    ]
+  },
+  {
     "id": "bonus-menores-2026-11-21",
     "data": "2026-11-21",
     "itens": [

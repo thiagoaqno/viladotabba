@@ -48,7 +48,8 @@ function abaAudio() {
     return linha(nome, dica, `<input type="range" min="0" max="100" value="${v}" data-som="${k}"><output data-som-v="${k}">${v}%</output>`); }).join("");
   return parte("Som", linha("Som do jogo", "Liga e desliga tudo", chave("data-acao=\"som\"", Sound.on)))
     + parte("Volumes", sons)
-    + parte("Rádio", linha("Voz do engenheiro", "Os avisos da equipe durante a corrida", `<button type="button" class="cfg-bt cfg-radio" data-radio-botao></button>`));
+    + parte("Rádio", linha("Voz do engenheiro", "Os avisos da equipe durante a corrida", `<button type="button" class="cfg-bt cfg-radio" data-radio-botao></button>`)
+      + (window.Radio?.ENGENHEIROS ? linha("Engenheiro", "Quem fala com você no rádio (as mesmas falas, cada um com a voz dele)", `<div class="cfg-seg" role="radiogroup">${window.Radio.ENGENHEIROS.map((e) => `<button type="button" role="radio" aria-checked="${e.id === window.Radio.engenheiro()}" data-engenheiro="${e.id}" title="${e.estilo}">${e.nome}</button>`).join("")}</div>`) : ""));
 }
 function abaGeral() {
   const g = graficos(), linhaFreio = document.getElementById("btnLinhaFreio"), tema = document.getElementById("btnTemaSala");
@@ -75,6 +76,7 @@ function montar() {
     <div class="cfg-meio"><nav class="cfg-abas" role="tablist"></nav><div class="cfg-corpo"></div></div></div>`;
   document.body.appendChild(tela);
   tela.addEventListener("click", (e) => {
+    { const b = e.target.closest?.("[data-engenheiro]"); if (b && window.Radio?.escolherEngenheiro) { window.Radio.escolherEngenheiro(b.dataset.engenheiro); desenhar(); try { window.Radio.dizer("boasvindas", { forcar: true }); } catch (er) { /* sem rádio */ } return; } } // (o engenheiro: uma fala para ouvir a voz)
     if (e.target === tela) return fecharConfig();
     const b = e.target.closest("button"); if (!b) return;
     if (b.dataset.aba) { aba = b.dataset.aba; try { localStorage.setItem(CHAVE_ABA, aba); } catch {} return desenhar(); }

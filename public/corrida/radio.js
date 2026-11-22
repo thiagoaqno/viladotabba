@@ -64,13 +64,32 @@ if (temDOM) {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", desenharBotoes); else desenharBotoes();
 }
 
+// ---------- o engenheiro (2026-11-21, o Thiago: "e se a gente criasse 4 tipos de treinadores? aí podemos escolher a voz") ----------
+// Quatro engenheiros com as MESMAS falas, cada um com a voz dele: o Jeff é o de sempre (radio/<fala>.mp3) e os outros ficam em radio/<pasta>/<fala>.mp3
+// (gerados pelo "Vozes dos engenheiros.bat", ferramentas/radio-engenheiro.js --pasta). A fala que o escolhido ainda não tem toca com o Jeff; o
+// observador (spot*) é sempre a voz dele. A escolha fica no navegador (`corrida:engenheiro`) e aparece em Configurações, Áudio.
+const ENGENHEIROS = [
+  { id: "", nome: "Jeff", estilo: "O de sempre" },
+  { id: "marcos", nome: "Marcos", estilo: "Veterano, calmo" },
+  { id: "bia", nome: "Bia", estilo: "Empolgada" },
+  { id: "rafa", nome: "Rafa", estilo: "Técnico, direto" },
+];
+let engenheiro = ""; try { const e = localStorage.getItem("corrida:engenheiro") || ""; if (ENGENHEIROS.some((x) => x.id === e)) engenheiro = e; } catch {}
+function escolherEngenheiro(id) {
+  if (!ENGENHEIROS.some((x) => x.id === id)) return engenheiro;
+  engenheiro = id; try { localStorage.setItem("corrida:engenheiro", id); } catch {}
+  buffers.clear(); faltam.clear(); return engenheiro;
+}
+
 // ---------- tocar ----------
+function baixar(url, x) { return fetch(url).then((r) => { if (!r.ok) throw new Error("sem arquivo"); return r.arrayBuffer(); }).then((b) => x.c.decodeAudioData(b)); }
 function carregar(f) {
   if (faltam.has(f.id)) return Promise.resolve(null);
   if (buffers.has(f.id)) return Promise.resolve(buffers.get(f.id));
   const x = contexto(); if (!x || typeof fetch !== "function") return Promise.resolve(null);
-  return fetch(`/corrida/radio/${f.id}.mp3`).then((r) => { if (!r.ok) throw new Error("sem arquivo"); return r.arrayBuffer(); })
-    .then((b) => x.c.decodeAudioData(b)).then((buf) => (buffers.set(f.id, buf), buf)).catch(() => (faltam.add(f.id), null)); // sem mp3: fica em silêncio
+  const pasta = engenheiro && !/^spot/.test(f.id) ? engenheiro + "/" : "";
+  const daPasta = pasta ? baixar(`/corrida/radio/${pasta}${f.id}.mp3`, x).catch(() => baixar(`/corrida/radio/${f.id}.mp3`, x)) : baixar(`/corrida/radio/${f.id}.mp3`, x); // (sem a voz do escolhido: a do Jeff)
+  return daPasta.then((buf) => (buffers.set(f.id, buf), buf)).catch(() => (faltam.add(f.id), null)); // sem mp3: fica em silêncio
 }
 // as aberturas gravadas do rádio (os bipes antes da voz, da ElevenLabs: GERAR-SONS-PISTA.bat, "radio-bip"): o índice dos sons
 // (sons/indice.json) diz quantas versões há; cada fala sorteia uma. Sem nenhuma, tenta o radio/bip.mp3 antigo.
@@ -218,6 +237,6 @@ function classificacao(pos, total) { dizer(pos <= Math.ceil(total / 3) ? "classb
 
 // o apito de abrir o rádio sozinho (o Jeff começando a ouvir: voz.js); respeita o botão do fone (mudo) e o volume geral
 function bipe() { try { if (mudo || !temDOM) return; const x = contexto(); if (!x || x.c.state === "suspended") return; abertura(x.c, x.destino, x.c.currentTime + 0.02); } catch { /* sem áudio */ } }
-const api = { bipe, escolher, dizer, frase, pedaco, usarSaida, posicao, uma, avisoF1, fim, classificacao, silenciar, desenharBotoes, get mudo() { return mudo; }, get tocando() { return tocando; }, INTERVALO, historico: () => historico.slice() };
+const api = { ENGENHEIROS, engenheiro: () => engenheiro, escolherEngenheiro, bipe, escolher, dizer, frase, pedaco, usarSaida, posicao, uma, avisoF1, fim, classificacao, silenciar, desenharBotoes, get mudo() { return mudo; }, get tocando() { return tocando; }, INTERVALO, historico: () => historico.slice() };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Radio = api;
 })(typeof self !== "undefined" ? self : this);

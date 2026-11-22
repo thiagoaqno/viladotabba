@@ -1,12 +1,13 @@
-# As barreiras de patrocínio moldadas à pista
+# O fim do GP espera os robôs perto cruzarem a linha, e a volta do topo é a sua
 
-Pedido do Thiago (2026-11-21): "as barreiras de patrocínio com arame triplo fazerem curvas e se moldarem com a inclinação... melhorar as emendas, e não serem pedaços quadrados".
+O Thiago (2026-11-21), em Mônaco: "cheguei colado com o Norris, a menos de 3 s, e com a minha punição ele ainda ficou atrás". Também: "quando eu ainda estou atrás da linha, às vezes aparece uma volta a mais no HUD quando o primeiro já passou".
 
-- `cenario-pista.js`: a "faixa" e a "faixa com tela" do editor (39 linhas em Mônaco) viraram uma fita contínua (`fitaDePatrocinio`).
-  - Cada ponto da linha é um vértice, na altura do chão dele (a beira da pista, com o relevo).
-  - Os dois pedaços vizinhos usam o mesmo vértice, com o lado pela média das duas direções. O canto fecha: sem vão por fora e sem um pedaço entrando no outro por dentro.
-  - A tela, os três fios de arame e a tampa de cima seguem a subida. Os postes ficam de pé em cada ponto, com o braço dobrado para a pista.
-- Antes era um bloco reto por pedaço, na altura média dos dois pontos e virado só no plano: na subida virava degrau, e na curva abria vão.
-- As marcas, os fundos e o painel alternado (`marca2`/`fundo2`) continuam por pedaço. A colisão não muda (`murosDoCenario` segue os pontos).
-- Conferido no navegador de teste montando Mônaco (`buildTrack`): sem erro, e nenhum vértice com número inválido. Não foi visto na tela (sem print).
-- As barreiras que voltaram onde ele tirou eram o cenário montado antes do arquivo do editor chegar, já corrigido em #888.
+## O fim do GP (`corrida.js`)
+- A chegada do último humano fechava o GP na hora (`estimarRobos` + `endRace`). Quem ainda estava na pista ganhava um tempo estimado, pela fração da volta que faltava e pelo tempo da última volta.
+- No save dele, o Norris (a ~2 s na pista) ficou com o tempo 9 s atrás e "9 voltas" em Mônaco, assim como outros que ele não tinha ultrapassado.
+- Agora quem está perto tem até `ESPERA_CHEGADA` (20 s) para cruzar a linha de verdade. A ordem final soma as punições de tempo, como antes (`F1.classificacaoFinal`). Só quem não cruzou até lá é estimado. Se todos cruzam antes, o GP fecha na hora.
+- Não foi jogado.
+
+## A volta no topo (`hud.js`)
+- A torre mostrava a volta do líder, como na TV, e ela subia quando ele cruzava a linha antes de você.
+- Agora, enquanto você corre, é a do seu carro. De quem só assiste, ou depois da sua chegada, continua a do líder (e "BANDEIRADA").

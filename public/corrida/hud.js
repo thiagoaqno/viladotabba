@@ -356,8 +356,10 @@ function hudF1(m, st, now) {
       dif: !tempos.has(l.id) ? { tipo: "m", texto: "Sem tempo" } : pole && l.id === pole.id ? { tipo: "lider", texto: tempo3(tempos.get(l.id)) } : { tipo: "seg", texto: `+${(tempos.get(l.id) - pole.tempo).toFixed(3)}` } }));
   }
   set(document.querySelector("#hTorre .tt-modo"), "t", q ? "QUALI" : "RACE"); set($("tVoltaRot"), "t", q ? "SESSÃO" : "VOLTA");
-  // a volta no topo é a do líder (como na TV); na classificação, a sessão e o tempo que falta
-  const lid = st[0] && st[0].p, volta = lid ? Math.max(1, Math.min(cfg.voltas, (lid.started ? lid.laps : 0) + 1)) : 1, acabou = !!lid && lid.finish != null;
+  // a volta no topo: a do SEU carro enquanto você corre (2026-11-21, o Thiago: "quando eu ainda estou atrás da linha, aparece uma volta a mais quando o
+  // primeiro já passou": era a do líder, como na TV); de quem só assiste, ou depois da sua chegada, a do líder. Na classificação, a sessão e o tempo que falta
+  const lid = st[0] && st[0].p, euNaPista = !!m && m.finish == null && !m.dnf, ref = euNaPista ? m : lid;
+  const volta = ref ? Math.max(1, Math.min(cfg.voltas, (ref.started ? ref.laps : 0) + 1)) : 1, acabou = euNaPista ? false : !!lid && lid.finish != null;
   if (q) { const resta = Math.max(0, (q.fimAt - now) / 1000); set($("tVolta"), "t", q.nome); set($("tVoltaTot"), "t", q.pausa ? " · fim" : now < q.startAt ? "" : ` · ${resta > 0 ? mmss(resta) : "bandeirada"}`); }
   else { set($("tVolta"), "t", acabou ? "BANDEIRADA" : volta); set($("tVoltaTot"), "t", acabou ? "" : ` / ${cfg.voltas}`); }
   const compacta = torreCompacta(), peq = innerWidth < 700;

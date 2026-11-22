@@ -50,6 +50,7 @@ const LUZES_MS = 3500; // regras de F1: o tempo até acender a primeira das cinc
 // temporada (com a tabela do campeonato), 20 s fora dela. `CORRIDA_TV_MS` troca os dois (0 desliga: os testes de rede usam).
 const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 8000; // (a avulsa: 20 → 8 s, a pedido do Thiago, 2026-11-11: a largada demorava demais; dá para pular nas duas)
 const HORAS_CARREIRA = 72, SALA_VAZIA_MS = Number(process.env.CORRIDA_SALA_VAZIA_MS) || 120000; // (os GPs da carreira ficam 3 dias; a sala rápida sem ninguém, 2 min)
+const ESPERA_CHEGADA = 20000; // (depois da chegada de quem joga, o tempo para os robôs perto cruzarem a linha: estimarRobos)
 const MAX_PLAYERS = 8, COUNTDOWN_MS = 4500, AFTER_FIRST_MS = 60000, MAX_RACE_MS = 45 * 60000; // 45 min: dá para as 21 voltas
 const COLORS = ["#e63946", "#1e88e5", "#43a047", "#fdd835", "#8e24aa", "#fb8c00", "#00acc1", "#f06292"];
 const PAWNS = ["😎", "🤠", "👽", "🤖", "🐸", "🦊", "🐼", "🐯", "🦄", "🐙", "👻", "🤡", "🦁", "🐵", "🐧", "🏎️"];
@@ -542,10 +543,17 @@ module.exports = function attachCorrida(io) {
         const mais = F1.acrescimoDeFinal(p, room.config.voltas, !!(room.clima && room.clima.chove)); // (com chuva a regra não vale)
         if (mais) { p.acrescimo = (p.acrescimo || 0) + mais; log(room, `⏱️ ${p.name} usou um composto só: +${mais} s no resultado.`); }
       }
-      // A chegada do último humano encerra o GP: os robôs ainda na pista recebem tempos estimados.
+      // A chegada do último humano encerra o GP: os robôs ainda na pista recebem tempos estimados. (2026-11-21, o Thiago em Mônaco: "cheguei colado com
+      // o Norris, a menos de 3 s, e com a minha punição ele ainda ficou atrás") o GP fechava NA HORA, e o Norris, a 2 s, ganhava um tempo estimado pela
+      // fração da volta (no save, 9 s atrás e "9 voltas"). Agora quem está perto tem até ESPERA_CHEGADA para cruzar a linha de verdade; só quem
+      // não cruzou até lá é estimado. Quando todos cruzam antes, o GP fecha na hora (o `racing` abaixo).
       const humanos = room.order.map((id) => room.players[id]).filter((q) => !q.bot);
       if (room.config.regras === "f1" && !p.bot && humanos.length && humanos.every((q) => q.finish != null || q.dnf || q.dsq)) {
-        estimarRobos(room, now); endRace(room); return true;
+        const restam = room.order.some((id) => { const q = room.players[id]; return q.bot && q.finish == null && !q.dnf && !q.dsq; });
+        if (!restam) { endRace(room); return true; }
+        clearTimeout(room.endTimer); room.endAt = now + ESPERA_CHEGADA;
+        room.endTimer = setTimeout(() => { if (room.phase !== "race") return; estimarRobos(room, Date.now()); endRace(room); }, ESPERA_CHEGADA);
+        return true;
       }
       const racing = room.order.filter((id) => room.players[id].finish == null && !room.players[id].dnf && (room.players[id].sockets.size || (room.config.regras === "f1" && room.players[id].bot)));
       if (!racing.length) endRace(room);

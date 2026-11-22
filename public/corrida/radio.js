@@ -73,11 +73,10 @@ const ENGENHEIROS = [
   { id: "", nome: "Jeff", estilo: "O de sempre" },
   { id: "marcos", nome: "Marcos", estilo: "Veterano, calmo" },
   { id: "bia", nome: "Bia", estilo: "Empolgada" },
-  { id: "rafa", nome: "Rafa", estilo: "Técnico, direto" },
 ];
-// (2026-11-21, o Thiago: "só tenho 83.200 caracteres") os outros engenheiros têm só as VARIACOES_ENG primeiras variações de cada fala (~17 mil caracteres
-// cada um, em vez de ~35 mil): com um deles escolhido, o rádio sorteia só entre elas
-const VARIACOES_ENG = 3, variacao = (id) => { const m = String(id).match(/-(\d+)$/); return m ? +m[1] : 1; };
+// (2026-11-21, o Thiago: "só tenho 83.200 caracteres... mantém o Jeff e cria mais 2") Jeff, Marcos e Bia, todos com as falas completas (~35,5 mil
+// caracteres cada um novo). VARIACOES_ENG fica sem limite; com um número, o rádio sortearia só entre as primeiras variações (o --variacoes do gerador)
+const VARIACOES_ENG = Infinity, variacao = (id) => { const m = String(id).match(/-(\d+)$/); return m ? +m[1] : 1; };
 let engenheiro = ""; try { const e = localStorage.getItem("corrida:engenheiro") || ""; if (ENGENHEIROS.some((x) => x.id === e)) engenheiro = e; } catch {}
 function escolherEngenheiro(id) {
   if (!ENGENHEIROS.some((x) => x.id === id)) return engenheiro;

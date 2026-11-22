@@ -1,5 +1,13 @@
 [
   {
+    "id": "hitbox-monaco-2026-11-22",
+    "data": "2026-11-22",
+    "itens": [
+      "Ver a batida dos muros (Configurações, Geral): uma linha vermelha onde o lado do carro encosta nas barreiras do editor, para conferir e acertar no editor",
+      "O muro das emendas das barreiras fica mais perto do desenho (menos carro entrando na barreira)"
+    ]
+  },
+  {
     "id": "muros-monaco-2026-11-22",
     "data": "2026-11-22",
     "itens": [

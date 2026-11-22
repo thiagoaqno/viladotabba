@@ -59,6 +59,7 @@ function abaGeral() {
       + linha("Painel em primeira pessoa", "No estilo Novo, no cockpit e na câmera do bico: só a bateria e a velocidade no canto de baixo (na T-cam fica o mostrador grande)", opcoes("painelDentro", g.painelDentro, [[true, "Compacto"], [false, "Completo"]]))
       + (linhaFreio ? linha("Linha de frenagem", "Marcas na pista: verde acelera, amarelo alivia, vermelho freia", chave("data-acao=\"linha\"", linhaFreio.getAttribute("aria-pressed") === "true")) : "")
       + (tema && !tema.classList.contains("hidden") ? linha("Modo escuro na sala", "", chave("data-acao=\"tema\"", tema.getAttribute("aria-pressed") === "true")) : ""))
+    + parte("Pistas do editor", linha("Ver a batida dos muros", "Uma linha vermelha onde o lado do carro encosta nas barreiras do editor (Mônaco): para conferir e acertar no editor. Vale na próxima pista que abrir", chave("data-acao=\"vermuros\"", (() => { try { return localStorage.getItem("corrida:verMuros") === "1"; } catch { return false; } })())))
     + parte("Ajuda", linha("Como jogar", "As teclas, as regras e as dicas", `<button type="button" class="cfg-bt" data-acao="regras">Abrir</button>`));
 }
 const CORPO = { graficos: abaGraficos, controle: abaControle, audio: abaAudio, geral: abaGeral };
@@ -90,6 +91,7 @@ function montar() {
     if (a === "som") { document.getElementById("btnSound")?.click(); return desenhar(); }
     if (a === "linha") { document.getElementById("btnLinhaFreio")?.click(); return desenhar(); }
     if (a === "tema") { document.getElementById("btnTemaSala")?.click(); return desenhar(); }
+    if (a === "vermuros") { try { localStorage.setItem("corrida:verMuros", localStorage.getItem("corrida:verMuros") === "1" ? "0" : "1"); } catch {} return desenhar(); }
   });
   tela.addEventListener("change", (e) => { const k = e.target.dataset?.g; if (k) { mudarGraficos({ [k]: e.target.value }); desenhar(); } });
   tela.addEventListener("input", (e) => {

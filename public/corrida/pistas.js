@@ -2371,7 +2371,10 @@ function murosDoCenario(pts, largura, cen) {
   };
   for (const it of (cen && cen.itens) || []) {
     if (!it) continue;
-    const mod = String(it.modelo || ""), barreira = it.tipo === "placa" || (it.tipo === "kit" && KIT_BARREIRA.test(it.kit || "")) || (it.tipo === "linha" && (mod === "parede" || mod === "pneus" || mod.startsWith("faixa") || KIT_BARREIRA.test(mod) || !mod));
+    // (2026-11-23, o Thiago: "acho mais fácil ajustar toda a colisão para onde eu coloquei a barreira na pista, a faixa de patrocínio com tela e arame") só
+    // bate o que acompanha a BEIRA da pista: as faixas (com e sem tela), as paredes, os pneus e os muros em linha pela beira. As placas, as peças soltas
+    // e as linhas desenhadas com pontos livres ficam só no desenho (em Mônaco, um guard-rail e uma placa estreitavam a curva antes do grampo)
+    const mod = String(it.modelo || ""), barreira = it.tipo === "linha" && !!it.beira && (mod === "parede" || mod === "pneus" || mod.startsWith("faixa") || KIT_BARREIRA.test(mod) || !mod);
     if (!barreira) continue;
     if (it.tipo === "linha" && it.beira) { const b = it.beira, lado = b.lado < 0 ? -1 : 1, rec = (+b.de || largura / 2 + 20) - largura / 2; let i0 = Math.round(+b.i0) || 0, i1 = Math.round(+b.i1) || 0; if (i1 < i0) i1 += n; if (i1 - i0 > n) i1 = i0 + n; for (let i = i0; i <= i1; i++) marcar(i, lado, rec); continue; }
     // (2026-11-20, o Thiago: "ainda bato em muros invisíveis perto das placas e do guard-rail triplo") as contas abaixo seguem o desenho

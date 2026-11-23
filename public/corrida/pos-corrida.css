@@ -550,3 +550,14 @@ body.cx-on .ra-cx .mn3-credito{color:var(--cx-tx2)}
 .rd-cond-l{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:12px;border-top:1px solid #ffffff14}
 .rd-cond-l span{display:flex;flex-direction:column;gap:2px}.rd-cond-l b{font:700 20px var(--qy-f)}.rd-cond-l small{color:#9aa2ae;font-size:12px}
 @media (max-width:900px){.qy-corpo,.rd-corpo{grid-template-columns:1fr}.qy-pole{min-height:260px}.rd-pneus{grid-template-columns:repeat(3,1fr)}}
+/* (2026-11-23) a pausa entre as sessões no estilo do QUALIFYING: quem caiu apagado, a linha do corte, o cartão do mais rápido e "Sua sessão" */
+.qy-aviso{margin:-6px 0 0;color:#c9cfd8;font:500 15px Manrope,sans-serif}.qy-aviso b{color:#fff}
+.qy-tab ol.qy-sessao li.meio{min-height:38px;font-size:16px;color:#d3d8e0}
+.qy-tab ol.qy-sessao li.fora{opacity:.5;background:linear-gradient(90deg,#e1060014,transparent 60%)}
+.qy-tab ol.qy-sessao li.fora .po{color:#ff6b63}
+.qy-tab ol.qy-sessao li.corte{border-bottom:2px solid #e10600;position:relative}
+.qy-tab ol.qy-sessao li.corte::after{content:"CORTE";position:absolute;right:0;bottom:-9px;padding:0 8px;font:700 11px var(--qy-f);letter-spacing:.24em;color:#fff;background:#e10600;border-radius:3px}
+.qy-lado{display:flex;flex-direction:column;gap:14px}.qy-lado .qy-pole{min-height:340px}
+.qy-lado .pq-eu{margin-top:0;background:#0d1016d9}
+.qy-pe .rd-ir{margin-left:auto;background:linear-gradient(100deg,#ff7a1a,#ff9a3c);border:0;color:#111;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);padding:16px 44px}
+.qy-pe .rd-ir:disabled{opacity:.6;cursor:default}.qy-pe .pq-espera{margin-left:auto}

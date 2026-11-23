@@ -1,28 +1,40 @@
-# Os robôs pilotam a classificação como fantasmas
+# Classificação: saída em grupos, tempo estimado no "Pronto", fantasmas de verdade e a tela entre as sessões
 
-Pedido do Thiago (2026-11-23): "faz o fantasma deles correndo no qualify". Também: "vamos manter só o Jeff mesmo, por enquanto".
+Pedidos do Thiago (2026-11-23):
+- "quando eu termino o qualify (faço 1 volta) eu aperto em pronto, então o tempo dos bots precisa ser estimado. Além disso, eles devem ser liberados aos poucos, a cada 5 s uns 2 ou 3, igual na F1";
+- "mesmo com modo fantasma os robôs ainda evitam passar um dentro do outro";
+- "você não fez o estilo das telas pós-qualify".
 
-## A classificação pilotada
-- Antes, o robô não andava na classificação: o tempo saía de uma conta (`voltaLancada`) e aparecia na tabela numa hora sorteada.
-- Agora, com gente jogando, os robôs da sessão saem do grid e pilotam com a física de verdade:
-  - `corrida-robos.js prepararQuali`: o pneu da classificação pela água da abertura, a saída de um a cada 1 s e os eliminados fora da pista;
-  - `passo`: na fase `quali`, só quem está na sessão aberta, sem ver os outros carros;
-  - `corrida.js`: o relógio dos robôs na classificação, com os setores pela mesma conta de quem joga (`onSector` → `aoSetor`);
-  - os robôs são fantasmas na classificação (o `fantasma` do estado público): aparecem transparentes e ninguém bate.
-- O tempo de cada robô é a melhor volta que ele fez (`tabela`). Sem ninguém na pista, fica a conta rápida de antes.
-- A sessão ganhou 21 s, a saída escalonada dos robôs (`duracaoDaClassificacao`).
-- Medido com um Q1 simulado em Mônaco (`klk/medir/quali-pilotada.js`, 21 robôs, nível 100):
+## A saída em grupos
+- `corrida-robos.js prepararQuali`: grupos de 2 ou 3 robôs (sorteados pela semente) a cada `QUALI_SAIDA_MS = 5000`. No Q1 de Mônaco com 21 robôs, as saídas ficam em 0, 5, 10… 40 s.
+- `duracaoDaClassificacao`: em vez da saída de um por segundo, soma `QUALI_SAIDA_TOTAL_S = 45`. Na simulação, o Q1 de Mônaco dura 248 s.
 
-| | Seco | Chuva (água 0,6) |
-|---|---|---|
-| Robôs com tempo | 21 de 21, 4 voltas cada | 21 de 21, 3 a 4 voltas |
-| Pole | 49,200 | 55,150 (+12%, a física) |
-| 10º | 50,200 | 56,300 |
-| Último | 53,200 | 57,650 |
+## O tempo estimado quando a sessão fecha antes ("Pronto")
+- `corrida-f1-classificacao.js completarRobos`, chamada em `fechar`: o robô que ainda não fez a volta lançada (menos de 2 voltas) fica com o melhor entre o que já fez e a volta estimada (`voltaLancada`).
+- A conta e a volta pilotada não batem igual em toda pista. Medido com 21 robôs, a mediana da razão pilotada/estimada:
 
-- A conta de chuva de #902 fica só para a classificação sem ninguém.
-- Não foi jogado.
+  | Pista | Mediana | Faixa |
+  |---|---|---|
+  | Mônaco | 1,019 | 0,992 a 1,047 |
+  | Interlagos | 0,978 | 0,939 a 1,011 |
 
-## O rádio só com o Jeff
-- `radio.js ENGENHEIROS`: só o Jeff. As vozes do Marcos e da Bia continuam em `radio/marcos` e `radio/bia`. A linha "Engenheiro" de Configurações só aparece com mais de um.
-- As 24 falas novas do Jeff para a classificação (#903), geradas pelo Thiago.
+  Por isso, a estimativa é multiplicada pela mediana dos robôs que já fizeram a lançada nesta sessão, ou da sessão anterior (`room.razaoQuali`, zerada a cada classificação). Sem nenhum, fica a conta pura.
+- Simulado o Q1 de Mônaco fechando cedo (`klk/medir/quali-pronto.js`):
+
+  | Fechou em | Robôs com tempo | Estimados | Pole |
+  |---|---|---|---|
+  | 70 s | 21 de 21 | 21 (sem razão: a conta pura) | 48,633 |
+  | 110 s | 21 de 21 | 12 | 49,600 |
+  | 150 s | 21 de 21 | 0 | 49,600 |
+
+## Fantasmas de verdade
+- Na fase `quali`, o `transito` dos robôs não vê ninguém, e a batida (`Contato.depoisDoPasso`) fica desligada. Antes, eles ainda desviavam e freavam atrás uns dos outros.
+
+## A tela entre as sessões
+- `pos-quali.js sessaoHTML`: depois do Q1 e do Q2, o mesmo estilo do QUALIFYING:
+  - a sessão inteira, com quem caiu apagado e a linha vermelha do CORTE;
+  - o cartão do mais rápido da sessão e "Sua sessão" embaixo;
+  - no rodapé: "Ajustes do carro" e "Largar para o Q2/Q3".
+- Os ajustes continuam na tela de antes. CSS no fim de `pos-corrida.css`.
+
+Não foi jogado. Conferido com `node --check`.

@@ -51,7 +51,7 @@ function cancelar(room) {
 
 // `deps`: { log(room, texto), broadcast(room), largar(room, grid) }. Começa a classificação: os robôs já estão no `room`.
 function iniciar(room, deps) {
-  cancelar(room);
+  cancelar(room); room.razaoQuali = null; // (a correção da volta estimada é de cada classificação: completarRobos)
   const n = room.order.length;
   room.quali = { sessoes: F1.sessoesDeClassificacao(n), i: 0, nome: "Q1", ativos: [], robos: {}, startAt: 0, fimAt: 0, durMs: 0, fechadas: [], grid: null, pausaAte: null, confirmados: new Set() };
   room.direcao = null;
@@ -112,10 +112,31 @@ function verificarFim(room, deps) {
   if (todosProntos || (agora >= q.fimAt && humanos.every((p) => p.qFim || p.qPronto || p.qIni == null))) return fechar(room, deps);
   if (agora >= q.fimAt) deps.broadcast(room); // bandeirada: quem tem volta aberta ainda pode terminar
 }
+// (2026-11-23, o Thiago: "quando eu termino o qualify, faço uma volta e aperto em Pronto: o tempo dos bots precisa ser estimado") a sessão fecha antes de
+// todo robô completar uma volta lançada: quem ainda não fez a lançada (a primeira volta sai do grid parado) fica com o melhor entre o que já fez e a
+// volta estimada (Robos.voltaLancada, com a chuva pela física do carro), na sessão de agora.
+function completarRobos(room) {
+  const q = room.quali; if (!q) return;
+  const bots = room.order.filter((id) => room.players[id] && room.players[id].bot);
+  const estimar = (p, id) => { try { const e = Robos.voltaLancada(room, p, q.i, bots.indexOf(id), bots.length, { startAt: q.startAt, durMs: q.durMs }); return e && Number.isFinite(e.tempo) ? e.tempo : null; } catch (e) { return null; } };
+  // a conta e a volta pilotada não batem igual em toda pista (medido: a pilotada sai 1,9% mais lenta em Mônaco e 2,3% mais rápida em Interlagos), então a
+  // correção vem dos robôs que já fizeram a volta lançada nesta sessão (a mediana), ou da sessão anterior; sem nenhum, fica a conta pura
+  const rz = [];
+  for (const id of q.ativos) { const p = room.players[id]; if (p && p.bot && !q.robos[id] && (p.qVoltas || 0) >= 2 && p.qMelhor != null) { const e = estimar(p, id); if (e) rz.push(p.qMelhor / e); } }
+  if (rz.length) { rz.sort((a, b) => a - b); room.razaoQuali = rz[rz.length >> 1]; }
+  const razao = room.razaoQuali || 1;
+  for (const id of q.ativos) {
+    const p = room.players[id]; if (!p || !p.bot || q.robos[id] || (p.qVoltas || 0) >= 2) continue;
+    const t = estimar(p, id); if (t == null) continue;
+    const est = { tempo: t * razao };
+    if (p.qMelhor == null || est.tempo < p.qMelhor) { p.qMelhor = est.tempo; p.qQuando = Math.min(Date.now(), q.fimAt); p.qMelhorSet = null; p.qEstimado = true; }
+  }
+}
 function fechar(room, deps) {
   const q = room.quali; if (!q || q.pausaAte) return;
   clearTimeout(q.fim); clearTimeout(q.corte); clearInterval(q.tique);
   const ultima = q.i >= q.sessoes.length - 1, nome = (id) => (room.players[id] ? room.players[id].name : "?");
+  completarRobos(room);
   const f = F1.fecharSessao(tabela(room, Infinity), ultima ? q.ativos.length : q.sessoes[q.i + 1]);
   q.fechadas.push(f); q.confirmados = new Set();
   const comHumanos = room.order.some((id) => conectado(room.players[id]));

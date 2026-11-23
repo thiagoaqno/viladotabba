@@ -404,16 +404,21 @@ function fatorDoQuali(pista) {
   if (FATOR_QUALI == null) { try { FATOR_QUALI = require("./public/corrida/quali-fator.json"); } catch { FATOR_QUALI = {}; } }
   const f = Number(FATOR_QUALI[pista] ?? FATOR_QUALI[T.baseDe(pista)]); return Number.isFinite(f) ? Math.max(0.96, Math.min(1.08, f)) : 1;
 }
+// o quanto a pista molhada deixa a volta mais lenta, na física do carro (a média de Mônaco e Bahrein, piloto ideal, o pneu certo de cada água):
+// sem água 1; garoa (0,3) +9,3%; de 0,6 para cima, +10,4%; no meio, a reta entre eles
+const MOLHADO = [[0, 1], [0.3, 1.093], [0.6, 1.104], [1, 1.104]];
+function molhadoNaFisica(agua) { const a = Math.max(0, Math.min(1, agua || 0)); for (let i = 1; i < MOLHADO.length; i++) if (a <= MOLHADO[i][0]) { const [x0, y0] = MOLHADO[i - 1], [x1, y1] = MOLHADO[i]; return y0 + (y1 - y0) * (a - x0) / (x1 - x0); } return MOLHADO[MOLHADO.length - 1][1]; }
 function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
   const pf = perfil(room.config.pista, p.spec || p.car, tracadoId), nivel = nivelDe(room, p, tracadoId, nBots, pf);
   const r = F1.sorteio(`quali:${room.semente}:${sessao}:${p.id}`), sigma = p.piloto ? Pilotos.ruidoDaVolta(p.piloto.constancia) : 0.012;
   const ruido = Math.max(-2.5, Math.min(2.5, gauss(r))), em = 0.3 + 0.62 * r();
-  let ader = F1.aderencia({ composto: "macio", desgaste: 0.03, temp: 0.8 });
-  if (janela && room.clima) { // chuva: o pneu da sessão pela água na abertura, e a aderência pela água na hora da volta (em passos de 0,1: a tabela é guardada)
-    const abre = F1.climaEm(room.clima, janela.startAt).agua, agua = Math.round(F1.climaEm(room.clima, janela.startAt + em * janela.durMs).agua * 10) / 10;
-    ader = F1.aderencia({ composto: F1.compostoDaClassificacao(abre), desgaste: 0.03, temp: 0.8 }, agua);
-  }
-  const tempo = tempoDaVolta(pf, nivel, ader) * (1 + ruido * sigma) * fatorDoQuali(room.config.pista);
+  // (2026-11-23, o Thiago: "os bots fizeram 48 s chovendo em Mônaco, isso não existe") a volta é a do seco, e a chuva entra pelo que ela custa na física
+  // do carro (molhadoNaFisica). A conta da tabela com a aderência molhada tirava só metade: medido, Mônaco +4,0 / +5,1 / +3,4% e Bahrein +3,6 / +4,5 /
+  // +3,0% (garoa 0,3 / chuva 0,6 / forte 0,9), contra +9,4 / +10,6 / +10,6% e +9,2 / +10,2 / +10,1% do piloto ideal na física (klk/medir/chuva-volta.js)
+  let agua = 0;
+  if (janela && room.clima) agua = Math.round(F1.climaEm(room.clima, janela.startAt + em * janela.durMs).agua * 10) / 10; // (a água na hora da volta)
+  const ader = F1.aderencia({ composto: "macio", desgaste: 0.03, temp: 0.8 });
+  const tempo = tempoDaVolta(pf, nivel, ader) * molhadoNaFisica(agua) * (1 + ruido * sigma) * fatorDoQuali(room.config.pista);
   // o recorde de quem joga protegido: nenhum robô abaixo de recorde + 1,5%. (2026-11-16, o Thiago: "todos os pilotos fizeram exatamente o mesmo tempo
   // no Q1") Era um corte em cada tempo (Math.max com o piso): com os robôs mais rápidos, todos caíam abaixo e iam para o MESMO número. Agora escala
   // todos juntos: a volta ideal (a do carro de referência, com o fator da pista) vai para o piso e cada um mantém a sua diferença.

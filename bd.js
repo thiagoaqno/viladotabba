@@ -79,6 +79,29 @@ function ritmoCorrida(pista, pilotos = null) {
   const medias = [...por.values()].map((ts) => ts.reduce((a, b) => a + b, 0) / ts.length);
   return { tempo: medias.reduce((a, b) => a + b, 0) / medias.length, pilotos: por.size, voltas: [...por.values()].reduce((a, ts) => a + ts.length, 0) };
 }
+// (2026-11-23) o ritmo aprendido de quem joga (migração 055): a razão volta / volta ideal do carro, por pista, piloto, condição e pneu. Cada corrida
+// entra com o peso PESO_CORRIDA_RITMO (a primeira entra inteira): uma corrida boa ou ruim não muda tudo de uma vez.
+const PESO_CORRIDA_RITMO = 0.25;
+function aprenderRitmoCorrida(pista, piloto, condicao, composto, razao, voltas) {
+  const chave = String(piloto).trim().toLowerCase(); if (!chave || !Number.isFinite(razao) || !(voltas > 0)) return null;
+  const db = bd(), v = db.prepare("SELECT razao, voltas, corridas FROM corrida_ritmo_aprendido WHERE pista = ? AND chave = ? AND condicao = ? AND composto = ?").get(pista, chave, condicao, composto);
+  const nova = v ? v.razao * (1 - PESO_CORRIDA_RITMO) + razao * PESO_CORRIDA_RITMO : razao;
+  db.prepare(`INSERT INTO corrida_ritmo_aprendido (pista, chave, condicao, composto, razao, voltas, corridas, atualizado) VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+    ON CONFLICT(pista, chave, condicao, composto) DO UPDATE SET razao = excluded.razao, voltas = corrida_ritmo_aprendido.voltas + excluded.voltas, corridas = corrida_ritmo_aprendido.corridas + 1, atualizado = excluded.atualizado`)
+    .run(pista, chave, condicao, composto, nova, voltas | 0, Date.now());
+  return nova;
+}
+// o ritmo aprendido de cada piloto (os nomes da sala) numa condição: a média dos pneus, pesada pelas voltas. Devolve o mais rápido dos pilotos.
+function ritmoAprendidoCorrida(pista, pilotos, condicao) {
+  const chaves = new Set((pilotos || []).map((p) => String(p).trim().toLowerCase()).filter(Boolean)); if (!chaves.size) return null;
+  const por = new Map();
+  for (const v of bd().prepare("SELECT chave, composto, razao, voltas FROM corrida_ritmo_aprendido WHERE pista = ? AND condicao = ?").all(pista, condicao)) {
+    if (!chaves.has(v.chave)) continue; const a = por.get(v.chave) || { s: 0, n: 0, pneus: {} }; a.s += v.razao * v.voltas; a.n += v.voltas; a.pneus[v.composto] = v.razao; por.set(v.chave, a);
+  }
+  let melhor = null;
+  for (const [chave, a] of por) { const r = a.s / a.n; if (!melhor || r < melhor.razao) melhor = { chave, razao: r, voltas: a.n, pneus: a.pneus }; }
+  return melhor;
+}
 // Guarda a volta se ela entra nas cinco melhores do piloto. Devolve 2 se é a melhor dele, 1 se só entrou, 0 se não.
 function salvarVoltaCorrida(pista, tempo, carro, piloto, amostras) {
   const db = bd(), dados = JSON.stringify(amostras), agora = Date.now(), chave = String(piloto).trim().toLowerCase();
@@ -554,5 +577,5 @@ function nivelDeTodosAdmin(treinador, nivel, ator) {
 const historicoPokemon = (treinador, limite = 20) => bd().prepare("SELECT ator, tipo, captura, antes, depois, criado_em FROM moderacao_pokemon WHERE treinador = ? ORDER BY id DESC LIMIT ?").all(treinador, limite)
   .map((r) => ({ ator: r.ator, tipo: r.tipo, captura: r.captura, antes: JSON.parse(r.antes || "null"), depois: JSON.parse(r.depois || "null"), em: Number(r.criado_em) }));
 
-module.exports = { hashesDaTemporadaCorrida, receberTemporadaDoPC, registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
+module.exports = { aprenderRitmoCorrida, ritmoAprendidoCorrida, hashesDaTemporadaCorrida, receberTemporadaDoPC, registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
 Object.assign(module.exports, { guardarReplayCorrida, replayCorrida, apagarReplaysCorrida, excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });

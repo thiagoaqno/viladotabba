@@ -1,40 +1,29 @@
-# Classificação: saída em grupos, tempo estimado no "Pronto", fantasmas de verdade e a tela entre as sessões
+# Robôs anotam o ritmo de quem joga (coleta e guarda); o uso no 100 a 150 fica sem efeito até resolver a régua
 
-Pedidos do Thiago (2026-11-23):
-- "quando eu termino o qualify (faço 1 volta) eu aperto em pronto, então o tempo dos bots precisa ser estimado. Além disso, eles devem ser liberados aos poucos, a cada 5 s uns 2 ou 3, igual na F1";
-- "mesmo com modo fantasma os robôs ainda evitam passar um dentro do outro";
-- "você não fez o estilo das telas pós-qualify".
+Pedido do Thiago (2026-11-23, aprovado com "pode fazer"): os robôs aprendem com as voltas de quem joga, separado por pista, seco ou molhado e pneu; no 150 o robô fica 2% mais lento que o jogador, diminuindo até o 100 (o Difícil de hoje); abaixo de 100 nada muda.
 
-## A saída em grupos
-- `corrida-robos.js prepararQuali`: grupos de 2 ou 3 robôs (sorteados pela semente) a cada `QUALI_SAIDA_MS = 5000`. No Q1 de Mônaco com 21 robôs, as saídas ficam em 0, 5, 10… 40 s.
-- `duracaoDaClassificacao`: em vez da saída de um por segundo, soma `QUALI_SAIDA_TOTAL_S = 45`. Na simulação, o Q1 de Mônaco dura 248 s.
+## O que entra
+- **Banco** (migração `055-ritmo-aprendido.sql`, `bd.js aprenderRitmoCorrida / ritmoAprendidoCorrida`): por pista, piloto, condição e pneu, a razão "volta ÷ volta ideal do carro dele com aquele pneu e aquela água". Cada corrida entra com peso 0,25 (a primeira entra inteira). Testado: 0,96 e depois 1,00 dá 0,97.
+- **Coleta** (`corrida.js anotarVoltaParaRobos / aprenderRitmo`): só no fim da corrida de F1 com robôs. Ficam de fora a 1ª volta, voltas com box, com safety car, com toque em carro, com **saída de pista** (o limite de pista da direção de prova) e com mais de 2 toques no muro. Por condição e pneu entra a mediana das voltas boas.
+- **Diferença de carro**: a razão é medida contra o carro de quem jogou e aplicada à volta ideal do carro de cada robô (`corrida-robos.js razaoDaVolta`).
+- **Base inicial**: sem ritmo aprendido no seco, valem as voltas guardadas em `corrida_voltas_piloto`.
+- **Uso** (`alvoF1`): do 100 ao 150, o alvo vai em linha reta do Difícil até o ritmo do jogador + 2%, mas nunca fica mais fácil que o nível sem o ritmo dele.
 
-## O tempo estimado quando a sessão fecha antes ("Pronto")
-- `corrida-f1-classificacao.js completarRobos`, chamada em `fechar`: o robô que ainda não fez a volta lançada (menos de 2 voltas) fica com o melhor entre o que já fez e a volta estimada (`voltaLancada`).
-- A conta e a volta pilotada não batem igual em toda pista. Medido com 21 robôs, a mediana da razão pilotada/estimada:
+## A medição: hoje o uso não muda nada
+Classificação pilotada de Suzuka (21 robôs, `klk/medir/quali-nivel.js`, banco com as voltas do Thiago):
 
-  | Pista | Mediana | Faixa |
-  |---|---|---|
-  | Mônaco | 1,019 | 0,992 a 1,047 |
-  | Interlagos | 0,978 | 0,939 a 1,011 |
+| Nível | Pole | 10º | Último |
+|---|---|---|---|
+| 100 | 41,300 | 42,300 | 42,850 |
+| 125 | 40,900 | 41,800 | 42,450 |
+| 150 | 40,600 | 41,400 | 42,100 |
+| 150 com o ritmo do Thiago | 40,600 | 41,400 | 42,100 |
 
-  Por isso, a estimativa é multiplicada pela mediana dos robôs que já fizeram a lançada nesta sessão, ou da sessão anterior (`room.razaoQuali`, zerada a cada classificação). Sem nenhum, fica a conta pura.
-- Simulado o Q1 de Mônaco fechando cedo (`klk/medir/quali-pronto.js`):
+Por quê:
+1. **Do 100 para cima o alvo de tempo não acelera ninguém.** A tabela de tempo por nível trava na volta ideal (f = 1: Suzuka 43,89 com qualquer f de 1 a 1,5); qualquer alvo abaixo dela vira o nível máximo, 1,5. O 125 e o 150 já pilotam no limite do carro; a diferença entre eles vem só do carro a mais do nível (+2,5% / +5% de aderência e +3% / +6% de potência).
+2. **A conta e a pista estão em réguas diferentes.** Na conta, o Thiago em Suzuka (média das 5 melhores voltas de corrida, 42,16) fica a 0,96 da volta ideal, mais rápido que o Difícil (1,005). Na pista, o robô do 100 já faz 41,30 na classificação. Juntar as duas réguas (somar aderência ao robô pela conta) deixaria o 150 ainda mais longe do Thiago em Suzuka.
 
-  | Fechou em | Robôs com tempo | Estimados | Pole |
-  |---|---|---|---|
-  | 70 s | 21 de 21 | 21 (sem razão: a conta pura) | 48,633 |
-  | 110 s | 21 de 21 | 12 | 49,600 |
-  | 150 s | 21 de 21 | 0 | 49,600 |
+## O que falta (próximo passo recomendado)
+Medir o jogador e os robôs **na mesma corrida**: no fim de cada corrida, a razão do jogador dividida pela dos robôs daquele nível, com o mesmo pneu e a mesma água. Com essa proximidade em voltas de verdade, o carro a mais do 150 (a única alavanca que mexe acima do 100) passa a ser ajustado para deixar o robô 2% atrás do jogador. Até lá este PR só guarda os dados, e o jogo anda igual à `main`.
 
-## Fantasmas de verdade
-- Na fase `quali`, o `transito` dos robôs não vê ninguém, e a batida (`Contato.depoisDoPasso`) fica desligada. Antes, eles ainda desviavam e freavam atrás uns dos outros.
-
-## A tela entre as sessões
-- `pos-quali.js sessaoHTML`: depois do Q1 e do Q2, o mesmo estilo do QUALIFYING:
-  - a sessão inteira, com quem caiu apagado e a linha vermelha do CORTE;
-  - o cartão do mais rápido da sessão e "Sua sessão" embaixo;
-  - no rodapé: "Ajustes do carro" e "Largar para o Q2/Q3".
-- Os ajustes continuam na tela de antes. CSS no fim de `pos-corrida.css`.
-
-Não foi jogado. Conferido com `node --check`.
+`node --check` em `bd.js`, `corrida.js` e `corrida-robos.js`. Sem testes novos (regra do projeto).

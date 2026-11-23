@@ -317,6 +317,7 @@ module.exports = function attachCorrida(io) {
         // nas regras de F1, os robôs andam o tempo real que passou (o timer não bate certinho em 50 ms: Robos.tempoDoPasso)
         const dtRobos = room.config.regras === "f1" ? Robos.tempoDoPasso(room) : 0.05;
         if (dtRobos <= 0) return;
+        logTravadaChuva(room, dtRobos);
         const t0Perf = PERF ? process.hrtime.bigint() : 0n; if (PERF) setImmediate(() => medirPerf(room, Number(process.hrtime.bigint() - t0Perf) / 1e6, dtRobos));
         Robos.passo(room, dtRobos, (p, s) => { if (onSector(room, p, s)) broadcast(room); }, (e, d) => {
           if (e === "box") { concluirParada(room, room.players[d.id], d); return broadcast(room); } // um robô acabou a parada
@@ -381,6 +382,16 @@ module.exports = function attachCorrida(io) {
       try { Robos.passo(room, dt, (p, s) => { if (onSector(room, p, s)) broadcast(room); }, () => {}); } catch (e) { console.warn("Classificação: passo dos robôs", e.message); }
     }, 50);
     Quali.iniciar(room, classificacao);
+  }
+  // (2026-11-23, o Thiago: "os robôs dão uma travadinha quando muda o clima"; a leitura do código não achou a causa) um log temporário: com o
+  // clima ligado, avisa no console do servidor quando o passo dos robôs demora mais de 20 ms ou quando o timer chega atrasado (algo travou o
+  // servidor entre dois passos), com a água, a chuva e quantos robôs estão no box. Tirar quando a causa aparecer.
+  function logTravadaChuva(room, dt) {
+    if (!room.clima || room.config.regras !== "f1") return;
+    const t0 = process.hrtime.bigint(), cl = F1.climaEm(room.clima, Date.now());
+    const resumo = () => { const bots = room.order.map((id) => room.players[id]).filter((p) => p && p.bot); return `água ${cl.agua.toFixed(2)}, chuva ${cl.chuva.toFixed(2)}, ${bots.filter((p) => p.box).length}/${bots.length} robôs no box, volta ${Math.max(0, ...bots.map((p) => p.laps || 0))}`; };
+    if (dt > 0.12) console.warn(`[travada-chuva] timer atrasado: ${Math.round(dt * 1000)} ms desde o último passo (${resumo()})`);
+    setImmediate(() => { const ms = Number(process.hrtime.bigint() - t0) / 1e6; if (ms > 20) console.warn(`[travada-chuva] passo dos robôs: ${ms.toFixed(1)} ms (${resumo()})`); });
   }
   // Quando todos os humanos terminaram, projeta o restante dos robôs pelo progresso e pelo ritmo observado.
   // Um carro que abandonou ou foi desclassificado não recebe chegada estimada.

@@ -289,9 +289,17 @@ function aoClicar(e) {
 const LARGAR = { mnLargar: () => largarRapida(true), mnAjustar: () => largarRapida(false), mnContraLargar: () => largarContra() };
 let largouEm = 0;
 function largarUmaVez(id) { const t = performance.now(); if (t - largouEm < 1500) return; largouEm = t; LARGAR[id](); }
+// (o Thiago: "parece que tem algo na frente do click do largar, ele não vira uma mãozinha") pelo lugar do clique, não pelo alvo: se o ponteiro
+// apertou e soltou dentro do retângulo de um botão de largar visível, larga, mesmo com algo invisível por cima; e o que estava por cima vai
+// para o servidor.log (no programa), para achar o culpado
+const botaoSob = (e) => { for (const id in LARGAR) { const b = document.getElementById(id); if (!b || b.disabled || !b.offsetParent) continue; const r = b.getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) return b; } return null; };
 let apertado = null;
-function aoApertar(e) { if (e.button === 0) apertado = e.target.closest?.("button")?.id || null; }
-function aoSoltar(e) { const b = e.target.closest?.("button"); if (e.button === 0 && b && LARGAR[b.id] && apertado === b.id && !b.disabled) largarUmaVez(b.id); apertado = null; }
+function aoApertar(e) { apertado = e.button === 0 && naTela && !haModal() ? botaoSob(e)?.id || null : null; }
+function aoSoltar(e) {
+  const b = e.button === 0 && apertado ? botaoSob(e) : null; apertado = null; if (!b) return;
+  if (!b.contains(e.target)) { const t = e.target, oque = `na frente do ${b.id}: ${t.tagName}#${t.id}.${[...(t.classList || [])].join(".")} (pai: ${t.parentElement?.id || t.parentElement?.className || "?"})`; console.warn(oque); fetch("/api/corrida/pc/travada", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ms: 0, pista: "menu", fase: "clique", oque }) }).catch(() => {}); }
+  largarUmaVez(b.id);
+}
 const refocar = (sel) => requestAnimationFrame(() => document.querySelector(`#mnPainel ${sel}`)?.focus({ preventScroll: true }));
 function alternarAjustes() { const on = document.body.classList.toggle("mn-ajustes"); $("mnAjustes").setAttribute("aria-expanded", on); }
 function fecharAjustes() { document.body.classList.remove("mn-ajustes"); $("mnAjustes")?.setAttribute("aria-expanded", "false"); }
@@ -377,7 +385,7 @@ function montarCapa() {
 function ligarUmaVez() {
   if (ligado) return; ligado = true;
   montarCapa();
-  $("mn").addEventListener("click", aoClicar); $("mn").addEventListener("pointerdown", aoApertar); $("mn").addEventListener("pointerup", aoSoltar);
+  $("mn").addEventListener("click", aoClicar); document.addEventListener("pointerdown", aoApertar, true); document.addEventListener("pointerup", aoSoltar, true);
   // a barra do nível dos robôs da corrida rápida: o número acompanha o arraste e fica guardado quando solta
   $("mn").addEventListener("input", (e) => { const x = e.target.closest && e.target.closest("[data-rp-nivel-faixa]"); if (x) x.parentNode.querySelector("output").textContent = x.value; });
   $("mn").addEventListener("change", (e) => { const x = e.target.closest && e.target.closest("[data-rp-nivel-faixa]"); if (x) { rapida.nivel = Math.round(+x.value); store.set(CHAVE_RAPIDA, rapida); } });

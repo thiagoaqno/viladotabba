@@ -282,10 +282,16 @@ function aoClicar(e) {
   if (d.rpQuali) return mudar(rapida, "classificacao", d.rpQuali, "rp-quali", "rapida");
   if (d.ctVoltas) return mudar(contra, "voltas", +d.ctVoltas, "ct-voltas", "contra");
   if (b.id === "mnAcerto") { usarPista(rapida.pista); return alternarAcerto(true, { sala: true }); } // o acerto antes de largar (o mesmo painel da tecla P)
-  if (b.id === "mnLargar") return largarRapida(true);
-  if (b.id === "mnAjustar") return largarRapida(false);
-  if (b.id === "mnContraLargar") return largarContra();
+  if (LARGAR[b.id]) return largarUmaVez(b.id);
 }
+// (2026-11-23, o Thiago: "o botão de largar da corrida rápida não funciona sempre, só com o Enter") com o mouse o clique às vezes se perdia
+// (o botão anda 4 px no hover e o painel se redesenha): os botões de largar também saem no pointerup em cima deles, e uma vez só
+const LARGAR = { mnLargar: () => largarRapida(true), mnAjustar: () => largarRapida(false), mnContraLargar: () => largarContra() };
+let largouEm = 0;
+function largarUmaVez(id) { const t = performance.now(); if (t - largouEm < 1500) return; largouEm = t; LARGAR[id](); }
+let apertado = null;
+function aoApertar(e) { if (e.button === 0) apertado = e.target.closest?.("button")?.id || null; }
+function aoSoltar(e) { const b = e.target.closest?.("button"); if (e.button === 0 && b && LARGAR[b.id] && apertado === b.id && !b.disabled) largarUmaVez(b.id); apertado = null; }
 const refocar = (sel) => requestAnimationFrame(() => document.querySelector(`#mnPainel ${sel}`)?.focus({ preventScroll: true }));
 function alternarAjustes() { const on = document.body.classList.toggle("mn-ajustes"); $("mnAjustes").setAttribute("aria-expanded", on); }
 function fecharAjustes() { document.body.classList.remove("mn-ajustes"); $("mnAjustes")?.setAttribute("aria-expanded", "false"); }
@@ -371,7 +377,7 @@ function montarCapa() {
 function ligarUmaVez() {
   if (ligado) return; ligado = true;
   montarCapa();
-  $("mn").addEventListener("click", aoClicar);
+  $("mn").addEventListener("click", aoClicar); $("mn").addEventListener("pointerdown", aoApertar); $("mn").addEventListener("pointerup", aoSoltar);
   // a barra do nível dos robôs da corrida rápida: o número acompanha o arraste e fica guardado quando solta
   $("mn").addEventListener("input", (e) => { const x = e.target.closest && e.target.closest("[data-rp-nivel-faixa]"); if (x) x.parentNode.querySelector("output").textContent = x.value; });
   $("mn").addEventListener("change", (e) => { const x = e.target.closest && e.target.closest("[data-rp-nivel-faixa]"); if (x) { rapida.nivel = Math.round(+x.value); store.set(CHAVE_RAPIDA, rapida); } });

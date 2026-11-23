@@ -121,7 +121,7 @@ body.em-home button:hover:not(:disabled).mn-item{background:none}
 .mn-acao b{display:block;font:italic 900 clamp(24px,2.1vw,32px)/1 var(--display);text-transform:uppercase}
 .mn-acao small{display:block;font-size:11px;opacity:.88}
 .mn-acao .mn-seta{opacity:1;transform:none;margin:0;transition:transform .24s var(--mn-t)}
-.mn-acao:hover,.mn-acao:focus-visible{transform:translateX(4px);filter:brightness(1.12)}.mn-acao:hover .mn-seta,.mn-acao:focus-visible .mn-seta{transform:translateX(6px)}
+.mn-acao:hover,.mn-acao:focus-visible{filter:brightness(1.12)}.mn-acao:hover .mn-seta,.mn-acao:focus-visible .mn-seta{transform:translateX(6px)}
 .mn-link{display:block;width:100%;margin-top:10px;padding:6px 0;background:none;border:0;border-radius:0;color:#dbe2ea;font:600 13px/1.3 var(--body);text-align:left;text-decoration:underline;text-decoration-color:var(--mn-acc);text-underline-offset:4px;transition:color .15s,padding-left .2s}
 .mn-link:hover,.mn-link:focus-visible{color:#fff;padding-left:8px;background:none!important}
 .mn-duas{display:flex;gap:6px;margin-top:6px}

@@ -491,7 +491,7 @@ export async function carregarCenario(tr) {
   const dados = dadosDe.get(tr.pistaId || tr.id);
   if (!dados || !Array.isArray(dados.itens)) return g;
   if (dados.colisao === "pecas" && window.Pistas?.murosDoCenario) tr.murosCenario = window.Pistas.murosDoCenario(tr.pts, tr.W, dados); // (a mesma conta do servidor, sim.js)
-  if (tr.murosCenario && verMuros()) desenharMuros(tr);
+  if (tr.murosCenario && (verMuros() || window.__editorCenario)) desenharMuros(tr); // (no editor, sempre: a batida de quando a pista abriu; mexeu nas peças, recarregue)
   if (window.Pistas?.obstaculosComAjustes) tr.obstaculos = window.Pistas.obstaculosComAjustes(tr.obstaculos, dados); // (o canteiro do grampo segue o ajuste do editor, como no servidor)
   const objs = await Promise.all(dados.itens.map((it) => montarItem(it, tr)));
   for (const o of objs) if (o) g.add(o);

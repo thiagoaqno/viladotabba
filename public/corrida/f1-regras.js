@@ -182,8 +182,8 @@ const ERS_MAX_RECARGA = 2.125, ERS_GASTO = 0.0875, ERS_GASTO_SUAVE = 0.0625, ERS
 const ERS_RECARGA_FREIO = 0.0875, ERS_RECARGA_ALIVIO = 0.0333;
 const ersNovo = () => ({ carga: 1, recarga: 0, volta: 0 }); // (2026-11-16, as estratégias do Thiago: "reserva na largada", a bateria cheia para a arrancada e a primeira curva; era 0,65)
 function carregarErs(ers, dt, freando, semGas, volta) {
-  if (volta !== ers.volta) { ers.volta = volta; ers.recarga = 0; ers.suave = 0; }
-  const ganho = Math.min(Math.max(0, ERS_MAX_RECARGA - ers.recarga), Math.max(0, 1 - ers.carga), Math.max(0, dt) * (freando ? ERS_RECARGA_FREIO : semGas ? ERS_RECARGA_ALIVIO : 0));
+  if (volta !== ers.volta) { ers.volta = volta; ers.recarga = 0; ers.suave = 0; ers.mom = false; }
+  const ganho = Math.min(Math.max(0, ERS_MAX_RECARGA + (ers.mom ? ERS_EXTRA_OVERTAKE : 0) - ers.recarga), Math.max(0, 1 - ers.carga), Math.max(0, dt) * (freando ? ERS_RECARGA_FREIO : semGas ? ERS_RECARGA_ALIVIO : 0));
   ers.carga = limite(ers.carga + ganho, 0, 1); ers.recarga += ganho;
   return ganho;
 }
@@ -197,6 +197,8 @@ function gastarErs(ers, dt, ativo, forte = true) { // forte: o overtake (o padr�
 // saídas de curva") o modo ultrapassagem (o gasto forte, até ERS_PISO_OVERTAKE e sem o orçamento da volta) vale a ULTRAPASSAGEM_S ou menos do carro
 // da frente (antes: só colado no vácuo, ~28 m); e o automático entrega também na saída da curva (a curva abrindo à frente), não só na reta.
 const ULTRAPASSAGEM_S = 1.5;
+// o extra do modo ultrapassagem (regra de 2026: +0,5 MJ na volta, sobre a janela de 4 MJ da bateria): sobe o teto da recarga daquela volta
+const ERS_EXTRA_OVERTAKE = 0.125;
 // os segundos até o carro da frente mais perto (em linha reta, pela minha velocidade); Infinity sem ninguém. `outros`: [{ x, y, z, a, dnf, fant }]
 function intervaloAFrente(c, outros) {
   const v = Math.abs(c.v || 0); if (v < 30 || !outros) return Infinity;
@@ -708,7 +710,7 @@ function vacuoF1(draft, curva) {
 }
 
 const api = { PLANOS_DOMINGO, DESGASTE_SOMADO, desgasteDoPlano, REL_PISTA, relDaPista, voltasDoGP, PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,
-  ULTRAPASSAGEM_S, intervaloAFrente, saidaDeCurva, zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersBloqueadoNaChuva, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
+  ULTRAPASSAGEM_S, ERS_EXTRA_OVERTAKE, intervaloAFrente, saidaDeCurva, zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersBloqueadoNaChuva, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
   LIMITADOR, PARADA_BASE, PARADA_ERRO, PARADA_RECORDE, paradaComBonus, CONSERTO_QUEBRA_S, UM_COMPOSTO, RAPIDO, RAMPA, GARAGENS, EQUIPES_GARAGEM, indiceDaGaragem, sorteio, tempoDeParada, PARADAS, classeDaParada, textoDaParada, BATIDA_MIN, BATIDA_MEDIA, BATIDA_FORTE, BATIDA_MAX, BATIDA_INTERVALO, batida, COLISAO_LEVE, COLISAO_MEDIA, COLISAO_GRAVE, PUNICAO_LEVE_S, PUNICAO_MEDIA_S, STOPGO_S, STOPGO_VOLTAS, STOPGO_CONVERSAO_S, gravidadeDaBatida, nivelDaPunicao, batidaProposital, DSQ_PROPOSITAIS, AVISO_PROPOSITAIS, stopGoCabe, efeitoDoDano, corredor, garagemDe, saidaDoCorredor, tempoNoBox, registrarParada, usouDoisCompostos, JOGOS_POR_COMPOSTO, jogosUsados, jogosRestantes, podeUsar, compostoParaParada, recomendarParada, ESCOLHA_BOX_S, penalidadeUmComposto, acrescimoDeFinal, estrategia, melhoresPlanos,
   CHANCE_CHUVA, GAROA, CHUVA_FORTE, AGUA_SOBE_S, AGUA_SECA_S, RAMPA_S, CHUVA_MIN_S, AVISO_S, AGUA_MOLHADA, AGUA_ENCHARCADA, AGUA_QUALI_CHUVA, OPCOES_DE_CLIMA, ROTULO_CLIMA, previsaoDoGP, descreverPrevisao, sortearClima, chuvaEm, aguaEm, proximaMudanca, climaEm, fatorAgua, compostoDaClassificacao, tempoMolhado, compostoPorAgua };
 if (typeof module !== "undefined" && module.exports) module.exports = api;

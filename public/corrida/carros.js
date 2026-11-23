@@ -136,6 +136,9 @@ const menosMovimento = matchMedia("(prefers-reduced-motion: reduce)");
 export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 0, fx = {}) {
   const suave = 1 - Math.exp(-dt * 12);
   k.pitch += (pitch - k.pitch) * suave; k.roll += (lean - k.roll) * suave;
+  // (2026-11-23, o Thiago: "na subida de Mônaco depois da curva 1 quase todo mundo fica arrastando") a compressão é a ladeira MUDANDO: o caimento de agora
+  // contra a média dos últimos ~0,4 s; numa rampa de inclinação constante a diferença some e o assoalho para de raspar
+  k.pitchMedio = (k.pitchMedio ?? k.pitch) + (k.pitch - (k.pitchMedio ?? k.pitch)) * (1 - Math.exp(-dt / 0.4)); const compressao = k.pitch - k.pitchMedio;
   // atingido: o kart dá um pulo, gira e fica com estrelinhas rodando na cabeça
   if (fx.rodando) { if (!k.rodava) k.tAt = 0; k.tAt += dt; }
   k.rodava = !!fx.rodando;
@@ -179,7 +182,7 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   // Assoalho raspa nas zebras ou nas compressões em alta velocidade. Emissão limitada por tempo.
   // raspa: na zebra ou nas compressões rápidas, como antes, ou quando a folga do assoalho acaba (asa demais para a altura escolhida)
   const raspa = k.folga < 0.004, folgaFaisca = raspa ? Math.min(1, (0.004 - k.folga) / 0.015) : 0;
-  if (fx.f1 && !fx.bala && !fx.rodando && !menosMovimento.matches && Math.abs(z - ground) < 4 && ((v > 230 && (fx.zebra || Math.abs(pitch) > 0.045)) || (raspa && v > 120)) && k.faiscaGP <= 0) {
+  if (fx.f1 && !fx.bala && !fx.rodando && !menosMovimento.matches && Math.abs(z - ground) < 4 && ((v > 230 && (fx.zebra || compressao > 0.02)) || (raspa && v > 120)) && k.faiscaGP <= 0) {
     k.faiscaGP = raspa ? 0.12 - folgaFaisca * 0.08 : 0.12; // raspando mais, mais faísca
     faiscas(x - Math.cos(a) * k.L * 0.43, ground + 1.5, y - Math.sin(a) * k.L * 0.43, "#ff9a3a", 7, 34, { vx: Math.cos(a) * v, vz: Math.sin(a) * v }); // o titânio do assoalho: laranja
   }

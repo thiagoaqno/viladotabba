@@ -85,6 +85,10 @@ module.exports = function attachCorrida(io) {
   module.exports.faseAgora = () => { for (const r of rooms.values()) if (r.phase === "race" || r.phase === "quali") { const q = r.quali, s = r.startAt ? Math.round((Date.now() - r.startAt) / 1000) : null; return r.phase === "quali" ? (q && q.carga ? "qualify, carregando" : q && q.pausaAte ? `qualify, intervalo depois do ${q.nome}` : `qualify ${q ? q.nome : ""}, ${s} s de sessão`) : `corrida, ${s} s depois da largada`; } return null; };
   module.exports.emCorrida = () => { for (const r of rooms.values()) if (r.phase === "race" || r.phase === "quali") return true; return false; }; // (corrida-pc.js: os envios ao site esperam a bandeirada)
   require("./lobby.js").registrar("corrida", rooms, { max: MAX_PLAYERS }); // aparece na lista de salas da Vila
+  // (2026-11-23, o servidor.log do Thiago: 15 s parado na bandeirada, quase tudo o Node achando e lendo módulos: getNearestParentPackageJSON, loader)
+  // o que só roda no fim da corrida (o replay, a análise, as regras e o paddock da carreira) era carregado na hora, na bandeirada. Carrega uns
+  // segundos depois de o servidor abrir, com ninguém correndo ainda.
+  setTimeout(() => { for (const m of ["./corrida-gravacao.js", "./corrida-analise.js", "./public/corrida/temporada/regras.js", "./public/corrida/temporada/paddock.js", "./public/corrida/f1-pneus-ritmo.js", "./corrida-contato.js"]) { try { require(m); } catch (e) { /* carrega na hora, como antes */ } } }, 4000).unref?.();
 
   // regras "f1" (planos/temporada-f1.md): pneus que gastam; sem caixas e sem a ajuda do pelotão
   const cleanConfig = (c = {}) => {

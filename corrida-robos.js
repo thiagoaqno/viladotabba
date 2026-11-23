@@ -1095,26 +1095,46 @@ function escolherComposto(restam, usados, fator, p) {
 // composto (F1.compostoPorAgua, a conta simples do molhado). Seco → chuva quando o de chuva fica mais de 0,8 s mais rápido;
 // chuva → seco quando o seco (o que aguenta o resto da corrida) fica mais de 0,8 s mais rápido. Cada robô tem o seu limite
 // (o viés), então não entram no box todos juntos. Devolve o composto, ou null para seguir como está.
+// (2026-11-23, o Thiago: "em SP o engenheiro já tinha dito que ia chover, mas o Norris colocou pneu duro" e os robôs pararam de intermediário numa
+// volta e de chuva na seguinte) a equipe olha o radar: a água que conta é a média de agora, de daqui a meia volta e de daqui a volta e meia (a
+// previsão do roteiro do clima, como o estrategista de quem joga), e só troca se o ganho por volta vezes as voltas que faltam paga o tempo
+// perdido no box (tab.parada, a tabela da pista).
+function aguaDaPerna(room, p, ia, cl, restam) {
+  const RP = ritmoDosPneus(), tab = RP && RP.tabelaDe(room.config.pista), ref = tab ? tab.compostos.medio.tempos[0] : (p.last || p.best || 90);
+  const agora = room.clima && room.clima.t0 ? room.clima.t0 + (cl.t || 0) * 1000 : Date.now();
+  const v = [cl.agua, ...[0.5, 1.5].filter((k) => k <= restam + 0.5).map((k) => F1.climaEm(room.clima, agora + k * ref * 1000).agua)];
+  return Math.max(0, Math.min(1, v.reduce((a, b) => a + b, 0) / v.length + (ia.vies || 0)));
+}
 function trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator) {
   if (restam < 1) return null;
-  const agua = Math.max(0, Math.min(1, cl.agua + (ia.vies || 0)));
+  const pista = room.config.pista, agua = aguaDaPerna(room, p, ia, cl, restam), RP = ritmoDosPneus(), tab = RP && RP.tabelaDe(pista), perda = tab ? tab.parada : 20;
+  const vale = (c) => (F1.tempoMolhado(pista, pneu.composto, agua) - F1.tempoMolhado(pista, c, agua)) * restam > perda;
   const livres = [...F1.SECOS, "chuva", "intermediario"].filter((c) => c === pneu.composto || F1.podeUsar(p, c));
-  const melhor = F1.compostoPorAgua(room.config.pista, agua, livres, pneu.composto);
-  if (F1.SECOS.includes(pneu.composto)) return !F1.SECOS.includes(melhor) ? melhor : null;
+  const melhor = F1.compostoPorAgua(pista, agua, livres, pneu.composto);
+  if (F1.SECOS.includes(pneu.composto)) return !F1.SECOS.includes(melhor) && vale(melhor) ? melhor : null;
   if (!F1.SECOS.includes(melhor)) {
-    if (melhor !== pneu.composto) return melhor;
+    if (melhor !== pneu.composto && vale(melhor)) return melhor;
     // (2026-11-21, o Thiago: "às vezes eles esticam o pneu até o fim na chuva, principalmente o intermediário") parava só depois do penhasco, e sem jogo
     // novo do mesmo composto não parava nunca. Agora para quando a próxima volta já passaria do penhasco (como no seco), com o jogo que ainda tiver (o
     // outro de chuva se o mesmo acabou)
-    const taxaChuva = taxaDoPneu(pneu.composto, fator * F1.relDaPista(room.config.pista));
+    const taxaChuva = taxaDoPneu(pneu.composto, fator * F1.relDaPista(pista));
     if (restam >= 1 && pneu.desgaste + taxaChuva > F1.PENHASCO) {
       const disponiveis = ["chuva", "intermediario"].filter((c) => F1.podeUsar(p, c));
-      if (disponiveis.length) return F1.compostoPorAgua(room.config.pista, agua, disponiveis);
+      if (disponiveis.length) return F1.compostoPorAgua(pista, agua, disponiveis);
       return null; // (os quatro jogos de chuva acabaram: um seco na água é pior que o de chuva gasto)
     }
     return null;
   }
-  return escolherComposto(restam, usados, fator, p); // secou: volta ao seco que aguenta o resto da corrida
+  const seco = escolherComposto(restam, usados, fator, p); // secou: volta ao seco que aguenta o resto da corrida (se a volta mais rápida pagar o box)
+  return vale(seco) ? seco : null;
+}
+// parando de qualquer jeito (pneu no fim, dano) numa corrida com chuva: o pneu sai pela previsão, não só pelo seco que aguenta
+function compostoDaParada(room, p, ia, cl, restam, usados, fv) {
+  if (room.clima && room.clima.chove && cl) {
+    const livres = [...F1.SECOS, "chuva", "intermediario"].filter((c) => F1.podeUsar(p, c)), m = F1.compostoPorAgua(room.config.pista, aguaDaPerna(room, p, ia, cl, restam), livres);
+    if (m && !F1.SECOS.includes(m)) return m;
+  }
+  return escolherComposto(restam, usados, fv, p);
 }
 let RITMO_PNEUS = null;
 const ritmoDosPneus = () => RITMO_PNEUS || (RITMO_PNEUS = (() => { try { return require("./public/corrida/f1-pneus-ritmo.js"); } catch (e) { return null; } })());
@@ -1128,7 +1148,7 @@ function decidirParada(room, p, ia, car, spec, cl) {
   if (chuvoso && cl) { const pelaAgua = trocaPeloClima(room, p, ia, pneu, cl, restam, usados, fator); if (pelaAgua) return pelaAgua; if (!F1.SECOS.includes(pneu.composto) && cl.agua + (ia.vies || 0) > 0.3) return null; }
   // carro avariado (mais de 10% de dano): para no box para consertar. Com o pneu ainda bom, só conserta ("manter", sem trocar); gasto, troca
   // também (o serviço do box conserta o dano em toda parada, concluirParada em corrida.js)
-  if ((p.dano || 0) > 10 && restam >= 1) { if (pneu.desgaste < F1.PENHASCO * 0.6) return "manter"; return escolherComposto(restam, usados, fv, p); }
+  if ((p.dano || 0) > 10 && restam >= 1) { if (pneu.desgaste < F1.PENHASCO * 0.6) return "manter"; return compostoDaParada(room, p, ia, cl, restam, usados, fv); }
   const chega = pneu.desgaste + taxa * (restam + 0.35) <= F1.PENHASCO; // o resto da corrida e o começo da volta de chegada
   const passaNaProxima = pneu.desgaste + taxa > F1.PENHASCO; // a volta que vem já passaria do penhasco
   // a volta planejada, ajustada pelo jeito: o undercut para uma volta antes se está colado no da frente; o overcut estica uma volta em
@@ -1151,11 +1171,13 @@ function decidirParada(room, p, ia, car, spec, cl) {
       if (ficar < trocar) para = false;
     }
   }
-  else if (noPlano && planoAguenta && estilo !== "overcut") para = true; // (o overcut, com o pneu aguentando até o fim, estica sem parar)
+  // (2026-11-23, Austin: depois de parar no safety car quase todos pararam de novo na volta 6, à toa) com o pneu chegando ao fim e os dois compostos já
+  // usados, a parada do plano não serve para nada: fica na pista
+  else if (noPlano && planoAguenta && estilo !== "overcut" && usados.size < 2) para = true; // (o overcut, com o pneu aguentando até o fim, estica sem parar)
   else if (estilo === "oportunista" && room.direcao?.safety && pneu.desgaste > 0.45 && restam >= 3) para = true; // parada barata sob SC, com pneu já gasto
   if (!para) return null;
   const aguentaPlano = planejada && planejada.composto !== pneu.composto && F1.podeUsar(p, planejada.composto) && F1.vidaEmVoltas(planejada.composto, fv * MARGEM_PNEU) >= restam;
-  return aguentaPlano ? planejada.composto : escolherComposto(restam, usados, fv, p);
+  return aguentaPlano ? planejada.composto : compostoDaParada(room, p, ia, cl, restam, usados, fv);
 }
 // Depois da bandeirada: fantasma (não bate e ninguém bate nele), no piloto automático da física a 70 u/s pela beira da pista. Antes ele
 // ficava congelado onde cruzou a linha de chegada, e a galera que ainda corria dava de cara com um paredão de robôs parados.

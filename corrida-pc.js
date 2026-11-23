@@ -151,7 +151,12 @@ function perfilDasTravadas() {
     const top = [...soma].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k} ${Math.round(v)} ms`).join(" · ");
     console.log(`${new Date().toLocaleTimeString("pt-BR")} Corrida PC: perfil da travada de ${ms} ms (os 10 s em volta): ${top || "sem amostra"}`);
   };
+  // (2026-11-23, o servidor.log do Thiago: "o laço atrasou 150 a 280 ms" a cada 10 s certinhos, a corrida inteira, e os robôs engasgando junto) fechar a
+  // janela do perfil (Profiler.stop: 10 s de amostras) parava o Node uns 200 ms: o próprio medidor fazia a travadinha. Com corrida ou classificação
+  // rodando ele não mede; fora delas (o pós-corrida, a abertura do qualify: as travadas grandes, de segundos) continua.
+  const emCorrida = () => { try { return !!require("./corrida.js").emCorrida?.(); } catch { return false; } };
   const janela = async () => {
+    if (emCorrida()) { travou = 0; setTimeout(janela, 10000).unref(); return; }
     try { await post("Profiler.enable"); await post("Profiler.setSamplingInterval", { interval: INTERVALO_US }); await post("Profiler.start"); } catch { return; }
     setTimeout(async () => {
       let r = null; try { r = await post("Profiler.stop"); } catch { r = null; }

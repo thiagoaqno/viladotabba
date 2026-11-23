@@ -1448,7 +1448,8 @@ function passo(room, dt, setor, emit) {
       const drs = !!(aderencia && p.drsZona === F1.zonaDRS(ia.s / pf.n, t.drs) && p.drsZona >= 0 && !room.direcao?.safety && !room.direcao?.amarelo);
       const ers = ia.ers;
       if (ers) F1.carregarErs(ers, dt, ia.v > alvo + 12, ia.v >= alvo, p.laps);
-      const usaErs = !!(ers && !room.direcao?.safety && F1.usarErsAuto(ers.carga, ia.v, c.vmax, pf.lim[i] > c.vmax * 0.93, encontrou));
+      const saidaCurva = pf.lim[(i + 6) % pf.lim.length] > pf.lim[i] * 1.08 && pf.lim[i] > c.vmax * 0.45; // (2026-11-23) a saída da curva: o limite sobe logo à frente
+      const usaErs = !!(ers && !room.direcao?.safety && F1.usarErsAuto(ers.carga, ia.v, c.vmax, pf.lim[i] > c.vmax * 0.93 || saidaCurva, encontrou));
       if (ers) F1.gastarErs(ers, dt, usaErs, encontrou);
       // regras de F1: o vácuo na reta (o mesmo de quem joga, com o mesmo teto do ganho aerodinâmico)
       const aero = vac ? Math.min(F1.AERO_MAX, vac.final + (drs ? F1.DRS_GANHO * (c.drs ?? 1) : 0) + (usaErs ? 0.03 : 0)) : (drs ? F1.DRS_GANHO * (c.drs ?? 1) : 0) + (usaErs ? 0.03 : 0);

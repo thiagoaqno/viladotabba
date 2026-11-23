@@ -193,6 +193,27 @@ function gastarErs(ers, dt, ativo, forte = true) { // forte: o overtake (o padr�
   ers.carga = limite(ers.carga - gasto, 0, 1);
   return gasto > 0;
 }
+// (2026-11-23, o Thiago: "o modo ultrapassagem devia ser ativado a 1,5 s ou menos do carro da frente" e "todo mundo pode usar o motor elétrico em
+// saídas de curva") o modo ultrapassagem (o gasto forte, até ERS_PISO_OVERTAKE e sem o orçamento da volta) vale a ULTRAPASSAGEM_S ou menos do carro
+// da frente (antes: só colado no vácuo, ~28 m); e o automático entrega também na saída da curva (a curva abrindo à frente), não só na reta.
+const ULTRAPASSAGEM_S = 1.5;
+// os segundos até o carro da frente mais perto (em linha reta, pela minha velocidade); Infinity sem ninguém. `outros`: [{ x, y, z, a, dnf, fant }]
+function intervaloAFrente(c, outros) {
+  const v = Math.abs(c.v || 0); if (v < 30 || !outros) return Infinity;
+  const fx = Math.cos(c.a), fy = Math.sin(c.a); let melhor = Infinity;
+  for (const o of outros) {
+    if (!o || o.dnf || o.fant) continue;
+    const dx = o.x - c.x, dy = o.y - c.y, along = dx * fx + dy * fy, lat = Math.abs(-dx * fy + dy * fx);
+    if (along <= 10 || lat > 90 || Math.abs((o.z || 0) - (c.z || 0)) > 15 || Math.cos((o.a || 0) - c.a) < 0.3) continue;
+    melhor = Math.min(melhor, along / v);
+  }
+  return melhor;
+}
+// a saída da curva: ainda curvando, mas a curva abre logo à frente (a curvatura cai)
+function saidaDeCurva(tr, idx) {
+  const n = tr.pts.length, k = tr.pts[idx]?.k || 0, k2 = tr.pts[(idx + 5) % n]?.k || 0;
+  return k > 1 / 1500 && k < 1 / 160 && k2 < k * 0.7;
+}
 const usarErsAuto = (carga, velocidade, vmax, reta, perto) => carga > (perto ? ERS_PISO_OVERTAKE : ERS_PISO_AUTO) && velocidade > vmax * 0.35 && reta; // (2026-11-21: colado no da frente também só na reta; era "reta || perto", e o ERS ligava no meio da curva)
 
 // ---------- o pit stop ----------
@@ -683,7 +704,7 @@ function vacuoF1(draft, curva) {
 }
 
 const api = { PLANOS_DOMINGO, DESGASTE_SOMADO, desgasteDoPlano, REL_PISTA, relDaPista, voltasDoGP, PONTO_VOLTA_RAPIDA, pontosDe, PNEUS, SECOS, COMPOSTO_PADRAO, PENHASCO, PERDA_FIM, vidaEmVoltas, vidaRestante, sessoesDeClassificacao, ordenarClassificacao, fecharSessao, gridDaClassificacao, PONTOS, classificacaoFinal, pneuNovo, gastarPneu, aderencia, frio,
-  zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersBloqueadoNaChuva, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
+  ULTRAPASSAGEM_S, intervaloAFrente, saidaDeCurva, zonaDRS, drsHabilitado, vacuoPermitido, vacuoF1, VACUO_FINAL, VACUO_ACEL, AR_SUJO, AERO_MAX, DRS_GANHO, ERS_POTENCIA, TETO_VELOCIDADE, ERS_LARGADA_KMH, ersBloqueadoNaChuva, ersNovo, carregarErs, gastarErs, usarErsAuto, ERS_PISO_OVERTAKE, ERS_MAX_RECARGA, ERS_GASTO, ERS_GASTO_SUAVE,
   LIMITADOR, PARADA_BASE, PARADA_ERRO, CONSERTO_QUEBRA_S, UM_COMPOSTO, RAPIDO, RAMPA, GARAGENS, EQUIPES_GARAGEM, indiceDaGaragem, sorteio, tempoDeParada, PARADAS, classeDaParada, textoDaParada, BATIDA_MIN, BATIDA_MEDIA, BATIDA_FORTE, BATIDA_MAX, BATIDA_INTERVALO, batida, COLISAO_LEVE, COLISAO_MEDIA, COLISAO_GRAVE, PUNICAO_LEVE_S, PUNICAO_MEDIA_S, STOPGO_S, STOPGO_VOLTAS, STOPGO_CONVERSAO_S, gravidadeDaBatida, nivelDaPunicao, batidaProposital, DSQ_PROPOSITAIS, AVISO_PROPOSITAIS, stopGoCabe, efeitoDoDano, corredor, garagemDe, saidaDoCorredor, tempoNoBox, registrarParada, usouDoisCompostos, JOGOS_POR_COMPOSTO, jogosUsados, jogosRestantes, podeUsar, compostoParaParada, recomendarParada, ESCOLHA_BOX_S, penalidadeUmComposto, acrescimoDeFinal, estrategia, melhoresPlanos,
   CHANCE_CHUVA, GAROA, CHUVA_FORTE, AGUA_SOBE_S, AGUA_SECA_S, RAMPA_S, CHUVA_MIN_S, AVISO_S, AGUA_MOLHADA, AGUA_ENCHARCADA, AGUA_QUALI_CHUVA, OPCOES_DE_CLIMA, ROTULO_CLIMA, previsaoDoGP, descreverPrevisao, sortearClima, chuvaEm, aguaEm, proximaMudanca, climaEm, fatorAgua, compostoDaClassificacao, tempoMolhado, compostoPorAgua };
 if (typeof module !== "undefined" && module.exports) module.exports = api;

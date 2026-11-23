@@ -40,7 +40,7 @@ export function atualizarCentro(ctx) {
   const m = ctx.m, rpm = Math.min(1, race.rpm || 0), carga = race.ers ? race.ers.carga : 0, ativo = !!race.ersAtivo;
   $("race").classList.toggle("hud-telemetria", estiloHud() === "telemetria");
   if (estiloHud() === "telemetria") atualizarHudTelemetria($("hCentro"), { kmh: ctx.kmh, marcha: !m ? "—" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1), modo: ctx.modoErs.texto, bateria: carga, rpm, acel: race.car.gasP, freio: race.car.brkP, drs: race.drsAtivo });
-  if ($("hDentro")) { set($("hdVel"), "t", ctx.kmh); set($("hdPct"), "t", Math.round(carga * 100) + "%"); set($("hdModo"), "t", ctx.modoErs.texto); set($("hdOver"), "c", "hd-over" + (ativo ? " on" : carga > 0.12 ? " pronto" : "")); }
+  if ($("hDentro")) { set($("hdVel"), "t", ctx.kmh); set($("hdPct"), "t", Math.round(carga * 100) + "%"); set($("hdModo"), "t", ctx.modoErs.texto); set($("hdOver"), "c", "hd-over" + (ativo && race.ultrap ? " on" : race.ultrap && carga > 0.05 ? " pronto" : "")); }
   set($("pVel"), "t", ctx.kmh); set($("pMarcha"), "t", !m ? "" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1));
   set($("gRpm"), "t", M().rpmReal(rpm, ctx.kmh));
   const acesas = Math.round(rpm * N_LED), leds = $("gLeds").children;
@@ -54,7 +54,7 @@ export function atualizarCentro(ctx) {
   set($("gErsBarra"), "w", Math.round(lim(carga, 0, 1) * 100) + "%");
   // OVERTAKE: aceso enquanto o ERS está desdobrando; o círculo mostra a tecla (E no manual) e o DRS tem a sua pílula
   const manual = E.S.config.ers === "manual";
-  set($("gBotao"), "t", manual ? "E" : "⚡"); set($("pOver"), "c", ativo ? "on" : carga > 0.12 ? "pronto" : "");
+  set($("gBotao"), "t", manual ? "E" : "⚡"); set($("pOver"), "c", ativo && race.ultrap ? "on" : race.ultrap && carga > 0.05 ? "pronto" : ""); // (2026-11-23: o OVERTAKE é o modo ultrapassagem, a 1,5 s do da frente; o elétrico das retas e saídas de curva não acende ele)
   const aberto = !!race.drsAtivo, pronto = !!m && m.drsZona >= 0;
   set($("gDrs"), "c", "gc-drs" + (aberto ? " aberto" : pronto ? " pronto" : ""));
 }

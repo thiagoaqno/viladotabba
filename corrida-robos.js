@@ -429,7 +429,7 @@ function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
 // quanto dura uma sessão de classificação, em segundos: dá para uma volta de saída e duas lançadas de um carro médio
 function duracaoDaClassificacao(pista) {
   const t = tempoDaVolta(perfil(pista, "equilibrado", 0), NIVEIS.medio);
-  return Math.max(80, Math.min(240, Math.round(t * 2.2 + 12 + GRID_F1 * QUALI_SAIDA_MS / 1000))); // (+ a saída escalonada dos robôs pilotando: prepararQuali)
+  return Math.max(80, Math.min(260, Math.round(t * 2.2 + 12 + QUALI_SAIDA_TOTAL_S))); // (+ a saída em grupos dos robôs pilotando: prepararQuali)
 }
 
 // troca os robôs da sala pelos novos (chamado na largada); devolve os ids
@@ -463,16 +463,18 @@ function planoDoRobo(room, id) {
 // (2026-11-23, o Thiago: "pensei em nos qualifies todo mundo correr junto, mas com modo fantasma, dando pra ver os bots também") a sessão da classificação
 // com os robôs pilotando: cada um sai do grid (largar), com o pneu da classificação pela água da abertura, um a cada QUALI_SAIDA_MS; quem não está na
 // sessão (eliminado) sai da pista. A volta deles é cronometrada pela mesma conta de quem joga (corrida-f1-classificacao.js aoSetor).
-const QUALI_SAIDA_MS = 1000;
+// (2026-11-23, o Thiago: "eles devem ser liberados aos poucos, a cada 5 s libera uns 2 ou 3, igual na F1") em grupos de 2 ou 3 (pela semente), a cada QUALI_SAIDA_MS
+const QUALI_SAIDA_MS = 5000, QUALI_SAIDA_TOTAL_S = 45;
 function prepararQuali(room) {
   const q = room.quali; if (!q) return;
   largar(room);
   const agua = room.clima ? F1.climaEm(room.clima, q.startAt).agua : 0, composto = F1.compostoDaClassificacao ? F1.compostoDaClassificacao(agua) : "macio";
-  let k = 0;
+  const rg = F1.sorteio(`saida:${room.semente}:${q.i}`); let grupo = 0, noGrupo = 0, tam = 2 + Math.floor(rg() * 2);
   for (const id of room.order) {
     const p = room.players[id]; if (!p.bot) continue;
     if (!q.ativos.includes(id)) { p.ia = null; p.pos = null; continue; }
-    p.qSaida = q.startAt + (k++) * QUALI_SAIDA_MS;
+    if (noGrupo >= tam) { grupo++; noGrupo = 0; tam = 2 + Math.floor(rg() * 2); }
+    p.qSaida = q.startAt + grupo * QUALI_SAIDA_MS; noGrupo++;
     if (p.ia && p.ia.sim) { const pn = F1.pneuNovo(composto); pn.temp = 0.85; p.ia.pneu = pn; p.ia.sim.pneu = pn; p.ia.plano = { largada: composto, paradas: [] }; Object.assign(p, { pneu: composto, pneuAtual: composto, compostos: [composto] }); }
   }
 }
@@ -702,7 +704,8 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     return { i: j, lat: (o.pos.x - a.x) * -a.ty + (o.pos.y - a.y) * a.tx, dist: distancia * STEP };
   };
   const desdeLargada = room.startAt ? now - room.startAt : Infinity, arranque = Math.max(0, Math.min(1, (desdeLargada - ARRANQUE_INI_MS) / ARRANQUE_RAMPA_MS)), largando = desdeLargada < ARRANQUE_SEM_ULT_MS;
-  for (const oid of room.order) {
+  // (2026-11-23, o Thiago: "mesmo com modo fantasma os robôs ainda evitam passar um dentro do outro") na classificação ninguém é tráfego: são fantasmas
+  for (const oid of (room.phase === "quali" ? [] : room.order)) {
     const o = room.players[oid]; if (o === p || !o.pos || o.finish != null || o.dnf || Math.abs((o.pos.z || 0) - ponto.h) > 15 || o.fantAte > now) continue; // (o fantasma, parado e recolocado, não é tráfego)
     // Duas partes próximas do desenho (especialmente curvas de Spa) não são tráfego uma da outra. Confere também a
     // distância ao longo da pista; só o carro realmente adiante pode mandar frear.
@@ -1291,7 +1294,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     Sim.passo(car, ent, amb, tr, ev);
     // a batida deste passo: a mesma dos humanos (corrida-contato.js), com os outros carros na hora do passo; o robô também troca momento
     evC.length = 0;
-    Contato.depoisDoPasso(room, p, car, now - dt * 1000 + (s + 1) * Sim.PASSO * 1000, evC, !amb.safety && p.finish == null && !p.dnf && !car.box?.fase);
+    Contato.depoisDoPasso(room, p, car, now - dt * 1000 + (s + 1) * Sim.PASSO * 1000, evC, room.phase !== "quali" && !amb.safety && p.finish == null && !p.dnf && !car.box?.fase);
     for (const e of evC) if (e.forca >= 5) emit("batida", { id: p.id, forca: e.forca, tipo: "carro", chave: "carro:" + e.id }); // (a direção de prova decide: abaixo da força mínima só vale se o outro derrapava)
     for (const e of ev) {
       if (e.t === "setor") setor(p, e.s);

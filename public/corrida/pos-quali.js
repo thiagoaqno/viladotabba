@@ -111,6 +111,27 @@ function qualifyingHTML(q, T, m, S) {
     <footer class="qy-pe"><span class="qy-mapa">${window.GpSobre ? window.GpSobre.mapaSvg(S.config.pista, "qy-mapa-svg") : ""}</span><span class="qy-gp"><b>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : "")}</b><small>${h(info && info.circuito ? info.circuito : "")}</small></span>
       <button type="button" class="qy-bt" data-pq-vista="raceday">CONTINUAR <span>→</span></button></footer></div>`;
 }
+// (2026-11-23, o Thiago: "você não fez o estilo das telas pós-qualify") a pausa entre as sessões (depois do Q1 e do Q2) no mesmo estilo do QUALIFYING:
+// a sessão inteira na tabela (quem caiu apagado, a linha vermelha do corte), o mais rápido da sessão no cartão e "Sua sessão" embaixo dele.
+function sessaoHTML(q, T, m, S, f, precisa, confirmado, prontos) {
+  const pista = PISTAS[S.config.pista], info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, k = q.fechadas.length - 1;
+  const ordem = f.ordem, pole = ordem[0] && ordem[0].tempo, passam = ordem.length - f.eliminados.length, p0 = P(ordem[0] && ordem[0].id), eq0 = eqDe(p0), f0 = fotoDe(p0);
+  const Ts = {}; for (const x of ordem) Ts[x.id] = [x.tempo];
+  const linhas = ordem.map((x, i) => linhaGrid(x.id, i, Ts, pole, m, `${i < 5 ? "top" : "meio"} ${f.eliminados.includes(x.id) ? "fora" : ""} ${i === passam - 1 && f.eliminados.length ? "corte" : ""}`)).join("");
+  const proximo = `Q${q.fechadas.length + 1}`;
+  const botao = precisa ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? `PRONTO · ${prontos}/${q.aguardados.length}` : `LARGAR PARA O ${proximo}`} <span>→</span></button>`
+    : m && !q.aguardados.length ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>PULAR PARA O ${proximo} <span>→</span></button>`
+    : m ? `<span class="pq-espera">Você assiste: o ${proximo} abre quando os outros estiverem prontos</span>` : "";
+  return `<div class="qy">
+    <header class="qy-topo"><small>QUALIFYING · ${h(f.nome || `Q${k + 1}`)}</small><h2>${h(f.nome || `Q${k + 1}`)}</h2><em>RESULTADO</em></header>
+    <p class="qy-aviso"><b>${f.eliminados.length} ${f.eliminados.length === 1 ? "piloto ficou" : "pilotos ficaram"} pelo caminho.</b> Os eliminados largam do fim do grid, na ordem do tempo; os ${passam} primeiros seguem para o ${proximo}.</p>
+    <div class="qy-corpo"><section class="qy-tab"><div class="qy-cab"><span>POS</span><span>PILOTO</span><span>EQUIPE</span><span>TEMPO</span></div><ol class="qy-sessao">${linhas}</ol></section>
+      <div class="qy-lado"><aside class="qy-pole" style="--c:${corOk(eq0 ? eq0.cor : p0 && p0.color)}">${f0 ? `<div class="qy-foto" style="--foto:url('${h(f0.url)}')"></div>` : `<div class="qy-foto sem">${logo(p0, "pq-logo-g")}</div>`}
+        <div class="qy-pole-txt"><small>MAIS RÁPIDO · ${h(f.nome || `Q${k + 1}`)}</small><span>${h(primeiro(p0))}</span><b>${h(sobrenome(p0).toUpperCase())}</b><em>${h(eq0 ? eq0.nome : "")} ${logo(p0)}</em><strong>${tempo3(pole)}</strong></div></aside>
+        ${minhaSessao(q, m)}</div></div>
+    <footer class="qy-pe"><span class="qy-mapa">${window.GpSobre ? window.GpSobre.mapaSvg(S.config.pista, "qy-mapa-svg") : ""}</span><span class="qy-gp"><b>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : "")}</b><small>${h(f.nome)} concluído${precisa || !m ? ` · <em class="pq-pe-estado"><em>${prontos}/${q.aguardados.length} prontos</em></em>` : ""} <span data-pq-relogio></span></small></span>
+      ${m ? `<button type="button" class="qy-bt ghost" data-pq-vista="ajustes">Ajustes do carro</button>` : ""}${botao}</footer></div>`;
+}
 function raceDayHTML(q, T, m, S, confirmado, precisa, prontos) {
   const F = window.F1Regras, pista = PISTAS[S.config.pista], info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, pole = (T[q.grid[0]] || []).at(-1), voltas = S.config.voltas;
   const meuI = m ? q.grid.indexOf(m.id) : -1, top = q.grid.slice(0, 5).map((id, i) => linhaGrid(id, i, T, pole, m)).join("");
@@ -161,6 +182,12 @@ export function renderQuali() {
     el.querySelectorAll("[data-pq-vista]").forEach((b) => { b.onclick = () => { vista = b.dataset.pqVista; chaveHtml = ""; renderQuali(); }; });
     const conf = el.querySelector("#confirmarLargada"); if (conf && !confirmado) conf.onclick = () => act("confirmarLargada");
     if (m && !confirmado) el.querySelectorAll("[data-pneu-largada]").forEach((b) => { b.onclick = () => act("pneu", { pneu: b.dataset.pneuLargada }); });
+    return;
+  }
+  if (!ultima && vista !== "ajustes") { // a pausa entre as sessões, no mesmo estilo
+    el.innerHTML = sessaoHTML(q, T, m, S, f, precisa, confirmado, prontos); relogio();
+    el.querySelectorAll("[data-pq-vista]").forEach((b) => { b.onclick = () => { vista = b.dataset.pqVista; chaveHtml = ""; renderQuali(); }; });
+    const conf = el.querySelector("#confirmarLargada"); if (conf && !confirmado) conf.onclick = () => act("confirmarLargada");
     return;
   }
   const pista = PISTAS[S.config.pista], titulo = ultima ? "Resultado da classificação" : `${f.nome} encerrado`;

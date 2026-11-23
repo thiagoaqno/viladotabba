@@ -29,7 +29,14 @@ const NIVEIS = { facil: 0.80, medio: 0.87, dificil: 0.93, lendario: 0.96 }; // m
 // robô já anda no limite do carro (medido: sozinho em Bahrein, 45,45 s no 100 e 45,15 s com a folga de −1% e o carro de sempre).
 const MARCA_NIVEL = { facil: 60, medio: 92, dificil: 100, lendario: 150 };
 // o carro a mais dos robôs acima de 100 (sim.js gpMods): no 150, +5% de aderência e +6% de potência
-function reforcoDoNivel(room) { const k = Math.max(0, Math.min(1, (forcaDoNivel(room.config.nivel) - 100) / 50)); return k > 0 ? { grip: 1 + 0.05 * k, potencia: 1 + 0.06 * k, desgaste: 1, grid: 0 } : null; }
+// (2026-11-23) a FORÇA do carro a mais: 1 é o do 150 de antes (+5% / +6%). Com o ritmo de quem joga (forcaDoReforco), ela pode passar de 1.
+// ROBO_REFORCO_X: só para medir (klk/medir).
+const reforcoDe = (x) => (x > 0 ? { grip: 1 + 0.05 * x, potencia: 1 + 0.06 * x, desgaste: 1, grid: 0 } : null);
+function reforcoDoNivel(room) {
+  if (process.env.ROBO_REFORCO_X != null) return reforcoDe(+process.env.ROBO_REFORCO_X);
+  const k = Math.max(0, Math.min(1, (forcaDoNivel(room.config.nivel) - 100) / 50)); if (!(k > 0)) return null;
+  return reforcoDe(forcaDoReforco(room, k));
+}
 function forcaDoNivel(nivel) {
   const n = typeof nivel === "number" ? nivel : MARCA_NIVEL[nivel];
   return Number.isFinite(n) ? Math.max(0, Math.min(MARCA_NIVEL.lendario, n)) : MARCA_NIVEL.medio;
@@ -176,7 +183,7 @@ const APRENDIDO = new Map(); // pista -> até cinco perfis humanos válidos
 let fonte = () => []; // de onde vêm até cinco voltas guardadas (o servidor liga no banco)
 let fonteRitmo = () => null; // o ritmo de quem joga: (pista, nomes da sala ou null) -> { tempo } (bd.ritmoCorrida)
 let fonteRecorde = () => null;
-let fonteAprendido = () => null; // o ritmo aprendido de quem joga: (pista, nomes da sala, condição) -> { razao, voltas } (bd.ritmoAprendidoCorrida)
+let fonteAprendido = () => null; // a proximidade de quem joga aos robôs do Difícil: (pista, nomes da sala, condição) -> { prox } (bd.proximidadeCorrida)
 function usarFonte(f, ritmo = () => null, recorde = () => null, aprendidoF1 = () => null) { fonte = f; fonteRitmo = ritmo; fonteRecorde = recorde; fonteAprendido = aprendidoF1; APRENDIDO.clear(); CACHE.clear(); }
 function processar(pista, volta) {
   T.usarEscala(pista); const t = T.PISTAS[pista], linha = tracado(pista), pts = linha.pts, n = pts.length, s = volta && volta.s;
@@ -350,9 +357,8 @@ const EMPURRAO_F1 = { facil: 0.86, medio: 1, dificil: 1 }, EMPURRAO_F1_ANTIGO = 
 // O Thiago: "os bots deviam aprender comigo (piloto de um jeito na chuva e com um pneu específico) e fazer um ritmo 2% mais lento, para dificultar os níveis
 // mais altos: o 150 é igual a mim mas 2% mais lento, e vai diminuindo até o 100, que pilota no difícil padrão; as voltas entram aos poucos, no fim de cada
 // corrida; voltas limpas ou com até 2 toques no muro". A volta de quem joga vira uma RAZÃO: o tempo dela sobre a volta ideal do carro dele, com o pneu e a
-// água daquela volta (`razaoDaVolta`). O robô mira a volta ideal do carro DELE vezes essa razão, mais RITMO_HUMANO_FOLGA: um Red Bull não fica com o ritmo de
-// um Racing Bulls. Medido nas voltas guardadas do Thiago (as 5 melhores de cada pista, de 11 a 21/nov): de 0,915 (Melbourne) a 1,054 (Hungaroring) da
-// volta ideal, ou seja, a conta de ritmo dos robôs errava diferente em cada pista. Sem ritmo aprendido no seco, valem essas voltas guardadas (ritmoDaSala).
+// água daquela volta (`razaoDaVolta`): o carro dele fica descontado. Comparada com a razão dos robôs da MESMA corrida, vira a proximidade
+// (corrida.js aprenderRitmo), que decide o carro a mais do 100 ao 150 (forcaDoReforco, abaixo).
 const RITMO_HUMANO_FOLGA = 0.02, TOQUES_MURO_MAX = 2;
 const condicaoDaAgua = (agua) => (/^(intermediario|chuva)$/.test(F1.compostoDaClassificacao ? F1.compostoDaClassificacao(agua || 0) : "macio") ? "molhado" : "seco");
 function razaoDaVolta(pista, spec, pneu, agua, tempo) {
@@ -360,32 +366,41 @@ function razaoDaVolta(pista, spec, pneu, agua, tempo) {
   const ideal = tempoDaVolta(perfil(pista, sp), 1, F1.aderencia({ composto: (pneu && pneu.composto) || "medio", desgaste: (pneu && pneu.desgaste) || 0, temp: 1 }, agua || 0));
   return ideal > 0 && Number.isFinite(tempo) ? tempo / ideal : null;
 }
-function ritmoHumano(room) {
-  const nomes = room.order.map((id) => room.players[id]).filter((p) => p && !p.bot).map((p) => p.name); if (!nomes.length) return null;
-  const pista = room.config.pista, cond = condicaoDaAgua(room.clima ? F1.climaEm(room.clima, room.startAt || Date.now()).agua : 0);
-  try { const a = fonteAprendido(pista, nomes, cond); if (a && Number.isFinite(a.razao)) return { razao: a.razao, condicao: cond, origem: "aprendido", voltas: a.voltas }; } catch (e) { /* banco indisponível */ }
-  if (cond !== "seco") return null;
-  try { const r = fonteRitmo(pista, nomes); if (r && Number.isFinite(r.tempo)) return { razao: r.tempo / idealDe(pista), condicao: cond, origem: "guardadas", voltas: r.voltas }; } catch (e) { /* idem */ }
-  return null;
+// Do 100 ao 150, o que mexe no ritmo é o carro a mais (o alvo de tempo já está no limite do carro: a tabela de tempoDaVolta para em f = 1). Medido com o
+// Perez de Cadillac sozinho em Suzuka (3 sementes, voltas 2 a 5): força 1 / 2 / 3 deixa o robô 1,4 / 2,6 / 3,4% mais rápido, sem batidas. Daí a conta
+// ritmo = 1 / (1 + REFORCO_POR_X · força). A proximidade de quem joga (a razão dele sobre a dos robôs do Difícil, sem carro a mais: corrida.js
+// aprenderRitmo) dá o alvo: no 150, o ritmo dele + 2%; do 100 ao 150, em linha reta. Nunca mais fácil que o nível sem o ritmo dele, e no máximo
+// REFORCO_X_MAX (+20% de aderência e +24% de potência; acima de 3 é conta, não medida).
+const REFORCO_POR_X = 0.012, REFORCO_X_MAX = 4;
+function proximidadeDaSala(room) {
+  const chave = `${room.startAt}|${room.config.pista}|${room.config.nivel}`; if (room._proximidade && room._proximidade.chave === chave) return room._proximidade.v;
+  let v = null;
+  const nomes = room.order.map((id) => room.players[id]).filter((p) => p && !p.bot).map((p) => p.name);
+  if (nomes.length) {
+    const cond = condicaoDaAgua(room.clima ? F1.climaEm(room.clima, room.startAt || Date.now()).agua : 0);
+    try { const a = fonteAprendido(room.config.pista, nomes, cond); if (a && Number.isFinite(a.prox)) v = { ...a, condicao: cond }; } catch (e) { /* banco indisponível */ }
+  }
+  room._proximidade = { chave, v }; return v;
 }
+function forcaDoReforco(room, k) {
+  const pr = proximidadeDaSala(room); if (!pr) return k;
+  const antes = 1 / (1 + REFORCO_POR_X * k), alvo = 1 + (pr.prox * (1 + RITMO_HUMANO_FOLGA) - 1) * k;
+  return Math.min(REFORCO_X_MAX, Math.max(k, (1 / Math.min(antes, alvo) - 1) / REFORCO_POR_X));
+}
+// o fator que leva o ritmo dos robôs desta sala ao do Difícil sem carro a mais (para medir a proximidade)
+function semReforco(room) { const g = reforcoDoNivel(room); return g ? 1 + REFORCO_POR_X * ((g.grip - 1) / 0.05) : 1; }
 function referenciaF1(room) {
   const pista = room.config.pista;
   const pf = perfil(pista, F1Equipes.specDaEquipe("mclaren"));
   const ideal = tempoDaVolta(pf, 1, aderRef());
   let recorde = null;
   try { const v = fonteRecorde(pista); if (v && Number.isFinite(v.tempo) && v.tempo >= T.PISTAS[pista].minLap) recorde = v.tempo; } catch (e) { /* banco indisponível: usa o traçado */ }
-  return { tempo: ideal * (1 + porNivel(FOLGA_F1, room.config.nivel)), ideal, recorde, origem: false, proteger: !!recorde && recorde <= ideal * 1.01, humano: forcaDoNivel(room.config.nivel) > MARCA_NIVEL.dificil ? ritmoHumano(room) : null };
+  return { tempo: ideal * (1 + porNivel(FOLGA_F1, room.config.nivel)), ideal, recorde, origem: false, proteger: !!recorde && recorde <= ideal * 1.01 };
 }
 function alvoF1(room, p, pf) {
   const ref = room.referenciaF1 || referenciaF1(room);
   const folga = porNivel(FOLGA_F1, room.config.nivel), piloto = p.piloto ? Math.min(0.012, Math.max(0, 96 - p.piloto.ritmo) * 0.0006) : 0.006;
-  const ideal = tempoDaVolta(pf, 1, aderRef()), k = Math.max(0, Math.min(1, (forcaDoNivel(room.config.nivel) - MARCA_NIVEL.dificil) / (MARCA_NIVEL.lendario - MARCA_NIVEL.dificil)));
-  // acima do 100, com ritmo de quem joga: do difícil padrão (100) até o ritmo dele + 2% (150), em linha reta. Nunca mais fácil que o nível sem o ritmo
-  // dele: medido com as voltas guardadas em Interlagos (a média das 5 melhores, 40,98), o ritmo + 2% dava a pole do 150 em 41,90 contra 41,08 de antes
-  if (k > 0 && ref.humano) {
-    const dificil = ideal * (1 + FOLGA_F1.dificil + piloto), humano = ideal * ref.humano.razao * (1 + RITMO_HUMANO_FOLGA) * (1 + piloto);
-    return Math.max(ref.proteger ? ref.recorde * 1.025 : 0, Math.min(ideal * (1 + folga + piloto), dificil + (humano - dificil) * k));
-  }
+  const ideal = tempoDaVolta(pf, 1, aderRef());
   return Math.max(ref.proteger ? ref.recorde * 1.025 : 0, ideal * (1 + folga + piloto));
 }
 function largada(pts, g, W, f1) { // mesma posição usada pela física e pelas marcas na pista
@@ -1468,4 +1483,4 @@ possivel.topo = (pista, spec) => topoDe(perfil(pista, spec || F1Equipes.specDaEq
 // (2026-11-21, o servidor.log do Thiago: 879 ms parado no começo da classificação, carregando arquivo: wrapResolveFilename / package.json) os
 // arquivos que os robôs só liam na primeira classificação vão para a memória logo depois da abertura, fora de qualquer corrida
 setImmediate(() => { try { fatorDoQuali("interlagos"); acertoDoRobo("interlagos", "medio", 0); ritmoDosPneus(); } catch (e) { /* (só aquece: o uso de verdade tenta de novo) */ } });
-module.exports = { razaoDaVolta, condicaoDaAgua, ritmoHumano, TOQUES_MURO_MAX, prepararQuali, forcaDoNivel, nomeDoNivel, MARCA_NIVEL, preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };
+module.exports = { razaoDaVolta, condicaoDaAgua, semReforco, forcaDoReforco, proximidadeDaSala, TOQUES_MURO_MAX, prepararQuali, forcaDoNivel, nomeDoNivel, MARCA_NIVEL, preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };

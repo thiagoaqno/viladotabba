@@ -25,7 +25,7 @@ const Equipes = require("./public/corrida/f1-equipes.js"); // as equipes de 2026
 const Pilotos = require("./public/corrida/f1-pilotos-2026.js");
 const TRobo = require("./corrida-temporada-robo.js"); // o robô que leva o carro de quem cai no meio do GP da temporada em grupo
 const bd = require("./bd.js");
-Robos.usarFonte((pista) => bd.melhoresTracadosCorrida(pista), (pista, nomes) => bd.ritmoCorrida(pista, nomes), (pista) => bd.melhorVoltaCorrida(pista), (pista, nomes, cond) => bd.ritmoAprendidoCorrida(pista, nomes, cond));
+Robos.usarFonte((pista) => bd.melhoresTracadosCorrida(pista), (pista, nomes) => bd.ritmoCorrida(pista, nomes), (pista) => bd.melhorVoltaCorrida(pista), (pista, nomes, cond) => bd.proximidadeCorrida(pista, nomes, cond));
 const { SKINS } = require("./public/pelada/campo.js"); // o piloto do kart usa as skins da Pelada
 const { rid, novoCodigo, limparNome: cleanName, ok, falha: fail, contexto, ligarSocket, buscarSala, quemVolta, nomeEmUso, limparSalasParadas } = require("./salas.js"); // as peças de sala que todo jogo repete
 const noite = require("./noite.js"); // o placar da Noite da Galera (quem ganhou e quem perdeu cada partida)
@@ -406,7 +406,7 @@ module.exports = function attachCorrida(io) {
   // Não servem: a 1ª volta (largada parada), a volta com box (a de entrada e a de saída), com safety car, com toque em carro, com saída de pista (o limite
   // de pista da direção de prova, corrida-f1-direcao.js registrar) ou com mais de 2 toques no muro.
   function anotarVoltaParaRobos(room, p, lap, ini, fim) {
-    const paradas = (p.paradas || []).length, sc = !!room.direcao?.safety || !!p.scNaVolta, c = p.sim && p.sim.c, pneu = c && c.pneu;
+    const paradas = (p.paradas || []).length, sc = !!room.direcao?.safety || !!p.scNaVolta, pneu = (p.sim && p.sim.c && p.sim.c.pneu) || (p.ia && p.ia.pneu); // (o robô: o pneu da IA)
     const agua = room.clima ? (F1.climaEm(room.clima, ini).agua + F1.climaEm(room.clima, fim).agua) / 2 : 0;
     const saiu = (p.avisosLimite || 0) > (p.limitesAntes ?? (p.avisosLimite || 0)) || !!p.fora;
     const v = { t: lap, muros: p.murosNaVolta || 0, carro: !!p.carroNaVolta, saiu, box: paradas !== (p.paradasAntes ?? paradas) || !!p.boxNaVolta || !!p.box, sc, primeira: p.laps <= 1,
@@ -414,18 +414,39 @@ module.exports = function attachCorrida(io) {
     (p.voltasRobos ||= []).push(v); if (p.voltasRobos.length > 200) p.voltasRobos.shift();
     p.murosNaVolta = 0; p.carroNaVolta = false; p.limitesAntes = p.avisosLimite || 0; p.boxNaVolta = !!p.box; p.scNaVolta = !!room.direcao?.safety; p.paradasAntes = paradas;
   }
+  // A volta de cada um vira a razão "volta ÷ volta ideal do carro dele, com aquele pneu e aquela água" (Robos.razaoDaVolta): o carro fica descontado.
+  // Quem joga: a mediana por condição e pneu vai para corrida_ritmo_aprendido. E, com robôs do Difícil para cima (todos no limite do carro), a
+  // PROXIMIDADE: a razão de quem joga dividida pela dos robôs da mesma corrida (sem o carro a mais do nível: Robos.semReforco). É ela que decide o
+  // carro a mais do 100 ao 150 (corrida-robos.js forcaDoReforco). (2026-11-23: a conta sozinha não servia: em Suzuka o Thiago fica a 0,96 da volta
+  // ideal, mais rápido que o Difícil na conta, mas na pista o robô do 100 já faz 41,30 contra as 42,16 dele.)
   function aprenderRitmo(room) {
     if (room.config.regras !== "f1" || !room.order.some((id) => room.players[id]?.bot)) return;
-    const pista = room.config.pista;
+    const pista = room.config.pista, boa = (v) => !v.primeira && !v.box && !v.sc && !v.carro && !v.saiu && v.muros <= Robos.TOQUES_MURO_MAX;
+    const mediana = (rs) => { rs.sort((a, b) => a - b); return rs[rs.length >> 1]; }; // (o ritmo de corrida, sem a volta perdida nem a melhor de todas)
+    const robos = {}; // condição -> razões das voltas boas dos robôs
+    for (const id of room.order) {
+      const p = room.players[id]; if (!p || !p.bot || !p.voltasRobos) continue;
+      for (const v of p.voltasRobos.filter(boa)) { const r = Robos.razaoDaVolta(pista, p.spec, { composto: v.composto, desgaste: v.desgaste }, v.agua, v.t); if (r) (robos[Robos.condicaoDaAgua(v.agua)] ||= []).push(r); }
+      p.voltasRobos = [];
+    }
+    const noLimite = Robos.forcaDoNivel(room.config.nivel) >= Robos.MARCA_NIVEL.dificil, fator = Robos.semReforco(room);
     for (const id of room.order) {
       const p = room.players[id]; if (!p || p.bot || !p.voltasRobos || !p.voltasRobos.length) continue;
-      const boas = p.voltasRobos.filter((v) => !v.primeira && !v.box && !v.sc && !v.carro && !v.saiu && v.muros <= Robos.TOQUES_MURO_MAX); p.voltasRobos = [];
-      const grupos = {};
-      for (const v of boas) { const r = Robos.razaoDaVolta(pista, p.spec, { composto: v.composto, desgaste: v.desgaste }, v.agua, v.t); if (r) (grupos[`${Robos.condicaoDaAgua(v.agua)}|${v.composto}`] ||= []).push(r); }
+      const boas = p.voltasRobos.filter(boa); p.voltasRobos = [];
+      const grupos = {}, porCond = {};
+      for (const v of boas) {
+        const r = Robos.razaoDaVolta(pista, p.spec, { composto: v.composto, desgaste: v.desgaste }, v.agua, v.t); if (!r) continue;
+        const cond = Robos.condicaoDaAgua(v.agua); (grupos[`${cond}|${v.composto}`] ||= []).push(r); (porCond[cond] ||= []).push(r);
+      }
       for (const [k, rs] of Object.entries(grupos)) {
-        rs.sort((a, b) => a - b); const med = rs[rs.length >> 1], [cond, comp] = k.split("|"); // a mediana: o ritmo de corrida, sem a volta perdida nem a melhor de todas
-        const nova = bd.aprenderRitmoCorrida(pista, p.name, cond, comp, med, rs.length);
-        if (nova != null) log(room, `🤖 Os robôs aprenderam o ritmo de ${p.name} (${cond}, ${(F1.PNEUS[comp] || {}).nome || comp}): ${rs.length} ${rs.length === 1 ? "volta" : "voltas"}.`);
+        const [cond, comp] = k.split("|");
+        if (bd.aprenderRitmoCorrida(pista, p.name, cond, comp, mediana(rs), rs.length) != null) log(room, `🤖 Os robôs anotaram o ritmo de ${p.name} (${cond}, ${(F1.PNEUS[comp] || {}).nome || comp}): ${rs.length} ${rs.length === 1 ? "volta" : "voltas"}.`);
+      }
+      for (const [cond, rs] of Object.entries(porCond)) {
+        const rb = robos[cond]; if (!noLimite || !rb || rb.length < 3 || rs.length < 2) continue; // (abaixo do Difícil os robôs não andam no limite: não servem de régua)
+        const prox = mediana(rs) / (mediana([...rb]) * fator);
+        const nova = bd.aprenderProximidadeCorrida(pista, p.name, cond, prox, rs.length);
+        if (nova != null) log(room, `🤖 ${p.name} ficou a ${((prox - 1) * 100).toFixed(1).replace(".", ",").replace(/^(?!-)/, "+")}% dos robôs do Difícil (${cond}).`);
       }
     }
   }
@@ -562,7 +583,7 @@ module.exports = function attachCorrida(io) {
     p.voltaSuja = (p.batidas || 0) > (p.batidasNaVolta || 0) || (p.fantAte || 0) > p.lapStart; p.batidasNaVolta = p.batidas || 0;
     const inicioDaVolta = p.lapStart, parciais = p.parciais || []; p.parciais = [];
     p.laps++; p.last = lap; p.best = p.best == null ? lap : Math.min(p.best, lap); p.lapStart = now;
-    if (!p.bot && room.config.regras === "f1" && room.phase === "race") anotarVoltaParaRobos(room, p, lap, inicioDaVolta, now);
+    if (room.config.regras === "f1" && room.phase === "race") anotarVoltaParaRobos(room, p, lap, inicioDaVolta, now);
     if (room.config.regras === "f1") Analise.volta(room, p, lap, inicioDaVolta);
     // o quadro de recordes da Vila só leva volta de corrida com as regras de F1 e com robôs na pista
     if (!p.bot && room.config.regras === "f1" && room.order.some((id) => room.players[id]?.bot)) { registrarRecorde(room, p, lap); if (!p.voltaSuja && parciais.length === 2) registrarSetores(room, p, [parciais[0] - inicioDaVolta, parciais[1] - parciais[0], now - parciais[1]]); }
@@ -606,7 +627,7 @@ module.exports = function attachCorrida(io) {
   // uma batida (de um humano ou de um robô): a punição e o dano ficam com a direção de prova; com a perda total de quem
   // ainda corria, a corrida pode ter acabado para todos
   function aplicarBatida(room, p, forca, tipo, quando = Date.now(), chave = tipo) {
-    if (p && !p.bot && room.phase === "race") { // (2026-11-23) os toques da volta, para o ritmo aprendido (aprenderRitmo): no muro um a cada 2 s, como anotarToque
+    if (p && room.phase === "race") { // (2026-11-23) os toques da volta (de quem joga e dos robôs), para o ritmo aprendido (aprenderRitmo): no muro um a cada 2 s, como anotarToque
       if (tipo === "muro") { if (quando - (p.murosT || 0) >= 2000) { p.murosNaVolta = (p.murosNaVolta || 0) + 1; p.murosT = quando; } }
       else p.carroNaVolta = true;
     }

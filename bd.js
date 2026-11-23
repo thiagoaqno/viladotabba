@@ -102,6 +102,24 @@ function ritmoAprendidoCorrida(pista, pilotos, condicao) {
   for (const [chave, a] of por) { const r = a.s / a.n; if (!melhor || r < melhor.razao) melhor = { chave, razao: r, voltas: a.n, pneus: a.pneus }; }
   return melhor;
 }
+// (2026-11-23) a proximidade de quem joga aos robôs do Difícil (migração 055), com o mesmo peso por corrida
+function aprenderProximidadeCorrida(pista, piloto, condicao, prox, voltas) {
+  const chave = String(piloto).trim().toLowerCase(); if (!chave || !Number.isFinite(prox) || !(voltas > 0)) return null;
+  const db = bd(), v = db.prepare("SELECT prox FROM corrida_ritmo_proximidade WHERE pista = ? AND chave = ? AND condicao = ?").get(pista, chave, condicao);
+  const nova = v ? v.prox * (1 - PESO_CORRIDA_RITMO) + prox * PESO_CORRIDA_RITMO : prox;
+  db.prepare(`INSERT INTO corrida_ritmo_proximidade (pista, chave, condicao, prox, voltas, corridas, atualizado) VALUES (?, ?, ?, ?, ?, 1, ?)
+    ON CONFLICT(pista, chave, condicao) DO UPDATE SET prox = excluded.prox, voltas = corrida_ritmo_proximidade.voltas + excluded.voltas, corridas = corrida_ritmo_proximidade.corridas + 1, atualizado = excluded.atualizado`)
+    .run(pista, chave, condicao, nova, voltas | 0, Date.now());
+  return nova;
+}
+// a proximidade dos pilotos da sala numa condição: a do mais rápido (o menor número), ou null
+function proximidadeCorrida(pista, pilotos, condicao) {
+  const chaves = new Set((pilotos || []).map((p) => String(p).trim().toLowerCase()).filter(Boolean)); if (!chaves.size) return null;
+  let melhor = null;
+  for (const v of bd().prepare("SELECT chave, prox, corridas FROM corrida_ritmo_proximidade WHERE pista = ? AND condicao = ?").all(pista, condicao))
+    if (chaves.has(v.chave) && (!melhor || v.prox < melhor.prox)) melhor = { chave: v.chave, prox: v.prox, corridas: v.corridas };
+  return melhor;
+}
 // Guarda a volta se ela entra nas cinco melhores do piloto. Devolve 2 se é a melhor dele, 1 se só entrou, 0 se não.
 function salvarVoltaCorrida(pista, tempo, carro, piloto, amostras) {
   const db = bd(), dados = JSON.stringify(amostras), agora = Date.now(), chave = String(piloto).trim().toLowerCase();
@@ -577,5 +595,5 @@ function nivelDeTodosAdmin(treinador, nivel, ator) {
 const historicoPokemon = (treinador, limite = 20) => bd().prepare("SELECT ator, tipo, captura, antes, depois, criado_em FROM moderacao_pokemon WHERE treinador = ? ORDER BY id DESC LIMIT ?").all(treinador, limite)
   .map((r) => ({ ator: r.ator, tipo: r.tipo, captura: r.captura, antes: JSON.parse(r.antes || "null"), depois: JSON.parse(r.depois || "null"), em: Number(r.criado_em) }));
 
-module.exports = { aprenderRitmoCorrida, ritmoAprendidoCorrida, hashesDaTemporadaCorrida, receberTemporadaDoPC, registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
+module.exports = { aprenderRitmoCorrida, ritmoAprendidoCorrida, aprenderProximidadeCorrida, proximidadeCorrida, hashesDaTemporadaCorrida, receberTemporadaDoPC, registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
 Object.assign(module.exports, { guardarReplayCorrida, replayCorrida, apagarReplaysCorrida, excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });

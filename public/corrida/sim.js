@@ -406,6 +406,7 @@ function passoBox(c, ent, amb, tr, p, ev) {
     const desvioEntrada = direto ? lado - cor.latParada(uEntrada, garagem, lado) : 0;
     Object.assign(B, { fase: "entra", u: uEntrada, uEntrada, desvioEntrada, lat0: lado, t: 0, composto: decidir ? null : B.pedido, escolher: decidir, rec, tt: tempoTroca, manter: false, stopGo, troca: !decidir && stopGo && B.pedido !== atual ? { parada: tempoTroca, t: 0 } : null, sg: stopGo ? amb.stopGo : 0, volta: (amb.laps || 0) + 1, n, parada: stopGo ? amb.stopGo : tempoTroca, garagem, tick0: c.tick });
     // "manter" direto (o robô com o carro avariado e o pneu ainda bom): para só para consertar, sem trocar o pneu, numa parada curta
+    B.conserto = amb.quebrou ? F1.CONSERTO_QUEBRA_S || 12 : 0; // (2026-11-23) o carro quebrado: a equipe conserta na garagem, com estes segundos a mais
     if (B.pedido === "manter" && !stopGo) { B.composto = atual; B.manter = true; B.parada = F1.PARADA_CONSERTO || 3.2; B.troca = null; }
     if (ev) ev.push({ t: "box", fase: "entra", volta: B.volta, n, stopGo: stopGo || undefined });
   }
@@ -421,7 +422,7 @@ function passoBox(c, ent, amb, tr, p, ev) {
     B.u = Math.min(destino, B.u + (c.v * dt) / 6);
     if (amb.boxOcupado && B.u >= destino - 0.02) { c.v = 0; if (!B.naFila) { B.naFila = true; if (ev) ev.push({ t: "boxFila" }); } }
     else if (B.naFila && !amb.boxOcupado) { B.naFila = false; if (ev) ev.push({ t: "boxFilaFim" }); }
-    if (!amb.boxOcupado && B.u >= B.garagem - 0.02) { B.u = B.garagem; c.v = 0; B.fase = B.escolher ? "escolha" : "parada"; B.t = 0; if (ev) ev.push({ t: B.escolher ? "boxParou" : "boxParou", escolha: B.escolher || undefined }); }
+    if (!amb.boxOcupado && B.u >= B.garagem - 0.02) { B.u = B.garagem; c.v = 0; B.fase = B.escolher ? "escolha" : "parada"; B.t = 0; if (!B.escolher) B.parada += B.conserto || 0; if (ev) ev.push({ t: B.escolher ? "boxParou" : "boxParou", escolha: B.escolher || undefined }); }
   } else if (B.fase === "escolha") {
     // o carro fica parado e o menu está aberto: o pedido que chega (um pneu ou "manter") escolhe; sem escolha em ESCOLHA_BOX_S vale o recomendado. O tempo conta na parada.
     c.v = 0; B.t += dt;
@@ -430,7 +431,7 @@ function passoBox(c, ent, amb, tr, p, ev) {
       const escolha = valido ? e : B.rec, atual = c.pneu ? c.pneu.composto : escolha, manter = escolha === "manter";
       B.manter = manter; B.composto = manter ? atual : escolha;
       B.troca = B.stopGo && B.composto !== atual ? { parada: B.tt, t: 0 } : null;
-      B.parada = B.stopGo ? B.sg : (manter ? 0 : B.tt);
+      B.parada = (B.stopGo ? B.sg : (manter ? 0 : B.tt)) + (B.conserto || 0);
       B.fase = "parada"; B.t = 0; if (ev) ev.push({ t: "boxEscolheu", composto: B.composto, manter: manter || undefined, auto: !valido || undefined });
     }
   } else if (B.fase === "parada") {
@@ -473,7 +474,7 @@ function garagemOcupada(lista, eu, faseDe) {
 // A fase da parada no box para o HUD: "stopgo" enquanto cumpre os segundos do stop-and-go, "troca" na troca do pneu (o stop-and-go já cumprido, ou a
 // parada normal), `resta` os segundos que faltam dessa fase e `total` os que faltam da parada inteira. null se não está parado na garagem.
 function faseDoBox(B) {
-  if (B && B.fase === "escolha") return { fase: "escolha", resta: Math.max(0, F1.ESCOLHA_BOX_S - B.t), total: Math.max(0, F1.ESCOLHA_BOX_S - B.t) + (B.stopGo ? B.sg : 0) + (B.stopGo ? 0 : B.tt || 0), stopGo: !!B.stopGo, troca: true, rec: B.rec };
+  if (B && B.fase === "escolha") return { fase: "escolha", resta: Math.max(0, F1.ESCOLHA_BOX_S - B.t), total: Math.max(0, F1.ESCOLHA_BOX_S - B.t) + (B.stopGo ? B.sg : 0) + (B.stopGo ? 0 : B.tt || 0) + (B.conserto || 0), stopGo: !!B.stopGo, troca: true, rec: B.rec };
   if (!B || B.fase !== "parada") return null;
   const noSg = B.stopGo && B.t < B.parada, tr = B.troca ? B.troca.parada - B.troca.t : noSg ? 0 : B.parada - B.t;
   return { fase: noSg ? "stopgo" : "troca", resta: Math.max(0, noSg ? B.parada - B.t : tr), total: Math.max(0, (noSg ? B.parada - B.t : 0) + (B.troca ? B.troca.parada - (noSg ? 0 : B.troca.t) : 0)), stopGo: !!B.stopGo, troca: !!B.troca };

@@ -236,6 +236,7 @@ function montarAmbiente(R) {
   AMB.boxOcupado = window.Sim.garagemOcupada(Object.values(S.players || {}), m, (o) => o.boxFase); // a fila do box da equipe (o servidor usa a mesma conta)
   AMB.finish = m.finish; AMB.dnf = !!m.dnf; AMB.quali = S.phase === "quali"; AMB.fantasma = m.finish != null; AMB.f1 = true; AMB.plano = m.plano || null; AMB.gpMods = m.gpMods || null; // (o servidor usa a mesma conta)
   AMB.jogos = m.jogos || null; // (os jogos de pneu: a recomendação do menu do box)
+  AMB.quebrou = !!m.quebrou; // (o conserto da quebra deixa a garagem mais longa: sim.js)
   AMB.stopGo = m.stopGo ? m.stopGo.s : 0; // stop-and-go pendente: a próxima visita ao box é só ele (o servidor usa a mesma conta)
   AMB.agua = atualizarClima().agua; // a água na pista agora (o servidor usa a mesma conta, pelo mesmo relógio)
   // a batida só vale para quem corre (nada na classificação, sob safety car, no box, depois da bandeirada ou fora da corrida)

@@ -66,7 +66,10 @@
 @media (max-width:700px){#race.f1avisos.f1hud #avisosF1{left:6px;top:6px;width:176px}#avisosF1 .avc-topo{height:30px}#avisosF1 .avc-topo .f1logo{width:30px;height:12px}#avisosF1 .avc-topo b{font-size:10px}
   #avisosF1 .avc-cor{min-height:36px;padding:5px 8px 6px}#avisosF1 .avc-tit{font-size:14px}#avisosF1 .avc-sub{font-size:10px}#avisosF1 .avc-ic,#avisosF1 .avc-ic svg{width:18px;height:18px}
   @keyframes avcAbre{from{clip-path:inset(0 0 calc(100% - 30px) 0)}to{clip-path:inset(0 0 -40px 0)}}}
+/* (2026-11-23) a torre abre espaço para o card: as linhas (tudo depois do cabeçalho) descem o tanto que o card cresceu e sobem quando ele fecha */
+#hTorre>.tt-topo+*{margin-top:var(--av-h,0px);transition:margin-top .42s cubic-bezier(.2,.9,.25,1)}
 @media (prefers-reduced-motion:reduce){.avc,.avc *,.avc.sai{animation:none !important}}
+@media (prefers-reduced-motion:reduce){#hTorre>.tt-topo+*{transition:none}}
 /* ---------- a torre (2026-11-23, 2 de 3 das animações; hud.js animarLinhaTorre) ----------
    Efeitos de uma vez, nos atributos data-tt-* (a classe da linha muda a cada quadro): o brilho que atravessa a linha (verde: subiu; vermelho:
    caiu), o anel da sua linha, o roxo da volta mais rápida e o abandono apagando. O número gira e a etiqueta desliza pelo Web Animations. */

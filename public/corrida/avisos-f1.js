@@ -68,6 +68,18 @@ function tipoDoTexto(texto) {
   return "sistema";
 }
 
+// (2026-11-23, o Thiago: "tem uns avisos meio desnecessários... eu falando com o Jeff ou informações sobre chuva que já são transmitidas por rádio")
+// Para onde vai um toast durante a sessão de F1: "card" (o card sobre a torre: o que é da corrida), "radio" (nada na tela: o rádio já falou, ou é a
+// conversa com o Jeff) ou "simples" (o aviso pequeno de sempre: câmera, HUD, gráficos, controle conectado...).
+function destinoDoToast(texto) {
+  const t = String(texto || "");
+  if (/microfone|reconhecimento de voz/i.test(t)) return "simples"; // (o erro do microfone precisa aparecer)
+  if (/^\s*🔧|stop-and-go|\bbox\b|garagem|esgotad|sem jogos de pneu/i.test(t)) return "card";
+  if (/^\s*(📻|🎧|🎙️|🌧️|🌤️|⛅|☔)|\bjeff\b|estrategista|r[aá]dio:|chuva|previs[aã]o|pista (molhada|secando|seca)/i.test(t)) return "radio";
+  if (/^\s*(🎥|📺|🎞️|🎮|📱|⚠️)|^\s*(HUD|Sem HUD)\b|R[aá]dio (des)?ligado|Gr[aá]ficos|c[aâ]mera|controle conectado|celular conectado|convite|recorde|quadro de recordes|voltou ao padr|restaurad|acerto/i.test(t)) return "simples";
+  return "card";
+}
+
 // Uma linha do log do servidor vira { tipo, texto } ou null (ruído: os robôs, quem entra e sai, e o que é dos outros pilotos e
 // só atrapalharia: as paradas, as batidas e os limites de pista deles). `nome`: o meu nome, para o que é só meu.
 const PARA_TODOS = new Set(["vermelha", "sc", "amarela", "verde"]);
@@ -146,7 +158,7 @@ const ICONES = {
 };
 const iconeDe = (tipo) => { const t = tipoDe(tipo); return (ICONES[t.icone] || ICONES.info)(t.bandeira); };
 
-const api = { TIPOS, tipoDe, limpar, tipoDoTexto, deLinha, novosDoLog, criarFila, iconeDe };
+const api = { TIPOS, tipoDe, limpar, tipoDoTexto, destinoDoToast, deLinha, novosDoLog, criarFila, iconeDe };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.AvisosF1 = api;
 })(typeof self !== "undefined" ? self : this);

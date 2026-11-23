@@ -26,6 +26,16 @@ const TIPOS = {
   alerta:       { prio: 7, fundo: "#1b1f2a", txt: "#ffffff", bloco: "#ffd23f", icone: "alerta", rotulo: "ATENÇÃO" },
   sistema:      { prio: 9, fundo: "#1b1f2a", txt: "#ffffff", bloco: "#3a3f4b", icone: "info", rotulo: "SISTEMA" },
 };
+// (2026-11-23, o Thiago, com a imagem dos cards da transmissão) o card do topo esquerdo: o título grande em inglês, como na TV, e a cor do corpo
+// (`card`, `cardTxt`; sem eles, o corpo escuro com o ícone na cor do tipo). hud.js htmlCard desenha; hud-f1.css anima.
+const CARDS = {
+  preta: ["BLACK FLAG", "#0a0a0c", "#fff"], vermelha: ["RED FLAG", "#e10600", "#fff"], sc: ["SAFETY CAR", "#ffd21f", "#111"], amarela: ["YELLOW FLAG", "#ffd21f", "#111"],
+  azul: ["BLUE FLAG", "#1460e0", "#fff"], punicao: ["PENALTY"], investigacao: ["UNDER INVESTIGATION"], limite: ["TRACK LIMITS"], verde: ["GREEN FLAG", "#25c16f", "#0b1a12"],
+  batida: ["INCIDENT"], dnf: ["RETIRED", "#7a0b10", "#fff"], quebra: ["MECHANICAL ISSUE"], box: ["PIT STOP", "#0b8fd9", "#fff"], drs: ["DRS ENABLED", "#19c37d", "#04210f"],
+  vmr: ["FASTEST LAP", "#9b12c8", "#fff"], chegada: ["CHEQUERED FLAG"], largada: ["LIGHTS OUT", "#25c16f", "#0b1a12"], alerta: ["WARNING"], sistema: ["INFO"], batalha: ["BATTLE FOR FIRST"],
+};
+TIPOS.batalha = { prio: 6, fundo: "#1b1f2a", txt: "#ffffff", bloco: "#3a3f4b", icone: "info", rotulo: "BATALHA PELA LIDERANÇA" };
+for (const [k, [titulo, card, cardTxt]] of Object.entries(CARDS)) Object.assign(TIPOS[k], { titulo, card: card || null, cardTxt: cardTxt || null });
 const tipoDe = (t) => TIPOS[t] || TIPOS.sistema;
 
 // tira os emojis e os símbolos das mensagens do servidor ("🟡 Bandeira amarela…" vira "Bandeira amarela…")

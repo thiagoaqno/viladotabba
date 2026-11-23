@@ -285,6 +285,9 @@ function loop(t) {
   raf = requestAnimationFrame(loop);
   if (!race) { raf && cancelAnimationFrame(raf); raf = 0; return; }
   const bruto = (t - (lastT || t)) / 1000, real = Math.min(0.25, bruto), dt = Math.min(1 / 30, real); lastT = t; // (bruto: o quadro de verdade, para o log das travadas)
+  // (2026-11-23, o Thiago: "os robôs dão uma travadinha quando muda o clima") log temporário: com a pista com água ou chovendo, um quadro de mais de
+  // 50 ms vai para o console do navegador ([travada-chuva]), com a água, a chuva e a hora. Tirar quando a causa aparecer.
+  if (bruto > 0.05 && E.S && E.S.clima) { try { const F1R = window.F1Regras || window.F1; const cl = F1R && F1R.climaEm ? F1R.climaEm(E.S.clima, Date.now()) : null; if (!cl || cl.agua > 0 || cl.chuva > 0) console.warn(`[travada-chuva] quadro de ${Math.round(bruto * 1000)} ms${cl ? ` (água ${cl.agua.toFixed(2)}, chuva ${cl.chuva.toFixed(2)})` : ""} às ${new Date().toLocaleTimeString()}`); } catch (e) { /* só o log */ } }
   // (2026-11-21, o servidor.log do Thiago: no pós-corrida, quadros de 76 a 250 ms o tempo todo) com a tela do resultado aberta, a corrida atrás do
   // painel (escurecida) é desenhada a 10 quadros por segundo: a análise, a miniatura 3D e o pódio ficam com a placa de vídeo
   if (E.S?.phase === "results" && !$("results").classList.contains("hidden")) { if (t - (race.ultDesenhoResultado || 0) < 100) return; race.ultDesenhoResultado = t; }

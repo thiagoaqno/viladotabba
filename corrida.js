@@ -85,6 +85,10 @@ module.exports = function attachCorrida(io) {
   module.exports.faseAgora = () => { for (const r of rooms.values()) if (r.phase === "race" || r.phase === "quali") { const q = r.quali, s = r.startAt ? Math.round((Date.now() - r.startAt) / 1000) : null; return r.phase === "quali" ? (q && q.carga ? "qualify, carregando" : q && q.pausaAte ? `qualify, intervalo depois do ${q.nome}` : `qualify ${q ? q.nome : ""}, ${s} s de sessão`) : `corrida, ${s} s depois da largada`; } return null; };
   module.exports.emCorrida = () => { for (const r of rooms.values()) if (r.phase === "race" || r.phase === "quali") return true; return false; }; // (corrida-pc.js: os envios ao site esperam a bandeirada)
   require("./lobby.js").registrar("corrida", rooms, { max: MAX_PLAYERS }); // aparece na lista de salas da Vila
+  // (2026-11-23, o servidor.log do Thiago: 15 s parado na bandeirada, quase tudo o Node achando e lendo módulos: getNearestParentPackageJSON, loader)
+  // o que só roda no fim da corrida (o replay, a análise, as regras e o paddock da carreira) era carregado na hora, na bandeirada. Carrega uns
+  // segundos depois de o servidor abrir, com ninguém correndo ainda.
+  setTimeout(() => { for (const m of ["./corrida-gravacao.js", "./corrida-analise.js", "./public/corrida/temporada/regras.js", "./public/corrida/temporada/paddock.js", "./public/corrida/f1-pneus-ritmo.js", "./corrida-contato.js"]) { try { require(m); } catch (e) { /* carrega na hora, como antes */ } } }, 4000).unref?.();
 
   // regras "f1" (planos/temporada-f1.md): pneus que gastam; sem caixas e sem a ajuda do pelotão
   const cleanConfig = (c = {}) => {
@@ -129,7 +133,7 @@ module.exports = function attachCorrida(io) {
       boxReady: Itens.publicBoxes(room), ...(room.config.regras === "f1" ? { estrategistas: room.estrategistas || null, tvAte: room.tvAte || null, tv: room.tvAte && Date.now() < room.tvAte ? room.tv || null : null, clima: room.clima || null, previsao: F1.previsaoDoGP(sementeDoClima(room), room.config.clima, room.config.pista), montagens: room.montagens || {}, bonusMontagem: room.bonusMontagem || {}, pecasEq: room.pecasEq || {}, chefes: chefes(room), semente: room.semente || null, direcao: Direcao.publico(room), luzes: room.luzes || null, quali: Quali.publico(room), resultado: room.resultado || null } : {}),
       players: room.order.map((id) => {
         const p = room.players[id];
-        return { id, bot: !!p.bot, ...(p.assumido ? { assumido: true } : {}), ...(p.plano ? { plano: p.plano } : {}), ...(p.gpMods ? { gpMods: p.gpMods } : {}), name: p.name, nomeCompleto: p.nomeCompleto || null, equipe: p.equipe || null, numero: p.numero || null, sigla: p.sigla || null, pawn: p.pawn, color: p.color, skin: p.skin, car: p.car, mods: p.mods, pneu: p.pneu || F1.COMPOSTO_PADRAO, pneuAtual: p.pneuAtual || p.pneu || F1.COMPOSTO_PADRAO, paradas: (p.paradas || []).length, desg: Math.round((((p.sim && p.sim.c && p.sim.c.pneu) || (p.ia && p.ia.pneu) || {}).desgaste || 0) * 100), jogos: room.config.regras === "f1" ? F1.jogosRestantes(p) : null, noBox: !!p.box, fantBox: Contato.fantasmaDoBox(p), fantasma: (room.phase === "quali" && !!p.bot) || Date.now() < (p.fantAte || 0), quebrou: !!p.quebrou, acrescimo: p.acrescimo || 0, penal: p.penal || 0, dsq: !!p.dsq, causadas: p.causadas || 0, stopGo: p.stopGo ? { s: p.stopGo.s, v: Direcao.stopGoRestante(p, room.config.voltas) } : null, boxFase: Sim.faseDoBox((p.sim ? p.sim.c : p.ia && p.ia.sim)?.box), dano: p.dano || 0, dnf: !!p.dnf, ultimaBatida: p.ultimaBatida || null, avisosLimite: p.avisosLimite || 0, azul: !!p.azul, drsZona: p.drsZona ?? -1, ers: p.ia?.ers?.carga ?? p.ers?.carga ?? null, grid: p.grid, online: p.sockets.size > 0, laps: p.laps, sector: p.sector, started: p.started, finish: p.finish, best: p.best, last: p.last,
+        return { id, bot: !!p.bot, ...(p.bonusBox ? { bonusBox: p.bonusBox } : {}), ...(p.assumido ? { assumido: true } : {}), ...(p.plano ? { plano: p.plano } : {}), ...(p.gpMods ? { gpMods: p.gpMods } : {}), name: p.name, nomeCompleto: p.nomeCompleto || null, equipe: p.equipe || null, numero: p.numero || null, sigla: p.sigla || null, pawn: p.pawn, color: p.color, skin: p.skin, car: p.car, mods: p.mods, pneu: p.pneu || F1.COMPOSTO_PADRAO, pneuAtual: p.pneuAtual || p.pneu || F1.COMPOSTO_PADRAO, paradas: (p.paradas || []).length, desg: Math.round((((p.sim && p.sim.c && p.sim.c.pneu) || (p.ia && p.ia.pneu) || {}).desgaste || 0) * 100), jogos: room.config.regras === "f1" ? F1.jogosRestantes(p) : null, noBox: !!p.box, fantBox: Contato.fantasmaDoBox(p), fantasma: (room.phase === "quali" && !!p.bot) || Date.now() < (p.fantAte || 0), quebrou: !!p.quebrou, acrescimo: p.acrescimo || 0, penal: p.penal || 0, dsq: !!p.dsq, causadas: p.causadas || 0, stopGo: p.stopGo ? { s: p.stopGo.s, v: Direcao.stopGoRestante(p, room.config.voltas) } : null, boxFase: Sim.faseDoBox((p.sim ? p.sim.c : p.ia && p.ia.sim)?.box), dano: p.dano || 0, dnf: !!p.dnf, ultimaBatida: p.ultimaBatida || null, avisosLimite: p.avisosLimite || 0, azul: !!p.azul, drsZona: p.drsZona ?? -1, ers: p.ia?.ers?.carga ?? p.ers?.carga ?? null, grid: p.grid, online: p.sockets.size > 0, laps: p.laps, sector: p.sector, started: p.started, finish: p.finish, best: p.best, last: p.last,
           item: p.item || null, cargas: p.cargas || 0, rolling: p.rolling || 0, boostUntil: p.boostUntil || 0, starUntil: p.starUntil || 0, spinUntil: p.spinUntil || 0,
           shrinkUntil: p.shrinkUntil || 0, inkUntil: p.inkUntil || 0, balaUntil: p.balaUntil || 0 };
       }),
@@ -289,6 +293,7 @@ module.exports = function attachCorrida(io) {
     const largaMolhado = f1 && F1.climaEm(room.clima, room.startAt).agua >= F1.AGUA_MOLHADA;
     if (largaMolhado && !room.temporada) for (const id of ids) { const p = room.players[id]; if (!p.bot && !p.pneuEscolhido) p.pneu = "chuva"; }
     for (const id of ids) { const p = room.players[id]; Object.assign(p, { paradas: [], consertos: [], compostos: [p.pneu || F1.COMPOSTO_PADRAO], pneuAtual: p.pneu || F1.COMPOSTO_PADRAO, acrescimo: 0, box: null, boxFant: 0 }); }
+    for (const id of ids) room.players[id].bonusBox = bonusDoBox(room, room.players[id]); // (2026-11-23) os segundos que os engenheiros tiram de cada parada, na garagem (sim.js e os robôs)
     Itens.start(room);
     room.nivelEmPedacos = true; // (o ritmo de cada robô é calculado aos pedaços, durante o carregamento: corrida-robos.js, aquecerNiveis)
     Robos.largar(room);
@@ -482,12 +487,12 @@ module.exports = function attachCorrida(io) {
     if (room.config.regras === "f1") {
       // (2026-11-16, Las Vegas: "eu ganhei do Verstappen, mas o jogo deu a vitória para ele") um robô com chegada ESTIMADA ainda estava na pista atrás
       // de quem cruzou a linha de verdade: nem a estimativa nem o bônus do box (os engenheiros, por parada) o põem na frente de um carro que já tinha chegado
-      const finalDe = (p) => p.finish + (p.acrescimo || 0) - bonusDoBox(room, p);
+      const finalDe = (p) => p.finish + (p.acrescimo || 0); // (o bônus do box já encurtou as paradas na pista: não mexe mais na ordem de chegada)
       const chegaram = room.order.map((id) => room.players[id]).filter((p) => p.finish != null && !p.dnf && !p.estimado);
       let piso = chegaram.length ? Math.max(...chegaram.map(finalDe)) : -Infinity;
       const estimados = room.order.map((id) => room.players[id]).filter((p) => p.finish != null && !p.dnf && p.estimado).sort((x, y) => finalDe(x) - finalDe(y));
       const ajuste = new Map(); for (const p of estimados) { const f = finalDe(p); if (f <= piso) { ajuste.set(p.id, piso + 0.1 - f); piso += 0.1; } else piso = f; }
-      room.resultado = F1.classificacaoFinal(room.order.map((id) => { const p = room.players[id]; const bonus = bonusDoBox(room, p); return { id, laps: p.laps, finish: p.finish, dnf: !!p.dnf, acrescimo: (p.acrescimo || 0) - bonus + (ajuste.get(id) || 0), prog: p.pos ? p.pos.prog : 0, best: p.best, dsq: !!p.dsq }; }), room.config.voltas)
+      room.resultado = F1.classificacaoFinal(room.order.map((id) => { const p = room.players[id]; return { id, laps: p.laps, finish: p.finish, dnf: !!p.dnf, acrescimo: (p.acrescimo || 0) + (ajuste.get(id) || 0), prog: p.pos ? p.pos.prog : 0, best: p.best, dsq: !!p.dsq }; }), room.config.voltas)
         .map((r) => { const p = room.players[r.id]; return { ...r, voltas: p.laps, grid: p.grid, paradas: (p.paradas || []).length + (p.consertos || []).length, compostos: p.compostos || [], estimado: !!p.estimado, penal: p.penal || 0, sg: p.sgFeitos || 0, dano: p.dano || 0, batidas: p.batidas || 0, melhor: p.best }; });
       const v = room.resultado[0]; if (v) log(room, `🏆 ${nameOf(room, v.id)} venceu o GP e leva ${v.pontos} pontos.`);
       // a análise do GP (posição, tempo e setores de cada volta, pits e safety car: corrida-analise.js) para a tela do resultado de qualquer sala;
@@ -542,7 +547,7 @@ module.exports = function attachCorrida(io) {
     const n = (p.paradas || []).length + 1, tempo = Math.round(d.tempo * 10) / 10, motivo = [];
     F1.registrarParada(p, { volta: d.volta, tempo, composto: d.composto });
     const caro = corredorDe(room);
-    if (!p.bot && caro && tempo < F1.tempoNoBox(caro, specDe(p).vmax, F1.tempoDeParada(room.semente, p.id, n)) * 0.85 - 1) {
+    if (!p.bot && caro && tempo < F1.tempoNoBox(caro, specDe(p).vmax, F1.paradaComBonus(F1.tempoDeParada(room.semente, p.id, n), p.bonusBox)) * 0.85 - 1) {
       p.acrescimo = (p.acrescimo || 0) + F1.RAPIDO; motivo.push(`passou do limitador: +${F1.RAPIDO} s`);
     }
     const parada = F1.tempoDeParada(room.semente, p.id, n); // o tempo sorteado pela semente: o box perfeito, o normal ou o ruim
@@ -733,10 +738,10 @@ module.exports = function attachCorrida(io) {
     return { code: room.code, pessoas, espectador };
   }
   // o bônus dos mecânicos e estrategistas da equipe, por parada (temporada solo: uma equipe; em grupo: uma por equipe humana)
+  // os segundos que os engenheiros (mecânico 0,5 s e estrategista 0,25 s por nível) tiram de CADA parada desta equipe, na garagem
   function bonusDoBox(room, p) {
     if (!room.temporada) return 0;
-    const k = room.bonusBoxEquipes ? room.bonusBoxEquipes[p.equipe] || 0 : p.equipe === room.equipeTemporada ? room.bonusBox || 0 : 0;
-    return (p.paradas || []).length * k;
+    return room.bonusBoxEquipes ? room.bonusBoxEquipes[p.equipe] || 0 : p.equipe === room.equipeTemporada ? room.bonusBox || 0 : 0;
   }
   // GP em grupo: a classificação começa quando todos os humanos chegaram à pista (ou 30 s depois da primeira pessoa)
   const ESPERA_GRUPO_MS = Number(process.env.CORRIDA_ESPERA_GRUPO_MS) || 30000, ASSUME_MS = process.env.CORRIDA_ASSUME_MS != null ? Number(process.env.CORRIDA_ASSUME_MS) : 8000;

@@ -83,7 +83,7 @@ function outrosDe(room, p) {
 function ambiente(room, p, S, agora = Date.now()) {
   const d = room.direcao, quali = room.phase === "quali", amb = S.amb || (S.amb = {});
   amb.agua = F1.climaEm(room.clima, agora).agua; // a água na pista agora (o relógio do roteiro do clima: f1-regras.js)
-  amb.spec = specDoPiloto(p); amb.manual = room.config.cambio === "manual"; amb.dano = p.dano || 0; amb.quebrou = !!p.quebrou; amb.drsZona = p.drsZona ?? -1;
+  amb.spec = specDoPiloto(p); amb.manual = room.config.cambio === "manual"; amb.dano = p.dano || 0; amb.bonusBox = p.bonusBox || 0; amb.quebrou = !!p.quebrou; amb.drsZona = p.drsZona ?? -1;
   amb.safety = !!(d && d.safety); amb.setorAmarelo = d && d.amarelo ? d.amarelo.setor : -1; amb.ersAuto = room.config.ers !== "manual";
   amb.voltas = room.config.voltas; amb.laps = p.laps || 0; amb.paradas = (p.paradas || []).length; amb.semente = room.semente; amb.id = p.id; amb.grid = p.grid; amb.equipe = p.equipe || null;
   amb.boxOcupado = Sim.garagemOcupada(Object.values(room.players), p, (o) => Sim.faseDoBox((o.sim ? o.sim.c : o.ia && o.ia.sim)?.box)); // a fila do box da equipe

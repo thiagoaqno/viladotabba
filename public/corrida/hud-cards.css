@@ -52,3 +52,26 @@
   .avc-cor{min-height:44px;padding:6px 10px 7px;gap:8px}.avc-tit{font-size:15px}.avc-sub{font-size:10.5px}.avc-ic,.avc-ic svg{width:22px;height:22px}.avc-gap{font-size:22px}}
 @media (max-width:560px){#race.f1avisos.f1hud #avisosF1{left:6px;width:calc(100% - 12px);top:182px}}
 @media (prefers-reduced-motion:reduce){.avc,.avc *,.avc.sai{animation:none !important}}
+/* ---------- a torre (2026-11-23, 2 de 3 das animações; hud.js animarLinhaTorre) ----------
+   Efeitos de uma vez, nos atributos data-tt-* (a classe da linha muda a cada quadro): o brilho que atravessa a linha (verde: subiu; vermelho:
+   caiu), o anel da sua linha, o roxo da volta mais rápida e o abandono apagando. O número gira e a etiqueta desliza pelo Web Animations. */
+#hTorre .tl{position:relative;isolation:isolate}
+#hTorre .tl .n{perspective:200px;backface-visibility:hidden}
+#hTorre .tl[data-tt-ganhou]::after,#hTorre .tl[data-tt-perdeu]::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(100deg,transparent 0 30%,var(--tt-brilho) 50%,transparent 70% 100%);background-size:250% 100%;background-repeat:no-repeat;animation:ttBrilho .8s cubic-bezier(.3,.6,.3,1) both}
+#hTorre .tl[data-tt-ganhou]{--tt-brilho:#2fd47a99}
+#hTorre .tl[data-tt-perdeu]{--tt-brilho:#ff4a4a88}
+#hTorre .tl[data-tt-ganhou] .sg{animation:ttSigla .5s cubic-bezier(.2,1.4,.4,1)}
+#hTorre .tl[data-tt-eu]{animation:ttEu 1s ease-out}
+#hTorre .tl[data-tt-roxo]{animation:ttRoxo 1.1s ease-out}
+#hTorre .tl[data-tt-fora]{animation:ttFora 1.2s ease-out}
+#hTorre .tl.out{opacity:.62;transition:opacity .6s}
+#hTorre .tl.out .sg{text-decoration:line-through;text-decoration-color:#ff4a4a99}
+#hTorre .tl .ic.box{animation:ttPisca 1.6s ease-in-out infinite}
+@keyframes ttBrilho{from{background-position:120% 0}to{background-position:-30% 0}}
+@keyframes ttSigla{40%{transform:translateX(3px)}to{transform:none}}
+@keyframes ttEu{0%{box-shadow:inset 0 0 0 2px #2fd47a,0 0 0 0 #ffffff99}100%{box-shadow:inset 0 0 0 0 #2fd47a00,0 0 0 8px #ffffff00}}
+@keyframes ttRoxo{0%,30%{filter:brightness(1.8) saturate(1.4)}100%{filter:none}}
+@keyframes ttFora{0%{background:#e10600cc}100%{background:transparent}}
+@keyframes ttPisca{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){#hTorre .tl,#hTorre .tl *,#hTorre .tl::after{animation:none !important}}

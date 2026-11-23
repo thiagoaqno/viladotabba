@@ -218,6 +218,13 @@ Object.assign(SITUACOES, {
   sugereintermediario: ["Sugerimos o box nesta volta, com intermediário. Confirma?", "Temos o intermediário pronto. Quer parar nesta volta?", "Que tal parar agora e ir de intermediário? Você confirma."],
   sugerechuva: ["Sugerimos o box nesta volta, com pneu de chuva. Confirma?", "Temos o pneu de chuva pronto. Quer parar nesta volta?", "Que tal parar agora e ir de pneu de chuva? Você confirma."],
   pneufim: ["Os pneus acabaram. Se quiser parar, estamos prontos.", "Pneu no fim. Cuidado nas curvas, a decisão do box é sua.", "A borracha acabou. Avise se vai parar.", "Pneus sem aderência nenhuma. Pense no box."],
+  // (2026-11-23) a classificação (hud.js radioDaClassificacao)
+  qualiabre: ["Sessão aberta. Volta de saída, esquente os pneus.", "Pista liberada. Aqueça bem os pneus antes da volta rápida.", "Começou. Prepare a volta lançada, sem pressa na saída.", "Sessão valendo. Encontre espaço antes de abrir a volta."],
+  qualimelhorou: ["Melhorou o tempo. Boa volta.", "Tempo melhor. Continue assim.", "Isso, você baixou o tempo.", "Volta mais rápida que a anterior. Bom trabalho."],
+  qualicorte: ["Atenção: você está na zona de eliminação.", "Estamos fora do corte agora. Precisamos de uma volta melhor.", "Você caiu para a zona de eliminação. Abra mais uma volta.", "Fora do corte. Ainda dá tempo, vá para cima."],
+  qualiultimo: ["Último minuto da sessão.", "Um minuto para a bandeirada. Esta é a volta.", "Falta um minuto. Tudo nesta volta.", "Último minuto. Não deixe a volta para depois."],
+  qualipassou: ["Passamos para a próxima sessão. Bom trabalho.", "Estamos dentro. Seguimos para a próxima fase.", "Classificados para a próxima sessão.", "Passamos. Agora é melhorar ainda mais."],
+  qualieliminado: ["Fomos eliminados. Vamos recuperar na corrida.", "Não deu para passar. A corrida é amanhã, cabeça erguida.", "Ficamos de fora do corte. Vamos com estratégia na corrida.", "Eliminados nesta sessão. Ainda temos a corrida."],
   pistacurta: ["Pista curta. O pneu aguenta mais voltas aqui.", "Volta curta nesta pista. Dá para esticar o stint.", "Aqui o pneu dura mais. Talvez dê para parar menos.", "Circuito curto. O pneu rende mais voltas."],
 });
 for (const [q, textos] of Object.entries({
@@ -234,7 +241,7 @@ for (const [q, textos] of Object.entries({
 })) if (SITUACOES[q]) SITUACOES[q].push(...textos);
 
 // situações que passam na frente do intervalo mínimo entre falas
-const URGENTES = ["box", "boxmacio", "boxmedio", "boxduro", "boxintermediario", "boxchuva", "sugerebox", "sugeremacio", "sugeremedio", "sugereduro", "sugereintermediario", "sugerechuva", "pneufim", "safety", "spotesq", "spotdir", "spotlivre"];
+const URGENTES = ["box", "boxmacio", "boxmedio", "boxduro", "boxintermediario", "boxchuva", "sugerebox", "sugeremacio", "sugeremedio", "sugereduro", "sugereintermediario", "sugerechuva", "pneufim", "qualiultimo", "qualicorte", "safety", "spotesq", "spotdir", "spotlivre"];
 const lista = [];
 for (const [quando, textos] of Object.entries(SITUACOES)) textos.forEach((texto, i) => lista.push({ id: `${quando}-${i + 1}`, texto, quando }));
 

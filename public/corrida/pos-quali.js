@@ -7,6 +7,7 @@
 // hud.js chama `renderQuali` a cada estado; a tela só é refeita quando muda o que ela mostra (o relógio da pausa anda à parte).
 import { E, PISTAS, $, h, me, act, sNow } from "./estado.js";
 import { alternarAcerto } from "./acerto.js";
+import { clima } from "./clima.js";
 
 let vista = "resultado", chaveVista = "", chaveHtml = "", relogioAtual = null, timer = 0;
 const tempo3 = (s) => (s == null ? "—" : `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, "0")}`);
@@ -87,6 +88,56 @@ function ajustesHTML(q, S, m, confirmado, ultima) {
   </div>`;
 }
 
+// ---------- (2026-11-23, o Thiago, com as duas imagens de referência) o fim da classificação em duas telas ----------
+// QUALIFYING: o resultado (o top 5 em destaque, o 6º ao 10º mais apagado, o resto embaixo) e o cartão da pole; "Continuar" leva ao RACE DAY: o grid de
+// largada (o top 5 e você, com a punição de grid), as condições da corrida (as voltas, a volta de verdade em km, a chance de chuva, a pista seca ou
+// molhada), o pneu da largada (com quantas voltas ele dura nesta pista) e "Ir para o grid". Sem temperatura nem combustível: o jogo não tem esses números.
+const fundoDoGP = (id) => (window.GpInfo ? window.GpInfo.fundoDe(id) : null);
+const nomeCompleto = (p) => `${h(primeiro(p))} <b>${h(sobrenome(p).toUpperCase())}</b>`;
+function linhaGrid(id, i, T, pole, m, classe = "") {
+  const p = P(id), eq = eqDe(p), t = (T[id] || []).at(-1), eu = m && id === m.id;
+  return `<li class="${classe} ${eu ? "eu" : ""}" style="--c:${corOk(eq ? eq.cor : p && p.color)}"><span class="po">${i + 1}</span><i class="barra"></i><span class="pi">${eu ? "<b>Você</b>" : nomeCompleto(p)}</span>
+    <span class="eq">${logo(p)}<small>${h(eq ? eq.nome : "")}</small></span><span class="tt">${i === 0 ? tempo3(t) : t != null && pole != null ? `+${(t - pole).toFixed(3)}` : "—"}</span></li>`;
+}
+function qualifyingHTML(q, T, m, S) {
+  const pista = PISTAS[S.config.pista], info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, pole = (T[q.grid[0]] || []).at(-1), p0 = P(q.grid[0]), eq0 = eqDe(p0), f0 = fotoDe(p0);
+  const top = q.grid.slice(0, 5).map((id, i) => linhaGrid(id, i, T, pole, m, "top")).join(""), meio = q.grid.slice(5, 10).map((id, i) => linhaGrid(id, i + 5, T, pole, m, "meio")).join("");
+  const resto = q.grid.slice(10).map((id, i) => linhaGrid(id, i + 10, T, pole, m, "resto")).join("");
+  return `<div class="qy">
+    <header class="qy-topo"><small>QUALIFYING</small><h2>QUALIFYING</h2><em>RESULTADO</em></header>
+    <div class="qy-corpo"><section class="qy-tab"><div class="qy-cab"><span>POS</span><span>PILOTO</span><span>EQUIPE</span><span>TEMPO</span></div><ol>${top}</ol><ol class="sub">${meio}</ol>${resto ? `<details class="qy-resto"><summary>Do 11º ao ${q.grid.length}º</summary><ol class="sub" start="11">${resto}</ol></details>` : ""}</section>
+      <aside class="qy-pole" style="--c:${corOk(eq0 ? eq0.cor : p0 && p0.color)}">${f0 ? `<div class="qy-foto" style="--foto:url('${h(f0.url)}')"></div>` : `<div class="qy-foto sem">${logo(p0, "pq-logo-g")}</div>`}
+        <div class="qy-pole-txt"><small>POLE POSITION</small><span>${h(primeiro(p0))}</span><b>${h(sobrenome(p0).toUpperCase())}</b><em>${h(eq0 ? eq0.nome : "")} ${logo(p0)}</em><strong>${tempo3(pole)}</strong></div></aside></div>
+    <footer class="qy-pe"><span class="qy-mapa">${window.GpSobre ? window.GpSobre.mapaSvg(S.config.pista, "qy-mapa-svg") : ""}</span><span class="qy-gp"><b>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : "")}</b><small>${h(info && info.circuito ? info.circuito : "")}</small></span>
+      <button type="button" class="qy-bt" data-pq-vista="raceday">CONTINUAR <span>→</span></button></footer></div>`;
+}
+function raceDayHTML(q, T, m, S, confirmado, precisa, prontos) {
+  const F = window.F1Regras, pista = PISTAS[S.config.pista], info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, pole = (T[q.grid[0]] || []).at(-1), voltas = S.config.voltas;
+  const meuI = m ? q.grid.indexOf(m.id) : -1, top = q.grid.slice(0, 5).map((id, i) => linhaGrid(id, i, T, pole, m)).join("");
+  const eu = meuI >= 5 ? `<li class="sep"></li>${linhaGrid(m.id, meuI, T, pole, m)}` : "";
+  const pen = m && m.gpMods && m.gpMods.grid ? `${m.gpMods.grid} posições a menos na largada` : "Sem punições de grid";
+  const prev = S.previsao && F && F.descreverPrevisao ? F.descreverPrevisao(S.previsao, voltas) : null, agua = clima && Number.isFinite(clima.agua) ? clima.agua : 0;
+  const ader = agua > 0.3 ? "Baixa" : agua > 0.05 ? "Média" : "Alta", fundo = fundoDoGP(S.config.pista), pneuAtual = (m && m.pneu) || "medio";
+  const vida = (c) => (F && F.vidaEmVoltas ? F.vidaEmVoltas(c, 1, agua, S.config.pista) : 0);
+  const pneus = F ? ["macio", "medio", "duro", "intermediario", "chuva"].map((c) => { const pn = F.PNEUS[c], v = vida(c);
+    return `<button type="button" data-pneu-largada="${c}" class="${pneuAtual === c ? "on" : ""}" style="--pn:${pn.cor}" ${confirmado || !m ? "disabled" : ""}><i></i><b>${h(pn.nome)}</b><small>~${v.toFixed(1).replace(".", ",")} voltas</small></button>`; }).join("") : "";
+  const vSel = vida(pneuAtual), paradas = vSel > 0 ? Math.max(0, Math.ceil(voltas / vSel) - 1) : 0;
+  const botao = precisa || (m && !q.aguardados.length) ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? `PRONTO · ${prontos}/${q.aguardados.length}` : "IR PARA O GRID"} <span>→</span></button>` : `<span class="pq-espera">A largada abre quando os outros estiverem prontos</span>`;
+  return `<div class="rd">
+    <header class="rd-topo"><small>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ").toUpperCase() : "")} <span>›</span> RACE DAY</small><h2>RACE DAY</h2><p>Prepare-se para a corrida</p></header>
+    <div class="rd-corpo">
+      <div class="rd-esq">
+        <section class="rd-card"><h4>GRID DE LARGADA</h4><ol class="rd-grid">${top}${eu}</ol><p class="rd-pen">ⓘ ${h(pen)}</p></section>
+        <section class="rd-card"><h4>PNEU DA LARGADA</h4><div class="rd-pneus" role="group" aria-label="Pneu da largada">${pneus}</div>
+          <div class="rd-est"><span><small>Com esse pneu</small><b>~${vSel.toFixed(1).replace(".", ",")} voltas até o fim da vida</b></span><span><small>Paradas, só com ele</small><b>${paradas} ${paradas === 1 ? "parada" : "paradas"} em ${voltas} voltas</b></span></div></section>
+      </div>
+      <aside class="rd-cond">${fundo ? `<div class="rd-foto" style="background-image:url('${h(fundo)}')"></div>` : ""}<div><h3>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : "")}</h3>
+        <p>${voltas} voltas${info && info.km ? ` · volta de ${String(info.km).replace(".", ",")} km` : ""}</p></div>
+        <div class="rd-cond-l"><span><b>${prev ? `${prev.pct}%` : "—"}</b><small>Chuva${prev && prev.quando ? ` · ${h(prev.quando)}` : ""}</small></span><span><b>${agua > 0.05 ? "Molhada" : "Seca"}</b><small>Pista</small></span><span><b>${ader}</b><small>Aderência</small></span></div></aside>
+    </div>
+    <footer class="rd-pe"><button type="button" class="qy-bt ghost" data-pq-vista="resultado">← VOLTAR</button>${m ? `<button type="button" class="qy-bt ghost" data-pq-vista="ajustes">Acerto e pontos</button>` : ""}${botao}</footer></div>`;
+}
+
 export function renderQuali() {
   const el = $("quali"), S = E.S, q = S && S.phase === "quali" && S.quali;
   if (!q || !q.pausa || !q.fechadas.length || q.carregando) { el.classList.add("hidden"); chaveHtml = ""; relogioAtual = null; return; }
@@ -99,11 +150,19 @@ export function renderQuali() {
   // (2026-11-15) a confirmação de OUTRO jogador só muda o contador (abaixo, sem refazer a tela): refazer tudo atrapalhava quem estava mexendo
   const chave = JSON.stringify([sessao, vista, confirmado, q.aguardados, m && m.pneu, montagem, linhas.length]);
   el.classList.remove("hidden");
+  { const f = fundoDoGP(S.config.pista); el.style.setProperty("--pq-fundo", f ? `url('${f}')` : "none"); el.classList.add("pq-tela"); } // (a foto do GP de fundo: a pausa não parece mais a corrida)
   // o relógio da pausa (só entre as sessões: antes da corrida, a largada espera todos), andando a cada segundo
   const relogio = () => { const r = el.querySelector("[data-pq-relogio]"); if (r) r.textContent = !ultima && q.pausaAte ? `· abre sozinho em ${mmss(q.pausaAte - sNow())}` : ""; };
   relogioAtual = relogio; if (!timer) timer = setInterval(() => { if (relogioAtual && !el.classList.contains("hidden")) relogioAtual(); }, 1000);
   if (chave === chaveHtml) { const em = el.querySelector(".pq-pe-estado em"); if (em) em.textContent = `${prontos}/${q.aguardados.length} prontos`; return relogio(); }
   chaveHtml = chave;
+  if (ultima && vista !== "ajustes") { // as telas do fim da classificação: Qualifying e Race Day
+    el.innerHTML = vista === "raceday" ? raceDayHTML(q, T, m, S, confirmado, precisa, prontos) : qualifyingHTML(q, T, m, S);
+    el.querySelectorAll("[data-pq-vista]").forEach((b) => { b.onclick = () => { vista = b.dataset.pqVista; chaveHtml = ""; renderQuali(); }; });
+    const conf = el.querySelector("#confirmarLargada"); if (conf && !confirmado) conf.onclick = () => act("confirmarLargada");
+    if (m && !confirmado) el.querySelectorAll("[data-pneu-largada]").forEach((b) => { b.onclick = () => act("pneu", { pneu: b.dataset.pneuLargada }); });
+    return;
+  }
   const pista = PISTAS[S.config.pista], titulo = ultima ? "Resultado da classificação" : `${f.nome} encerrado`;
   const proximo = ultima ? "Ir para a largada" : `Largar para o Q${q.fechadas.length + 1}`;
   const esquerda = ultima ? `<div class="pq-podio">${[1, 0, 2].filter((i) => q.grid[i]).map((i) => cartao(q.grid[i], i, T, q)).join("")}</div>` : `<div class="pq-aviso"><b>${f.eliminados.length} ${f.eliminados.length === 1 ? "piloto ficou" : "pilotos ficaram"} pelo caminho</b><span>Os eliminados largam do fim do grid, na ordem do tempo. Os outros seguem para o Q${q.fechadas.length + 1}.</span></div>`;

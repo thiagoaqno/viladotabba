@@ -37,7 +37,7 @@ function tabela(room, agora = Date.now()) {
 function publico(room) {
   const q = room.quali; if (!q) return null;
   const nomeDe = (i) => `Q${i + 1}`;
-  return { nome: q.nome, i: q.i, total: q.sessoes.length, startAt: q.startAt, fimAt: q.fimAt, pausa: !!q.pausaAte, carregando: !!q.carga, pausaAte: q.pausaAte, ativos: q.ativos, confirmados: [...q.confirmados],
+  return { nome: q.nome, i: q.i, total: q.sessoes.length, sessoes: q.sessoes, startAt: q.startAt, fimAt: q.fimAt, pausa: !!q.pausaAte, carregando: !!q.carga, pausaAte: q.pausaAte, ativos: q.ativos, confirmados: [...q.confirmados],
     aguardados: aguardadosDe(room),
     pronto: q.ativos.filter((id) => room.players[id] && room.players[id].qPronto), grid: q.grid,
     tabela: tabela(room).filter((x) => x.tempo != null).map((x) => ({ id: x.id, tempo: x.tempo })),

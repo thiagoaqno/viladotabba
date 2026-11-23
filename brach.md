@@ -1,19 +1,27 @@
-# A chuva na volta de classificação dos robôs, e a linha da batida no editor
+# O fim da classificação em duas telas (Qualifying e Race Day), e as falas da classificação
 
-O Thiago (2026-11-23): "sinto que os bots jogam numa configuração diferente da minha nos qualifies, especialmente quando chove... fizeram 48 s chovendo em Mônaco". E sobre a hitbox de Mônaco: "faça o 2" (ele mesmo acerta as peças no editor).
+Pedido do Thiago (2026-11-23), com duas imagens de referência: "essa tela entre qualifies precisa ser refeita: parece que a gente não sai da corrida, e não é intuitivo escolher o pneu"; o Continuar leva a uma tela de pré-corrida, RACE DAY, com o grid, as condições, a estratégia e a chamada para a corrida. E: "não temos falas específicas para os qualifies".
 
-## A chuva na classificação (`corrida-robos.js voltaLancada`)
-- O robô não pilota a volta da classificação: o tempo sai da tabela do perfil dele (`tempoDaVolta`). A chuva entrava pela aderência molhada do pneu, e isso só tirava metade do que a física do carro perde. Medido:
+## As telas (`pos-quali.js`, `pos-corrida.css`)
+- **QUALIFYING**, no fim do Q3:
+  - a tabela com o top 5 em destaque e o 6º ao 10º mais apagados, com o resto embaixo, numa lista que abre;
+  - o cartão da POLE POSITION, com a foto do piloto, a equipe e o tempo;
+  - no rodapé, o mapa da pista, o nome do GP e "CONTINUAR".
+- **RACE DAY:**
+  - o grid de largada, com o top 5 e você, mais a punição de grid se houver;
+  - as condições: as voltas, a volta de verdade em km, a chance de chuva da previsão, a pista seca ou molhada e a aderência;
+  - o pneu da largada, os cinco com quantas voltas cada um dura nesta pista (`vidaEmVoltas`, com a água), e com o escolhido, quantas paradas ele pede;
+  - "Voltar", "Acerto e pontos" (a página de ajustes de antes) e "IR PARA O GRID".
+- Sem temperatura nem combustível: o jogo não tem esses números.
+- A pausa inteira da classificação, Q1 e Q2 também, ganhou a foto do GP de fundo (`GpInfo.fundoDe`): não parece mais a corrida atrás.
+- Conferido montando um fim de Q3 falso no navegador de teste (22 carros em Mônaco). Não foi visto com o print.
 
-| Pista | Conta do robô (garoa / chuva / forte) | Piloto ideal na física (`klk/medir/chuva-volta.js`) |
-|---|---|---|
-| Mônaco | +4,0 / +5,1 / +3,4% | +9,4 / +10,6 / +10,6% |
-| Bahrein | +3,6 / +4,5 / +3,0% | +9,2 / +10,2 / +10,1% |
-
-- Agora a volta é a do seco vezes o que a chuva custa na física (`molhadoNaFisica`, a média das duas pistas): garoa (0,3) +9,3%, de 0,6 para cima +10,4%, e no meio a reta entre eles.
-- Conferido com um robô de nível 100 em Mônaco: 49,50 s no seco; 54,10 s na garoa; 54,65 s na chuva e na chuva forte.
-- Na corrida nada muda: lá o robô anda com a física de verdade.
-
-## A linha da batida no editor (`cenario-pista.js`)
-- No editor de pistas a linha vermelha da batida (#901) aparece sempre. Ela mostra a batida de quando a pista abriu; depois de mexer nas peças, recarregue.
-- Na curva antes do grampo de Mônaco, quem estreita a pista são o item 187 (guard-rail com tela) e o 188 (placa), do lado esquerdo, que encostam na beira do asfalto entre os pontos 884 e 890.
+## As falas da classificação (`hud.js radioDaClassificacao`, `radio/falas.js`)
+- Seis situações, cada uma uma vez só por sessão:
+  - a sessão abrindo;
+  - a volta melhorada;
+  - a zona de eliminação, nos 90 s finais;
+  - o último minuto;
+  - no fim, passou ou caiu (o resultado final segue em `Radio.classificacao`).
+- `corrida-f1-classificacao.js publico` passou a mandar as `sessoes` (quantos passam em cada uma).
+- 24 falas novas: 1.065 caracteres no Jeff, e o mesmo em cada engenheiro novo.

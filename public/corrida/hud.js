@@ -452,6 +452,21 @@ function logoEquipe(p, cls) {
 }
 // o lugar no grid de quem foi eliminado na sessão `i` (quem passa tem `sessoes[i + 1]` carros): depois dos que seguem
 const lugarDoEliminado = (q, i, id) => { const f = q.fechadas[i], passam = f.ordem.length - f.eliminados.length; return passam + f.eliminados.indexOf(id) + 1; };
+// (2026-11-23, o Thiago: "não temos falas específicas para os qualifies") o engenheiro na classificação: a sessão abrindo, a volta melhorada, a zona de
+// eliminação perto do fim, o último minuto, e no fim da sessão se passou ou caiu (o resultado final segue em Radio.classificacao). Cada uma uma vez só.
+function radioDaClassificacao(q, m, dentro, meu, pos, restante, now) {
+  const R = window.Radio; if (!R || !m || !E.S) return;
+  const k = `${E.S.startAt}:${q.nome}`, passam = q.sessoes && q.sessoes[q.i + 1], diga = (sit) => () => R.dizer(sit, { forcar: true });
+  if (q.pausa) {
+    if (q.grid) return; const f = q.fechadas[q.fechadas.length - 1]; if (!f || !f.ordem.some((x) => x.id === m.id)) return;
+    R.uma("qfim:" + k, diga(f.eliminados.includes(m.id) ? "qualieliminado" : "qualipassou")); return;
+  }
+  if (!dentro || now < q.startAt) return;
+  R.uma("qabre:" + k, diga("qualiabre"));
+  if (meu && Number.isFinite(meu.tempo)) { if (race.qMeu && race.qMeu.k === k && meu.tempo < race.qMeu.t - 0.0005) R.uma(`qmelhor:${k}:${meu.tempo}`, diga("qualimelhorou")); race.qMeu = { k, t: meu.tempo }; }
+  if (passam && pos > passam && restante > 0 && restante <= 90) R.uma("qcorte:" + k, diga("qualicorte"));
+  if (restante > 0 && restante <= 60) R.uma("qultimo:" + k, diga("qualiultimo"));
+}
 function hudClassificacao(m, now) {
   const q = E.S.quali; if (!q) return;
   const tab = q.tabela, dentro = !!m && q.ativos.includes(m.id), pos = dentro ? tab.findIndex((x) => x.id === m.id) + 1 : 0, restante = Math.max(0, (q.fimAt - now) / 1000);
@@ -472,6 +487,7 @@ function hudClassificacao(m, now) {
   else if (dentro && restante <= 0) msg = "🏁 Bandeirada: termine a volta";
   else if (dentro && !meu) msg = "⏱️ A volta conta na linha de chegada";
   if (E.S.config.regras === "f1") estadoF1(msg); else $("hMsg").textContent = msg;
+  radioDaClassificacao(q, m, dentro, meu, pos, restante, now);
   const bp = $("bPronto"); if (bp) { bp.classList.toggle("hidden", !dentro || q.pausa); bp.disabled = q.pronto.includes(m && m.id); }
 }
 // a tela das pausas da classificação (o resultado de cada Q e os ajustes do carro): pos-quali.js

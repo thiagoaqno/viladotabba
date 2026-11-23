@@ -1,5 +1,14 @@
 [
   {
+    "id": "race-day-2026-11-23",
+    "data": "2026-11-23",
+    "itens": [
+      "Fim da classificação em duas telas novas: QUALIFYING (o resultado e a pole) e RACE DAY (o grid de largada, as condições da corrida, o pneu da largada com quantas voltas ele dura, e Ir para o grid)",
+      "A pausa da classificação com a foto do GP de fundo",
+      "Falas do engenheiro na classificação: a sessão abrindo, a volta melhorada, a zona de eliminação, o último minuto, passou ou caiu"
+    ]
+  },
+  {
     "id": "quali-chuva-2026-11-23",
     "data": "2026-11-23",
     "itens": [

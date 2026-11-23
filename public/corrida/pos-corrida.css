@@ -486,3 +486,67 @@ body.cx-on .ra-cx .mn3-credito{color:var(--cx-tx2)}
 .pq-eu b{font-variant-numeric:tabular-nums;font-size:15px}
 .pq-eu-setores span{padding:4px 10px;border-radius:6px;background:#ffffff0d}
 .pq-eu-setores span.roxo{background:#8b3dd426;box-shadow:inset 0 0 0 1px #a560f0}.pq-eu-setores span.roxo b{color:#c9a2ff}
+
+/* ---------- (2026-11-23) o fim da classificação no estilo das imagens do Thiago: QUALIFYING (o resultado e a pole) e RACE DAY (pos-quali.js) ---------- */
+/* a foto do GP de fundo em toda a pausa da classificação: a tela não parece mais a corrida atrás */
+#quali.pq-tela{background:linear-gradient(90deg,#07090ef2 0%,#07090ed9 46%,#07090e8c 100%),var(--pq-fundo,none) center/cover no-repeat,#07090e}
+.qy,.rd{--qy-f:"Barlow Condensed","Titillium Web",Manrope,sans-serif;width:min(1500px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:18px;padding:clamp(16px,3vw,44px);color:#eef1f6;animation:pqEntra .35s cubic-bezier(.2,.8,.2,1)}
+.qy-topo small,.rd-topo small{font:600 13px var(--qy-f);letter-spacing:.32em;color:#c9cfd8;opacity:.85}
+.rd-topo small span{margin:0 10px;opacity:.6}
+.qy-topo h2,.rd-topo h2{margin:6px 0 0;font:900 italic clamp(40px,6vw,92px)/.9 var(--qy-f);letter-spacing:.01em}
+.qy-topo em{display:block;font:300 normal clamp(22px,3vw,42px) var(--qy-f);letter-spacing:.6em;color:#b9c0cb;border-bottom:2px solid #e10600;padding-bottom:14px;width:min(820px,100%)}
+.rd-topo p{margin:4px 0 0;font:500 clamp(16px,1.6vw,22px) Manrope,sans-serif;color:#c9cfd8;border-bottom:2px solid #ff7a1a;padding-bottom:14px;width:min(820px,100%)}
+.qy-corpo{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,.9fr);gap:28px;align-items:start}
+.qy-cab{display:grid;grid-template-columns:70px minmax(0,1.6fr) minmax(0,1.1fr) 120px;padding:0 14px 8px;font:600 12px var(--qy-f);letter-spacing:.24em;color:#8f97a4}
+.qy-tab ol,.rd-grid{list-style:none;margin:0;padding:0}
+.qy-tab li,.rd-grid li{display:grid;grid-template-columns:70px minmax(0,1.6fr) minmax(0,1.1fr) 120px;align-items:center;min-height:44px;padding:0 14px;border-bottom:1px solid #ffffff14;font:500 18px Manrope,sans-serif}
+.qy-tab li .po,.rd-grid li .po{font:800 22px var(--qy-f);text-align:center}
+.qy-tab li .barra,.rd-grid li .barra{position:absolute;opacity:0}
+.qy-tab li .pi,.rd-grid li .pi{position:relative;padding-left:16px}
+.qy-tab li .pi::before,.rd-grid li .pi::before{content:"";position:absolute;left:0;top:50%;width:4px;height:26px;transform:translateY(-50%);background:var(--c);border-radius:2px}
+.qy-tab li .eq,.rd-grid li .eq{display:flex;align-items:center;gap:10px;color:#c9cfd8;font-size:15px}
+.qy-tab li .eq .pq-logo,.rd-grid li .eq .pq-logo{width:34px;height:22px;object-fit:contain}
+.qy-tab li .tt,.rd-grid li .tt{font:700 19px var(--qy-f);font-variant-numeric:tabular-nums;text-align:right}
+.qy-tab li:first-child{background:#ffffff12}
+.qy-tab ol.sub{margin-top:8px;border-top:2px solid #ffffff2e}
+.qy-tab ol.sub li{min-height:36px;font-size:15px;color:#aeb6c2}
+.qy-tab ol.sub li .po{font-size:17px;font-weight:600}
+.qy-tab li.eu,.rd-grid li.eu{background:linear-gradient(90deg,#ff7a1a33,transparent 70%);box-shadow:inset 4px 0 0 #ff7a1a;color:#fff}
+.qy-resto{margin-top:10px;color:#9aa2ae}.qy-resto summary{cursor:pointer;font:600 13px var(--qy-f);letter-spacing:.18em;padding:6px 14px}
+.qy-pole{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:420px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,transparent 35%,#0b0d12f2 70%),#11151d;border:1px solid #ffffff1f}
+.qy-foto{position:absolute;inset:0;background:var(--foto) center 20%/cover no-repeat}
+.qy-foto.sem{display:grid;place-items:center;opacity:.35}.qy-foto.sem .pq-logo-g{width:60%;height:auto}
+.qy-pole-txt{position:relative;padding:24px 26px;border-left:4px solid var(--c);margin:0 0 22px 22px}
+.qy-pole-txt small{display:block;font:600 13px var(--qy-f);letter-spacing:.34em;color:#c9cfd8}
+.qy-pole-txt span{display:block;margin-top:10px;font:300 italic 34px var(--qy-f)}
+.qy-pole-txt b{display:block;font:900 italic clamp(34px,3.6vw,54px)/.95 var(--qy-f)}
+.qy-pole-txt em{display:flex;align-items:center;gap:8px;margin-top:6px;font:500 normal 18px Manrope,sans-serif}.qy-pole-txt em .pq-logo{width:30px;height:20px;object-fit:contain}
+.qy-pole-txt strong{display:block;margin-top:14px;font:900 italic clamp(34px,3.4vw,52px) var(--qy-f);font-variant-numeric:tabular-nums}
+.qy-pe,.rd-pe{display:flex;align-items:center;gap:18px;padding-top:16px;border-top:1px solid #ffffff1f}
+.qy-mapa-svg{width:120px;height:60px}.qy-mapa-svg path{stroke:#fff}
+.qy-gp{display:flex;flex-direction:column;padding-left:18px;border-left:1px solid #ffffff2e}.qy-gp b{font:700 18px var(--qy-f);letter-spacing:.14em;text-transform:uppercase}.qy-gp small{font:500 12px var(--qy-f);letter-spacing:.24em;color:#9aa2ae;text-transform:uppercase}
+.qy-bt,.rd-ir{margin-left:auto;display:inline-flex;align-items:center;gap:14px;padding:14px 30px;border:1px solid #ffffff59;border-radius:4px 14px;background:#0b0d12b3;color:#fff;font:800 17px var(--qy-f);letter-spacing:.22em;cursor:pointer;transition:background .15s,transform .15s}
+.qy-bt:hover,.rd-ir:hover{background:#ffffff1f;transform:translateY(-1px)}
+.qy-bt.ghost{margin-left:0;padding:12px 22px;font-size:15px}
+.rd-pe .rd-ir{margin-left:auto;background:linear-gradient(100deg,#ff7a1a,#ff9a3c);border:0;color:#111;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);padding:16px 44px}
+.rd-pe .rd-ir:disabled{opacity:.6;cursor:default}
+.rd-corpo{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.85fr);gap:28px;align-items:start}
+.rd-esq{display:flex;flex-direction:column;gap:18px}
+.rd-card{padding:18px 20px;border-radius:10px;background:#0d1016d9;border:1px solid #ffffff1a}
+.rd-card h4{margin:0 0 12px;font:800 18px var(--qy-f);letter-spacing:.16em}
+.rd-grid li{min-height:40px;font-size:16px}.rd-grid li.sep{min-height:0;border-bottom:2px solid #ffffff38;padding:0;margin:4px 0}
+.rd-pen{margin:10px 0 0;font-size:13px;color:#aeb6c2}
+.rd-pneus{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.rd-pneus button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff0a;color:#eef1f6;cursor:pointer;font:600 13px Manrope,sans-serif}
+.rd-pneus button i{width:30px;height:30px;border-radius:50%;border:5px solid var(--pn);background:#16181d}
+.rd-pneus button small{color:#9aa2ae;font-size:11px}
+.rd-pneus button.on{border-color:var(--pn);background:color-mix(in srgb,var(--pn) 18%,transparent);box-shadow:0 0 0 1px var(--pn) inset}
+.rd-pneus button:disabled{cursor:default;opacity:.75}
+.rd-est{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid #ffffff14}
+.rd-est span{display:flex;flex-direction:column;gap:2px}.rd-est small{color:#9aa2ae;font-size:12px}.rd-est b{font:700 16px Manrope,sans-serif}
+.rd-cond{display:flex;flex-direction:column;gap:14px;padding:16px;border-radius:12px;background:#0d1016e6;border:1px solid #ffffff1f}
+.rd-foto{height:150px;border-radius:8px;background:center/cover no-repeat}
+.rd-cond h3{margin:0;font:800 26px var(--qy-f);letter-spacing:.06em;text-transform:uppercase}.rd-cond p{margin:4px 0 0;color:#c9cfd8}
+.rd-cond-l{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:12px;border-top:1px solid #ffffff14}
+.rd-cond-l span{display:flex;flex-direction:column;gap:2px}.rd-cond-l b{font:700 20px var(--qy-f)}.rd-cond-l small{color:#9aa2ae;font-size:12px}
+@media (max-width:900px){.qy-corpo,.rd-corpo{grid-template-columns:1fr}.qy-pole{min-height:260px}.rd-pneus{grid-template-columns:repeat(3,1fr)}}

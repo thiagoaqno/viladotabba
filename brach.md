@@ -1,40 +1,31 @@
-# Classificação: saída em grupos, tempo estimado no "Pronto", fantasmas de verdade e a tela entre as sessões
+# Telas do fim da classificação mais perto das referências (QUALIFYING e RACE DAY), tudo reagindo ao mouse
 
-Pedidos do Thiago (2026-11-23):
-- "quando eu termino o qualify (faço 1 volta) eu aperto em pronto, então o tempo dos bots precisa ser estimado. Além disso, eles devem ser liberados aos poucos, a cada 5 s uns 2 ou 3, igual na F1";
-- "mesmo com modo fantasma os robôs ainda evitam passar um dentro do outro";
-- "você não fez o estilo das telas pós-qualify".
+Pedido do Thiago (2026-11-23), com as duas imagens de referência do GP de Mônaco: as telas estavam "meio longe da referência" e "os elementos devem ser responsivos ao mouse".
 
-## A saída em grupos
-- `corrida-robos.js prepararQuali`: grupos de 2 ou 3 robôs (sorteados pela semente) a cada `QUALI_SAIDA_MS = 5000`. No Q1 de Mônaco com 21 robôs, as saídas ficam em 0, 5, 10… 40 s.
-- `duracaoDaClassificacao`: em vez da saída de um por segundo, soma `QUALI_SAIDA_TOTAL_S = 45`. Na simulação, o Q1 de Mônaco dura 248 s.
+## QUALIFYING (o resultado final e a pausa entre Q1, Q2 e Q3)
+- Topo com a marca e o caminho, "QUALIFYING" grande, "RESULTADO" espaçado e a linha vermelha.
+- Tabela POS | PILOTO (barra fina na cor da equipe) | EQUIPE (logo + nome) | TEMPO. Top 5 maior, a 1ª linha mais clara; do 6º ao 10º menor e mais apagado, depois do separador; do 11º em diante num "Do 11º ao 20º" que abre.
+- Cartão POLE POSITION inclinado: a foto do piloto saindo por cima do cartão (com as bordas esfumadas), o primeiro nome fino, o sobrenome grosso em itálico, a equipe com o logo e o tempo grande.
+- Rodapé: o traçado da pista, a bandeira, "GP DE MÔNACO / CIRCUIT DE MONACO" e o botão "CONTINUAR →" inclinado.
+- Fundo: a foto do GP escurecida, a faixa diagonal escura e os riscos vermelhos.
+- Na pausa entre as sessões, a tabela inteira rola por dentro e o rodapé (com "LARGAR PARA O Q2") fica sempre à vista.
 
-## O tempo estimado quando a sessão fecha antes ("Pronto")
-- `corrida-f1-classificacao.js completarRobos`, chamada em `fechar`: o robô que ainda não fez a volta lançada (menos de 2 voltas) fica com o melhor entre o que já fez e a volta estimada (`voltaLancada`).
-- A conta e a volta pilotada não batem igual em toda pista. Medido com 21 robôs, a mediana da razão pilotada/estimada:
+## RACE DAY
+- Topo: a marca, "GP DE MÔNACO › RACE DAY" e, à direita, a sua equipe com o logo. "RACE DAY" em itálico, "Prepare-se para a corrida" e a linha laranja.
+- GRID DE LARGADA: o top 5 (posição, logo, equipe, piloto, tempo e diferença), o separador e a sua linha em laranja, mais as punições de grid.
+- ESTRATÉGIA: pneu de largada, paradas e vida do pneu (o jogo não tem temperatura nem combustível, por isso não aparecem).
+- À direita: o cartão do GP (foto, nome, voltas e km, chuva, pista, aderência) e, embaixo dele, a escolha do PNEU DA LARGADA (antes ficava dentro da estratégia e empurrava os botões para fora da tela).
+- Rodapé: "← VOLTAR", "ACERTO E PONTOS" e o botão laranja inclinado "IR PARA O GRID →".
 
-  | Pista | Mediana | Faixa |
-  |---|---|---|
-  | Mônaco | 1,019 | 0,992 a 1,047 |
-  | Interlagos | 0,978 | 0,939 a 1,011 |
+## Mouse
+- Linhas da tabela e do grid: fundo na cor da equipe, a linha anda um pouco para o lado e o logo cresce. A animação de entrada passou de `both` para `backwards`: com `both` ela segurava a posição e o movimento do hover não aparecia.
+- Cartões (pole, grid, estratégia, GP, pneus): sobem um pouco e a borda acende; a foto cresce. Botões: o inclinado acende, a seta anda.
 
-  Por isso, a estimativa é multiplicada pela mediana dos robôs que já fizeram a lançada nesta sessão, ou da sessão anterior (`room.razaoQuali`, zerada a cada classificação). Sem nenhum, fica a conta pura.
-- Simulado o Q1 de Mônaco fechando cedo (`klk/medir/quali-pronto.js`):
+## Janela menor
+- Altura baixa (até 760 px): título, cartão da pole e linhas mais compactos.
+- O rodapé com os botões fica preso embaixo (`position: sticky`) quando a tela precisa rolar.
+- Estreita (até 900 px) uma coluna só; celular (até 560 px) esconde o nome da equipe e o traçado, sem rolagem para o lado.
 
-  | Fechou em | Robôs com tempo | Estimados | Pole |
-  |---|---|---|---|
-  | 70 s | 21 de 21 | 21 (sem razão: a conta pura) | 48,633 |
-  | 110 s | 21 de 21 | 12 | 49,600 |
-  | 150 s | 21 de 21 | 0 | 49,600 |
+Conferido no navegador com um estado de teste de Mônaco (Norris na pole com 1:09.673, você em 7º) em 1600 × 900, 1100 × 640 e 375 × 812. `node --check` no `pos-quali.js`.
 
-## Fantasmas de verdade
-- Na fase `quali`, o `transito` dos robôs não vê ninguém, e a batida (`Contato.depoisDoPasso`) fica desligada. Antes, eles ainda desviavam e freavam atrás uns dos outros.
-
-## A tela entre as sessões
-- `pos-quali.js sessaoHTML`: depois do Q1 e do Q2, o mesmo estilo do QUALIFYING:
-  - a sessão inteira, com quem caiu apagado e a linha vermelha do CORTE;
-  - o cartão do mais rápido da sessão e "Sua sessão" embaixo;
-  - no rodapé: "Ajustes do carro" e "Largar para o Q2/Q3".
-- Os ajustes continuam na tela de antes. CSS no fim de `pos-corrida.css`.
-
-Não foi jogado. Conferido com `node --check`.
+Arquivos: `public/corrida/pos-quali.js`, `public/corrida/pos-corrida.css`, `public/corrida/novidades.json`.

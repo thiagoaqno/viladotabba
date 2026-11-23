@@ -5,7 +5,7 @@
 //
 // As SETAS são do MFD (sem modo ajustar): ↑↓ escolhem a linha, ←→ mudam o valor (ou a página nas páginas sem linhas); mexer nelas abre o painel e
 // reinicia os 3 s. Tudo remapeável na tela Controles (teclas.js / teclas-ui.js). Tab e Start só abrem e fecham o painel.
-import { E, $, me, carOf, store, toast, PISTAS } from "./estado.js";
+import { E, $, me, carOf, store, toast, PISTAS, act } from "./estado.js";
 import { race } from "./jogo.js";
 import { alternarPedido, escolherComposto, cancelarPedido, pedirNoBox, jogosDe, textoJogos } from "./box.js";
 import { set } from "./hud-painel.js";
@@ -232,6 +232,13 @@ const LINHAS = {
       } },
     { rot: "Pedir box", dica: "B", valor() { const B = race && race.box; return !B ? "—" : B.fase ? "No box" : B.pedido ? "Sim" : "Não"; },
       mudar() { alternarBox(); } },
+    // (2026-11-23, o Thiago: "eu nem tinha opção de dar DNF") abandonar a corrida: o primeiro toque arma por 4 s, o segundo confirma
+    { rot: "Abandonar a corrida", valor() { const m = me(); return !m || E.S?.phase !== "race" || m.finish != null ? "—" : m.dnf ? "Fora" : Date.now() < (mfd.dnfAte || 0) ? "Confirmar?" : "DNF"; },
+      mudar() {
+        const m = me(); if (!m || E.S?.phase !== "race" || m.finish != null || m.dnf) return;
+        if (Date.now() < (mfd.dnfAte || 0)) { mfd.dnfAte = 0; act("abandonar"); return; }
+        mfd.dnfAte = Date.now() + 4000; toast("Abandonar a corrida? Toque de novo para confirmar", 2000);
+      } },
   ],
   ajustes: [
     { rot: "Torre", valor: () => (acoes.torreCompacta() ? "Compacta" : "Completa"), mudar() { if (acoes.torreAlternar) acoes.torreAlternar(); } },

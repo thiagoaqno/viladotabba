@@ -520,6 +520,9 @@ module.exports = function attachCorrida(io) {
     if (!p || ((!d.stopGo || d.troca) && !F1.PNEUS[d.composto])) return;
     // O serviço dos boxes recupera 90% do dano existente, também na visita de stop-and-go.
     p.dano = Math.max(0, (p.dano || 0) * 0.1);
+    // (2026-11-23, o Thiago: "quando o carro quebra e você vai para os boxes não era para consertar?") a parada na corrida conserta a quebra
+    // (sai do modo de emergência); a garagem leva F1.CONSERTO_QUEBRA_S a mais nesse caso (sim.js), então ir ao box custa tempo, mas salva a corrida
+    if (p.quebrou && room.phase === "race") { p.quebrou = false; p.falhaEm = null; log(room, `🔧 ${p.name}: a equipe consertou o carro nos boxes.`); }
     if (room.phase === "quali") { // (2026-11-16) na classificação o box só troca o pneu: não conta como parada da corrida nem na regra dos compostos
       if (F1.PNEUS[d.composto]) { log(room, `🔧 ${p.name} foi aos boxes na classificação (${F1.PNEUS[d.composto].nome}).`); }
       return;
@@ -804,7 +807,7 @@ module.exports = function attachCorrida(io) {
       const { room, me } = ctx();
       if (!room) return fail(cb, "Você não está numa sala.");
       const type = data.type, isHost = me && room.host === me.id;
-      if (room.temporada && !["qpronto", "confirmarLargada", "montagemGrid", "box", "batida", "sector", "pneu", "tvpular", "carregou", "mods"].includes(type)) return fail(cb, "Este GP é controlado pela sede da temporada.");
+      if (room.temporada && !["qpronto", "confirmarLargada", "montagemGrid", "box", "batida", "sector", "pneu", "tvpular", "carregou", "mods", "abandonar"].includes(type)) return fail(cb, "Este GP é controlado pela sede da temporada.");
       const err = (() => {
         if (type === "color") {
           if (!me || room.phase === "race") return "Só dá para trocar fora da corrida.";
@@ -914,6 +917,10 @@ module.exports = function attachCorrida(io) {
           room.montagens[me.equipe] = v.montagem;
           atribuirCarros(room);
           return;
+        }
+        if (type === "abandonar") { // (2026-11-23) quem joga abandona a corrida (DNF), pelo MFD: o carro sai da pista e o resto do grid segue
+          if (!me || room.phase !== "race" || me.finish != null || me.dnf) return "ignorado";
+          me.dnf = true; me.box = null; log(room, `🏳️ ${me.name} abandonou a corrida (DNF).`); return;
         }
         if (type === "box") { // regras de F1: entrou no corredor dos boxes (fase "entra") ou saiu dele com o pneu novo (fase "sai")
           if (room.config.regras !== "f1" || room.phase !== "race" || me.finish != null || !corredorDe(room)) return "ignorado";

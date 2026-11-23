@@ -265,6 +265,8 @@ function registrarResultado(s, linhas, analise = null) {
   const receita = s.patrocinio + premio + bonus - salarios;
   Paddock.aoResultado(s, resultado, objetivo.gp); // (o humor da equipe depois do GP; a verba nova do patrocinador vale a partir do próximo)
   demissaoNoMeio(s);
+  // a janela de propostas abriu: a notícia avisa quem quer você
+  if (s.gp < s.tamanho - 2 && janelaAberta(s)) { const ps = propostas(s); if (ps.length) noticia(s, ps.length === 1 ? `A ${nomeDaEquipe(ps[0].equipe)} quer você` : `${ps.length} equipes querem você`, `${ps.map((x) => nomeDaEquipe(x.equipe)).join(" e ")} ${ps.length === 1 ? "fez uma proposta" : "fizeram propostas"}: veja em Contratos > Propostas. Assinando agora, você muda de equipe já no próximo GP.`, "Mercado"); }
   return { resultado, receita };
 }
 function tabelas(s) {
@@ -363,17 +365,37 @@ function renovar(s, anos) {
   if (p.confianca >= 70) s.patrocinio = Math.min(14, s.patrocinio + 2); else if (p.confianca >= 50) s.patrocinio = Math.min(14, s.patrocinio + 1); // boa fase: a verba por GP sobe na assinatura
   return s;
 }
-// As propostas (2026-11-21): do meio do ano em diante as equipes mais fortes sondam quem vai bem (pré-contrato para a próxima temporada); nas 2
-// últimas etapas vêm todas: uma mais forte (se a temporada foi boa), uma parecida e uma para liderar. Cada uma com a verba dela, o extra pela sua
-// posição, o bônus por vitória e as exigências (as metas da equipe nova).
+// As propostas. (2026-11-23, o Thiago: "receber propostas no meio da carreira, pelo seu desempenho: equipes melhores te querem se você for bom na
+// tabela, equipes piores se você estiver ruim; no meio da temporada também, a cada 2 ou 3 corridas") Durante o ano o mercado abre em JANELAS: a
+// primeira depois do 2º GP e as outras a cada 2 ou 3 GPs (sorteado pela semente do ano). Na janela, quem chama depende de como você está contra o
+// que a sua equipe espera (metas().temporada, a posição no campeonato): acima da meta, as equipes mais fortes (mais acima quanto melhor a posição);
+// bem abaixo (4 posições ou mais), as de trás, que querem um piloto para liderar; perto da meta, uma equipe parecida. Assinar na janela muda de
+// equipe NA HORA: você corre por ela a partir do próximo GP, com contrato até o fim da temporada seguinte. Nas 2 últimas etapas vêm todas (uma
+// mais forte se a temporada foi boa, uma parecida e uma para liderar), e aí a assinatura é o pré-contrato para o ano que vem, como antes.
+function janelasDoAno(s) {
+  const r = gerador(`janelas:${s.semente}:${s.ano}`), v = []; let g = 2;
+  while (g < s.tamanho - 2) { v.push(g); g += r() < 0.5 ? 2 : 3; }
+  return v;
+}
+const janelaAberta = (s) => janelasDoAno(s).includes(s.gp);
+const proximaJanela = (s) => janelasDoAno(s).find((g) => g > s.gp) ?? null;
 function propostas(s) {
-  const meio = s.gp >= Math.ceil(s.tamanho / 2), fim = s.gp >= s.tamanho - 2; if (!meio) return [];
+  const fim = s.gp >= s.tamanho - 2, janela = !fim && janelaAberta(s);
+  if (!fim && !janela) return [];
+  if (janela && s.trocaNoMeio && s.trocaNoMeio.ano === s.ano && s.trocaNoMeio.gp === s.gp) return []; // (acabou de trocar nesta janela)
   const ordem = ordemDeForca(), i = ordem.indexOf(s.equipe), pos = tabelas(s).pilotos.findIndex((p) => p.id === "voce") + 1;
   const passo = pos <= 5 ? 3 : pos <= 10 ? 2 : pos <= 15 ? 1 : 0;
-  const alvos = fim ? [i - passo, i + 1, i + 3] : passo >= 2 ? [i - passo, i - passo + 1] : [];
+  let alvos;
+  if (fim) alvos = [i - passo, i + 1, i + 3];
+  else {
+    const meta = metas(s).temporada, folga = meta - pos, r = gerador(`proposta:${s.semente}:${s.ano}:${s.gp}`), sobe = Math.max(1, passo);
+    alvos = folga >= 0 ? [i - sobe, i - sobe + 1] // indo melhor que a meta: as de cima
+      : folga <= -4 ? [i + 1, i + 2] // bem abaixo: as de trás, para liderar
+      : [i + (r() < 0.5 ? -1 : 1)]; // perto da meta: uma parecida
+  }
   return [...new Set(alvos.map((k) => ordem[Math.max(0, Math.min(ordem.length - 1, k))]))].filter((id) => id !== s.equipe).map((id) => ({
     equipe: id, verbaGP: Math.min(14, verbaBase(id) + extraPelaPosicao(pos)), bonusVitoria: BONUS_VITORIA[faixaDe(id)], exige: metas({ ...s, equipe: id }),
-    orcamento: Equipes.EQUIPES[id].orcamento, antecipada: !fim }));
+    orcamento: Equipes.EQUIPES[id].orcamento, agora: !fim, antecipada: false }));
 }
 // troca de equipe (a proposta assinada, ou a demissão): o carro novo, o companheiro novo, o humor da equipe do zero
 function trocarDeEquipe(s, id, termos, inicio) {
@@ -385,6 +407,13 @@ function trocarDeEquipe(s, id, termos, inicio) {
 function aceitarProposta(s, id) {
   const p = propostas(s).find((x) => x.equipe === id);
   if (!p) throw Error("Esta equipe não fez proposta.");
+  if (p.agora) { // a janela do meio do ano: muda já, corre pela equipe nova a partir do próximo GP
+    if (s.precontrato) throw Error("Você já assinou um pré-contrato.");
+    const antiga = s.equipe;
+    trocarDeEquipe(s, id, p, s.ano); s.contrato.fim = s.ano + 1; s.trocaNoMeio = { ano: s.ano, gp: s.gp };
+    noticia(s, `Você assinou com a ${nomeDaEquipe(id)}`, `Saiu da ${nomeDaEquipe(antiga)} no meio do ano: corre pela ${nomeDaEquipe(id)} a partir do próximo GP, com contrato até a temporada ${s.ano + 1}.`, "Diretoria");
+    return s;
+  }
   if (s.gp < s.tamanho) { // antes do último GP: pré-contrato, vale na virada do ano
     if (s.precontrato) throw Error("Você já assinou um pré-contrato.");
     s.precontrato = { ano: s.ano, equipe: p.equipe, verbaGP: p.verbaGP, bonusVitoria: p.bonusVitoria };
@@ -442,7 +471,7 @@ function proximaTemporada(s) {
   const sorteado = sortearCalendario(s.tamanho, s.semente, s.calendario.map((g) => g.pista));
   s.calendario = sorteado.calendario; s.calendarioSemente = sorteado.semente; return s;
 }
-const api = { vagaDe, pilotoRealDe, verbaBase, demissaoNoMeio, limiteDoAno, custoDoDesenvolvimento, ajustarParaPista, CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
+const api = { janelasDoAno, proximaJanela, vagaDe, pilotoRealDe, verbaBase, demissaoNoMeio, limiteDoAno, custoDoDesenvolvimento, ajustarParaPista, CALENDARIO, PISTAS_TRABALHADAS, sortearCalendario, PONTOS, ENGENHEIROS, teto, criar, mudarNivel, conferirMontagem, aplicarMontagem, contratarPiloto, contratarEngenheiro, desenvolver, desenvolvimentoRivais, pilotosNoGrid, registrarResultado, tabelas, metas, imersao, proximaTemporada, contrato, objetivos, perspectiva, renovar, propostas, aceitarProposta, metasDeBonus };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.F1Temporada = api;
 })(typeof window !== "undefined" ? window : globalThis);

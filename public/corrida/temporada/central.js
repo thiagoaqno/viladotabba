@@ -271,7 +271,8 @@ function html(c) {
     ${codigoHTML}<main class="cx-corpo" role="tabpanel">${corpo}</main>
     <footer class="cx-pe"><div class="cx-dicas"><span class="gp"><kbd class="r">A</kbd> Selecionar</span><span class="gp"><kbd class="r">B</kbd> Voltar</span><span class="gp"><kbd>LB</kbd><kbd>RB</kbd> Trocar aba</span><span class="kb"><kbd>Q</kbd><kbd>E</kbd> Trocar aba</span><span class="kb"><kbd>Esc</kbd> Voltar</span><button type="button" class="cx-msg" data-cx-msg><kbd class="r gp">Y</kbd><kbd class="kb">M</kbd> Mensagens · ${c.nMensagens}</button></div><div class="cx-salvo"><svg class="cx-ok" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4.600 4.600L19 7"/></svg>Salvo</div></footer></div>`;
 }
-function depois(c) { { const hl = document.querySelector("[data-halo-lugar]"); if (hl) root.HaloCarreira?.montar(hl, c.s.equipe); } entradaEq = null; document.body.classList.remove("cx-entrada"); tema(c.s.equipe); ligarFundo(c.s.equipe); requestAnimationFrame(posicionarRotulos); root.Radio?.desenharBotoes?.(); root.CentralAnalise?.ligarGraficos(); capaceteNaAba(); }
+let contouAbertura = false; // (2026-11-23, animacoes.js) os números contam na abertura da Central e a cada troca de aba
+function depois(c) { root.Animacoes?.indicador(document.querySelector(".cx-abas")); if (!contouAbertura && root.Animacoes) { contouAbertura = true; const corpo = document.querySelector(".cx-corpo"); root.Animacoes.contar(corpo); root.Animacoes.cascata(corpo); } { const hl = document.querySelector("[data-halo-lugar]"); if (hl) root.HaloCarreira?.montar(hl, c.s.equipe); } entradaEq = null; document.body.classList.remove("cx-entrada"); tema(c.s.equipe); ligarFundo(c.s.equipe); requestAnimationFrame(posicionarRotulos); root.Radio?.desenharBotoes?.(); root.CentralAnalise?.ligarGraficos(); capaceteNaAba(); }
 // a aba Capacete: o editor (o módulo de temporada/index.html) entra no lugar marcado; se o módulo ainda não chegou, entra quando chegar
 function capaceteNaAba() {
   const lugar = document.querySelector("[data-cx-capacete]"); if (!lugar) return;
@@ -302,7 +303,7 @@ function animarAba(dir) {
   const blocos = [...corpo.children].slice(0, 6);
   (blocos.length ? blocos : [corpo]).forEach((el, i) => el.animate([{ opacity: 0, transform: `translateX(${dir * 22}px)` }, { opacity: 1, transform: "none" }], { duration: 260, delay: i * 35, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" }));
 }
-function trocarAba(a, render) { const ordem = (x) => ABAS.findIndex((q) => q[0] === x), dir = ordem(a) < ordem(aba) ? -1 : 1, mudou = a !== aba; aba = a; try { localStorage.setItem("corrida:temporada:aba", a); } catch {} render(); if (mudou) animarAba(dir); window.scrollTo?.({ top: 0 }); const b = document.querySelector(`.cx-aba[data-cx-aba="${a}"]`); b?.focus({ preventScroll: true }); }
+function trocarAba(a, render) { const ordem = (x) => ABAS.findIndex((q) => q[0] === x), dir = ordem(a) < ordem(aba) ? -1 : 1, mudou = a !== aba; aba = a; try { localStorage.setItem("corrida:temporada:aba", a); } catch {} render(); if (mudou) { animarAba(dir); const A = root.Animacoes, corpo = document.querySelector(".cx-corpo"); A?.contar(corpo); A?.cascata(corpo); } window.scrollTo?.({ top: 0 }); const b = document.querySelector(`.cx-aba[data-cx-aba="${a}"]`); b?.focus({ preventScroll: true }); }
 function abrirMensagens() { const d = dialogo("cxMsgDlg", "cx-msgs"); d.innerHTML = `<form method="dialog"><button class="cx-dlg-x" aria-label="Fechar">✕</button></form>${ctxAtual?.caixaMensagens || ""}`; d.showModal(); }
 // devolve true se o clique era desta tela
 function clique(alvo, render) {

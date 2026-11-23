@@ -25,7 +25,13 @@ f1Pronto.then(() => { f1Carregou = true; if (E.S && E.S.phase === "lobby") rende
 
 const reduz = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 let veioDaCorrida = false;
+// (2026-11-23) a troca entre a tela inicial e a sala: a tela nova sobe e aparece (animacoes.js entrar); a ida para a corrida tem a varredura de TV dela
 export function show(id) {
+  const visivel = ["home", "lobby", "race"].find((s) => !$(s).classList.contains("hidden"));
+  mostrar(id); // (na hora: quem chama show conta com a tela nova já visível)
+  if (window.Animacoes && visivel && visivel !== id && id !== "race" && visivel !== "race") window.Animacoes.entrar($(id));
+}
+function mostrar(id) {
   if (id === "race") window.MusicaCarreira?.calar(); else window.MusicaCarreira?.voltar();
   const eraSala = !$("lobby").classList.contains("hidden");
   for (const s of ["home", "lobby"]) $(s).classList.toggle("hidden", s !== id);

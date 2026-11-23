@@ -1,0 +1,34 @@
+/* Corrida da Galera — as animações dos menus e da carreira (2026-11-23, o Thiago: "animações entre todas as telas da interface, especialmente do modo
+   carreira/carreira com amigos"; 3 de 3). Minimalistas: deslize curto, desbotar, afundar no clique. Carregado em /corrida/ e /corrida/temporada/.
+   Com "reduzir movimento" no sistema, nada disso anima. */
+
+/* 1. Entre páginas (menu ⇄ Central da carreira): a transição nativa do navegador entre documentos (Chrome 126+; sem ela, troca seca como antes) */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:anSai .2s cubic-bezier(.4,0,1,1) both}
+::view-transition-new(root){animation:anEntra .34s cubic-bezier(0,0,.2,1) both}
+@keyframes anSai{to{opacity:0;transform:scale(.985)}}
+@keyframes anEntra{from{opacity:0;transform:translateY(12px)}}
+
+/* 2. Botões: afundam no clique (a propriedade `scale` soma com o transform de cada botão: o inclinado continua inclinado; sem mexer no transition de cada um) */
+button:not(:disabled):active,a.cx-bt:active,[role="button"]:active{scale:.96}
+
+/* 3. Cartões da Central: sobem um pouco com o mouse */
+.cx .cx-card{transition:translate .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,border-color .22s}
+.cx .cx-card:hover{translate:0 -3px;box-shadow:0 14px 30px #0003}
+
+/* 4. O sublinhado das abas da Central: um só, que desliza até a aba nova (animacoes.js Animacoes.indicador) */
+.cx-abas.an-ind{position:relative}
+.cx-abas.an-ind .cx-aba.on::after{transform:scaleX(0)}
+.an-ind-barra{position:absolute;bottom:0;left:0;height:3px;width:0;background:var(--eq-at,#e10600);border-radius:2px;pointer-events:none;
+  transition:transform .34s cubic-bezier(.65,0,.35,1),width .34s cubic-bezier(.65,0,.35,1)}
+.an-ind-barra.sem{transition:none}
+
+/* 5. Linhas de tabela e listas: entram em cascata quando a aba abre (animacoes.js Animacoes.cascata) */
+.an-cai{animation:anLinha .34s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--an-i,0) * 28ms)}
+@keyframes anLinha{from{opacity:0;transform:translateY(8px)}}
+
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-old(root),::view-transition-new(root){animation:none}
+  button:not(:disabled):active,a.cx-bt:active,[role="button"]:active{scale:none}
+  .cx .cx-card:hover{translate:none}.an-ind-barra{transition:none}.an-cai{animation:none}
+}

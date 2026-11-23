@@ -194,6 +194,33 @@ export function htmlAviso(tipo, texto) {
   const cab = t.direcao ? '<b>DIREÇÃO DE PROVA</b><small>RACE CONTROL</small>' : `<b>${t.rotulo}</b>`;
   return `<span class="av-bloco">${A.iconeDe(tipo)}</span><span class="av-corpo"><span class="av-cab">${cab}${LOGO_AVISO}</span><span class="av-txt">${h(texto)}</span></span>`;
 }
+// ---------- (2026-11-23, o Thiago, com a imagem dos cards da transmissão) o card do topo esquerdo ----------
+// A faixa preta com o logo e "RACE" (ou RACE CONTROL), o corpo na cor do aviso com o título grande, a frase e o ícone. A entrada em três tempos
+// (hud-f1.css: o card cai, a cor varre da esquerda, o título sobe e o ícone salta); a batalha pela liderança troca só o número, rolando.
+const SVGC = (d, extra = "") => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ${extra}>${d}</svg>`;
+const ICONE_CARD = {
+  bandeira: SVGC('<path d="M5 22V3"/><path d="M5 4h12l-2.5 4L17 12H5" fill="currentColor"/>'),
+  sc: '<svg viewBox="0 0 48 20" aria-hidden="true"><path fill="currentColor" d="M4 13c0-2 1-3 3-3.4L13 8l6-4h12c2 0 3 .6 4.4 2l3.6 3.4 4 .8c1.4.3 2 1.3 2 2.6V15h-3.2a4 4 0 0 0-7.6 0H14.8a4 4 0 0 0-7.6 0H4z"/><circle cx="11" cy="15.5" r="3" fill="currentColor"/><circle cx="34.6" cy="15.5" r="3" fill="currentColor"/></svg>',
+  pare: SVGC('<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>'),
+};
+function iconeCard(tipo) {
+  const A = window.AvisosF1, t = A.tipoDe(tipo);
+  if (tipo === "vermelha" || tipo === "preta") return ICONE_CARD.pare;
+  if (tipo === "sc") return ICONE_CARD.sc;
+  if (t.card && t.icone === "bandeira") return ICONE_CARD.bandeira;
+  return A.iconeDe(tipo);
+}
+export function htmlCard(tipo, texto) {
+  const A = window.AvisosF1, t = A.tipoDe(tipo), fase = E.S && E.S.phase === "quali" ? "QUALI" : "RACE";
+  const topo = `<div class="avc-topo">${LOGO_F1}<b>${t.direcao ? "RACE CONTROL" : fase}</b></div>`;
+  if (tipo === "batalha") {
+    const [s1, e1, s2, e2, gap] = String(texto).split("|");
+    return `${topo}<div class="avc-cor avc-bat"><span class="avc-p">${logoEquipe({ equipe: e1, color: "#888" }, "avc-logo")}<b>1. ${h(s1)}</b></span><span class="avc-meio"><small>${t.titulo === "BATTLE FOR FIRST" ? "Battle for first" : h(t.titulo)}</small><b class="avc-gap">+${h(gap)}</b></span><span class="avc-p">${logoEquipe({ equipe: e2, color: "#888" }, "avc-logo")}<b>2. ${h(s2)}</b></span></div>`;
+  }
+  const corpo = tipo === "vmr" ? '<i class="avc-setas" aria-hidden="true"></i>' : "";
+  return `${topo}<div class="avc-cor">${corpo}<span class="avc-txt"><b class="avc-tit">${h(t.titulo || t.rotulo)}</b><small class="avc-sub">${h(texto)}</small></span><span class="avc-ic">${iconeCard(tipo)}</span></div>`;
+}
+function estiloCard(el, tipo) { const t = window.AvisosF1.tipoDe(tipo); el.dataset.tipo = tipo; el.classList.toggle("escuro", !t.card); el.style.setProperty("--card", t.card || "#1a1d24"); el.style.setProperty("--card-txt", t.cardTxt || "#fff"); el.style.setProperty("--card-ic", t.card ? "currentColor" : t.bloco); }
 function estiloAviso(el, tipo) { const t = window.AvisosF1.tipoDe(tipo); el.style.setProperty("--fundo", t.fundo); el.style.setProperty("--txt", t.txt); el.style.setProperty("--bloco", t.bloco); }
 // um aviso de fora (toast, tela de fim): vira uma faixa da fila
 E.avisarF1 = (texto, ms) => { const A = window.AvisosF1, l = A.limpar(texto); if (l && window.Radio && (A.tipoDoTexto(texto) !== "vmr" || (me() && texto.includes(me().name)))) window.Radio.avisoF1(A.tipoDoTexto(texto)); if (l) filaAvisos().empurrar({ tipo: A.tipoDoTexto(texto), texto: l, ttl: Math.max(2600, (ms || 3200) + 1200) }, Date.now()); };
@@ -211,10 +238,25 @@ function desenharAvisos() {
   for (const a of lista) {
     vivos.add(a.id);
     let n = NOS_AVISOS.get(a.id);
-    if (!n) { n = document.createElement("div"); n.className = "av-item"; n._tipo = a.tipo; n._txt = a.texto; estiloAviso(n, a.tipo); n.innerHTML = htmlAviso(a.tipo, a.texto); NOS_AVISOS.set(a.id, n); box.appendChild(n); }
-    else if (n._tipo !== a.tipo || n._txt !== a.texto) { n._tipo = a.tipo; n._txt = a.texto; estiloAviso(n, a.tipo); n.innerHTML = htmlAviso(a.tipo, a.texto); }
+    if (!n) { n = document.createElement("div"); n.className = "avc" + (a.fixo ? " fixo" : ""); n._tipo = a.tipo; n._txt = a.texto; estiloCard(n, a.tipo); n.innerHTML = htmlCard(a.tipo, a.texto); NOS_AVISOS.set(a.id, n); box.appendChild(n); }
+    else if (n._tipo === "batalha" && a.tipo === "batalha" && n._txt !== a.texto) { // a batalha: só o número muda, rolando (sem refazer o card)
+      n._txt = a.texto; const g = n.querySelector(".avc-gap"), novo = "+" + String(a.texto).split("|")[4];
+      if (g && g.textContent !== novo) { const sobe = parseFloat(novo) > parseFloat(g.textContent); g.textContent = novo; g.classList.remove("rola", "abre", "fecha"); void g.offsetWidth; g.classList.add("rola", sobe ? "abre" : "fecha"); }
+    }
+    else if (n._tipo !== a.tipo || n._txt !== a.texto) { const trocou = n._tipo !== a.tipo; n._tipo = a.tipo; n._txt = a.texto; estiloCard(n, a.tipo); n.innerHTML = htmlCard(a.tipo, a.texto); if (trocou) { n.classList.remove("troca"); void n.offsetWidth; n.classList.add("troca"); } }
   }
-  for (const [id, n] of NOS_AVISOS) if (!vivos.has(id)) { NOS_AVISOS.delete(id); n.classList.add("sai"); setTimeout(() => n.remove(), 460); } // sai com a animação (CSS) e só então some do DOM
+  for (const [id, n] of NOS_AVISOS) if (!vivos.has(id)) { NOS_AVISOS.delete(id); n.classList.add("sai"); setTimeout(() => n.remove(), 420); } // sai com a animação (CSS) e só então some do DOM
+}
+// a batalha pela liderança (o card "Battle for first"): com o 2º a menos de 1 s do líder, aparece a cada 2 voltas do líder por 7 s, e o número
+// acompanha ao vivo enquanto o card está na tela
+function batalhaF1(linhas) {
+  const f = filaAvisos(), a = linhas[0], b = linhas[1], S = E.S;
+  if (!S || S.phase !== "race" || !a || !b || b.dif.tipo !== "seg") { f.remover("batalha"); race.batAte = 0; return; }
+  const gap = parseFloat(String(b.dif.texto).replace(/[^\d.,]/g, "").replace(",", ".")), lider = S.players.find((p) => p.id === a.id), volta = (lider && lider.laps) || 0, agora = Date.now();
+  if (!(gap < 1) || volta < 2) { if (agora > (race.batAte || 0)) f.remover("batalha"); return; }
+  const texto = `${a.sigla}|${a.equipe}|${b.sigla}|${b.equipe}|${gap.toFixed(3)}`;
+  if (race.batVolta !== volta && volta % 2 === 0) { race.batVolta = volta; race.batAte = agora + 7000; f.empurrar({ chave: "batalha", tipo: "batalha", texto, ttl: 7000 }, agora); }
+  else if (agora < (race.batAte || 0)) f.empurrar({ chave: "batalha", tipo: "batalha", texto }, agora);
 }
 // o que vira aviso a cada quadro: as linhas novas do log da direção de prova, o DRS liberado, a volta mais rápida, a largada e a bandeirada
 function avisosF1(m, left, now) {
@@ -355,6 +397,7 @@ function hudF1(m, st, now) {
     linhas = T.torre(cq, { n: tr.n, meuId: m && m.id, esc: race.hudEsc }).map((l) => ({ ...l, volta: !!pole && l.id === pole.id,
       dif: !tempos.has(l.id) ? { tipo: "m", texto: "Sem tempo" } : pole && l.id === pole.id ? { tipo: "lider", texto: tempo3(tempos.get(l.id)) } : { tipo: "seg", texto: `+${(tempos.get(l.id) - pole.tempo).toFixed(3)}` } }));
   }
+  if (!q) batalhaF1(linhas);
   set(document.querySelector("#hTorre .tt-modo"), "t", q ? "QUALI" : "RACE"); set($("tVoltaRot"), "t", q ? "SESSÃO" : "VOLTA");
   // a volta no topo: a do SEU carro enquanto você corre (2026-11-21, o Thiago: "quando eu ainda estou atrás da linha, aparece uma volta a mais quando o
   // primeiro já passou": era a do líder, como na TV); de quem só assiste, ou depois da sua chegada, a do líder. Na classificação, a sessão e o tempo que falta

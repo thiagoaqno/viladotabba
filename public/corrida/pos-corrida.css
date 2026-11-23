@@ -487,77 +487,135 @@ body.cx-on .ra-cx .mn3-credito{color:var(--cx-tx2)}
 .pq-eu-setores span{padding:4px 10px;border-radius:6px;background:#ffffff0d}
 .pq-eu-setores span.roxo{background:#8b3dd426;box-shadow:inset 0 0 0 1px #a560f0}.pq-eu-setores span.roxo b{color:#c9a2ff}
 
-/* ---------- (2026-11-23) o fim da classificação no estilo das imagens do Thiago: QUALIFYING (o resultado e a pole) e RACE DAY (pos-quali.js) ---------- */
-/* a foto do GP de fundo em toda a pausa da classificação: a tela não parece mais a corrida atrás */
-#quali.pq-tela{background:linear-gradient(90deg,#07090ef2 0%,#07090ed9 46%,#07090e8c 100%),var(--pq-fundo,none) center/cover no-repeat,#07090e}
-.qy,.rd{--qy-f:"Barlow Condensed","Titillium Web",Manrope,sans-serif;width:min(1500px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:18px;padding:clamp(16px,3vw,44px);color:#eef1f6;animation:pqEntra .35s cubic-bezier(.2,.8,.2,1)}
-.qy-topo small,.rd-topo small{font:600 13px var(--qy-f);letter-spacing:.32em;color:#c9cfd8;opacity:.85}
-.rd-topo small span{margin:0 10px;opacity:.6}
-.qy-topo h2,.rd-topo h2{margin:6px 0 0;font:900 italic clamp(40px,6vw,92px)/.9 var(--qy-f);letter-spacing:.01em}
-.qy-topo em{display:block;font:300 normal clamp(22px,3vw,42px) var(--qy-f);letter-spacing:.6em;color:#b9c0cb;border-bottom:2px solid #e10600;padding-bottom:14px;width:min(820px,100%)}
-.rd-topo p{margin:4px 0 0;font:500 clamp(16px,1.6vw,22px) Manrope,sans-serif;color:#c9cfd8;border-bottom:2px solid #ff7a1a;padding-bottom:14px;width:min(820px,100%)}
-.qy-corpo{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,.9fr);gap:28px;align-items:start}
-.qy-cab{display:grid;grid-template-columns:70px minmax(0,1.6fr) minmax(0,1.1fr) 120px;padding:0 14px 8px;font:600 12px var(--qy-f);letter-spacing:.24em;color:#8f97a4}
+/* ---------- (2026-11-23) o fim da classificação no estilo das imagens do Thiago: QUALIFYING (e a pausa entre as sessões) e RACE DAY (pos-quali.js) ---------- */
+/* 2ª versão ("meio longe da referência... os elementos devem ser responsivos ao mouse"): a foto do GP à direita, a faixa diagonal escura com o risco vermelho,
+   o título grande, a tabela com a barra da equipe, o cartão da pole inclinado, os cartões e os botões inclinados; tudo com hover */
+#quali.pq-tela{background:linear-gradient(90deg,#090b10 0%,#090b10f2 34%,#090b10b3 52%,#090b1066 78%,#090b1099 100%),var(--pq-fundo,none) center/cover no-repeat,#07090e;isolation:isolate}
+#quali.pq-tela::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(118deg,transparent 0 47%,#0c0e14e6 47% 58%,transparent 58%),linear-gradient(118deg,transparent 0 58.4%,#e10600cc 58.4% 59.1%,transparent 59.1%),
+    linear-gradient(118deg,transparent 0 86%,#0c0e14b3 86% 92%,transparent 92%),linear-gradient(118deg,transparent 0 92.4%,#e10600aa 92.4% 92.9%,transparent 92.9%)}
+#quali.pq-tela::after{content:"";position:absolute;left:0;right:0;bottom:0;height:13%;z-index:-1;pointer-events:none;background:linear-gradient(180deg,transparent,#06070bf2 70%)}
+.qy,.rd{--qy-f:"Barlow Condensed","Titillium Web",Manrope,sans-serif;--qy-c:#e10600;position:relative;width:min(1560px,100%);height:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:clamp(16px,2.6vw,40px) clamp(16px,3.4vw,56px) 0;color:#eef1f6;animation:pqEntra .35s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;scrollbar-color:#ffffff40 transparent}
+.rd{--qy-c:#ff7a1a}
+/* o topo: a marca, o caminho, o título e o subtítulo */
+.qy-cam{display:flex;align-items:center;gap:22px;font:500 15px var(--qy-f);letter-spacing:.3em;color:#c9cfd8}
+.qy-cam .qy-marca{width:74px;height:22px;flex:none}
+.qy-cam>span:not(.rd-eq){padding-left:22px;border-left:1px solid #ffffff4d}.qy-cam i{font-style:normal;margin:0 12px;opacity:.6}
+.rd-eq{margin-left:auto;display:flex;align-items:center;gap:12px;padding-left:22px;border-left:1px solid #ffffff4d;letter-spacing:.04em;font:600 19px Manrope,sans-serif;color:#fff}.rd-eq .pq-logo{width:40px;height:24px;object-fit:contain}
+.qy-topo h2,.rd-topo h2{margin:14px 0 0;font:900 normal clamp(40px,min(5.6vw,10.5vh),96px)/.86 var(--qy-f);letter-spacing:.01em;text-shadow:0 4px 30px #0009}
+.rd-topo h2{font-style:italic}
+.qy-topo em{display:block;margin-top:6px;font:300 normal clamp(24px,3vw,46px) var(--qy-f);letter-spacing:.62em;color:#b9c0cb;border-bottom:2px solid var(--qy-c);padding-bottom:18px;width:min(1000px,100%)}
+.rd-topo p{margin:10px 0 0;font:400 clamp(17px,1.7vw,26px) Manrope,sans-serif;color:#d3d8e0;border-bottom:2px solid var(--qy-c);padding-bottom:18px;width:min(700px,100%);background:linear-gradient(90deg,transparent,transparent) bottom}
+.qy-aviso{margin:0;color:#c9cfd8;font:500 15px Manrope,sans-serif}.qy-aviso b{color:#fff}
+/* o corpo do QUALIFYING: a tabela e a pole */
+.qy-corpo{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1.75fr) minmax(280px,.8fr);gap:clamp(20px,3vw,56px);align-items:center}
+.qy-cab{display:grid;grid-template-columns:64px minmax(0,1.7fr) minmax(0,1.2fr) 130px;padding:0 18px 10px;font:600 13px var(--qy-f);letter-spacing:.3em;color:#8f97a4}
+.qy-cab span:nth-child(2){padding-left:16px;border-left:1px solid #ffffff38}
 .qy-tab ol,.rd-grid{list-style:none;margin:0;padding:0}
-.qy-tab li,.rd-grid li{display:grid;grid-template-columns:70px minmax(0,1.6fr) minmax(0,1.1fr) 120px;align-items:center;min-height:44px;padding:0 14px;border-bottom:1px solid #ffffff14;font:500 18px Manrope,sans-serif}
-.qy-tab li .po,.rd-grid li .po{font:800 22px var(--qy-f);text-align:center}
-.qy-tab li .barra,.rd-grid li .barra{position:absolute;opacity:0}
-.qy-tab li .pi,.rd-grid li .pi{position:relative;padding-left:16px}
-.qy-tab li .pi::before,.rd-grid li .pi::before{content:"";position:absolute;left:0;top:50%;width:4px;height:26px;transform:translateY(-50%);background:var(--c);border-radius:2px}
-.qy-tab li .eq,.rd-grid li .eq{display:flex;align-items:center;gap:10px;color:#c9cfd8;font-size:15px}
-.qy-tab li .eq .pq-logo,.rd-grid li .eq .pq-logo{width:34px;height:22px;object-fit:contain}
-.qy-tab li .tt,.rd-grid li .tt{font:700 19px var(--qy-f);font-variant-numeric:tabular-nums;text-align:right}
-.qy-tab li:first-child{background:#ffffff12}
-.qy-tab ol.sub{margin-top:8px;border-top:2px solid #ffffff2e}
-.qy-tab ol.sub li{min-height:36px;font-size:15px;color:#aeb6c2}
-.qy-tab ol.sub li .po{font-size:17px;font-weight:600}
-.qy-tab li.eu,.rd-grid li.eu{background:linear-gradient(90deg,#ff7a1a33,transparent 70%);box-shadow:inset 4px 0 0 #ff7a1a;color:#fff}
-.qy-resto{margin-top:10px;color:#9aa2ae}.qy-resto summary{cursor:pointer;font:600 13px var(--qy-f);letter-spacing:.18em;padding:6px 14px}
-.qy-pole{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:420px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,transparent 35%,#0b0d12f2 70%),#11151d;border:1px solid #ffffff1f}
-.qy-foto{position:absolute;inset:0;background:var(--foto) center 20%/cover no-repeat}
-.qy-foto.sem{display:grid;place-items:center;opacity:.35}.qy-foto.sem .pq-logo-g{width:60%;height:auto}
-.qy-pole-txt{position:relative;padding:24px 26px;border-left:4px solid var(--c);margin:0 0 22px 22px}
-.qy-pole-txt small{display:block;font:600 13px var(--qy-f);letter-spacing:.34em;color:#c9cfd8}
-.qy-pole-txt span{display:block;margin-top:10px;font:300 italic 34px var(--qy-f)}
-.qy-pole-txt b{display:block;font:900 italic clamp(34px,3.6vw,54px)/.95 var(--qy-f)}
-.qy-pole-txt em{display:flex;align-items:center;gap:8px;margin-top:6px;font:500 normal 18px Manrope,sans-serif}.qy-pole-txt em .pq-logo{width:30px;height:20px;object-fit:contain}
-.qy-pole-txt strong{display:block;margin-top:14px;font:900 italic clamp(34px,3.4vw,52px) var(--qy-f);font-variant-numeric:tabular-nums}
-.qy-pe,.rd-pe{display:flex;align-items:center;gap:18px;padding-top:16px;border-top:1px solid #ffffff1f}
-.qy-mapa-svg{width:120px;height:60px}.qy-mapa-svg path{stroke:#fff}
-.qy-gp{display:flex;flex-direction:column;padding-left:18px;border-left:1px solid #ffffff2e}.qy-gp b{font:700 18px var(--qy-f);letter-spacing:.14em;text-transform:uppercase}.qy-gp small{font:500 12px var(--qy-f);letter-spacing:.24em;color:#9aa2ae;text-transform:uppercase}
-.qy-bt,.rd-ir{margin-left:auto;display:inline-flex;align-items:center;gap:14px;padding:14px 30px;border:1px solid #ffffff59;border-radius:4px 14px;background:#0b0d12b3;color:#fff;font:800 17px var(--qy-f);letter-spacing:.22em;cursor:pointer;transition:background .15s,transform .15s}
-.qy-bt:hover,.rd-ir:hover{background:#ffffff1f;transform:translateY(-1px)}
-.qy-bt.ghost{margin-left:0;padding:12px 22px;font-size:15px}
-.rd-pe .rd-ir{margin-left:auto;background:linear-gradient(100deg,#ff7a1a,#ff9a3c);border:0;color:#111;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);padding:16px 44px}
-.rd-pe .rd-ir:disabled{opacity:.6;cursor:default}
-.rd-corpo{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.85fr);gap:28px;align-items:start}
-.rd-esq{display:flex;flex-direction:column;gap:18px}
-.rd-card{padding:18px 20px;border-radius:10px;background:#0d1016d9;border:1px solid #ffffff1a}
-.rd-card h4{margin:0 0 12px;font:800 18px var(--qy-f);letter-spacing:.16em}
-.rd-grid li{min-height:40px;font-size:16px}.rd-grid li.sep{min-height:0;border-bottom:2px solid #ffffff38;padding:0;margin:4px 0}
-.rd-pen{margin:10px 0 0;font-size:13px;color:#aeb6c2}
-.rd-pneus{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.rd-pneus button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff0a;color:#eef1f6;cursor:pointer;font:600 13px Manrope,sans-serif}
-.rd-pneus button i{width:30px;height:30px;border-radius:50%;border:5px solid var(--pn);background:#16181d}
-.rd-pneus button small{color:#9aa2ae;font-size:11px}
-.rd-pneus button.on{border-color:var(--pn);background:color-mix(in srgb,var(--pn) 18%,transparent);box-shadow:0 0 0 1px var(--pn) inset}
-.rd-pneus button:disabled{cursor:default;opacity:.75}
-.rd-est{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid #ffffff14}
-.rd-est span{display:flex;flex-direction:column;gap:2px}.rd-est small{color:#9aa2ae;font-size:12px}.rd-est b{font:700 16px Manrope,sans-serif}
-.rd-cond{display:flex;flex-direction:column;gap:14px;padding:16px;border-radius:12px;background:#0d1016e6;border:1px solid #ffffff1f}
-.rd-foto{height:150px;border-radius:8px;background:center/cover no-repeat}
-.rd-cond h3{margin:0;font:800 26px var(--qy-f);letter-spacing:.06em;text-transform:uppercase}.rd-cond p{margin:4px 0 0;color:#c9cfd8}
-.rd-cond-l{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:12px;border-top:1px solid #ffffff14}
-.rd-cond-l span{display:flex;flex-direction:column;gap:2px}.rd-cond-l b{font:700 20px var(--qy-f)}.rd-cond-l small{color:#9aa2ae;font-size:12px}
-@media (max-width:900px){.qy-corpo,.rd-corpo{grid-template-columns:1fr}.qy-pole{min-height:260px}.rd-pneus{grid-template-columns:repeat(3,1fr)}}
-/* (2026-11-23) a pausa entre as sessões no estilo do QUALIFYING: quem caiu apagado, a linha do corte, o cartão do mais rápido e "Sua sessão" */
-.qy-aviso{margin:-6px 0 0;color:#c9cfd8;font:500 15px Manrope,sans-serif}.qy-aviso b{color:#fff}
-.qy-tab ol.qy-sessao li.meio{min-height:38px;font-size:16px;color:#d3d8e0}
-.qy-tab ol.qy-sessao li.fora{opacity:.5;background:linear-gradient(90deg,#e1060014,transparent 60%)}
+.qy-tab li{position:relative;display:grid;grid-template-columns:64px minmax(0,1.7fr) minmax(0,1.2fr) 130px;align-items:center;min-height:46px;padding:0 18px;border-bottom:1px solid #ffffff14;font:400 clamp(17px,1.4vw,22px) Manrope,sans-serif;
+  transition:background .18s,transform .18s,box-shadow .18s;animation:qyLinha .4s calc(var(--i,0) * 35ms) backwards cubic-bezier(.2,.8,.2,1)}
+@keyframes qyLinha{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.qy-tab li .po{font:800 clamp(20px,1.7vw,26px) var(--qy-f);text-align:center}
+.qy-tab li .pi{position:relative;padding-left:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qy-tab li .pi b{font-weight:800}
+.qy-tab li .pi::before{content:"";position:absolute;left:0;top:50%;width:4px;height:28px;transform:translateY(-50%);background:var(--c);border-radius:1px;transition:height .18s,width .18s}
+.qy-tab li .eq{display:flex;align-items:center;gap:14px;color:#d3d8e0;font-size:.8em}
+.qy-tab li .eq .pq-logo{width:40px;height:24px;object-fit:contain;transition:transform .18s}
+.qy-tab li .tt{font:700 clamp(19px,1.6vw,25px) var(--qy-f);font-variant-numeric:tabular-nums;text-align:right}
+.qy-tab ol:first-of-type li:first-child,.qy-tab ol.qy-sessao li:first-child{background:linear-gradient(90deg,#ffffff1f,#ffffff0a)}
+.qy-tab li:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--c) 30%,transparent),#ffffff08 70%);transform:translateX(6px);box-shadow:inset 0 -1px 0 var(--c)}
+.qy-tab li:hover .pi::before{width:6px;height:34px}.qy-tab li:hover .eq .pq-logo{transform:scale(1.15)}
+.qy-tab ol.sub{margin-top:6px;border-top:2px solid #ffffff38}
+.qy-tab ol.sub li{min-height:36px;font-size:clamp(15px,1.15vw,18px);color:#aeb6c2}.qy-tab ol.sub li .po{font-size:18px;font-weight:600}.qy-tab ol.sub li .tt{font-size:18px;font-weight:500}
+.qy-tab ol.sub li .pi::before{height:20px;opacity:.75}.qy-tab ol.sub li:hover{color:#fff}
+.qy-tab li.eu{background:linear-gradient(90deg,#ff7a1a3d,transparent 70%);box-shadow:inset 4px 0 0 #ff7a1a;color:#fff}
+.qy-resto{margin-top:10px;color:#9aa2ae}.qy-resto summary{cursor:pointer;font:600 13px var(--qy-f);letter-spacing:.2em;padding:8px 18px;transition:color .15s}.qy-resto summary:hover{color:#fff}
+.qy-tab ol.qy-sessao li.meio{min-height:38px;font-size:clamp(15px,1.15vw,18px);color:#d3d8e0}
+.qy-tab ol.qy-sessao li.fora{opacity:.5;background:linear-gradient(90deg,#e1060014,transparent 60%)}.qy-tab ol.qy-sessao li.fora:hover{opacity:.9}
 .qy-tab ol.qy-sessao li.fora .po{color:#ff6b63}
-.qy-tab ol.qy-sessao li.corte{border-bottom:2px solid #e10600;position:relative}
-.qy-tab ol.qy-sessao li.corte::after{content:"CORTE";position:absolute;right:0;bottom:-9px;padding:0 8px;font:700 11px var(--qy-f);letter-spacing:.24em;color:#fff;background:#e10600;border-radius:3px}
-.qy-lado{display:flex;flex-direction:column;gap:14px}.qy-lado .qy-pole{min-height:340px}
-.qy-lado .pq-eu{margin-top:0;background:#0d1016d9}
-.qy-pe .rd-ir{margin-left:auto;background:linear-gradient(100deg,#ff7a1a,#ff9a3c);border:0;color:#111;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);padding:16px 44px}
-.qy-pe .rd-ir:disabled{opacity:.6;cursor:default}.qy-pe .pq-espera{margin-left:auto}
+.qy-tab ol.qy-sessao li.corte{border-bottom:2px solid #e10600}
+.qy-tab ol.qy-sessao li.corte::after{content:"CORTE";position:absolute;right:0;bottom:-10px;padding:1px 9px;font:700 11px var(--qy-f);letter-spacing:.24em;color:#fff;background:#e10600;clip-path:polygon(8% 0,100% 0,92% 100%,0 100%)}
+/* o cartão da pole: a foto em cima e o painel escuro inclinado por cima dela */
+.qy-pole{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-self:stretch;min-height:0;max-height:100%;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.qy-foto{position:absolute;inset:-4% -4% 30% 18%;background:var(--foto) center 14%/cover no-repeat;-webkit-mask:linear-gradient(180deg,transparent,#000 16%,#000 60%,transparent),linear-gradient(90deg,transparent,#000 38%,#000 88%,transparent);-webkit-mask-composite:source-in;mask:linear-gradient(180deg,transparent,#000 16%,#000 60%,transparent),linear-gradient(90deg,transparent,#000 38%,#000 88%,transparent);mask-composite:intersect;filter:brightness(.9) saturate(.95) contrast(1.05);transition:transform .35s}
+.qy-foto.sem{display:grid;place-items:center;opacity:.35;-webkit-mask:none;mask:none}.qy-foto.sem .pq-logo-g{width:60%;height:auto}
+.qy-pole-txt{position:relative;padding:28px 30px 30px;background:linear-gradient(160deg,#1b1f28f2,#0e1117f7);clip-path:polygon(9% 0,100% 0,100% 100%,0 100%);box-shadow:0 20px 50px #0009;transition:box-shadow .25s}
+.qy-pole-txt small{display:block;padding-left:10%;font:500 15px var(--qy-f);letter-spacing:.42em;color:#c9cfd8}
+.qy-pole-nome{margin:16px 0 0 8%;padding-left:20px;border-left:4px solid var(--c)}
+.qy-pole-nome span{display:block;font:300 italic clamp(30px,2.6vw,44px)/1 var(--qy-f)}
+.qy-pole-nome b{display:block;font:900 italic clamp(38px,3.6vw,64px)/.95 var(--qy-f)}
+.qy-pole-nome em{display:flex;align-items:center;gap:10px;margin-top:6px;font:500 normal 20px Manrope,sans-serif}.qy-pole-nome em .pq-logo{width:34px;height:22px;object-fit:contain}
+.qy-pole-txt strong{display:block;margin:16px 0 0 6%;font:900 italic clamp(38px,3.6vw,62px) var(--qy-f);font-variant-numeric:tabular-nums;transition:color .2s}
+.qy-pole:hover{transform:translateY(-6px)}.qy-pole:hover .qy-foto{transform:scale(1.04)}.qy-pole:hover .qy-pole-txt{box-shadow:0 26px 60px #000b,inset 0 2px 0 var(--c)}.qy-pole:hover strong{color:var(--c)}
+.qy-tab{max-height:100%;overflow:auto;scrollbar-width:thin;scrollbar-color:#ffffff40 transparent}
+.qy-tab ol.qy-sessao li.top{min-height:38px}.qy-tab ol.qy-sessao li.meio{min-height:31px}
+.qy-lado{display:flex;flex-direction:column;gap:14px;max-height:100%;min-height:0;overflow:auto;scrollbar-width:none}.qy-lado .qy-pole{min-height:clamp(300px,36vh,440px)}
+.qy-lado .pq-eu{margin-top:0;background:#0d1016e6;transition:border-color .18s}.qy-lado .pq-eu:hover{border-color:#ffffff40}
+/* o rodapé: o mapa, a bandeira e o GP, e os botões inclinados */
+.qy-pe,.rd-pe{position:sticky;bottom:0;z-index:2;margin-top:auto !important;backdrop-filter:blur(8px);display:flex;flex-wrap:wrap;align-items:center;gap:16px 20px;margin:0 calc(-1 * clamp(16px,3.4vw,56px));padding:14px clamp(16px,3.4vw,56px) 18px;border-top:1px solid #ffffff1f;background:#06070bb3}
+.qy-mapa{display:flex;padding-right:22px;border-right:1px solid #ffffff38}.qy-mapa-svg{width:130px;height:62px;transition:transform .2s}.qy-mapa-svg path{stroke:#fff}.qy-mapa:hover .qy-mapa-svg{transform:scale(1.08)}
+.qy-gp{display:flex;align-items:center;gap:14px}.qy-gp .gp-bandeira{width:36px;height:24px;border-radius:2px}.qy-gp>span{display:flex;flex-direction:column}
+.qy-gp b{font:700 20px var(--qy-f);letter-spacing:.14em;text-transform:uppercase}.qy-gp small{font:500 13px var(--qy-f);letter-spacing:.28em;color:#9aa2ae;text-transform:uppercase}
+.qy-estado{color:#aab4c0;font-size:14px}
+.qy-bt,.rd-ir{margin-left:auto;display:inline-flex;align-items:center;gap:18px;padding:15px 34px;border:1.5px solid #ffffffb3;background:#0b0d12b3;color:#fff;font:700 18px var(--qy-f);letter-spacing:.24em;cursor:pointer;
+  clip-path:polygon(7% 0,100% 0,93% 100%,0 100%);transition:background .18s,color .18s,transform .18s,filter .18s}
+.qy-bt{clip-path:none;border-radius:6px 18px 6px 18px;transform:skewX(-8deg)}.qy-bt>*{transform:skewX(8deg)}
+.qy-bt svg,.rd-ir svg{width:20px;height:20px;transition:transform .18s}
+.qy-bt:hover{background:#fff;color:#0b0d12;transform:skewX(-8deg) translateY(-2px)}.qy-bt:hover svg{transform:translateX(5px)}
+.qy-bt.ghost{margin-left:0;padding:12px 24px;font-size:16px;border-color:#ffffff59}.qy-bt.ghost.volta:hover svg{transform:translateX(-5px)}
+.qy-bt.ghost+.qy-bt.ghost{margin-left:0}
+.rd-ir{border:0;color:#111;background:linear-gradient(100deg,var(--qy-c),#ff9a3c);padding:18px 52px;font-weight:800;font-size:20px}
+.qy .rd-ir{--qy-c:#ff7a1a}
+.rd-ir:hover{filter:brightness(1.12);transform:translateY(-2px)}.rd-ir:hover svg{transform:translateX(6px)}
+.rd-ir:disabled{opacity:.6;cursor:default;filter:none;transform:none}
+.qy-pe .pq-espera,.rd-pe .pq-espera{margin-left:auto}
+/* o RACE DAY */
+.rd-corpo{flex:1;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.9fr);gap:clamp(20px,3vw,60px);align-items:start}
+.rd-esq{display:flex;flex-direction:column;gap:16px;max-width:880px}
+.rd-dir{display:flex;flex-direction:column;gap:16px;min-width:0}
+.rd-escolha .rd-pneus{margin-top:0;padding-top:2px;border-top:0}
+.rd-topo .qy-cam{padding-right:clamp(0px,9vw,170px)}
+.rd-card{padding:16px 20px 14px;border-radius:4px;background:#0f1218e0;border:1px solid #ffffff1a;backdrop-filter:blur(4px);transition:border-color .2s,transform .2s,box-shadow .2s}
+.rd-card:hover{border-color:#ffffff40;transform:translateY(-3px);box-shadow:0 18px 40px #0008}
+.rd-card h4{display:flex;align-items:center;gap:14px;margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid #ffffff14;font:700 21px var(--qy-f);letter-spacing:.06em}
+.rd-card h4 svg{width:24px;height:24px}
+.rd-grid li{position:relative;display:grid;grid-template-columns:44px 56px minmax(0,1fr) minmax(0,1.5fr) 100px;align-items:center;min-height:40px;padding:0 8px;border-bottom:1px solid #ffffff12;font:400 17px Manrope,sans-serif;transition:background .18s,transform .18s;
+  animation:qyLinha .4s calc(var(--i,0) * 40ms) backwards cubic-bezier(.2,.8,.2,1)}
+.rd-grid li .po{font:800 22px var(--qy-f);text-align:center}
+.rd-grid li .lg .pq-logo{width:36px;height:22px;object-fit:contain;transition:transform .18s}
+.rd-grid li .eq{color:#c9cfd8;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rd-grid li .pi{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rd-grid li .pi b{font-weight:800}
+.rd-grid li .tt{font:500 18px var(--qy-f);font-variant-numeric:tabular-nums;text-align:right}
+.rd-grid li:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--c) 28%,transparent),transparent 80%);transform:translateX(5px)}.rd-grid li:hover .lg .pq-logo{transform:scale(1.18)}
+.rd-grid li.sep{min-height:0;border-bottom:2px solid #ffffff33;padding:0;margin:4px -20px;animation:none}.rd-grid li.sep:hover{transform:none;background:none}
+.rd-grid li.eu{background:linear-gradient(90deg,#ff7a1a33,transparent 70%);box-shadow:inset 5px 0 0 #ff7a1a;margin-left:-20px;padding-left:28px}.rd-grid li.eu .tt{font-weight:700}
+.rd-pen{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:14px;color:#aeb6c2}.rd-pen svg{width:16px;height:16px}
+.rd-est{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+.rd-est>span{display:flex;align-items:center;gap:14px;padding:6px 18px;border-left:1px solid #ffffff24;transition:background .18s}.rd-est>span:first-child{border-left:0;padding-left:4px}
+.rd-est>span:hover{background:#ffffff0a}
+.rd-est svg{width:28px;height:28px;flex:none;color:#c9cfd8}
+.rd-est>span>span{display:flex;flex-direction:column;gap:2px}.rd-est small{color:#aab4c0;font-size:14px}.rd-est b{font:700 19px Manrope,sans-serif}
+.rd-pneu-ic>i{width:44px;height:44px;flex:none;border-radius:50%;border:6px solid #2a2d33;box-shadow:inset 0 0 0 3px var(--pn),0 0 0 1px #000;background:radial-gradient(circle,#3a3d44 0 30%,#16181d 31%)}
+.rd-pneus{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #ffffff12}
+.rd-pneus button{display:flex;align-items:center;gap:8px;padding:7px 14px 7px 8px;border:1px solid #ffffff24;border-radius:30px;background:#ffffff08;color:#d3d8e0;cursor:pointer;font:600 14px Manrope,sans-serif;transition:background .15s,border-color .15s,transform .15s}
+.rd-pneus button i{width:20px;height:20px;border-radius:50%;border:4px solid var(--pn);background:#16181d}
+.rd-pneus button:hover:not(:disabled){border-color:var(--pn);background:color-mix(in srgb,var(--pn) 14%,transparent);transform:translateY(-2px)}
+.rd-pneus button.on{border-color:var(--pn);background:color-mix(in srgb,var(--pn) 22%,transparent);color:#fff;box-shadow:0 0 0 1px var(--pn) inset}
+.rd-pneus button:disabled{cursor:default;opacity:.7}
+.rd-cond{display:flex;flex-direction:column;border-radius:4px;background:#13161ce6;border:1px solid #ffffff1f;backdrop-filter:blur(6px);box-shadow:0 20px 50px #0008;overflow:hidden;transition:transform .25s,border-color .25s}
+.rd-cond:hover{transform:translateY(-4px);border-color:#ffffff45}
+.rd-cond-top{display:flex;gap:28px;align-items:center;padding:14px}
+.rd-foto{flex:none;width:clamp(150px,13vw,230px);aspect-ratio:2/1.1;border-radius:3px;background:center/cover no-repeat;transition:transform .3s}.rd-cond:hover .rd-foto{transform:scale(1.04)}
+.rd-cond h3{margin:0;font:700 clamp(24px,2vw,32px) var(--qy-f);letter-spacing:.04em;text-transform:uppercase}.rd-cond p{margin:6px 0 0;color:#d3d8e0;font-size:18px}
+.rd-cond-l{display:grid;grid-template-columns:repeat(3,1fr);background:#0b0d12a6;border-top:1px solid #ffffff14}
+.rd-cond-l>span{display:flex;align-items:center;justify-content:center;gap:14px;padding:16px 10px;border-left:1px solid #ffffff1a;transition:background .18s}.rd-cond-l>span:first-child{border-left:0}
+.rd-cond-l>span:hover{background:#ffffff0d}
+.rd-cond-l svg{width:30px;height:30px;color:#c9cfd8}
+.rd-cond-l>span>span{display:flex;flex-direction:column}.rd-cond-l b{font:700 21px var(--qy-f)}.rd-cond-l small{color:#9aa2ae;font-size:13px}
+.rd-barras{display:flex;align-items:flex-end;gap:3px;height:22px}.rd-barras i{width:5px;background:#ffffff33;border-radius:1px}.rd-barras i.on{background:#e6e9ee}
+.rd-pe .qy-bt.ghost.volta{margin-left:0}
+@media (max-width:900px){.qy-corpo,.rd-corpo{grid-template-columns:1fr}.qy-pole{min-height:280px}.rd-est{grid-template-columns:1fr}.rd-est>span{border-left:0;padding-left:4px}#quali.pq-tela::before{display:none}}
+@media (max-height:760px){.qy-topo h2,.rd-topo h2{margin-top:8px}.qy-topo em{padding-bottom:10px;font-size:clamp(20px,2.4vw,34px)}.rd-topo p{padding-bottom:10px;margin-top:6px}
+  .qy-pole-txt{padding:16px 22px 18px}.qy-pole-nome{margin-top:10px}.qy-pole-nome span{font-size:26px}.qy-pole-nome b{font-size:40px}.qy-pole-nome em{font-size:16px}.qy-pole-txt strong{margin-top:8px;font-size:38px}
+  .rd-grid li{min-height:33px}.rd-card{padding:12px 18px 10px}.rd-card h4{margin-bottom:6px;padding-bottom:8px;font-size:19px}.rd-esq,.rd-dir{gap:12px}.rd-cond-top{padding:10px}.rd-cond-l>span{padding:10px}
+  .qy-tab li{min-height:38px}.qy-tab ol.sub li{min-height:30px}.qy-pe,.rd-pe{padding-top:10px;padding-bottom:12px}.qy-mapa-svg{height:48px}}
+@media (max-width:900px){.qy-corpo{flex:none;grid-template-rows:none}.qy-tab,.qy-lado{max-height:none;overflow:visible}.qy-pole{max-height:none}.qy-cab,.qy-tab li{grid-template-columns:44px minmax(0,1.6fr) minmax(0,1fr) 96px;padding:0 10px}.rd-grid li{grid-template-columns:34px 44px minmax(0,.8fr) minmax(0,1.4fr) 76px}.rd-topo .qy-cam{padding-right:0;flex-wrap:wrap}.qy-pe .qy-bt,.qy-pe .rd-ir,.rd-pe .rd-ir{margin-left:0}}
+@media (max-width:560px){.qy-cab,.qy-tab li{grid-template-columns:30px minmax(0,1fr) 40px 74px;padding:0 6px}.qy-tab li .eq small,.qy-cab span:nth-child(3){visibility:hidden;font-size:0}.qy-tab li .pi{padding-left:12px}.qy-cam{gap:12px;letter-spacing:.18em}.qy-mapa{display:none}.qy-pe,.rd-pe{gap:10px;padding-top:10px;padding-bottom:10px}.qy-bt,.rd-ir{padding:12px 22px;font-size:15px}.rd-grid li{grid-template-columns:28px 36px 0 minmax(0,1fr) 70px}.rd-grid li .eq{visibility:hidden}.rd-est>span{padding:6px 0}}

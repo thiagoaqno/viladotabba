@@ -88,75 +88,98 @@ function ajustesHTML(q, S, m, confirmado, ultima) {
   </div>`;
 }
 
-// ---------- (2026-11-23, o Thiago, com as duas imagens de referência) o fim da classificação em duas telas ----------
-// QUALIFYING: o resultado (o top 5 em destaque, o 6º ao 10º mais apagado, o resto embaixo) e o cartão da pole; "Continuar" leva ao RACE DAY: o grid de
-// largada (o top 5 e você, com a punição de grid), as condições da corrida (as voltas, a volta de verdade em km, a chance de chuva, a pista seca ou
-// molhada), o pneu da largada (com quantas voltas ele dura nesta pista) e "Ir para o grid". Sem temperatura nem combustível: o jogo não tem esses números.
+// ---------- (2026-11-23, o Thiago, com as duas imagens de referência) o fim da classificação: QUALIFYING e RACE DAY ----------
+// A 2ª versão ("me parece meio longe da referência... e os elementos devem ser responsivos ao mouse"): a marca e o caminho no topo, o título grande, a
+// faixa diagonal com o risco vermelho sobre a foto do GP, a tabela com a barra da equipe e o cartão da pole em painel inclinado; no RACE DAY o grid (posição,
+// logo, equipe, piloto e tempo), a estratégia (pneu, paradas e vida), as condições (foto, voltas, chuva, pista, aderência) e os botões inclinados embaixo.
+// Tudo responde ao mouse (pos-corrida.css). Sem temperatura nem combustível: o jogo não tem esses números.
 const fundoDoGP = (id) => (window.GpInfo ? window.GpInfo.fundoDe(id) : null);
 const nomeCompleto = (p) => `${h(primeiro(p))} <b>${h(sobrenome(p).toUpperCase())}</b>`;
+const nomeGP = (S) => { const info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, pista = PISTAS[S.config.pista]; return info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : ""; };
+const MARCA = `<svg class="qy-marca" viewBox="0 0 60 18" aria-hidden="true"><path d="M8 0h52l-5 6H3zM4 9h40l-5 6H0z" fill="#e10600"/></svg>`;
+const ICQ = {
+  grid: '<svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M2 2h4v4H2zM10 2h4v4h-4zM6 6h4v4H6zM14 6h4v4h-4zM2 10h4v4H2zM10 10h4v4h-4zM6 14h4v4H6zM14 14h4v4h-4z"/></svg>',
+  chave: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/></svg>',
+  box: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>',
+  vida: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>',
+  gota: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg>',
+  pista: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 18 10 6h4l7 12zM12 9v2M12 14v2"/></svg>',
+  info: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.5"/></svg>',
+  seta: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  volta: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+};
+const barrasAder = (n) => `<span class="rd-barras">${[1, 2, 3, 4].map((k) => `<i class="${k <= n ? "on" : ""}" style="height:${4 + k * 4}px"></i>`).join("")}</span>`;
 function linhaGrid(id, i, T, pole, m, classe = "") {
   const p = P(id), eq = eqDe(p), t = (T[id] || []).at(-1), eu = m && id === m.id;
-  return `<li class="${classe} ${eu ? "eu" : ""}" style="--c:${corOk(eq ? eq.cor : p && p.color)}"><span class="po">${i + 1}</span><i class="barra"></i><span class="pi">${eu ? "<b>Você</b>" : nomeCompleto(p)}</span>
+  return `<li class="${classe} ${eu ? "eu" : ""}" style="--c:${corOk(eq ? eq.cor : p && p.color)};--i:${i}"><span class="po">${i + 1}</span><span class="pi">${eu ? "<b>Você</b>" : nomeCompleto(p)}</span>
     <span class="eq">${logo(p)}<small>${h(eq ? eq.nome : "")}</small></span><span class="tt">${i === 0 ? tempo3(t) : t != null && pole != null ? `+${(t - pole).toFixed(3)}` : "—"}</span></li>`;
 }
+function rodapeGP(S) {
+  const info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null;
+  return `<span class="qy-mapa">${window.GpSobre ? window.GpSobre.mapaSvg(S.config.pista, "qy-mapa-svg") : ""}</span><span class="qy-gp">${window.GpInfo ? window.GpInfo.bandeira(S.config.pista) : ""}<span><b>${h(nomeGP(S))}</b><small>${h(info && info.circuito ? info.circuito : "")}</small></span></span>`;
+}
+function poleHTML(p0, tempo, rotulo) {
+  const eq0 = eqDe(p0), f0 = fotoDe(p0);
+  return `<aside class="qy-pole" style="--c:${corOk(eq0 ? eq0.cor : p0 && p0.color)}">${f0 ? `<div class="qy-foto" style="--foto:url('${h(f0.url)}')"></div>` : `<div class="qy-foto sem">${logo(p0, "pq-logo-g")}</div>`}
+    <div class="qy-pole-txt"><small>${h(rotulo)}</small><div class="qy-pole-nome"><span>${h(primeiro(p0))}</span><b>${h(sobrenome(p0).toUpperCase())}</b><em>${h(eq0 ? eq0.nome : "")} ${logo(p0)}</em></div><strong>${tempo3(tempo)}</strong></div></aside>`;
+}
 function qualifyingHTML(q, T, m, S) {
-  const pista = PISTAS[S.config.pista], info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, pole = (T[q.grid[0]] || []).at(-1), p0 = P(q.grid[0]), eq0 = eqDe(p0), f0 = fotoDe(p0);
+  const pole = (T[q.grid[0]] || []).at(-1);
   const top = q.grid.slice(0, 5).map((id, i) => linhaGrid(id, i, T, pole, m, "top")).join(""), meio = q.grid.slice(5, 10).map((id, i) => linhaGrid(id, i + 5, T, pole, m, "meio")).join("");
   const resto = q.grid.slice(10).map((id, i) => linhaGrid(id, i + 10, T, pole, m, "resto")).join("");
   return `<div class="qy">
-    <header class="qy-topo"><small>QUALIFYING</small><h2>QUALIFYING</h2><em>RESULTADO</em></header>
-    <div class="qy-corpo"><section class="qy-tab"><div class="qy-cab"><span>POS</span><span>PILOTO</span><span>EQUIPE</span><span>TEMPO</span></div><ol>${top}</ol><ol class="sub">${meio}</ol>${resto ? `<details class="qy-resto"><summary>Do 11º ao ${q.grid.length}º</summary><ol class="sub" start="11">${resto}</ol></details>` : ""}</section>
-      <aside class="qy-pole" style="--c:${corOk(eq0 ? eq0.cor : p0 && p0.color)}">${f0 ? `<div class="qy-foto" style="--foto:url('${h(f0.url)}')"></div>` : `<div class="qy-foto sem">${logo(p0, "pq-logo-g")}</div>`}
-        <div class="qy-pole-txt"><small>POLE POSITION</small><span>${h(primeiro(p0))}</span><b>${h(sobrenome(p0).toUpperCase())}</b><em>${h(eq0 ? eq0.nome : "")} ${logo(p0)}</em><strong>${tempo3(pole)}</strong></div></aside></div>
-    <footer class="qy-pe"><span class="qy-mapa">${window.GpSobre ? window.GpSobre.mapaSvg(S.config.pista, "qy-mapa-svg") : ""}</span><span class="qy-gp"><b>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : "")}</b><small>${h(info && info.circuito ? info.circuito : "")}</small></span>
-      <button type="button" class="qy-bt" data-pq-vista="raceday">CONTINUAR <span>→</span></button></footer></div>`;
+    <header class="qy-topo"><div class="qy-cam">${MARCA}<span>QUALIFYING</span></div><h2>QUALIFYING</h2><em>RESULTADO</em></header>
+    <div class="qy-corpo"><section class="qy-tab"><div class="qy-cab"><span>POS</span><span>PILOTO</span><span>EQUIPE</span><span>TEMPO</span></div><ol>${top}</ol><ol class="sub">${meio}</ol>${resto ? `<details class="qy-resto"><summary>Do 11º ao ${q.grid.length}º</summary><ol class="sub">${resto}</ol></details>` : ""}</section>
+      ${poleHTML(P(q.grid[0]), pole, "POLE POSITION")}</div>
+    <footer class="qy-pe">${rodapeGP(S)}<button type="button" class="qy-bt" data-pq-vista="raceday">CONTINUAR ${ICQ.seta}</button></footer></div>`;
 }
-// (2026-11-23, o Thiago: "você não fez o estilo das telas pós-qualify") a pausa entre as sessões (depois do Q1 e do Q2) no mesmo estilo do QUALIFYING:
-// a sessão inteira na tabela (quem caiu apagado, a linha vermelha do corte), o mais rápido da sessão no cartão e "Sua sessão" embaixo dele.
+// a pausa entre as sessões (depois do Q1 e do Q2), no mesmo estilo: a sessão inteira (quem caiu apagado, a linha vermelha do corte), o mais rápido e "Sua sessão"
 function sessaoHTML(q, T, m, S, f, precisa, confirmado, prontos) {
-  const pista = PISTAS[S.config.pista], info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, k = q.fechadas.length - 1;
-  const ordem = f.ordem, pole = ordem[0] && ordem[0].tempo, passam = ordem.length - f.eliminados.length, p0 = P(ordem[0] && ordem[0].id), eq0 = eqDe(p0), f0 = fotoDe(p0);
+  const k = q.fechadas.length - 1, nome = f.nome || `Q${k + 1}`, ordem = f.ordem, pole = ordem[0] && ordem[0].tempo, passam = ordem.length - f.eliminados.length;
   const Ts = {}; for (const x of ordem) Ts[x.id] = [x.tempo];
   const linhas = ordem.map((x, i) => linhaGrid(x.id, i, Ts, pole, m, `${i < 5 ? "top" : "meio"} ${f.eliminados.includes(x.id) ? "fora" : ""} ${i === passam - 1 && f.eliminados.length ? "corte" : ""}`)).join("");
   const proximo = `Q${q.fechadas.length + 1}`;
-  const botao = precisa ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? `PRONTO · ${prontos}/${q.aguardados.length}` : `LARGAR PARA O ${proximo}`} <span>→</span></button>`
-    : m && !q.aguardados.length ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>PULAR PARA O ${proximo} <span>→</span></button>`
+  const botao = precisa ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? `PRONTO · ${prontos}/${q.aguardados.length}` : `LARGAR PARA O ${proximo}`} ${ICQ.seta}</button>`
+    : m && !q.aguardados.length ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>PULAR PARA O ${proximo} ${ICQ.seta}</button>`
     : m ? `<span class="pq-espera">Você assiste: o ${proximo} abre quando os outros estiverem prontos</span>` : "";
   return `<div class="qy">
-    <header class="qy-topo"><small>QUALIFYING · ${h(f.nome || `Q${k + 1}`)}</small><h2>${h(f.nome || `Q${k + 1}`)}</h2><em>RESULTADO</em></header>
+    <header class="qy-topo"><div class="qy-cam">${MARCA}<span>QUALIFYING <i>›</i> ${h(nome)}</span></div><h2>${h(nome)}</h2><em>RESULTADO</em></header>
     <p class="qy-aviso"><b>${f.eliminados.length} ${f.eliminados.length === 1 ? "piloto ficou" : "pilotos ficaram"} pelo caminho.</b> Os eliminados largam do fim do grid, na ordem do tempo; os ${passam} primeiros seguem para o ${proximo}.</p>
     <div class="qy-corpo"><section class="qy-tab"><div class="qy-cab"><span>POS</span><span>PILOTO</span><span>EQUIPE</span><span>TEMPO</span></div><ol class="qy-sessao">${linhas}</ol></section>
-      <div class="qy-lado"><aside class="qy-pole" style="--c:${corOk(eq0 ? eq0.cor : p0 && p0.color)}">${f0 ? `<div class="qy-foto" style="--foto:url('${h(f0.url)}')"></div>` : `<div class="qy-foto sem">${logo(p0, "pq-logo-g")}</div>`}
-        <div class="qy-pole-txt"><small>MAIS RÁPIDO · ${h(f.nome || `Q${k + 1}`)}</small><span>${h(primeiro(p0))}</span><b>${h(sobrenome(p0).toUpperCase())}</b><em>${h(eq0 ? eq0.nome : "")} ${logo(p0)}</em><strong>${tempo3(pole)}</strong></div></aside>
-        ${minhaSessao(q, m)}</div></div>
-    <footer class="qy-pe"><span class="qy-mapa">${window.GpSobre ? window.GpSobre.mapaSvg(S.config.pista, "qy-mapa-svg") : ""}</span><span class="qy-gp"><b>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : "")}</b><small>${h(f.nome)} concluído${precisa || !m ? ` · <em class="pq-pe-estado"><em>${prontos}/${q.aguardados.length} prontos</em></em>` : ""} <span data-pq-relogio></span></small></span>
-      ${m ? `<button type="button" class="qy-bt ghost" data-pq-vista="ajustes">Ajustes do carro</button>` : ""}${botao}</footer></div>`;
+      <div class="qy-lado">${poleHTML(P(ordem[0] && ordem[0].id), pole, `MAIS RÁPIDO · ${nome}`)}${minhaSessao(q, m)}</div></div>
+    <footer class="qy-pe">${rodapeGP(S)}<span class="qy-estado">${h(nome)} concluído${precisa || !m ? ` · <em class="pq-pe-estado"><em>${prontos}/${q.aguardados.length} prontos</em></em>` : ""} <span data-pq-relogio></span></span>
+      ${m ? `<button type="button" class="qy-bt ghost" data-pq-vista="ajustes">${IC.ajustes} AJUSTES DO CARRO</button>` : ""}${botao}</footer></div>`;
 }
 function raceDayHTML(q, T, m, S, confirmado, precisa, prontos) {
-  const F = window.F1Regras, pista = PISTAS[S.config.pista], info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, pole = (T[q.grid[0]] || []).at(-1), voltas = S.config.voltas;
-  const meuI = m ? q.grid.indexOf(m.id) : -1, top = q.grid.slice(0, 5).map((id, i) => linhaGrid(id, i, T, pole, m)).join("");
-  const eu = meuI >= 5 ? `<li class="sep"></li>${linhaGrid(m.id, meuI, T, pole, m)}` : "";
+  const F = window.F1Regras, info = window.GpInfo ? window.GpInfo.get(S.config.pista) : null, pole = (T[q.grid[0]] || []).at(-1), voltas = S.config.voltas;
+  const meuI = m ? q.grid.indexOf(m.id) : -1, linha = (id, i) => { const p = P(id), eq = eqDe(p), t = (T[id] || []).at(-1), eu = m && id === m.id;
+    return `<li class="${eu ? "eu" : ""}" style="--c:${corOk(eq ? eq.cor : p && p.color)};--i:${i}"><span class="po">${i + 1}</span><span class="lg">${logo(p)}</span><span class="eq">${h(eq ? eq.nome : "")}</span><span class="pi">${eu ? "<b>Você</b>" : nomeCompleto(p)}</span><span class="tt">${i === 0 ? tempo3(t) : t != null && pole != null ? `+${(t - pole).toFixed(3)}` : "—"}</span></li>`; };
+  const top = q.grid.slice(0, 5).map((id, i) => linha(id, i)).join(""), eu = meuI >= 5 ? `<li class="sep"></li>${linha(m.id, meuI)}` : "";
   const pen = m && m.gpMods && m.gpMods.grid ? `${m.gpMods.grid} posições a menos na largada` : "Sem punições de grid";
   const prev = S.previsao && F && F.descreverPrevisao ? F.descreverPrevisao(S.previsao, voltas) : null, agua = clima && Number.isFinite(clima.agua) ? clima.agua : 0;
-  const ader = agua > 0.3 ? "Baixa" : agua > 0.05 ? "Média" : "Alta", fundo = fundoDoGP(S.config.pista), pneuAtual = (m && m.pneu) || "medio";
-  const vida = (c) => (F && F.vidaEmVoltas ? F.vidaEmVoltas(c, 1, agua, S.config.pista) : 0);
-  const pneus = F ? ["macio", "medio", "duro", "intermediario", "chuva"].map((c) => { const pn = F.PNEUS[c], v = vida(c);
-    return `<button type="button" data-pneu-largada="${c}" class="${pneuAtual === c ? "on" : ""}" style="--pn:${pn.cor}" ${confirmado || !m ? "disabled" : ""}><i></i><b>${h(pn.nome)}</b><small>~${v.toFixed(1).replace(".", ",")} voltas</small></button>`; }).join("") : "";
+  const ader = agua > 0.3 ? ["Baixa", 1] : agua > 0.05 ? ["Média", 2] : ["Alta", 4], fundo = fundoDoGP(S.config.pista), pneuAtual = (m && m.pneu) || "medio";
+  const vida = (c) => (F && F.vidaEmVoltas ? F.vidaEmVoltas(c, 1, agua, S.config.pista) : 0), pnSel = F ? F.PNEUS[pneuAtual] : null;
+  const pneus = F ? ["macio", "medio", "duro", "intermediario", "chuva"].map((c) => { const pn = F.PNEUS[c];
+    return `<button type="button" data-pneu-largada="${c}" class="${pneuAtual === c ? "on" : ""}" style="--pn:${pn.cor}" title="${h(pn.nome)}: ~${vida(c).toFixed(1).replace(".", ",")} voltas" ${confirmado || !m ? "disabled" : ""}><i></i><b>${h(pn.nome)}</b></button>`; }).join("") : "";
   const vSel = vida(pneuAtual), paradas = vSel > 0 ? Math.max(0, Math.ceil(voltas / vSel) - 1) : 0;
-  const botao = precisa || (m && !q.aguardados.length) ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? `PRONTO · ${prontos}/${q.aguardados.length}` : "IR PARA O GRID"} <span>→</span></button>` : `<span class="pq-espera">A largada abre quando os outros estiverem prontos</span>`;
+  const eqM = m ? eqDe(m) : null;
+  const botao = precisa || (m && !q.aguardados.length) ? `<button type="button" class="rd-ir" id="confirmarLargada" ${confirmado ? "disabled" : ""}>${confirmado ? `PRONTO · ${prontos}/${q.aguardados.length}` : "IR PARA O GRID"} ${ICQ.seta}</button>` : `<span class="pq-espera">A largada abre quando os outros estiverem prontos</span>`;
   return `<div class="rd">
-    <header class="rd-topo"><small>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ").toUpperCase() : "")} <span>›</span> RACE DAY</small><h2>RACE DAY</h2><p>Prepare-se para a corrida</p></header>
+    <header class="rd-topo"><div class="qy-cam">${MARCA}<span>${h(nomeGP(S).toUpperCase())} <i>›</i> RACE DAY</span>${eqM ? `<span class="rd-eq">${h(eqM.nome)} ${logo(m)}</span>` : ""}</div><h2>RACE DAY</h2><p>Prepare-se para a corrida</p></header>
     <div class="rd-corpo">
       <div class="rd-esq">
-        <section class="rd-card"><h4>GRID DE LARGADA</h4><ol class="rd-grid">${top}${eu}</ol><p class="rd-pen">ⓘ ${h(pen)}</p></section>
-        <section class="rd-card"><h4>PNEU DA LARGADA</h4><div class="rd-pneus" role="group" aria-label="Pneu da largada">${pneus}</div>
-          <div class="rd-est"><span><small>Com esse pneu</small><b>~${vSel.toFixed(1).replace(".", ",")} voltas até o fim da vida</b></span><span><small>Paradas, só com ele</small><b>${paradas} ${paradas === 1 ? "parada" : "paradas"} em ${voltas} voltas</b></span></div></section>
+        <section class="rd-card"><h4>${ICQ.grid} GRID DE LARGADA</h4><ol class="rd-grid">${top}${eu}</ol><p class="rd-pen">${ICQ.info} ${h(pen)}</p></section>
+        <section class="rd-card rd-estr"><h4>${ICQ.chave} ESTRATÉGIA</h4>
+          <div class="rd-est"><span class="rd-pneu-ic" style="--pn:${pnSel ? pnSel.cor : "#fff"}"><i></i><span><small>Pneu de largada</small><b>${h(pnSel ? pnSel.nome : "")}</b></span></span>
+            <span>${ICQ.box}<span><small>Paradas, só com ele</small><b>${paradas} ${paradas === 1 ? "parada" : "paradas"}</b></span></span>
+            <span>${ICQ.vida}<span><small>Vida do pneu</small><b>~${vSel.toFixed(1).replace(".", ",")} voltas</b></span></span></div></section>
       </div>
-      <aside class="rd-cond">${fundo ? `<div class="rd-foto" style="background-image:url('${h(fundo)}')"></div>` : ""}<div><h3>${h(info && info.gp ? info.gp.replace(/^Grande Prêmio d[aeo]s? /i, "GP de ") : pista ? pista.name : "")}</h3>
-        <p>${voltas} voltas${info && info.km ? ` · volta de ${String(info.km).replace(".", ",")} km` : ""}</p></div>
-        <div class="rd-cond-l"><span><b>${prev ? `${prev.pct}%` : "—"}</b><small>Chuva${prev && prev.quando ? ` · ${h(prev.quando)}` : ""}</small></span><span><b>${agua > 0.05 ? "Molhada" : "Seca"}</b><small>Pista</small></span><span><b>${ader}</b><small>Aderência</small></span></div></aside>
+      <div class="rd-dir"><aside class="rd-cond"><div class="rd-cond-top">${fundo ? `<div class="rd-foto" style="background-image:url('${h(fundo)}')"></div>` : ""}<div><h3>${h(nomeGP(S))}</h3>
+        <p>${voltas} voltas${info && info.km ? ` · volta de ${String(info.km).replace(".", ",")} km` : ""}</p></div></div>
+        <div class="rd-cond-l"><span>${ICQ.gota}<span><b>${prev ? `${prev.pct}%` : "—"}</b><small>Chuva${prev && prev.quando ? ` · ${h(prev.quando)}` : ""}</small></span></span><span>${ICQ.pista}<span><b>${agua > 0.05 ? "Molhada" : "Seca"}</b><small>Pista</small></span></span><span>${barrasAder(ader[1])}<span><b>${ader[0]}</b><small>Aderência</small></span></span></div></aside>
+        <section class="rd-card rd-escolha"><h4>${ICQ.vida} PNEU DA LARGADA</h4><div class="rd-pneus" role="group" aria-label="Pneu da largada">${pneus}</div></section></div>
     </div>
-    <footer class="rd-pe"><button type="button" class="qy-bt ghost" data-pq-vista="resultado">← VOLTAR</button>${m ? `<button type="button" class="qy-bt ghost" data-pq-vista="ajustes">Acerto e pontos</button>` : ""}${botao}</footer></div>`;
+    <footer class="rd-pe"><button type="button" class="qy-bt ghost volta" data-pq-vista="resultado">${ICQ.volta} VOLTAR</button>${m ? `<button type="button" class="qy-bt ghost" data-pq-vista="ajustes">${IC.ajustes} ACERTO E PONTOS</button>` : ""}${botao}</footer></div>`;
 }
 
 export function renderQuali() {

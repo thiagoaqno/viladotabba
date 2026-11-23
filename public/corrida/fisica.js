@@ -233,7 +233,7 @@ const AMB = { outros: [] }, ENT = {}, ENT_C = {}, EV = [];
 // o ambiente do passo: tudo o que a física precisa saber do jogo (o servidor monta o mesmo)
 function montarAmbiente(R) {
   const S = E.S, m = me(), d = S.direcao;
-  AMB.spec = carOf(m); AMB.manual = S.config.cambio === "manual"; AMB.dano = m.dano || 0; AMB.drsZona = m.drsZona ?? -1;
+  AMB.spec = carOf(m); AMB.manual = S.config.cambio === "manual"; AMB.dano = m.dano || 0; AMB.bonusBox = m.bonusBox || 0; AMB.drsZona = m.drsZona ?? -1;
   AMB.safety = !!(d && d.safety); AMB.setorAmarelo = d && d.amarelo ? d.amarelo.setor : -1; AMB.ersAuto = S.config.ers !== "manual";
   AMB.voltas = S.config.voltas; AMB.laps = m.laps || 0; AMB.paradas = m.paradas || 0; AMB.semente = S.semente; AMB.id = m.id; AMB.grid = m.grid; AMB.equipe = m.equipe || null;
   AMB.boxOcupado = window.Sim.garagemOcupada(Object.values(S.players || {}), m, (o) => o.boxFase); // a fila do box da equipe (o servidor usa a mesma conta)

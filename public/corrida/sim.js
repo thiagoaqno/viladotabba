@@ -403,7 +403,7 @@ function passoBox(c, ent, amb, tr, p, ev) {
     // com um stop-and-go pendente (`amb.stopGo`: os segundos parado) a visita começa com ele: fica parado esses segundos SEM mexer no pneu e, se o
     // composto pedido é outro (`troca`), a equipe troca o pneu em seguida, na mesma parada, com o tempo normal da troca somado
     // `B.parada`/`B.t`: a parada em si (no stop-and-go, os segundos dele); `B.troca = { parada, t }`: a troca de pneu que vem logo depois (null se não troca)
-    const stopGo = amb.stopGo > 0, decidir = B.pedido === "decidir", atual = c.pneu ? c.pneu.composto : (decidir ? "medio" : B.pedido), tempoTroca = F1.tempoDeParada(amb.semente, amb.id, n);
+    const stopGo = amb.stopGo > 0, decidir = B.pedido === "decidir", atual = c.pneu ? c.pneu.composto : (decidir ? "medio" : B.pedido), tempoTroca = F1.paradaComBonus(F1.tempoDeParada(amb.semente, amb.id, n), amb.bonusBox); // (o bônus dos engenheiros da carreira: a parada mais curta)
     const voltasRest = Math.max(0, (amb.voltas || 1) - ((amb.laps || 0) + 1)), rec = decidir ? F1.recomendarParada({ atual, jogos: amb.jogos, agua: amb.agua || 0, voltasRestantes: voltasRest, fator: spec.desgaste, pista: tr.pistaId || tr.id }) : null;
     const uEntrada = rel + 0.5, garagem = F1.garagemDe(cor, amb.grid || 0, amb.equipe);
     const desvioEntrada = direto ? lado - cor.latParada(uEntrada, garagem, lado) : 0;

@@ -35,6 +35,8 @@ echo   grama (2)            o pneu na grama, em laco
 echo   vento (1)            o vento no cockpit, crescendo com a velocidade, em laco
 echo   ers-fim (2)          a bateria acabando no meio da reta
 echo   limitador (1)        o bipe do limitador do box
+echo   trovao-perto (3)     o estalo do raio perto e o estrondo
+echo   trovao-longe (3)     o trovao rolando longe
 echo.
 echo O que gerar?
 echo   1) So os que faltam

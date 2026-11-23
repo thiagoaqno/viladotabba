@@ -257,6 +257,41 @@ export const Sound = (() => {
     }
     torcidaAntes = n;
   }
+  // o trovão (clima-visual.js chama depois do clarão, atrasado pela distância): `perto` de 0 (longe: ronco comprido, baixo e abafado) a 1 (perto: o
+  // estalo seco e o estrondo). Com os gravados (sons/trovao-perto-*.mp3 e trovao-longe-*.mp3, GERAR-SONS-PISTA.bat) toca um deles; sem eles, o
+  // sintetizado, diferente a cada vez (o tamanho, os roncos que rolam, o lado de onde vem)
+  let ruidoMarrom = null;
+  function trovao(perto = 0.5) {
+    const c = ctx(); if (!c || !on) return;
+    const t = c.currentTime, p = Math.max(0, Math.min(1, perto)), lado = c.createStereoPanner ? c.createStereoPanner() : c.createGain();
+    if (lado.pan) lado.pan.value = (Math.random() * 2 - 1) * 0.7; lado.connect(CANAL.ambiente);
+    const id = p > 0.6 && tem("trovao-perto") ? "trovao-perto" : tem("trovao-longe") ? "trovao-longe" : tem("trovao-perto") ? "trovao-perto" : null;
+    if (id) {
+      const src = c.createBufferSource(), g = c.createGain(), lp = c.createBiquadFilter(); src.buffer = escolher(id);
+      lp.type = "lowpass"; lp.frequency.value = 1500 + 9000 * p; src.playbackRate.value = 0.88 + Math.random() * 0.2;
+      g.gain.value = (0.3 + 0.55 * p) * (0.85 + Math.random() * 0.3); src.connect(lp).connect(g).connect(lado); src.start(t); return;
+    }
+    if (!ruidoMarrom) { // ruído marrom (o grave do ronco), 8 s
+      const len = c.sampleRate * 8, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); let u = 0;
+      for (let i = 0; i < len; i++) { u = (u + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = u * 3.5; }
+      ruidoMarrom = b;
+    }
+    const dur = 3.5 + (1 - p) * 3 + Math.random() * 2;
+    // o ronco: o grave que cresce e rola em 3 a 6 ondas até sumir
+    const r = c.createBufferSource(), lp = c.createBiquadFilter(), g = c.createGain(); r.buffer = ruidoMarrom;
+    lp.type = "lowpass"; lp.frequency.value = 140 + 420 * p; lp.Q.value = 0.4; g.gain.value = 0.0001;
+    const pico = 0.35 + 0.6 * p; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(pico, t + 0.08 + (1 - p) * 0.5);
+    let tt = t + 0.3 + (1 - p) * 0.5; const ondas = 3 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < ondas && tt < t + dur - 0.6; k++) { tt += 0.35 + Math.random() * 0.8; g.gain.linearRampToValueAtTime(pico * (0.25 + Math.random() * 0.75) * (1 - k / (ondas + 1)), tt); }
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    r.connect(lp).connect(g).connect(lado); r.start(t, Math.random() * 3, dur + 0.1);
+    if (p > 0.45) { // o estalo do raio perto: um rasgo de ruído claro, curto
+      const s = c.createBufferSource(), hp = c.createBiquadFilter(), gs = c.createGain(), len = Math.floor(c.sampleRate * 0.5), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5) * (Math.random() < 0.15 ? 1 : 0.45);
+      s.buffer = b; hp.type = "highpass"; hp.frequency.value = 600 + Math.random() * 600; gs.gain.value = 0.28 * (p - 0.35);
+      s.connect(hp).connect(gs).connect(lado); s.start(t);
+    }
+  }
   // o engenheiro falando: os motores de F1 descem para ~35% e voltam devagar quando ele acaba
   function abafar(sim) { if (motorBus && ac) motorBus.gain.setTargetAtTime(sim ? 0.35 : 1, ac.currentTime, sim ? 0.08 : 0.35); }
   function crash(forca, tipo = "muro") {
@@ -283,7 +318,7 @@ export const Sound = (() => {
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.radio, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.narrador, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, chiado, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.35); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, chiado, trovao, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.35); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

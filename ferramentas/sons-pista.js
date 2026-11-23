@@ -37,6 +37,9 @@ const SONS = [
   { id: "vento", n: 1, seg: 6, laco: true, texto: "Steady strong wind rushing past an open helmet at very high speed, constant airy roar and buffeting, no gusts stopping, no music, no voices" },
   { id: "ers-fim", n: 2, seg: 0.7, texto: `Short electric power-down, a descending high voltage whine fading out with a soft low digital blip, energy depleted, ${LIMPO}` },
   { id: "limitador", n: 1, seg: 0.4, texto: `Single short soft electronic beep, a clean mid-pitched dashboard warning tone, ${LIMPO}` },
+  // (2026-11-23) os trovões: o perto (o estalo do raio e o estrondo) e o longe (o ronco rolando no horizonte); o jogo sorteia uma versão a cada raio
+  { id: "trovao-perto", n: 3, seg: 6, texto: "Close lightning strike: a sharp sudden crack splitting the air followed by a huge deep thunder boom that rolls and fades, outdoors in heavy rain, no music, no voices" },
+  { id: "trovao-longe", n: 3, seg: 8, texto: "Distant thunder: a long low rolling rumble far away on the horizon, soft and deep, growing and fading slowly, no rain, no music, no voices" },
   { id: "chuva", n: 1, seg: 12, laco: true, texto: "Steady medium rain falling on wet asphalt and puddles outdoors, soft continuous hiss and patter, no thunder, no wind, no traffic, no music" },
 ];
 

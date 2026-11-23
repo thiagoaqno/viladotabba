@@ -2,18 +2,11 @@
    reagindo ao mouse, mais legal mudar as páginas e clicar nas coisas"). Por cima de animacoes.css; carreira-vida.js liga tudo por delegação (sobrevive aos
    redesenhos da Central). Só transform, opacity, clip-path e variáveis: nada que pese. Com "reduzir movimento", nada anima. */
 
-/* 1. Troca de aba: uma faixa diagonal na cor da equipe varre a tela (como a vinheta da TV) e o conteúdo novo entra atrás dela */
-.cv-varre{position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden}
-.cv-varre i{position:absolute;top:-20%;bottom:-20%;width:46vw;transform:skewX(-18deg);background:var(--eq-at,#e10600);box-shadow:0 0 60px #0006}
-.cv-varre i+i{width:12vw;background:#fff;opacity:.85}
-.cv-varre i+i+i{width:5vw;background:var(--eq,#111);opacity:1}
+/* 1. Troca de aba: um slide com mola (carreira-vida.js entrar; a faixa diagonal saiu em 2026-11-23) */
 
-/* 2. Os cartões: inclinam na direção do mouse e uma luz segue o cursor por cima (carreira-vida.js põe --cv-x/--cv-y e o `rotate`) */
+/* 2. Os cartões: inclinam na direção do mouse e a borda acende perto do cursor (a luz branca por cima saiu) (carreira-vida.js põe --cv-x/--cv-y e o `rotate`) */
 .cv-vivo{transition:rotate .5s cubic-bezier(.2,.8,.2,1),translate .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,border-color .22s;will-change:rotate}
 .cv-vivo.cv-dentro{transition:rotate .12s linear,translate .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,border-color .22s}
-.cv-luz{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;opacity:0;transition:opacity .3s;mix-blend-mode:soft-light;
-  background:radial-gradient(420px circle at var(--cv-x,50%) var(--cv-y,50%),#ffffffaa,#ffffff22 30%,transparent 60%)}
-.cv-dentro>.cv-luz{opacity:1}
 .cv-borda{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;opacity:0;transition:opacity .3s;padding:1px;
   background:radial-gradient(260px circle at var(--cv-x,50%) var(--cv-y,50%),var(--eq-at,#e10600),transparent 70%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
@@ -43,8 +36,24 @@
 @keyframes cvEntra{from{opacity:0;filter:blur(6px);transform:translateX(var(--cv-dx,30px)) scale(.985)}to{opacity:1;filter:none;transform:none}}
 
 @media (prefers-reduced-motion:reduce){
-  .cv-varre,.cv-onda,.cv-luz,.cv-borda{display:none}
+  .cv-onda,.cv-borda{display:none}
   .cv-vivo,.cv-ima,#cxFundo .cx-relevo{rotate:none !important;translate:none !important;transition:none}
   .cx .cx-aba:hover{translate:none}.cx .cx-aba.cv-pulo,.cv-ima.cv-brilha{animation:none}
 }
-@media (hover:none){.cv-luz,.cv-borda{display:none}}
+@media (hover:none){.cv-borda{display:none}}
+
+/* 8. O ponteiro (2026-11-23): um ponto na cor da equipe exatamente no mouse e um anel fino que vem atrás com mola; em cima do que dá para
+   clicar o anel abre e o ponto some dentro dele; no clique aperta; em campo de texto vira uma barrinha. Só com mouse (carreira-vida.js). */
+html.cv-sem-seta,html.cv-sem-seta *{cursor:none !important}
+html.cv-sem-seta input:not([type=range]):not([type=checkbox]):not([type=radio]),html.cv-sem-seta textarea{cursor:text !important}
+.cv-ponteiro{position:fixed;inset:0;z-index:2147483647;pointer-events:none;opacity:0;transition:opacity .2s}
+.cv-ponteiro.cv-ve{opacity:1}
+.cv-ponteiro i,.cv-ponteiro b{position:absolute;left:0;top:0;border-radius:50%;will-change:translate}
+.cv-ponteiro b{width:6px;height:6px;margin:-3px 0 0 -3px;background:var(--eq-at,#fff);box-shadow:0 0 0 1px #0007;transition:scale .18s cubic-bezier(.2,.8,.2,1),opacity .18s}
+.cv-ponteiro i{width:30px;height:30px;margin:-15px 0 0 -15px;border:1.5px solid color-mix(in srgb,var(--eq-at,#fff) 75%,#fff);opacity:.55;
+  transition:scale .28s cubic-bezier(.3,1.6,.4,1),opacity .2s,background-color .2s}
+.cv-ponteiro.cv-sobre i{scale:1.45;opacity:.9;background-color:color-mix(in srgb,var(--eq-at,#fff) 12%,transparent)}
+.cv-ponteiro.cv-sobre b{scale:.6}
+.cv-ponteiro.cv-aperta i{scale:.75;opacity:1}
+.cv-ponteiro.cv-aperta.cv-sobre i{scale:1.15}
+.cv-ponteiro.cv-texto i{opacity:0}.cv-ponteiro.cv-texto b{opacity:0}

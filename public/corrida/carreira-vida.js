@@ -1,6 +1,6 @@
 // Corrida da Galera — a carreira de F1 com mais vida (2026-11-23; carreira-vida.css). Tudo por delegação no documento, então vale para o que a Central
-// redesenhar depois. Com "reduzir movimento", só o essencial (nada se mexe). Ajudas: CarreiraVida.varrer(dir) e CarreiraVida.entrar(corpo, dir), que a
-// troca de aba da Central chama (central.js animarAba).
+// redesenhar depois. Com "reduzir movimento", só o essencial (nada se mexe). Ajudas: CarreiraVida.entrar(corpo, dir) (o slide com mola), que a
+// troca de aba da Central chama (central.js animarAba). Também o ponteiro (um ponto e um anel) no lugar da seta.
 (function (root) {
   if (typeof document === "undefined") return;
   const reduz = () => !!(root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -15,8 +15,7 @@
   function preparar(el) {
     if (el._cv) return; el._cv = true; el.classList.add("cv-vivo");
     if (getComputedStyle(el).position === "static") el.style.position = "relative";
-    const luz = document.createElement("i"), borda = document.createElement("i"); luz.className = "cv-luz"; borda.className = "cv-borda";
-    luz.setAttribute("aria-hidden", "true"); borda.setAttribute("aria-hidden", "true"); el.append(luz, borda);
+    const borda = document.createElement("i"); borda.className = "cv-borda"; borda.setAttribute("aria-hidden", "true"); el.append(borda); // (2026-11-23: a luz branca que seguia o mouse saiu; fica a borda)
     if (el.parentElement && !el.parentElement.style.perspective) el.parentElement.style.perspective = "1100px";
   }
   function soltar(el) { if (!el) return; el.classList.remove("cv-dentro"); el.style.rotate = ""; }
@@ -74,21 +73,60 @@
     if (el.classList.contains("cx-aba") && !reduz()) { el.classList.remove("cv-pulo"); void el.offsetWidth; el.classList.add("cv-pulo"); }
   }, { passive: true });
 
-  // ---------- a troca de aba: a varredura e a entrada ----------
-  function varrer(dir = 1) {
-    if (reduz()) return;
-    const v = document.createElement("div"); v.className = "cv-varre"; v.setAttribute("aria-hidden", "true"); v.innerHTML = "<i></i><i></i><i></i>";
-    document.body.appendChild(v);
-    const de = dir > 0 ? "-60vw" : "120vw", para = dir > 0 ? "120vw" : "-60vw";
-    [...v.children].forEach((faixa, k) => faixa.animate([{ left: de }, { left: para }], { duration: 560, delay: k * 45, easing: "cubic-bezier(.7,0,.25,1)", fill: "both" }));
-    setTimeout(() => v.remove(), 760);
-  }
+  // ---------- a troca de aba: um slide com mola ----------
+  // (2026-11-23, o Thiago: "eu sempre vejo o conteúdo antes de a faixa passar" e "quero algo minimalista e moderno, só um slide com efeito mola")
+  // A faixa saiu. O conteúdo novo é desenhado e, no MESMO quadro (antes de a tela pintar), já começa escondido e fora do lugar: entra deslizando do
+  // lado para onde a pessoa foi, passa um pouco do ponto e volta (a mola), bloco a bloco com um atraso curto. Nada aparece antes da hora.
+  const MOLA = (() => { // os quadros da mola (amortecida: passa ~6% do ponto e assenta), de 0 a 1
+    const z = 0.62, w = 15, wd = w * Math.sqrt(1 - z * z), n = 36, dur = 0.62, q = [];
+    for (let k = 0; k <= n; k++) { const t = (k / n) * dur; q.push(k === n ? 1 : 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t))); }
+    return { q, ms: dur * 1000 };
+  })();
+  function varrer() {} // (a faixa saiu: fica o nome para quem ainda chama)
   function entrar(corpo, dir = 1) {
     if (reduz() || !corpo || !corpo.animate) return;
-    const blocos = [...corpo.children].slice(0, 10);
-    (blocos.length ? blocos : [corpo]).forEach((el, i) => el.animate(
-      [{ opacity: 0, filter: "blur(6px)", transform: `translateX(${dir * 36}px) scale(.985)` }, { opacity: 1, filter: "blur(0)", transform: "none" }],
-      { duration: 420, delay: 140 + i * 55, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" }));
+    const blocos = [...corpo.children].slice(0, 10), D = 48 * dir;
+    (blocos.length ? blocos : [corpo]).forEach((el, i) => {
+      const atraso = i * 38;
+      el.animate(MOLA.q.map((x) => ({ transform: `translateX(${((1 - x) * D).toFixed(2)}px)` })), { duration: MOLA.ms, delay: atraso, easing: "linear", fill: "backwards" });
+      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: atraso, easing: "ease-out", fill: "backwards" });
+    });
   }
+
+  // ---------- o ponteiro: um ponto e um anel ----------
+  // (2026-11-23, o Thiago: "tira essa mancha branca do meu mouse... muda o estilo do ponteiro para algo mais moderno, minimalista") o ponto fica
+  // exatamente no mouse (a precisão de sempre); o anel vem atrás com uma mola leve, cresce em cima do que dá para clicar e aperta no clique.
+  // Só com mouse de verdade (pointer: fine); com "reduzir movimento" o anel acompanha sem mola. Dentro dos diálogos (que ficam na camada de
+  // cima), o ponteiro passa para dentro do diálogo aberto, senão ficaria por baixo dele.
+  const fino = () => !!(root.matchMedia && root.matchMedia("(hover: hover) and (pointer: fine)").matches);
+  let cur = null;
+  function montarPonteiro() {
+    if (cur || !fino() || !document.body) return;
+    const caixa = document.createElement("div"), anel = document.createElement("i"), ponto = document.createElement("b");
+    caixa.className = "cv-ponteiro"; caixa.setAttribute("aria-hidden", "true"); caixa.append(anel, ponto); document.body.appendChild(caixa);
+    document.documentElement.classList.add("cv-sem-seta");
+    cur = { caixa, anel, ponto, x: -100, y: -100, ax: -100, ay: -100, vx: 0, vy: 0, raf: 0, ant: 0 };
+  }
+  function passoAnel(agora) {
+    const c = cur; c.raf = 0;
+    const dt = Math.min(0.05, (agora - (c.ant || agora)) / 1000) || 0.016; c.ant = agora;
+    if (reduz()) { c.ax = c.x; c.ay = c.y; c.vx = c.vy = 0; }
+    else { const k = 520, am = 34; c.vx += ((c.x - c.ax) * k - c.vx * am) * dt; c.vy += ((c.y - c.ay) * k - c.vy * am) * dt; c.ax += c.vx * dt; c.ay += c.vy * dt; }
+    c.anel.style.translate = `${c.ax.toFixed(1)}px ${c.ay.toFixed(1)}px`;
+    if (Math.abs(c.x - c.ax) + Math.abs(c.y - c.ay) + Math.abs(c.vx) + Math.abs(c.vy) > 0.3) c.raf = requestAnimationFrame(passoAnel); else c.ant = 0;
+  }
+  function moverPonteiro(e) {
+    montarPonteiro(); if (!cur) return;
+    const dlg = [...document.querySelectorAll("dialog[open]")].pop() || document.body; if (cur.caixa.parentNode !== dlg) dlg.appendChild(cur.caixa);
+    cur.x = e.clientX; cur.y = e.clientY; cur.ponto.style.translate = `${cur.x}px ${cur.y}px`; cur.caixa.classList.add("cv-ve");
+    const alvo = e.target.closest && e.target.closest(CLICAVEIS + ",label,select,summary,input[type=range],input[type=checkbox],input[type=radio]");
+    cur.caixa.classList.toggle("cv-sobre", !!alvo && !alvo.disabled);
+    cur.caixa.classList.toggle("cv-texto", !!(e.target.closest && e.target.closest("input:not([type=range]):not([type=checkbox]):not([type=radio]),textarea,[contenteditable=true]")));
+    if (!cur.raf) cur.raf = requestAnimationFrame(passoAnel);
+  }
+  document.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") moverPonteiro(e); }, { passive: true });
+  document.addEventListener("pointerdown", (e) => { if (cur && e.pointerType === "mouse") cur.caixa.classList.add("cv-aperta"); }, { passive: true });
+  document.addEventListener("pointerup", () => { if (cur) cur.caixa.classList.remove("cv-aperta"); }, { passive: true });
+  document.documentElement.addEventListener("mouseleave", () => { if (cur) cur.caixa.classList.remove("cv-ve"); });
   root.CarreiraVida = { varrer, entrar };
 })(typeof window !== "undefined" ? window : globalThis);

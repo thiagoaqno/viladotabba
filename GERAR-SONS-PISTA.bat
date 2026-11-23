@@ -25,18 +25,26 @@ echo   drs (2)              a asa abrindo
 echo   batida-muro-leve, -media, -forte (3 cada)
 echo   batida-carro-leve, -media, -forte (3 cada)
 echo   chegada (2)          a festa da bandeirada
-echo   chuva (1)            chuva caindo no asfalto, em laco
 echo   ers-liga (2)         o ERS ligando na tecla (o overtake)
 echo   radio-bip (2)        os bipes do radio da equipe antes da voz
 echo   raspa (2)            o assoalho raspando no chao (acerto do carro), em laco
 echo   fundo (3)            a suspensao batendo no fundo nas compressoes
 echo   brita (2)            o pneu na brita, em laco
 echo   grama (2)            o pneu na grama, em laco
-echo   vento (1)            o vento no cockpit, crescendo com a velocidade, em laco
 echo   ers-fim (2)          a bateria acabando no meio da reta
 echo   limitador (1)        o bipe do limitador do box
-echo   trovao-perto (3)     o estalo do raio perto e o estrondo
-echo   trovao-longe (3)     o trovao rolando longe
+echo.
+echo   O CLIMA (muitas versoes, cada uma com uma descricao diferente):
+echo   trovao-perto (8), trovao-medio (8), trovao-longe (8)
+echo   chuva-fraca (4), chuva (6), chuva-forte (5), em laco
+echo   chuva-capacete (4)   a chuva batendo no capacete, na camera de dentro
+echo   spray (4)            o pneu jogando agua na pista molhada, em laco
+echo   vento (6)            o vento no cockpit, em laco
+echo   vento-rajada (6)     rajadas de vento na chuva forte
+echo.
+echo   O AMBIENTE DE CADA PISTA (2 versoes de cada, em laco): amb-monaco (mar), amb-spa (passaros),
+echo   amb-silverstone (aviao) e as outras 21 pistas
+echo   OS FOGOS das pistas de noite: fogos-estouro (6), fogos-longe (5), fogos-crepitar (5), fogos-assobio (4)
 echo.
 echo O que gerar?
 echo   1) So os que faltam
@@ -54,7 +62,7 @@ if "%M%"=="3" (
 )
 
 echo.
-echo Cada som gasta creditos de efeitos sonoros da sua conta (sao 38 arquivos curtos; com a opcao 1 so os que faltam).
+echo Cada som gasta creditos de efeitos sonoros da sua conta (sao muitos arquivos curtos; com a opcao 1 so os que faltam).
 set "GO=N"
 set /p "GO=Continuar e gerar? s/N: "
 if /i not "!GO!"=="s" ( echo Cancelado. Nada foi gerado. & pause & exit /b 0 )

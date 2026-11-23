@@ -41,6 +41,7 @@ import { quadroTV, pularTV } from "./transmissao.js";
 import { criarLinhaFreio } from "./linha-frenagem.js";
 import { detalheRemoto } from "./detalhe-remoto.js";
 import { criarBoxesDaCorrida } from "./mecanicos.js";
+import { passoFogos, limparFogos } from "./fogos.js";
 import { cargaAberta, etapaCarga, esconderCarga } from "./carregando.js";
 const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -250,7 +251,7 @@ export function startRace(st) {
   if (f1 && mine) { usarPista(st.config.pista); carregarIdeais(); } // a cena já desenhou: a TV e as luzes podem seguir (corrida.js, liberarCarga)
 }
 function clearRace() { if (!race) return; race.mecanicos?.soltar(); soltarRecorte(race.tr); race.linhaFreio?.parar(); stopItems(); limparEfeitos(); dropKart(race.kart); dropKart(race.bestKart); dropKart(race.safetyKart); for (const gh of race.ghosts.values()) dropKart(gh.kart); }
-export function stopRace() { ForcaVolante.parar(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); limparClima(); }
+export function stopRace() { ForcaVolante.parar(); clearRace(); race = null; Sound.engine(0, false); Sound.zebra(0); Sound.torcida(0, 0); Sound.raspa(0); Sound.foraDaPista(null, 0); Sound.vento(0, false); Sound.ambientePista(null); limparClima(); limparFogos(); }
 function resize() {
   const w = window.innerWidth, hh = window.innerHeight;
   renderer.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); ajustarTela(w, hh);
@@ -489,6 +490,8 @@ function draw(dt) {
   abrirTV(tr, dt, motionPreference.matches);
   if (tr.sky) tr.sky.position.set(cam.position.x, 0, cam.position.z);
   passoClima(dt, race, cam, modoClima, src, c); // o visual do clima: céu, luz, neblina, chuva, asfalto molhado, borrifo, som e HUD (clima-visual.js)
+  passoFogos(dt, race, cam, nearest ?? race.idx ?? 0, !!(me() && me().finish != null) || E.S?.phase === "results"); // os fogos nas pistas de noite (fogos.js)
+  Sound.ambientePista(tr.pistaId || tr.id, 0.3); // o ambiente gravado da pista (mar, pássaros, avião...), quando existe
   quadroRecorte(tr, cam, mode !== "cima" && mode !== "tv" && !(race.tvAte && now < race.tvAte), nearest); // o que não dá para ver daqui não vai para a placa de vídeo (recorte.js)
   race.linhaFreio?.atualizar(race, !(race.tvAte && now < race.tvAte));
   // as posições de toda a cena calculadas UMA vez por quadro, com tudo já posto: o Three.js refazia as 1.300 malhas a cada desenho (os espelhos,

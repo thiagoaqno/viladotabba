@@ -44,11 +44,11 @@ export const Sound = (() => {
   }
   // um som gravado em laço (uma versão sorteada), que entra e sai devagar pelo volume
   function laco(c, buf, canal = CANAL.efeitos) { const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf; src.loop = true; g.gain.value = 0; src.connect(g).connect(canal); src.start(); return { src, g }; }
-  function umaVez(id, vol, rate = 1, at = 0) {
+  function umaVez(id, vol, rate = 1, at = 0, canal = null) {
     const c = ac, buf = escolher(id); if (!c || !buf || !on) return false;
     const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf;
     src.playbackRate.value = rate * (0.96 + Math.random() * 0.08); g.gain.value = vol * (0.88 + Math.random() * 0.24);
-    src.connect(g).connect(CANAL.efeitos); src.start(c.currentTime + at); return true;
+    src.connect(g).connect(canal || CANAL.efeitos); src.start(c.currentTime + at); return true;
   }
   const tem = (id) => !!(amostras[id] && amostras[id].length);
   // o pit stop em partes limpas: o macaco sobe, as pistolas (duas versões diferentes, uma logo depois da outra) e, no fim da troca, o
@@ -71,6 +71,8 @@ export const Sound = (() => {
     const c = ctx(); if (!c || !tem(id)) return;
     if (!lacosNovos[id]) lacosNovos[id] = laco(c, escolher(id), canal || CANAL.efeitos);
     const t = c.currentTime, L = lacosNovos[id];
+    // (2026-11-23) parado e em silêncio, o laço sai: a próxima vez que ele tocar é outra versão (a variedade dos gravados)
+    if (!(vol > 0.001) && L.g.gain.value < 0.004 && amostras[id].length > 1) { try { L.src.stop(); } catch {} delete lacosNovos[id]; return; }
     L.g.gain.setTargetAtTime(on ? Math.max(0, vol) : 0, t, tau); L.src.playbackRate.setTargetAtTime(rate, t, 0.1);
   }
   const raspa = (n) => lacoNivel("raspa", Math.min(1, n) * 0.7, 0.9 + Math.min(1, n) * 0.3, 0.04);
@@ -79,7 +81,8 @@ export const Sound = (() => {
     lacoNivel("brita", sup === "brita" ? 0.25 + 0.55 * a : 0, 0.8 + 0.4 * a, 0.05);
     lacoNivel("grama", sup === "grama" ? 0.2 + 0.5 * a : 0, 0.8 + 0.4 * a, 0.05);
   }
-  const vento = (v, dentro) => { const a = Math.min(1.3, Math.abs(v || 0) / 400); lacoNivel("vento", a * a * (dentro ? 0.55 : 0.22), 0.85 + 0.3 * a, 0.3, CANAL.ambiente); };
+  let dentroCam = false;
+  const vento = (v, dentro) => { dentroCam = !!dentro; const a = Math.min(1.3, Math.abs(v || 0) / 400); lacoNivel("vento", a * a * (dentro ? 0.55 : 0.22), 0.85 + 0.3 * a, 0.3, CANAL.ambiente); };
   function tone(f, dur, { type = "square", vol = 0.12, at = 0 } = {}) {
     const c = ctx(); if (!c || !on) return; const t = c.currentTime + at;
     const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
@@ -136,10 +139,17 @@ export const Sound = (() => {
   function chuva(nivel, pneus, preparar = false) {
     if (!preparar && !chuvaN && !chuvaA && nivel < 0.01 && pneus < 0.01) return;
     const c = ctx(); if (!c) return;
-    if (tem("chuva")) { // a chuva gravada em laço, que entra devagar (uns 8 s) e sai mais depressa; o chiado dos pneus no molhado segue sintetizado
-      if (!chuvaA) chuvaA = laco(c, escolher("chuva"));
-      const alvo = on ? Math.min(1, nivel) * 0.55 : 0;
-      chuvaA.g.gain.setTargetAtTime(alvo, c.currentTime, alvo > chuvaA.g.gain.value ? 2.6 : 1.2);
+    if (tem("chuva") || tem("chuva-fraca") || tem("chuva-forte")) { // a chuva gravada em laço, que entra devagar (uns 8 s) e sai mais depressa
+      // (2026-11-23) três intensidades que se misturam pelo nível (garoa, média, forte; a que falta passa a vez para a que existe), a chuva no
+      // capacete na câmera de dentro, o spray dos pneus no molhado e, na chuva forte, uma rajada de vento de vez em quando
+      const n = on ? Math.min(1, nivel) : 0, t = c.currentTime;
+      let wF = n > 0 ? Math.max(0, Math.min(1, 1 - (n - 0.2) / 0.3)) : 0, wX = Math.max(0, Math.min(1, (n - 0.55) / 0.3)), wM = n > 0 ? Math.max(0, 1 - wF - wX) : 0;
+      if (!tem("chuva-fraca")) { wM += wF; wF = 0; } if (!tem("chuva-forte")) { wM += wX; wX = 0; } if (!tem("chuva")) { if (tem("chuva-fraca")) wF += wM; else wX += wM; wM = 0; }
+      const vol = n > 0.005 ? 0.22 + 0.4 * n : 0;
+      for (const [id, w] of [["chuva-fraca", wF], ["chuva", wM], ["chuva-forte", wX]]) if (tem(id)) lacoNivel(id, vol * w, 1, (vol * w) > (lacosNovos[id]?.g.gain.value || 0) ? 2.6 : 1.2, CANAL.ambiente);
+      lacoNivel("chuva-capacete", dentroCam ? n * 0.45 : 0, 1, 0.6);
+      if (tem("spray")) { lacoNivel("spray", Math.min(1, pneus) * 0.5, 0.85 + 0.3 * Math.min(1, pneus), 0.15); pneus = 0; }
+      if (n > 0.6 && tem("vento-rajada") && t > (chuva.rajada || 0)) { if (chuva.rajada) umaVez("vento-rajada", 0.25 + 0.3 * n, 1, 0, CANAL.ambiente); chuva.rajada = t + 10 + Math.random() * 22; }
       nivel = 0;
     }
     if (!chuvaN) {
@@ -265,7 +275,8 @@ export const Sound = (() => {
     const c = ctx(); if (!c || !on) return;
     const t = c.currentTime, p = Math.max(0, Math.min(1, perto)), lado = c.createStereoPanner ? c.createStereoPanner() : c.createGain();
     if (lado.pan) lado.pan.value = (Math.random() * 2 - 1) * 0.7; lado.connect(CANAL.ambiente);
-    const id = p > 0.6 && tem("trovao-perto") ? "trovao-perto" : tem("trovao-longe") ? "trovao-longe" : tem("trovao-perto") ? "trovao-perto" : null;
+    const pref = p > 0.66 ? ["trovao-perto", "trovao-medio", "trovao-longe"] : p > 0.33 ? ["trovao-medio", "trovao-longe", "trovao-perto"] : ["trovao-longe", "trovao-medio", "trovao-perto"];
+    const id = pref.find((k) => tem(k)) || null; // (o mais perto da distância do raio entre os que existem)
     if (id) {
       const src = c.createBufferSource(), g = c.createGain(), lp = c.createBiquadFilter(); src.buffer = escolher(id);
       lp.type = "lowpass"; lp.frequency.value = 1500 + 9000 * p; src.playbackRate.value = 0.88 + Math.random() * 0.2;
@@ -292,6 +303,27 @@ export const Sound = (() => {
       s.connect(hp).connect(gs).connect(lado); s.start(t);
     }
   }
+  // (2026-11-23) o ambiente de cada pista (sons/amb-<pista>-*.mp3): um laço baixinho no barramento do ambiente (abre e fecha com a corrida);
+  // trocou de pista, o da anterior sai
+  let ambId = null;
+  function ambientePista(id, vol = 0.3) {
+    const k = id ? "amb-" + id : null;
+    if (ambId && ambId !== k) lacoNivel(ambId, 0, 1, 1.2, barramento());
+    ambId = k; if (k && tem(k)) lacoNivel(k, vol, 1, 1.5, barramento());
+  }
+  // os fogos (fogos.js): o estouro chega atrasado pela distância (`m`, em metros; o som a 343 m/s), perto alto e claro, longe abafado; o
+  // crisântemo crepita depois. Sem os gravados, um estouro sintetizado curto.
+  function fogos(tipo, m) {
+    const c = ctx(); if (!c || !on) return;
+    const perto = Math.max(0, Math.min(1, 1 - m / 700)), at = Math.min(3, m / 343), vol = 0.12 + 0.45 * perto;
+    const id = perto > 0.35 && tem("fogos-estouro") ? "fogos-estouro" : tem("fogos-longe") ? "fogos-longe" : tem("fogos-estouro") ? "fogos-estouro" : null;
+    if (id) { umaVez(id, vol, 1, at, CANAL.ambiente); if (tipo === "crisantemo" && tem("fogos-crepitar")) umaVez("fogos-crepitar", vol * 0.8, 1, at + 0.5, CANAL.ambiente); return; }
+    const t = c.currentTime + at, len = Math.floor(c.sampleRate * 0.7), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = 500 + 2500 * perto; g.gain.value = vol * 0.5;
+    s.connect(f).connect(g).connect(CANAL.ambiente); s.start(t);
+  }
+  function fogosSobe(m) { const c = ctx(); if (!c || !on || m > 450) return; umaVez("fogos-assobio", 0.1 + 0.3 * (1 - m / 450), 1, 0, CANAL.ambiente); }
   // o engenheiro falando: os motores de F1 descem para ~35% e voltam devagar quando ele acaba
   function abafar(sim) { if (motorBus && ac) motorBus.gain.setTargetAtTime(sim ? 0.35 : 1, ac.currentTime, sim ? 0.08 : 0.35); }
   function crash(forca, tipo = "muro") {
@@ -318,7 +350,7 @@ export const Sound = (() => {
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.radio, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.narrador, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, chiado, trovao, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.35); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, chiado, trovao, ambientePista, fogos, fogosSobe, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.35); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

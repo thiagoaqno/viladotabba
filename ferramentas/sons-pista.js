@@ -80,11 +80,6 @@ const SONS = [
     "Rain pattering on a curved hard shell right next to the ear, crisp clicks of drops, muffled outside rain, no music",
     "Heavy rain drumming on a closed motorcycle helmet heard from inside, dense close tapping, no music, no voices",
     "Light rain ticking on a visor and a carbon fibre panel, sparse close drops and a faint hiss, no music" ] },
-  { id: "spray", n: 4, seg: 4, laco: true, textos: [
-    `Continuous spray of water thrown up by fast spinning rubber tyres on a flooded road, rushing hissing whoosh, ${LIMPO}`,
-    `Fast tyres cutting through standing water, steady wet tearing hiss and splashing, ${LIMPO}`,
-    `Water mist and spray rushing past at high speed on a wet surface, airy watery roar, ${LIMPO}`,
-    `Wet tyre noise on soaked asphalt, sticky sizzling hiss with small splashes, ${LIMPO}` ] },
   { id: "vento", n: 6, seg: 6, laco: true, textos: [
     "Steady strong wind rushing past an open helmet at very high speed, constant airy roar and buffeting, no gusts stopping, no music, no voices",
     "High speed wind noise around a helmet, deep turbulent rumble with a bright airy hiss on top, constant, no music, no voices",

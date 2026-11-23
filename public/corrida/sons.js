@@ -141,14 +141,14 @@ export const Sound = (() => {
     const c = ctx(); if (!c) return;
     if (tem("chuva") || tem("chuva-fraca") || tem("chuva-forte")) { // a chuva gravada em laço, que entra devagar (uns 8 s) e sai mais depressa
       // (2026-11-23) três intensidades que se misturam pelo nível (garoa, média, forte; a que falta passa a vez para a que existe), a chuva no
-      // capacete na câmera de dentro, o spray dos pneus no molhado e, na chuva forte, uma rajada de vento de vez em quando
+      // capacete na câmera de dentro e, na chuva forte, uma rajada de vento de vez em quando
       const n = on ? Math.min(1, nivel) : 0, t = c.currentTime;
       let wF = n > 0 ? Math.max(0, Math.min(1, 1 - (n - 0.2) / 0.3)) : 0, wX = Math.max(0, Math.min(1, (n - 0.55) / 0.3)), wM = n > 0 ? Math.max(0, 1 - wF - wX) : 0;
       if (!tem("chuva-fraca")) { wM += wF; wF = 0; } if (!tem("chuva-forte")) { wM += wX; wX = 0; } if (!tem("chuva")) { if (tem("chuva-fraca")) wF += wM; else wX += wM; wM = 0; }
       const vol = n > 0.005 ? 0.22 + 0.4 * n : 0;
       for (const [id, w] of [["chuva-fraca", wF], ["chuva", wM], ["chuva-forte", wX]]) if (tem(id)) lacoNivel(id, vol * w, 1, (vol * w) > (lacosNovos[id]?.g.gain.value || 0) ? 2.6 : 1.2, CANAL.ambiente);
       lacoNivel("chuva-capacete", dentroCam ? n * 0.45 : 0, 1, 0.6);
-      if (tem("spray")) { lacoNivel("spray", Math.min(1, pneus) * 0.5, 0.85 + 0.3 * Math.min(1, pneus), 0.15); pneus = 0; }
+      // (2026-11-23, o Thiago: "o som de spray ficou MUITO ruim, tira") o spray gravado saiu: o chiado do molhado volta a ser o sintetizado de antes
       if (n > 0.6 && tem("vento-rajada") && t > (chuva.rajada || 0)) { if (chuva.rajada) umaVez("vento-rajada", 0.25 + 0.3 * n, 1, 0, CANAL.ambiente); chuva.rajada = t + 10 + Math.random() * 22; }
       nivel = 0;
     }

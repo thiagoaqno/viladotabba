@@ -38,7 +38,6 @@ echo   O CLIMA (muitas versoes, cada uma com uma descricao diferente):
 echo   trovao-perto (8), trovao-medio (8), trovao-longe (8)
 echo   chuva-fraca (4), chuva (6), chuva-forte (5), em laco
 echo   chuva-capacete (4)   a chuva batendo no capacete, na camera de dentro
-echo   spray (4)            o pneu jogando agua na pista molhada, em laco
 echo   vento (6)            o vento no cockpit, em laco
 echo   vento-rajada (6)     rajadas de vento na chuva forte
 echo.

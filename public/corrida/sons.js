@@ -303,6 +303,27 @@ export const Sound = (() => {
       s.connect(hp).connect(gs).connect(lado); s.start(t);
     }
   }
+  // (2026-11-23) o ambiente de cada pista (sons/amb-<pista>-*.mp3): um laço baixinho no barramento do ambiente (abre e fecha com a corrida);
+  // trocou de pista, o da anterior sai
+  let ambId = null;
+  function ambientePista(id, vol = 0.3) {
+    const k = id ? "amb-" + id : null;
+    if (ambId && ambId !== k) lacoNivel(ambId, 0, 1, 1.2, barramento());
+    ambId = k; if (k && tem(k)) lacoNivel(k, vol, 1, 1.5, barramento());
+  }
+  // os fogos (fogos.js): o estouro chega atrasado pela distância (`m`, em metros; o som a 343 m/s), perto alto e claro, longe abafado; o
+  // crisântemo crepita depois. Sem os gravados, um estouro sintetizado curto.
+  function fogos(tipo, m) {
+    const c = ctx(); if (!c || !on) return;
+    const perto = Math.max(0, Math.min(1, 1 - m / 700)), at = Math.min(3, m / 343), vol = 0.12 + 0.45 * perto;
+    const id = perto > 0.35 && tem("fogos-estouro") ? "fogos-estouro" : tem("fogos-longe") ? "fogos-longe" : tem("fogos-estouro") ? "fogos-estouro" : null;
+    if (id) { umaVez(id, vol, 1, at, CANAL.ambiente); if (tipo === "crisantemo" && tem("fogos-crepitar")) umaVez("fogos-crepitar", vol * 0.8, 1, at + 0.5, CANAL.ambiente); return; }
+    const t = c.currentTime + at, len = Math.floor(c.sampleRate * 0.7), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = 500 + 2500 * perto; g.gain.value = vol * 0.5;
+    s.connect(f).connect(g).connect(CANAL.ambiente); s.start(t);
+  }
+  function fogosSobe(m) { const c = ctx(); if (!c || !on || m > 450) return; umaVez("fogos-assobio", 0.1 + 0.3 * (1 - m / 450), 1, 0, CANAL.ambiente); }
   // o engenheiro falando: os motores de F1 descem para ~35% e voltam devagar quando ele acaba
   function abafar(sim) { if (motorBus && ac) motorBus.gain.setTargetAtTime(sim ? 0.35 : 1, ac.currentTime, sim ? 0.08 : 0.35); }
   function crash(forca, tipo = "muro") {
@@ -329,7 +350,7 @@ export const Sound = (() => {
     volume(v) { volume = Math.max(0, Math.min(1, v)); store.set("corrida:volume", volume); if (master) master.gain.setTargetAtTime(volume, ac.currentTime, 0.05); }, get nivel() { return volume; },
     radioSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.radio, abafar } : null; }, // o rádio do engenheiro usa o volume geral
     narradorSaida() { const c = ctx(); return c && master ? { ac: c, saida: CANAL.narrador, ligado: on } : null; }, // o narrador da transmissão: volume geral e som ligado
-    crash, chuva, zebra, torcida, chiado, trovao, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.35); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
+    crash, chuva, zebra, torcida, chiado, trovao, ambientePista, fogos, fogosSobe, pitStop() { if (!ac) ctx(); return pitStop(); }, fimDoPit() { if (!ac) ctx(); return fimDoPit(); }, tocar(id, vol = 0.7) { if (!ac) ctx(); return umaVez(id, vol); }, ersLiga, raspa, foraDaPista, vento, fundo() { if (!ac) ctx(); return umaVez("fundo", 0.7); }, ersFim() { if (!ac) ctx(); return umaVez("ers-fim", 0.35); }, limitador() { if (!ac) ctx(); return umaVez("limitador", 0.45); }, prepararChuva() { chuva(0, 0, true); }, engine, outros, ambiente: barramento, eco(v) { if (ecoG) ecoG.gain.setTargetAtTime(on ? v : 0, ac.currentTime, 0.25); }, troca(d) { tone(d > 0 ? 180 : 120, 0.05, { type: "square", vol: 0.05 }); }, toggle() { on = !on; store.set("corrida:sound", on); if (!on) { engine(0, false); if (window.Narrador) window.Narrador.parar(); } }, get on() { return on; }, unlock() { ctx(); },
   };
 })();
 function renderSoundBtn() { Comum.iconeSom(Sound.on); for (const id of ["volume", "volCorrida"]) { const el = $(id); if (el) el.value = Math.round(Sound.nivel * 100); } }

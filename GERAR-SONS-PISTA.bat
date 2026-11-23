@@ -42,6 +42,10 @@ echo   spray (4)            o pneu jogando agua na pista molhada, em laco
 echo   vento (6)            o vento no cockpit, em laco
 echo   vento-rajada (6)     rajadas de vento na chuva forte
 echo.
+echo   O AMBIENTE DE CADA PISTA (2 versoes de cada, em laco): amb-monaco (mar), amb-spa (passaros),
+echo   amb-silverstone (aviao) e as outras 21 pistas
+echo   OS FOGOS das pistas de noite: fogos-estouro (6), fogos-longe (5), fogos-crepitar (5), fogos-assobio (4)
+echo.
 echo O que gerar?
 echo   1) So os que faltam
 echo   2) Refazer todos

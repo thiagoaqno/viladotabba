@@ -1,5 +1,5 @@
 // Corrida da Galera — a carreira de F1 com mais vida (2026-11-23; carreira-vida.css). Tudo por delegação no documento, então vale para o que a Central
-// redesenhar depois. Com "reduzir movimento", só o essencial (nada se mexe). Ajudas: CarreiraVida.entrar(corpo, dir) (o slide com mola), que a
+// redesenhar depois. Com "reduzir movimento", só o essencial (nada se mexe). Ajudas: CarreiraVida.entrar(corpo, dir) (a tela se montando peça por peça), que a
 // troca de aba da Central chama (central.js animarAba). Também o ponteiro (um ponto e um anel) no lugar da seta.
 (function (root) {
   if (typeof document === "undefined") return;
@@ -73,24 +73,28 @@
     if (el.classList.contains("cx-aba") && !reduz()) { el.classList.remove("cv-pulo"); void el.offsetWidth; el.classList.add("cv-pulo"); }
   }, { passive: true });
 
-  // ---------- a troca de aba: um slide com mola ----------
-  // (2026-11-23, o Thiago: "eu sempre vejo o conteúdo antes de a faixa passar" e "quero algo minimalista e moderno, só um slide com efeito mola")
-  // A faixa saiu. O conteúdo novo é desenhado e, no MESMO quadro (antes de a tela pintar), já começa escondido e fora do lugar: entra deslizando do
-  // lado para onde a pessoa foi, passa um pouco do ponto e volta (a mola), bloco a bloco com um atraso curto. Nada aparece antes da hora.
-  const MOLA = (() => { // os quadros da mola (amortecida: passa ~6% do ponto e assenta), de 0 a 1
-    const z = 0.62, w = 15, wd = w * Math.sqrt(1 - z * z), n = 36, dur = 0.62, q = [];
-    for (let k = 0; k <= n; k++) { const t = (k / n) * dur; q.push(k === n ? 1 : 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t))); }
-    return { q, ms: dur * 1000 };
-  })();
+  // ---------- a troca de aba: a tela se monta aos poucos ----------
+  // (2026-11-23, o Thiago: a mola "não foi boa... algo mais clean: cada elemento dando um slide e a tela se montando aos poucos") cada peça da aba
+  // nova (os blocos e, dentro das grades, cada cartão) desliza um pouco do lado para onde a pessoa foi e aparece, sem passar do ponto, uma depois
+  // da outra na ordem da leitura (de cima para baixo, da esquerda para a direita). Tudo começa escondido no mesmo quadro em que a aba é desenhada.
   function varrer() {} // (a faixa saiu: fica o nome para quem ainda chama)
+  const SUAVE = "cubic-bezier(.16,1,.3,1)"; // (sai rápido e assenta devagar, sem mola)
+  function pecas(corpo) {
+    const lista = [];
+    for (const el of corpo.children) {
+      const filhos = [...el.children], d = getComputedStyle(el).display;
+      if (filhos.length >= 2 && filhos.length <= 12 && /grid|flex/.test(d) && el.tagName !== "TABLE") lista.push(...filhos); else lista.push(el);
+      if (lista.length >= 24) break;
+    }
+    const r = new Map(lista.map((el) => [el, el.getBoundingClientRect()]));
+    return lista.filter((el) => r.get(el).height > 0).sort((x, y) => { const a = r.get(x), b = r.get(y); return Math.abs(a.top - b.top) > 8 ? a.top - b.top : a.left - b.left; }).slice(0, 18);
+  }
   function entrar(corpo, dir = 1) {
     if (reduz() || !corpo || !corpo.animate) return;
-    const blocos = [...corpo.children].slice(0, 10), D = 48 * dir;
-    (blocos.length ? blocos : [corpo]).forEach((el, i) => {
-      const atraso = i * 38;
-      el.animate(MOLA.q.map((x) => ({ transform: `translateX(${((1 - x) * D).toFixed(2)}px)` })), { duration: MOLA.ms, delay: atraso, easing: "linear", fill: "backwards" });
-      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: atraso, easing: "ease-out", fill: "backwards" });
-    });
+    const lista = pecas(corpo);
+    (lista.length ? lista : [corpo]).forEach((el, i) => el.animate(
+      [{ opacity: 0, transform: `translate(${dir * 22}px, 6px)` }, { opacity: 1, transform: "none" }],
+      { duration: 460, delay: Math.min(620, i * 48), easing: SUAVE, fill: "backwards" }));
   }
 
   // ---------- o ponteiro: um ponto e um anel ----------

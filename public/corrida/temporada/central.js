@@ -300,7 +300,7 @@ function pintar(alvo, html) {
 function animarAba(dir) {
   if (matchMedia("(prefers-reduced-motion:reduce)").matches) return;
   const corpo = document.querySelector(".cx-corpo"); if (!corpo?.animate) return;
-  if (root.CarreiraVida) { root.CarreiraVida.entrar(corpo, dir); return; } // (2026-11-23, carreira-vida.js: o slide com mola; a faixa saiu)
+  if (root.CarreiraVida) { root.CarreiraVida.entrar(corpo, dir); return; } // (2026-11-23, carreira-vida.js: a tela se monta peça por peça)
   const blocos = [...corpo.children].slice(0, 6);
   (blocos.length ? blocos : [corpo]).forEach((el, i) => el.animate([{ opacity: 0, transform: `translateX(${dir * 22}px)` }, { opacity: 1, transform: "none" }], { duration: 260, delay: i * 35, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" }));
 }

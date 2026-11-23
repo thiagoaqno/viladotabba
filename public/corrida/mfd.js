@@ -16,7 +16,6 @@ const M = () => window.HudMfd, F = () => window.F1Regras;
 export const mfd = { aberto: true, pagina: "resumo", lista: [], linha: {}, ultimo: 0, entrada: "teclado" };
 // o que controles.js registra (a câmera e a torre são dele e do hud.js): { camera(d), torre(): alterna compacta/completa }
 import { estiloHud, definirEstiloHud, ESTILOS_HUD } from "./hud-telemetria.js";
-import { editarHud } from "./hud-vivo.js";
 export const acoes = { camera: null, cameraAjuste: null, camNome: () => "", radioRival: null, torreCompacta: () => true, torreAlternar: null, mapaPerto: () => false, mapaAlternar: null };
 const LEITURA = {}; // os últimos dados que o hud passou (as linhas do painel leem daqui)
 let raiz = null, refs = {}, abas = "", paginaVista = null;
@@ -243,7 +242,6 @@ const LINHAS = {
   ],
   ajustes: [
     { rot: "Torre", valor: () => (acoes.torreCompacta() ? "Compacta" : "Completa"), mudar() { if (acoes.torreAlternar) acoes.torreAlternar(); } },
-    { rot: "Posição do HUD", valor: () => "Mover", mudar() { editarHud(true); } }, // (2026-11-23: arrastar velocímetro, tempos, torre, mapa... hud-vivo.js)
     { rot: "Câmera", valor: () => acoes.camNome(), mudar(d) { if (acoes.camera) acoes.camera(d); } },
     { rot: "Ajuste da câmera", dica: "H", valor: () => "Abrir", mudar() { if (acoes.cameraAjuste) acoes.cameraAjuste(); } },
     { rot: "Mapa", valor: () => (acoes.mapaPerto() ? "Perto" : "Pista inteira"), mudar() { if (acoes.mapaAlternar) acoes.mapaAlternar(); } },

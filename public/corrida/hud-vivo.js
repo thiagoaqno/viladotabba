@@ -43,7 +43,21 @@ function aplicar(sel) {
   el.style.translate = tr;
   if (sel === "hTorre") { const av = document.getElementById("avisosF1"); if (av) av.style.translate = tr; } // (o card dos avisos mora em cima da torre: vai junto)
 }
-export function aplicarPosicoes() { for (const [s] of ALVOS) aplicar(s); }
+export function aplicarPosicoes() { if (!arrasto) { try { pos = store.get(CHAVE) || {}; } catch (_) { pos = {}; } } for (const [s] of ALVOS) aplicar(s); } // (relê: a miniatura das Configurações, hud-layout.js, também muda)
+// o lugar de fábrica de cada bloco nesta tela (sem o deslocamento), para a miniatura das Configurações desenhar fora da corrida (hud-layout.js)
+function medir() {
+  const r = document.getElementById("race"); if (!r || r.classList.contains("hidden") || editando) return;
+  const W = window.innerWidth, H = window.innerHeight, ant = store.get("corrida:hud-rects"), itens = ant && ant.W === W && ant.H === H ? { ...ant.itens } : {};
+  let mudou = !ant || ant.W !== W || ant.H !== H;
+  for (const [s, nome] of ALVOS) {
+    const el = elDe(s); if (!el || el.offsetParent === null || getComputedStyle(el).visibility === "hidden") continue;
+    const b = el.getBoundingClientRect(); if (b.width < 4 || b.height < 4) continue;
+    const p = pos[s] || [0, 0], v = [Math.round(b.left - p[0]), Math.round(b.top - p[1]), Math.round(b.width), Math.round(b.height), nome];
+    if (String(itens[s]) !== String(v)) { itens[s] = v; mudou = true; }
+  }
+  if (mudou && Object.keys(itens).length) store.set("corrida:hud-rects", { W, H, itens });
+}
+setInterval(medir, 3000);
 
 let editando = false, barra = null, arrasto = null;
 export const editandoHud = () => editando;
@@ -79,3 +93,4 @@ document.addEventListener("pointerup", soltar, true); document.addEventListener(
 document.addEventListener("keydown", (e) => { if (editando && e.key === "Escape") { e.preventDefault(); editarHud(false); } });
 aplicarPosicoes();
 window.addEventListener("hud:estilo", aplicarPosicoes);
+window.HudVivo = { aplicarPosicoes, editarHud };

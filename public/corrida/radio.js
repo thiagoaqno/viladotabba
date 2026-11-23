@@ -71,8 +71,9 @@ if (temDOM) {
 // observador (spot*) é sempre a voz dele. A escolha fica no navegador (`corrida:engenheiro`) e aparece em Configurações, Áudio.
 const ENGENHEIROS = [
   { id: "", nome: "Jeff", estilo: "O de sempre" },
-  { id: "marcos", nome: "Marcos", estilo: "Veterano, calmo" },
-  { id: "bia", nome: "Bia", estilo: "Empolgada" },
+  // (2026-11-23, o Thiago: "acho que vamos manter só o Jeff mesmo, por enquanto") o Marcos e a Bia saíram da escolha; as vozes deles continuam em
+  // radio/marcos e radio/bia, para voltar é só pôr as duas linhas de volta:
+  // { id: "marcos", nome: "Marcos", estilo: "Veterano, calmo" }, { id: "bia", nome: "Bia", estilo: "Empolgada" },
 ];
 // (2026-11-21, o Thiago: "só tenho 83.200 caracteres... mantém o Jeff e cria mais 2") Jeff, Marcos e Bia, todos com as falas completas (~35,5 mil
 // caracteres cada um novo). VARIACOES_ENG fica sem limite; com um número, o rádio sortearia só entre as primeiras variações (o --variacoes do gerador)

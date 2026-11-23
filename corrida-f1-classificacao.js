@@ -29,7 +29,7 @@ function tabela(room, agora = Date.now()) {
   const q = room.quali;
   return F1.ordenarClassificacao(q.ativos.map((id) => {
     const p = room.players[id];
-    if (p && p.bot) { const r = q.robos[id], quando = q.startAt + r.em * q.durMs; return agora >= quando ? { id, tempo: r.tempo, quando } : { id, tempo: null, quando: null }; }
+    if (p && p.bot && q.robos[id]) { const r = q.robos[id], quando = q.startAt + r.em * q.durMs; return agora >= quando ? { id, tempo: r.tempo, quando } : { id, tempo: null, quando: null }; } // (a conta rápida, sem ninguém na pista; pilotando, vale a volta abaixo)
     return { id, tempo: p && p.qMelhor != null ? p.qMelhor : null, quando: p && p.qQuando != null ? p.qQuando : null, voltas: (p && p.qVoltas) || 0, setores: (p && p.qMelhorSet) || null };
   }));
 }
@@ -93,8 +93,11 @@ function abrirSessao(room, deps) {
     const p = room.players[id];
     Object.assign(p, { sector: T.SECTORS - 1, qIni: null, qMelhor: null, qQuando: null, qVoltas: 0, qSet: null, qMelhorSet: null, qFim: false, qPronto: false, pos: null });
     if (!p.bot) p.grid = g++; // cada um na sua fila do grid, só para sair de um lugar diferente (na classificação não tem batida)
-    else q.robos[id] = Robos.voltaLancada(room, p, q.i, bots.indexOf(id), bots.length, { startAt: q.startAt, durMs: q.durMs });
+    else if (!quemJoga) q.robos[id] = Robos.voltaLancada(room, p, q.i, bots.indexOf(id), bots.length, { startAt: q.startAt, durMs: q.durMs }); // (sem ninguém na pista: a conta rápida de sempre)
   }
+  // (2026-11-23) com gente jogando, os robôs PILOTAM a sessão, como fantasmas (corrida-robos.js prepararQuali), e o tempo deles é a volta cronometrada
+  q.robos = quemJoga ? {} : q.robos;
+  if (quemJoga) { try { Robos.prepararQuali(room); } catch (e) { console.warn("Classificação: os robôs não saíram para pilotar", e); } }
   clearInterval(q.tique); q.tique = setInterval(() => deps.broadcast(room), 1000);
   clearTimeout(q.fim); q.fim = setTimeout(() => verificarFim(room, deps), CONTAGEM_MS + q.durMs);
   clearTimeout(q.corte); q.corte = setTimeout(() => fechar(room, deps), CONTAGEM_MS + q.durMs + GRACA_MS); // ninguém segura a sessão

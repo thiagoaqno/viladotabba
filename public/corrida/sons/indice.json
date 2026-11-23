@@ -12,8 +12,8 @@
  "batida-carro-media": 3,
  "batida-carro-forte": 3,
  "chegada": 2,
- "ers-liga": 1,
- "radio-bip": 1,
+ "ers-liga": 2,
+ "radio-bip": 2,
  "raspa": 2,
  "fundo": 3,
  "brita": 2,
@@ -21,5 +21,7 @@
  "vento": 1,
  "ers-fim": 2,
  "limitador": 1,
+ "trovao-perto": 3,
+ "trovao-longe": 3,
  "chuva": 1
 }

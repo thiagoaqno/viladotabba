@@ -188,7 +188,7 @@ const radioF1 = (situacao, op) => { if (window.Radio && E.S && E.S.config && E.S
 const LOGO_AVISO = LOGO_F1.replace('class="f1logo"', 'class="f1logo av-logo"');
 const NOS_AVISOS = new Map();
 let FILA_AVISOS = null;
-const filaAvisos = () => FILA_AVISOS || (FILA_AVISOS = window.AvisosF1.criarFila({ max: 1, ttl: 3800 })); // um aviso por vez (pedido do Thiago, 2026-11-11); os outros esperam a vez
+const filaAvisos = () => FILA_AVISOS || (FILA_AVISOS = window.AvisosF1.criarFila({ max: 1, ttl: 3000 })); // um aviso por vez (pedido do Thiago, 2026-11-11); os outros esperam a vez
 export function htmlAviso(tipo, texto) {
   const A = window.AvisosF1, t = A.tipoDe(tipo);
   const cab = t.direcao ? '<b>DIREÇÃO DE PROVA</b><small>RACE CONTROL</small>' : `<b>${t.rotulo}</b>`;
@@ -223,12 +223,16 @@ export function htmlCard(tipo, texto) {
 function estiloCard(el, tipo) { const t = window.AvisosF1.tipoDe(tipo); el.dataset.tipo = tipo; el.classList.toggle("escuro", !t.card); el.style.setProperty("--card", t.card || "#1a1d24"); el.style.setProperty("--card-txt", t.cardTxt || "#fff"); el.style.setProperty("--card-ic", t.card ? "currentColor" : t.bloco); }
 function estiloAviso(el, tipo) { const t = window.AvisosF1.tipoDe(tipo); el.style.setProperty("--fundo", t.fundo); el.style.setProperty("--txt", t.txt); el.style.setProperty("--bloco", t.bloco); }
 // um aviso de fora (toast, tela de fim): vira uma faixa da fila
-E.avisarF1 = (texto, ms) => { const A = window.AvisosF1, l = A.limpar(texto); if (l && window.Radio && (A.tipoDoTexto(texto) !== "vmr" || (me() && texto.includes(me().name)))) window.Radio.avisoF1(A.tipoDoTexto(texto)); if (l) filaAvisos().empurrar({ tipo: A.tipoDoTexto(texto), texto: l, ttl: Math.max(2600, (ms || 3200) + 1200) }, Date.now()); };
+E.avisarF1 = (texto, ms) => { const A = window.AvisosF1, l = A.limpar(texto); if (l && window.Radio && (A.tipoDoTexto(texto) !== "vmr" || (me() && texto.includes(me().name)))) window.Radio.avisoF1(A.tipoDoTexto(texto)); if (l) filaAvisos().empurrar({ tipo: A.tipoDoTexto(texto), texto: l, ttl: Math.max(2400, Math.min(3600, ms || 3000)) }, Date.now()); }; // (2026-11-23: no máximo 3,6 s; antes chegava a 10 s)
 // o aviso que dura enquanto a situação dura (bandeira, box, perda total...): uma faixa só, troca o texto no lugar
 function estadoF1(texto) {
   const A = window.AvisosF1, f = filaAvisos(), l = A.limpar(texto);
   if (l && window.Radio) { const t = A.tipoDoTexto(texto); window.Radio.avisoF1(t); if (/perda total/i.test(texto)) window.Radio.uma("dnf:" + (E.S && E.S.startAt), () => window.Radio.fim(0, 0, true)); }
-  if (!l) f.remover("estado"); else f.empurrar({ chave: "estado", tipo: A.tipoDoTexto(texto), texto: l, fixo: true }, Date.now());
+  // (2026-11-23, o Thiago: "tem uns avisos que duram muito tempo na tela") bandeira vermelha, preta, amarela e safety car ficam enquanto durarem;
+  // o resto (bandeira azul, limites da pista, box, perda total...) aparece por 5 s e só volta se o texto mudar
+  const tipo = l ? A.tipoDoTexto(texto) : null, grave = tipo === "vermelha" || tipo === "preta" || tipo === "sc" || tipo === "amarela", agora = Date.now();
+  if (l !== race.estTxt) { race.estTxt = l; race.estAte = agora + 5000; }
+  if (!l || (!grave && agora > race.estAte)) f.remover("estado", agora); else f.empurrar({ chave: "estado", tipo, texto: l, fixo: true }, agora);
 }
 function desenharAvisos() {
   const box = $("avisosF1"); if (!box) return;
@@ -246,6 +250,10 @@ function desenharAvisos() {
     else if (n._tipo !== a.tipo || n._txt !== a.texto) { const trocou = n._tipo !== a.tipo; n._tipo = a.tipo; n._txt = a.texto; estiloCard(n, a.tipo); n.innerHTML = htmlCard(a.tipo, a.texto); if (trocou) { n.classList.remove("troca"); void n.offsetWidth; n.classList.add("troca"); } }
   }
   for (const [id, n] of NOS_AVISOS) if (!vivos.has(id)) { NOS_AVISOS.delete(id); n.classList.add("sai"); setTimeout(() => n.remove(), 420); } // sai com a animação (CSS) e só então some do DOM
+  // (2026-11-23, o Thiago: "o cabeçalho não fica maior e desloca as posições para baixo, aí cobre o nome do primeiro") o card abre sobre o
+  // cabeçalho da torre e as linhas descem o tanto que ele cresceu (hud-cards.css: --av-h no #hTorre); quando ele fecha, sobem de volta
+  const torre = $("hTorre"), ativo = [...NOS_AVISOS.values()].pop();
+  if (torre) { const topo = ativo && ativo.querySelector(".avc-topo"), cresce = ativo ? Math.max(0, ativo.offsetHeight - (topo ? topo.offsetHeight : 38)) : 0; torre.style.setProperty("--av-h", cresce + "px"); }
 }
 // a batalha pela liderança (o card "Battle for first"): com o 2º a menos de 1 s do líder, aparece a cada 2 voltas do líder por 7 s, e o número
 // acompanha ao vivo enquanto o card está na tela
@@ -255,7 +263,7 @@ function batalhaF1(linhas) {
   const gap = parseFloat(String(b.dif.texto).replace(/[^\d.,]/g, "").replace(",", ".")), lider = S.players.find((p) => p.id === a.id), volta = (lider && lider.laps) || 0, agora = Date.now();
   if (!(gap < 1) || volta < 2) { if (agora > (race.batAte || 0)) f.remover("batalha"); return; }
   const texto = `${a.sigla}|${a.equipe}|${b.sigla}|${b.equipe}|${gap.toFixed(3)}`;
-  if (race.batVolta !== volta && volta % 2 === 0) { race.batVolta = volta; race.batAte = agora + 7000; f.empurrar({ chave: "batalha", tipo: "batalha", texto, ttl: 7000 }, agora); }
+  if (race.batVolta !== volta && volta % 2 === 0) { race.batVolta = volta; race.batAte = agora + 5000; f.empurrar({ chave: "batalha", tipo: "batalha", texto, ttl: 5000 }, agora); }
   else if (agora < (race.batAte || 0)) f.empurrar({ chave: "batalha", tipo: "batalha", texto }, agora);
 }
 // o que vira aviso a cada quadro: as linhas novas do log da direção de prova, o DRS liberado, a volta mais rápida, a largada e a bandeirada
@@ -275,12 +283,14 @@ function avisosF1(m, left, now) {
     race.avDrs = z;
     // a volta mais rápida da corrida: muda quando alguém baixa o tempo
     let melhor = null; for (const p of S.players) if (p.best != null && (!melhor || p.best < melhor.best)) melhor = p;
-    if (melhor && (race.avVmr == null || melhor.best < race.avVmr - 1e-6)) { if (m && melhor.id === m.id) f.empurrar({ tipo: "vmr", texto: `Você · ${fmt(melhor.best)}`, ttl: 4200 }, agora); race.avVmr = melhor.best; } // (só a sua)
+    if (melhor && (race.avVmr == null || melhor.best < race.avVmr - 1e-6)) { if (m && melhor.id === m.id) f.empurrar({ tipo: "vmr", texto: `Você · ${fmt(melhor.best)}`, ttl: 3200 }, agora); race.avVmr = melhor.best; } // (só a sua)
     // o stop-and-go pendente: faixa fixa até cumprir (as voltas que restam mudam no lugar)
-    if (m && m.stopGo && !m.dnf) f.empurrar({ chave: "stopgo", tipo: "punicao", texto: `Stop-and-go ${m.stopGo.s} s: cumpra em ${m.stopGo.v} volta${m.stopGo.v > 1 ? "s" : ""} · B pede o box`, fixo: true }, agora);
-    else f.remover("stopgo", agora);
+    // (2026-11-23: não fica mais fixo; aparece 5 s e de novo a cada volta que muda)
+    const sg = m && m.stopGo && !m.dnf ? `Stop-and-go ${m.stopGo.s} s: cumpra em ${m.stopGo.v} volta${m.stopGo.v > 1 ? "s" : ""} · B pede o box` : null;
+    if (sg && race.avSG !== sg) { race.avSG = sg; f.empurrar({ chave: "stopgo", tipo: "punicao", texto: sg, ttl: 5000 }, agora); }
+    else if (!sg) { race.avSG = null; f.remover("stopgo", agora); }
     // minha bandeirada
-    if (m && m.finish != null && !race.avFim) { race.avFim = true; f.empurrar({ tipo: "chegada", texto: "Bandeirada! Você cruzou a linha de chegada", ttl: 6000 }, agora); window.Narrador?.falarEvento("chegada"); Sound.tocar("chegada", 0.75); }
+    if (m && m.finish != null && !race.avFim) { race.avFim = true; f.empurrar({ tipo: "chegada", texto: "Bandeirada! Você cruzou a linha de chegada", ttl: 4000 }, agora); window.Narrador?.falarEvento("chegada"); Sound.tocar("chegada", 0.75); }
   }
   desenharAvisos();
 }

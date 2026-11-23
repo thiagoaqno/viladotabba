@@ -428,10 +428,11 @@ function hudF1(m, st, now) {
     const d = box[k], l = ver[k] != null ? linhas[ver[k]] : null;
     const aviso = l && indicacoes.get(l.id);
     set(d, "c", l ? "tl" + (l.eu ? " eu" : "") + (l.pos === 1 ? " p1" : "") + (l.volta ? " vmr" : "") + (l.dif.tipo === "out" ? " out" : "") + (aviso ? " trocou" : "") : "tl hidden");
-    d._piloto = l ? l.id : null;
+    const prevId = d._piloto; d._piloto = l ? l.id : null;
     if (!l) continue;
     const c = d.children; // n, eq, sg, pn, ic, df, vrx
     set(c[0], "t", l.pos); logoNaTorre(c[1], l); set(c[2], "t", l.sigla);
+    if (prevId === l.id) animarLinhaTorre(d, c, l, aviso, ic0(l)); else { d._ic = ic0(l); d._vmr = !!l.volta; d._pos = l.pos; }
     set(c[3], "t", l.letra); set(c[3], "col", (F.PNEUS[l.pneu] || F.PNEUS.medio).cor);
     const ic = l.dif.tipo === "out" ? (l.dsq ? "DSQ" : "DNF") : l.noBox ? "BOX" : l.acabou ? "FIM" : l.sg ? "SG" : l.penal > 0 ? `+${l.penal}s` : ""; // fora (ou desclassificado), no box, bandeirado, com stop-and-go a cumprir ou punido
     set(c[4], "t", ic); set(c[4], "c", "ic" + (ic === "DNF" || ic === "DSQ" ? " dnf" : ic === "BOX" ? " box" : ic === "FIM" ? " fim" : ic ? " pen" : ""));
@@ -441,7 +442,26 @@ function hudF1(m, st, now) {
     set(c[7], "aria-label", aviso ? (aviso.subiu ? "Subiu de posição" : "Perdeu posição") : "");
     set(c[7], "aria-hidden", String(!aviso));
   }
-  // FLIP: o piloto vai da posição anterior à nova; mudanças rápidas começam da posição visível.
+  // (2026-11-23, o Thiago: "a torre de troca de posições precisa ser mais animada") os efeitos de uma vez só em cada linha, quando algo muda para o
+// mesmo piloto: o brilho que atravessa a linha (verde subiu, vermelho caiu) com o número girando como placar, a etiqueta (BOX, DNF, punição)
+// deslizando, o roxo da volta mais rápida piscando e a sua linha com um anel. hud-f1.css: .tl::after e os @keyframes tt*.
+const MOVE_OK = () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function ic0(l) { return l.dif.tipo === "out" ? (l.dsq ? "DSQ" : "DNF") : l.noBox ? "BOX" : l.acabou ? "FIM" : l.sg ? "SG" : l.penal > 0 ? `+${l.penal}s` : ""; }
+// (num atributo data-*, não na classe: a linha troca de classe a cada mudança e cortaria o efeito no meio)
+function reanimar(el, nome) { const at = "data-" + nome; el.removeAttribute(at); void el.offsetWidth; el.setAttribute(at, ""); clearTimeout(el["_t" + nome]); el["_t" + nome] = setTimeout(() => el.removeAttribute(at), 1400); }
+function animarLinhaTorre(d, c, l, aviso, ic) {
+  if (!MOVE_OK()) { d._ic = ic; d._vmr = !!l.volta; d._pos = l.pos; return; }
+  if (d._pos != null && d._pos !== l.pos && E.S.phase === "race") {
+    reanimar(d, l.pos < d._pos ? "tt-ganhou" : "tt-perdeu");
+    c[0].animate([{ transform: "rotateX(90deg)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 320, easing: "cubic-bezier(.2,.9,.3,1)" });
+    if (l.eu) reanimar(d, "tt-eu");
+  }
+  if (ic && ic !== d._ic) c[4].animate([{ transform: "translateX(16px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: "cubic-bezier(.2,1.3,.4,1)" });
+  if ((ic === "DNF" || ic === "DSQ") && d._ic !== ic) reanimar(d, "tt-fora");
+  if (l.volta && !d._vmr) reanimar(d, "tt-roxo");
+  d._ic = ic; d._vmr = !!l.volta; d._pos = l.pos;
+}
+// FLIP: o piloto vai da posição anterior à nova; mudanças rápidas começam da posição visível.
   if (mudou && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) for (let k = 0; k < box.length; k++) {
     const d = box[k], l = ver[k] != null ? linhas[ver[k]] : null, antiga = l && anterior.get(l.id);
     if (!antiga || !posAnt.has(l.id) || posAnt.get(l.id) === l.pos) continue;

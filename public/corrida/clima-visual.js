@@ -439,6 +439,29 @@ scene.add(domo, gotas, resp, spray, amostraGotas);
 let ultRace = null, ativoAntes = false; const marcasCarros = [], meuMarca = { x: 0, y: 0, a: 0, v: 0 };
 // chamado por quadro (jogo.js, depois de posicionar a câmera): `mode` é a câmera ("perto", "cockpit", "longe", "cima"), `src` o carro
 // que a câmera segue e `c` o meu carro como é desenhado
+// ---------- os raios (2026-11-23, o Thiago: "na chuva trovões e raios; nublado só raios, flashes nas nuvens bastam") ----------
+// De tempos em tempos as nuvens (o domo) piscam: 2 ou 3 clarões em ~0,3 s. Na chuva vem o trovão (Sound.trovao), atrasado pela distância do raio
+// (perto: quase junto e mais claro; longe: uns segundos depois, abafado); no nublado sem chuva só o clarão, mais raro e mais fraco. Com
+// "reduzir movimento" o clarão fica bem mais fraco. O domo pega a cor da neblina a cada quadro, então o brilho a mais não acumula.
+let raioEm = -1, raioT = 9, raioForca = 0, raioPulsos = [], trovaoEm = -1, trovaoPerto = 0, domoBase = null;
+function passoRaios(dt, I, N) {
+  const chove = I > 0.25, nublado = !chove && N > 0.3 && clima.nublado;
+  if (!scene.fog) { if (!domoBase) domoBase = domo.material.color.clone(); domo.material.color.copy(domoBase); }
+  if (!(chove || nublado) || !domo.visible) { raioEm = -1; trovaoEm = -1; return; }
+  if (raioEm < 0) raioEm = chove ? (6 + Math.random() * 14) * (1.3 - 0.5 * Math.min(1, I)) : 14 + Math.random() * 24;
+  raioEm -= dt;
+  if (raioEm <= 0) {
+    raioEm = -1; raioT = 0;
+    const perto = chove ? Math.random() : 0.15 + Math.random() * 0.3; // (no nublado, sempre longe)
+    raioForca = (chove ? 0.45 + 0.75 * perto : 0.25 + 0.4 * perto) * (reduz.matches ? 0.3 : 1);
+    raioPulsos = [0]; const n = 1 + Math.floor(Math.random() * 3); for (let k = 1; k < n; k++) raioPulsos.push(raioPulsos[k - 1] + 0.06 + Math.random() * 0.12);
+    if (chove) { trovaoPerto = perto; trovaoEm = 0.12 + (1 - perto) * (1.5 + Math.random() * 2.5); }
+  }
+  if (trovaoEm >= 0) { trovaoEm -= dt; if (trovaoEm < 0) Sound.trovao?.(trovaoPerto); }
+  raioT += dt;
+  let f = 0; for (const p of raioPulsos) { const d = raioT - p; if (d >= 0) f = Math.max(f, Math.exp(-d / 0.055) * (p === 0 ? 1 : 0.55 + 0.4 * Math.random())); }
+  if (f > 0.01) domo.material.color.multiplyScalar(1 + 2.4 * raioForca * f);
+}
 export function passoClima(dt, race, cam, mode, src, c) {
   camPreaquecer = cam;
   if (race !== ultRace) { ultRace = race; meuMarca.__marca = null; I = clima.chuva; sVivos = 0; sVida.fill(0); sAlfa.fill(0); rVivos = 0; rVida.fill(0); gotaT = -1; grX = NaN; coletarAsfalto(race.tr); }
@@ -469,6 +492,7 @@ export function passoClima(dt, race, cam, mode, src, c) {
     }
     const op = fecha * 0.97; // (a garoa já cobre a foto do céu azul)
     domo.material.opacity = op; domo.visible = op > 0.01; domo.position.copy(cam.position);
+    passoRaios(dt, I, N);
     if (!reduz.matches) nuvens.offset.x = (nuvens.offset.x + dt * 0.002) % 1;
     ativoAntes = I > 0;
     if (N && Iv === N) { sun.color.lerp(TARDE, 0.35); sun.shadow.intensity = 0.35; eCorSol.ult.copy(sun.color); } // (o sol baixo atrás das nuvens: um pouco de sombra mole, quente)

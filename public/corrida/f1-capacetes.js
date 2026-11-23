@@ -413,8 +413,42 @@ export function bandeiraImg(sigla, aoChegar) {
   if (!b.ok && aoChegar) b.espera.push(aoChegar);
   return b.ok ? b.img : null;
 }
+// a bandeira num círculo no alto do capacete, vista de cima: a parte de cima da bandeira para a frente (−z) e a esquerda dela na esquerda do piloto.
+// A folha é a da esfera (coluna = phi/2π · 512, linha = theta/π · 256; a frente em phi = 1,5π, a coluna 384), então o círculo em volta do polo
+// vira uma faixa no alto da folha: cada pixel dela é levado ao plano do topo (projeção azimutal) e pega a cor da bandeira ali. A bandeira cobre o
+// círculo (as pontas de lado ficam cortadas) e leva um aro escuro fino em volta.
+const TOPO = { raio: 0.46, aro: 0.035 }; // (em radianos de theta, a partir do polo)
+const PIX_BAND = new Map();
+function pixelsDaBandeira(sigla, img) {
+  let p = PIX_BAND.get(sigla); if (p) return p;
+  const w = 192, h = 128, cv = document.createElement("canvas"); cv.width = w; cv.height = h; const c = cv.getContext("2d");
+  c.drawImage(img, 0, 0, w, h);
+  try { p = { w, h, d: c.getImageData(0, 0, w, h).data }; } catch { return null; }
+  PIX_BAND.set(sigla, p); return p;
+}
+function bandeiraNoTopo(x, sigla, img) {
+  const W = x.canvas.width, H = x.canvas.height, R = TOPO.raio, RA = R + TOPO.aro, linhas = Math.min(H, Math.ceil((RA / Math.PI) * H) + 2);
+  const b = pixelsDaBandeira(sigla, img); if (!b) return;
+  let dados; try { dados = x.getImageData(0, 0, W, linhas); } catch { return; }
+  const d = dados.data, passo = Math.PI / H; // (o tamanho de um pixel em theta: a borda sai suave)
+  for (let j = 0; j < linhas; j++) {
+    const th = ((j + 0.5) / H) * Math.PI; if (th > RA + passo) break;
+    for (let i = 0; i < W; i++) {
+      const phi = ((i + 0.5) / W) * Math.PI * 2, X = -Math.cos(phi) * th, Z = Math.sin(phi) * th, k = (j * W + i) * 4;
+      let r = 11, g = 12, bl = 16; // o aro escuro
+      const dentro = Math.max(0, Math.min(1, (R - th) / passo + 0.5));
+      if (dentro > 0) {
+        const u = Math.max(0, Math.min(b.w - 1, Math.floor((X / (3 * R) + 0.5) * b.w))), v = Math.max(0, Math.min(b.h - 1, Math.floor((Z / (2 * R) + 0.5) * b.h))), q = (v * b.w + u) * 4;
+        r = r + (b.d[q] - r) * dentro; g = g + (b.d[q + 1] - g) * dentro; bl = bl + (b.d[q + 2] - bl) * dentro;
+      }
+      const a = Math.max(0, Math.min(1, (RA - th) / passo + 0.5));
+      d[k] += (r - d[k]) * a; d[k + 1] += (g - d[k + 1]) * a; d[k + 2] += (bl - d[k + 2]) * a;
+    }
+  }
+  x.putImageData(dados, 0, 0);
+}
 // pinta a folha inteira: o casco, o desenho e o que todo capacete tem (a faixa do patrocínio acima da viseira, o filete embaixo e o número);
-// `extra` (o capacete de quem joga): a bandeira atrás e nos lados e o nome na faixa acima da viseira e na nuca. `aoChegar`: a bandeira chegou depois, repinte
+// `extra` (o capacete de quem joga): a bandeira num círculo no topo e o nome na faixa acima da viseira e na nuca. `aoChegar`: a bandeira chegou depois, repinte
 export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = null) {
   const v = extra && extra.variante | 0, base = v === 1 ? [cores[0], cores[2], cores[1]] : v === 2 ? [cores[1], cores[0], cores[2]] : cores; // (o "Padrão": as cores trocadas)
   const [c1, c2, c3] = base;
@@ -436,7 +470,7 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   }
   if (extra) {
     const img = extra.bandeira ? bandeiraImg(extra.bandeira, aoChegar) : null;
-    if (img) for (const [cx, cy, w] of [[128, 104, 84], [256, 120, 54], [0, 120, 54], [512, 120, 54]]) { x.fillStyle = "#0b0c10"; x.fillRect(cx - w / 2 - 2, cy - w / 3 - 2, w + 4, w * 2 / 3 + 4); x.drawImage(img, cx - w / 2, cy - w / 3, w, w * 2 / 3); }
+    if (img) bandeiraNoTopo(x, extra.bandeira, img); // (2026-11-23, o Thiago: a bandeira redonda em cima do capacete, não mais nos lados e atrás)
     const nome = String(extra.nome || "").trim();
     if (nome) {
       if (!patr.faixa) { // na faixa acima da viseira (acima do lábio dela), se a faixa não tiver patrocínio

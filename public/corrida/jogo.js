@@ -9,7 +9,7 @@ import { quadroRetrovisor } from "./retrovisor.js";
 import "./configuracoes.js"; // (a tela Configurações: gráficos, controle, áudio e geral)
 import { graficos } from "./qualidade.js";
 import { estiloHud } from "./hud-telemetria.js";
-import { montarMapaDaTorcida, nivelDaTorcida } from "./torcida-som.js";
+import { montarMapaDaTorcida, torcidaEm } from "./torcida-som.js";
 import { atualizarClima } from "./clima.js";
 import { passoClima, limparClima, exercitarChuva, ligarChuvaDeEnsaio } from "./clima-visual.js";
 import { updateGhosts } from "./rede.js";
@@ -263,15 +263,16 @@ export function respawn() {
 }
 
 // os 3 carros mais perto, para o som (volume pela distância e Doppler): três objetos que se reaproveitam a cada quadro
-const OUTROS_SOM = [0, 1, 2].map(() => ({ dist: 0, vRel: 0, v: 0, lado: 0 })), M_POR_U = 0.75 / 3.6, ALCANCE_SOM = 380;
+const OUTROS_SOM = [0, 1, 2, 3, 4].map(() => ({ dist: 0, vRel: 0, v: 0, lado: 0, frente: 0 })), M_POR_U = 0.75 / 3.6, ALCANCE_SOM = 380;
 function outrosParaSom() {
   const c = race.car, sa = Math.sin(c.a), ca = Math.cos(c.a); let n = 0;
   for (const [id, gh] of race.ghosts) {
     if (P(id)?.dnf) continue;
     const dx = gh.x - c.x, dy = gh.y - c.y, du = Math.hypot(dx, dy) || 1, d = du * M_POR_U;
-    if (d > ALCANCE_SOM || (n === 3 && d >= OUTROS_SOM[2].dist)) continue;
-    let i = n < 3 ? n++ : 2; const s = OUTROS_SOM[i], ux = dx / du, uy = dy / du, gv = gh.v || 0;
-    s.dist = d; s.v = Math.abs(gv) * M_POR_U; s.lado = -sa * ux + ca * uy; // (a direita do meu carro é (-sen a, cos a))
+    const N = OUTROS_SOM.length;
+    if (d > ALCANCE_SOM || (n === N && d >= OUTROS_SOM[N - 1].dist)) continue;
+    let i = n < N ? n++ : N - 1; const s = OUTROS_SOM[i], ux = dx / du, uy = dy / du, gv = gh.v || 0;
+    s.dist = d; s.v = Math.abs(gv) * M_POR_U; s.lado = -sa * ux + ca * uy; s.frente = ca * ux + sa * uy; // (a direita do meu carro é (-sen a, cos a); a frente, (cos a, sen a))
     s.vRel = -((Math.cos(gh.a) * gv - (c.vx || 0)) * ux + (Math.sin(gh.a) * gv - (c.vy || 0)) * uy) * M_POR_U; // positivo = se aproximando
     while (i > 0 && OUTROS_SOM[i - 1].dist > s.dist) { OUTROS_SOM[i] = OUTROS_SOM[i - 1]; OUTROS_SOM[i - 1] = s; i--; }
   }
@@ -313,7 +314,9 @@ function loop(t) {
   // (o som de freio e de pneu chiando saiu, a pedido do Thiago)
   // o pneu na zebra (race.naZebra, medido no desenho) e a torcida de quem passa perto das arquibancadas (torcida-som.js)
   const correndo = !!me() && ativo() && sNow() >= race.startAt;
-  Sound.zebra(correndo && race.naZebra && !race.car.air ? race.car.v : 0);
+  // (o lado da zebra: as rodas de fora, para o lado da borda em que o carro está; vira esquerda/direita no som)
+  const pz = race.tr.pts[race.idx], zLado = pz ? Math.sign(race.zebraLat || 0) * (-Math.sin(race.car.a) * pz.nx + Math.cos(race.car.a) * pz.ny) : 0;
+  Sound.zebra(correndo && race.naZebra && !race.car.air ? race.car.v : 0, zLado);
   // a força no volante Logitech e a vibração do controle (forca-volante.js): o mesmo que o som sente (zebra, grama/brita) e o volante do carro
   ForcaVolante.quadro({ correndo, v: race.car.v, steer: race.car.steer, slip: race.car.slip, zebra: race.naZebra && !race.car.air, fora: race.offroad && !race.car.air }, dt);
   // os efeitos novos (sons.js; só tocam quando o arquivo gravado existe): o assoalho raspando (a folga do acerto acabou), a suspensão
@@ -328,7 +331,10 @@ function loop(t) {
   race.ersAntes = carga; race.ersAtivoAntes = !!race.ersAtivo;
   if (correndo && race.box?.fase === "entra" && sNow() > (race.limitadorAte || 0)) { race.limitadorAte = sNow() + 550; Sound.limitador(); }
   if (!race.tr.mapaTorcida) montarMapaDaTorcida(race.tr, scene);
-  Sound.torcida(correndo ? nivelDaTorcida(race.tr, race.car.x, race.car.y) : 0, race.car.v);
+  { const tc = correndo ? torcidaEm(race.tr, race.car.x, race.car.y) : null, sa = Math.sin(race.car.a), ca = Math.cos(race.car.a);
+    // (de onde vem a torcida, no referencial do meu carro: o som 3D sai da arquibancada)
+    const dx = tc ? tc.x - race.car.x : 0, dy = tc ? tc.y - race.car.y : 0;
+    Sound.torcida(tc ? tc.nivel : 0, race.car.v, tc ? { lado: -sa * dx + ca * dy, frente: ca * dx + sa * dy, dist: tc.dist } : null); }
   // (o som da asa abrindo, o DRS, saiu: pedido do Thiago; a F1 de 2026 não tem DRS)
   race.drsSom = !!race.drsAtivo;
   // o ERS ligando na tecla (o overtake): o som só no aperto do piloto, não no automático (que liga e desliga sozinho), e no máximo um a cada 1,5 s
@@ -387,7 +393,7 @@ function draw(dt) {
     const spec = CARS3[me()?.car] || CARS3.equilibrado, inc = inclinacao(tr, c.x, c.y, c.a, race.idx, spec.L * KS, spec.W * KS, c.vz, c.air, c.v);
     race.pitch = inc.pitch; race.dyChao = c.air ? 0 : inc.dy; // (o carro desenhado sobe ou desce para as rodas tocarem o asfalto: inclinacao.js; a câmera de dentro vai junto)
     const turbo = race.boostUntil > now || race.sling > 0, rodando = race.spinUntil > now, bala = race.balaUntil > now;
-    poseKart(race.kart, c.x, c.y, c.z + (c.air ? 0 : inc.dy), c.a + (race.net ? 0 : slide * 0.25), c.v, c.steer, fr, dt, -c.steer * 0.04 + inc.roll, inc.pitch, fxDe(me(), now, { acerto: ACERTO_CARRO, drs: !!race.drsAtivo, turbo, rodando, bala, pneu: race.pneu ? race.pneu.composto : null, zebra: (race.naZebra = (!tr.zebras || !!tr.zebras[race.idx]) && Math.abs(Math.abs((c.x - tr.pts[race.idx].x) * tr.pts[race.idx].nx + (c.y - tr.pts[race.idx].y) * tr.pts[race.idx].ny) - tr.W / 2) < 9), derrapa: c.slip > 45 ? (c.slip > 110 ? 2 : 1) : 0 }));
+    poseKart(race.kart, c.x, c.y, c.z + (c.air ? 0 : inc.dy), c.a + (race.net ? 0 : slide * 0.25), c.v, c.steer, fr, dt, -c.steer * 0.04 + inc.roll, inc.pitch, fxDe(me(), now, { acerto: ACERTO_CARRO, drs: !!race.drsAtivo, turbo, rodando, bala, pneu: race.pneu ? race.pneu.composto : null, zebra: (race.naZebra = (!tr.zebras || !!tr.zebras[race.idx]) && Math.abs(Math.abs((race.zebraLat = (c.x - tr.pts[race.idx].x) * tr.pts[race.idx].nx + (c.y - tr.pts[race.idx].y) * tr.pts[race.idx].ny)) - tr.W / 2) < 9), derrapa: c.slip > 45 ? (c.slip > 110 ? 2 : 1) : 0 }));
     // derrapagem: fumaça branca saindo dos pneus de trás, mais grossa quanto mais o carro escorrega
     if (c.slip > 40 && !c.air) { const forte = Math.min(1, (c.slip - 40) / 120); for (const s of [-1, 1]) if (Math.random() < 0.55 + forte * 0.45) puff(c.x - Math.cos(c.a) * 15 + -Math.sin(c.a) * s * 9, c.z + 3, c.y - Math.sin(c.a) * 15 + Math.cos(c.a) * s * 9, "#eeeeee", 3.2 + forte * 3, 0.8 + forte * 0.6, 1.7, 0.3 + forte * 0.22); }
     if (race.offroad && Math.random() < 0.5) puff(c.x - Math.cos(c.a) * 18, c.z + 2, c.y - Math.sin(c.a) * 18, tr.id === "interlagos" ? "#b39c66" : "#9a9a9a", 2.5);

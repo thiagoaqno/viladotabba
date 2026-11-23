@@ -36,15 +36,21 @@ export function montarMapaDaTorcida(tr, cena) {
 }
 
 // de 0 a 1: quão perto (e quão cheia) está a torcida do ponto (x, y)
-export function nivelDaTorcida(tr, x, y) {
-  const m = tr.mapaTorcida; if (!m || !m.celulas.size) return 0;
+export function nivelDaTorcida(tr, x, y) { return torcidaEm(tr, x, y).nivel; }
+// o mesmo, mais DE ONDE ela vem (para o som 3D): o centro das células pesado pelo quanto cada uma soa, e a distância até ele
+const SEM = { nivel: 0, x: 0, y: 0, dist: 0 };
+export function torcidaEm(tr, x, y) {
+  const m = tr.mapaTorcida; if (!m || !m.celulas.size) return SEM;
   const i0 = Math.floor(x / CEL), j0 = Math.floor(y / CEL), r = Math.ceil(ALCANCE / CEL);
-  let melhor = 0;
+  let melhor = 0, sp = 0, sx = 0, sy = 0;
   for (let i = i0 - r; i <= i0 + r; i++) for (let j = j0 - r; j <= j0 + r; j++) {
     const n = m.celulas.get(m.chave(i, j)); if (!n) continue;
-    const d = Math.hypot((i + 0.5) * CEL - x, (j + 0.5) * CEL - y), perto = Math.max(0, Math.min(1, 1 - (d - PERTO) / (ALCANCE - PERTO)));
+    const cx = (i + 0.5) * CEL, cy = (j + 0.5) * CEL, d = Math.hypot(cx - x, cy - y), perto = Math.max(0, Math.min(1, 1 - (d - PERTO) / (ALCANCE - PERTO)));
     const cheia = Math.min(1, Math.sqrt(n / 6)); // uma pessoa sozinha quase não soa; um trecho de arquibancada cheio, sim
-    melhor = Math.max(melhor, perto * perto * (0.35 + 0.65 * cheia));
+    const k = perto * perto * (0.35 + 0.65 * cheia);
+    melhor = Math.max(melhor, k); const w = k * k; sp += w; sx += cx * w; sy += cy * w;
   }
-  return melhor;
+  if (!(sp > 0)) return SEM;
+  const cx = sx / sp, cy = sy / sp;
+  return { nivel: melhor, x: cx, y: cy, dist: Math.hypot(cx - x, cy - y) };
 }

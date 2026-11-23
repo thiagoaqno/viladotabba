@@ -1,5 +1,13 @@
 [
   {
+    "id": "hud-mover-2026-11-23",
+    "data": "2026-11-23",
+    "itens": [
+      "Dá para mover o HUD: MFD > Ajustes > Posição do HUD, arraste o velocímetro, os tempos, a torre, o mapa e o resto; fica salvo",
+      "Velocímetro e telemetria mais vivos: a velocidade corre suave, a marcha dá um pulo na troca, as luzes piscam no corte e a telemetria acende BOOST e OVERTAKE"
+    ]
+  },
+  {
     "id": "capacete-sons3d-2026-11-23",
     "data": "2026-11-23",
     "itens": [

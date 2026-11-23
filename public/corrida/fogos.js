@@ -17,7 +17,7 @@ const aPos = new THREE.BufferAttribute(P, 3).setUsage(THREE.DynamicDrawUsage), a
 geo.setAttribute("position", aPos); geo.setAttribute("color", aCor); geo.setDrawRange(0, 0);
 const ponto = (() => { const cv = document.createElement("canvas"); cv.width = cv.height = 32; const x = cv.getContext("2d"), g = x.createRadialGradient(16, 16, 0, 16, 16, 16);
   g.addColorStop(0, "#fff"); g.addColorStop(0.25, "#ffffffcc"); g.addColorStop(1, "#ffffff00"); x.fillStyle = g; x.fillRect(0, 0, 32, 32); return new THREE.CanvasTexture(cv); })();
-const mat = new THREE.PointsMaterial({ size: 9, map: ponto, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false, sizeAttenuation: true });
+const mat = new THREE.PointsMaterial({ size: 14, map: ponto, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false, sizeAttenuation: true });
 mat.userData.bloom = 3;
 const nuvem = new THREE.Points(geo, mat); nuvem.frustumCulled = false; nuvem.name = "fogos"; nuvem.renderOrder = 5;
 
@@ -49,7 +49,13 @@ function estourar(f, cam) {
 function lancar(tr, cam, idx) {
   const n = tr.n || tr.pts.length, i = ((idx + Math.floor((Math.random() * 2 - 1) * 160)) % n + n) % n, q = tr.pts[i]; if (!q) return;
   const lado = Math.random() < 0.5 ? -1 : 1, off = (tr.W || 120) / 2 + 350 + Math.random() * 900, chao = q.h || 0;
-  const x = q.x + (q.nx || 0) * lado * off, z = q.y + (q.ny || 0) * lado * off, alt = chao + 280 + Math.random() * 260;
+  let x = q.x + (q.nx || 0) * lado * off, z = q.y + (q.ny || 0) * lado * off; const alt = chao + 280 + Math.random() * 260;
+  // (2026-11-23, o Thiago: "não teve nenhum fogos em Bahrein e a corrida foi de noite") ao lado da pista eles estouravam fora da tela na câmera
+  // de dentro, que olha para a frente: agora quase sempre sobem na frente da câmera (até ~35° para cada lado, de 1200 a 2600 u)
+  if (cam && Math.random() < 0.85) {
+    const fx = new THREE.Vector3(); cam.getWorldDirection(fx); const h = Math.hypot(fx.x, fx.z) || 1, ang = Math.atan2(fx.z / h, fx.x / h) + (Math.random() * 2 - 1) * 0.6, dist = 1200 + Math.random() * 1400;
+    x = cam.position.x + Math.cos(ang) * dist; z = cam.position.z + Math.sin(ang) * dist;
+  }
   const tipos = ["peonia", "peonia", "anel", "salgueiro", "crisantemo"], cor = CORES[(Math.random() * CORES.length) | 0];
   foguetes.push({ x, y: chao + 5, z, alvo: alt, vy: 260 + Math.random() * 60, tipo: tipos[(Math.random() * tipos.length) | 0], cor, cor2: Math.random() < 0.4 ? CORES[(Math.random() * CORES.length) | 0] : null, rastro: 0 });
   if (cam) Sound.fogosSobe?.(Math.hypot(cam.position.x - x, cam.position.z - z) * 0.2083);

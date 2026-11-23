@@ -7,7 +7,7 @@ import { Sound } from "./sons.js";
 import * as ForcaVolante from "./forca-volante.js";
 import { quadroRetrovisor } from "./retrovisor.js";
 import "./configuracoes.js"; // (a tela Configurações: gráficos, controle, áudio e geral)
-import { graficos } from "./qualidade.js";
+import { graficos, aoMudarGraficos } from "./qualidade.js";
 import { estiloHud } from "./hud-telemetria.js";
 import { montarMapaDaTorcida, torcidaEm } from "./torcida-som.js";
 import { atualizarClima } from "./clima.js";
@@ -93,6 +93,19 @@ async function subirMalhas(tr, alvo) {
 // que é a que o pós-processamento (pos.js: Média e Alta) usa. Só a da tela era compilada: na primeira vez que o carro
 // passava de 40% da velocidade, as ~25 da outra compilavam de uma vez, no meio da reta. Aqui as duas compilam em
 // paralelo (o compileAsync escolhe a versão pelo alvo do momento em que é chamado).
+// (2026-11-23, o servidor.log do Thiago: "quadro de 9299 ms · 64 shader(s) novo(s)" ao mudar o gráfico no meio da corrida) a sombra e o pós ligando ou
+// desligando refazem os shaders de todos os materiais, e o desenho seguinte compilava tudo de uma vez, com a página parada. Agora a troca no meio
+// da corrida compila em paralelo (compileAsync, como no aquecimento) e, enquanto isso, a tela fica com a última imagem e o aviso "Aplicando
+// gráficos": o jogo, o HUD e o som seguem. No máximo 20 s de espera (depois desenha de qualquer jeito).
+let compilandoGraficos = false;
+aoMudarGraficos(() => {
+  if (!race || compilandoGraficos) return;
+  compilandoGraficos = true; let aviso = $("avGraficos");
+  if (!aviso) { aviso = document.createElement("div"); aviso.id = "avGraficos"; aviso.setAttribute("role", "status"); aviso.textContent = "Aplicando gráficos…"; Object.assign(aviso.style, { position: "fixed", left: "50%", top: "42%", transform: "translateX(-50%)", padding: "10px 18px", borderRadius: "10px", background: "#0b0d12e6", color: "#fff", font: "700 15px system-ui,sans-serif", zIndex: 50, pointerEvents: "none" }); document.body.appendChild(aviso); }
+  aviso.hidden = false;
+  const alvo = new THREE.WebGLRenderTarget(2, 2), fim = () => { compilandoGraficos = false; aviso.hidden = true; alvo.dispose(); };
+  Promise.race([Promise.all([compilarTudo(alvo), compilarPos()]).catch(() => {}), new Promise((ok) => setTimeout(ok, 20000))]).then(fim, fim);
+});
 function compilarTudo(alvo) {
   const anterior = renderer.getRenderTarget();
   renderer.setRenderTarget(alvo); const naImagem = renderer.compileAsync(scene, cam); renderer.setRenderTarget(anterior);
@@ -485,14 +498,14 @@ function draw(dt) {
   // a máscara do foco e a cena: 3 a 4 vezes por quadro; updateMatrixWorld era ~11% do quadro em Monza)
   scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false;
   try {
-  quadroEspelhos(race.kart, mode); // os retrovisores do meu carro (só no cockpit e na T-cam, e não na qualidade Baixa), depois de tudo posto e antes de desenhar a cena
+  if (!compilandoGraficos) quadroEspelhos(race.kart, mode); // os retrovisores do meu carro (só no cockpit e na T-cam, e não na qualidade Baixa), depois de tudo posto e antes de desenhar a cena
   // desfoque de velocidade, pela fração da velocidade final do carro (vale igual para os cinco): começa em 40% (uns 90 km/h
   // no equilibrado), fica inteiro a 90% e o turbo e o estilingue borram ainda mais
   const turbo = src === c && (race.boostUntil > now || race.sling > 0 || (me() && me().boostUntil > now));
   const vref = (src === c ? carOf(me()) : CARROS.equilibrado).vmax;
   // (de cima não tem desfoque: o chão inteiro borrado só atrapalha a ver a pista)
-  desenhar(mode === "cima" || mode === "tv" ? 0 : Math.min(1, Math.max(0, (Math.abs(src.v || 0) / vref - 0.4) / 0.5)) + (turbo ? 0.4 : 0));
-  quadroRetrovisor(race.kart, mode); // o retrovisor virtual, por cima da tela já desenhada (retrovisor.js; Configurações > Gráficos)
+  if (!compilandoGraficos) { desenhar(mode === "cima" || mode === "tv" ? 0 : Math.min(1, Math.max(0, (Math.abs(src.v || 0) / vref - 0.4) / 0.5)) + (turbo ? 0.4 : 0));
+  quadroRetrovisor(race.kart, mode); } // o retrovisor virtual, por cima da tela já desenhada (retrovisor.js; Configurações > Gráficos)
   } finally { scene.matrixWorldAutoUpdate = true; }
   // a câmera de dentro do carro troca o mostrador grande pelo painel compacto do canto (hud-painel.js, #hDentro; Configurações > Geral)
   // (só no estilo Novo, no cockpit e no bico, e se a opção estiver ligada: na T-cam fica o mostrador grande, pedido do Thiago; o estilo

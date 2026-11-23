@@ -66,9 +66,10 @@ export function physics(dt, spec = carOf(me())) {
   if (!race.ersLiberado && (E.S?.phase === "quali" || Math.abs(vf) * 0.75 >= F1.ERS_LARGADA_KMH)) race.ersLiberado = true; // (a largada: o ERS só depois dos 50 km/h, sim.js)
   // (2026-11-23, as mesmas contas de sim.js) o modo ultrapassagem a 1,5 s ou menos do carro da frente; o automático também na saída da curva
   const frente = []; for (const [id, gh] of race.ghosts) if (!P(id)?.dnf) frente.push(gh);
-  const ultrap = F1.intervaloAFrente({ x: c.x, y: c.y, z: c.z, a: c.a, v: vf }, frente) <= F1.ULTRAPASSAGEM_S, piso = ultrap ? F1.ERS_PISO_OVERTAKE : F1.ERS_PISO_AUTO; race.ultrap = ultrap;
-  const usarErs = !!(race.ersLiberado && ers && keys.gas && !dirProva?.safety && !F1.ersBloqueadoNaChuva(atualizarClima().agua) && (ersAuto ? F1.usarErsAuto(ers.carga, vf, spec.vmax, (tr.pts[race.idx].k || 0) < 1 / 1500 || F1.saidaDeCurva(tr, race.idx), ultrap) || (keys.ers && ers.carga > piso) : keys.ers && ers.carga > piso));
-  const ersAtivo = ers ? F1.gastarErs(ers, dt, usarErs, ultrap) : false;
+  // (o ERS é livre: no manual o botão entrega sempre; o modo ultrapassagem só dá a energia extra da volta e, no automático, o gasto forte)
+  const ultrap = F1.intervaloAFrente({ x: c.x, y: c.y, z: c.z, a: c.a, v: vf }, frente) <= F1.ULTRAPASSAGEM_S; race.ultrap = ultrap; if (ultrap && ers) ers.mom = true;
+  const usarErs = !!(race.ersLiberado && ers && keys.gas && !dirProva?.safety && !F1.ersBloqueadoNaChuva(atualizarClima().agua) && (ersAuto ? F1.usarErsAuto(ers.carga, vf, spec.vmax, (tr.pts[race.idx].k || 0) < 1 / 1500 || F1.saidaDeCurva(tr, race.idx), ultrap) || (keys.ers && ers.carga > F1.ERS_PISO_OVERTAKE) : keys.ers));
+  const ersAtivo = ers ? F1.gastarErs(ers, dt, usarErs, !ersAuto || ultrap || !!keys.ers) : false;
   race.drsAtivo = drs; race.ersAtivo = ersAtivo;
   const curva = (tr.pts[race.idx].k || 0) > 1 / 600, vac = pn ? F1.vacuoF1(race.draft, curva) : null; // nas regras de F1: vácuo na reta, ar sujo na curva
   race.arSujo = vac ? 1 - vac.aderencia : 0;
@@ -233,7 +234,7 @@ const AMB = { outros: [] }, ENT = {}, ENT_C = {}, EV = [];
 // o ambiente do passo: tudo o que a física precisa saber do jogo (o servidor monta o mesmo)
 function montarAmbiente(R) {
   const S = E.S, m = me(), d = S.direcao;
-  AMB.spec = carOf(m); AMB.manual = S.config.cambio === "manual"; AMB.dano = m.dano || 0; AMB.drsZona = m.drsZona ?? -1;
+  AMB.spec = carOf(m); AMB.manual = S.config.cambio === "manual"; AMB.dano = m.dano || 0; AMB.bonusBox = m.bonusBox || 0; AMB.drsZona = m.drsZona ?? -1;
   AMB.safety = !!(d && d.safety); AMB.setorAmarelo = d && d.amarelo ? d.amarelo.setor : -1; AMB.ersAuto = S.config.ers !== "manual";
   AMB.voltas = S.config.voltas; AMB.laps = m.laps || 0; AMB.paradas = m.paradas || 0; AMB.semente = S.semente; AMB.id = m.id; AMB.grid = m.grid; AMB.equipe = m.equipe || null;
   AMB.boxOcupado = window.Sim.garagemOcupada(Object.values(S.players || {}), m, (o) => o.boxFase); // a fila do box da equipe (o servidor usa a mesma conta)

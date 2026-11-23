@@ -1,6 +1,7 @@
 // Escolha pessoal e mostrador alternativo inspirado na visão de transmissão.
 import { store } from "./estado.js";
 import * as THREE from "three";
+import { numeroSuave, pulsar } from "./hud-vivo.js";
 const CHAVE = "corrida:hud-estilo";
 // os estilos (Configurações > Geral): "classico" é o da transmissão da F1 (o novo: torre, setores e o mostrador) e "telemetria" o
 // mostrador alternativo
@@ -18,7 +19,7 @@ export function definirEstiloHud(valor) {
 export function htmlHudTelemetria() { return `<div class="hud-tele" aria-label="Velocidade, marcha, bateria, freio e acelerador">
   <svg class="hud-tele-moldura" viewBox="0 0 600 210" preserveAspectRatio="none" aria-hidden="true"><path d="M38 92 L197 25 Q300 -18 403 25 L562 92"/><path d="M42 112 L183 166 M558 112 L417 166"/></svg>
   <div class="hud-tele-lado esquerdo"><div class="hud-tele-conjunto"><div class="hud-tele-barras freio"><i data-hud-freio></i></div><span class="hud-tele-ers">RECARGA</span></div><small>FREIO · BATERIA <b data-hud-bat>65%</b></small></div>
-  <div class="hud-tele-centro"><small>KM/H</small><strong data-hud-vel>0</strong><span data-hud-modo>BALANCED</span><strong class="hud-tele-mph" data-hud-mph>0</strong><small>MPH</small></div>
+  <div class="hud-tele-centro"><small>KM/H</small><strong data-hud-vel>0</strong><span data-hud-modo>BALANCED</span><span class="hud-tele-modos"><em data-hud-boost>BOOST</em><em data-hud-over>OVERTAKE</em></span><strong class="hud-tele-mph" data-hud-mph>0</strong><small>MPH</small></div>
   <div class="hud-tele-lado direito"><div class="hud-tele-conjunto"><span class="hud-tele-ers">ERS</span><div class="hud-tele-barras acel"><i data-hud-acel></i></div></div><small>ACELERADOR · <b data-hud-drs>DRS</b></small></div>
   <div class="hud-tele-cambio"><div><small>MARCHAS</small><span class="hud-tele-marchas">${[1,2,3,4,5,6,7,8].map(n => `<b data-marcha="${n}">${n}</b>`).join("")}</span><strong data-hud-marcha>N</strong></div><div class="hud-tele-rpm"><i data-hud-rpm></i></div><small>ROTAÇÃO</small></div>
   </div>`; }
@@ -27,7 +28,15 @@ export function atualizarHudTelemetria(raiz, v) {
   if (!raiz) return;
   const texto = (id, valor) => { const e = raiz.querySelector(`[data-hud-${id}]`); if (e && e.textContent !== String(valor)) e.textContent = String(valor); };
   const barra = (id, valor, vertical = false) => { const e = raiz.querySelector(`[data-hud-${id}]`); if (e) e.style[vertical ? "height" : "width"] = Math.round(lim(valor) * 100) + "%"; };
-  texto("vel", v.kmh); texto("mph", Math.round((Number(v.kmh) || 0) * 0.621371)); texto("marcha", v.marcha); texto("modo", v.modo); texto("bat", Math.round(lim(v.bateria) * 100) + "%"); texto("drs", v.drs ? "DRS ABERTO" : "DRS");
+  // (2026-11-23) os números correm suaves; a marcha nova dá um "pop"; BOOST (o elétrico entregando) e OVERTAKE (a 1,5 s do da frente) acendem;
+  // a rotação muda de cor perto do corte e pisca nele; o freio forte brilha
+  const q = (id) => raiz.querySelector(`[data-hud-${id}]`);
+  numeroSuave(q("vel"), Number(v.kmh) || 0); numeroSuave(q("mph"), Math.round((Number(v.kmh) || 0) * 0.621371));
+  { const e = q("marcha"); if (e && e.textContent !== String(v.marcha)) { e.textContent = String(v.marcha); pulsar(e); } }
+  q("boost")?.classList.toggle("on", !!v.boost); { const o = q("over"); if (o) { o.classList.toggle("on", v.over === "on"); o.classList.toggle("pronto", v.over === "pronto"); } }
+  { const r = q("rpm")?.parentElement; if (r) { r.classList.toggle("alto", lim(v.rpm) > 0.85); r.classList.toggle("corte", lim(v.rpm) > 0.97); } }
+  q("freio")?.parentElement?.classList.toggle("forte", lim(v.freio) > 0.8); q("acel")?.parentElement?.classList.toggle("cheio", lim(v.acel) > 0.98);
+  raiz.querySelector(".hud-tele-centro")?.classList.toggle("boost", !!v.boost); texto("modo", v.modo); texto("bat", Math.round(lim(v.bateria) * 100) + "%"); texto("drs", v.drs ? "DRS ABERTO" : "DRS");
   raiz.querySelectorAll("[data-marcha]").forEach(e => e.classList.toggle("atual", String(v.marcha) === e.dataset.marcha));
   barra("acel", v.acel, true); barra("freio", v.freio, true); barra("rpm", v.rpm);
 }

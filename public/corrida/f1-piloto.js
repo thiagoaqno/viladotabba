@@ -145,9 +145,10 @@ function geometrias() {
   // o braço (manga) afina do ombro ao cotovelo e o antebraço do cotovelo ao pulso; o ombro e o cotovelo são bolinhas (a junta arredondada). As bolas levam a escala inversa do comprimento do osso, que estica o cilindro a cada quadro.
   const junta = (r, y, L) => { const e = new THREE.SphereGeometry(r, 12, 8); e.scale(1, 1 / L, 1); e.translate(0, y, 0); return e; };
   const tubo = (rTopo, rBase) => { const c = new THREE.CylinderGeometry(rTopo, rBase, 1, 12, 1, true); c.translate(0, 0.5, 0); return c; };
-  const braco = mergeGeometries([tubo(0.02, 0.029), junta(0.031, 0, OSSO.cima), junta(0.0235, 1, OSSO.cima)]); // do ombro (y = 0) ao cotovelo (y = 1)
-  const antebraco = mergeGeometries([tubo(0.015, 0.0215), junta(0.0235, 0, OSSO.baixo)]); // do cotovelo (y = 0) ao pulso (y = 1)
-  const tronco = new THREE.CapsuleGeometry(0.085, 0.13, 4, 12); tronco.scale(1.3, 1, 0.8); // o peito e os ombros (deitado para trás, na malha)
+  // (2026-11-23, o Thiago: "o piloto parece muito magrelo") braços e tronco mais grossos, com o volume do macacão: o braço ~8,5 cm no ombro, o antebraço ~6 cm
+  const braco = mergeGeometries([tubo(0.033, 0.043), junta(0.045, 0, OSSO.cima), junta(0.035, 1, OSSO.cima)]); // do ombro (y = 0) ao cotovelo (y = 1)
+  const antebraco = mergeGeometries([tubo(0.023, 0.032), junta(0.035, 0, OSSO.baixo)]); // do cotovelo (y = 0) ao pulso (y = 1)
+  const tronco = new THREE.CapsuleGeometry(0.105, 0.13, 4, 12); tronco.scale(1.35, 1, 0.85); // o peito e os ombros (deitado para trás, na malha)
   const aro = new THREE.BoxGeometry(0.235, 0.12, 0.035); // o volante dos carros "leves" (que não trazem o do modelo): só para as mãos terem onde segurar
   return (G = { capacete, viseira, moldura, braco, antebraco, tronco, aro });
 }

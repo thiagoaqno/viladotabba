@@ -18,6 +18,37 @@ function linha(nome, dica, k, v) {
 function chave(nome, dica, k, on) {
   return `<div class="ccf-linha"><span><b>${nome}</b><small>${dica}</small></span><button type="button" class="ccf-chave" role="switch" aria-checked="${!!on}" data-ccf-chave="${k}"><i></i></button></div>`;
 }
+// (2026-11-23, o Thiago: "a configuração de HUD e todas as outras... deviam ficar nas configurações no lobby/carreira também; hoje pra mexer nas
+// configurações completas é preciso sair da carreira") o HUD e os gráficos aqui também, nos MESMOS valores da Corrida: o estilo (corrida:hud-estilo,
+// hud-telemetria.js), o minimapa e o painel da primeira pessoa (corrida:graficos, qualidade.js), a posição dos blocos (a miniatura, hud-layout.js) e a
+// predefinição dos gráficos (corrida:graficos + corrida:qualidade, com as mesmas predefinições de qualidade.js PREDEF)
+const ESTILOS = [["classico", "Novo (F1)"], ["compacto", "Compacto"], ["telemetria", "Telemetria"]];
+const PREDEF = {
+  baixa: { efeitos: "baixa", resolucao: "auto", sombras: "desligadas", espelhos: false, adversarios: "simples" },
+  media: { efeitos: "media", resolucao: "auto", sombras: "baixas", espelhos: true, adversarios: "detalhados" },
+  alta: { efeitos: "alta", resolucao: "auto", sombras: "altas", espelhos: true, adversarios: "detalhados" },
+};
+const seg = (k, valor, lista) => `<div class="ccf-seg" role="radiogroup">${lista.map(([v, n]) => `<button type="button" role="radio" aria-checked="${String(v) === String(valor)}" data-ccf-seg="${k}" data-v="${v}">${n}</button>`).join("")}</div>`;
+const linhaSeg = (nome, dica, ctl) => `<div class="ccf-linha ccf-col"><span><b>${nome}</b><small>${dica}</small></span>${ctl}</div>`;
+function hud() {
+  const g = ler("corrida:graficos", {}) || {}, est = ler("corrida:hud-estilo", "classico");
+  const predef = g.predef || (() => { try { return localStorage.getItem("corrida:qualidade") || "media"; } catch { return "media"; } })();
+  return `<section class="ccf-parte"><h3>HUD</h3>
+      ${linhaSeg("Estilo do HUD", "Novo: o da transmissão da F1. Compacto: o painel pequeno no canto. Telemetria: o mostrador alternativo", seg("estilo", est, ESTILOS))}
+      ${linhaSeg("Minimapa", "embaixo à esquerda ou em cima à direita", seg("mapa", g.mapa || "baixo", [["baixo", "Embaixo"], ["cima", "Em cima"]]))}
+      ${linhaSeg("Painel em primeira pessoa", "no cockpit: só a bateria e a velocidade no canto", seg("painelDentro", g.painelDentro !== false, [[true, "Compacto"], [false, "Completo"]]))}
+      <div class="ccf-linha ccf-col"><span><b>Posição dos blocos</b><small>arraste na miniatura; vale na próxima corrida</small></span><div data-ccf-layout></div><div class="hl-acoes"><button type="button" class="ccf-bt" data-ccf-restaurar>Restaurar</button></div></div>
+    </section>
+    <section class="ccf-parte"><h3>Gráficos</h3>
+      ${linhaSeg("Qualidade", "Baixa: leve, sem efeitos. Média: cor, brilho e sombras simples. Alta: tudo ligado", seg("predef", predef, [["baixa", "Baixa"], ["media", "Média"], ["alta", "Alta"]]))}
+    </section>`;
+}
+function mudarSeg(k, v) {
+  if (k === "estilo") return gravar("corrida:hud-estilo", v);
+  const g = { ...(ler("corrida:graficos", {}) || {}) };
+  if (k === "predef") { Object.assign(g, PREDEF[v] || {}, { predef: v }); gravar("corrida:graficos", g); try { localStorage.setItem("corrida:qualidade", v); } catch { /* sem armazenamento */ } return; }
+  g[k] = v === "true" ? true : v === "false" ? false : v; gravar("corrida:graficos", g);
+}
 function corpo() {
   const mix = { motor: 1, efeitos: 1, ambiente: 1, radio: 1, narrador: 1, ...(ler("corrida:mixer", {}) || {}) }, musica = root.MusicaCarreira?.nivel?.();
   return `<header class="ccf-cab"><h2>Configurações</h2><button type="button" class="ccf-x" data-ccf-fechar aria-label="Fechar">✕</button></header>
@@ -28,7 +59,8 @@ function corpo() {
     </section>
     <section class="ccf-parte"><h3>Mixer</h3>${CANAIS.map(([k, n, d]) => linha(n, d, k, mix[k])).join("")}
       ${musica != null ? linha("Música", "o tocador da carreira", "musica", musica) : ""}</section>
-    <p class="ccf-nota">Vale na próxima corrida (a música muda já). Gráficos e controles ficam na engrenagem do menu da Corrida.</p>`;
+    ${hud()}
+    <p class="ccf-nota">Vale na próxima corrida (a música muda já). Os controles (remapear teclas e o volante) ficam na engrenagem do menu da Corrida.</p>`;
 }
 function montar() {
   dlg = document.createElement("dialog"); dlg.className = "ccf"; dlg.setAttribute("aria-label", "Configurações");
@@ -42,6 +74,8 @@ function montar() {
   });
   dlg.addEventListener("click", (e) => {
     if (e.target === dlg || e.target.closest("[data-ccf-fechar]")) { dlg.close(); return; }
+    { const sg = e.target.closest("[data-ccf-seg]"); if (sg) { mudarSeg(sg.dataset.ccfSeg, sg.dataset.v); sg.parentElement.querySelectorAll("button").forEach((x) => x.setAttribute("aria-checked", String(x === sg))); return; } }
+    if (e.target.closest("[data-ccf-restaurar]")) { root.HudLayout?.restaurar(); montarLayout(); return; }
     const b = e.target.closest("[data-ccf-chave]"); if (!b) return;
     const on = b.getAttribute("aria-checked") !== "true"; b.setAttribute("aria-checked", String(on));
     if (b.dataset.ccfChave === "som") gravar("corrida:sound", on);
@@ -49,6 +83,7 @@ function montar() {
   });
   dlg.addEventListener("keydown", (e) => e.stopPropagation()); // (as teclas da Central, como Q e E, não trocam de aba com a tela aberta)
 }
-function abrir() { if (!dlg) montar(); dlg.innerHTML = corpo(); dlg.showModal(); }
+function montarLayout() { const c = dlg && dlg.querySelector("[data-ccf-layout]"); if (c && root.HudLayout) root.HudLayout.montar(c); }
+function abrir() { if (!dlg) montar(); dlg.innerHTML = corpo(); dlg.showModal(); montarLayout(); }
 root.ConfigCarreira = { abrir };
 })(window);

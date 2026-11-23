@@ -1,0 +1,37 @@
+/* Corrida da Galera — o HUD mais vivo e o modo de mover os blocos (2026-11-23; hud-vivo.js) */
+
+/* o "pop" de uma vez (a troca de marcha) */
+.hv-pop{animation:hvPop .3s cubic-bezier(.2,1.4,.4,1)}
+@keyframes hvPop{0%{scale:1.35;filter:brightness(1.7)}100%{scale:1;filter:none}}
+@keyframes hvPisca{50%{opacity:.25}}
+
+/* o mostrador clássico: as luzes piscam no corte */
+.gc-leds.corte i{animation:hvPisca .12s steps(1) infinite}
+#pMarcha{display:inline-block}
+
+/* a telemetria (no estilo da transmissão de 2026): as pílulas BOOST e OVERTAKE, as barras fluidas, a rotação que esquenta e o centro que acende com o boost */
+.hud-tele-modos{display:flex;gap:3px;margin:1px 0 2px}
+.hud-tele-modos em{font:800 6.5px/1 system-ui,sans-serif;font-style:normal;letter-spacing:.1em;padding:2px 4px;border-radius:3px;color:#94b6cd70;border:1px solid #94b6cd38;transition:color .15s,background-color .15s,border-color .15s,box-shadow .15s}
+.hud-tele-modos em.pronto{color:#d8f3ff;border-color:#37d0ee}
+.hud-tele-modos em.on{color:#05131d;background:#37d0ee;border-color:#37d0ee;box-shadow:0 0 10px #37d0eeaa}
+.hud-tele-centro{transition:border-color .2s,box-shadow .2s}
+.hud-tele-centro.boost{border-color:#37d0ee;box-shadow:0 0 18px #37d0ee66,inset 0 0 14px #37d0ee33}
+.hud-tele-barras i{transition:height .09s linear}
+.hud-tele-barras.freio.forte{box-shadow:0 0 14px #fa6475aa}
+.hud-tele-barras.acel.cheio{box-shadow:0 0 12px #65f74788}
+.hud-tele-rpm i{transition:width .09s linear,filter .15s}
+.hud-tele-rpm.alto i{filter:saturate(1.4) brightness(1.15)}
+.hud-tele-rpm.corte{animation:hvPisca .12s steps(1) infinite}
+.hud-tele-marchas b{transition:color .15s,font-size .15s}
+[data-hud-marcha]{display:inline-block}
+
+/* mover o HUD: cada bloco com contorno e nome, arrastável; a barra em cima com Restaurar e Pronto */
+#race.hud-editar [data-hud-nome]{pointer-events:auto !important;cursor:move;outline:2px dashed #ffffffb0;outline-offset:4px;user-select:none;touch-action:none}
+#race.hud-editar [data-hud-nome]::before{content:attr(data-hud-nome);position:absolute;left:0;top:-22px;z-index:5;padding:2px 7px;border-radius:4px;background:#0b0d12e6;color:#fff;font:700 11px/1.4 system-ui,sans-serif;font-style:normal;letter-spacing:0;text-transform:none;white-space:nowrap;pointer-events:none}
+#race.hud-editar [data-hud-nome].hv-arrasta{outline:2px solid var(--eq-at,#37d0ee);cursor:grabbing}
+.hv-barra{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:10px;background:#0b0d12f0;border:1px solid #ffffff26;box-shadow:0 10px 30px #000a;color:#fff;font:600 13px system-ui,sans-serif;pointer-events:auto}
+.hv-barra button{padding:6px 12px;border-radius:7px;border:1px solid #ffffff30;background:transparent;color:#fff;font:700 12px system-ui,sans-serif;cursor:pointer}
+.hv-barra button:hover{background:#ffffff14}
+.hv-barra .hv-ok{background:#fff;color:#0b0d12;border-color:#fff}
+
+@media (prefers-reduced-motion:reduce){.hv-pop,.gc-leds.corte i,.hud-tele-rpm.corte{animation:none}.hud-tele-barras i,.hud-tele-rpm i{transition:none}}

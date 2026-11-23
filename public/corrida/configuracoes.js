@@ -59,6 +59,8 @@ function abaGeral() {
       + linha("Painel em primeira pessoa", "No estilo Novo, no cockpit e na câmera do bico: só a bateria e a velocidade no canto de baixo (na T-cam fica o mostrador grande)", opcoes("painelDentro", g.painelDentro, [[true, "Compacto"], [false, "Completo"]]))
       + (linhaFreio ? linha("Linha de frenagem", "Marcas na pista: verde acelera, amarelo alivia, vermelho freia", chave("data-acao=\"linha\"", linhaFreio.getAttribute("aria-pressed") === "true")) : "")
       + (tema && !tema.classList.contains("hidden") ? linha("Modo escuro na sala", "", chave("data-acao=\"tema\"", tema.getAttribute("aria-pressed") === "true")) : ""))
+    // (2026-11-23) a posição de cada bloco do HUD: a miniatura (hud-layout.js) aqui mesmo, e na corrida o "Mover na tela" arrasta os blocos de verdade
+    + parte("Posição do HUD", `<div class="cfg-livre" data-hud-layout></div><div class="hl-acoes">${document.getElementById("race")?.classList.contains("hidden") === false ? `<button type="button" class="cfg-bt" data-acao="hudmover">Mover na tela</button>` : ""}<button type="button" class="cfg-bt" data-acao="hudrestaurar">Restaurar</button></div>`)
     + parte("Pistas do editor", linha("Ver a batida dos muros", "Uma linha vermelha onde o lado do carro encosta nas barreiras do editor (Mônaco): para conferir e acertar no editor. Vale na próxima pista que abrir", chave("data-acao=\"vermuros\"", (() => { try { return localStorage.getItem("corrida:verMuros") === "1"; } catch { return false; } })())))
     + parte("Ajuda", linha("Como jogar", "As teclas, as regras e as dicas", `<button type="button" class="cfg-bt" data-acao="regras">Abrir</button>`));
 }
@@ -69,6 +71,7 @@ function desenhar() {
   tela.querySelector(".cfg-abas").innerHTML = ABAS.map(([id, nome]) => `<button type="button" role="tab" aria-selected="${id === aba}" data-aba="${id}">${nome}</button>`).join("");
   tela.querySelector(".cfg-corpo").innerHTML = CORPO[aba]();
   if (aba === "audio") window.Radio?.desenharBotoes?.(); // (o radio.js desenha o botão novo da voz do engenheiro)
+  { const c = tela.querySelector("[data-hud-layout]"); if (c) window.HudLayout?.montar(c, () => window.HudVivo?.aplicarPosicoes()); }
 }
 function montar() {
   tela = document.createElement("div"); tela.id = "cfgTela"; tela.className = "cfg hidden";
@@ -91,6 +94,8 @@ function montar() {
     if (a === "som") { document.getElementById("btnSound")?.click(); return desenhar(); }
     if (a === "linha") { document.getElementById("btnLinhaFreio")?.click(); return desenhar(); }
     if (a === "tema") { document.getElementById("btnTemaSala")?.click(); return desenhar(); }
+    if (a === "hudmover") { fecharConfig(); return window.HudVivo?.editarHud(true); }
+    if (a === "hudrestaurar") { window.HudLayout?.restaurar(); window.HudVivo?.aplicarPosicoes(); return desenhar(); }
     if (a === "vermuros") { try { localStorage.setItem("corrida:verMuros", localStorage.getItem("corrida:verMuros") === "1" ? "0" : "1"); } catch {} return desenhar(); }
   });
   tela.addEventListener("change", (e) => { const k = e.target.dataset?.g; if (k) { mudarGraficos({ [k]: e.target.value }); desenhar(); } });

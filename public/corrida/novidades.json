@@ -1,5 +1,14 @@
 [
   {
+    "id": "hud-mover-2026-11-23",
+    "data": "2026-11-23",
+    "itens": [
+      "Dá para arrumar o HUD fora da corrida: Configurações > Geral (lobby) e Configurações da carreira têm a miniatura da tela para arrastar o velocímetro, os tempos, a torre, o mapa e o resto; na corrida, \"Mover na tela\"",
+      "Velocímetro e telemetria mais vivos: a velocidade corre suave, a marcha dá um pulo na troca, as luzes piscam no corte e a telemetria acende BOOST e OVERTAKE",
+      "Configurações da carreira com o HUD (estilo, minimapa, painel) e a qualidade dos gráficos, sem precisar sair da carreira"
+    ]
+  },
+  {
     "id": "propostas-janelas-2026-11-23",
     "data": "2026-11-23",
     "itens": [

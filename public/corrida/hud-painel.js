@@ -6,6 +6,7 @@ import { E, $, carOf, checkpoint, store } from "./estado.js";
 import { race } from "./jogo.js";
 import { clima } from "./clima.js";
 import { htmlHudTelemetria, atualizarHudTelemetria, estiloHud } from "./hud-telemetria.js";
+import { numeroSuave, pulsar } from "./hud-vivo.js";
 
 const M = () => window.HudMfd, F = () => window.F1Regras;
 // escreve só o que mudou (o cache fica no próprio elemento): "t" texto, "c" classe (atributo: vale também para SVG), "w" largura, "bg" fundo, "col" cor, "d" display, outro = atributo
@@ -39,12 +40,15 @@ export function montarCentro() {
 export function atualizarCentro(ctx) {
   const m = ctx.m, rpm = Math.min(1, race.rpm || 0), carga = race.ers ? race.ers.carga : 0, ativo = !!race.ersAtivo;
   $("race").classList.toggle("hud-telemetria", estiloHud() === "telemetria");
-  if (estiloHud() === "telemetria") atualizarHudTelemetria($("hCentro"), { kmh: ctx.kmh, marcha: !m ? "—" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1), modo: ctx.modoErs.texto, bateria: carga, rpm, acel: race.car.gasP, freio: race.car.brkP, drs: race.drsAtivo });
-  if ($("hDentro")) { set($("hdVel"), "t", ctx.kmh); set($("hdPct"), "t", Math.round(carga * 100) + "%"); set($("hdModo"), "t", ctx.modoErs.texto); set($("hdOver"), "c", "hd-over" + (ativo && race.ultrap ? " on" : race.ultrap && carga > 0.05 ? " pronto" : "")); }
-  set($("pVel"), "t", ctx.kmh); set($("pMarcha"), "t", !m ? "" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1));
+  if (estiloHud() === "telemetria") atualizarHudTelemetria($("hCentro"), { kmh: ctx.kmh, marcha: !m ? "—" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1), modo: ctx.modoErs.texto, bateria: carga, rpm, acel: race.car.gasP, freio: race.car.brkP, drs: race.drsAtivo, boost: ativo, over: race.ultrap ? (ativo ? "on" : "pronto") : "" });
+  if ($("hDentro")) { numeroSuave($("hdVel"), ctx.kmh); set($("hdPct"), "t", Math.round(carga * 100) + "%"); set($("hdModo"), "t", ctx.modoErs.texto); set($("hdOver"), "c", "hd-over" + (ativo && race.ultrap ? " on" : race.ultrap && carga > 0.05 ? " pronto" : "")); }
+  // (2026-11-23) a velocidade corre suave até o valor (hud-vivo.js) e a marcha dá um "pop" quando troca
+  numeroSuave($("pVel"), ctx.kmh);
+  { const mm = !m ? "" : (ctx.kmh < 1 && !race.marcha ? "N" : race.marcha || 1), el = $("pMarcha"); if (el._v?.t !== undefined && el._v.t !== mm) pulsar(el); set(el, "t", mm); }
   set($("gRpm"), "t", M().rpmReal(rpm, ctx.kmh));
   const acesas = Math.round(rpm * N_LED), leds = $("gLeds").children;
   for (let k = 0; k < N_LED; k++) set(leds[k], "c", k < acesas ? (k < N_LED * 0.45 ? "g" : k < N_LED * 0.8 ? "r" : "b") : "");
+  set($("gLeds"), "c", "gc-leds" + (rpm > 0.97 ? " corte" : "")); // (no corte as luzes piscam: hora de trocar)
   set($("gRpmArco"), "stroke-dasharray", `${(rpm * ARCO).toFixed(1)} 400`);
   set($("gBatArco"), "stroke-dasharray", `${(lim(carga, 0, 1) * ARCO).toFixed(1)} 400`);
   set($("gBatArco"), "class", "valor " + (ativo ? "on" : carga < 0.2 ? "baixo" : carga < 0.5 ? "medio" : "bom"));

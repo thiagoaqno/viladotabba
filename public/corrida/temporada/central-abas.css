@@ -112,3 +112,10 @@ body:not(.cx-on) .folha h2,body:not(.cx-on) .sede .bloco h2{font-family:var(--di
 .ccf .ccf-linha span b{color:var(--cx-tx);font:700 14px var(--cx-f,system-ui)}.ccf .ccf-linha span small{display:block;color:var(--cx-tx2);font:500 12px var(--cx-f,system-ui)}
 .ccf .ccf-linha output{color:var(--cx-tx);font:800 14px var(--cx-f,system-ui)}
 .ccf .ccf-linha{margin:0;font-size:14px}
+
+/* (2026-11-23) HUD e gráficos na Configurações da carreira: os seletores em botões e a miniatura do HUD (hud-layout.js) */
+.ccf-linha.ccf-col{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.ccf-seg{display:flex;flex-wrap:wrap;gap:6px}
+.ccf-seg button{padding:6px 12px;border-radius:999px;border:1px solid var(--cx-lin,#ffffff2a);background:transparent;color:var(--cx-tx2,#ffffffb0);font:700 12.5px var(--cx-f,system-ui);cursor:pointer;transition:background .15s,color .15s}
+.ccf-seg button[aria-checked="true"]{background:var(--eq-at,var(--eq,#e10600));border-color:transparent;color:#fff}
+.ccf-bt{padding:6px 14px;border-radius:8px;border:1px solid var(--cx-lin,#ffffff2a);background:var(--cx-hover,#ffffff10);color:var(--cx-tx,#fff);font:700 12.5px var(--cx-f,system-ui);cursor:pointer}

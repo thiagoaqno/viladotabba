@@ -44,11 +44,11 @@ export const Sound = (() => {
   }
   // um som gravado em laço (uma versão sorteada), que entra e sai devagar pelo volume
   function laco(c, buf, canal = CANAL.efeitos) { const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf; src.loop = true; g.gain.value = 0; src.connect(g).connect(canal); src.start(); return { src, g }; }
-  function umaVez(id, vol, rate = 1, at = 0) {
+  function umaVez(id, vol, rate = 1, at = 0, canal = null) {
     const c = ac, buf = escolher(id); if (!c || !buf || !on) return false;
     const src = c.createBufferSource(), g = c.createGain(); src.buffer = buf;
     src.playbackRate.value = rate * (0.96 + Math.random() * 0.08); g.gain.value = vol * (0.88 + Math.random() * 0.24);
-    src.connect(g).connect(CANAL.efeitos); src.start(c.currentTime + at); return true;
+    src.connect(g).connect(canal || CANAL.efeitos); src.start(c.currentTime + at); return true;
   }
   const tem = (id) => !!(amostras[id] && amostras[id].length);
   // o pit stop em partes limpas: o macaco sobe, as pistolas (duas versões diferentes, uma logo depois da outra) e, no fim da troca, o
@@ -71,6 +71,8 @@ export const Sound = (() => {
     const c = ctx(); if (!c || !tem(id)) return;
     if (!lacosNovos[id]) lacosNovos[id] = laco(c, escolher(id), canal || CANAL.efeitos);
     const t = c.currentTime, L = lacosNovos[id];
+    // (2026-11-23) parado e em silêncio, o laço sai: a próxima vez que ele tocar é outra versão (a variedade dos gravados)
+    if (!(vol > 0.001) && L.g.gain.value < 0.004 && amostras[id].length > 1) { try { L.src.stop(); } catch {} delete lacosNovos[id]; return; }
     L.g.gain.setTargetAtTime(on ? Math.max(0, vol) : 0, t, tau); L.src.playbackRate.setTargetAtTime(rate, t, 0.1);
   }
   const raspa = (n) => lacoNivel("raspa", Math.min(1, n) * 0.7, 0.9 + Math.min(1, n) * 0.3, 0.04);
@@ -79,7 +81,8 @@ export const Sound = (() => {
     lacoNivel("brita", sup === "brita" ? 0.25 + 0.55 * a : 0, 0.8 + 0.4 * a, 0.05);
     lacoNivel("grama", sup === "grama" ? 0.2 + 0.5 * a : 0, 0.8 + 0.4 * a, 0.05);
   }
-  const vento = (v, dentro) => { const a = Math.min(1.3, Math.abs(v || 0) / 400); lacoNivel("vento", a * a * (dentro ? 0.55 : 0.22), 0.85 + 0.3 * a, 0.3, CANAL.ambiente); };
+  let dentroCam = false;
+  const vento = (v, dentro) => { dentroCam = !!dentro; const a = Math.min(1.3, Math.abs(v || 0) / 400); lacoNivel("vento", a * a * (dentro ? 0.55 : 0.22), 0.85 + 0.3 * a, 0.3, CANAL.ambiente); };
   function tone(f, dur, { type = "square", vol = 0.12, at = 0 } = {}) {
     const c = ctx(); if (!c || !on) return; const t = c.currentTime + at;
     const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = f;
@@ -136,10 +139,17 @@ export const Sound = (() => {
   function chuva(nivel, pneus, preparar = false) {
     if (!preparar && !chuvaN && !chuvaA && nivel < 0.01 && pneus < 0.01) return;
     const c = ctx(); if (!c) return;
-    if (tem("chuva")) { // a chuva gravada em laço, que entra devagar (uns 8 s) e sai mais depressa; o chiado dos pneus no molhado segue sintetizado
-      if (!chuvaA) chuvaA = laco(c, escolher("chuva"));
-      const alvo = on ? Math.min(1, nivel) * 0.55 : 0;
-      chuvaA.g.gain.setTargetAtTime(alvo, c.currentTime, alvo > chuvaA.g.gain.value ? 2.6 : 1.2);
+    if (tem("chuva") || tem("chuva-fraca") || tem("chuva-forte")) { // a chuva gravada em laço, que entra devagar (uns 8 s) e sai mais depressa
+      // (2026-11-23) três intensidades que se misturam pelo nível (garoa, média, forte; a que falta passa a vez para a que existe), a chuva no
+      // capacete na câmera de dentro, o spray dos pneus no molhado e, na chuva forte, uma rajada de vento de vez em quando
+      const n = on ? Math.min(1, nivel) : 0, t = c.currentTime;
+      let wF = n > 0 ? Math.max(0, Math.min(1, 1 - (n - 0.2) / 0.3)) : 0, wX = Math.max(0, Math.min(1, (n - 0.55) / 0.3)), wM = n > 0 ? Math.max(0, 1 - wF - wX) : 0;
+      if (!tem("chuva-fraca")) { wM += wF; wF = 0; } if (!tem("chuva-forte")) { wM += wX; wX = 0; } if (!tem("chuva")) { if (tem("chuva-fraca")) wF += wM; else wX += wM; wM = 0; }
+      const vol = n > 0.005 ? 0.22 + 0.4 * n : 0;
+      for (const [id, w] of [["chuva-fraca", wF], ["chuva", wM], ["chuva-forte", wX]]) if (tem(id)) lacoNivel(id, vol * w, 1, (vol * w) > (lacosNovos[id]?.g.gain.value || 0) ? 2.6 : 1.2, CANAL.ambiente);
+      lacoNivel("chuva-capacete", dentroCam ? n * 0.45 : 0, 1, 0.6);
+      if (tem("spray")) { lacoNivel("spray", Math.min(1, pneus) * 0.5, 0.85 + 0.3 * Math.min(1, pneus), 0.15); pneus = 0; }
+      if (n > 0.6 && tem("vento-rajada") && t > (chuva.rajada || 0)) { if (chuva.rajada) umaVez("vento-rajada", 0.25 + 0.3 * n, 1, 0, CANAL.ambiente); chuva.rajada = t + 10 + Math.random() * 22; }
       nivel = 0;
     }
     if (!chuvaN) {
@@ -265,7 +275,8 @@ export const Sound = (() => {
     const c = ctx(); if (!c || !on) return;
     const t = c.currentTime, p = Math.max(0, Math.min(1, perto)), lado = c.createStereoPanner ? c.createStereoPanner() : c.createGain();
     if (lado.pan) lado.pan.value = (Math.random() * 2 - 1) * 0.7; lado.connect(CANAL.ambiente);
-    const id = p > 0.6 && tem("trovao-perto") ? "trovao-perto" : tem("trovao-longe") ? "trovao-longe" : tem("trovao-perto") ? "trovao-perto" : null;
+    const pref = p > 0.66 ? ["trovao-perto", "trovao-medio", "trovao-longe"] : p > 0.33 ? ["trovao-medio", "trovao-longe", "trovao-perto"] : ["trovao-longe", "trovao-medio", "trovao-perto"];
+    const id = pref.find((k) => tem(k)) || null; // (o mais perto da distância do raio entre os que existem)
     if (id) {
       const src = c.createBufferSource(), g = c.createGain(), lp = c.createBiquadFilter(); src.buffer = escolher(id);
       lp.type = "lowpass"; lp.frequency.value = 1500 + 9000 * p; src.playbackRate.value = 0.88 + Math.random() * 0.2;

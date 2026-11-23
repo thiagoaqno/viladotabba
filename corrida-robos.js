@@ -429,7 +429,7 @@ function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
 // quanto dura uma sessão de classificação, em segundos: dá para uma volta de saída e duas lançadas de um carro médio
 function duracaoDaClassificacao(pista) {
   const t = tempoDaVolta(perfil(pista, "equilibrado", 0), NIVEIS.medio);
-  return Math.max(70, Math.min(210, Math.round(t * 2.2 + 12)));
+  return Math.max(80, Math.min(240, Math.round(t * 2.2 + 12 + GRID_F1 * QUALI_SAIDA_MS / 1000))); // (+ a saída escalonada dos robôs pilotando: prepararQuali)
 }
 
 // troca os robôs da sala pelos novos (chamado na largada); devolve os ids
@@ -459,6 +459,22 @@ function remover(room) {
 function planoDoRobo(room, id) {
   const r = F1.sorteio(`plano-robo:${room.semente}:${id}`)();
   return r < 0.35 ? null : r < 0.49 ? "arriscar" : r < 0.63 ? "seguro" : r < 0.77 ? "largada" : r < 0.91 ? "final" : "pneu";
+}
+// (2026-11-23, o Thiago: "pensei em nos qualifies todo mundo correr junto, mas com modo fantasma, dando pra ver os bots também") a sessão da classificação
+// com os robôs pilotando: cada um sai do grid (largar), com o pneu da classificação pela água da abertura, um a cada QUALI_SAIDA_MS; quem não está na
+// sessão (eliminado) sai da pista. A volta deles é cronometrada pela mesma conta de quem joga (corrida-f1-classificacao.js aoSetor).
+const QUALI_SAIDA_MS = 1000;
+function prepararQuali(room) {
+  const q = room.quali; if (!q) return;
+  largar(room);
+  const agua = room.clima ? F1.climaEm(room.clima, q.startAt).agua : 0, composto = F1.compostoDaClassificacao ? F1.compostoDaClassificacao(agua) : "macio";
+  let k = 0;
+  for (const id of room.order) {
+    const p = room.players[id]; if (!p.bot) continue;
+    if (!q.ativos.includes(id)) { p.ia = null; p.pos = null; continue; }
+    p.qSaida = q.startAt + (k++) * QUALI_SAIDA_MS;
+    if (p.ia && p.ia.sim) { const pn = F1.pneuNovo(composto); pn.temp = 0.85; p.ia.pneu = pn; p.ia.sim.pneu = pn; p.ia.plano = { largada: composto, paradas: [] }; Object.assign(p, { pneu: composto, pneuAtual: composto, compostos: [composto] }); }
+  }
 }
 function largar(room) {
   const t = T.PISTAS[room.config.pista], bots = room.order.filter((id) => room.players[id].bot);
@@ -1310,6 +1326,10 @@ function passo(room, dt, setor, emit) {
     const ia = p.ia, pf = ia.perfil || (ia.perfil = perfil(room.config.pista, p.spec || p.car, ia.tracadoId)), c = pf.c;
     if (f1 && ia.sim) {
       if (p.dnf) { ia.sim.v = ia.v = 0; if (p.pos) { p.pos.v = 0; p.pos.at = now; } continue; }
+      if (room.phase === "quali") { // (2026-11-23) a classificação pilotada: só quem está na sessão aberta, depois da hora de sair; sem os outros carros (fantasmas)
+        const q = room.quali; if (!q || q.pausaAte || !q.ativos.includes(id) || now < (p.qSaida || Infinity)) continue;
+        passoF1(room, p, ia, pf, dt, now, setor, emit, []); continue;
+      }
       if (corrida && p.finish == null && now >= room.startAt + ia.reacao) passoF1(room, p, ia, pf, dt, now, setor, emit, outrosF1);
       else if (p.finish != null) passoFantasma(room, p, ia, pf, dt, now); // depois da bandeirada o carro segue rodando sozinho (como o dos humanos), em vez de parar na linha de chegada
       continue;
@@ -1415,4 +1435,4 @@ possivel.topo = (pista, spec) => topoDe(perfil(pista, spec || F1Equipes.specDaEq
 // (2026-11-21, o servidor.log do Thiago: 879 ms parado no começo da classificação, carregando arquivo: wrapResolveFilename / package.json) os
 // arquivos que os robôs só liam na primeira classificação vão para a memória logo depois da abertura, fora de qualquer corrida
 setImmediate(() => { try { fatorDoQuali("interlagos"); acertoDoRobo("interlagos", "medio", 0); ritmoDosPneus(); } catch (e) { /* (só aquece: o uso de verdade tenta de novo) */ } });
-module.exports = { forcaDoNivel, nomeDoNivel, MARCA_NIVEL, preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };
+module.exports = { prepararQuali, forcaDoNivel, nomeDoNivel, MARCA_NIVEL, preaquecerQuali, preaquecerNiveis, tempoDoPasso, transito, prepararTracado, tracadoPronto, linhaF1Pronta, idealDe, possivel, forcaDoContato, preparar, remover, largar, passo, NIVEIS, RITMO, GRID_F1, aprender, usarFonte, aprendido, tempoDaVolta, perfil, ritmoDosRobos, prazoDeChegada, voltaLancada, duracaoDaClassificacao, escolherComposto, decidirParada };

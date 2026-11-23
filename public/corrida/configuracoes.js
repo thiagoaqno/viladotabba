@@ -49,7 +49,7 @@ function abaAudio() {
   return parte("Som", linha("Som do jogo", "Liga e desliga tudo", chave("data-acao=\"som\"", Sound.on)))
     + parte("Volumes", sons)
     + parte("Rádio", linha("Voz do engenheiro", "Os avisos da equipe durante a corrida", `<button type="button" class="cfg-bt cfg-radio" data-radio-botao></button>`)
-      + (window.Radio?.ENGENHEIROS ? linha("Engenheiro", "Quem fala com você no rádio (as mesmas falas, cada um com a voz dele)", `<div class="cfg-seg" role="radiogroup">${window.Radio.ENGENHEIROS.map((e) => `<button type="button" role="radio" aria-checked="${e.id === window.Radio.engenheiro()}" data-engenheiro="${e.id}" title="${e.estilo}">${e.nome}</button>`).join("")}</div>`) : ""));
+      + (window.Radio?.ENGENHEIROS?.length > 1 ? linha("Engenheiro", "Quem fala com você no rádio (as mesmas falas, cada um com a voz dele)", `<div class="cfg-seg" role="radiogroup">${window.Radio.ENGENHEIROS.map((e) => `<button type="button" role="radio" aria-checked="${e.id === window.Radio.engenheiro()}" data-engenheiro="${e.id}" title="${e.estilo}">${e.nome}</button>`).join("")}</div>`) : ""));
 }
 function abaGeral() {
   const g = graficos(), linhaFreio = document.getElementById("btnLinhaFreio"), tema = document.getElementById("btnTemaSala");

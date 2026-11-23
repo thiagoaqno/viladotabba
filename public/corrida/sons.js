@@ -2,7 +2,7 @@ import { criarReverberacao } from "./reverberacao.js";
 // Corrida da Galera — sons sintetizados (kart e F1, derrapagem, batidas e largada). O motor de F1 é o V6 turbo híbrido de hoje (motor-v6.js); o V10 dos anos 2000 (motor-v10.js) segue como alternativa com `?motor=v10`.
 import { $, store } from "./estado.js";
 import { criarMotorF1 as criarMotorV10 } from "./motor-v10.js";
-import { criarMotorF1 as criarMotorV6 } from "./motor-v6.js";
+import { criarMotorF1 as criarMotorV6, criarPanner3D, posicionar } from "./motor-v6.js";
 
 // qual motor de F1 soa: o V6 é o padrão; `?motor=v10` na página traz o V10 de volta
 const motorEscolhido = (() => { try { return new URLSearchParams(location.search).get("motor") === "v10" ? "v10" : "v6"; } catch { return "v6"; } })();
@@ -170,18 +170,21 @@ export const Sound = (() => {
   // no grave (o pneu), os dois batendo a cada listra (uma a cada ~14 unidades: "tum-tum-tum" devagar, "brrrrm" rápido).
   // `v`: a velocidade do carro na zebra (0 fora dela).
   let zebraN = null;
-  let zebraA = null;
-  function zebra(v) {
+  let zebraA = null, zebraP = null;
+  // (2026-11-23) `lado`: de que lado do carro está a zebra (-1 esquerda, 1 direita): o som sai das rodas que pisaram nela
+  function zebraSaida(c) { if (!zebraP) { zebraP = c.createStereoPanner ? c.createStereoPanner() : c.createGain(); zebraP.connect(CANAL.efeitos); } return zebraP; }
+  function zebra(v, lado = 0) {
     if (!zebraN && !zebraA && !(v > 1)) return;
     const c = ctx(); if (!c) return;
+    if (zebraP?.pan && v > 1) zebraP.pan.setTargetAtTime(Math.max(-1, Math.min(1, lado || 0)) * 0.6, c.currentTime, 0.04);
     if (tem("zebra")) { // o som gravado: mais rápido e um pouco mais agudo com a velocidade; uma versão nova a cada zebra
-      if (!zebraA) { zebraA = laco(c, escolher("zebra")); if (zebraN) zebraN.saida.gain.value = 0; }
-      if (!(Math.abs(v || 0) > 8) && zebraA.g.gain.value < 0.01 && amostras.zebra.length > 1 && !zebraA.trocou) { zebraA.trocou = true; const buf = escolher("zebra"); try { zebraA.src.stop(); } catch {} zebraA = laco(c, buf); }
+      if (!zebraA) zebraA = laco(c, escolher("zebra"), zebraSaida(c));
+      if (!(Math.abs(v || 0) > 8) && zebraA.g.gain.value < 0.01 && amostras.zebra.length > 1 && !zebraA.trocou) { zebraA.trocou = true; const buf = escolher("zebra"); try { zebraA.src.stop(); } catch {} zebraA = laco(c, buf, zebraSaida(c)); }
       if (Math.abs(v || 0) > 8) zebraA.trocou = false;
       const t = c.currentTime, a = Math.abs(v || 0), ligado = on && a > 8;
       zebraA.src.playbackRate.setTargetAtTime(Math.min(1.5, 0.75 + a / 500), t, 0.05);
       zebraA.g.gain.setTargetAtTime(ligado ? Math.min(0.9, 0.45 + a * 0.0012) : 0, t, ligado ? 0.015 : 0.06);
-      return;
+      // (2026-11-23) por baixo do gravado, a batida grave das listras (o sintetizado, mais baixo): o "tum-tum" que diz "estou na zebra"
     }
     if (!zebraN) {
       const tom = c.createOscillator(), lfo = c.createOscillator(), prof = c.createGain(), pulso = c.createGain(), passa = c.createBiquadFilter(), saida = c.createGain();
@@ -190,13 +193,13 @@ export const Sound = (() => {
       const len = c.sampleRate, b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       const ruido = c.createBufferSource(), fr = c.createBiquadFilter(), gr = c.createGain(); ruido.buffer = b; ruido.loop = true; fr.type = "lowpass"; fr.frequency.value = 110; fr.Q.value = 0.7; gr.gain.value = 0.8;
       tom.connect(pulso); ruido.connect(fr).connect(gr).connect(pulso); lfo.connect(prof).connect(pulso.gain); // (o volume pulsa a cada listra)
-      pulso.connect(passa).connect(saida).connect(CANAL.efeitos); tom.start(); lfo.start(); ruido.start();
+      pulso.connect(passa).connect(saida).connect(zebraSaida(c)); tom.start(); lfo.start(); ruido.start();
       zebraN = { tom, lfo, prof, pulso, passa, saida };
     }
     const t = c.currentTime, a = Math.abs(v || 0), ligado = on && a > 8, hz = Math.min(70, Math.max(6, a / 14));
     zebraN.lfo.frequency.setTargetAtTime(hz, t, 0.03); zebraN.tom.frequency.setTargetAtTime(55 + Math.min(20, a * 0.05), t, 0.08);
     zebraN.passa.frequency.setTargetAtTime(150 + Math.min(90, a * 0.15), t, 0.08);
-    const vol = ligado ? Math.min(0.32, 0.16 + a * 0.0004) : 0;
+    const vol = (ligado ? Math.min(0.32, 0.16 + a * 0.0004) : 0) * (zebraA ? 0.45 : 1); // (com o gravado tocando, só o corpo grave)
     zebraN.pulso.gain.setTargetAtTime(vol * 0.55, t, 0.02); zebraN.prof.gain.setTargetAtTime(vol * 0.45, t, 0.02);
     zebraN.saida.gain.setTargetAtTime(ligado ? 1 : 0, t, ligado ? 0.012 : 0.05);
   }
@@ -204,12 +207,23 @@ export const Sound = (() => {
   // crescem com a proximidade e com a velocidade, e ao chegar rápido perto de uma arquibancada a galera solta um "uuuh", com
   // palmas e buzinas soltas.
   let torcidaN = null, torcidaAntes = 0, uauAte = 0;
-  let torcidaA = null;
-  function torcida(nivel, v) {
+  let torcidaA = null, torcida3D = null;
+  // (2026-11-23, o Thiago: sons 3D) a torcida sai de onde ela está: `de` = { lado, frente, dist } (no referencial do meu carro, torcida-som.js
+  // torcidaEm). Uma parte passa por um PannerNode HRTF (a direção da arquibancada) e outra fica aberta (o eco do autódromo); de longe ela
+  // chega abafada (passa-baixas pela distância) e perto fica clara.
+  function saidaTorcida(c) {
+    if (torcida3D) return torcida3D.ent;
+    const ent = c.createGain(), seco = c.createGain(), dir = c.createGain(), lp = c.createBiquadFilter(), p = criarPanner3D(c);
+    lp.type = "lowpass"; lp.frequency.value = 2500; lp.Q.value = 0.5; seco.gain.value = 0.35; dir.gain.value = 0.85;
+    ent.connect(lp); lp.connect(seco).connect(CANAL.ambiente); lp.connect(dir); if (p) dir.connect(p).connect(CANAL.ambiente); else dir.connect(CANAL.ambiente);
+    torcida3D = { ent, lp, p }; return ent;
+  }
+  function torcida(nivel, v, de = null) {
     if (!torcidaN && !torcidaA && !(nivel > 0.01)) return;
     const c = ctx(); if (!c) return;
+    if (de && torcida3D) { const t = c.currentTime, longe = Math.max(0, Math.min(1, ((de.dist || 0) * 0.75 - 15) / 110)); posicionar(torcida3D.p, t, de.lado, de.frente); torcida3D.lp.frequency.setTargetAtTime(9000 - 7600 * longe, t, 0.3); }
     if (tem("torcida")) { // o som gravado: o rumor em laço (entra e sai devagar), o "uuuh" e a buzina quando o carro chega rápido
-      if (!torcidaA) { torcidaA = laco(c, escolher("torcida"), CANAL.ambiente); if (torcidaN) { torcidaN.gr.gain.value = 0; torcidaN.gv.gain.value = 0; } }
+      if (!torcidaA) { torcidaA = laco(c, escolher("torcida"), saidaTorcida(c)); if (torcidaN) { torcidaN.gr.gain.value = 0; torcidaN.gv.gain.value = 0; } }
       const t = c.currentTime, n = on ? Math.max(0, Math.min(1, nivel)) : 0, rapido = Math.min(1, Math.abs(v || 0) / 300);
       torcidaA.g.gain.setTargetAtTime(n * (0.35 + 0.35 * rapido), t, 0.9);
       if (n > 0.55 && torcidaAntes <= 0.55 && rapido > 0.35 && t > uauAte + 2) {
@@ -224,7 +238,7 @@ export const Sound = (() => {
       const src = c.createBufferSource(); src.buffer = b; src.loop = true;
       const fr = c.createBiquadFilter(), gr = c.createGain(), fv = c.createBiquadFilter(), gv = c.createGain();
       fr.type = "bandpass"; fr.frequency.value = 650; fr.Q.value = 0.6; gr.gain.value = 0; fv.type = "bandpass"; fv.frequency.value = 1900; fv.Q.value = 1.4; gv.gain.value = 0;
-      src.connect(fr).connect(gr).connect(CANAL.ambiente); src.connect(fv).connect(gv).connect(CANAL.ambiente); src.start();
+      const sT = saidaTorcida(c); src.connect(fr).connect(gr).connect(sT); src.connect(fv).connect(gv).connect(sT); src.start();
       torcidaN = { fr, gr, fv, gv, buf: b };
     }
     const t = c.currentTime, n = on ? Math.max(0, Math.min(1, nivel)) : 0, rapido = Math.min(1, Math.abs(v || 0) / 300);

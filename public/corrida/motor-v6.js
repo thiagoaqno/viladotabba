@@ -15,7 +15,19 @@
 
 const SOM = 343;        // velocidade do som, m/s (para o Doppler)
 const CORTE_KMH = [98, 130, 165, 198, 230, 262, 292, 321]; // a velocidade do corte de cada marcha (cambio)
-const VOZES = 3;        // quantos carros dos outros soam ao mesmo tempo (os mais perto)
+const VOZES = 5;        // quantos carros dos outros soam ao mesmo tempo (os mais perto; 2026-11-23: 3 → 5, com o som 3D dá para separar cada um)
+// o som 3D: um PannerNode HRTF (o ouvinte é o meu carro, na origem olhando para -z); a distância fica com quem chama (rolloff 0).
+// Sem PannerNode, um StereoPanner. `posicionar`: a direção do som pelo `lado` (-1 esquerda, 1 direita) e pela `frente` (1 na frente, -1 atrás).
+export function criarPanner3D(c) {
+  if (c.createPanner) { try { const p = c.createPanner(); p.panningModel = "HRTF"; p.distanceModel = "linear"; p.rolloffFactor = 0; p.refDistance = 1; p.maxDistance = 1e4; p.tresD = true; return p; } catch {} }
+  return c.createStereoPanner ? c.createStereoPanner() : null;
+}
+export function posicionar(p, t, lado, frente = 0) {
+  if (!p) return;
+  if (!p.tresD) { p.pan.setTargetAtTime(Math.max(-1, Math.min(1, lado || 0)) * 0.85, t, 0.07); return; }
+  let x = lado || 0, z = -(frente || 0); const l = Math.hypot(x, z); if (l < 0.05) { x = 0; z = -1; } else { x /= l; z /= l; }
+  if (p.positionX) { p.positionX.setTargetAtTime(x, t, 0.05); p.positionY.setTargetAtTime(0.15, t, 0.05); p.positionZ.setTargetAtTime(z, t, 0.05); } else p.setPosition(x, 0.15, z);
+}
 
 // ---- a rotação: o `rpm` do câmbio (0 a 1, fração do corte da marcha) vira rpm do V6 ----
 // o câmbio troca perto de 1 (~12.500 rpm); o que passa de 1 (até 1,04) é o motor encostando no corte de 15.000 rpm
@@ -162,12 +174,16 @@ export function criarMotorF1(c, saida, eco) {
   // ---- os carros dos outros: até VOZES, a versão barata (menos ordens), com volume pela distância, Doppler forte e pan ----
   const ondaExp = onda("explosaoBarata", 0.6), ondaBx = onda("baixoBarato", 1.4), vozes = [];
   for (let i = 0; i < VOZES; i++) {
-    const soma2 = ganho(1), f = no("lowpass", 1500, 0.9), g = ganho(0), p = c.createStereoPanner ? c.createStereoPanner() : null;
+    // (2026-11-23, o Thiago: "sons 3d e melhor identificados") cada voz num PannerNode HRTF: o carro soa de onde ele está (na frente, atrás, de
+    // lado), não só esquerda/direita. O volume pela distância continua na conta daqui (rolloff 0 no panner); sem PannerNode, o pan de antes.
+    const soma2 = ganho(1), f = no("lowpass", 1500, 0.9), g = ganho(0), p = criarPanner3D(c);
     const ge = ganho(0.85), gb = ganho(0.75), gt = ganho(0.02), a = oscOnda(ondaExp, ge), b = oscOnda(ondaBx, gb), w = osc("sine", gt); ge.connect(soma2); gb.connect(soma2);
     const r1 = no("peaking", 430, 2, 7), r2 = no("peaking", 1700, 2.4, 5); soma2.connect(r1); r1.connect(r2); r2.connect(f);
     f.connect(g); gt.connect(g); // o assobio do turbo passa fora do passa-baixas da voz (só pela distância; 2026-11-21: 0,05 → 0,02, o assobio que acompanhava todo carro)
+    // o ar e os pneus de quem passa colado: um "vush" de ruído que só aparece perto e rápido (é ele que diz que o carro passou do lado)
+    const arS = c.createBufferSource(), arF2 = no("bandpass", 900, 0.8), arG2 = ganho(0); arS.buffer = nb; arS.loop = true; arS.start(0, Math.random() * 0.8); arS.connect(arF2); arF2.connect(arG2); arG2.connect(g);
     if (p) { g.connect(p); p.connect(camLp1); } else g.connect(camLp1);
-    vozes.push({ a, b, w, f, g, p, fino: 1 + (i - 1) * 0.004 + (Math.random() - 0.5) * 0.03, tFino: 0.85 + Math.random() * 0.3 }); // (cada voz com o tom e o turbo um pouco diferentes: os carros não soam iguais)
+    vozes.push({ a, b, w, f, g, p, arF: arF2, arG: arG2, fino: 1 + (i - 1) * 0.004 + (Math.random() - 0.5) * 0.03, tFino: 0.85 + Math.random() * 0.3 }); // (cada voz com o tom e o turbo um pouco diferentes: os carros não soam iguais)
   }
 
   let marchaAnt = 0, gasAntes = false, corteAte = 0, estalosAte = 0, proxEstalo = 0, blipIni = -1;
@@ -262,7 +278,7 @@ export function criarMotorF1(c, saida, eco) {
     for (const g of [saidaMotor, fogoG, combG, bxG, mdG, vibG, admG, arG, lfoAmp, turboG, mguG, cbG]) g.gain.setTargetAtTime(0, t, 0.05);
     outros(t, null, 0, false);
   }
-  // lista: [{ dist (m), vRel (m/s, positivo = se aproximando), v (m/s), lado (-1 esquerda a 1 direita) }], n: quantos valem
+  // lista: [{ dist (m), vRel (m/s, positivo = se aproximando), v (m/s), lado (-1 esquerda a 1 direita), frente (-1 atrás a 1 na frente) }], n: quantos valem
   function outros(t, lista, n, ativo) {
     for (let i = 0; i < VOZES; i++) {
       const v = vozes[i], r = ativo && lista && i < n ? lista[i] : null;
@@ -273,7 +289,9 @@ export function criarMotorF1(c, saida, eco) {
       v.w.frequency.setTargetAtTime((TURBO_HZ[0] + (TURBO_HZ[1] - TURBO_HZ[0]) * rot * rot) * dop * v.tFino, t, 0.045); // o assobio acompanha o Doppler
       v.f.frequency.setTargetAtTime((800 + rot * rot * rot * 3600) / (1 + r.dist / 240), t, 0.08);
       v.g.gain.setTargetAtTime(0.11 / (1 + Math.pow(r.dist / 32, 1.4)), t, 0.07);
-      if (v.p) v.p.pan.setTargetAtTime(r.lado * 0.85, t, 0.07);
+      const perto = Math.max(0, 1 - r.dist / 28), rapido = Math.min(1, Math.abs(r.vRel) / 40 + r.v / 90);
+      v.arG.gain.setTargetAtTime(0.9 * perto * perto * rapido, t, 0.05); v.arF.frequency.setTargetAtTime(700 + 900 * perto + 400 * Math.max(0, Math.min(1, r.vRel / 40)), t, 0.06);
+      posicionar(v.p, t, r.lado, r.frente);
     }
   }
   return { atualizar, silenciar, outros };

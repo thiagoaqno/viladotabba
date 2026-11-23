@@ -1,5 +1,13 @@
 [
   {
+    "id": "capacete-sons3d-2026-11-23",
+    "data": "2026-11-23",
+    "itens": [
+      "A bandeira do capacete agora fica num círculo em cima dele, não mais nos lados e atrás",
+      "Som 3D: o motor de cada carro vem de onde ele está (frente, atrás, lado), com o vento de quem passa colado; a torcida vem da arquibancada e chega abafada de longe; a zebra soa do lado das rodas que pisaram nela"
+    ]
+  },
+  {
     "id": "carreira-vida-2026-11-23",
     "data": "2026-11-23",
     "itens": [

@@ -397,9 +397,15 @@ function referenciaF1(room) {
   try { const v = fonteRecorde(pista); if (v && Number.isFinite(v.tempo) && v.tempo >= T.PISTAS[pista].minLap) recorde = v.tempo; } catch (e) { /* banco indisponível: usa o traçado */ }
   return { tempo: ideal * (1 + porNivel(FOLGA_F1, room.config.nivel)), ideal, recorde, origem: false, proteger: !!recorde && recorde <= ideal * 1.01 };
 }
+const PILOTO_TOPO = 98;
 function alvoF1(room, p, pf) {
   const ref = room.referenciaF1 || referenciaF1(room);
-  const folga = porNivel(FOLGA_F1, room.config.nivel), piloto = p.piloto ? Math.min(0.012, Math.max(0, 96 - p.piloto.ritmo) * 0.0006) : 0.006;
+  // (2026-11-23, o Thiago: "agora que os carros seguem uma volta do banco, os perfis dos pilotos importam MUITO mais, especialmente no qualify") o
+  // ritmo do piloto pesava no máximo 1,2% e todo mundo de 96 para cima andava igual. Agora conta a escala toda, a partir do melhor (Verstappen, 98):
+  // na corrida 0,11% por ponto (Norris +0,2%, Hamilton +0,7%, Lindblad +2,1%); na classificação 0,16% por ponto, onde o talento mais aparece
+  // (Norris +0,3%, Hamilton +1,0%, Lindblad +3,0%). Sem piloto, o meio da tabela.
+  const porPonto = room.phase === "quali" ? 0.0016 : 0.0011;
+  const folga = porNivel(FOLGA_F1, room.config.nivel), piloto = (p.piloto ? Math.max(0, PILOTO_TOPO - p.piloto.ritmo) : 10) * porPonto;
   const ideal = tempoDaVolta(pf, 1, aderRef());
   return Math.max(ref.proteger ? ref.recorde * 1.025 : 0, ideal * (1 + folga + piloto));
 }

@@ -275,7 +275,7 @@ export const Sound = (() => {
     const c = ctx(); if (!c || !on) return;
     const t = c.currentTime, p = Math.max(0, Math.min(1, perto)), lado = c.createStereoPanner ? c.createStereoPanner() : c.createGain();
     if (lado.pan) lado.pan.value = (Math.random() * 2 - 1) * 0.7; lado.connect(CANAL.ambiente);
-    const pref = p > 0.66 ? ["trovao-perto", "trovao-medio", "trovao-longe"] : p > 0.33 ? ["trovao-medio", "trovao-longe", "trovao-perto"] : ["trovao-longe", "trovao-medio", "trovao-perto"];
+    const pref = p > 0.66 ? ["trovao-perto"] : []; // (2026-11-23) só o gravado de perto ficou; o médio e o longe são os sintetizados
     const id = pref.find((k) => tem(k)) || null; // (o mais perto da distância do raio entre os que existem)
     if (id) {
       const src = c.createBufferSource(), g = c.createGain(), lp = c.createBiquadFilter(); src.buffer = escolher(id);

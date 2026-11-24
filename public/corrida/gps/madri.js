@@ -8,3 +8,5 @@ export const GP_MADRI = gpSimples("madri", {
   montanha: { angulo: (-3 * Math.PI) / 4, afastamento: 1700, altura: 760, rocha: "#8a8478", mato: "#5e6648", longe: "#a8b4c4" }, // a serra de Guadarrama, a noroeste
   beira: { arvores: 0.05, predios: 0.1, longe: { predios: 0.2, vidro: 0.1 } }, horizonte: { cor: 0x9a9472 },
 });
+// a passarela do kit ia a 0,5 da volta, em cima da La Monumental, que agora é inclinada (`banking` de pistas.js): ela fica nas outras retas
+GP_MADRI.passarelas = { ...GP_MADRI.passarelas, candidatos: GP_MADRI.passarelas.candidatos.filter((f) => f < 0.4 || f > 0.53) };

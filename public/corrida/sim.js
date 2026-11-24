@@ -62,7 +62,15 @@ function quadro(tr, x, y, idx) {
 }
 function alturaDoChao(tr, x, y, idx) {
   const f = quadro(tr, x, y, idx), t = tr.t, off = Math.abs(f.lat) - tr.W / 2 - t.flat;
-  return f.h * (off <= 0 ? 1 : Math.max(0, 1 - off / t.fall));
+  return f.h * (off <= 0 ? 1 : Math.max(0, 1 - off / t.fall)) + (tr.banco === null ? 0 : P.alturaDoBanco(tr, x, y, idx)); // (+ a curva inclinada: pistas.js, `banking`)
+}
+// a inclinação de lado do chão que o carro sente (rad; positiva quando o lado esquerdo do carro, o de `vl` positivo, está mais alto): só a das curvas
+// inclinadas (`banking`); sem elas é 0 e nada muda. Mede a altura do banco 5 u para cada lado do carro.
+function inclinacaoDeLado(tr, c) {
+  if (tr.banco === null || !P.bancoDaPista(tr)) return 0;
+  const lx = -Math.sin(c.a) * 5, ly = Math.cos(c.a) * 5;
+  const d = P.alturaDoBanco(tr, c.x + lx, c.y + ly, c.idx) - P.alturaDoBanco(tr, c.x - lx, c.y - ly, c.idx);
+  return d ? Math.atan(d / 10) : 0;
 }
 // o ponto da pista mais perto de (x, y): procura perto do último, ou na pista toda
 function procurar(tr, x, y, de) {
@@ -273,7 +281,7 @@ function passo(c, ent, amb, tr, ev) {
   const h0 = alturaDoChao(tr, c.x, c.y, c.idx), h1 = alturaDoChao(tr, c.x + fx * 10, c.y + fy * 10, c.idx);
   const bandeira = amb.safety ? 0.54 : amb.amarela ? 0.82 : 1;
   const amb2 = c.amb || (c.amb = {});
-  amb2.chao = estrada; amb2.superficie = superficie; amb2.subida = (h1 - h0) / 10; amb2.ar = c.air; amb2.manual = !!amb.manual; amb2.marchaManual = ent.marcha || c.marcha;
+  amb2.chao = estrada; amb2.superficie = superficie; amb2.subida = (h1 - h0) / 10; amb2.banco = inclinacaoDeLado(tr, c); amb2.ar = c.air; amb2.manual = !!amb.manual; amb2.marchaManual = ent.marcha || c.marcha;
   amb2.pn = pn; amb2.dano = dano; amb2.drs = drs; amb2.ers = ersAtivo; amb2.vacuo = vac; amb2.curva = curva;
   amb2.extra = c.acerto ? extraDoAcerto(c.acerto, Math.abs(c.v || 0), amb2.extraAc || (amb2.extraAc = {})) : null; // o acerto do carro (asa e altura)
   const plano = !amb.quali && planoAgora(PLANO[amb.plano], amb); // (2026-11-16) o plano da corrida da carreira (f1-regras.js PLANOS_DOMINGO): fora da classificação
@@ -765,7 +773,7 @@ function extraDoAcerto(a, v, o = {}) {
   o.raspa = raspa;
   return o;
 }
-const api = { EMPURRAO_MURO, vacuoRastro, viradaMax, ACERTO_PADRAO, alturaParada, forcaDaAsa, afundaAero, extraDoAcerto, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
+const api = { EMPURRAO_MURO, vacuoRastro, viradaMax, ACERTO_PADRAO, alturaParada, forcaDaAsa, afundaAero, extraDoAcerto, PASSO, ATRASO, EXTRAPOLA, EXTRAPOLA_MAX, extrapolar, amostraEm, ERRO_SALTO, TEMPO_DO_DESVIO, decairDesvio, gastarTempo, reconciliar, pneuDaLargada, criarPista, preparar, quadro, alturaDoChao, inclinacaoDeLado, procurar, vagaDoGrid, novo, empacotar, desempacotar, vacuoAlvo, atualizarDRS, DRS_PASSOS, pilotoAutomatico, pilotoLinha, PILOTO_LINHA, passo, voltarParaPista, faseDoBox, garagemOcupada, contatoPasso, maisEnterrado, impulsoExterno, culpaEntre, culpaPorOnde, K_CULPADO, K_VITIMA, FORCA_EV, novoRegistro, aplicarContato, forcaEntre, massaDe, baterNosOutros, DIMENSOES, dimensoes, serializar, aplicar, COMPOSTOS };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Sim = api;
 })(typeof window !== "undefined" ? window : globalThis);

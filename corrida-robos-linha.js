@@ -208,7 +208,7 @@ function perfilF1(pf, f) {
   let v = mapa.get(q);
   if (!v && pf.linha.hi) { // pistas de GP: o ritmo do piloto novo (corrida-piloto.js), com os limites de verdade do carro
     const lat = Float64Array.from({ length: pf.n }, (_, i) => pf.lat[(i + 2) % pf.n]);
-    v = Piloto.perfilDoNivel(pf.pts, lat, pf.c, aderRef(), q, pf.t.janelaRitmo);
+    v = Piloto.perfilDoNivel(pf.pts, lat, pf.c, aderRef(), q, pf.t.janelaRitmo, pf.t); // (pf.t: as curvas inclinadas, `banking`)
     // (2026-11-16) o teto de velocidade entre as barreiras (o mesmo de baixo, de antes) não valia na linha de F1: no castelo de Baku (44% da volta, a pista
     // com ~19 u de folga para cada lado) o robô entrava a ~220 u/s, não fazia a chicane e raspava o muro mesmo com a linha corrigida. ESTREITO_BASE e
     // ESTREITO_K: a fração da velocidade máxima onde a folga do muro (pf.teto) vai a zero e o quanto ela sobe até `tetoMuro` (30 u). Mônaco tem a sua conta.

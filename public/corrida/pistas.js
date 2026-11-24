@@ -540,6 +540,9 @@ const PISTAS = {
     // Circuit Zandvoort: 4255 m. Traçado de bacinger/f1-circuits (nl-1948, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 150 vértices, a linha de chegada no primeiro
     scale: 2.29, width: 120, minLap: 31, walls: false, flat: 60, fall: 380, largada: 0.865, hillsSuave: true,
+    // as duas curvas inclinadas de verdade (formula1.com, "First look: images of Zandvoort's completed banked corners", 2020): a Hugenholtz (curva 3) com 19° e
+    // a Arie Luyendyk (a última) com 18°. As frações são onde a curva vira no traçado do jogo (medidas na curvatura de `pontos`)
+    banking: [{ de: 0.196, ate: 0.236, graus: 19, nome: "Hugenholtz" }, { de: 0.856, ate: 0.938, graus: 18, nome: "Arie Luyendyk" }],
     // relevo real por ferramentas/pista-real.js (eudem25m); barreiras por trecho do OpenStreetMap (© colaboradores do OpenStreetMap, ODbL)
     hills: [[0,12],[0.01,14],[0.02,14],[0.03,15],[0.04,16],[0.05,15],[0.06,14],[0.07,14],[0.08,15],[0.09,18],[0.1,19],[0.11,18],[0.12,15],[0.13,12],[0.14,11],[0.15,11],[0.16,12],[0.17,13],[0.18,13],[0.19,13],[0.2,13],[0.21,12],[0.22,10],[0.23,9],[0.24,10],[0.25,11],[0.26,12],[0.27,13],[0.28,12],[0.29,11],[0.3,8],[0.31,7],[0.32,6],[0.33,6],[0.34,7],[0.35,9],[0.36,11],[0.37,13],[0.38,16],[0.39,17],[0.4,16],[0.41,15],[0.42,15],[0.43,15],[0.44,15],[0.45,14],[0.46,14],[0.47,14],[0.48,13],[0.49,10],[0.5,7],[0.51,5],[0.52,5],[0.53,6],[0.54,6],[0.55,6],[0.56,6],[0.57,5],[0.58,5],[0.59,5],[0.6,8],[0.61,10],[0.62,11],[0.63,10],[0.64,9],[0.65,7],[0.66,6],[0.67,6],[0.68,6],[0.69,8],[0.7,9],[0.71,10],[0.72,10],[0.73,9],[0.74,8],[0.75,7],[0.76,6],[0.77,5],[0.78,4],[0.79,4],[0.8,4],[0.81,5],[0.82,6],[0.83,7],[0.84,8],[0.85,8],[0.86,9],[0.87,10],[0.88,11],[0.89,12],[0.9,13],[0.91,14],[0.92,14],[0.93,14],[0.94,13],[0.95,12],[0.96,11],[0.97,10],[0.98,11],[0.99,11],[1,12]],
     muros: [[0,0.01,1,20,30],[0.01,0.02,1,40,30],[0.02,0.03,1,220,30],[0.08,0.12,1,220,30],[0.12,0.13,1,40,30],[0.13,0.19,1,20,30],[0.19,0.22,1,40,30],[0.22,0.3,1,20,30],[0.3,0.32,1,60,30],[0.32,0.35,1,40,30],[0.35,0.56,1,20,30],[0.56,0.6,1,40,30],[0.6,0.63,1,100,30],[0.63,0.64,1,40,30],[0.64,0.66,1,20,30],[0.66,0.69,1,60,30],[0.69,0.7,1,40,30],[0.7,0.82,1,20,30],[0.82,0.83,1,40,30],[0.83,0.85,1,60,30],[0.85,0.94,1,20,30],[0.97,1,1,20,30],[0.02,0.09,-1,20,30],[0.09,0.1,-1,60,30],[0.1,0.12,-1,100,30],[0.12,0.13,-1,60,30],[0.13,0.14,-1,40,30],[0.14,0.18,-1,20,30],[0.18,0.2,-1,60,30],[0.2,0.22,-1,20,30],[0.22,0.26,-1,40,30],[0.26,0.3,-1,20,30],[0.33,0.38,-1,20,30],[0.38,0.39,-1,40,30],[0.39,0.4,-1,60,30],[0.4,0.44,-1,120,30],[0.44,0.45,-1,100,30],[0.45,0.46,-1,60,30],[0.46,0.47,-1,40,30],[0.47,0.48,-1,20,30],[0.48,0.49,-1,40,30],[0.49,0.51,-1,100,30],[0.51,0.56,-1,80,30],[0.56,0.59,-1,40,30],[0.59,0.62,-1,60,30],[0.62,0.64,-1,40,30],[0.64,0.66,-1,20,30],[0.7,0.74,-1,20,30],[0.74,0.76,-1,200,30],[0.76,0.78,-1,80,30],[0.78,0.79,-1,40,30],[0.79,0.84,-1,20,30],[0.84,0.86,-1,100,30],[0.86,0.87,-1,80,30],[0.87,0.88,-1,40,30],[0.88,1,-1,20,30]],
@@ -570,6 +573,9 @@ const PISTAS = {
     // Circuito de Madring: 5430 m. Traçado de bacinger/f1-circuits (es-2026, licença MIT: ver o cabeçalho dos traçados convertidos)
     // convertido por ferramentas/circuitos-f1.js: a linha central real em 133 vértices, a linha de chegada no primeiro
     scale: 3.64, width: 120, minLap: 34, walls: false, flat: 40, fall: 220, largada: 0.759,
+    // La Monumental (curva 12): 24% de inclinação, 13,5° (formula1.com, "Why Madrid's La Monumental corner lives up to its name"; Motorsport Magazine também
+    // dá 13,5°), uns 550 m de curva. A fração é onde ela vira no traçado do jogo (0,412 a 0,512 da volta: 1391 u, ~543 m na escala desta pista)
+    banking: [{ de: 0.412, ate: 0.512, graus: 13.5, nome: "La Monumental" }],
     hills: [[0,32], [0.04,15], [0.08,13], [0.12,14], [0.16,23], [0.2,28], [0.24,44], [0.28,53], [0.32,55], [0.36,51], [0.4,34], [0.44,27], [0.48,21], [0.52,29], [0.56,42], [0.6,34], [0.64,45], [0.68,19], [0.72,28], [0.76,16], [0.8,22], [0.84,27], [0.88,14], [0.92,11], [0.96,23], [1,32]],
     points: [
       [909, 1378, 0], [806, 1394, 947], [779, 1401, 54], [772, 1405, 20], [769, 1410, 30], [766, 1429, 58], [764, 1435, 20], [759, 1440, 21],
@@ -2410,7 +2416,82 @@ function suavizarMuros(lados, n) {
   }
   return lados;
 }
-const api = { obstaculosComAjustes, murosDoCenario, usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
+// ---------- a superelevação (curvas inclinadas: `banking` de cada pista) ----------
+// `banking: [{ de, ate, graus, nome }]`: de `de` a `ate` (frações da volta, as mesmas de `muros` e `drs`) o asfalto inclina para o lado de dentro da
+// curva com `graus` (o número real da curva, com a fonte ao lado). A beira de dentro fica na altura de sempre e a de fora sobe largura × tan(graus):
+// o plano inclinado. Nas pontas do trecho a inclinação entra e sai suave (`rampa`, a fração do trecho em cada ponta, 0,2 se não disser). Para fora do
+// asfalto, a beira alta continua até `ext` e desce até o chão em `fade`, sem chegar no trecho vizinho da pista (`livre`: o quanto dá para ir antes
+// de outro trecho ficar mais perto). Sem `banking`, nada muda: `bancoDaPista` devolve null e quem pergunta a altura do banco recebe 0.
+// A física (sim.js) e o desenho (pista.js) usam as mesmas contas daqui, então o carro anda exatamente sobre o asfalto que se vê.
+function bancoDaPista(tr) {
+  if (tr.banco !== undefined) return tr.banco;
+  const t = tr.t, lista = t && t.banking;
+  if (!lista || !lista.length) return (tr.banco = null);
+  const pts = tr.pts, n = pts.length, W = t.width;
+  const s = new Int8Array(n), tg = new Float32Array(n), ext = new Float32Array(n), fade = new Float32Array(n);
+  for (const b of lista) {
+    const i0 = Math.round(b.de * n), i1 = Math.round((b.ate < b.de ? b.ate + 1 : b.ate) * n), len = i1 - i0;
+    let soma = 0; // o lado de dentro: para onde a curva vira no trecho todo
+    for (let k = 0; k <= len; k++) { const p = pts[(i0 + k) % n], q = pts[(i0 + k + 3) % n]; soma += p.tx * q.ty - p.ty * q.tx; }
+    const lado = soma > 0 ? 1 : -1, tan = Math.tan((b.graus * Math.PI) / 180), rampa = Math.max(3, Math.round(len * (b.rampa ?? 0.2)));
+    for (let k = 0; k <= len; k++) {
+      const i = (i0 + k) % n, x = Math.min(1, k / rampa, (len - k) / rampa), w = x * x * (3 - 2 * x);
+      if (tan * w > tg[i]) { s[i] = lado; tg[i] = tan * w; }
+    }
+  }
+  // o quanto o lado de fora tem livre até outro trecho da pista ficar mais perto (o barranco desce antes disso, sem degrau no meio do caminho)
+  const maxD = (t.flat || 0) + (t.fall || 0), livre = new Float32Array(n).fill(maxD);
+  for (let i = 0; i < n; i++) {
+    if (!s[i]) continue;
+    const p = pts[i], nx = -p.ty, ny = p.tx, fora = -s[i];
+    for (let d = 6; d <= maxD; d += 6) {
+      const x = p.x + nx * fora * (W / 2 + d), y = p.y + ny * fora * (W / 2 + d);
+      let bj = i, bd = Infinity;
+      for (let j = 0; j < n; j += 2) { const q = pts[j], dd = (q.x - x) ** 2 + (q.y - y) ** 2; if (dd < bd) { bd = dd; bj = j; } }
+      let di = Math.abs(bj - i); di = Math.min(di, n - di);
+      if (di > 40) { livre[i] = d; break; }
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    if (!s[i]) continue;
+    let B = Infinity; for (let k = -6; k <= 6; k++) B = Math.min(B, livre[(i + k + n) % n]); // (o menor dos vizinhos: sem degrau ao longo da pista)
+    ext[i] = Math.min(t.flat || 0, 0.35 * B); fade[i] = Math.max(6, Math.min(t.fall || 0, 0.85 * B - ext[i]));
+  }
+  return (tr.banco = { s, tg, ext, fade, W });
+}
+// quanto o banco levanta o chão no ponto `i` da pista, a `lat` do eixo (0 fora do trecho inclinado e do lado de dentro)
+function bancoNoLado(bk, i, lat) {
+  const s = bk.s[i], tg = bk.tg[i];
+  if (!s || !tg) return 0;
+  const W = bk.W, u = W / 2 - s * lat; // a distância da beira de dentro
+  if (u <= 0) return 0;
+  if (u <= W) return tg * u;
+  const d = u - W, sobe = tg * W;
+  if (d <= bk.ext[i]) return sobe;
+  const f = 1 - (d - bk.ext[i]) / bk.fade[i];
+  return f <= 0 ? 0 : sobe * f * f * (3 - 2 * f);
+}
+// a altura que o banco soma em (x, y), já sabendo o ponto da pista mais perto (`idx`): a mesma projeção de sim.js (quadro), entre os dois trechos vizinhos
+function alturaDoBanco(tr, x, y, idx) {
+  const bk = tr.banco === undefined ? bancoDaPista(tr) : tr.banco;
+  if (!bk) return 0;
+  const pts = tr.pts, n = pts.length, ia = ((idx % n) + n) % n, ib = (ia + 1) % n, ic = (ia - 1 + n) % n;
+  if (!bk.s[ia] && !bk.s[ib] && !bk.s[ic]) return 0;
+  const a = pts[ia], b = pts[ib], c = pts[ic], nx = -a.ty, ny = a.tx;
+  const proj = (p, q) => { const dx = q.x - p.x, dy = q.y - p.y, l2 = dx * dx + dy * dy || 1, k = Math.max(0, Math.min(1, ((x - p.x) * dx + (y - p.y) * dy) / l2)), px = p.x + dx * k, py = p.y + dy * k; return { k, d2: (x - px) ** 2 + (y - py) ** 2, lat: (x - px) * nx + (y - py) * ny }; };
+  const f = proj(a, b), g = proj(c, a);
+  if (g.d2 < f.d2) return bancoNoLado(bk, ic, g.lat) * (1 - g.k) + bancoNoLado(bk, ia, g.lat) * g.k;
+  return bancoNoLado(bk, ia, f.lat) * (1 - f.k) + bancoNoLado(bk, ib, f.lat) * f.k;
+}
+// a inclinação (seno do ângulo) que ajuda a curva no ponto `i` para quem anda a `lat` do eixo: positiva quando o lado de dentro é o baixo (os robôs)
+function senoDoBanco(bk, i, lat) {
+  if (!bk || !bk.s[i] || !bk.tg[i]) return 0;
+  const u = bk.W / 2 - bk.s[i] * lat;
+  if (u < 0 || u > bk.W) return 0;
+  return Math.sin(Math.atan(bk.tg[i]));
+}
+
+const api = { bancoDaPista, bancoNoLado, alturaDoBanco, senoDoBanco, obstaculosComAjustes, murosDoCenario, usarEscala, escalaReal, aoTrocarEscala, baseDe, idsReais, PISTAS_ESCONDIDAS, idsNaEscolha, murosPorTrechos, alturaPistaMaisProxima, obstaculosDaPista, limiteViaduto, SUPERFICIES_ESCAPE, mapaSuperficies, superficieEscape, muroCampeoes, RECUO_MURO_ESCAPE, murosDoEscape, WORLD, PISTAS, CARROS, MODS, MODS_PADRAO, sample, elevate, pontos, checkpoint, cruzouSetor, boxesFor, SECTORS, TURBO_MS, TURBO_SOLTA };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Pistas = api;
 })(typeof window !== "undefined" ? window : globalThis);

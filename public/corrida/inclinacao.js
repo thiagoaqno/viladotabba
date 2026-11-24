@@ -12,7 +12,7 @@ function perto(tr, x, y, idx) {
 export function inclinacao(tr, x, y, a, idx, L, W, vz, noAr, v, f1, Sim, groundH) {
   if (noAr) return { pitch: Math.max(-0.5, Math.min(0.4, Math.atan2(vz || 0, Math.max(60, Math.abs(v))))), roll: 0, dy: 0 };
   const lat = Math.abs(Sim.quadro(tr, x, y, idx).lat), naPista = f1 && lat <= (tr.W + W) / 2;
-  const h = (dx, dy) => { const px = x + dx, py = y + dy, i = perto(tr, px, py, idx); return naPista ? Sim.quadro(tr, px, py, i).h : groundH(tr, px, py, i); };
+  const h = (dx, dy) => { const px = x + dx, py = y + dy, i = perto(tr, px, py, idx); return naPista ? Sim.quadro(tr, px, py, i).h + (tr.banco === null ? 0 : window.Pistas.alturaDoBanco(tr, px, py, i)) : groundH(tr, px, py, i); }; // (+ a curva inclinada, `banking`: o carro deita junto com o asfalto)
   const fx = Math.cos(a), fy = Math.sin(a), e = L * EIXO, w = W / 2;
   const fd = h(fx * e - fy * w, fy * e + fx * w), fe = h(fx * e + fy * w, fy * e - fx * w), td = h(-fx * e - fy * w, -fy * e + fx * w), te = h(-fx * e + fy * w, -fy * e - fx * w);
   const frente = (fd + fe) / 2, tras = (td + te) / 2, dir = (fd + td) / 2, esq = (fe + te) / 2;

@@ -44,17 +44,20 @@ const naTabela = (tab, passoV, v) => { const x = Math.max(0, v) / passoV, i = Ma
 // A velocidade de cada ponto de um caminho com curvatura `k` (com sinal ou não), trechos `ds`, e o tempo da volta.
 // A curva divide o pneu com o freio e a tração (o `uso` da física). `freioK`: a fração da frenagem máxima usada.
 function perfilNoCaminho(k, ds, cap, op = {}) {
-  const n = k.length, v = op.saida || new Float64Array(n), latK = op.latK ?? 1, freioK = op.freioK ?? 1, aLat = cap.aLat * latK;
-  for (let i = 0; i < n; i++) { const a = Math.abs(k[i]); v[i] = a > 1e-6 ? Math.min(cap.top, Math.sqrt(aLat / a), cap.turn / a) : cap.top; }
+  const n = k.length, v = op.saida || new Float64Array(n), latK = op.latK ?? 1, freioK = op.freioK ?? 1, aLat0 = cap.aLat * latK, sb = op.banco;
+  // `banco` (opcional): o seno da inclinação em cada ponto, com o sinal do lado baixo (bancoNoCaminho). Lá o pneu segura mais: a gravidade puxa para dentro
+  // e a curva aperta o carro no chão (a mesma conta de dinamica.js, cargaDoBanco: a carga a mais com o atrito MU_BANCO): a = (aLat·cos θ + g·sen θ) / (1 - MU_BANCO·sen θ)
+  const latEm = sb ? (i) => { const x = sb[i] * Math.sign(k[i]); return x ? (aLat0 * Math.sqrt(1 - x * x) + D.G_U * x) / Math.max(0.2, 1 - D.MU_BANCO * x) : aLat0; } : () => aLat0; // (sb com sinal: + quando o lado de dentro, o baixo, é o lado `lat` positivo; vezes o lado para onde o caminho vira)
+  for (let i = 0; i < n; i++) { const a = Math.abs(k[i]); v[i] = a > 1e-6 ? Math.min(cap.top, Math.sqrt(latEm(i) / a), cap.turn / a) : cap.top; }
   const piso = (x) => Math.sqrt(Math.max(0.04, 1 - x * x));
   for (let volta = 0; volta < 2; volta++) {
     for (let q = 2 * n - 1; q >= 0; q--) { // para trás: de onde ainda dá para frear
-      const i = q % n, j = (i + 1) % n, vj = v[j], uso = (vj * vj * Math.abs(k[j])) / aLat;
+      const i = q % n, j = (i + 1) % n, vj = v[j], uso = (vj * vj * Math.abs(k[j])) / latEm(j);
       const a = naTabela(cap.freio, cap.passoV, vj) * freioK * piso(uso), lim = Math.sqrt(vj * vj + 2 * a * ds[i]);
       if (lim < v[i]) v[i] = lim;
     }
     if (!op.soFreio) for (let q = 0; q < 2 * n; q++) { // para a frente: até onde dá para acelerar (só para comparar linhas: o carro real acelera o que o motor der)
-      const i = q % n, j = (i + 1) % n, vi = v[i], uso = (vi * vi * Math.abs(k[i])) / aLat;
+      const i = q % n, j = (i + 1) % n, vi = v[i], uso = (vi * vi * Math.abs(k[i])) / latEm(i);
       const lim = Math.sqrt(vi * vi + 2 * naTabela(cap.acel, cap.passoV, vi) * piso(0.6 * uso) * ds[i]);
       if (lim < v[j]) v[j] = lim;
     }
@@ -217,13 +220,23 @@ const temLinhaPronta = (pista, n) => { const a = arquivoDeLinhas()[pista]; retur
 // O ritmo de um nível `f` sobre o caminho `lat` (índice da pista): o `f` multiplica a velocidade de curva e a frenagem usada.
 // Os dois param no limite do pneu (1): acima dele o robô mirava curva que o pneu não segura, rodava e batia (o difícil 1,2 do
 // #692 dava 58 a 66 s em Mônaco com 4 a 6 batidas por volta, contra 50,1 s do nível 1).
-function perfilDoNivel(pts, lat, spec, ref, f, janela = JANELA_RITMO) {
+// `t` (opcional): a pista, para as curvas inclinadas (`banking`): ali o robô anda mais rápido, como o carro de verdade (bancoNoCaminho)
+function perfilDoNivel(pts, lat, spec, ref, f, janela = JANELA_RITMO, t = null) {
   const g = geometria(pts, lat, janela), cap = CAP_LINHA(spec, ref);
-  return perfilNoCaminho(g.k, g.ds, cap, { latK: Math.min(1, f * f), freioK: Math.min(1, f), soFreio: true }).v; // (2026-11-21: passar do limite, 1,04, foi testado e tirado: "eles entram rápido demais na curva")
+  return perfilNoCaminho(g.k, g.ds, cap, { latK: Math.min(1, f * f), freioK: Math.min(1, f), soFreio: true, banco: bancoNoCaminho(t, pts, lat) }).v; // (2026-11-21: passar do limite, 1,04, foi testado e tirado: "eles entram rápido demais na curva")
+}
+// o seno da inclinação em cada ponto do caminho `lat`, positivo quando o lado baixo é o de `lat` positivo (null sem curva inclinada na pista)
+function bancoNoCaminho(t, pts, lat) {
+  if (!t || !t.banking) return null;
+  const bk = T.bancoDaPista({ t, pts });
+  if (!bk) return null;
+  const sb = new Float64Array(pts.length);
+  for (let i = 0; i < pts.length; i++) sb[i] = T.senoDoBanco(bk, i, lat[i]) * bk.s[i]; // (com o sinal do lado de dentro, o baixo)
+  return sb;
 }
 // O que os comandos precisam de um perfil, calculado uma vez
 function contexto(spec, ref) {
   return { p: D.parametros(spec), cap: CAP_LINHA(spec, ref), teto: Infinity };
 }
 
-module.exports = { MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, esticarLinhaDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, contexto, jeitoDe, comandos, naTabela };
+module.exports = { MARGEM_MURO, PILOTO, JANELA_K, limitesDaPista, esticarLinhaDaPista, capacidade, perfilNoCaminho, geometria, linhaDeCorrida, calcularLinha, linhaDaPista, temLinhaPronta, perfilDoNivel, bancoNoCaminho, contexto, jeitoDe, comandos, naTabela };

@@ -1,6 +1,6 @@
 // Zandvoort — as curvas (peças só desta pista):
-// · `curvaInclinada`: a Hugenholtz (curva 3) e a Arie Luyendyk (a última) são inclinadas de verdade no circuito (~19°). A pista do jogo é plana
-//   (a física não muda), então o cenário conta a inclinação por fora: do lado de fora da curva, depois da área de escape, uma rampa de
+// · `curvaInclinada`: a Hugenholtz (curva 3) e a Arie Luyendyk (a última) são inclinadas de verdade no circuito (19° e 18°). Desde as curvas inclinadas
+//   do jogo (`banking` de pistas.js, banco-visual.js) o asfalto delas inclina de verdade; o cenário continua por fora: depois da área de escape, uma rampa de
 //   concreto sobe até um paredão branco com a cerca alta de proteção, e em cima fica o terraço onde ficam as arquibancadas "em volta";
 //   o terraço cai atrás numa berma de areia e capim até o chão. `terraco` devolve onde ele está, para pôr as tribunas e a torcida;
 // · `muroHolandes`: o muro de proteção em painéis laranja, brancos, azuis e vermelhos (as cores da casa) ao longo da beira;

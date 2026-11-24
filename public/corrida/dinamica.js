@@ -140,6 +140,17 @@ function volanteMaximo(p, vm, kGrip = 1, kCarga = 1) {
 //   pn: F1.aderencia(pneu) ou null, dano: F1.efeitoDoDano(dano) ou null, drs (aberto), ers (ativo), vacuo ({final,acel,aderencia} ou null),
 //   curva (para o ar sujo), limiteV (teto de velocidade em u/s por bandeira), tetoV (a velocidade máxima da F1: acima dela só corta o acelerador), extra (multiplicadores soltos) }
 const sub = { fx: 0, fy: 0, mz: 0 };
+// A CURVA INCLINADA (`amb.banco`, rad: o chão sobe para o lado esquerdo do carro, o de `vl` positivo; sim.js inclinacaoDeLado). No plano do asfalto,
+// a gravidade puxa para o lado baixo (m·g·sen θ) e o peso apoia só m·g·cos θ; a curva feita contra a inclinação ainda aperta o carro no chão
+// (m·a·sen θ, com a = a aceleração de lado). Essa carga a mais entra com o atrito de um pneu slick de F1 de verdade (MU_BANCO, ~1,6: Grokipedia,
+// "Racing slick": 1,55 a 1,60 nas condições ideais), não com o `mu` do jogo (2,7 a 3,5: o jogo dá mais aderência de propósito): com o `mu` do jogo, a
+// conta de livro (v² = gR(sen θ + μ cos θ)/(cos θ - μ sen θ)) passa do infinito perto de 20° e o carro faria a Hugenholtz de pé cravado.
+const MU_BANCO = 1.6;
+// o quanto o peso apoia nos pneus (fração de m·g) e a aceleração de lado da gravidade (m/s², para o lado de `vl` positivo), na guinada `ay` (m/s²)
+function cargaDoBanco(p, th, ay) {
+  if (!th) return 1;
+  return limite(Math.cos(th) - (MU_BANCO / p.mu) * (ay / G) * Math.sin(th), 0.3, 3);
+}
 const INST_GRIP = 0.35, INST_TRASEIRA = 0.3; // com a instabilidade cheia: -35% de aderência lateral nos dois eixos e mais -30% atrás
 function passo(c, ent, amb, p, dt = PASSO) {
   const ex = amb.extra || EXTRA_PADRAO, pn = amb.pn, dn = amb.dano;
@@ -208,8 +219,9 @@ function passo(c, ent, amb, p, dt = PASSO) {
     const NdF = DF * p.balAero, NdR = DF * (1 - p.balAero);
     const ax = c.axL;
     const dN = p.massa * ax * p.h / p.L;
-    const Nf = Math.max(0.06 * p.W, p.W * (p.b / p.L) - dN + NdF);
-    const Nr = Math.max(0.06 * p.W, p.W * (p.a / p.L) + dN + NdR);
+    const kB = cargaDoBanco(p, amb.banco, u * r); // (a curva inclinada; 1 no chão plano)
+    const Nf = Math.max(0.06 * p.W, p.W * kB * (p.b / p.L) - dN + NdF);
+    const Nr = Math.max(0.06 * p.W, p.W * kB * (p.a / p.L) + dN + NdR);
     // o volante: o limite acompanha o que o pneu segura na velocidade (um pouco além, para o teclado), e a assistência de contraesterço
     const muF = p.mu * kGrip, muR = p.mu * kGrip * p.balPneu * (1 - INST_TRASEIRA * ins);
     let delta = 0, alF = 0, alR = 0, FyF = 0, FyR = 0;
@@ -274,7 +286,7 @@ function passo(c, ent, amb, p, dt = PASSO) {
     const fxRes = V > 0.01 ? -Fres * (u / V) : 0, fyRes = V > 0.01 ? -(Fres * 2.5) * (w / V) * Math.min(1, V / 8) : 0;
     const cd = Math.cos(delta), sd = Math.sin(delta);
     sub.fx = FxF * cd - FyF * sd + FxR + FxBr + FxEb + fxRes + Fg;
-    sub.fy = FyF * cd + FxF * sd + FyR + fyRes;
+    sub.fy = FyF * cd + FxF * sd + FyR + fyRes + (amb.banco ? -p.massa * G * Math.sin(amb.banco) : 0); // (a gravidade na curva inclinada)
     sub.mz = p.a * (FyF * cd + FxF * sd) - p.b * FyR;
     // integra
     if (arc) { // arcade: só a velocidade para a frente muda aqui (o lado, no fim do passo)
@@ -295,7 +307,7 @@ function passo(c, ent, amb, p, dt = PASSO) {
   if (arc) { lateralArcade(c, p, kGrip, ex, pn, amb); return; }
   // posição e rumo
   const velocidade = Math.abs(c.v), vM = velocidade * ESC, qFinal = 0.5 * RHO * vM * vM;
-  const ayPneu = p.mu * kGrip * (G + qFinal * p.ClA * kCarga / p.massa) / ESC;
+  const th = amb.banco || 0, ayPneu = Math.max(0, p.mu * kGrip * (G * cargaDoBanco(p, th, vM * c.r * Math.sign(c.v || 1)) + qFinal * p.ClA * kCarga / p.massa) / ESC - (th ? G_U * Math.sin(th) * Math.sign(c.r) : 0));
   const guinadaMax = Math.min(p.turn * Math.min(1, velocidade / 90), 1.25 * ayPneu / Math.max(velocidade, 20));
   c.r = limite(c.r, -guinadaMax, guinadaMax); // evita girar o bico mais rápido que os pneus conseguem puxar o carro
   const ca = Math.cos(c.a), sa = Math.sin(c.a);
@@ -318,7 +330,8 @@ function lateralArcade(c, p, kGrip, ex, pn, amb) {
   // o pneu relativo ao médio novo (o `grip` do carro já é o do médio) e o resto (dano, asfalto, ar sujo) como no passo normal
   const k = kGrip / (pn.rel ? pn.grip / pn.rel : 1);
   const sat = c.slip > KIN_SATURA ? limite(p.kinU * (pn.kin || 1), 0.3, 1) : 1;
-  const gripU = p.gripU * k * sat * (1 - 0.2 * c.travada) * (1 - PERDA_PATINANDO * c.patina) * (1 - 0.5 * (c.inst > 0 ? c.inst : 0));
+  const th = amb.banco || 0; // (a curva inclinada: o peso que apoia e a carga a mais da curva, como no passo normal; cargaDoBanco)
+  const gripU = p.gripU * k * sat * (1 - 0.2 * c.travada) * (1 - PERDA_PATINANDO * c.patina) * (1 - 0.5 * (c.inst > 0 ? c.inst : 0)) * (th ? limite(Math.cos(th) - MU_BANCO * (c.v * w / G_U) * Math.sin(th) * (G_U / p.gripU), 0.3, 3) : 1);
   c.uso = gripU > 1 ? limite(Math.abs(c.v * w) / gripU, 0, 1) : 0;
   // a guinada que a batida deu (`rIns`) segue além do volante e se apaga sozinha
   const ri = c.rIns || 0; c.rIns = Math.abs(ri) < 0.01 ? 0 : ri * Math.exp(-dt * (1.2 + 3 * (1 - (c.inst > 0 ? c.inst : 0))));
@@ -327,6 +340,7 @@ function lateralArcade(c, p, kGrip, ex, pn, amb) {
   c.a += c.r * dt; // gira o bico: a velocidade no mundo não muda e passa a ser medida no eixo novo
   const cn = Math.cos(c.a), sn = Math.sin(c.a);
   c.v = vx * cn + vy * sn; c.vl = -vx * sn + vy * cn;
+  if (th) c.vl -= G_U * Math.sin(th) * dt; // a gravidade puxa para o lado baixo (os pneus seguram, até o limite)
   const g = gripU * dt; // os pneus puxam o carro para o novo rumo até o limite de aderência; o resto escorrega e freia
   if (Math.abs(c.vl) <= g) c.vl = 0;
   else { c.vl -= Math.sign(c.vl) * g; c.v -= Math.sign(c.v) * Math.min(Math.abs(c.v), p.scrub * 3 * Math.abs(c.vl) * dt); }
@@ -433,7 +447,7 @@ function novoCarro(x = 0, y = 0, a = 0) {
   return { x, y, a, v: 0, vl: 0, r: 0, vx: 0, vy: 0, steer: 0, gasP: 0, brkP: 0, marcha: 1, trocaT: 0, rpm: 0.3, axL: 0, travada: 0, patina: 0, slip: 0, uso: 0, inst: 0, instK: 0, rIns: 0 };
 }
 
-const api = { ESC, G, G_U, RHO, PASSO, NUM, RPM_MAX, FRACAO, CORTE, SOBE, DESCE, TROCA_T, EXTRA_PADRAO, parametros, potencia, vCorte, rotacao, rpmDe, marchaAuto, marchaIdeal, pneuLateral, guinadaDoVolante, volanteParaGuinada,
+const api = { MU_BANCO, cargaDoBanco, ESC, G, G_U, RHO, PASSO, NUM, RPM_MAX, FRACAO, CORTE, SOBE, DESCE, TROCA_T, EXTRA_PADRAO, parametros, potencia, vCorte, rotacao, rpmDe, marchaAuto, marchaIdeal, pneuLateral, guinadaDoVolante, volanteParaGuinada,
   passo, novoCarro, volanteMaximo, aceleracaoLateral, velocidadeDeCurva, velocidadeFinal, aceleracaoMaxima, frenagemMaxima, distanciaDeFrenagem, tempoParaAcelerar, perfilIdeal };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.Dinamica = api;

@@ -12,6 +12,7 @@ import { aplicarCeu } from "./ceu.js";
 import { fundoMonaco, relevoMonaco, corDoChaoMonaco, NIVEL_DO_MAR, afastarMuro } from "./monaco.js";
 // o kit de pista (kit/README.md) e a configuração de cada GP (gps/)
 import { GPS } from "./gps/index.js";
+import { levantarBanco } from "./banco-visual.js"; // as curvas inclinadas (`banking` de pistas.js): só nas pistas que têm
 // Formula GP: os cenários no tamanho real (de antes de #665, em real/) e as peças do kit daquela época que mudaram depois
 import { GPS as GPS_REAL } from "./real/gps/index.js";
 import { arquibancadas as arquibancadasReal } from "./real/kit/arquibancadas.js";
@@ -181,7 +182,7 @@ function emPedacos(geo, S, N) {
   }
   return out;
 }
-export function groundH(tr, x, y, idx) { const f = trackFrame(tr, x, y, idx); return tr.relevoGP ? tr.relevoGP(x, y, f, idx) : f.h * falloff(tr, f.lat); }
+export function groundH(tr, x, y, idx) { const f = trackFrame(tr, x, y, idx); return (tr.relevoGP ? tr.relevoGP(x, y, f, idx) : f.h * falloff(tr, f.lat)) + (tr.bancoFeito ? window.Pistas.alturaDoBanco(tr, x, y, idx) : 0); } // (bancoFeito: a cena já foi levantada nas curvas inclinadas, banco-visual.js)
 
 // Rio: o mar fica do lado de fora da reta da orla (Copacabana); as coordenadas foram desenhadas no quadrado de 1600
 const rioSea = (x, y) => { const K = PISTAS.rio.scale; return x < 230 * K + (y - 335 * K) * 0.04 && y < 1450 * K; };
@@ -190,6 +191,7 @@ const aguaTex = (cor) => canvasTex(256, 256, (x, w, hh, rr) => { x.fillStyle = c
 function buildWorld(tr) {
   const { pts, n, W, look, id, grp } = tr, t = tr.t, add = (o) => (grp.add(o), o), r = rng(id.length * 977), gp = gpDe(id, t.real);
   const mundo = mundoDe(id, t.real);
+  tr.bancoFeito = false; // (a cena sai plana; as curvas inclinadas sobem no fim, em levantarBanco)
   const KIT = t.real ? { arquibancadas: arquibancadasReal, chaoGP: chaoGPReal, escapeGP: escapeGPReal, ambienteGP: ambienteGPReal, passarelas: passarelasReal, postes: postesReal, montanha: montanhaReal, boxesGP: boxesGPReal } : { arquibancadas, chaoGP, escapeGP, ambienteGP, passarelas, postes, montanha, boxesGP };
   // a escala do cenário (real/gps/<id>.js: `escala`, e `escalaGente` para a torcida; padrão 1 = o tamanho de sempre, o da F1): multiplica o TAMANHO das peças, nunca a posição
   const E = (tr.escala = gp?.escala ?? 1); tr.escalaGente = gp?.escalaGente ?? E;
@@ -646,6 +648,7 @@ function buildWorld(tr) {
   // (2026-11-17) o que uma pista acrescenta DEPOIS de tudo (`tr.depois`): entra no fim do grupo, então as peças de antes mantêm as chaves
   // que o editor de cenário guardou (cenario/<pista>.json `ajustes`), e um paredão ou pilar novo não desloca o que o Thiago já mexeu
   for (const f of tr.depois || []) f(); tr.depois = null;
+  if (window.Pistas.bancoDaPista(tr)) levantarBanco(tr); tr.bancoFeito = true; // as curvas inclinadas (`banking`): o asfalto, o chão e o que está em cima sobem pela altura da física
   aplicarAjustes(tr); torcidaSegueArquibancadas(tr); // (a torcida some ou anda junto com a arquibancada que o editor escondeu ou moveu)
   if (!window.__editorCenario) fundirEstaticos(tr, { celulaInst: tr.id === "interlagos" ? 1200 : 2400, simular: () => { for (let k = 0; k < 24; k++) { const p = pts[Math.floor((k / 24) * n)], foco = { x: p.x, y: p.y, z: p.h, a: Math.atan2(p.ty, p.tx) }; for (let s = 0; s < 6; s++) animarVida(tr, 0.08, foco); } } });
 }

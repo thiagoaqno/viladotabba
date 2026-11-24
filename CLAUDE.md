@@ -14,7 +14,7 @@ Site de jogos com os amigos, tudo em português. Hoje o projeto principal é **s
 
 ## Servidor e navegador
 
-Node + Express 5 + Socket.io 4 em `server.js` (`npm start`, porta 3000). Navegador em HTML/JS puro, sem build; o 3D é Three.js pelo importmap (`/vendor/three/`). Os arquivos do servidor ficam em `servidor/`: `corrida/` (todos os `corrida*.js` e o `corrida-linhas-f1.json`), `carreira/`, `jogos/` (os outros jogos), `admin/` (os painéis e a `moderacao-api.js`) e `comum/` (`bd.js`, `salas.js`, `lobby.js`); na raiz só ficam `server.js`, os `.bat` (os atalhos de `Downloadslts` chamam eles por aí) e a configuração. Os nomes citados abaixo são desses arquivos. Banco SQLite em `servidor/comum/bd.js` com `migracoes/NNN-nome.sql`, que rodam em ordem, uma vez só.
+Node + Express 5 + Socket.io 4 em `server.js` (`npm start`, porta 3000). Navegador em HTML/JS puro, sem build; o 3D é Three.js pelo importmap (`/vendor/three/`). Os arquivos do servidor ficam em `servidor/`: `corrida/` (todos os `corrida*.js` e o `corrida-linhas-f1.json`), `carreira/`, `jogos/` (os outros jogos), `admin/` (os painéis e a `moderacao-api.js`) e `comum/` (`bd.js`, `salas.js`, `lobby.js`); na raiz só ficam `server.js`, os `.bat` (os atalhos de `Downloads\lts` chamam eles por aí) e a configuração. Os nomes citados abaixo são desses arquivos. Banco SQLite em `servidor/comum/bd.js` com `migracoes/NNN-nome.sql`, que rodam em ordem, uma vez só.
 
 ## Mapa da Corrida (`servidor/corrida/` + `public/corrida/`)
 

@@ -4,8 +4,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const T = require("../public/corrida/pistas.js");
 const F1 = require("../public/corrida/f1-regras.js");
-const Robos = require("../corrida-robos.js");
-const Direcao = require("../corrida-f1-direcao.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
 
 const PISTAS = ["interlagos", "monaco", "monza", "barcelona", "silverstone", "melbourne", "xangai", "suzuka", "bahrein", "jeddah", "miami", "montreal", "redbullring",
   "spa", "hungaroring", "zandvoort", "madri", "baku", "singapura", "austin", "mexico", "lasvegas", "catar", "abudhabi"];

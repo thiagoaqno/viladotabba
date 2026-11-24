@@ -4,9 +4,9 @@ process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
 const Motor = require("../public/carreira/motor.js");
-const Eventos = require("../carreira-eventos.js");
-const Memoria = require("../carreira-memoria.js");
-const { novaCarreira, ajudas, timeDe, fecharRodada } = require("../carreira.js").paraTestes;
+const Eventos = require("../servidor/carreira/carreira-eventos.js");
+const Memoria = require("../servidor/carreira/carreira-memoria.js");
+const { novaCarreira, ajudas, timeDe, fecharRodada } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 function carreiraNoMeio(rodadas = 6) {

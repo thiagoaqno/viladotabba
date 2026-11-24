@@ -7,8 +7,8 @@ const assert = require("node:assert/strict");
 const F1 = require("../public/corrida/f1-regras.js");
 const Ritmo = require("../public/corrida/f1-pneus-ritmo.js");
 const P = require("../ferramentas/pneus-fisica.js");
-const Robos = require("../corrida-robos.js");
-const Itens = require("../corrida-itens.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Itens = require("../servidor/corrida/corrida-itens.js");
 const T = require("../public/corrida/pistas.js");
 
 const L = { macio: "S", medio: "M", duro: "H" };

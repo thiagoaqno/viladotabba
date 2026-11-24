@@ -1,7 +1,7 @@
 // Banco de dados: migrações e as carreiras de treinador (bd.js), num banco em memória.
 const test = require("node:test");
 const assert = require("node:assert");
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 
 test.beforeEach(() => { bd.fechar(); bd.abrir(":memory:"); });
 test.after(() => bd.fechar());

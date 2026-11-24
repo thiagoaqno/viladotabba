@@ -1,0 +1,152 @@
+// Sede da temporada solo de Fórmula 1. O servidor é dono do save e da passagem entre GPs.
+const bd = require("../comum/bd.js");
+const Regras = require("../../public/corrida/temporada/regras.js");
+const Paddock = require("../../public/corrida/temporada/paddock.js"); // (2026-11-15) as decisões do Paddock
+const subir = (token, linha) => { try { require("./corrida-pc.js").enviarCarreiraAoSite(token, linha); } catch { /* fora do programa */ } }; // (a carreira do PC sobe para o site)
+const Anos = require("../../public/corrida/f1-temporadas.js"); // o ano da carreira (`anoF1` do save; os saves de antes são de 2026)
+const { limparNome } = require("../comum/salas.js");
+
+module.exports = function attachTemporadaCorrida(io, corrida) {
+  const nsp = io.of("/corrida-temporada"), ativos = new Map();
+  const enviar = (s, resposta) => { if (typeof resposta === "function") resposta(s); };
+  const erro = (resposta, e) => enviar({ ok: false, erro: e.message || String(e) }, resposta);
+  const estado = (linha) => ({ ok: true, id: linha.id, dados: linha.dados, tabelas: Regras.tabelas(linha.dados), ativo: ativos.get(linha.id) || null });
+  function avisar(linha) {
+    const canal = `temporada:${linha.id}`;
+    for (const socket of nsp.sockets.values()) {
+      if (!socket.rooms.has(canal)) continue;
+      if (bd.temporadaCorridaPorToken(socket.data.tokenTemporada)?.id !== linha.id) { socket.leave(canal); continue; }
+      socket.emit("estado", estado(linha));
+    }
+  }
+  function carregar(socket) {
+    const linha = bd.temporadaCorridaPorToken(socket.data.tokenTemporada);
+    if (!linha) throw Error("Abra ou recupere a temporada antes de continuar.");
+    Anos.usarAno(linha.dados.anoF1);
+    return linha;
+  }
+  function entrar(socket, linha, token, resposta, recuperacao) {
+    Anos.usarAno(linha.dados.anoF1);
+    if (socket.data.idTemporada && socket.data.idTemporada !== linha.id) socket.leave(`temporada:${socket.data.idTemporada}`);
+    socket.data.tokenTemporada = token;
+    socket.data.idTemporada = linha.id;
+    socket.join(`temporada:${linha.id}`);
+    enviar({ ...estado(linha), token, ...(recuperacao ? { recuperacao } : {}) }, resposta);
+  }
+  function mudar(socket, resposta, fn) {
+    try {
+      const linha = carregar(socket);
+      if (ativos.has(linha.id)) throw Error("O GP está aberto. Volte à sede depois do resultado.");
+      fn(linha.dados);
+      bd.salvarTemporadaCorrida(linha.id, linha.dados); subir(socket.data.tokenTemporada, linha);
+      avisar(linha); enviar(estado(linha), resposta);
+    } catch (e) { erro(resposta, e); }
+  }
+  nsp.on("connection", (socket) => {
+    socket.use((_, next) => { Anos.usarAno(Anos.ANO_PADRAO); next(); }); // cada pedido começa em 2026; carregar() troca para o ano do save
+    socket.on("criar", (d = {}, resposta) => {
+      try {
+        const anoF1 = Anos.usarAno(d.anoF1); // a temporada escolhida (2023 a 2026): o calendário, as equipes e os pilotos daquele ano
+        const real = d.piloto && d.piloto !== "eu" ? String(d.piloto) : null; // (2026-11-21) jogar como um piloto de verdade da equipe: o nome é o dele
+        const nome = real ? "piloto" : limparNome(d.nome);
+        if (!nome) throw Error("Escreva seu nome.");
+        const dados = Regras.criar(nome, d.equipe, Number(d.tamanho), Number(d.voltas), undefined, d.nivel || "medio", real);
+        dados.anoF1 = anoF1;
+        const nova = bd.criarTemporadaCorrida(nome, dados);
+        entrar(socket, { id: nova.id, dados }, nova.token, resposta, nova.recuperacao); subir(nova.token, { id: nova.id });
+      } catch (e) { erro(resposta, e); }
+    });
+    socket.on("abrir", async (d = {}, resposta) => {
+      try {
+        // no programa de PC (a carreira solo roda no PC, sem ping): o save que só existe no site vem para cá na primeira vez (corrida-pc.js)
+        const linha = bd.temporadaCorridaPorToken(d.token) || await require("./corrida-pc.js").trazerCarreiraDoSite(d.token);
+        if (!linha) throw Error("Save não encontrado neste navegador. Use o código de recuperação.");
+        entrar(socket, linha, d.token, resposta); subir(d.token, linha); // (no programa: a carreira que já estava no PC sobe ao abrir)
+      } catch (e) { erro(resposta, e); }
+    });
+    socket.on("recuperar", (d = {}, resposta) => {
+      try { const linha = bd.recuperarTemporadaCorrida(d.codigo); if (!linha) throw Error("Código de recuperação inválido."); entrar(socket, linha, linha.token, resposta); }
+      catch (e) { erro(resposta, e); }
+    });
+    // o replay de um GP já corrido desta carreira (a análise 3D da Central: analise-salva.js)
+    socket.on("replay", (d = {}, resposta) => {
+      try {
+        if (!socket.data.idTemporada) throw Error("Abra a carreira primeiro.");
+        enviar({ ok: true, replay: bd.replayCorrida("solo:" + socket.data.idTemporada, Number(d.ano), Number(d.gp)) }, resposta);
+      } catch (e) { erro(resposta, e); }
+    });
+    socket.on("montagem", (d = {}, resposta) => mudar(socket, resposta, (s) => { Regras.aplicarMontagem(s, d); }));
+    socket.on("piloto", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.contratarPiloto(s, d.id)));
+    socket.on("engenheiro", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.contratarEngenheiro(s, d.area, Number(d.nivel))));
+    socket.on("nivel", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.mudarNivel(s, d.nivel))); // a dificuldade dos robôs no meio da carreira
+    socket.on("desenvolver", (_, resposta) => mudar(socket, resposta, (s) => Regras.desenvolver(s)));
+    socket.on("paddock", (d = {}, resposta) => mudar(socket, resposta, (s) => Paddock.decidir(s, String(d.id || ""), String(d.opcao || "")))); // (as decisões do Paddock)
+    socket.on("renovar", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.renovar(s, Number(d.anos))));
+    socket.on("aceitarProposta", (d = {}, resposta) => mudar(socket, resposta, (s) => Regras.aceitarProposta(s, d.equipe)));
+    socket.on("proximaTemporada", (_, resposta) => mudar(socket, resposta, (s) => Regras.proximaTemporada(s)));
+    // excluir a carreira de vez: só com o token válido e sem GP aberto (o save, o token e o código de recuperação somem)
+    socket.on("excluir", (d = {}, resposta) => {
+      try {
+        const linha = bd.temporadaCorridaPorToken(d.token != null ? d.token : socket.data.tokenTemporada);
+        if (!linha) throw Error("Temporada não encontrada. Confira se este navegador ainda tem o acesso dela.");
+        const atual = ativos.get(linha.id);
+        if (atual && corrida.salaGP(atual.code) && corrida.salaGP(atual.code).phase !== "results") throw Error("O GP está aberto. Termine ou saia do GP antes de excluir a carreira.");
+        ativos.delete(linha.id);
+        bd.excluirTemporadaCorrida(linha.id);
+        const canal = `temporada:${linha.id}`;
+        for (const s of nsp.sockets.values()) if (s.rooms.has(canal)) { s.leave(canal); s.data.tokenTemporada = null; s.data.idTemporada = null; if (s !== socket) s.emit("excluida"); }
+        enviar({ ok: true }, resposta);
+      } catch (e) { erro(resposta, e); }
+    });
+    socket.on("novoCodigo", (_, resposta) => {
+      try { const linha = carregar(socket), recuperacao = bd.novoCodigoTemporadaCorrida(linha.id); enviar({ ok: true, recuperacao }, resposta); }
+      catch (e) { erro(resposta, e); }
+    });
+    socket.on("iniciarGP", (_, resposta) => {
+      try {
+        const linha = carregar(socket), s = linha.dados;
+        if (s.gp >= s.tamanho) throw Error("A temporada terminou. Comece a próxima.");
+        const atual = ativos.get(linha.id);
+        const viva = atual && corrida.salaGP(atual.code); // (a sala do GP pode ter sumido: aí abre outra, em vez de mandar para uma que não existe)
+        if (viva && viva.phase !== "results") return enviar({ ok: true, acesso: atual }, resposta);
+        ativos.delete(linha.id);
+        const indice = s.gp, ano = s.ano, tokenGP = socket.data.tokenTemporada;
+        const acesso = corrida.abrirGP(s, (room) => {
+          const fresco = bd.temporadaCorridaPorId(linha.id);
+          if (!fresco || fresco.dados.gp !== indice || fresco.dados.ano !== ano) return;
+          const linhas = room.resultado.map((r) => {
+            const p = room.players[r.id];
+            return { piloto: p.bot ? p.piloto.id : "voce", equipe: p.equipe, pos: r.pos, pontos: r.pontos, dnf: r.dnf, nc: r.nc, voltaRapida: !!r.voltaRapida };
+          });
+          let analise = null; // a análise é um extra: um erro nela nunca pode perder o resultado do GP
+          const chave = (p) => (p.bot ? p.piloto.id : "voce");
+          let gravado = null; // as ultrapassagens e o replay (corrida-gravacao.js): extras, como a análise
+          try { gravado = require("./corrida-gravacao.js").paraSave(room, chave); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); }
+          try { analise = require("./corrida-analise.js").resumo(room, chave); if (gravado) analise.ultrapassagens = gravado.ultrapassagens; } catch (e) { console.warn("Temporada F1: análise do GP não salva:", e.message); }
+          if (room.rixa) { (analise ||= {}).rixa = { id: room.rixa.id, n: room.rixa.n, culpaSua: room.rixa.culpaSua, culpaDele: room.rixa.culpaDele }; } // (a rivalidade: paddock.js aoResultado)
+          try { // (2026-11-21) o que aconteceu com você na corrida: os toques (corrida.js anotarToque), o dano no fim, as punições e as ultrapassagens (paddock.js: os acontecimentos que vêm daí)
+            const eu = Object.values(room.players).find((q) => !q.bot), t = room.toques || { muros: 0, carros: 0, por: {} }, us = gravado ? gravado.ultrapassagens : [];
+            const por = {}; for (const [id, r] of Object.entries(t.por || {})) por[id] = { n: r.n, culpaSua: r.culpaSua, culpaDele: r.culpaDele };
+            (analise ||= {}).corrida = { muros: t.muros, carros: t.carros, por, dano: Math.round((eu && eu.dano) || 0), acrescimo: Math.round((eu && eu.acrescimo) || 0), stopGo: (eu && eu.sgFeitos) || 0,
+              passou: us.filter((u) => u.a === "voce").length, passaram: us.filter((u) => u.b === "voce").length, paradas: eu && eu.paradas ? eu.paradas.length : 0 };
+          } catch (e) { console.warn("Temporada F1: o resumo da corrida não foi salvo:", e.message); }
+          Regras.registrarResultado(fresco.dados, linhas, analise);
+          if (gravado && gravado.replay) { try { bd.guardarReplayCorrida("solo:" + fresco.id, ano, indice, gravado.replay); } catch (e) { console.warn("Temporada F1: replay do GP não salvo:", e.message); } }
+          if (bd.salvarTemporadaCorrida(fresco.id, fresco.dados, indice)) {
+            subir(tokenGP, fresco);
+            ativos.delete(fresco.id); avisar(fresco);
+          }
+        }, (_, montagem) => {
+          const fresco = bd.temporadaCorridaPorId(linha.id);
+          if (!fresco || fresco.dados.gp !== indice || fresco.dados.ano !== ano) throw Error("Esta etapa da carreira não está mais aberta.");
+          Regras.aplicarMontagem(fresco.dados, { montagem });
+          if (!bd.salvarTemporadaCorrida(fresco.id, fresco.dados, indice)) throw Error("Não foi possível salvar o acerto do carro.");
+          avisar(fresco);
+        });
+        ativos.set(linha.id, acesso);
+        avisar(linha); enviar({ ok: true, acesso }, resposta);
+      } catch (e) { erro(resposta, e); }
+    });
+  });
+  return { ativos };
+};

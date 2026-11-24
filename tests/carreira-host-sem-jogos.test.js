@@ -5,7 +5,7 @@ const test = require("node:test");
 const assert = require("node:assert");
 const fs = require("node:fs");
 const path = require("node:path");
-const G = require("../carreira.js").grupo;
+const G = require("../servidor/carreira/carreira.js").grupo;
 const { subirServidor, conectar, pedir, esperarEstado } = require("./ajuda.js");
 
 test("o servidor já monta a rodada só com os jogos dos amigos quando o anfitrião não tem mais nenhum", () => {

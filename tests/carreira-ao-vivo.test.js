@@ -5,9 +5,9 @@ const test = require("node:test");
 const assert = require("node:assert");
 const Temporada = require("../public/carreira/temporada.js");
 const indice = require("../public/carreira/base/mundo-2026.js");
-const { novaCarreira, estado, proximoJogoMundo, sementeDoJogo } = require("../carreira.js").paraTestes;
-const G = require("../carreira.js").grupo;
-const Rd = require("../carreira-rodada.js");
+const { novaCarreira, estado, proximoJogoMundo, sementeDoJogo } = require("../servidor/carreira/carreira.js").paraTestes;
+const G = require("../servidor/carreira/carreira.js").grupo;
+const Rd = require("../servidor/carreira/carreira-rodada.js");
 const { subirServidor, conectar, pedir } = require("./ajuda.js");
 
 const bases = Object.fromEntries(["brasileirao", "inglaterra", "espanha", "italia", "alemanha", "franca", "argentina", "sulamericanos"]

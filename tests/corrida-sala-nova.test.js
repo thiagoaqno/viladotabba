@@ -4,7 +4,7 @@
 const Pilotos = require("../public/corrida/f1-pilotos-2026.js");
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 const { subirServidor, conectar, pedir, esperarEstado } = require("./ajuda.js");
 
 test("sala nova sem config: Mônaco, F1, grid de 22, clima variável, sem classificação, equipe escolhida e pneu médio; a config do organizador vale", { timeout: 30000 }, async () => {

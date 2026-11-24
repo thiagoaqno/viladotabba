@@ -1,0 +1,599 @@
+// Banco de dados do site (SQLite pelo node:sqlite, que já vem no Node: sem dependência nativa).
+// - Onde fica: DB_PATH (no Fly, /data/galera.db, num volume); sem DB_PATH, ./dados/galera.db; nos testes, ":memory:".
+// - Migrações: os arquivos migracoes/NNN-nome.sql rodam em ordem, uma vez só, e ficam anotados na tabela "migracoes".
+// - Guarda as carreiras de treinador (planos/carreira.md), as salas da carreira em grupo e as cartas que já saíram
+//   nos jogos de baralho. Nada de ORM: funções pequenas.
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+
+const PASTA_MIGRACOES = path.join(__dirname, "..", "..", "migracoes");
+const LETRAS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sem 0/O e 1/I, que confundem ao digitar
+let banco = null;
+
+// o node:sqlite ainda avisa que é "experimental" no Node 22/24; o aviso não ajuda ninguém no log do servidor
+function carregarSqlite() {
+  const emitir = process.emitWarning;
+  process.emitWarning = (aviso, ...resto) => { if (!String(aviso && aviso.message || aviso).includes("SQLite")) emitir.call(process, aviso, ...resto); };
+  try { return require("node:sqlite"); } finally { process.emitWarning = emitir; }
+}
+
+function migrar(db) {
+  db.exec("CREATE TABLE IF NOT EXISTS migracoes (nome TEXT PRIMARY KEY, rodada_em INTEGER NOT NULL)");
+  const feitas = new Set(db.prepare("SELECT nome FROM migracoes").all().map((m) => m.nome));
+  const arquivos = fs.existsSync(PASTA_MIGRACOES) ? fs.readdirSync(PASTA_MIGRACOES).filter((f) => /^\d{3}-.+\.sql$/.test(f)).sort() : [];
+  const rodadas = [];
+  for (const nome of arquivos) {
+    if (feitas.has(nome)) continue;
+    const sql = fs.readFileSync(path.join(PASTA_MIGRACOES, nome), "utf8");
+    db.exec("BEGIN");
+    try {
+      db.exec(sql);
+      db.prepare("INSERT INTO migracoes (nome, rodada_em) VALUES (?, ?)").run(nome, Date.now());
+      db.exec("COMMIT");
+      rodadas.push(nome);
+    } catch (e) { db.exec("ROLLBACK"); throw new Error(`migração ${nome} falhou: ${e.message}`); }
+  }
+  return rodadas;
+}
+
+function abrir(caminho = process.env.DB_PATH || path.join(__dirname, "..", "..", "dados", "galera.db")) {
+  if (banco) return banco;
+  const { DatabaseSync } = carregarSqlite();
+  if (caminho !== ":memory:") fs.mkdirSync(path.dirname(caminho), { recursive: true });
+  const db = new DatabaseSync(caminho);
+  if (caminho !== ":memory:") db.exec("PRAGMA journal_mode = WAL");
+  // (2026-11-16) com WAL, o "NORMAL" não espera o disco a cada gravação (só no checkpoint) e o banco continua íntegro se o programa cair. Medido no
+  // PC do Thiago: gravar a volta (3.000 pontos) levava até 117 ms e o recorde com os setores até 49 ms, no meio da corrida, e o servidor parava de
+  // mandar as posições dos robôs (as travadinhas do programa do PC); no NORMAL, 2,6 ms e 1,1 ms no pior caso.
+  if (caminho !== ":memory:") db.exec("PRAGMA synchronous = NORMAL");
+  db.exec("PRAGMA foreign_keys = ON");
+  migrar(db);
+  banco = db;
+  return db;
+}
+function fechar() { if (banco) { banco.close(); banco = null; } }
+const bd = () => banco || abrir();
+
+// Corrida: a melhor volta de cada pista (os robôs aprendem com ela). Só troca se a nova for mais rápida.
+function melhorVoltaCorrida(pista) {
+  const v = bd().prepare("SELECT tempo, carro, piloto, dados FROM corrida_voltas WHERE pista = ?").get(pista);
+  return v ? { tempo: v.tempo, carro: v.carro, piloto: v.piloto, s: JSON.parse(v.dados) } : null;
+}
+// As cinco melhores voltas de cada piloto ficam (migração 017). Os robôs usam as cinco voltas
+// mais rápidas da pista; o ritmo clássico é a média das voltas guardadas (ritmoCorrida).
+const VOLTAS_POR_PILOTO = 5;
+function melhoresTracadosCorrida(pista) {
+  return bd().prepare(`SELECT tempo, carro, piloto, dados FROM corrida_voltas_piloto
+    WHERE pista = ? ORDER BY tempo, feita_em, id LIMIT 5`).all(pista)
+    .map((v) => ({ tempo: v.tempo, carro: v.carro, piloto: v.piloto, s: JSON.parse(v.dados) }));
+}
+// O ritmo de quem joga: a média das (até) cinco melhores voltas de cada piloto, e depois a média entre os pilotos.
+// `pilotos`: os nomes da sala (sem eles, todo mundo que já correu na pista). Sem volta nenhuma, null.
+function ritmoCorrida(pista, pilotos = null) {
+  const chaves = pilotos && new Set(pilotos.map((p) => String(p).trim().toLowerCase()));
+  const por = new Map();
+  for (const v of bd().prepare("SELECT chave, tempo FROM corrida_voltas_piloto WHERE pista = ?").all(pista))
+    if (!chaves || chaves.has(v.chave)) (por.get(v.chave) || por.set(v.chave, []).get(v.chave)).push(v.tempo);
+  if (!por.size) return null;
+  const medias = [...por.values()].map((ts) => ts.reduce((a, b) => a + b, 0) / ts.length);
+  return { tempo: medias.reduce((a, b) => a + b, 0) / medias.length, pilotos: por.size, voltas: [...por.values()].reduce((a, ts) => a + ts.length, 0) };
+}
+// (2026-11-23) o ritmo aprendido de quem joga (migração 055): a razão volta / volta ideal do carro, por pista, piloto, condição e pneu. Cada corrida
+// entra com o peso PESO_CORRIDA_RITMO (a primeira entra inteira): uma corrida boa ou ruim não muda tudo de uma vez.
+const PESO_CORRIDA_RITMO = 0.25;
+function aprenderRitmoCorrida(pista, piloto, condicao, composto, razao, voltas) {
+  const chave = String(piloto).trim().toLowerCase(); if (!chave || !Number.isFinite(razao) || !(voltas > 0)) return null;
+  const db = bd(), v = db.prepare("SELECT razao, voltas, corridas FROM corrida_ritmo_aprendido WHERE pista = ? AND chave = ? AND condicao = ? AND composto = ?").get(pista, chave, condicao, composto);
+  const nova = v ? v.razao * (1 - PESO_CORRIDA_RITMO) + razao * PESO_CORRIDA_RITMO : razao;
+  db.prepare(`INSERT INTO corrida_ritmo_aprendido (pista, chave, condicao, composto, razao, voltas, corridas, atualizado) VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+    ON CONFLICT(pista, chave, condicao, composto) DO UPDATE SET razao = excluded.razao, voltas = corrida_ritmo_aprendido.voltas + excluded.voltas, corridas = corrida_ritmo_aprendido.corridas + 1, atualizado = excluded.atualizado`)
+    .run(pista, chave, condicao, composto, nova, voltas | 0, Date.now());
+  return nova;
+}
+// o ritmo aprendido de cada piloto (os nomes da sala) numa condição: a média dos pneus, pesada pelas voltas. Devolve o mais rápido dos pilotos.
+function ritmoAprendidoCorrida(pista, pilotos, condicao) {
+  const chaves = new Set((pilotos || []).map((p) => String(p).trim().toLowerCase()).filter(Boolean)); if (!chaves.size) return null;
+  const por = new Map();
+  for (const v of bd().prepare("SELECT chave, composto, razao, voltas FROM corrida_ritmo_aprendido WHERE pista = ? AND condicao = ?").all(pista, condicao)) {
+    if (!chaves.has(v.chave)) continue; const a = por.get(v.chave) || { s: 0, n: 0, pneus: {} }; a.s += v.razao * v.voltas; a.n += v.voltas; a.pneus[v.composto] = v.razao; por.set(v.chave, a);
+  }
+  let melhor = null;
+  for (const [chave, a] of por) { const r = a.s / a.n; if (!melhor || r < melhor.razao) melhor = { chave, razao: r, voltas: a.n, pneus: a.pneus }; }
+  return melhor;
+}
+// (2026-11-23) a proximidade de quem joga aos robôs do Difícil (migração 055), com o mesmo peso por corrida
+function aprenderProximidadeCorrida(pista, piloto, condicao, prox, voltas) {
+  const chave = String(piloto).trim().toLowerCase(); if (!chave || !Number.isFinite(prox) || !(voltas > 0)) return null;
+  const db = bd(), v = db.prepare("SELECT prox FROM corrida_ritmo_proximidade WHERE pista = ? AND chave = ? AND condicao = ?").get(pista, chave, condicao);
+  const nova = v ? v.prox * (1 - PESO_CORRIDA_RITMO) + prox * PESO_CORRIDA_RITMO : prox;
+  db.prepare(`INSERT INTO corrida_ritmo_proximidade (pista, chave, condicao, prox, voltas, corridas, atualizado) VALUES (?, ?, ?, ?, ?, 1, ?)
+    ON CONFLICT(pista, chave, condicao) DO UPDATE SET prox = excluded.prox, voltas = corrida_ritmo_proximidade.voltas + excluded.voltas, corridas = corrida_ritmo_proximidade.corridas + 1, atualizado = excluded.atualizado`)
+    .run(pista, chave, condicao, nova, voltas | 0, Date.now());
+  return nova;
+}
+// a proximidade dos pilotos da sala numa condição: a do mais rápido (o menor número), ou null
+function proximidadeCorrida(pista, pilotos, condicao) {
+  const chaves = new Set((pilotos || []).map((p) => String(p).trim().toLowerCase()).filter(Boolean)); if (!chaves.size) return null;
+  let melhor = null;
+  for (const v of bd().prepare("SELECT chave, prox, corridas FROM corrida_ritmo_proximidade WHERE pista = ? AND condicao = ?").all(pista, condicao))
+    if (chaves.has(v.chave) && (!melhor || v.prox < melhor.prox)) melhor = { chave: v.chave, prox: v.prox, corridas: v.corridas };
+  return melhor;
+}
+// Guarda a volta se ela entra nas cinco melhores do piloto. Devolve 2 se é a melhor dele, 1 se só entrou, 0 se não.
+function salvarVoltaCorrida(pista, tempo, carro, piloto, amostras) {
+  const db = bd(), dados = JSON.stringify(amostras), agora = Date.now(), chave = String(piloto).trim().toLowerCase();
+  if (!chave || !Number.isFinite(tempo)) return 0;
+  db.exec("BEGIN");
+  try {
+    const { lastInsertRowid: id } = db.prepare("INSERT INTO corrida_voltas_piloto (pista, chave, piloto, tempo, carro, dados, feita_em) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(pista, chave, piloto, tempo, carro, dados, agora);
+    db.prepare(`DELETE FROM corrida_voltas_piloto WHERE pista = ? AND chave = ? AND id NOT IN
+      (SELECT id FROM corrida_voltas_piloto WHERE pista = ? AND chave = ? ORDER BY tempo, feita_em, id LIMIT ?)`).run(pista, chave, pista, chave, VOLTAS_POR_PILOTO);
+    db.prepare(`INSERT INTO corrida_voltas (pista, tempo, carro, piloto, dados, feita_em) VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(pista) DO UPDATE SET tempo=excluded.tempo, carro=excluded.carro, piloto=excluded.piloto, dados=excluded.dados, feita_em=excluded.feita_em
+    WHERE excluded.tempo < corrida_voltas.tempo`).run(pista, tempo, carro, piloto, dados, agora);
+    db.exec("COMMIT");
+    const ficaram = db.prepare("SELECT id FROM corrida_voltas_piloto WHERE pista = ? AND chave = ? ORDER BY tempo, feita_em, id").all(pista, chave);
+    const pos = ficaram.findIndex((v) => v.id === id);
+    return pos < 0 ? 0 : pos === 0 ? 2 : 1;
+  } catch (e) { db.exec("ROLLBACK"); throw e; }
+}
+
+// Os recordes de volta de cada pista (migração 013): cada piloto uma vez por pista, com a melhor volta dele, e só os 5
+// mais rápidos ficam. Devolve a posição (1 a 5) se a volta entrou no quadro agora, ou 0.
+const RECORDES_POR_PISTA = 5;
+function registrarRecordeCorrida(pista, tempo, carro, piloto) {
+  const db = bd(), chave = String(piloto).trim().toLowerCase();
+  if (!chave || !Number.isFinite(tempo)) return 0;
+  db.exec("BEGIN");
+  try {
+    // (f1 = 1: volta de corrida com as regras de F1 e robôs, a única que entra no quadro; troca também a antiga, de antes da regra, f1 = 0)
+    const r = db.prepare(`INSERT INTO corrida_recordes (pista, chave, piloto, tempo, carro, feita_em, f1) VALUES (?, ?, ?, ?, ?, ?, 1)
+      ON CONFLICT(pista, chave) DO UPDATE SET piloto=excluded.piloto, tempo=excluded.tempo, carro=excluded.carro, feita_em=excluded.feita_em, f1=1
+      WHERE excluded.tempo < corrida_recordes.tempo OR corrida_recordes.f1 = 0`).run(pista, chave, piloto, tempo, carro, Date.now());
+    // só os 5 primeiros ficam (no empate, quem fez antes fica na frente); as antigas (f1 = 0) não contam nem são apagadas
+    db.prepare(`DELETE FROM corrida_recordes WHERE pista = ? AND f1 = 1 AND chave NOT IN
+      (SELECT chave FROM corrida_recordes WHERE pista = ? AND f1 = 1 ORDER BY tempo, feita_em LIMIT ?)`).run(pista, pista, RECORDES_POR_PISTA);
+    db.exec("COMMIT");
+    if (!r.changes) return 0;
+    const top = db.prepare("SELECT chave FROM corrida_recordes WHERE pista = ? AND f1 = 1 ORDER BY tempo, feita_em").all(pista);
+    return top.findIndex((x) => x.chave === chave) + 1;
+  } catch (e) { db.exec("ROLLBACK"); throw e; }
+}
+// o melhor de cada setor da pista (0 a 2): só troca se o tempo novo for menor. Devolve true se trocou
+function registrarSetorCorrida(pista, setor, tempo, piloto) {
+  if (!Number.isFinite(tempo) || !String(piloto).trim()) return false;
+  return bd().prepare(`INSERT INTO corrida_setores (pista, setor, piloto, tempo, feita_em) VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(pista, setor) DO UPDATE SET piloto=excluded.piloto, tempo=excluded.tempo, feita_em=excluded.feita_em
+    WHERE excluded.tempo < corrida_setores.tempo`).run(pista, setor, piloto, tempo, Date.now()).changes > 0;
+}
+// { pista: [setor 0, setor 1, setor 2] }, cada um { piloto, tempo } ou null
+function setoresCorrida() {
+  const out = {};
+  for (const r of bd().prepare("SELECT pista, setor, piloto, tempo FROM corrida_setores").all()) (out[r.pista] ||= [null, null, null])[r.setor] = { piloto: r.piloto, tempo: r.tempo };
+  return out;
+}
+// o quadro de todas as pistas: { pista: [{ piloto, tempo, carro, em }] }, do mais rápido para o mais lento
+function recordesCorrida() {
+  const out = {};
+  for (const r of bd().prepare("SELECT pista, piloto, tempo, carro, feita_em FROM corrida_recordes WHERE f1 = 1 ORDER BY pista, tempo, feita_em").all())
+    (out[r.pista] ||= []).push({ piloto: r.piloto, tempo: r.tempo, carro: r.carro, em: r.feita_em });
+  return out;
+}
+
+// Times Pokémon dos personagens do Ginásio. O código base é o padrão; o banco guarda só edições.
+const timesPokemonGinasio = () => bd().prepare("SELECT treinador, time_json, ator, atualizado_em FROM ginasio_times_pokemon").all();
+function salvarTimePokemonGinasio(treinador, time, ator) {
+  bd().prepare(`INSERT INTO ginasio_times_pokemon (treinador, time_json, ator, atualizado_em) VALUES (?, ?, ?, ?)
+    ON CONFLICT(treinador) DO UPDATE SET time_json=excluded.time_json, ator=excluded.ator, atualizado_em=excluded.atualizado_em`)
+    .run(treinador, JSON.stringify(time), ator, Date.now());
+}
+const perfisPilotoCorrida = () => bd().prepare("SELECT piloto, perfil_json, ator, atualizado_em FROM corrida_perfis_piloto").all();
+function salvarPerfilPilotoCorrida(piloto, perfil, ator) {
+  bd().prepare(`INSERT INTO corrida_perfis_piloto (piloto, perfil_json, ator, atualizado_em) VALUES (?, ?, ?, ?)
+    ON CONFLICT(piloto) DO UPDATE SET perfil_json = excluded.perfil_json, ator = excluded.ator, atualizado_em = excluded.atualizado_em`).run(piloto, JSON.stringify(perfil), ator, Date.now());
+}
+const reporPerfilPilotoCorrida = (piloto) => bd().prepare("DELETE FROM corrida_perfis_piloto WHERE piloto = ?").run(piloto);
+const reporTimePokemonGinasio = (treinador) => bd().prepare("DELETE FROM ginasio_times_pokemon WHERE treinador = ?").run(treinador);
+
+// Fotos recortadas da Carreira. URL nula guarda uma busca sem resultado para não repetir a cada visita.
+function fotoJogador(id) {
+  return bd().prepare("SELECT url, consultado_em FROM fotos_jogadores WHERE jogador = ?").get(id) || null;
+}
+function guardarFotoJogador(id, url) {
+  bd().prepare("INSERT INTO fotos_jogadores (jogador, url, consultado_em) VALUES (?, ?, ?) ON CONFLICT(jogador) DO UPDATE SET url = excluded.url, consultado_em = excluded.consultado_em")
+    .run(id, url, Date.now());
+}
+
+// ---------- carreiras ----------
+const hash = (txt) => crypto.createHash("sha256").update(String(txt)).digest("hex");
+const novoToken = () => crypto.randomBytes(24).toString("hex");
+function novoCodigoRecuperacao() {
+  const b = crypto.randomBytes(12);
+  return Array.from(b, (x) => LETRAS[x % LETRAS.length]).join("");
+}
+// o código de recuperação aceita espaço, traço e minúscula ("abcd-efgh-jklm")
+const limparCodigo = (c) => String(c || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const tokenValido = (t) => typeof t === "string" && /^[a-f0-9]{32,64}$/.test(t);
+
+function lerCarreira(linha) {
+  if (!linha) return null;
+  let dados = {};
+  try { dados = JSON.parse(linha.dados); } catch {}
+  return { id: Number(linha.id), nome: linha.nome, dados, criadaEm: Number(linha.criada_em), atualizadaEm: Number(linha.atualizada_em) };
+}
+// cria a carreira e devolve o token (fica no navegador) e o código de recuperação (para outro aparelho): os dois só
+// aparecem aqui; o banco guarda só o hash
+function criarCarreira(nome, dados = {}) {
+  const token = novoToken(), recuperacao = novoCodigoRecuperacao(), agora = Date.now();
+  const r = bd().prepare("INSERT INTO carreiras (token_hash, recuperacao_hash, nome, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(hash(token), hash(recuperacao), String(nome).slice(0, 40), JSON.stringify(dados), agora, agora);
+  return { id: Number(r.lastInsertRowid), token, recuperacao };
+}
+function carreiraPorToken(token) {
+  if (!tokenValido(token)) return null;
+  return lerCarreira(bd().prepare("SELECT * FROM carreiras WHERE token_hash = ?").get(hash(token)));
+}
+// entrar em outro aparelho: o código vale, e nasce um token novo para este navegador (o antigo deixa de valer)
+function recuperarCarreira(codigo) {
+  const c = limparCodigo(codigo);
+  if (c.length !== 12) return null;
+  const linha = bd().prepare("SELECT * FROM carreiras WHERE recuperacao_hash = ?").get(hash(c));
+  if (!linha) return null;
+  const token = novoToken();
+  bd().prepare("UPDATE carreiras SET token_hash = ?, atualizada_em = ? WHERE id = ?").run(hash(token), Date.now(), linha.id);
+  return { ...lerCarreira(linha), token };
+}
+function salvarCarreira(id, dados) {
+  const r = bd().prepare("UPDATE carreiras SET dados = ?, atualizada_em = ? WHERE id = ?").run(JSON.stringify(dados), Date.now(), id);
+  return r.changes > 0;
+}
+// mostrar o código de novo: o banco só tem o hash, então nasce um código novo (o antigo deixa de valer)
+function novoCodigoDe(id) {
+  const recuperacao = novoCodigoRecuperacao();
+  const r = bd().prepare("UPDATE carreiras SET recuperacao_hash = ?, atualizada_em = ? WHERE id = ?").run(hash(recuperacao), Date.now(), id);
+  return r.changes > 0 ? recuperacao : null;
+}
+// apagar a carreira de vez (o token e o código deixam de valer)
+function excluirCarreira(id) {
+  return bd().prepare("DELETE FROM carreiras WHERE id = ?").run(id).changes > 0;
+}
+
+// Temporada F1: credenciais próprias, sem misturar os saves da Carreira de futebol.
+function lerTemporada(linha) {
+  if (!linha) return null;
+  return { id: Number(linha.id), nome: linha.nome, dados: JSON.parse(linha.dados), criadaEm: linha.criada_em, atualizadaEm: linha.atualizada_em };
+}
+function criarTemporadaCorrida(nome, dados) {
+  const token = novoToken(), recuperacao = novoCodigoRecuperacao(), agora = Date.now();
+  const r = bd().prepare("INSERT INTO corrida_temporadas (token_hash, recuperacao_hash, nome, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(hash(token), hash(recuperacao), String(nome).slice(0, 40), JSON.stringify(dados), agora, agora);
+  return { id: Number(r.lastInsertRowid), token, recuperacao };
+}
+function temporadaCorridaPorToken(token) {
+  if (!tokenValido(token)) return null;
+  return lerTemporada(bd().prepare("SELECT * FROM corrida_temporadas WHERE token_hash = ?").get(hash(token)));
+}
+// O programa de PC (corrida-pc.js): a carreira solo que estava no site vem para o banco do PC com o MESMO token (o navegador do programa
+// já o tem guardado). Só cria se ainda não existe; o código de recuperação do site não vem (o do PC é novo e não é mostrado).
+function importarTemporadaCorrida(token, nome, dados) {
+  if (!tokenValido(token) || temporadaCorridaPorToken(token)) return temporadaCorridaPorToken(token);
+  const agora = Date.now();
+  bd().prepare("INSERT INTO corrida_temporadas (token_hash, recuperacao_hash, nome, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(hash(token), hash(novoCodigoRecuperacao()), String(nome).slice(0, 40), JSON.stringify(dados), agora, agora);
+  return temporadaCorridaPorToken(token);
+}
+// (2026-11-15) O caminho de volta: a carreira jogada no programa de PC sobe para o site (corrida-pc.js enviarCarreiraAoSite), com o MESMO
+// código de recuperação (vai o hash, nunca o código), para o código que o programa mostra valer também no navegador. No site: acha a carreira
+// pelo código (ela pode ter ganhado outro token numa recuperação) ou pelo token; se não existe, cria com os dois hashes. O save só é trocado
+// se o que chega não está atrás (o ano e o GP), e o código do site, se ele já tinha um, fica como está.
+function hashesDaTemporadaCorrida(id) { return bd().prepare("SELECT token_hash, recuperacao_hash FROM corrida_temporadas WHERE id = ?").get(id) || null; }
+function receberTemporadaDoPC(token, recuperacaoHash, nome, dados) {
+  if (!tokenValido(token) || !/^[0-9a-f]{64}$/.test(String(recuperacaoHash || "")) || !dados || typeof dados !== "object" || !Array.isArray(dados.calendario)) return null;
+  const linha = bd().prepare("SELECT * FROM corrida_temporadas WHERE recuperacao_hash = ?").get(recuperacaoHash) || bd().prepare("SELECT * FROM corrida_temporadas WHERE token_hash = ?").get(hash(token));
+  const agora = Date.now();
+  if (!linha) {
+    bd().prepare("INSERT INTO corrida_temporadas (token_hash, recuperacao_hash, nome, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(hash(token), recuperacaoHash, String(nome || "").slice(0, 40), JSON.stringify(dados), agora, agora);
+    return { criada: true };
+  }
+  const atual = JSON.parse(linha.dados), passo = (d) => (Number(d.ano) || 0) * 1000 + (Number(d.gp) || 0);
+  if (passo(dados) < passo(atual)) return { atras: true };
+  bd().prepare("UPDATE corrida_temporadas SET dados = ?, nome = ?, atualizada_em = ? WHERE id = ?").run(JSON.stringify(dados), String(nome || linha.nome).slice(0, 40), agora, linha.id);
+  return { atualizada: true };
+}
+function temporadaCorridaPorId(id) {
+  return lerTemporada(bd().prepare("SELECT * FROM corrida_temporadas WHERE id = ?").get(id));
+}
+function recuperarTemporadaCorrida(codigo) {
+  const c = limparCodigo(codigo);
+  if (c.length !== 12) return null;
+  const linha = bd().prepare("SELECT * FROM corrida_temporadas WHERE recuperacao_hash = ?").get(hash(c));
+  if (!linha) return null;
+  const token = novoToken();
+  bd().prepare("UPDATE corrida_temporadas SET token_hash = ?, atualizada_em = ? WHERE id = ?").run(hash(token), Date.now(), linha.id);
+  return { ...lerTemporada(linha), token };
+}
+function salvarTemporadaCorrida(id, dados, gpEsperado) {
+  const r = gpEsperado == null
+    ? bd().prepare("UPDATE corrida_temporadas SET dados = ?, atualizada_em = ? WHERE id = ?").run(JSON.stringify(dados), Date.now(), id)
+    : bd().prepare("UPDATE corrida_temporadas SET dados = ?, atualizada_em = ? WHERE id = ? AND CAST(json_extract(dados, '$.gp') AS INTEGER) = ?")
+      .run(JSON.stringify(dados), Date.now(), id, gpEsperado);
+  return r.changes > 0;
+}
+// o replay de um GP da carreira (corrida-gravacao.js, `paraSave`): as amostras com gzip e as colunas em JSON; cada dono fica com os 30 mais recentes
+const REPLAYS_POR_DONO = 30;
+function guardarReplayCorrida(dono, ano, gp, replay) {
+  if (!replay || !replay.dados || !replay.dados.length) return false;
+  const { dados, ...meta } = replay, gz = require("zlib").gzipSync(dados);
+  bd().prepare("INSERT INTO corrida_replays (dono, ano, gp, meta, dados, criado_em) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(dono, ano, gp) DO UPDATE SET meta = excluded.meta, dados = excluded.dados, criado_em = excluded.criado_em")
+    .run(String(dono), ano | 0, gp | 0, JSON.stringify(meta), gz, Date.now());
+  bd().prepare("DELETE FROM corrida_replays WHERE dono = ? AND rowid NOT IN (SELECT rowid FROM corrida_replays WHERE dono = ? ORDER BY criado_em DESC LIMIT ?)").run(String(dono), String(dono), REPLAYS_POR_DONO);
+  return true;
+}
+// o replay para o navegador: as colunas e as amostras em base64 (o mesmo formato da sala da Corrida, evento `replay`)
+function replayCorrida(dono, ano, gp) {
+  const l = bd().prepare("SELECT meta, dados FROM corrida_replays WHERE dono = ? AND ano = ? AND gp = ?").get(String(dono), ano | 0, gp | 0);
+  if (!l) return null;
+  return { ...JSON.parse(l.meta), dados: require("zlib").gunzipSync(l.dados).toString("base64") };
+}
+const apagarReplaysCorrida = (dono) => bd().prepare("DELETE FROM corrida_replays WHERE dono = ?").run(String(dono)).changes;
+function novoCodigoTemporadaCorrida(id) {
+  const recuperacao = novoCodigoRecuperacao();
+  const r = bd().prepare("UPDATE corrida_temporadas SET recuperacao_hash = ?, atualizada_em = ? WHERE id = ?").run(hash(recuperacao), Date.now(), id);
+  return r.changes ? recuperacao : null;
+}
+
+// A temporada de F1 em grupo (corrida-temporada-grupo.js): uma linha por sala, com a sala inteira em JSON.
+function salvarSalaTemporadaCorrida(codigo, dados) {
+  const agora = Date.now();
+  bd().prepare("INSERT INTO corrida_temporadas_grupo (codigo, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?) ON CONFLICT(codigo) DO UPDATE SET dados = excluded.dados, atualizada_em = excluded.atualizada_em")
+    .run(codigo, JSON.stringify(dados), agora, agora);
+}
+// todas as salas guardadas (o servidor carrega ao subir): [{ codigo, dados, atualizadaEm }]
+const salasTemporadaCorrida = () => bd().prepare("SELECT * FROM corrida_temporadas_grupo").all().map((l) => {
+  let dados = null; try { dados = JSON.parse(l.dados); } catch {}
+  return { codigo: l.codigo, dados, atualizadaEm: Number(l.atualizada_em) };
+}).filter((s) => s.dados);
+// apagar a temporada solo de vez (o token e o código de recuperação deixam de valer)
+function excluirTemporadaCorrida(id) {
+  bd().prepare("DELETE FROM corrida_replays WHERE dono = ?").run("solo:" + id); // os replays dos GPs vão junto
+  return bd().prepare("DELETE FROM corrida_temporadas WHERE id = ?").run(id).changes > 0;
+}
+const apagarSalaTemporadaCorrida = (codigo) => { bd().prepare("DELETE FROM corrida_replays WHERE dono = ?").run("grupo:" + codigo); return bd().prepare("DELETE FROM corrida_temporadas_grupo WHERE codigo = ?").run(codigo).changes > 0; };
+
+// ---------- a moderação das carreiras solo (admin-carreira.js) ----------
+// a lista sem abrir o save inteiro de cada uma: só os campos que o painel mostra, tirados do JSON pelo próprio SQLite
+const listarCarreiras = (limite = 300) => bd().prepare(`SELECT id, nome, criada_em, atualizada_em,
+    json_extract(dados, '$.clube') AS clube, json_extract(dados, '$.temporada') AS temporada, json_extract(dados, '$.temporadasMax') AS temporadas_max,
+    json_extract(dados, '$.rodada') AS rodada, json_extract(dados, '$.v') AS v, json_type(dados, '$.partida') = 'object' AS partida,
+    json_type(dados, '$.jogador') = 'object' AS jogador, json_extract(dados, '$.demitido') AS demitido
+  FROM carreiras ORDER BY atualizada_em DESC LIMIT ?`).all(limite).map((l) => ({ id: Number(l.id), nome: l.nome, clube: l.clube, temporada: Number(l.temporada) || 1,
+  temporadasMax: Number(l.temporadas_max) || null, rodada: Number(l.rodada) || 0, v: Number(l.v) || 0, partida: !!l.partida, jogador: !!l.jogador, demitido: !!l.demitido,
+  criadaEm: Number(l.criada_em), atualizadaEm: Number(l.atualizada_em) }));
+const carreiraPorId = (id) => lerCarreira(bd().prepare("SELECT * FROM carreiras WHERE id = ?").get(Number(id)));
+// a edição e o registro dela juntos (o código no registro é "solo:<id>")
+function salvarEdicaoCarreira(id, dados, ator, edicao) {
+  const db = bd(), agora = Date.now();
+  db.exec("BEGIN");
+  try {
+    if (dados) {
+      const r = db.prepare("UPDATE carreiras SET dados = ?, atualizada_em = ? WHERE id = ?").run(JSON.stringify(dados), agora, id);
+      if (!r.changes) throw new Error("Carreira não encontrada no banco.");
+    }
+    db.prepare("INSERT INTO moderacao_carreira (codigo, ator, tipo, clube, jogador, antes, depois, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(`solo:${id}`, String(ator), edicao.tipo, edicao.clube || "", edicao.jogador || null, JSON.stringify(edicao.antes ?? null), JSON.stringify(edicao.depois ?? null), agora);
+    db.exec("COMMIT");
+  } catch (e) { db.exec("ROLLBACK"); throw e; }
+}
+// as últimas edições da moderação (de uma sala, ou de uma carreira solo com "solo:<id>")
+const historicoModeracao = (codigo, limite = 20) => bd().prepare("SELECT ator, tipo, clube, jogador, antes, depois, criado_em FROM moderacao_carreira WHERE codigo = ? ORDER BY id DESC LIMIT ?")
+  .all(String(codigo), limite).map((l) => { const ler = (t) => { try { return JSON.parse(t); } catch { return null; } };
+    return { ator: l.ator, tipo: l.tipo, clube: l.clube, jogador: l.jogador, antes: ler(l.antes), depois: ler(l.depois), em: Number(l.criado_em) }; });
+
+// ---------- as salas da carreira em grupo (carreira-online.js) ----------
+function salvarSalaCarreira(codigo, dados) {
+  const agora = Date.now();
+  bd().prepare("INSERT INTO carreiras_online (codigo, dados, criada_em, atualizada_em) VALUES (?, ?, ?, ?) ON CONFLICT(codigo) DO UPDATE SET dados = excluded.dados, atualizada_em = excluded.atualizada_em")
+    .run(codigo, JSON.stringify(dados), agora, agora);
+}
+// todas as salas guardadas (o servidor carrega ao subir): [{ codigo, dados, atualizadaEm }]
+const salasCarreira = () => bd().prepare("SELECT * FROM carreiras_online").all().map((l) => {
+  let dados = null; try { dados = JSON.parse(l.dados); } catch {}
+  return { codigo: l.codigo, dados, atualizadaEm: Number(l.atualizada_em) };
+}).filter((s) => s.dados);
+const apagarSalaCarreira = (codigo) => bd().prepare("DELETE FROM carreiras_online WHERE codigo = ?").run(codigo).changes > 0;
+function salvarEdicaoModeracao(codigo, dados, ator, edicao) {
+  const db = bd(), agora = Date.now();
+  db.exec("BEGIN");
+  try {
+    const r = db.prepare("UPDATE carreiras_online SET dados = ?, atualizada_em = ? WHERE codigo = ?").run(JSON.stringify(dados), agora, codigo);
+    if (!r.changes) throw new Error("Sala não encontrada no banco.");
+    db.prepare("INSERT INTO moderacao_carreira (codigo, ator, tipo, clube, jogador, antes, depois, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(codigo, String(ator), edicao.tipo, edicao.clube, edicao.jogador, JSON.stringify(edicao.antes), JSON.stringify(edicao.depois), agora);
+    db.exec("COMMIT");
+  } catch (e) { db.exec("ROLLBACK"); throw e; }
+}
+
+// ---------- cartas que já saíram (o monte dura entre reinícios do servidor) ----------
+const cartasSaidas = (jogo) => new Set(bd().prepare("SELECT carta FROM cartas_saidas WHERE jogo = ?").all(jogo).map((r) => r.carta));
+const marcarCarta = (jogo, carta) => { bd().prepare("INSERT OR IGNORE INTO cartas_saidas (jogo, carta, saiu_em) VALUES (?, ?, ?)").run(jogo, carta, Date.now()); };
+const zerarCartas = (jogo) => { bd().prepare("DELETE FROM cartas_saidas WHERE jogo = ?").run(jogo); };
+
+// ---------- a estante de troféus (todas as carreiras) ----------
+// o nome do técnico vira a chave do ranking: minúsculas, sem acento e sem espaço sobrando ("João " e "joao" são o mesmo)
+const chaveTecnico = (nome) => String(nome || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+// guarda as conquistas de uma temporada (a mesma conquista não entra duas vezes)
+function guardarConquistas(lista) {
+  const ins = bd().prepare(`INSERT OR IGNORE INTO estante (carreira, modo, tecnico, chave, clube, competicao, nome, colocacao, pontos, ano, temporada, criado_em)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  let novas = 0;
+  for (const c of lista) {
+    const chave = chaveTecnico(c.tecnico); if (!chave) continue;
+    novas += ins.run(String(c.carreira), c.modo === "grupo" ? "grupo" : "solo", String(c.tecnico).slice(0, 24), chave, String(c.clube), String(c.competicao), String(c.nome), c.colocacao === 1 ? 1 : 2,
+      Math.max(0, Math.round(c.pontos || 0)), c.ano | 0, c.temporada | 0, c.criadoEm || Date.now()).changes;
+  }
+  return novas;
+}
+// a estante inteira (só carreiras em grupo; solo e Rumo ao Estrelato ficam guardados mas não entram): o ranking dos técnicos (pontos, títulos, vices, as taças de cada competição e o clube mais vitorioso) e as
+// últimas conquistas
+function estante({ limite = 50, recentes = 24 } = {}) {
+  const linhas = bd().prepare("SELECT * FROM estante WHERE modo = 'grupo' ORDER BY criado_em ASC, id ASC").all();
+  const por = new Map();
+  for (const l of linhas) {
+    const t = por.get(l.chave) || { tecnico: l.tecnico, chave: l.chave, pontos: 0, titulos: 0, vices: 0, tacas: {}, clubes: {}, carreiras: new Set(), ultimo: 0 };
+    t.tecnico = l.tecnico; t.pontos += l.pontos; t.carreiras.add(l.carreira); t.ultimo = Math.max(t.ultimo, l.criado_em);
+    if (l.colocacao === 1) {
+      t.titulos++;
+      const x = t.tacas[l.competicao] || (t.tacas[l.competicao] = { competicao: l.competicao, nome: l.nome, n: 0 }); x.n++;
+      t.clubes[l.clube] = (t.clubes[l.clube] || 0) + 1;
+    } else t.vices++;
+    por.set(l.chave, t);
+  }
+  const ranking = [...por.values()].map(({ carreiras, clubes, ...t }) => ({ ...t, carreiras: carreiras.size, clube: Object.entries(clubes).sort((a, b) => b[1] - a[1])[0]?.[0] || null, tacas: Object.values(t.tacas).sort((a, b) => b.n - a.n) }))
+    .sort((a, b) => b.pontos - a.pontos || b.titulos - a.titulos || a.ultimo - b.ultimo).slice(0, limite);
+  const ultimas = linhas.filter((l) => l.colocacao === 1).slice(-recentes).reverse()
+    .map((l) => ({ tecnico: l.tecnico, clube: l.clube, competicao: l.competicao, nome: l.nome, ano: l.ano, modo: l.modo, em: l.criado_em }));
+  return { ranking, ultimas, total: linhas.filter((l) => l.colocacao === 1).length };
+}
+
+// ---------- a estante da F1 com os amigos (corrida_estante, migracoes/028) ----------
+// guarda pódios e títulos; a mesma conquista não entra duas vezes (o servidor pode reiniciar no meio)
+function guardarEstanteCorrida(lista) {
+  const ins = bd().prepare(`INSERT OR IGNORE INTO corrida_estante (sala, piloto, chave, equipe, tipo, pista, colocacao, ano, gp, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  let novas = 0;
+  for (const c of lista || []) {
+    const chave = chaveTecnico(c.piloto); if (!chave || !["gp", "pilotos", "construtores"].includes(c.tipo)) continue;
+    novas += ins.run(String(c.sala), String(c.piloto).slice(0, 24), chave, String(c.equipe), c.tipo, c.pista ? String(c.pista) : null,
+      Math.min(3, Math.max(1, c.colocacao | 0)), c.ano | 0, c.tipo === "gp" ? c.gp | 0 : -1, c.criadoEm || Date.now()).changes;
+  }
+  return novas;
+}
+// o ranking dos amigos (títulos de pilotos, de construtores, vices, vitórias e pódios em GP, a equipe com mais conquistas) e as últimas
+// vitórias e títulos. A ordem: títulos de pilotos, vitórias, títulos de construtores e pódios.
+function estanteCorrida({ limite = 100, recentes = 20 } = {}) {
+  const linhas = bd().prepare("SELECT * FROM corrida_estante ORDER BY criado_em ASC, id ASC").all();
+  const por = new Map();
+  for (const l of linhas) {
+    const t = por.get(l.chave) || { piloto: l.piloto, chave: l.chave, titulos: 0, construtores: 0, vices: 0, vitorias: 0, podios: 0, equipes: {}, salas: new Set(), ultimo: 0 };
+    t.piloto = l.piloto; t.salas.add(l.sala); t.ultimo = Math.max(t.ultimo, l.criado_em);
+    if (l.tipo === "gp") { t.podios++; if (l.colocacao === 1) t.vitorias++; }
+    else if (l.colocacao === 1) { if (l.tipo === "pilotos") t.titulos++; else t.construtores++; }
+    else if (l.tipo === "pilotos") t.vices++;
+    t.equipes[l.equipe] = (t.equipes[l.equipe] || 0) + 1;
+    por.set(l.chave, t);
+  }
+  const ranking = [...por.values()].map(({ salas, equipes, ...t }) => ({ ...t, salas: salas.size, equipe: Object.entries(equipes).sort((a, b) => b[1] - a[1])[0]?.[0] || null }))
+    .sort((a, b) => b.titulos - a.titulos || b.vitorias - a.vitorias || b.construtores - a.construtores || b.podios - a.podios || a.ultimo - b.ultimo).slice(0, limite);
+  const ultimas = linhas.filter((l) => l.colocacao === 1).slice(-recentes).reverse()
+    .map((l) => ({ piloto: l.piloto, chave: l.chave, equipe: l.equipe, tipo: l.tipo, pista: l.pista, ano: l.ano, em: l.criado_em }));
+  return { ranking, ultimas, titulos: linhas.filter((l) => l.tipo === "pilotos" && l.colocacao === 1).length, vitorias: linhas.filter((l) => l.tipo === "gp" && l.colocacao === 1).length };
+}
+
+// Os Pokémon da grama alta da Vila (vila-mato.js): cada linha de "capturas" é um indivíduo com nível e experiência.
+// O treinador chega aqui já como hash. A Pokédex ("pokedex") guarda toda espécie que o treinador já teve.
+function registrarNaPokedex(treinador, bicho) {
+  bd().prepare("INSERT OR IGNORE INTO pokedex (treinador, bicho, primeiro_em) VALUES (?, ?, ?)").run(treinador, bicho, Date.now());
+}
+function guardarCaptura(treinador, nome, bicho, raridade, brilhante, nivel = 5, origem = "captura") {
+  const r = bd().prepare("INSERT INTO capturas (treinador, nome, bicho, raridade, brilhante, capturado_em, nivel, xp, origem) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)")
+    .run(treinador, nome, bicho, raridade, brilhante ? 1 : 0, Date.now(), nivel, origem);
+  registrarNaPokedex(treinador, bicho);
+  return Number(r.lastInsertRowid);
+}
+// os três iniciais entram uma vez por treinador (no nível 5), como Pokémon de verdade: sobem de nível e evoluem
+function garantirIniciais(treinador, nome, iniciais) {
+  const tem = bd().prepare("SELECT COUNT(*) AS n FROM capturas WHERE treinador = ? AND origem = 'inicial'").get(treinador);
+  if (Number(tem.n)) return false;
+  for (const [bicho, raridade] of iniciais) guardarCaptura(treinador, nome || "", bicho, raridade, false, 5, "inicial");
+  return true;
+}
+const individuo = (c) => ({ id: Number(c.id), bicho: c.bicho, raridade: c.raridade, brilhante: !!c.brilhante, nivel: Number(c.nivel), xp: Number(c.xp), origem: c.origem, capturado_em: Number(c.capturado_em) });
+// os Pokémon do treinador, um por linha (do nível mais alto para o mais baixo)
+function pokemonsDe(treinador) {
+  return bd().prepare("SELECT id, bicho, raridade, brilhante, nivel, xp, origem, capturado_em FROM capturas WHERE treinador = ? ORDER BY nivel DESC, xp DESC, id")
+    .all(treinador).map(individuo);
+}
+// sobe o nível, a experiência e (na evolução) a espécie de um Pokémon do treinador
+function atualizarPokemon(treinador, id, { bicho, nivel, xp }) {
+  bd().prepare("UPDATE capturas SET bicho = ?, nivel = ?, xp = ? WHERE id = ? AND treinador = ?").run(bicho, nivel, xp, id, treinador);
+  registrarNaPokedex(treinador, bicho);
+}
+// a Pokédex: as espécies que o treinador já teve
+function pokedexDe(treinador) {
+  return bd().prepare("SELECT bicho FROM pokedex WHERE treinador = ? ORDER BY primeiro_em").all(treinador).map((r) => r.bicho);
+}
+// a coleção para a Pokédex da Vila: uma linha por espécie que tem agora, com quantos, o melhor nível e se já veio brilhante
+function capturasDe(treinador) {
+  return bd().prepare(`SELECT bicho, raridade, COUNT(*) AS vezes, MAX(brilhante) AS brilhante, MIN(capturado_em) AS primeira, MAX(nivel) AS nivel, MAX(origem = 'inicial') AS inicial
+    FROM capturas WHERE treinador = ? GROUP BY bicho ORDER BY primeira`).all(treinador)
+    .map((c) => ({ bicho: c.bicho, raridade: c.raridade, vezes: Number(c.vezes), brilhante: !!c.brilhante, primeira: Number(c.primeira), nivel: Number(c.nivel), inicial: !!c.inicial }));
+}
+// os maiores colecionadores (espécies na Pokédex), pelo nome mais recente de cada treinador; os iniciais não contam
+function rankingCapturas(limite = 10) {
+  return bd().prepare(`SELECT (SELECT nome FROM capturas d WHERE d.treinador = c.treinador ORDER BY capturado_em DESC LIMIT 1) AS nome,
+    (SELECT COUNT(*) FROM pokedex x WHERE x.treinador = c.treinador) AS especies, COUNT(*) AS total
+    FROM capturas c WHERE origem = 'captura' GROUP BY treinador ORDER BY especies DESC, total DESC LIMIT ?`).all(limite)
+    .map((r) => ({ nome: r.nome, especies: Number(r.especies), total: Number(r.total) }));
+}
+
+// ---------- o painel da Pokédex (admin-pokemon.js, /admin/pokedex) ----------
+// os treinadores com Pokémon: o nome mais recente, quantos tem, as espécies da Pokédex, o maior nível e a última captura
+function treinadoresPokemon(busca = "", limite = 300) {
+  const termo = String(busca || "").trim().toLowerCase();
+  return bd().prepare(`SELECT treinador, (SELECT nome FROM capturas d WHERE d.treinador = c.treinador AND nome <> '' ORDER BY capturado_em DESC LIMIT 1) AS nome,
+    COUNT(*) AS total, SUM(origem = 'captura') AS capturas, MAX(nivel) AS maior, MAX(capturado_em) AS ultima,
+    (SELECT COUNT(*) FROM pokedex x WHERE x.treinador = c.treinador) AS especies
+    FROM capturas c GROUP BY treinador ORDER BY ultima DESC LIMIT ?`).all(limite)
+    .map((r) => ({ treinador: r.treinador, nome: r.nome || "", total: Number(r.total), capturas: Number(r.capturas || 0), maior: Number(r.maior), ultima: Number(r.ultima), especies: Number(r.especies) }))
+    .filter((r) => !termo || r.nome.toLowerCase().includes(termo) || r.treinador.startsWith(termo));
+}
+const capturaPorId = (treinador, id) => { const c = bd().prepare("SELECT id, bicho, raridade, brilhante, nivel, xp, origem, capturado_em FROM capturas WHERE id = ? AND treinador = ?").get(id, treinador); return c ? individuo(c) : null; };
+const nomeDoTreinador = (treinador) => (bd().prepare("SELECT nome FROM capturas WHERE treinador = ? AND nome <> '' ORDER BY capturado_em DESC LIMIT 1").get(treinador) || {}).nome || "";
+// uma alteração do painel e o registro dela, juntos (ou nenhuma das duas)
+function moderarPokemon(treinador, ator, tipo, captura, antes, depois, alterar) {
+  const db = bd();
+  db.exec("BEGIN");
+  try {
+    alterar(db);
+    db.prepare("INSERT INTO moderacao_pokemon (treinador, ator, tipo, captura, antes, depois, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run(treinador, String(ator), tipo, captura ?? null, JSON.stringify(antes ?? null), JSON.stringify(depois ?? null), Date.now());
+    db.exec("COMMIT");
+  } catch (e) { db.exec("ROLLBACK"); throw e; }
+}
+function editarCapturaAdmin(treinador, id, campos, ator) {
+  const antes = capturaPorId(treinador, id); if (!antes) return null;
+  const depois = { ...antes, ...campos };
+  moderarPokemon(treinador, ator, "editar", id, antes, depois, (db) => {
+    db.prepare("UPDATE capturas SET bicho = ?, raridade = ?, nivel = ?, xp = ?, brilhante = ? WHERE id = ? AND treinador = ?").run(depois.bicho, depois.raridade, depois.nivel, depois.xp, depois.brilhante ? 1 : 0, id, treinador);
+    db.prepare("INSERT OR IGNORE INTO pokedex (treinador, bicho, primeiro_em) VALUES (?, ?, ?)").run(treinador, depois.bicho, Date.now());
+  });
+  return capturaPorId(treinador, id);
+}
+function darPokemonAdmin(treinador, { bicho, raridade, nivel, brilhante }, ator) {
+  let id = null;
+  moderarPokemon(treinador, ator, "dar", null, null, { bicho, nivel, brilhante: !!brilhante }, (db) => {
+    id = Number(db.prepare("INSERT INTO capturas (treinador, nome, bicho, raridade, brilhante, capturado_em, nivel, xp, origem) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'captura')")
+      .run(treinador, nomeDoTreinador(treinador), bicho, raridade, brilhante ? 1 : 0, Date.now(), nivel).lastInsertRowid);
+    db.prepare("INSERT OR IGNORE INTO pokedex (treinador, bicho, primeiro_em) VALUES (?, ?, ?)").run(treinador, bicho, Date.now());
+  });
+  return capturaPorId(treinador, id);
+}
+function tirarPokemonAdmin(treinador, id, ator) {
+  const antes = capturaPorId(treinador, id); if (!antes) return false;
+  moderarPokemon(treinador, ator, "tirar", id, antes, null, (db) => db.prepare("DELETE FROM capturas WHERE id = ? AND treinador = ?").run(id, treinador));
+  return true;
+}
+// todos os Pokémon do treinador num nível (a experiência do nível volta a zero)
+function nivelDeTodosAdmin(treinador, nivel, ator) {
+  const antes = pokemonsDe(treinador).map((p) => ({ id: p.id, nivel: p.nivel }));
+  if (!antes.length) return 0;
+  moderarPokemon(treinador, ator, "nivel-todos", null, antes, { nivel }, (db) => db.prepare("UPDATE capturas SET nivel = ?, xp = 0 WHERE treinador = ?").run(nivel, treinador));
+  return antes.length;
+}
+const historicoPokemon = (treinador, limite = 20) => bd().prepare("SELECT ator, tipo, captura, antes, depois, criado_em FROM moderacao_pokemon WHERE treinador = ? ORDER BY id DESC LIMIT ?").all(treinador, limite)
+  .map((r) => ({ ator: r.ator, tipo: r.tipo, captura: r.captura, antes: JSON.parse(r.antes || "null"), depois: JSON.parse(r.depois || "null"), em: Number(r.criado_em) }));
+
+module.exports = { aprenderRitmoCorrida, ritmoAprendidoCorrida, aprenderProximidadeCorrida, proximidadeCorrida, hashesDaTemporadaCorrida, receberTemporadaDoPC, registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
+Object.assign(module.exports, { guardarReplayCorrida, replayCorrida, apagarReplaysCorrida, excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });

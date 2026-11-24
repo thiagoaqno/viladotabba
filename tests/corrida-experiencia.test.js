@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const T = require("../public/corrida/pistas.js");
-const Itens = require("../corrida-itens.js");
+const Itens = require("../servidor/corrida/corrida-itens.js");
 
 test("Rio refeito e circuitos longos têm volta, relevo e caixas válidos", () => {
   for (const id of ["rio", "serra", "deserto"]) {

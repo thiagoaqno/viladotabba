@@ -3,8 +3,8 @@
 const T = require("../public/corrida/pistas.js");
 const F1 = require("../public/corrida/f1-regras.js");
 const Pilotos = require("../public/corrida/f1-pilotos-2026.js");
-const Robos = require("../corrida-robos.js");
-const Direcao = require("../corrida-f1-direcao.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
 const Sim = require("../public/corrida/sim.js");
 
 function curvatura(pts, lat, m = 12, janela = 6) {

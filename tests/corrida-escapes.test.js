@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const P = require("../public/corrida/pistas.js");
 const Sim = require("../public/corrida/sim.js");
-const Direcao = require("../corrida-f1-direcao.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
 
 test("autódromos têm barreira afastada, recortada sem invadir outros trechos; ruas preservam o muro", () => {
   for (const id of ["barcelona", "interlagos", "suzuka", "spa"]) {

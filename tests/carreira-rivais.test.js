@@ -4,9 +4,9 @@ process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
 const Rivais = require("../public/carreira/rivais.js");
-const Clube = require("../carreira-clube.js");
-const bd = require("../bd.js");
-const Carreira = require("../carreira.js");
+const Clube = require("../servidor/carreira/carreira-clube.js");
+const bd = require("../servidor/comum/bd.js");
+const Carreira = require("../servidor/carreira/carreira.js");
 const { novaCarreira, completar, ajudas } = Carreira.paraTestes;
 const G = Carreira.grupo;
 
@@ -123,7 +123,7 @@ test("estante: a sala carregada do banco manda as conquistas dos técnicos, sem 
   const save = G.novaCarreiraGrupo([{ clube: "vasco", nome: "Thiago" }, { clube: "flamengo", nome: "Ana" }], { temporadas: 2, aporte: 0 });
   save.humanos.vasco.estado.historico = [{ ano: 2026, temporada: 1, clube: "vasco", posicao: 2, titulos: ["Mundial de Clubes", "Super Mundial de Clubes"], vices: [] }];
   bd.salvarSalaCarreira("VASCO", { code: "VASCO", fase: "carreira", save, players: {}, order: [] });
-  const ligar = require("../carreira-online.js"), io = { of: () => ({ on() {}, to: () => ({ emit() {} }), sockets: new Map() }) };
+  const ligar = require("../servidor/carreira/carreira-online.js"), io = { of: () => ({ on() {}, to: () => ({ emit() {} }), sockets: new Map() }) };
   ligar(io);
   const linhas = bd.abrir().prepare("SELECT competicao, clube, tecnico, modo FROM estante WHERE carreira = ? ORDER BY competicao").all(save.semente);
   assert.deepStrictEqual(linhas.map((l) => [l.competicao, l.clube, l.tecnico, l.modo]), [["mundial", "vasco", "Thiago", "grupo"], ["supermundial", "vasco", "Thiago", "grupo"]]);

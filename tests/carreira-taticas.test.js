@@ -4,8 +4,8 @@ const test = require("node:test");
 const assert = require("node:assert");
 const Taticas = require("../public/carreira/taticas.js");
 const Motor = require("../public/carreira/motor.js");
-const G = require("../carreira.js").grupo;
-const { novaCarreira } = require("../carreira.js").paraTestes;
+const G = require("../servidor/carreira/carreira.js").grupo;
+const { novaCarreira } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const POSICOES = ["GOL", "ZAG", "ZAG", "LD", "LE", "VOL", "MC", "MC", "MEI", "PE", "PD", "ATA", "ATA", "ZAG"];
 function time(id, { atr = {}, nota = 74, formacao = "4-3-3", tatica } = {}) {
@@ -131,14 +131,14 @@ test("o motor preserva a energia entre jogos e o cansaço afeta o rendimento", (
 
 test("na carreira, repetir os mesmos 11 derruba a energia e o banco descansa; as férias devolvem tudo", () => {
   const Temporada = require("../public/carreira/temporada.js");
-  const { proximoJogoMundo, simularMinha, fecharRodada, estado, sementeDoJogo } = require("../carreira.js").paraTestes;
+  const { proximoJogoMundo, simularMinha, fecharRodada, estado, sementeDoJogo } = require("../servidor/carreira/carreira.js").paraTestes;
   const save = novaCarreira("Teste", "flamengo", "x");
   const rodar = () => {
     const jogo = proximoJogoMundo(save);
     save.partida = { rodada: save.rodada, jogoId: jogo.id, competicao: jogo.competicao, fase: jogo.fase, mataMata: jogo.mataMata, agregado: [0, 0], casa: jogo.casa, fora: jogo.fora, modo: 1, semente: sementeDoJogo(save, jogo.semana, jogo.casa, jogo.fora), decisoes: {} };
     const r = simularMinha(save); assert.ok(r.completo); fecharRodada(save, r);
   };
-  const titulares = () => { const d = require("../public/carreira/motor.js").escalacaoDetalhada(require("../carreira.js").paraTestes.timeDe(save, save.clube)); return d.map((v) => v.id).filter(Boolean); };
+  const titulares = () => { const d = require("../public/carreira/motor.js").escalacaoDetalhada(require("../servidor/carreira/carreira.js").paraTestes.timeDe(save, save.clube)); return d.map((v) => v.id).filter(Boolean); };
   save.escalacao.titulares = titulares(); save.escalacao.fixo = true; // sempre os mesmos 11
   const onze = [...save.escalacao.titulares];
   assert.strictEqual(estado(save).energia[onze[0]], 100, "no começo todo mundo está com 100");
@@ -159,7 +159,7 @@ test("a sequência de jogos não tira over além da energia", () => {
 });
 
 test("um jogo no banco recupera 80 pontos e zera a sequência", () => {
-  const { aplicarFadiga, timeDe } = require("../carreira.js").paraTestes;
+  const { aplicarFadiga, timeDe } = require("../servidor/carreira/carreira.js").paraTestes;
   const save = novaCarreira("Descanso", "flamengo", "x");
   const pid = timeDe(save, save.clube).jogadores[0].id;
   save.energia = { [pid]: 5 };
@@ -172,7 +172,7 @@ test("um jogo no banco recupera 80 pontos e zera a sequência", () => {
 });
 
 test("o titular perde energia por jogo, mais depois dos 30 anos", () => {
-  const { aplicarFadiga, timeDe } = require("../carreira.js").paraTestes;
+  const { aplicarFadiga, timeDe } = require("../servidor/carreira/carreira.js").paraTestes;
   const Evolucao = require("../public/carreira/evolucao.js");
   const save = novaCarreira("Desgaste", "saopaulo", "x");
   const el = timeDe(save, save.clube).jogadores;

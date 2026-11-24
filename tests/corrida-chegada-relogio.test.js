@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const T = require('../public/corrida/pistas.js');
 const S = require('../public/corrida/sim.js');
 const F1 = require('../public/corrida/f1-regras.js');
-const H = require('../corrida-humanos.js');
+const H = require('../servidor/corrida/corrida-humanos.js');
 
 for (const comRelogio of [true, false]) test(`chegada após travada respeita o tempo real ${comRelogio ? 'com' : 'sem'} relógio do cliente`, () => {
   const inicio = 1000000, p = { id: 'humano', grid: 0, laps: 2, car: 'equilibrado', pneu: 'medio', finish: null, paradas: [] };

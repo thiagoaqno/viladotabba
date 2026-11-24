@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const F1 = require("../public/corrida/f1-regras.js");
-const Robos = require("../corrida-robos.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
 
 const piloto = (largada, ...compostos) => { const p = { pneu: largada, pneuAtual: largada, compostos: [largada], paradas: [] }; compostos.forEach((c, i) => F1.registrarParada(p, { volta: i + 1, tempo: 2.5, composto: c })); return p; };
 

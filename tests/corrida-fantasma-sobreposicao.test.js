@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const Parados = require('../corrida-parados.js');
+const Parados = require('../servidor/corrida/corrida-parados.js');
 
 test('fantasma continua durante sobreposição e por meio segundo após separar', () => {
   const a = { id: 'a', sim: { c: { x: 0, y: 0, a: 0 } }, fantAte: 3000 };

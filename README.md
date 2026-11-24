@@ -77,9 +77,9 @@ Abra **http://localhost:3000/** (a Corrida fica em `/corrida/`). Variáveis úte
 | Onde | O quê |
 |---|---|
 | `server.js` | o Express e o Socket.io: serve o site e liga o canal de cada jogo |
-| `<jogo>.js` (na raiz) | o servidor de cada jogo; a Corrida é `corrida*.js` |
+| `servidor/` | o servidor de cada jogo: `corrida/`, `carreira/`, `jogos/` (os outros), `admin/` (painéis) e `comum/` (banco, salas e a lista de salas) |
 | `public/<jogo>/` | o jogo no navegador |
-| `bd.js` + `migracoes/` | o banco SQLite |
+| `servidor/comum/bd.js` + `migracoes/` | o banco SQLite |
 | `desktop/` | o programa para Windows |
 | `tests/` | os testes (`node --test` e Playwright) |
 

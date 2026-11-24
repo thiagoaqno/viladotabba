@@ -6,8 +6,8 @@ const assert = require("node:assert");
 const http = require("http");
 const { Server } = require("socket.io");
 const { io: cliente } = require("socket.io-client");
-const bd = require("../bd.js");
-const { hashDe } = require("../vila-mato.js");
+const bd = require("../servidor/comum/bd.js");
+const { hashDe } = require("../servidor/jogos/vila-mato.js");
 
 const ASH = "a".repeat(32), GARY = "b".repeat(32);
 let servidor, url;
@@ -16,7 +16,7 @@ test.before(async () => {
   bd.guardarCaptura(hashDe(ASH), "Ash", "pikachu", "comum", false);
   bd.guardarCaptura(hashDe(ASH), "Ash", "eevee", "incomum", false);
   servidor = http.createServer();
-  require("../ginasio.js")(new Server(servidor));
+  require("../servidor/jogos/ginasio.js")(new Server(servidor));
   await new Promise((ok) => servidor.listen(0, ok));
   url = `http://localhost:${servidor.address().port}/ginasio`;
 });

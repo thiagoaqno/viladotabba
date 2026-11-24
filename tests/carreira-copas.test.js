@@ -4,7 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert");
 const Temporada = require("../public/carreira/temporada.js");
 const indice = require("../public/carreira/base/mundo-2026.js");
-const { novaCarreira, classificadosDe } = require("../carreira.js").paraTestes;
+const { novaCarreira, classificadosDe } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const bases = Object.fromEntries(["brasileirao", "inglaterra", "espanha", "italia", "alemanha", "franca", "argentina", "sulamericanos"]
   .map((id) => { const b = require(`../public/carreira/base/${id}-2026.js`); return [b.id, b]; }));

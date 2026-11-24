@@ -5,7 +5,7 @@ const assert = require("node:assert");
 const fs = require("node:fs");
 const path = require("node:path");
 const Temporada = require("../public/carreira/temporada.js");
-const { novaCarreira, estado } = require("../carreira.js").paraTestes;
+const { novaCarreira, estado } = require("../servidor/carreira/carreira.js").paraTestes;
 
 function ate(save, W) {
   const meus = Temporada.jogosDoClube({ jogos: save.calendarioMundo }, save.clube);

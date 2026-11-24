@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 test("painel permite escolher jogador e desfazer transferência pela própria lista", async ({ page }) => {
-  const html = fs.readFileSync(path.join(__dirname, "..", "..", "admin-carreira.html"), "utf8");
+  const html = fs.readFileSync(path.join(__dirname, "..", "..", "servidor", "admin", "admin-carreira.html"), "utf8");
   const edicoes = [];
   const detalhe = {
     codigo: "ABCDE", nomeClube: "Flamengo", clube: "flamengo", caixa: 75000000, jogoAoVivo: false,

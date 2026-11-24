@@ -10,7 +10,7 @@ const { conectar, pedir, esperarEstado } = require("./ajuda.js");
 
 test("admin põe no automático e devolve o controle sem tirar o técnico da sala", async () => {
   const httpServer = http.createServer(), io = new Server(httpServer);
-  const carreira = require("../carreira-online.js")(io);
+  const carreira = require("../servidor/carreira/carreira-online.js")(io);
   await new Promise((resolve) => httpServer.listen(0, resolve));
   const url = `http://localhost:${httpServer.address().port}`;
   const a = await conectar(url, "/carreira-online"), b = await conectar(url, "/carreira-online");

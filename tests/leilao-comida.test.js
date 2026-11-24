@@ -5,7 +5,7 @@ const { io } = require("socket.io-client");
 const { subirServidor } = require("./ajuda.js");
 global.window = {};
 require("../public/presets.js");
-const Juri = require("../juri.js");
+const Juri = require("../servidor/jogos/juri.js");
 const PRESETS = global.window.PRESETS;
 
 const semAcento = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();

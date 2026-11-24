@@ -5,7 +5,7 @@ const assert = require("node:assert");
 const fs = require("node:fs");
 const path = require("node:path");
 const Temporada = require("../public/carreira/temporada.js");
-const { novaCarreira, estado, novaTemporada } = require("../carreira.js").paraTestes;
+const { novaCarreira, estado, novaTemporada } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const brasil = require("../public/carreira/base/brasileirao-2026.js").clubes;
 const forca = (c) => { const n = c.jogadores.map((j) => j.nota).sort((a, b) => b - a).slice(0, 11); return n.reduce((s, x) => s + x, 0) / n.length; };

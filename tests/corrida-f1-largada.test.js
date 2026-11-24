@@ -8,8 +8,8 @@ const S = require("../public/corrida/sim.js");
 const T = require("../public/corrida/pistas.js");
 const F1 = require("../public/corrida/f1-regras.js");
 const Equipes = require("../public/corrida/f1-equipes.js");
-const Humanos = require("../corrida-humanos.js");
-const Direcao = require("../corrida-f1-direcao.js");
+const Humanos = require("../servidor/corrida/corrida-humanos.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
 
 const tr = S.criarPista(T.PISTAS.interlagos, "interlagos");
 const mclaren = Equipes.specDaEquipe("mclaren");
@@ -95,7 +95,7 @@ test("o navegador só solta o carro no go: a previsão segura pelo relógio, nã
   assert.ok(linhas.length >= 2);
   for (const l of linhas) assert.ok(!/ent\.gas|luzes/.test(l), `a previsão não pode liberar o carro pelo acelerador: ${l.trim()}`);
   assert.ok(!/!!race\.luzes/.test(fonte), "physics não pode andar antes do go");
-  const servidor = fs.readFileSync(path.join(__dirname, "../corrida-humanos.js"), "utf8");
+  const servidor = fs.readFileSync(path.join(__dirname, "../servidor/corrida/corrida-humanos.js"), "utf8");
   assert.ok(/amb\.segurar = t < room\.startAt;/.test(servidor), "o servidor segura o carro até o go");
 });
 

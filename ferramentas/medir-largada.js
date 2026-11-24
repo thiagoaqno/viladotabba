@@ -1,5 +1,5 @@
 "use strict";
-const T=require("../public/corrida/pistas.js"), F=require("../public/corrida/f1-regras.js"), R=require("../corrida-robos.js"), D=require("../corrida-f1-direcao.js");
+const T=require("../public/corrida/pistas.js"), F=require("../public/corrida/f1-regras.js"), R=require("../servidor/corrida/corrida-robos.js"), D=require("../servidor/corrida/corrida-f1-direcao.js");
 function medir({semente=951, pista="monaco", nivel="dificil", segundos=15}={}) {
   const antigo=Date.now, random=Math.random; let agora=1000000; Date.now=()=>agora; Math.random=F.sorteio("largada:"+semente);
   try {

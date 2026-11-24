@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const F1 = require('../public/corrida/f1-regras.js');
 const T = require('../public/corrida/pistas.js');
-const Direcao = require('../corrida-f1-direcao.js');
+const Direcao = require('../servidor/corrida/corrida-f1-direcao.js');
 const Sim = require('../public/corrida/sim.js');
 
 // (2026-11-17) teste apagado: quebrou depois das mudanças do Thiago (pedido dele)

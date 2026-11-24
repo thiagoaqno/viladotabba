@@ -4,9 +4,9 @@ const test = require("node:test");
 const assert = require("node:assert");
 const Motor = require("../public/carreira/motor.js");
 const Personalidade = require("../public/carreira/personalidade.js");
-const Eventos = require("../carreira-eventos.js");
-const { PERSONALIDADES } = require("../carreira-personalidades.js");
-const { novaCarreira, ajudas, timeDe, fecharRodada } = require("../carreira.js").paraTestes;
+const Eventos = require("../servidor/carreira/carreira-eventos.js");
+const { PERSONALIDADES } = require("../servidor/carreira/carreira-personalidades.js");
+const { novaCarreira, ajudas, timeDe, fecharRodada } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 function jogar(save, n) {

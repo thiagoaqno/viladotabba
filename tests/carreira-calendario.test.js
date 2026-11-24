@@ -2,7 +2,7 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const { novaCarreira, estado, proximoJogoMundo, simularMinha, sementeDoJogo, fecharRodada } = require("../carreira.js").paraTestes;
+const { novaCarreira, estado, proximoJogoMundo, simularMinha, sementeDoJogo, fecharRodada } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const save0 = novaCarreira("Teste", "palmeiras", "", 2);
 const copia = () => JSON.parse(JSON.stringify(save0));

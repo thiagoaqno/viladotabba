@@ -3,8 +3,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const F1 = require("../public/corrida/f1-regras.js");
 const T = require("../public/corrida/pistas.js");
-const Robos = require("../corrida-robos.js");
-const Direcao = require("../corrida-f1-direcao.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
 const { subirServidor, conectar, pedir } = require("./ajuda.js");
 
 process.env.CORRIDA_TV_MS = "0"; // sem a transmissão de TV antes das luzes: a largada vem logo

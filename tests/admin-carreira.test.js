@@ -4,7 +4,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const express = require("express");
-const Admin = require("../admin-carreira.js");
+const Admin = require("../servidor/admin/admin-carreira.js");
 
 test("painel só abre para a conta GitHub permitida e exige CSRF para editar", async () => {
   const anterior = process.env.NODE_ENV;
@@ -88,7 +88,7 @@ test("painel só abre para a conta GitHub permitida e exige CSRF para editar", a
 });
 
 test("JavaScript da página administrativa tem sintaxe válida", () => {
-  const html = fs.readFileSync(path.join(__dirname, "..", "admin-carreira.html"), "utf8");
+  const html = fs.readFileSync(path.join(__dirname, "..", "servidor", "admin", "admin-carreira.html"), "utf8");
   const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(script);
   assert.doesNotThrow(() => new Function(script));

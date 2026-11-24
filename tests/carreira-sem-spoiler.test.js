@@ -3,7 +3,7 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const G = require("../carreira.js").grupo;
+const G = require("../servidor/carreira/carreira.js").grupo;
 
 const save = G.novaCarreiraGrupo([{ clube: "flamengo", nome: "Ana" }, { clube: "palmeiras", nome: "Bia" }], { temporadas: 2 });
 const jogos = (clube, antesDe) => save.calendarioMundo.filter((j) => (j.casa === clube || j.fora === clube) && j.semana < antesDe).map((j) => j.id);

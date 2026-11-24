@@ -3,7 +3,7 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, estado } = require("../carreira.js").paraTestes;
+const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, estado } = require("../servidor/carreira/carreira.js").paraTestes;
 
 test("festa do campeão: só aparece depois que o último jogo da competição ficou para trás", () => {
   const save = novaCarreira("Teste", "flamengo", "");

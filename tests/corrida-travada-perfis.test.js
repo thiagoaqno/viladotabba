@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const T = require('../public/corrida/pistas.js');
-const R = require('../corrida-robos.js');
+const R = require('../servidor/corrida/corrida-robos.js');
 
 for (const regras of ['classica']) test(`volta aprendida não altera os robôs em corrida (${regras})`, () => {
   R.usarFonte(() => []);

@@ -2,7 +2,7 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const { PREMIO_TITULO, premioDoTitulo, PREMIOS_G6, premioG6, novaCarreira, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo } = require("../carreira.js").paraTestes;
+const { PREMIO_TITULO, premioDoTitulo, PREMIOS_G6, premioG6, novaCarreira, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const jogar = (save, ate = Infinity) => {
   for (let jogo, n = 0; n < ate && (jogo = proximoJogoMundo(save)); n++) {
@@ -58,8 +58,8 @@ test("o bônus de título: R$ 60 mi na Libertadores, R$ 50 mi na Copa do Brasil,
 });
 
 // ---------- o vale de campeão (um jogador de graça) não existe mais: o título rende uma contratação paga a mais, só na sala ----------
-const Clube = require("../carreira-clube.js");
-const { ajudas, completar } = require("../carreira.js").paraTestes;
+const Clube = require("../servidor/carreira/carreira-clube.js");
+const { ajudas, completar } = require("../servidor/carreira/carreira.js").paraTestes;
 const novo = (clube = "flamengo") => completar(novaCarreira("Teste", clube, "", 3));
 
 test("título não dá mais jogador de graça: nem vale na gestão, nem ação de vale, e o vale velho some na virada", () => {

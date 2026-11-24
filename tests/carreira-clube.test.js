@@ -4,9 +4,9 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const Clube = require("../carreira-clube.js");
+const Clube = require("../servidor/carreira/carreira-clube.js");
 const R = require("../public/carreira/clube-regras.js");
-const Carreira = require("../carreira.js");
+const Carreira = require("../servidor/carreira/carreira.js");
 const { novaCarreira, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo, novaTemporada, estado, ajudas, completar } = Carreira.paraTestes;
 const G = Carreira.grupo;
 

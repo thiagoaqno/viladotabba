@@ -7,9 +7,9 @@ const assert = require("node:assert");
 const http = require("http");
 const { Server } = require("socket.io");
 const { io: cliente } = require("socket.io-client");
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 const Niveis = require("../public/galeramon/niveis.js");
-const { hashDe } = require("../vila-mato.js");
+const { hashDe } = require("../servidor/jogos/vila-mato.js");
 
 const ASH = "c".repeat(32), T = hashDe(ASH);
 let servidor, url, ginasio;
@@ -17,7 +17,7 @@ const aleatorio = Math.random;
 test.before(async () => {
   bd.abrir(":memory:");
   servidor = http.createServer();
-  ginasio = require("../ginasio.js")(new Server(servidor));
+  ginasio = require("../servidor/jogos/ginasio.js")(new Server(servidor));
   await new Promise((ok) => servidor.listen(0, ok));
   url = `http://localhost:${servidor.address().port}/ginasio`;
 });

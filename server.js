@@ -3,11 +3,11 @@ const express = require("express");
 const http = require("http");
 const path = require("path");
 const { Server } = require("socket.io");
-const { simulate, FORMATIONS } = require("./simulador.js");
+const { simulate, FORMATIONS } = require("./servidor/jogos/simulador.js");
 const { cleanPins } = require("./public/escalacao.js");
-const Juri = require("./juri.js");
+const Juri = require("./servidor/jogos/juri.js");
 const Ratings = require("./public/ratings.js");
-const { rid, novoCodigo, buscarSala, protegerCanais } = require("./salas.js");
+const { rid, novoCodigo, buscarSala, protegerCanais } = require("./servidor/comum/salas.js");
 const ALL_FORMATIONS = new Set(["auto", ...Object.keys(FORMATIONS.futsal), ...Object.keys(FORMATIONS.futebol)]);
 
 const app = express();
@@ -22,53 +22,53 @@ setInterval(() => {
 }, 10000).unref();
 // compressão das mensagens do WebSocket: os pacotes dos jogos em tempo real se repetem muito e encolhem bastante
 // cors: o programa de PC (corrida-pc.js) abre o jogo em 127.0.0.1 e, com internet, liga os sockets aqui no site
-const io = new Server(server, { perMessageDeflate: { threshold: 128 }, cors: { origin: require("./corrida-pc.js").corsPC } });
+const io = new Server(server, { perMessageDeflate: { threshold: 128 }, cors: { origin: require("./servidor/corrida/corrida-pc.js").corsPC } });
 protegerCanais(io); // um evento com dados quebrados não derruba mais o servidor (antes dos jogos abrirem os canais)
-require("./banco.js")(io); // Banco da Galera: jogo de tabuleiro, canal /banco
-require("./uno.js")(io); // Uno da Galera: jogo de cartas, canal /uno
-require("./sinuca.js")(io); // Sinuca da Galera: bola 8, canal /sinuca
-require("./truco.js")(io); // Truco da Galera: truco paulista, canal /truco
-require("./bloqueio.js")(io); // Bloqueio: corrida de peões com paredes (Quoridor), canal /bloqueio
-require("./domino.js")(io); // Dominó da Galera: dominó de dupla, canal /domino
-require("./ludo.js")(io); // Ludo da Galera: ludo de 2 a 4 jogadores, canal /ludo
-require("./botao.js")(io); // Futebol de Botão da Galera: x1, duplas ou rei do campo, canal /botao
-const corrida = require("./corrida.js")(io); // Corrida da Galera: kart com fantasmas em Mônaco, Interlagos e Tóquio, canal /corrida
-const ginasio = require("./ginasio.js")(io); // Ginasio: Galeramon e Pokemon em tempo real, canal /ginasio
-require("./lobby.js").attach(io); // lista de salas abertas de todos os jogos, canal /lobby
-require("./vila.js")(io, ginasio); // Vila da Galera: o lobby em mapinha, canal /vila
-require("./tiro.js")(io); // Tiro da Galera: FPS de arena x1 ou x2 com AK-47 e AWP, canal /tiro
-require("./pelada.js")(io); // Pelada da Galera: futsal 3D do 1x1 ao 5x5, canal /pelada (e o Rocket, de carro)
-require("./batalha.js")(io); // Batalha da Galera: batalha de balões de kart estilo Mario Kart, canal /batalha
+require("./servidor/jogos/banco.js")(io); // Banco da Galera: jogo de tabuleiro, canal /banco
+require("./servidor/jogos/uno.js")(io); // Uno da Galera: jogo de cartas, canal /uno
+require("./servidor/jogos/sinuca.js")(io); // Sinuca da Galera: bola 8, canal /sinuca
+require("./servidor/jogos/truco.js")(io); // Truco da Galera: truco paulista, canal /truco
+require("./servidor/jogos/bloqueio.js")(io); // Bloqueio: corrida de peões com paredes (Quoridor), canal /bloqueio
+require("./servidor/jogos/domino.js")(io); // Dominó da Galera: dominó de dupla, canal /domino
+require("./servidor/jogos/ludo.js")(io); // Ludo da Galera: ludo de 2 a 4 jogadores, canal /ludo
+require("./servidor/jogos/botao.js")(io); // Futebol de Botão da Galera: x1, duplas ou rei do campo, canal /botao
+const corrida = require("./servidor/corrida/corrida.js")(io); // Corrida da Galera: kart com fantasmas em Mônaco, Interlagos e Tóquio, canal /corrida
+const ginasio = require("./servidor/jogos/ginasio.js")(io); // Ginasio: Galeramon e Pokemon em tempo real, canal /ginasio
+require("./servidor/comum/lobby.js").attach(io); // lista de salas abertas de todos os jogos, canal /lobby
+require("./servidor/jogos/vila.js")(io, ginasio); // Vila da Galera: o lobby em mapinha, canal /vila
+require("./servidor/jogos/tiro.js")(io); // Tiro da Galera: FPS de arena x1 ou x2 com AK-47 e AWP, canal /tiro
+require("./servidor/jogos/pelada.js")(io); // Pelada da Galera: futsal 3D do 1x1 ao 5x5, canal /pelada (e o Rocket, de carro)
+require("./servidor/jogos/batalha.js")(io); // Batalha da Galera: batalha de balões de kart estilo Mario Kart, canal /batalha
 const Ritmo = require("./public/leilao/ritmo.js"); // quanto dura cada parte do campeonato ao vivo
 // o banco de dados (bd.js: SQLite, carreiras de treinador). Se não abrir, o resto do site segue funcionando.
-try { require("./bd.js").abrir(); } catch (e) { console.warn("Banco de dados não abriu:", e.message); }
-require("./corrida-temporada.js")(io, corrida); // temporada solo de Fórmula 1, canal /corrida-temporada
-require("./corrida-temporada-grupo.js")(io, corrida); // temporada de Fórmula 1 com os amigos, sala com código, canal /corrida-temporada-grupo
-require("./corrida-controle.js").attach(io, app); // o controle no celular (só no programa de PC: um servidor HTTPS na rede local, aberto quando o jogo pede)
-require("./fotos-jogadores.js").attach(app);
-require("./carreira.js")(io); // Carreira de Treinador: a temporada contra o computador, salva no banco, canal /carreira
-const carreiraOnline = require("./carreira-online.js")(io); // Carreira em grupo: a sala com código, cada amigo num clube do mesmo mundo, canal /carreira-online
-require("./moderacao-api.js").attach(app, carreiraOnline); // o workflow manual do GitHub edita salas vivas
-require("./admin-carreira.js").attach(app, carreiraOnline); // painel privado em URL separada, com login pelo GitHub
-require("./admin-pokemon.js").attach(app); // edição dos times Pokémon dos líderes e treinadores
-require("./admin-pilotos.js").attach(app); // edição dos perfis dos pilotos de F1
-const noite = require("./noite.js"); noite.attach(io); // Noite da Galera: levar todo mundo para outro jogo e o placar da noite, canal /noite
-require("./tenis.js")(io); // Tênis da Galera: tênis arcade, simples ou duplas, com robôs, canal /tenis
-require("./digita.js")(io); // Corrida de Digitação: quem digita a frase mais rápido, canal /digita
-require("./futevolei.js")(io); // Futevôlei da Galera: futevôlei 3D na areia, 1x1 ou duplas, com robôs, canal /futevolei
-require("./haxball.js")(io); // Haxball da Galera: futebol de discos 2D, de 1x1 a 5x5, canal /haxball
-require("./cozinha.js")(io); // Cozinha da Galera: o Overcooked da galera, de 1 a 4 cozinheiros, canal /cozinha
-require("./drag.js")(io); // Drag da Galera: o racha de até 4 pessoas (o resto são rivais robôs), canal /drag
-require("./proibida.js")(io); // Palavra Proibida da Galera: explicar palavras em dois times, canal /proibida
-require("./rumi.js")(io); // Rumi da Galera: o jogo de peças numeradas clássico, 2 a 4 com robôs, canal /rumi
-require("./corrida-editor-online.js").attach(app); // (o editor de cenário no site, com login pelo GitHub: antes dos arquivos, para o rascunho valer)
+try { require("./servidor/comum/bd.js").abrir(); } catch (e) { console.warn("Banco de dados não abriu:", e.message); }
+require("./servidor/corrida/corrida-temporada.js")(io, corrida); // temporada solo de Fórmula 1, canal /corrida-temporada
+require("./servidor/corrida/corrida-temporada-grupo.js")(io, corrida); // temporada de Fórmula 1 com os amigos, sala com código, canal /corrida-temporada-grupo
+require("./servidor/corrida/corrida-controle.js").attach(io, app); // o controle no celular (só no programa de PC: um servidor HTTPS na rede local, aberto quando o jogo pede)
+require("./servidor/carreira/fotos-jogadores.js").attach(app);
+require("./servidor/carreira/carreira.js")(io); // Carreira de Treinador: a temporada contra o computador, salva no banco, canal /carreira
+const carreiraOnline = require("./servidor/carreira/carreira-online.js")(io); // Carreira em grupo: a sala com código, cada amigo num clube do mesmo mundo, canal /carreira-online
+require("./servidor/admin/moderacao-api.js").attach(app, carreiraOnline); // o workflow manual do GitHub edita salas vivas
+require("./servidor/admin/admin-carreira.js").attach(app, carreiraOnline); // painel privado em URL separada, com login pelo GitHub
+require("./servidor/admin/admin-pokemon.js").attach(app); // edição dos times Pokémon dos líderes e treinadores
+require("./servidor/admin/admin-pilotos.js").attach(app); // edição dos perfis dos pilotos de F1
+const noite = require("./servidor/jogos/noite.js"); noite.attach(io); // Noite da Galera: levar todo mundo para outro jogo e o placar da noite, canal /noite
+require("./servidor/jogos/tenis.js")(io); // Tênis da Galera: tênis arcade, simples ou duplas, com robôs, canal /tenis
+require("./servidor/jogos/digita.js")(io); // Corrida de Digitação: quem digita a frase mais rápido, canal /digita
+require("./servidor/jogos/futevolei.js")(io); // Futevôlei da Galera: futevôlei 3D na areia, 1x1 ou duplas, com robôs, canal /futevolei
+require("./servidor/jogos/haxball.js")(io); // Haxball da Galera: futebol de discos 2D, de 1x1 a 5x5, canal /haxball
+require("./servidor/jogos/cozinha.js")(io); // Cozinha da Galera: o Overcooked da galera, de 1 a 4 cozinheiros, canal /cozinha
+require("./servidor/jogos/drag.js")(io); // Drag da Galera: o racha de até 4 pessoas (o resto são rivais robôs), canal /drag
+require("./servidor/jogos/proibida.js")(io); // Palavra Proibida da Galera: explicar palavras em dois times, canal /proibida
+require("./servidor/jogos/rumi.js")(io); // Rumi da Galera: o jogo de peças numeradas clássico, 2 a 4 com robôs, canal /rumi
+require("./servidor/corrida/corrida-editor-online.js").attach(app); // (o editor de cenário no site, com login pelo GitHub: antes dos arquivos, para o rascunho valer)
 app.use(express.static(path.join(__dirname, "public")));
-require("./corrida-pc.js").attach(app); require("./corrida-editor.js").attach(app); // (o editor de cenário: só com CORRIDA_EDITOR=1, no próprio PC) // o programa de PC: versão, recordes feitos sem internet, CORS e o /corrida/pc.js (antes das rotas /api/)
+require("./servidor/corrida/corrida-pc.js").attach(app); require("./servidor/corrida/corrida-editor.js").attach(app); // (o editor de cenário: só com CORRIDA_EDITOR=1, no próprio PC) // o programa de PC: versão, recordes feitos sem internet, CORS e o /corrida/pc.js (antes das rotas /api/)
 // Traçado calculado para a corrida: não inicia trabalho pesado em resposta a acessos externos.
 app.get("/api/corrida/linha/:pista", (req, res) => {
   const pistas = require("./public/corrida/pistas.js").PISTAS;
   if (!Object.hasOwn(pistas, req.params.pista)) return res.sendStatus(404);
-  const linha = require("./corrida-robos.js").linhaF1Pronta(req.params.pista);
+  const linha = require("./servidor/corrida/corrida-robos.js").linhaF1Pronta(req.params.pista);
   if (!linha) return res.sendStatus(404);
   res.set("Cache-Control", "no-store").json(linha);
 });
@@ -99,7 +99,7 @@ app.get("/api/corrida/drag/musicas", (req, res) => {
 // os recordes de volta da Corrida (os 5 melhores de cada pista, para sempre): o placar do Autódromo na Vila
 app.get("/api/recordes-corrida", (req, res) => {
   try {
-    const T = require("./public/corrida/pistas.js"), rec = require("./bd.js").recordesCorrida(), set = require("./bd.js").setoresCorrida();
+    const T = require("./public/corrida/pistas.js"), rec = require("./servidor/comum/bd.js").recordesCorrida(), set = require("./servidor/comum/bd.js").setoresCorrida();
     res.json({ pistas: T.idsNaEscolha().map((id) => [id, T.PISTAS[id]]).map(([id, p]) => ({ id, nome: p.name, top: rec[id] || [], setores: set[id] || [null, null, null] })) });
   } catch (e) { res.status(500).json({ erro: "O placar não abriu." }); }
 });
@@ -121,14 +121,14 @@ app.get("/api/corrida/pre-carga", (req, res) => {
 });
 // a tela inicial da Corrida: quem está online, as salas abertas e o desafio da semana
 app.get("/api/corrida/menu", (req, res) => {
-  try { res.json(require("./corrida-menu.js").resumo(io, require("./bd.js"))); } catch (e) { res.status(500).json({ erro: "O menu não abriu." }); }
+  try { res.json(require("./servidor/corrida/corrida-menu.js").resumo(io, require("./servidor/comum/bd.js"))); } catch (e) { res.status(500).json({ erro: "O menu não abriu." }); }
 });
-app.get("/api/estante", (req, res) => { try { res.json(require("./bd.js").estante()); } catch (e) { res.status(500).json({ erro: "A estante não abriu." }); } });
+app.get("/api/estante", (req, res) => { try { res.json(require("./servidor/comum/bd.js").estante()); } catch (e) { res.status(500).json({ erro: "A estante não abriu." }); } });
 // a estante da F1 com os amigos: o ranking dos pilotos de verdade (títulos, vitórias e pódios das temporadas em grupo) e as últimas conquistas
 // (com o nome e a cor das equipes e o nome do GP, para a Vila, que não carrega os arquivos da Corrida)
 app.get("/api/corrida/estante", (req, res) => {
   try {
-    const d = require("./bd.js").estanteCorrida(), Eq = require("./public/corrida/f1-pilotos-2026.js").EQUIPES, Gp = require("./public/corrida/gp-info.js");
+    const d = require("./servidor/comum/bd.js").estanteCorrida(), Eq = require("./public/corrida/f1-pilotos-2026.js").EQUIPES, Gp = require("./public/corrida/gp-info.js");
     const eq = (x) => { const e = Eq[x.equipe]; if (e) { x.equipeNome = e.nome; x.cor = e.cor; } return x; };
     d.ranking.forEach(eq);
     d.ultimas.forEach((x) => { eq(x); if (x.pista) x.gpNome = (Gp.get(x.pista)?.gp || x.pista).replace(/^Grande Prêmio/, "GP"); });
@@ -186,7 +186,7 @@ app.use("/vendor/three-addons", express.static(path.join(path.dirname(require.re
 app.get("/vendor/purify.js", (req, res) => res.sendFile(require.resolve("dompurify/dist/purify.min.js")));
 
 const rooms = new Map(); // code -> room
-require("./lobby.js").registrar("leilao", rooms, { max: 0, jogadores: (r) => Object.values(r.captains).map((c) => ({ nome: c.name, online: c.sockets.size > 0, host: r.captains[r.hostCap] === c })) }); // aparece na lista de salas da Vila
+require("./servidor/comum/lobby.js").registrar("leilao", rooms, { max: 0, jogadores: (r) => Object.values(r.captains).map((c) => ({ nome: c.name, online: c.sockets.size > 0, host: r.captains[r.hostCap] === c })) }); // aparece na lista de salas da Vila
 
 // ---------- Resultado colado (modo suspense) ----------
 // Divide o texto da IA em partes pelos títulos Markdown (## …) para revelar uma de cada vez.

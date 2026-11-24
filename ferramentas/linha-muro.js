@@ -16,7 +16,7 @@ const RODADAS = 8, LIMITE_FOLGA = 2, ESPALHA = 10, GANHO = 1.5; // GANHO: empurr
 if (process.argv[2] === "--medir") {
   const pista = process.argv[3];
   const T = require(RAIZ + "/public/corrida/pistas.js"), F1 = require(RAIZ + "/public/corrida/f1-regras.js"), Eq = require(RAIZ + "/public/corrida/f1-equipes.js");
-  const Robos = require(RAIZ + "/corrida-robos.js"), Direcao = require(RAIZ + "/corrida-f1-direcao.js"), Sim = require(RAIZ + "/public/corrida/sim.js");
+  const Robos = require(RAIZ + "/servidor/corrida/corrida-robos.js"), Direcao = require(RAIZ + "/servidor/corrida/corrida-f1-direcao.js"), Sim = require(RAIZ + "/public/corrida/sim.js");
   let relogio = 1e6; Date.now = () => relogio; Math.random = F1.sorteio("linha-muro:" + pista);
   Robos.usarFonte(() => []);
   const room = { config: { pista, regras: "f1", caixas: false, robos: 1, nivel: "dificil", voltas: 6 }, players: {}, order: [], phase: "race", startAt: relogio, semente: 777, finishOrder: [] };

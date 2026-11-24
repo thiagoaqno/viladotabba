@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const T = require("../public/corrida/pistas.js");
-const { setoresDoAviso, MAX_PULO } = require("../corrida-setores.js");
+const { setoresDoAviso, MAX_PULO } = require("../servidor/corrida/corrida-setores.js");
 
 const n = T.pontos(T.PISTAS.monaco, 6).length;
 const ao = (atual, s, idx) => setoresDoAviso(atual, s, idx, n, T.SECTORS, T.checkpoint);

@@ -6,7 +6,7 @@
 //   node ferramentas/quali-fator.js [pista ...]   (sem pista: as da carreira, PISTAS_TRABALHADAS)
 const R = require("path").join(__dirname, "..") + "/";
 const T = require(R + "public/corrida/pistas.js"), F1 = require(R + "public/corrida/f1-regras.js"), Eq = require(R + "public/corrida/f1-equipes.js");
-const Robos = require(R + "corrida-robos.js"), Direcao = require(R + "corrida-f1-direcao.js");
+const Robos = require(R + "servidor/corrida/corrida-robos.js"), Direcao = require(R + "servidor/corrida/corrida-f1-direcao.js");
 function medir(pista, nb = 10, nivel = "medio") {
 const agora = Date.now; let relogio = 1e6; Date.now = () => relogio; Math.random = F1.sorteio("c:" + pista);
 Robos.usarFonte(() => []);

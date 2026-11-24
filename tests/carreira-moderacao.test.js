@@ -2,9 +2,9 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const http = require("node:http");
 const express = require("express");
-const Carreira = require("../carreira.js").grupo;
-const Moderacao = require("../carreira-moderacao.js");
-const Api = require("../moderacao-api.js");
+const Carreira = require("../servidor/carreira/carreira.js").grupo;
+const Moderacao = require("../servidor/carreira/carreira-moderacao.js");
+const Api = require("../servidor/admin/moderacao-api.js");
 
 test("moderação altera a sala viva, desfaz transferência e bloqueia edição durante jogo", () => {
   const save = Carreira.novaCarreiraGrupo([{ clube: "flamengo", nome: "Ana" }, { clube: "palmeiras", nome: "Bia" }], { temporadas: 2 });

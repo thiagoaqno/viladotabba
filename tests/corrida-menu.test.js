@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert");
-const { semanaDe, desafioDaSemana, salasAbertas } = require("../corrida-menu.js");
+const { semanaDe, desafioDaSemana, salasAbertas } = require("../servidor/corrida/corrida-menu.js");
 const T = require("../public/corrida/pistas.js");
 
 const BRASILIA = (a, m, d, h = 0) => Date.UTC(a, m - 1, d, h + 3);

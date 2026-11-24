@@ -3,7 +3,7 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const Carreira = require("../carreira.js");
+const Carreira = require("../servidor/carreira/carreira.js");
 const G = Carreira.grupo, T = Carreira.paraTestes;
 const Mercado = require("../public/carreira/mercado.js");
 

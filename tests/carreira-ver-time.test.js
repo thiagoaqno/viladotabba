@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert");
 const { subirServidor, conectar, pedir, esperarEstado } = require("./ajuda.js");
-const Carreira = require("../carreira.js");
+const Carreira = require("../servidor/carreira/carreira.js");
 const G = Carreira.grupo;
 
 test("a ficha do computador: o elenco inteiro e os 11 da escalação automática", () => {

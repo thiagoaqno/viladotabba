@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert");
 process.env.DB_PATH = ":memory:";
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 
 test("o setor só troca de dono com um tempo menor, e cada pista e setor é separado", () => {
   assert.equal(bd.registrarSetorCorrida("spa", 0, 30.5, "Ana"), true);

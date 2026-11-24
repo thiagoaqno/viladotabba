@@ -5,7 +5,7 @@ const Evolucao = require("../public/carreira/evolucao.js");
 const Motor = require("../public/carreira/motor.js");
 
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-const { novaCarreira, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo, novaTemporada, estado, ajudas, completar, APOSENTADO } = require("../carreira.js").paraTestes;
+const { novaCarreira, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo, novaTemporada, estado, ajudas, completar, APOSENTADO } = require("../servidor/carreira/carreira.js").paraTestes;
 
 // joga todos os jogos do seu clube até o fim da temporada, no modo "só o resultado"
 function jogarTemporada(save) {
@@ -118,7 +118,7 @@ test("virada de temporada: aposentados saem dos elencos, a base manda jovens e a
   for (const j of elenco.filter((x) => save.jovens[x.id])) assert.ok(e.jovens[j.id]);
   // ninguém compra aposentado
   save.rodada = 0;
-  assert.match(require("../carreira.js").paraTestes.propor(save, { jogador: aposentados[0], valor: 1e6, salario: 1e5 }), /disponível/);
+  assert.match(require("../servidor/carreira/carreira.js").paraTestes.propor(save, { jogador: aposentados[0], valor: 1e6, salario: 1e5 }), /disponível/);
 });
 
 test("limite de temporadas: depois da última, novaTemporada recusa e o estado diz que acabou", () => {

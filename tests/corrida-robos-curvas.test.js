@@ -6,8 +6,8 @@ const assert = require("node:assert/strict");
 const T = require("../public/corrida/pistas.js");
 const F1 = require("../public/corrida/f1-regras.js");
 const Eq = require("../public/corrida/f1-equipes.js");
-const Robos = require("../corrida-robos.js");
-const Direcao = require("../corrida-f1-direcao.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
 const volta = require("./dados/volta-interlagos-cadillac.json");
 
 const TEMPO_USUARIO = volta.tempo; // s

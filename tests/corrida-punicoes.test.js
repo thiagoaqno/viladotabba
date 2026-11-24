@@ -4,8 +4,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const F1 = require("../public/corrida/f1-regras.js");
-const Contato = require("../corrida-contato.js");
-const Direcao = require("../corrida-f1-direcao.js");
+const Contato = require("../servidor/corrida/corrida-contato.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
 
 const sala = (voltas = 5, laps = 2) => {
   const room = { phase: "race", startAt: 1000, config: { pista: "interlagos", regras: "f1", voltas, robos: 0 }, semente: 7, order: ["a", "b"], players: {
@@ -206,7 +206,7 @@ test("ERS: a bateria enche na frenagem, o automático gasta suave com orçamento
 });
 
 test("depois de uma colisão os dois carros viram fantasma por 2 s, sem reativar em loop com o mesmo par", () => {
-  const D = require("../public/corrida/dinamica.js"), Parados = require("../corrida-parados.js");
+  const D = require("../public/corrida/dinamica.js"), Parados = require("../servidor/corrida/corrida-parados.js");
   const room = { phase: "race", startAt: Date.now() - 60000, config: { pista: "interlagos", regras: "f1", voltas: 5 }, order: ["a", "b"], players: { a: { id: "a", name: "A", car: "equilibrado" }, b: { id: "b", name: "B", car: "equilibrado" } } };
   const mk = (x, v) => { const c = D.novoCarro(x, 0, 0); c.v = v; c.vx = v; c.z = 0; c.tick = 1; c.x0 = x - v / 120; c.y0 = 0; c.a0 = 0; return c; };
   const t0 = Date.now(), B = mk(38, 200);
@@ -221,7 +221,7 @@ test("depois de uma colisão os dois carros viram fantasma por 2 s, sem reativar
 });
 
 test("bater no muro põe o carro em fantasma por 2 s: quem vem atrás o atravessa e depois ele volta a colidir", () => {
-  const D = require("../public/corrida/dinamica.js"), Parados = require("../corrida-parados.js");
+  const D = require("../public/corrida/dinamica.js"), Parados = require("../servidor/corrida/corrida-parados.js");
   const agora = Date.now; let relogio = 1e9 + 100000; Date.now = () => relogio;
   try {
     const room = sala(); room.startAt = 1000; room.order = ["a", "b"];

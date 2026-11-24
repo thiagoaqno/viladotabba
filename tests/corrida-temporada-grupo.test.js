@@ -10,12 +10,12 @@ const { io: cliente } = require("socket.io-client");
 process.env.CORRIDA_TV_MS = "0"; // sem a transmissão de TV antes das luzes: a largada vem logo
 process.env.CORRIDA_ASSUME_MS = "60"; // a sala de F1 lê isto ao ligar
 process.env.CORRIDA_ESPERA_GRUPO_MS = "60000";
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 const E = require("../public/corrida/f1-equipes.js");
 const G = require("../public/corrida/temporada/grupo-regras.js");
-const Quali = require("../corrida-f1-classificacao.js");
-const attachCorrida = require("../corrida.js");
-const attachGrupo = require("../corrida-temporada-grupo.js");
+const Quali = require("../servidor/corrida/corrida-f1-classificacao.js");
+const attachCorrida = require("../servidor/corrida/corrida.js");
+const attachGrupo = require("../servidor/corrida/corrida-temporada-grupo.js");
 
 const chamar = (socket, evento, dados = {}) => new Promise((resolve) => socket.emit(evento, dados, resolve));
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));

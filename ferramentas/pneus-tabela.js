@@ -38,7 +38,7 @@ if (!isMainThread) {
     // ~21% (8,7 a 9,0 s em Suzuka, Melbourne e Monza). Os tempos de volta vão para a escala do robô (k = ideal / volta) e o trecho do corredor
     // (`semParada`, medido contra a volta lenta) é dividido por k; o tempo parado fica. A conta dá 8,6 / 8,2 / 8,6 s contra os 8,9 / 8,7 / 9,0 medidos.
     try {
-      const Robos = require("../corrida-robos.js"), Equipes = require("../public/corrida/f1-equipes.js"), r3 = (x) => Math.round(x * 1000) / 1000;
+      const Robos = require("../servidor/corrida/corrida-robos.js"), Equipes = require("../public/corrida/f1-equipes.js"), r3 = (x) => Math.round(x * 1000) / 1000;
       for (const [id, tab] of Object.entries(novas)) {
         const k = Robos.idealDe(id, Equipes.specDaEquipe("mclaren")) / tab.volta; if (!(k > 0.3 && k < 1.5)) continue;
         for (const c of Object.values(tab.compostos)) { c.tempos = c.tempos.map((x) => r3(x * k)); c.frio = r3(c.frio * k); }

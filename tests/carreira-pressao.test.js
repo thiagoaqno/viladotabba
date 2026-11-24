@@ -1,9 +1,9 @@
 // Pressão em volta do time: a coletiva depois do jogo, a torcida cobrando, o clima do estádio e a viagem com recepção no feed.
 const test = require("node:test");
 const assert = require("node:assert");
-const Pressao = require("../carreira-pressao.js");
-const Memoria = require("../carreira-memoria.js");
-const Feed = require("../carreira-feed.js");
+const Pressao = require("../servidor/carreira/carreira-pressao.js");
+const Memoria = require("../servidor/carreira/carreira-memoria.js");
+const Feed = require("../servidor/carreira/carreira-feed.js");
 const Motor = require("../public/carreira/motor.js");
 
 const ajudas = { clubeDe: (s, id) => s.clubes[id], proximoJogoMundo: (s) => s.proximo };

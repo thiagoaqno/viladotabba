@@ -3,7 +3,7 @@
 // tudo igual com a mesma semente (a festa só copia o que já saiu, não sorteia nada).
 const test = require("node:test");
 const assert = require("node:assert");
-const { simulate } = require("../simulador.js");
+const { simulate } = require("../servidor/jogos/simulador.js");
 
 const NOMES = ["Neymar (ATA)", "Lionel Messi (ATA)", "Casemiro (MEI)", "Marquinhos (ZAG)", "Alisson (GOL)", "Vinícius Júnior (ATA)", "Rodrygo (ATA)", "Toni Kroos (MEI)",
   "Sergio Ramos (ZAG)", "Thibaut Courtois (GOL)", "Kylian Mbappé (ATA)", "Antoine Griezmann (ATA)", "N'Golo Kanté (MEI)", "Raphaël Varane (ZAG)", "Hugo Lloris (GOL)",

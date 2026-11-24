@@ -3,9 +3,9 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const G = require("../carreira.js").grupo;
-const { novaCarreira } = require("../carreira.js").paraTestes;
-const ligarCarreiraOnline = require("../carreira-online.js");
+const G = require("../servidor/carreira/carreira.js").grupo;
+const { novaCarreira } = require("../servidor/carreira/carreira.js").paraTestes;
+const ligarCarreiraOnline = require("../servidor/carreira/carreira-online.js");
 const { subirServidor, conectar, pedir, esperarEstado } = require("./ajuda.js");
 
 const jogadoresDe = (liga) => require(`../public/carreira/base/${liga}-2026.js`).clubes.flatMap((c) => c.jogadores.map((j) => ({ ...j, clube: c.id })));

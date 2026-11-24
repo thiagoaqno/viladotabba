@@ -1,8 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const T = require("../public/corrida/pistas.js");
-const Robos = require("../corrida-robos.js");
-const Itens = require("../corrida-itens.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Itens = require("../servidor/corrida/corrida-itens.js");
 
 // (2026-11-14: apagado o teste "pistas refeitas: voltas longas sem trechos encostando um no outro": falhava na main; pedido do Thiago, testes velhos que quebram se apagam)
 

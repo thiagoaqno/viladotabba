@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert");
 process.env.DB_PATH = ":memory:";
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 const G = require("../public/corrida/temporada/grupo-regras.js");
 
 function salaDeDois() {

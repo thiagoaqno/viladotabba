@@ -4,8 +4,8 @@ process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
 const Temporada = require("../public/carreira/temporada.js");
-const { novaCarreira, estado } = require("../carreira.js").paraTestes;
-const G = require("../carreira.js").grupo;
+const { novaCarreira, estado } = require("../servidor/carreira/carreira.js").paraTestes;
+const G = require("../servidor/carreira/carreira.js").grupo;
 
 // leva o clube até a semana W sem jogar: os jogos dele antes dela contam como jogados (o limite do que a tela mostra)
 function ate(save, W) {

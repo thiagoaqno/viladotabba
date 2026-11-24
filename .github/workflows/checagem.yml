@@ -18,7 +18,7 @@ jobs:
       - name: Sintaxe dos arquivos da Corrida
         run: |
           erro=0
-          for f in corrida*.js server.js bd.js; do node --check "$f" || erro=1; done
+          for f in servidor/corrida/*.js server.js servidor/comum/bd.js; do node --check "$f" || erro=1; done
           for f in $(find public/corrida -name '*.js' -not -path '*/vendor/*'); do
             if grep -qE '^(import|export) ' "$f"; then node --input-type=module --check < "$f" || { echo "em $f"; erro=1; }
             else node --check "$f" || erro=1; fi

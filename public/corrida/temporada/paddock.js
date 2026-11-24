@@ -46,7 +46,7 @@ const ajusteDeRitmo = (s) => Math.round(((garantir(s).moral - 50) / 25) * 10) / 
 //  - experiência (os GPs que ele já fez pela sua equipe): até +4 de constância e +6 de largada (a reação no semáforo), 0,25 e 0,4 por GP;
 //  - agressividade (0 a 100, das instruções e das brigas): o ataque e a defesa ±0,2 e a taxa de erro ±40% (ataca mais e erra mais).
 // (os perfis de corrida só existem no servidor: corrida-estilos.js; no navegador a personalidade serve só para a tela)
-const Estilos = () => { if (typeof module === "undefined" || !module.exports) return null; try { return require("../../../corrida-estilos.js"); } catch (e) { return null; } };
+const Estilos = () => { if (typeof module === "undefined" || !module.exports) return null; try { return require("../../../servidor/corrida/corrida-estilos.js"); } catch (e) { return null; } };
 function experiencia(s) { return (s.resultados || []).filter((r) => r.linhas.some((l) => l.piloto === s.piloto2 && l.equipe === s.equipe)).length; }
 function personalidade(s, piloto) {
   const p = garantir(s), exp = experiencia(s), base = Estilos() ? Estilos().dePiloto(piloto.id) : null, a = (p.agressividade - 50) / 50; // −1 a +1

@@ -1,5 +1,5 @@
 const test = require("node:test"), assert = require("node:assert/strict");
-const Estilos = require("../corrida-estilos.js"), Pilotos = require("../public/corrida/f1-pilotos-2026.js"), Piloto = require("../corrida-piloto.js");
+const Estilos = require("../servidor/corrida/corrida-estilos.js"), Pilotos = require("../public/corrida/f1-pilotos-2026.js"), Piloto = require("../servidor/corrida/corrida-piloto.js");
 
 test("todo piloto do grid tem perfil de pilotagem completo, de 0 a 1", () => {
   for (const { id } of Pilotos.PILOTOS) {

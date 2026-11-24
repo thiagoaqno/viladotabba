@@ -4,8 +4,8 @@ process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
 const Motor = require("../public/carreira/motor.js");
-const Eventos = require("../carreira-eventos.js");
-const { novaCarreira, ajudas, timeDe, fecharRodada } = require("../carreira.js").paraTestes;
+const Eventos = require("../servidor/carreira/carreira-eventos.js");
+const { novaCarreira, ajudas, timeDe, fecharRodada } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 // uma carreira no meio da temporada (com tabela, resultados e um lesionado), para todo "quando" ter chance
@@ -107,7 +107,7 @@ test("temporada inteira: os eventos aparecem quase toda rodada e nenhum se repet
 });
 
 test("catálogo: os 100 eventos novos (carreira-catalogo-novos.js) entram no sorteio, em todos os grupos", () => {
-  const { NOVOS } = require("../carreira-catalogo-novos.js");
+  const { NOVOS } = require("../servidor/carreira/carreira-catalogo-novos.js");
   assert.strictEqual(NOVOS.length, 100);
   const ids = new Set(Eventos.CATALOGO.map((d) => d.id));
   assert.ok(NOVOS.every((d) => ids.has(d.id)));
@@ -116,7 +116,7 @@ test("catálogo: os 100 eventos novos (carreira-catalogo-novos.js) entram no sor
 });
 
 test("imersão: 300 eventos inéditos entram no catálogo e a multa do clássico afeta o caixa", () => {
-  const { IMERSAO } = require("../carreira-catalogo-imersao.js");
+  const { IMERSAO } = require("../servidor/carreira/carreira-catalogo-imersao.js");
   assert.strictEqual(IMERSAO.length, 300);
   assert.strictEqual(new Set(IMERSAO.map((d) => d.id)).size, 300);
   assert.strictEqual(new Set(IMERSAO.map((d) => d.grupo)).size, 15);

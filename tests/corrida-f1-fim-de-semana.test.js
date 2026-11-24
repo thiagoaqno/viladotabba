@@ -4,9 +4,9 @@ const assert = require('node:assert/strict');
 const F1 = require('../public/corrida/f1-regras.js');
 const Pilotos = require('../public/corrida/f1-pilotos-2026.js');
 const T = require('../public/corrida/pistas.js');
-const Robos = require('../corrida-robos.js');
-const Direcao = require('../corrida-f1-direcao.js');
-const Quali = require('../corrida-f1-classificacao.js');
+const Robos = require('../servidor/corrida/corrida-robos.js');
+const Direcao = require('../servidor/corrida/corrida-f1-direcao.js');
+const Quali = require('../servidor/corrida/corrida-f1-classificacao.js');
 
 // o relógio simulado do node só dispara os timers que já existiam no começo de um `tick`: avança aos poucos
 const avanca = (t, ms) => { for (let i = 0; i < Math.ceil(ms / 250); i++) t.mock.timers.tick(Math.min(250, ms - i * 250)); };

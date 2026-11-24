@@ -5,8 +5,8 @@ const test = require("node:test");
 const assert = require("node:assert");
 const Motor = require("../public/carreira/motor.js");
 const Mercado = require("../public/carreira/mercado.js");
-const Eventos = require("../carreira-eventos.js");
-const { novaCarreira, ajudas, timeDe, fecharRodada, propor, estado, olheiro, consultarPedido } = require("../carreira.js").paraTestes;
+const Eventos = require("../servidor/carreira/carreira-eventos.js");
+const { novaCarreira, ajudas, timeDe, fecharRodada, propor, estado, olheiro, consultarPedido } = require("../servidor/carreira/carreira.js").paraTestes;
 
 function jogarRodada(save, i = 0) {
   const [casa, fora] = save.calendario[save.rodada].find((m) => m.includes(save.clube));

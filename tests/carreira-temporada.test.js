@@ -53,7 +53,7 @@ test("empate eliminatório termina nos pênaltis", () => {
 // "calendario-1": no EA FC 27, esta semente leva o Flamengo à final da Libertadores (os três testes de baixo contam com isso)
 test("o calendário não revela fases futuras do mata-mata", () => {
   process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-  const { novaCarreira, estado } = require("../carreira.js").paraTestes;
+  const { novaCarreira, estado } = require("../servidor/carreira/carreira.js").paraTestes;
   const save = novaCarreira("Sem spoiler", "flamengo", "");
   save.semente = "calendario-1"; save.calendarioMundo = null;
   const e = estado(save), futurosBrutos = save.calendarioMundo.filter((j) => j.mataMata && (j.casa === save.clube || j.fora === save.clube));
@@ -63,7 +63,7 @@ test("o calendário não revela fases futuras do mata-mata", () => {
 
 test("a final empatada salva e anuncia o vencedor dos pênaltis", () => {
   process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-  const { novaCarreira, estado, simularMinha, fecharRodada } = require("../carreira.js").paraTestes;
+  const { novaCarreira, estado, simularMinha, fecharRodada } = require("../servidor/carreira/carreira.js").paraTestes;
   const save = novaCarreira("Final visível", "flamengo", "");
   save.semente = "calendario-1"; save.calendarioMundo = null; estado(save);
   const final = save.competicoes.libertadores.jogos.find((j) => j.fase === "final");
@@ -94,7 +94,7 @@ test("a final empatada salva e anuncia o vencedor dos pênaltis", () => {
 
 test("a carreira em grupo atualiza o chaveamento antes de anunciar a final", () => {
   process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-  const G = require("../carreira.js").grupo;
+  const G = require("../servidor/carreira/carreira.js").grupo;
   const save = G.novaCarreiraGrupo([{ clube: "flamengo", nome: "A" }], { temporadas: 1 });
   save.semente = "calendario-1"; save.calendarioMundo = null; G.fecharRodadaGrupo(save);
   const final = save.competicoes.libertadores.jogos.find((j) => j.fase === "final");
@@ -111,7 +111,7 @@ test("a carreira em grupo atualiza o chaveamento antes de anunciar a final", () 
 
 test("no calendário mundial, suspensão e lesão contam os jogos e o jogador volta", () => {
   process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-  const { novaCarreira, ajudas, timeDe, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo } = require("../carreira.js").paraTestes;
+  const { novaCarreira, ajudas, timeDe, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo } = require("../servidor/carreira/carreira.js").paraTestes;
   const save = novaCarreira("T", "flamengo", "");
   const [a, b] = ajudas.elencoDe(save, "flamengo");
   save.suspensos[a.id] = 1; save.lesoes[b.id] = 2;
@@ -130,7 +130,7 @@ test("no calendário mundial, suspensão e lesão contam os jogos e o jogador vo
 
 test("no calendário mundial, os eventos aleatórios também viram notícias", () => {
   process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-  const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, sementeDoJogo } = require("../carreira.js").paraTestes;
+  const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, sementeDoJogo } = require("../servidor/carreira/carreira.js").paraTestes;
   const save = novaCarreira("Notícias", "flamengo", "");
   for (let i = 0; i < 8 && !save.feed.some((p) => p.tipo === "evento"); i++) {
     const jogo = proximoJogoMundo(save);
@@ -144,7 +144,7 @@ test("no calendário mundial, os eventos aleatórios também viram notícias", (
 
 test("a notícia da fase de grupos só sai depois do sexto jogo da copa", () => {
   process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-  const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, sementeDoJogo, estado } = require("../carreira.js").paraTestes;
+  const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, sementeDoJogo, estado } = require("../servidor/carreira/carreira.js").paraTestes;
   const preparar = (save, jogo) => {
     save.partida = { rodada: save.rodada, jogoId: jogo.id, competicao: jogo.competicao, fase: jogo.fase, mataMata: jogo.mataMata,
       casa: jogo.casa, fora: jogo.fora, modo: 1, semente: sementeDoJogo(save, jogo.semana, jogo.casa, jogo.fora), decisoes: {} };

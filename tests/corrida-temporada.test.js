@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 const R = require("../public/corrida/temporada/regras.js");
 const E = require("../public/corrida/f1-equipes.js");
 const Pilotos = require("../public/corrida/f1-pilotos-2026.js");
@@ -11,7 +11,7 @@ const { subirServidor, conectar, esperarEstado } = require("./ajuda.js");
 const http = require("node:http");
 const { Server } = require("socket.io");
 const { io: cliente } = require("socket.io-client");
-const attachTemporada = require("../corrida-temporada.js");
+const attachTemporada = require("../servidor/corrida/corrida-temporada.js");
 
 process.env.CORRIDA_TV_MS = "0"; // sem a transmissão de TV antes das luzes: a largada vem logo
 const chamar = (socket, evento, dados = {}) => new Promise((resolve) => socket.emit(evento, dados, resolve));
@@ -208,9 +208,9 @@ test("a dificuldade dos robôs vai no save, com médio como padrão", () => {
 // da equipe; agora eles montam do zero pelo que rende (#881). Pedido do Thiago: testes velhos que quebram se apagam)
 
 test("o GP usa o carro desenvolvido das rivais e o mesmo carro para companheiros de equipe", () => {
-  const Robos = require("../corrida-robos.js");
+  const Robos = require("../servidor/corrida/corrida-robos.js");
   const nsp = { on() {}, to() { return { emit() {}, volatile: { emit() {} } }; }, sockets: new Map() };
-  const corrida = require("../corrida.js")({ of: () => nsp });
+  const corrida = require("../servidor/corrida/corrida.js")({ of: () => nsp });
   const s = R.criar("Thiago", "cadillac", 8, 5, 170); s.gp = 4; s.montagem = E.montagemPadrao("cadillac");
   const acesso = corrida.abrirGP(s, () => {}, () => {}), sala = corrida.salaGP(acesso.code);
   assert.equal(sala.campeonatoPilotos.restam, 3);

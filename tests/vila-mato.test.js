@@ -5,8 +5,8 @@ const test = require("node:test");
 const assert = require("node:assert");
 const Mato = require("../public/vila/mato.js");
 const PokeDex = require("../public/galeramon/pokemon.js");
-const bd = require("../bd.js");
-const ligarMato = require("../vila-mato.js");
+const bd = require("../servidor/comum/bd.js");
+const ligarMato = require("../servidor/jogos/vila-mato.js");
 const Niveis = require("../public/galeramon/niveis.js");
 
 const OX = 131, OY = 100;

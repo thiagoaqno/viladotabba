@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { escolher } = require("../fotos-jogadores.js");
+const { escolher } = require("../servidor/carreira/fotos-jogadores.js");
 
 const cutout = "https://r2.thesportsdb.com/images/media/player/cutout/2p9j0d1750919894.png";
 

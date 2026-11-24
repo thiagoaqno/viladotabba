@@ -3,8 +3,8 @@
 "use strict";
 const fs = require("fs"), path = require("path");
 const T = require("../public/corrida/pistas.js"), F1 = require("../public/corrida/f1-regras.js"), Equipes = require("../public/corrida/f1-equipes.js");
-const Piloto = require("../corrida-piloto.js");
-const ARQ = path.join(__dirname, "..", "corrida-linhas-f1.json"), FANTASIA = new Set(["serra", "deserto", "nurburgring", "arcoiris"]), PASSO_NO = 8;
+const Piloto = require("../servidor/corrida/corrida-piloto.js");
+const ARQ = path.join(__dirname, "..", "servidor", "corrida", "corrida-linhas-f1.json"), FANTASIA = new Set(["serra", "deserto", "nurburgring", "arcoiris"]), PASSO_NO = 8;
 const salvo = fs.existsSync(ARQ) ? JSON.parse(fs.readFileSync(ARQ, "utf8")) : {};
 const spec = Equipes.specDaEquipe("mclaren"), ref = F1.aderencia({ composto: "medio", desgaste: 0, temp: 1 });
 const pedidas = process.argv.slice(2), pistas = pedidas.length ? pedidas : Object.keys(T.PISTAS).filter((id) => !FANTASIA.has(id));

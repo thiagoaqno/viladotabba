@@ -1,5 +1,5 @@
 const test = require("node:test"), assert = require("node:assert/strict");
-const Robos = require("../corrida-robos.js"), Sim = require("../public/corrida/sim.js");
+const Robos = require("../servidor/corrida/corrida-robos.js"), Sim = require("../public/corrida/sim.js");
 
 test("os robôs de F1 andam o tempo real que passou, em passos inteiros da física", () => {
   const room = { relogioRobos: 1000 }, ms = Sim.PASSO * 1000;

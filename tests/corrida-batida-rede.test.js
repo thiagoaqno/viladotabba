@@ -4,7 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const D = require("../public/corrida/dinamica.js");
 const S = require("../public/corrida/sim.js");
-const Humanos = require("../corrida-humanos.js");
+const Humanos = require("../servidor/corrida/corrida-humanos.js");
 
 const eu = { L: 44, W: 26, massa: 800 };
 const carro = (x, y, v) => { const c = D.novoCarro(x, y, 0); c.v = v; c.vx = v; c.z = 0; c.tick = 1; c.x0 = x - v / 120; c.y0 = y; c.a0 = 0; return c; };

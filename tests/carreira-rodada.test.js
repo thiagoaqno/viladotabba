@@ -2,8 +2,8 @@
 const test = require("node:test");
 const assert = require("node:assert");
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-const G = require("../carreira.js").grupo;
-const Rd = require("../carreira-rodada.js");
+const G = require("../servidor/carreira/carreira.js").grupo;
+const Rd = require("../servidor/carreira/carreira-rodada.js");
 const Motor = require("../public/carreira/motor.js");
 
 const OPC = { vel: 1, decisaoMs: 5000, espera: 0 };

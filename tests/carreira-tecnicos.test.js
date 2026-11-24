@@ -3,8 +3,8 @@ const test = require("node:test");
 const assert = require("node:assert");
 
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
-const { novaCarreira, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo, novaTemporada, estado, completar, ajudas, forcaDoClube, caixaInicial, temporadaAcabou } = require("../carreira.js").paraTestes;
-const Tecnicos = require("../carreira-tecnicos.js");
+const { novaCarreira, fecharRodada, proximoJogoMundo, simularMinha, sementeDoJogo, novaTemporada, estado, completar, ajudas, forcaDoClube, caixaInicial, temporadaAcabou } = require("../servidor/carreira/carreira.js").paraTestes;
+const Tecnicos = require("../servidor/carreira/carreira-tecnicos.js");
 const ctx = () => ({ ...ajudas, forcaDoClube, caixaInicial, temporadaAcabou });
 
 // joga todos os jogos do seu clube até o fim da temporada, no modo "só o resultado"

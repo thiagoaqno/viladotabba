@@ -3,9 +3,9 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const F1 = require("../public/corrida/f1-regras.js");
 const T = require("../public/corrida/pistas.js");
-const Robos = require("../corrida-robos.js");
-const Itens = require("../corrida-itens.js");
-const bd = require("../bd.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Itens = require("../servidor/corrida/corrida-itens.js");
+const bd = require("../servidor/comum/bd.js");
 const { subirServidor, conectar, pedir, esperarEstado } = require("./ajuda.js");
 
 process.env.CORRIDA_TV_MS = "0"; // sem a transmissão de TV antes das luzes: a largada vem logo

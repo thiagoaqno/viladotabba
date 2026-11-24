@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { otimizar } = require("../corrida-linha.js");
+const { otimizar } = require("../servidor/corrida/corrida-linha.js");
 
 test("a otimização continua depois que pontos sucessivos chegam à borda", () => {
   const n = 20, max = 10;

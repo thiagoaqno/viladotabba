@@ -1,63 +1,65 @@
 <p align="center">
-  <img src="public/corrida/icone-256.png" width="120" alt="Corrida da Galera">
+  <img src="public/corrida/icone-256.png" width="110" alt="Corrida da Galera">
 </p>
 
-<h1 align="center">Corrida da Galera</h1>
+<h1 align="center">Vila da Galera</h1>
 
-<p align="center"><b>Fórmula 1 com os amigos, no navegador ou instalado no PC.</b><br>
-Grid de 22 carros, as equipes e os pilotos de 2026, 25 pistas, carreira, safety car, box, chuva e ERS.</p>
+<p align="center"><b>Um site de jogos multiplayer para jogar com os amigos, feito do zero em JavaScript.</b><br>
+O destaque é a <b>Corrida da Galera</b>, um jogo de Fórmula 1 em 3D no navegador.</p>
 
 <p align="center">
-  <a href="https://viladotabba.com/corrida/"><b>▶ Jogar agora no navegador</b></a> ·
-  <a href="https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe"><b>⬇ Baixar para Windows</b></a> ·
-  <a href="https://viladotabba.com/">A Vila da Galera</a>
+  <a href="https://viladotabba.com/corrida/"><b>▶ Jogar a Corrida</b></a> ·
+  <a href="https://viladotabba.com/"><b>A Vila da Galera</b></a> ·
+  <a href="https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe"><b>⬇ Programa para Windows</b></a>
 </p>
 
-<p align="center"><img src="public/corrida/capa-carregamento.png" width="900" alt="A largada em Interlagos"></p>
+<p align="center"><img src="public/corrida/capa-carregamento.png" width="860" alt="A largada em Interlagos"></p>
 
----
+## A ideia
 
-## O que tem no jogo
+Um único servidor Node.js serve o site e abre um canal de tempo real (Socket.io) para cada jogo. A sala vive no servidor, e ele é quem manda: guarda o estado da partida, valida as jogadas e reparte o resultado para todos os navegadores. Não tem etapa de build: o navegador recebe HTML, CSS e JavaScript puros.
 
-- **Corrida rápida** contra 21 robôs, com três níveis, clima aleatório, seco, chuva ou variável, e classificação opcional (Q1, Q2 e Q3).
-- **Carreira solo**: escolha a equipe, desenvolva o carro peça por peça, contrate pilotos e engenheiros e dispute o campeonato.
-- **Temporada com os amigos**: cada um na sua equipe (dois podem dividir a mesma), mercado disputado, e quem chega depois entra numa equipe com vaga no meio da temporada.
-- **Multiplayer**: abra uma sala, mande o link e corram juntos, com robôs completando o grid.
-- **Contrarrelógio e treino livre**, com o fantasma da sua melhor volta e o acerto do carro liberado.
-- **Regras de F1 de verdade**: pneus que gastam e esquentam, pit stop com a equipe de mecânicos, DRS, ERS manual, bandeiras, limites de pista, punições, safety car e a transmissão de TV antes da largada.
-- **Acerto do carro** (asa e altura) por pista, com a proposta do engenheiro e a sugestão do estrategista.
-- **Câmeras** de cockpit, T-cam, bico, de fora e de TV, com retrovisores e o retrovisor virtual.
-- **Volante e controle**: tudo remapeável, força no volante nos Logitech (G25, G27, G29, Driving Force) e vibração no controle.
-- **Configurações como nos jogos**: predefinições gráficas (e a personalizada), resolução, sombras, efeitos, áudio por canal e o painel compacto em primeira pessoa.
+Na **Corrida**, a física do carro de quem joga roda no servidor em passos fixos de 1/120 s, com a mesma física prevista no navegador, que se corrige aos poucos. Os 21 robôs do grid também pilotam no servidor. O mesmo servidor roda dentro do **programa para Windows**: jogando sozinho ou na carreira solo fica tudo no PC, sem ping, e as salas com os amigos e os recordes vão para o site.
 
-<p align="center">
-  <img src="public/corrida/carregamento-bortoleto-interlagos.webp" width="290" alt="Bortoleto em Interlagos">
-  <img src="public/corrida/carregamento-hamilton-suzuka.webp" width="290" alt="Hamilton em Suzuka">
-  <img src="public/corrida/carregamento-antonelli-monza.webp" width="290" alt="Antonelli em Monza">
-</p>
-<p align="center">
-  <img src="public/corrida/carregamento-alonso.webp" width="290" alt="Alonso em Las Vegas">
-  <img src="public/corrida/carregamento-perez.webp" width="290" alt="Pérez em Singapura">
-  <img src="public/corrida/carregamento-ferrari-mexico.webp" width="290" alt="A Ferrari no México">
-</p>
+## Os jogos
 
-## Jogar
+- **Corrida da Galera (F1 3D):** grid de 22 carros, as equipes e pilotos de 2023 a 2026, 25 GPs, carreira solo e com os amigos, classificação, pneus, box, chuva, ERS, DRS e safety car.
+- **Futebol e esportes:** Carreira de Treinador (solo e online), Leilão de Times, Pelada 3D (futsal), Futevôlei, Tênis, Haxball e Futebol de Botão.
+- **Jogos de mesa e de cartas:** Uno, Truco, Dominó, Sinuca, Ludo, Banco, Rumi e Bloqueio.
+- **Outros:** Ginásio (batalhas de Galeramon), Tiro (arena), Batalha (balões de kart), Drag (racha), Cozinha, Palavra Proibida e Corrida de Digitação.
+- **A Vila:** o lobby em mapinha que leva a cada jogo, e a Noite da Galera, que leva todo mundo de um jogo para outro e conta o placar da noite.
 
-### No navegador
-Abra **https://viladotabba.com/corrida/**, escreva o seu nome e escolha o modo. Funciona no Chrome e no Edge, no computador. No celular, dá para jogar com os botões na tela.
+## Tecnologias
 
-### Instalado no Windows (mais leve e sem ping jogando sozinho)
-1. Baixe o **[CorridaDaGalera-Setup.exe](https://github.com/thiagoaqno/viladotabba/releases/download/programa-pc/CorridaDaGalera-Setup.exe)**.
-2. Abra o arquivo. Se o Windows mostrar "O Windows protegeu o computador", clique em **Mais informações → Executar assim mesmo** (o programa não tem a assinatura paga da Microsoft).
-3. **Avançar → Instalar**. Não pede senha de administrador.
+### Frontend
+- **HTML, CSS e JavaScript puros** (módulos ES), sem framework e sem build.
+- **Three.js** para o 3D (Corrida, Pelada, Futevôlei, Tiro e outros), com modelos **glTF/GLB**.
+- **Web Audio** para motor, rádio e efeitos; **Gamepad API** para controle e volante (com força no volante nos Logitech).
+- **PWA** (manifesto e instalação no celular); **marked** e **DOMPurify** para os textos em Markdown.
 
-O programa roda o jogo no próprio PC:
-- **Sozinho** (corrida rápida, contrarrelógio, treino e carreira solo): roda inteiro no seu computador, sem ping, e funciona até sem internet.
-- **Com os amigos**: entra nas salas do site, do mesmo jeito que quem joga pelo navegador.
-- **Recordes**: os feitos sem internet sobem para o site quando a internet volta.
-- **Atualizações**: ao abrir, o jogo pergunta antes de baixar e baixa só o que mudou.
+### Backend
+- **Node.js 24** com **Express 5** (site e API) e **Socket.io 4** (tempo real, um canal por jogo).
+- **SQLite** pelo `node:sqlite` nativo do Node, com migrações em SQL numeradas (`migracoes/`).
+- **worker_threads** para os cálculos pesados (a linha de corrida de cada pista) sem travar as salas.
+- **Docker** numa VPS, publicando a `main`.
+- **GitHub Actions**: os testes da Corrida (`node --test`), uma checagem rápida a cada PR e a montagem do programa para Windows. Há também testes de ponta a ponta com **Playwright** (`npm run test:e2e`).
+- **Programa para Windows:** um lançador em C# e o instalador do Inno Setup, que se atualiza baixando só os arquivos que mudaram.
 
-## Rodar o código no seu PC
+### Linguagens
+
+| Linguagem | Linhas | Onde |
+|---|---:|---|
+| JavaScript | ~181 mil | servidor, jogos no navegador, física, ferramentas e testes |
+| HTML | ~9,9 mil | as páginas de cada jogo |
+| CSS | ~8,8 mil | as interfaces |
+| Python | ~700 | ferramentas de importar sprites e carros |
+| SQL | ~400 | as migrações do banco |
+| Batch e PowerShell | ~320 | os atalhos do Windows e a montagem do programa |
+| C# | ~100 | o lançador do programa para Windows |
+
+<sub>Medido com `git ls-files` em 24/11/2026: 6.187 arquivos e 1.987 commits desde 01/10/2026.</sub>
+
+## Rodar no seu PC
 
 Precisa do **[Node.js](https://nodejs.org/) 24** (ou 22.13 em diante).
 
@@ -68,33 +70,25 @@ npm ci
 npm start
 ```
 
-Abra **http://localhost:3000/corrida/**. Para jogar com alguém na mesma rede, use o IP do seu PC no lugar de `localhost`.
-
-Variáveis úteis:
-- `PORT`: a porta (3000).
-- `DB_PATH`: o banco SQLite (`./dados/galera.db`; `:memory:` para um banco descartável).
-- `CORRIDA_SITE`: o site a que o programa de PC se liga.
-
-**Testes da Corrida:** `npm run test:corrida` (o `npm test` roda os de todos os jogos).
+Abra **http://localhost:3000/** (a Corrida fica em `/corrida/`). Variáveis úteis: `PORT` (3000) e `DB_PATH` (o banco SQLite; `:memory:` para um descartável). Testes: `npm test` (todos) ou `npm run test:corrida`.
 
 ## Como o código está organizado
 
 | Onde | O quê |
 |---|---|
-| `server.js` | Express + Socket.io: serve o site e abre os canais de cada jogo |
-| `corrida*.js` | O servidor da Corrida: salas, robôs, física com autoridade do servidor, direção de prova, classificação e carreira |
-| `public/corrida/` | O jogo no navegador (Three.js, sem etapa de build): pistas, carros, HUD, câmeras, sons e menus |
-| `public/corrida/pistas.js` e `gps/` | O traçado e a configuração de cada GP; `kit/` tem as peças de cenário |
-| `desktop/` | O programa de PC (o lançador e o instalador, montados pela action "Programa de PC") |
-| `migracoes/` | O banco SQLite, uma migração por arquivo |
+| `server.js` | o Express e o Socket.io: serve o site e liga o canal de cada jogo |
+| `servidor/` | o servidor de cada jogo: `corrida/`, `carreira/`, `jogos/` (os outros), `admin/` (painéis) e `comum/` (banco, salas e a lista de salas) |
+| `public/<jogo>/` | o jogo no navegador |
+| `servidor/comum/bd.js` + `migracoes/` | o banco SQLite |
+| `desktop/` | o programa para Windows |
+| `tests/` | os testes (`node --test` e Playwright) |
 
-Um mapa mais detalhado está em [`CLAUDE.md`](CLAUDE.md) e em [`docs/mapa-completo.md`](docs/mapa-completo.md).
+O mapa detalhado está em [`CLAUDE.md`](CLAUDE.md), [`docs/mapa-f1.md`](docs/mapa-f1.md) e [`docs/mapa-completo.md`](docs/mapa-completo.md).
 
-## A Vila da Galera
+## Quem sou eu
 
-A Corrida mora dentro da **[Vila da Galera](https://viladotabba.com/)**, um site de jogos com os amigos que também tem futebol (carreira de treinador, futsal, pelada 3D), jogos de mesa (Uno, Truco, Dominó, Banco, Ludo, Sinuca) e mais. O próximo passo é a Vila virar um **GP de F1**: as casinhas de cada jogo ao redor de um circuito, com os carrinhos correndo enquanto a galera escolhe o que jogar.
+Sou o **Thiago** ([@thiagoaqno](https://github.com/thiagoaqno)). Comecei a Vila da Galera para ter um lugar com os jogos que eu e meus amigos jogamos juntos, e ela foi crescendo até virar um jogo de F1 completo. Eu decido o que entra, testo jogando com a galera, e o código é escrito em parceria com IA (Claude Code).
 
 ---
 
-<p align="center"><img src="public/corrida/carregamento-hamilton-verstappen.webp" width="600" alt="Hamilton e Verstappen no paddock"></p>
 <p align="center"><sub>Fórmula 1, F1 e os nomes das equipes e dos pilotos pertencem aos seus donos.</sub></p>

@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const D = require("../public/galeramon/naruto.js");
-const G = require("../galeramon.js");
+const G = require("../servidor/jogos/galeramon.js");
 
 function luta() {
   return G.createBattle(

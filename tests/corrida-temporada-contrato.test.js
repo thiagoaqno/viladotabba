@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert");
 const R = require("../public/corrida/temporada/regras.js");
-const Analise = require("../corrida-analise.js");
+const Analise = require("../servidor/corrida/corrida-analise.js");
 
 function resultado(s, pos) {
   const vagas = Array.from({ length: 22 }, (_, i) => i + 1).filter((p) => p !== pos);

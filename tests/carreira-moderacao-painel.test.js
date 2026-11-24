@@ -3,18 +3,18 @@ process.env.DB_PATH = ":memory:";
 process.env.CARREIRA_PAUSA_MS = "0";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const bd = require("../bd.js");
-const C = require("../carreira.js");
+const bd = require("../servidor/comum/bd.js");
+const C = require("../servidor/carreira/carreira.js");
 const Carreira = C.grupo;
-const Moderacao = require("../carreira-moderacao.js");
-const Solo = require("../carreira-solo-moderacao.js");
+const Moderacao = require("../servidor/carreira/carreira-moderacao.js");
+const Solo = require("../servidor/carreira/carreira-solo-moderacao.js");
 
 // o módulo da sala tem relógios próprios: aqui eles não seguram o processo do teste
 function carregarSalas() {
   const orig = global.setInterval;
   global.setInterval = (f, t) => { const h = orig(f, t); if (h.unref) h.unref(); return h; };
   const ns = { on() {}, to: () => ({ emit() {} }), sockets: new Map() };
-  try { return require("../carreira-online.js")({ of: () => ns }); } finally { global.setInterval = orig; }
+  try { return require("../servidor/carreira/carreira-online.js")({ of: () => ns }); } finally { global.setInterval = orig; }
 }
 
 test("carreira solo: as mesmas edições da sala, bloqueadas durante a partida", () => {

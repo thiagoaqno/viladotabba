@@ -6,7 +6,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const Motor = require("../public/carreira/motor.js");
 const Temporada = require("../public/carreira/temporada.js");
-const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, estado, sementeDoJogo } = require("../carreira.js").paraTestes;
+const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, estado, sementeDoJogo } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const POSICOES = ["GOL", "ZAG", "ZAG", "LD", "LE", "VOL", "MC", "MC", "MEI", "PE", "PD", "ATA", "ATA", "ZAG"];
 const time = (id, formacao = "4-3-3") => ({ id, nome: id, formacao, jogadores: POSICOES.map((pos, i) => ({ id: `${id}${i}`, nome: `${id} ${i}`, pos, nota: 74, atr: { fin: 70, pas: 70, dri: 70, def: 70, fis: 70, rit: 70, gol: 70 } })) });

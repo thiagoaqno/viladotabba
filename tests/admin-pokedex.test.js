@@ -6,9 +6,9 @@ const assert = require("node:assert/strict");
 const http = require("node:http");
 const crypto = require("node:crypto");
 const express = require("express");
-const bd = require("../bd.js");
-const Admin = require("../admin-carreira.js");
-const AdminPokemon = require("../admin-pokemon.js");
+const bd = require("../servidor/comum/bd.js");
+const Admin = require("../servidor/admin/admin-carreira.js");
+const AdminPokemon = require("../servidor/admin/admin-pokemon.js");
 
 test("Pokédex dos treinadores: sessão, CSRF, nível, evolução, dar, tirar e o nível de todos", async () => {
   const anterior = process.env.NODE_ENV;

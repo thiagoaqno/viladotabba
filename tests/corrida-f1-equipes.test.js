@@ -5,8 +5,8 @@ const assert = require("node:assert/strict");
 const E = require("../public/corrida/f1-equipes.js");
 const Pilotos = require("../public/corrida/f1-pilotos-2026.js");
 const T = require("../public/corrida/pistas.js");
-const Robos = require("../corrida-robos.js");
-const bd = require("../bd.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const bd = require("../servidor/comum/bd.js");
 
 process.env.CORRIDA_TV_MS = "0"; // sem a transmissão de TV antes das luzes: a largada vem logo
 const montagem = (motor, aero, chassi, freios, suspensao, confiab) => ({ motor, aero, chassi, freios, suspensao, confiab });
@@ -118,7 +118,7 @@ test("a ficha do carro dá notas de 1 a 10 e as extremidades aparecem", () => {
 function salaDeMentira() {
   const estados = {};
   const nsp = { handlers: {}, on(e, f) { this.handlers[e] = f; }, to(codigo) { return { emit(ev, d) { if (ev === "state") estados[codigo] = JSON.parse(JSON.stringify(d)); }, volatile: { emit() {} } }; }, sockets: new Map() };
-  require("../corrida.js")({ of: () => nsp });
+  require("../servidor/corrida/corrida.js")({ of: () => nsp });
   let n = 0;
   const socket = () => {
     const h = {}, s = { id: "s" + ++n, data: {}, h, on(e, f) { h[e] = f; }, emit() {}, join() {}, leave() {}, to() { return { emit() {}, volatile: { emit() {} } }; } };

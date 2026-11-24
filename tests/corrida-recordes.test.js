@@ -1,7 +1,7 @@
 // Corrida: os recordes de volta de cada pista, para sempre (bd.js e GET /api/recordes-corrida).
 const test = require("node:test");
 const assert = require("node:assert");
-const bd = require("../bd.js");
+const bd = require("../servidor/comum/bd.js");
 const { subirServidor, conectar, pedir, esperarEstado } = require("./ajuda.js");
 
 process.env.CORRIDA_TV_MS = "0"; // sem a transmissão de TV antes das luzes: a largada vem logo

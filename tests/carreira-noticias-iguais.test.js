@@ -2,7 +2,7 @@
 process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
-const G = require("../carreira.js").grupo;
+const G = require("../servidor/carreira/carreira.js").grupo;
 
 const CLUBES = ["flamengo", "palmeiras", "corinthians"];
 const ingles = require("../public/carreira/base/inglaterra-2026.js").clubes.flatMap((c) => c.jogadores.map((j) => ({ ...j, clube: c.id })));

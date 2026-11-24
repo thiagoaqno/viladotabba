@@ -7,10 +7,10 @@ const F1 = require("../public/corrida/f1-regras.js");
 const Eq = require("../public/corrida/f1-equipes.js");
 const D = require("../public/corrida/dinamica.js");
 const Sim = require("../public/corrida/sim.js");
-const Robos = require("../corrida-robos.js");
-const Linha = require("../corrida-linha.js");
-const Direcao = require("../corrida-f1-direcao.js");
-const Contato = require("../corrida-contato.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Linha = require("../servidor/corrida/corrida-linha.js");
+const Direcao = require("../servidor/corrida/corrida-f1-direcao.js");
+const Contato = require("../servidor/corrida/corrida-contato.js");
 
 const mclaren = Eq.specDaEquipe("mclaren"), p = D.parametros(mclaren), kmh = (u) => u * 0.75;
 // freia a fundo em linha reta de v0 a v1 (km/h) com o pneu e a água dados: a distância (m), o tempo (s), o pico de g e a roda travada

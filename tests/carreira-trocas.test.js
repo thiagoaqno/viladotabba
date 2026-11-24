@@ -3,8 +3,8 @@ process.env.DB_PATH = process.env.DB_PATH || ":memory:";
 const test = require("node:test");
 const assert = require("node:assert");
 const Temporada = require("../public/carreira/temporada.js");
-const G = require("../carreira.js").grupo;
-const { novaCarreira, estado } = require("../carreira.js").paraTestes;
+const G = require("../servidor/carreira/carreira.js").grupo;
+const { novaCarreira, estado } = require("../servidor/carreira/carreira.js").paraTestes;
 
 const CLUBES = ["flamengo", "palmeiras", "corinthians"];
 const sala = () => G.novaCarreiraGrupo(CLUBES.map((c, i) => ({ clube: c, nome: `T${i}` })), { temporadas: 2, aporte: 0 });

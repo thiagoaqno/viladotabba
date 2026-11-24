@@ -2,7 +2,7 @@
 // triplo, a lula e a bala, e quem está de estrela ou de bala derrubando quem encosta.
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const Itens = require("../corrida-itens.js");
+const Itens = require("../servidor/corrida/corrida-itens.js");
 
 // uma sala na corrida com os pilotos em fila na reta (prog: quanto já andou; o maior é o líder)
 function sala(n = 4) {

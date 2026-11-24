@@ -4,9 +4,9 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const F1 = require("../public/corrida/f1-regras.js");
 const T = require("../public/corrida/pistas.js");
-const Robos = require("../corrida-robos.js");
-const Itens = require("../corrida-itens.js");
-const bd = require("../bd.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
+const Itens = require("../servidor/corrida/corrida-itens.js");
+const bd = require("../servidor/comum/bd.js");
 
 process.env.CORRIDA_TV_MS = "0"; // sem a transmissão de TV antes das luzes: a largada vem logo
 const corredorDe = (id) => { const t = T.PISTAS[id]; return F1.corredor(t, T.pontos(t, 6).length, t.width); };
@@ -130,7 +130,7 @@ test("robôs: sem as regras de F1 não existe box", () => {
 function salaDeMentira() {
   const estados = {};
   const nsp = { handlers: {}, on(e, f) { this.handlers[e] = f; }, to(codigo) { return { emit(ev, d) { if (ev === "state") estados[codigo] = JSON.parse(JSON.stringify(d)); }, volatile: { emit() {} } }; }, sockets: new Map() };
-  const api = require("../corrida.js")({ of: () => nsp });
+  const api = require("../servidor/corrida/corrida.js")({ of: () => nsp });
   let n = 0;
   const socket = () => {
     const h = {}, s = { id: "s" + ++n, data: {}, h, on(e, f) { h[e] = f; }, emit() {}, join() {}, leave() {}, to() { return { emit() {}, volatile: { emit() {} } }; } };

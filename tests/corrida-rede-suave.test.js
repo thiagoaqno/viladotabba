@@ -6,8 +6,8 @@ const Pose = require("../public/corrida/pose.js");
 const S = require("../public/corrida/sim.js");
 const T = require("../public/corrida/pistas.js");
 const Equipes = require("../public/corrida/f1-equipes.js");
-const Humanos = require("../corrida-humanos.js");
-const Contato = require("../corrida-contato.js");
+const Humanos = require("../servidor/corrida/corrida-humanos.js");
+const Contato = require("../servidor/corrida/corrida-contato.js");
 
 const ESC = 0.75 / 3.6; // metros por unidade
 

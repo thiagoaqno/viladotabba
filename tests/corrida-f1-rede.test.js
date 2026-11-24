@@ -7,7 +7,7 @@ const S = require("../public/corrida/sim.js");
 const T = require("../public/corrida/pistas.js");
 const F1 = require("../public/corrida/f1-regras.js");
 const Equipes = require("../public/corrida/f1-equipes.js");
-const Humanos = require("../corrida-humanos.js");
+const Humanos = require("../servidor/corrida/corrida-humanos.js");
 const Pose = require("../public/corrida/pose.js");
 const { subirServidor, conectar, pedir } = require("./ajuda.js");
 

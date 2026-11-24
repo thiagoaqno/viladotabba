@@ -1,7 +1,7 @@
 // A temporada de F1 em grupo aparece na lista da Vila e o código dela leva até a sede.
 const test = require("node:test");
 const assert = require("node:assert");
-const lobby = require("../lobby.js");
+const lobby = require("../servidor/comum/lobby.js");
 
 test("a temporada entra na lista com o endereço da sede e o código é reconhecido", () => {
   const sala = { code: "ABCDE", phase: "lobby", t: 1, sala: { gente: [{ nome: "Ana", online: true, host: true }] } };

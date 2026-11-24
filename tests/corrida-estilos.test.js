@@ -1,8 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const Estilos = require("../corrida-estilos.js");
+const Estilos = require("../servidor/corrida/corrida-estilos.js");
 const Pilotos = require("../public/corrida/f1-pilotos-2026.js");
-const Robos = require("../corrida-robos.js");
+const Robos = require("../servidor/corrida/corrida-robos.js");
 const F1 = require("../public/corrida/f1-regras.js");
 
 const medio = { margem: 44, antec: 1, defende: 0.5 };

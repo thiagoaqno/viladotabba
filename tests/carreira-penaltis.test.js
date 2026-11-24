@@ -4,7 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert");
 const Motor = require("../public/carreira/motor.js");
 const Temporada = require("../public/carreira/temporada.js");
-const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, estado, sementeDoJogo, timeDe } = require("../carreira.js").paraTestes;
+const { novaCarreira, proximoJogoMundo, simularMinha, fecharRodada, estado, sementeDoJogo, timeDe } = require("../servidor/carreira/carreira.js").paraTestes;
 
 // dois times iguais, o jogo costuma terminar em poucos gols: procura uma semente que empata
 function time(id) {

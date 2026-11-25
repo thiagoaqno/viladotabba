@@ -248,10 +248,25 @@ function cabelo(g, t, cor, P) {
       fios(4, 10);
       risca(4, 10); return;
     case "trancas":
-      massa(4, 15, 2, 21); sombraTesta(15);
-      for (let y = 16; y <= 41; y++) { const w = larg(Math.min(y, 25)) + 4; for (let k = 0; k < 5; k++) for (const x of [CX - w + k, CX + w - 1 - k]) pinta(g, x, y, (x + Math.floor(y / 2)) % 2 ? H.base : H.sombra); }
-      for (let y = 4; y <= 16; y++) for (let x = 0; x < N; x++) if (g[y][x] === H.base || g[y][x] === H.sombra) g[y][x] = x % 3 === 1 ? H.funda : x % 3 === 0 && y % 3 ? H.luz : H.base; // as tranças em fileiras
+    { // (2026-11-25, o Thiago: "o cabelo em tranças não fica em tranças") em cima, as fileiras da testa para trás, cada uma com o trançado em
+      // zigue-zague (2 pixels de largura e o sulco escuro entre elas); dos lados, as tranças soltas caindo separadas, cada uma com o trançado e a
+      // conta na ponta
+      massa(4, 15, 1, 19); sombraTesta(15);
+      const tranca = (x, y, fase) => { pinta(g, x, y, (y + fase) % 2 ? H.luz : H.base); pinta(g, x + 1, y, (y + fase) % 2 ? H.sombra : H.luz); };
+      for (let y = 4; y <= 16; y++) for (let x = 0; x < N; x++) {
+        if (!g[y][x] || !(g[y][x] === H.base || g[y][x] === H.sombra || g[y][x] === H.funda)) continue;
+        const k = ((x - CX) % 3 + 3) % 3; // (as fileiras: 2 de trança e 1 de sulco)
+        g[y][x] = k === 2 ? H.funda : k === 0 ? ((y + x) % 2 ? H.luz : H.base) : ((y + x) % 2 ? H.sombra : H.luz);
+      }
+      // as tranças soltas: 3 de cada lado, com 1 pixel de vão, descendo até os ombros (a de fora mais comprida)
+      const w0 = larg(20);
+      for (const lado of [-1, 1]) for (let k = 0; k < 3; k++) {
+        const x = lado < 0 ? CX - w0 - 3 + k * 3 - 3 : CX + w0 - 1 + 3 - k * 3, fim = 33 + (2 - k) * 3;
+        for (let y = 14 + k; y <= fim; y++) tranca(x, y, k);
+        pinta(g, x, fim + 1, "#e2b84a"); pinta(g, x + 1, fim + 1, "#b38a2a"); // a conta
+      }
       return;
+    }
     default: // "curto"
       massa(6, 15, 1, 21); sombraTesta(15);
       linha(g, 5, CX - 4, CX + 3, H.base);
@@ -283,8 +298,61 @@ export function montar(t, op = {}) {
   cabelo(g, t, cor, P);
   if (t.oculos) oculos(g);
   if (t.brinco) brinco(g, t);
-  contorno(g);
+  if (!op.semContorno) contorno(g);
   return g;
+}
+// ---------- o piloto de corpo inteiro (2026-11-25, o Thiago: "enquanto eu estiver fazendo o piloto na carreira, ele deve aparecer em pé, inteiro,
+// do lado direito") ----------
+// A cabeça é a do retrato (as mesmas peças, linhas 0 a 39); embaixo, numa grade de 48×116: a balaclava, o macacão na cor da equipe (luz à
+// esquerda, sombra à direita, faixa branca nas laterais do tronco e das pernas, patrocínios no peito, zíper e cinto), os braços com as luvas e as
+// pernas com as botas. O contorno escuro sai em volta de tudo, como no retrato.
+export const ALTURA_INTEIRO = 116;
+export function montarInteiro(t, op = {}) {
+  const H = ALTURA_INTEIRO, g = Array.from({ length: H }, () => new Array(N).fill(null)), cabeca = montar(t, { ...op, semContorno: true });
+  for (let y = 0; y < 40; y++) for (let x = 0; x < N; x++) g[y][x] = cabeca[y][x];
+  const P = (x, y, c) => { if (c && x >= 0 && x < N && y >= 0 && y < H) g[y][x] = c; }, L = (y, a, b, c) => { for (let x = a; x <= b; x++) P(x, y, c); };
+  const c = tons(op.cor || "#3a6fd0"), bal = tons("#2a2c33"), branco = "#eef0f2", luva = tons("#23252c"), bota = tons("#1c1d22");
+  for (let y = 38; y <= 41; y++) L(y, CX - (y === 38 ? 7 : 8), CX + (y === 38 ? 6 : 7), y === 38 ? bal.luz : bal.base); // a balaclava
+  // o tronco
+  const meiaT = (y) => (y <= 41 ? 12 : y <= 45 ? 16 : y <= 62 ? 13 : 12); // (os ombros largos até a linha 45; dali o braço se solta do tronco)
+  for (let y = 40; y <= 73; y++) { const w = meiaT(y); for (let dx = 0; dx < w; dx++) {
+    P(CX - 1 - dx, y, dx >= w - 2 ? c.sombra : dx >= w - 5 ? c.luz : c.base);
+    P(CX + dx, y, dx >= w - 2 ? c.funda : dx >= w - 6 ? c.sombra : c.base);
+  } }
+  L(42, CX - 9, CX - 7, c.funda); L(42, CX + 6, CX + 8, c.funda); // a gola do macacão
+  for (let y = 42; y <= 71; y++) { P(CX - 1, y, c.sombra); P(CX, y, c.funda); } // o zíper
+  for (let y = 46; y <= 71; y++) { P(CX - 11, y, branco); P(CX + 10, y, mistura(branco, c.funda, 0.35)); } // a faixa branca das laterais
+  for (const [a, b] of [[CX - 9, CX - 4], [CX + 3, CX + 8]]) { L(48, a, b, branco); L(49, a, b, branco); } // os patrocínios do peito
+  L(53, CX - 8, CX - 5, branco); L(53, CX + 4, CX + 7, mistura(branco, c.base, 0.3));
+  for (let y = 71; y <= 73; y++) L(y, CX - 12, CX + 11, y === 71 ? c.funda : bal.base); L(72, CX - 2, CX + 1, "#9aa0a8"); // o cinto e a fivela
+  // os braços e as luvas
+  for (let y = 43; y <= 77; y++) { for (let k = 0; k < 4; k++) { P(CX - 19 + k, y, k === 0 ? c.sombra : k === 3 ? c.base : c.luz); P(CX + 15 + k, y, k === 3 ? c.funda : c.sombra); } }
+  for (let y = 46; y <= 76; y++) { P(CX - 18, y, branco); } // (a faixa do braço esquerdo)
+  L(77, CX - 20, CX - 15, c.funda); L(77, CX + 14, CX + 19, c.funda); // o punho
+  for (let y = 78; y <= 82; y++) { L(y, CX - 20, CX - 15, y === 82 ? luva.sombra : luva.base); L(y, CX + 14, CX + 19, y === 82 ? luva.funda : luva.sombra); P(CX - 19, y, luva.luz); }
+  // as pernas
+  for (let y = 74; y <= 107; y++) {
+    const fora = y > 96 ? 1 : 0, vao = y >= 80;
+    for (let x = CX - 12 + fora; x <= CX + 11 - fora; x++) { if (vao && (x === CX - 1 || x === CX)) continue;
+      const esq = x < CX; P(x, y, esq ? (x <= CX - 11 + fora ? c.sombra : x <= CX - 8 ? c.luz : c.base) : (x >= CX + 10 - fora ? c.funda : x >= CX + 6 ? c.sombra : c.base)); }
+    P(CX - 11 + fora, y, branco); P(CX + 10 - fora, y, mistura(branco, c.funda, 0.35)); // a faixa branca
+    if (y === 90) { L(y, CX - 9, CX - 4, c.sombra); L(y, CX + 3, CX + 8, c.funda); } // os joelhos
+  }
+  // as botas
+  for (let y = 108; y <= 114; y++) { L(y, CX - 13, CX - 2, y === 108 ? c.funda : y === 114 ? "#3a3d45" : bota.base); L(y, CX + 1, CX + 12, y === 108 ? c.funda : y === 114 ? "#3a3d45" : bota.sombra); }
+  L(110, CX - 12, CX - 9, bota.luz);
+  const fora = []; for (let y = 0; y < H; y++) for (let x = 0; x < N; x++) if (!g[y][x] && ((g[y - 1] && g[y - 1][x]) || (g[y + 1] && g[y + 1][x]) || g[y][x - 1] || g[y][x + 1])) fora.push([x, y]);
+  for (const [x, y] of fora) g[y][x] = CONTORNO;
+  return g;
+}
+export function retratoInteiro(t, op = {}) {
+  const chave = JSON.stringify(["inteiro", t, op.cor || "", op.escala || 4]);
+  if (CACHE.has(chave)) return CACHE.get(chave);
+  if (typeof document === "undefined") return "";
+  const e = op.escala || 4, H = ALTURA_INTEIRO, cv = document.createElement("canvas"); cv.width = N * e; cv.height = H * e;
+  const x = cv.getContext("2d"), g = montarInteiro(t, op);
+  for (let y = 0; y < H; y++) for (let k = 0; k < N; k++) if (g[y][k]) { x.fillStyle = g[y][k]; x.fillRect(k * e, y * e, e, e); }
+  const url = cv.toDataURL("image/png"); CACHE.set(chave, url); return url;
 }
 // a imagem (data URL) do retrato, guardada por combinação; `fundo` pinta o quadrado inteiro atrás (sem fundo, transparente)
 const CACHE = new Map();

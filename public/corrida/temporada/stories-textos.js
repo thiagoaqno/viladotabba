@@ -5,6 +5,15 @@
 (function (root) {
 "use strict";
 const T = {
+  // (2026-11-25, com os retratos em pixel art: o pódio do GP e a pole) {vencedor} {segundo} {terceiro} {piloto} {gp}
+  podio_gp: {
+    t: ["O pódio do {gp}", "Os três do {gp}", "Champanhe no {gp}", "Quem subiu no {gp}", "O {gp} em três degraus", "Pódio formado no {gp}"],
+    s: ["{vencedor} no topo, {segundo} e {terceiro} ao lado.", "{vencedor} venceu; {segundo} e {terceiro} completam o pódio.", "Vitória de {vencedor}, com {segundo} em segundo e {terceiro} em terceiro.", "{vencedor} levou, {segundo} e {terceiro} brindaram junto."],
+  },
+  pole: {
+    t: ["Pole de {piloto}", "{piloto} larga na frente no {gp}", "A pole do {gp} é de {piloto}", "{piloto} cravou a pole", "Ninguém foi mais rápido que {piloto}"],
+    s: ["A primeira posição do grid foi dele.", "Largou na frente de todo mundo no {gp}.", "Na classificação, ninguém chegou perto.", "A pole que abriu o fim de semana."],
+  },
   vitoria: {
     t: ["Vitória no {gp}!", "Você venceu o {gp}", "Ninguém segurou você no {gp}", "Bandeirada sua no {gp}", "O {gp} é seu", "Primeiro lugar no {gp}",
       "Que corrida! Vitória no {gp}", "Topo do pódio no {gp}", "O {gp} tem dono", "Champanhe no {gp}", "Show no {gp}: vitória", "Vencedor do {gp}"],

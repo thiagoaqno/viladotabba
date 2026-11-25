@@ -1,7 +1,7 @@
 {
-  "_": "Uma voz de rádio por tipo de arma principal da classe (WEAPONS[classe.primary].cat no jogo). A 'padrao' fica na pasta tiro-vozes/ e vale para fuzil de assalto, pistola e o que não tiver voz própria; as outras ficam em tiro-vozes/<grupo>/ e viram um pacote separado (sfx/voix_<grupo>.js), baixado só quando alguém usa aquela classe.",
-  "padrao": { "voz": "oCWW6YTSEVFt26dBO8vU", "armas": "fuzis de assalto (classe Assalto)" },
-  "smg": { "voz": "cPoqAvGWCPfCfyPMwe4z", "armas": "submetralhadoras (classe Faxineiro)" },
-  "sniper": { "voz": "Bj9UqZbhQsanLzgalpEG", "armas": "fuzis de precisão (classe Atirador)" },
-  "shotgun": { "voz": "jqcCZkN6Knx8BJ5TBdYR", "armas": "escopetas (classe Arrombador)" }
+  "_": "As vozes do narrador (o rádio). Quem joga escolhe em Opções > Áudio > Voz do narrador (o 'nome' é o que aparece lá; dá para trocar aqui e rodar ferramentas/tiro-frontline.js de novo), ou 'Pela classe da arma': aí vale o tipo da arma principal da classe (WEAPONS[classe.primary].cat), que é a chave de cada voz. A 'padrao' fica na pasta tiro-vozes/ e é a de começo; as outras ficam em tiro-vozes/<chave>/ e viram um pacote separado (sfx/voix_<chave>.js), baixado só quando alguém escolhe aquela voz.",
+  "padrao": { "voz": "oCWW6YTSEVFt26dBO8vU", "nome": "Narrador 1", "armas": "fuzis de assalto (classe Assalto)" },
+  "smg": { "voz": "cPoqAvGWCPfCfyPMwe4z", "nome": "Narrador 2", "armas": "submetralhadoras (classe Faxineiro)" },
+  "sniper": { "voz": "Bj9UqZbhQsanLzgalpEG", "nome": "Narrador 3", "armas": "fuzis de precisão (classe Atirador)" },
+  "shotgun": { "voz": "jqcCZkN6Knx8BJ5TBdYR", "nome": "Narrador 4", "armas": "escopetas (classe Arrombador)" }
 }

@@ -1,23 +1,20 @@
-# Tiro da Galera: trocar de equipe direto no salão
+# Tiro da Galera: cada um escolhe a voz do narrador
 
-O Thiago pediu para dar para trocar de equipe no salão. O jogo já deixava, mas o botão ficava escondido: era preciso clicar no
-próprio nome na lista de jogadores.
+O Thiago preferiu que cada jogador escolha a voz do narrador, em vez de ela depender da classe.
 
 ## O que mudou
 
-- **Botão "Trocar de equipe" à vista no salão,** logo abaixo de "Editar a classe". Ele diz em que equipe você está ("Você está
-  na Alpha. Passa você para a Bravo").
-  - Vale para quem criou o salão e para quem entrou.
-  - Aparece só em modo de equipe (mata-mata em equipe e dominação) e enquanto o salão espera a partida.
-  - O dono continua podendo mudar os outros pelo nome deles na lista.
-  - É feito por `ferramentas/tiro-frontline.js`, só no salão de amigos.
-- **Entrar pelo código ficou mais rápido.** O jogo tenta primeiro um "salão permanente" do servidor original
-  (`/tiro/rele/serveur/...`), que aqui não existe, e esperava ~1 s até desistir. Agora o relé responde "não existe" (4004) na
-  hora, e o jogo cai direto no salão de amigos.
+- **Opções > Áudio > "Voz do narrador"**, logo acima de "Volume da voz do rádio": Narrador 1, 2, 3 ou 4, ou "Pela classe da
+  arma", que é o jeito de antes. O padrão é o Narrador 1.
+- **Os nomes** vêm do campo `nome` de `ferramentas/tiro-vozes/vozes.json`: dá para trocar ali e rodar o
+  `ferramentas/tiro-frontline.js` de novo.
+- **O pacote da voz escolhida** só é baixado quando ela é escolhida (ou ao nascer, no modo "pela classe"). Até chegar, o anúncio
+  sai no Narrador 1.
+- **A escolha fica nos ajustes** (`dc_settings.vozNarr`), então vai junto com o perfil da Vila.
 
-## Conferido no navegador, com dois jogadores pelo relé
+## Conferido no navegador
 
-- O dono criou o salão, viu o botão e passou da Alpha para a Bravo.
-- O convidado entrou pelo código, pelo relé do nosso servidor: é o primeiro teste do online de ponta a ponta no jogo de verdade.
-- O convidado trocou da Alpha para a Bravo, e o dono viu os dois na Bravo.
-- Depois do ajuste no relé, o convidado entra em 77 ms.
+- O seletor apareceu na aba Áudio, começando no Narrador 1.
+- Escolhendo o Narrador 3, o pacote dele carregou e o anúncio passou a sair nele (`vp_uav_on`).
+- O Narrador 1 usa a voz padrão (`v_uav_on`).
+- "Pela classe" com a classe Assalto (M4) cai na voz padrão, como antes.

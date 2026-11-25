@@ -1,27 +1,27 @@
-# Volante e painel personalizáveis
+# Tiro da Galera novo (fase 1): o Riposte: Frontline no lugar do tiro antigo
 
-O Thiago pediu que os volantes e painéis dos carros fossem personalizáveis.
+O Thiago pediu para trocar o tiro da Vila pelo Riposte: Frontline (github.com/BenDBSS/Riposte-Frontline-Source), um FPS completo
+no navegador com código MIT.
 
-## O que dá para escolher (no seu carro, visto no cockpit)
+## O que mudou
 
-- **A tela do volante, em 5 modelos:**
-  - **F1 2026:** a de antes.
-  - **Clássico:** a marcha no meio, a velocidade embaixo e o ERS em segmentos.
-  - **Minimalista:** só a marcha, enorme.
-  - **Retrô:** o conta-giros de ponteiro, com a faixa vermelha.
-  - **Neon:** magenta e ciano, com brilho.
-- **As luzes de troca:** F1 (verde, vermelho, azul), azul, âmbar, arco-íris ou na cor da equipe.
-- **O punho do volante:** carbono (o de fábrica), alcântara, vermelho ou na cor da equipe.
+- **`/tiro/`** agora é o jogo novo, montado por `ferramentas/tiro-frontline.js` a partir da pasta `dist/` deles.
+- **`/tiro-antigo/`** guarda o tiro de antes (ele continua usando o canal `/tiro` do servidor).
+- Na Vila, o card do tiro ganhou a descrição nova.
 
-## Como
+## O que o script troca (o que não é MIT, pelo NOTICE.md deles)
 
-- **`f1.js`:**
-  - `ESTILOS_VOLANTE` traz as opções, e `lerEstiloVolante`/`gravarEstiloVolante` guardam a escolha neste navegador.
-  - `desenharTelaEm` desenha a tela de cada modelo, num canvas de 256×144.
-  - As luzes pintam pelo esquema escolhido, e o punho tinge o material do volante.
-  - Tudo é lido a cada quadro, então muda na hora, também no meio da corrida.
-- **`volante-ui.js` (novo):** a seção "Volante e painel" na gaveta da sala, com a prévia da tela e as opções. A prévia se redesenha a cada clique.
+- O nome vira **Tiro da Galera**, com um logo e um fundo de menu nossos. Ícones, capa, `deck/`, manifest e service worker ficam de fora.
+- **Sem músicas:** as do menu, de subida de nível, de vitória e de derrota eram do Suno, só para uso não comercial.
+- **Som de acerto:** um clique gerado pelo script, no lugar do sample do flashkit.
+- **Contas desligadas:** a API de contas deles não existe aqui, e `/api/` é da Vila.
+- **A CSP com hashes saiu,** porque os scripts mudaram.
+- Os créditos e a licença MIT ficam em `public/tiro/CREDITOS.txt`.
 
-## Conferido
+## O que fica para depois
 
-A página carrega sem erros, e desenhei as telas fora do jogo. Não vi o volante no cockpit numa corrida.
+- **Fase 2:** o online pelo nosso servidor. Hoje o online liga navegador com navegador pelo PeerJS. O jogo já tem um modo de
+  relé por WebSocket (`meta cod-relay`, rotas `/room/` e `/serveur/`) que dá para implementar no nosso servidor.
+- **Fase 3:** as animações dos soldados ainda são as deles, feitas no Mixamo. Elas precisam ser refeitas pela nossa conta
+  (`ferramentas/animacoes-mixamo.mjs`). O jogo abre em inglês ou francês; falta o português.
+- Os testes do tiro antigo (`salas.spec.js`) foram apagados.

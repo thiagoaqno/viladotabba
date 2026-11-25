@@ -165,6 +165,16 @@ h = troca(h, "sfxPlay('r_off',o,end+0.04,{gain:0.5})", `sfxPlay('r_off',o,end+0.
   console.log("     1× botão de equipe no salão");
 }
 
+// sombras mais baratas: as duas faixas de longe (CSM, cascatas 1 e 2) já são redesenhadas em quadros alternados, mas o jogo
+// forçava o redesenho delas sempre que a câmera girava 1,5° ou andava 0,3 m desde o último, ou seja, quase todo quadro de um FPS.
+// Agora só a faixa de perto segue essa regra; as de longe só são forçadas num giro de 11° ou 2 m (fora isso, no máximo 2 quadros
+// de atraso), e cada uma é redesenhada a cada 4 quadros em vez de 2 (ainda alternadas). Simulado: de 2 a 3 passadas de sombra por
+// quadro para 1,5 (ferramentas: a regra do updateShadows). Medido no PC do Thiago (RTX 2060, Edge): com sombras, 402 chamadas de desenho e 13,4 ms de processador por quadro.
+h = troca(h, "maxTurn:Math.cos(0.026/2),maxMove:0.3};", "maxTurn:Math.cos(0.026/2),maxMove:0.3,maxTurnFar:Math.cos(0.2/2),maxMoveFar:2};", { nome: "sombras de longe (limites)" });
+h = troca(h, "due=(i===0?S.frame%k===0:(S.frame+i*k)%(2*k)===0)||moved", "due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||moved", { nome: "sombras de longe a cada 4 quadros" });
+h = troca(h, "const moved=Math.abs(S.q[i].dot(camera.quaternion))<S.maxTurn||S.p[i].distanceToSquared(camera.position)>S.maxMove*S.maxMove;",
+  "const mt=i===0?S.maxTurn:S.maxTurnFar,mm=i===0?S.maxMove:S.maxMoveFar;const moved=Math.abs(S.q[i].dot(camera.quaternion))<mt||S.p[i].distanceToSquared(camera.position)>mm*mm;", { nome: "sombras de longe (regra)" });
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

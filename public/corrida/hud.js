@@ -8,6 +8,7 @@ import { drawItemHud } from "./itens.js";
 import { clima } from "./clima.js";
 import { set, montarCentro, atualizarCentro, montarTempo, atualizarTempo, estrategia, minimapaF1, minimapaPertoF1, desenharBanner, montarCrono, desenharCrono } from "./hud-painel.js";
 import { montarMfd, atualizarMfd, acoes } from "./mfd.js";
+import { hudTv } from "./hud-tv.js";
 import { atualizarMenuBox } from "./box-menu.js";
 import { tocarCinematica } from "./cinematica.js";
 const cine = { chave: null, tocando: false };
@@ -257,7 +258,7 @@ function desenharAvisos() {
 }
 // (2026-11-24, o Thiago: "só aparece a distância do 2º para o 1º, e uma vez por corrida") o card de distância é do SEU carro, em qualquer posição:
 // a diferença para o carro da frente (ou, liderando, para o de trás), 3 vezes por corrida, quando você completa 1/4, 2/4 e 3/4 das voltas.
-// Fica 6 s na tela, com o número ao vivo. O texto: sigla|equipe da frente|sigla|equipe de trás|segundos|posição|posição|legenda
+// Fica 6 s na tela, com o número do momento em que abriu. O texto: sigla|equipe da frente|sigla|equipe de trás|segundos|posição|posição|legenda
 function gapF1(linhas, cors, m, cron, agoraS) {
   const f = filaAvisos(), S = E.S, HM = window.HudMfd, agora = Date.now();
   if (!S || S.phase !== "race" || !HM || !m || !m.started || m.dnf || m.finish != null) { f.remover("batalha", agora); race.gapAte = 0; return; }
@@ -267,7 +268,7 @@ function gapF1(linhas, cors, m, cron, agoraS) {
     race.gapAlvos = [...new Set([1, 2, 3].map((k) => Math.max(1, Math.round((n * k) / 4))))].filter((v) => v < n);
   }
   const v = m.laps || 0;
-  if (v !== race.gapVolta && race.gapAlvos.includes(v)) { race.gapVolta = v; race.gapAte = agora + 6000; }
+  if (v !== race.gapVolta && race.gapAlvos.includes(v)) { race.gapVolta = v; race.gapAte = agora + 6000; race.gapTexto = null; }
   if (agora >= (race.gapAte || 0)) { f.remover("batalha", agora); return; }
   const iv = HM.intervalos(cors, m.id, race.hudEsc, 22, cron, agoraS), porId = new Map(linhas.map((l) => [l.id, l])), eu = porId.get(m.id);
   let a = null, b = null, seg = null;
@@ -275,7 +276,10 @@ function gapF1(linhas, cors, m, cron, agoraS) {
   else if (iv.tras && iv.tras.seg != null && porId.get(iv.tras.id)) { a = eu; b = porId.get(iv.tras.id); seg = iv.tras.seg; }
   if (!a || !b) return;
   const texto = [a.sigla, a.equipe, b.sigla, b.equipe, seg.toFixed(3), a.pos, b.pos, a === eu ? "Gap to car behind" : "Gap to car ahead"].join("|");
-  f.empurrar({ chave: "batalha", tipo: "batalha", texto, fixo: true }, agora);
+  // (2026-11-25, o Thiago: "o card do carro da frente fica atualizando a cada segundo; deve ser fixo no momento que ele saiu") a diferença é a do
+  // momento em que o card abre e fica assim os 6 s
+  if (!race.gapTexto) race.gapTexto = texto;
+  f.empurrar({ chave: "batalha", tipo: "batalha", texto: race.gapTexto, fixo: true }, agora);
 }
 // o que vira aviso a cada quadro: as linhas novas do log da direção de prova, o DRS liberado, a volta mais rápida, a largada e a bandeirada
 function avisosF1(m, left, now) {
@@ -496,6 +500,8 @@ function hudF1(m, st, now) {
   if (carga > (race.hudCargaAnt == null ? carga : race.hudCargaAnt) + 0.0004) race.hudHarv = t0; race.hudCargaAnt = carga; // recarregando (frear ou tirar o pé)
   const modoErs = HM.modoDoErs({ ativo: !!race.ersAtivo, carga, subindo: t0 - (race.hudHarv || -1e9) < 400 });
   atualizarCentro({ m, kmh, modoErs });
+  // o estilo "Transmissão (TV)" (hud-tv.js): a batalha dentro da torre, o cartão do piloto, o novo líder e a caixa de marcha
+  hudTv({ linhas, ver, m, fase: E.S.phase, batalha: (filaAvisos().visiveis(Date.now()).find((a) => a.tipo === "batalha") || {}).texto || null, kmh, marcha: !m ? "" : (kmh < 1 && !race.marcha ? "N" : race.marcha || 1), carga, ersAtivo: !!race.ersAtivo });
   atualizarTempo(m, st, now); // o quadro do alto à direita (setores, posição, volta atual, melhor)
   // o MFD e as punições
   const est = estrategia(m, cors, race.hudEsc);

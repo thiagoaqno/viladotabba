@@ -6,7 +6,7 @@ const CHAVE = "corrida:hud-estilo";
 // os estilos (Configurações > Geral): "classico" é o da transmissão da F1 (o novo: torre, setores e o mostrador) e "telemetria" o
 // mostrador alternativo
 // "compacto": o do novo, mas com o painel pequeno do canto (bateria e velocidade: hud-painel.js, #hDentro) em qualquer câmera
-export const ESTILOS_HUD = [["classico", "Novo (F1)"], ["compacto", "Compacto"], ["telemetria", "Telemetria"]]; // (o "antigo", os painéis de antes do estilo F1, saiu: pedido do Thiago, 2026-11-11)
+export const ESTILOS_HUD = [["classico", "Novo (F1)"], ["compacto", "Compacto"], ["telemetria", "Telemetria"], ["tv", "Transmissão (TV)"]]; // ("tv": hud-tv.js, a torre e a caixa de marcha da transmissão do jogo da F1) // (o "antigo", os painéis de antes do estilo F1, saiu: pedido do Thiago, 2026-11-11)
 let estilo = "classico";
 try { const v = store.get(CHAVE); if (ESTILOS_HUD.some(([k]) => k === v)) estilo = v; } catch (_) {}
 export const estiloHud = () => estilo;
@@ -14,6 +14,7 @@ export function definirEstiloHud(valor) {
   estilo = ESTILOS_HUD.some(([k]) => k === valor) ? valor : "classico";
   try { store.set(CHAVE, estilo); } catch (_) {}
   document.getElementById("race")?.classList.toggle("hud-telemetria", estilo === "telemetria");
+  document.getElementById("race")?.classList.toggle("hud-tv", estilo === "tv");
   window.dispatchEvent(new Event("hud:estilo"));
 }
 export function htmlHudTelemetria() { return `<div class="hud-tele" aria-label="Velocidade, marcha, bateria, freio e acelerador">
@@ -47,7 +48,7 @@ const centro = new THREE.Vector3(), esquerda = new THREE.Vector3(), direita = ne
 export function posicionarHudNoHalo(el, kart, camera, modo, area) {
   if (el) el.style.visibility = estilo === "classico" && modo === "cockpit" ? "hidden" : ""; // na primeira pessoa, o volante já mostra marcha e velocidade: o velocímetro clássico some (na T-cam, "onboard", fica)
   const ref = kart?.kt?.modelo?.dados?.haloReferencia, carro = kart?.kt?.carro;
-  if (!el || !area || !ref || !carro || estilo !== "telemetria" || (modo !== "cockpit" && modo !== "onboard")) { el?.classList.remove("ancorado"); return; }
+  if (!el || !area || !ref || !carro || estilo !== "telemetria" || (modo !== "cockpit" && modo !== "onboard" && modo !== "f1")) { el?.classList.remove("ancorado"); return; }
   const w = area.clientWidth, h = area.clientHeight; if (!w || !h) { el.classList.remove("ancorado"); return; }
   carro.updateWorldMatrix(true, false); camera.updateMatrixWorld();
   const projetar = (v, x, y, z) => v.set(x, y, z).applyMatrix4(carro.matrixWorld).project(camera);

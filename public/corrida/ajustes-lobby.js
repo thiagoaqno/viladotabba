@@ -33,7 +33,7 @@ function iniciar() {
   return true;
 }
 // (2026-11-21, a sala nova: a etapa Piloto) a câmera e o estilo do HUD em botões, no lugar das listas (as listas continuam escondidas: o resto lê delas)
-const CURTO = { cockpit: "Cockpit", onboard: "Onboard T-cam", bico: "Bico", perto: "Perseguição próxima", longe: "Perseguição afastada", cima: "Aérea", tv: "TV" };
+const CURTO = { cockpit: "Cockpit", onboard: "Onboard T-cam", f1: "F1", bico: "Bico", perto: "Perseguição próxima", longe: "Perseguição afastada", cima: "Aérea", tv: "TV" };
 function botoes() {
   const cams = $("#sfCams"), huds = $("#sfHuds");
   if (cams) cams.innerHTML = EDITAVEIS.map(k => `<button type="button" class="sf-cam ${k === modo ? "on" : ""}" data-cam="${k}" aria-pressed="${k === modo}" title="${NOMES[k] || k}"><i class="sf-ico ico-cam-${k}" aria-hidden="true"></i><span>${CURTO[k] || NOMES[k] || k}</span></button>`).join("");
@@ -80,12 +80,12 @@ function quadro() {
   if (modo === "cockpit") camera.position.set(0, eye.y * scale + 1.5 + a.y * 10, eye.z * scale - a.z * 10);
   // a T-cam e o bico na MESMA conta da corrida (cameras.js): a posição medida no modelo (medidas: em cima da entrada de ar, e logo atrás da ponta do nariz)
   // vezes o tamanho do carro, e o ajuste do jogador em metros × KS (antes a prévia usava 1,1 m e -0,3 m fixos e multiplicava o ajuste pelo tamanho do carro)
-  else if (modo === "onboard" || modo === "bico") { const M = medidas(kart)[modo === "onboard" ? "tcam" : "bico"]; camera.position.set(0, M.y * scale + a.y * 10, -(M.f * scale) - a.z * 10); }
+  else if (modo === "onboard" || modo === "f1" || modo === "bico") { const M = medidas(kart)[modo === "bico" ? "bico" : "tcam"]; camera.position.set(0, M.y * scale + a.y * 10, -(M.f * scale) - a.z * 10); }
   else camera.position.set(0, (modo === "perto" ? 15 : 29) + a.y * 10, (modo === "perto" ? 52 : 98) + a.z * 10);
   camera.position.x = a.x * 10; camera.fov = a.fov;
   // Mesma mira da corrida em pista plana e com o carro parado; o tremor depende da velocidade.
   const fora = modo === "perto" || modo === "longe", distancia = fora ? (modo === "perto" ? 60 : 85) : 70;
-  const alvoY = fora ? 4 : modo === "cockpit" ? eye.y * scale * 0.5 - (kart.kt.olhoBaixo || 0) * 70 : (modo === "onboard" ? medidas(kart).tcam.y * scale * 0.42 : medidas(kart).bico.y * scale * 0.6);
+  const alvoY = fora ? 4 : modo === "cockpit" ? eye.y * scale * 0.5 - (kart.kt.olhoBaixo || 0) * 70 : (modo === "onboard" || modo === "f1" ? medidas(kart).tcam.y * scale * 0.42 : medidas(kart).bico.y * scale * 0.6);
   camera.lookAt(camera.position.x, alvoY + Math.tan(a.incl * Math.PI / 180) * distancia, fora ? -distancia : camera.position.z - distancia); camera.updateProjectionMatrix();
   posicionarHudNoHalo(host.querySelector(".hud-tele"), kart, camera, modo, host);
   quadroEspelhosPreview(kart, renderer, cena); renderer.render(cena, camera);

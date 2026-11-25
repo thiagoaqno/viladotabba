@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { renderer, scene } from "./cena.js";
 import { graficos } from "./qualidade.js";
 
-const L = 512, A = 84, ALCANCE = 550, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]);
+const L = 512, A = 84, ALCANCE = 550, DE_DENTRO = new Set(["cockpit", "onboard", "f1", "bico"]);
 let ultimoDesenho = 0, rt = null, camTras = null, cenaQuadro = null, camQuadro = null, molde = null, contador = 0, medidas = null;
 const v = new THREE.Vector3(), d = new THREE.Vector3(), cima = new THREE.Vector3(), tam = new THREE.Vector2();
 

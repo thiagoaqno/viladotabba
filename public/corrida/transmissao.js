@@ -10,6 +10,7 @@ import { E, PISTAS, $, sNow, me, act } from "./estado.js";
 import { transicaoF1 } from "./transicao-f1.js";
 import { cargaAberta } from "./carregando.js";
 import { DESTAQUES, cameraDestaque } from "./destaques-tv.js";
+import { retratoDoJogador } from "./pixel-piloto.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const lim = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), suave = (x) => x * x * (3 - 2 * x);
@@ -214,11 +215,33 @@ function cartaCampeonato(S) {
   return `<div class="tvCarta tvCamp" data-b="camp"><div class="tvKicker">Campeonato · após ${d.gp - 1} GP${d.gp - 1 > 1 ? "s" : ""}</div>
     <div class="tvDuas"><div><h3>Pilotos</h3><ol>${d.pilotos.map((p) => linha(p, "p")).join("")}</ol></div><div><h3>Equipes</h3><ol>${d.equipes.map((p) => linha(p, "e")).join("")}</ol></div></div></div>`;
 }
+// (2026-11-25, o Thiago: "durante a apresentação da pista, exibir de 2 em 2 a ordem dos pilotos com os cards deles e nome"; depois, com o print do
+// "Starting grid" da transmissão do jogo da F1) o grid num painel de tela cheia: a fila da vez nos dois lados (a posição enorme, o retrato em pixel
+// art grande, o nome, o logo da equipe e, se houve classificação, o tempo e a diferença para a pole), e no meio o grid em zigue-zague sendo
+// preenchido da pole para trás, com a sigla de cada um na cor da equipe
+function paresDoGrid(S) { const l = [...S.players].filter((p) => p.grid != null && !p.dnf).sort((a, b) => a.grid - b.grid), r = []; for (let i = 0; i < l.length; i += 2) r.push(l.slice(i, i + 2)); return r; }
+const siglaDe = (p) => p.sigla || (window.HudTorre && window.HudTorre.siglaDe ? window.HudTorre.siglaDe(p) : String(p.name || "?").slice(0, 3).toUpperCase());
+function temposDaQuali(S) { const t = new Map(); for (const x of (S.quali && S.quali.tabela) || []) if (x.tempo > 0) t.set(x.id, x.tempo); return t; }
+function ladoDoGrid(p, tempos) {
+  const eq = equipeDe(p.equipe), cor = corDe(p), nome = String(p.nomeCompleto || p.name || "").trim().split(/s+/), sobrenome = nome.length > 1 ? nome.slice(1).join(" ") : nome[0];
+  const logo = p.equipe && window.EQUIPES_F1 && window.EQUIPES_F1[p.equipe] && window.EQUIPES_F1[p.equipe].arquivo ? `<img class="tgpLogo" src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(p.equipe)}" alt="${esc((eq && eq.nome) || "")}">` : "";
+  const t = tempos.get(p.id), pole = tempos.size ? Math.min(...tempos.values()) : null;
+  const tempoHTML = t ? `<span class="tgpTempo">${tempo(t)}${pole && t > pole ? ` <i>+${(t - pole).toFixed(3)}</i>` : ""}</span>` : "";
+  const eu = me() && p.id === me().id;
+  return `<div class="tgpPiloto${eu ? " eu" : ""}" style="--c:${cor}"><b class="tgpOrd">${p.grid + 1}<sup>º</sup></b><img class="tgpFoto" src="${retratoDoJogador(p, cor)}" alt="">
+    <div class="tgpNome">${logo}<div><small>${esc(nome.length > 1 ? nome[0] : "")}</small><strong>${esc(sobrenome.toUpperCase())}</strong>${tempoHTML}</div></div></div>`;
+}
+// o meio: as posições em zigue-zague (ímpares à esquerda, pares à direita e um pouco abaixo); até `ate` com a sigla, o resto só com o número
+function meioDoGrid(lista, ate) {
+  const n = lista.length, ini = Math.max(0, Math.min(n - 10, ate - 6)), fim = Math.min(n, ini + 10);
+  let h = "";
+  for (let k = ini; k < fim; k++) { const p = lista[k], vis = k <= ate; h += `<div class="tgpVaga ${k % 2 ? "dir" : "esq"}${vis ? " vis" : ""}${k >= ate - 1 && k <= ate ? " agora" : ""}" style="--c:${corDe(p)}"><small>${k + 1}</small><b>${vis ? esc(siglaDe(p)) : ""}</b></div>`; }
+  return h;
+}
 function cartaGrid(S) {
-  const eu = me(), lista = [...S.players].sort((a, b) => a.grid - b.grid);
-  const linha = (p) => `<li class="${p.grid === 0 ? "pole" : ""}${eu && p.id === eu.id ? " eu" : ""}" style="--c:${corDe(p)}"><b>${p.grid + 1}</b><span>${esc(p.nomeCompleto || p.name)}</span><em>${esc(p.grid === 0 ? "POLE" : (equipeDe(p.equipe) || {}).sigla || "")}</em></li>`;
-  const meio = Math.ceil(lista.length / 2);
-  return `<div class="tvCarta tvGrid" data-b="grid"><div class="tvKicker">Grid de largada</div><div class="tvDuas"><ol>${lista.slice(0, meio).map(linha).join("")}</ol><ol start="${meio + 1}">${lista.slice(meio).map(linha).join("")}</ol></div></div>`;
+  const ano = (S.config && S.config.ano) || 2026;
+  return `<div class="tvCarta tvGridP" data-b="grid"><div class="tgpGP">Fórmula 1 · ${esc(PISTAS[S.config.pista]?.name || "")} ${ano}</div><h2 class="tgpTit">Grid de largada</h2>
+    <div class="tgpLado esq"></div><div class="tgpMeio"></div><div class="tgpLado dir"></div></div>`;
 }
 // o traçado no minimapa (a mesma largura em todo circuito) e os pontos de DRS em verde
 function desenharMini(cv, tr) {
@@ -234,7 +257,7 @@ function desenharMini(cv, tr) {
 }
 
 // ---------- a sequência ----------
-const BASE = { pista: 9.5, clima: 4, camp: 6.5, grid: 5 }; // segundos; encolhem se faltar tempo e o grid pega a sobra
+const BASE = { pista: 6, clima: 2.5, camp: 4.5, grid: 12 }; // segundos; encolhem se faltar tempo e o grid pega a sobra (2026-11-25: o grid subiu de 5 para 12 s, para os pares de cards; a avulsa passou de 8 para 20 s)
 const TITULO = { pista: "O circuito", clima: "O clima", camp: "O campeonato", grid: "O grid de largada" };
 const MIN_S = 7; // com menos que isso para o fim da transmissão, não vale começar
 let ultimo = null;
@@ -271,7 +294,7 @@ function camera(tv, tr, b, u) {
     const P = ponto(tr, n - 55), Q = ponto(tr, n + 5), e = suave(u);
     return { x: P.x - P.tx * (190 - 50 * e) - P.ty * 34, y: P.h + 12 + 85 * e, z: P.y - P.ty * (190 - 50 * e) + P.tx * 34, ax: Q.x, ay: Q.h + 8, az: Q.y, fov: 60 };
   }
-  const f = n - 270 + 280 * u, P = ponto(tr, f), Q = ponto(tr, f + 38); // o grid: no meio das duas filas, da última fila até a pole
+  const f = n - 270 + 280 * (1 - u), P = ponto(tr, f), Q = ponto(tr, f + 38); // o grid: no meio das duas filas, da pole até a última fila (os pares vão na mesma ordem)
   return { x: P.x, y: P.h + 11 + 3 * Math.sin(u * 3), z: P.y, ax: Q.x, ay: Q.h + 5, az: Q.y, fov: 66 };
 }
 // o corte entre os blocos: a varredura de TV (transicao-f1.js; com movimento reduzido a transmissão já foi pulada)
@@ -301,7 +324,7 @@ function iniciar(race, tr, reduzMov) {
   }).catch(() => {});
   let climaF = tr.n * 0.5; // o trecho do bloco do clima: fora de túnel
   for (let k = 0; k < 12; k++) { const f = tr.n * (0.4 + 0.045 * k); if (!tr.coberto || !tr.coberto(Math.floor(f % tr.n)) && !tr.coberto(Math.floor((f + 40) % tr.n))) { climaF = f; break; } }
-  return { el, ini: agora, faixas, total: t, med, desenho, climaF, bloco: "", alvo: [0, 0], voo: montarVoo(tr), reduz: reduzMov };
+  return { el, ini: agora, faixas, total: t, med, desenho, climaF, bloco: "", alvo: [0, 0], voo: montarVoo(tr), reduz: reduzMov, pares: paresDoGrid(S), par: -1 };
 }
 
 // Chamado a cada quadro de `draw` (jogo.js), depois da câmera normal. Põe a câmera da TV por cima, ou deixa a normal.
@@ -328,6 +351,16 @@ export function quadroTV(race, tr, cam, reduzMov) {
     if (window.Narrador) { // o narrador apresenta a pista junto do voo; no grid ele abaixa; as luzes cortam (narrador.js)
       if (f.k === "pista") window.Narrador.falarDaPista(window.Pistas.baseDe(E.S.config.pista), E.S.semente, { cortarEm: race.startAt - ((race.luzes?.espera || 0) + 4) * 1000 - sNow() });
       else if (f.k === "grid") window.Narrador.abaixar(0.3, 0.6);
+    }
+  }
+  if (f.k === "grid" && tv.pares.length) { // os pares, da pole para trás (a última fila fica no fim, parada)
+    const n = tv.pares.length, k = Math.min(n - 1, Math.floor(u * n * 1.08));
+    if (k !== tv.par) {
+      tv.par = k; const par = tv.pares[k], el = tv.el, lista = tv.pares.flat(), tempos = temposDaQuali(E.S);
+      el.querySelector(".tgpLado.esq").innerHTML = par[0] ? ladoDoGrid(par[0], tempos) : "";
+      el.querySelector(".tgpLado.dir").innerHTML = par[1] ? ladoDoGrid(par[1], tempos) : "";
+      el.querySelector(".tgpMeio").innerHTML = meioDoGrid(lista, Math.min(lista.length - 1, k * 2 + 1));
+      for (const l of el.querySelectorAll(".tgpLado")) { l.classList.remove("entra"); void l.offsetWidth; l.classList.add("entra"); }
     }
   }
   const c = camera(tv, tr, f.k, u);

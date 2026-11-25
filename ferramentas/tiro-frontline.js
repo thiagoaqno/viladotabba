@@ -49,43 +49,52 @@ console.log("logo e fundo trocados");
 
 // as músicas (Suno, só uso não comercial, como a Vila) e o som de acerto (flashkit) ficam os deles
 
-// ---------- vozes do rádio em português (ferramentas/tiro-vozes/*.mp3, feitas por ferramentas/tiro-vozes.js) ----------
-// O jogo carrega o pacote voix_en (é o idioma 'en', que aqui é o português): ele é trocado pelo nosso. Cada mp3 <id>_N vira
-// "v_<id>-N": o motor de som do jogo junta os "-N" do mesmo som e sorteia um a cada anúncio (no celular, só os dois primeiros).
+// ---------- vozes do rádio em português (ferramentas/tiro-vozes/, feitas por ferramentas/tiro-vozes.js) ----------
+// Uma voz por tipo de arma principal da classe (tiro-vozes/vozes.json). A padrão entra no pacote voix_en (o idioma 'en' daqui é
+// o português), no lugar do inglês; as outras viram pacotes próprios (sfx/voix_<grupo>.js), que o jogo só baixa quando o jogador
+// usa uma classe com aquela arma (vozDaClasse, mais abaixo). Cada mp3 <id>_N vira "<prefixo><id>-N": o motor de som do jogo junta
+// os "-N" do mesmo som e sorteia um a cada anúncio (no celular, só os dois primeiros).
+const PREFIXO = { padrao: "v_", smg: "vs_", sniper: "vp_", shotgun: "ve_" };
+const VOZ_GRUPOS = [];
 {
   const VOZES = path.join(__dirname, "tiro-vozes");
-  const falas = JSON.parse(fs.readFileSync(path.join(VOZES, "falas.json"), "utf8")); delete falas._;
-  const faltam = Object.keys(falas).filter((id) => !fs.existsSync(path.join(VOZES, id + ".mp3")));
-  const pack = fs.readdirSync(path.join(OUT, "sfx")).find((f) => f.startsWith("voix_en."));
-  if (faltam.length) console.log(`vozes: faltam ${faltam.length} de ${Object.keys(falas).length} falas em português (${faltam.slice(0, 4).join(", ")}...): fica a voz em inglês`);
-  else {
-    // duração em amostras a 48 kHz, contada pelos quadros do mp3 (o jogo usa para saber quando a fala acaba)
-    const amostras48 = (b) => {
-      let i = 0;
-      if (b.slice(0, 3).toString() === "ID3") i = 10 + ((b[6] & 127) << 21 | (b[7] & 127) << 14 | (b[8] & 127) << 7 | (b[9] & 127));
-      // camada III: MPEG-1 (1152 amostras por quadro) e MPEG-2/2.5 (576)
-      const BR1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320], BR2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
-      const SR = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
-      let seg = 0;
-      while (i + 4 <= b.length) {
-        const v = (b[i + 1] >> 3) & 3;
-        if (b[i] !== 0xff || (b[i + 1] & 0xe0) !== 0xe0 || ((b[i + 1] >> 1) & 3) !== 1 || v === 1) { i++; continue; }
-        const br = (v === 3 ? BR1 : BR2)[b[i + 2] >> 4], s = SR[v][(b[i + 2] >> 2) & 3];
-        if (!br || !s) { i++; continue; }
-        const spf = v === 3 ? 1152 : 576;
-        seg += spf / s; i += Math.floor(spf / 8 * br * 1000 / s) + ((b[i + 2] >> 1) & 1);
-      }
-      return Math.round(seg * 48000);
-    };
+  const ler = (f) => { const j = JSON.parse(fs.readFileSync(path.join(VOZES, f), "utf8")); delete j._; return j; };
+  const falas = ler("falas.json"), grupos = ler("vozes.json");
+  // duração em amostras a 48 kHz, contada pelos quadros do mp3 (o jogo usa para saber quando a fala acaba)
+  const amostras48 = (b) => {
+    let i = 0;
+    if (b.slice(0, 3).toString() === "ID3") i = 10 + ((b[6] & 127) << 21 | (b[7] & 127) << 14 | (b[8] & 127) << 7 | (b[9] & 127));
+    // camada III: MPEG-1 (1152 amostras por quadro) e MPEG-2/2.5 (576)
+    const BR1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320], BR2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
+    const SR = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+    let seg = 0;
+    while (i + 4 <= b.length) {
+      const v = (b[i + 1] >> 3) & 3;
+      if (b[i] !== 0xff || (b[i + 1] & 0xe0) !== 0xe0 || ((b[i + 1] >> 1) & 3) !== 1 || v === 1) { i++; continue; }
+      const br = (v === 3 ? BR1 : BR2)[b[i + 2] >> 4], s = SR[v][(b[i + 2] >> 2) & 3];
+      if (!br || !s) { i++; continue; }
+      const spf = v === 3 ? 1152 : 576;
+      seg += spf / s; i += Math.floor(spf / 8 * br * 1000 / s) + ((b[i + 2] >> 1) & 1);
+    }
+    return Math.round(seg * 48000);
+  };
+  for (const g of Object.keys(grupos)) {
+    if (!PREFIXO[g]) { console.log(`vozes: grupo ${g} sem prefixo no script, pulei`); continue; }
+    const pasta = g === "padrao" ? VOZES : path.join(VOZES, g);
+    const faltam = Object.keys(falas).filter((id) => !fs.existsSync(path.join(pasta, id + ".mp3")));
+    if (faltam.length) { console.log(`vozes ${g}: faltam ${faltam.length} de ${Object.keys(falas).length} anúncios${g === "padrao" ? ": fica a voz em inglês" : ": essa classe usa a voz padrão"}`); continue; }
     const s = {}; let n = 0;
     for (const [id, textos] of Object.entries(falas)) textos.forEach((_, k) => {
-      const f = path.join(VOZES, id + (k ? "_" + (k + 1) : "") + ".mp3"); if (!fs.existsSync(f)) return;
+      const f = path.join(pasta, id + (k ? "_" + (k + 1) : "") + ".mp3"); if (!fs.existsSync(f)) return;
       const b = fs.readFileSync(f), am = amostras48(b);
       // [duração, crista, mp3]: a crista só serve para achar o atraso do codificador; com a duração cheia o jogo não corta nada
-      s["v_" + id + (k ? "-" + (k + 1) : "")] = [am, Math.round(am / 3), b.toString("base64")]; n++;
+      s[PREFIXO[g] + id + (k ? "-" + (k + 1) : "")] = [am, Math.round(am / 3), b.toString("base64")]; n++;
     });
-    fs.writeFileSync(path.join(OUT, "sfx", pack), "sfxPack(\"voix_en\"," + JSON.stringify({ rate: 44100, s }) + ");\n");
-    console.log(`vozes em português: ${n} falas (${Object.keys(falas).length} anúncios)`);
+    const chave = g === "padrao" ? "voix_en" : "voix_" + g;
+    const arq = g === "padrao" ? fs.readdirSync(path.join(OUT, "sfx")).find((f) => f.startsWith("voix_en.")) : `voix_${g}.js`;
+    fs.writeFileSync(path.join(OUT, "sfx", arq), `sfxPack(${JSON.stringify(chave)},` + JSON.stringify({ rate: 44100, s }) + ");\n");
+    if (g !== "padrao") VOZ_GRUPOS.push({ g, chave, arq });
+    console.log(`vozes ${g}: ${n} falas (${grupos[g].armas})`);
   }
 }
 
@@ -118,6 +127,19 @@ h = troca(h, "if(c==='fr'||c==='en')return c;", "if(c==='fr')return c;", { nome:
 h = troca(h, "const LOCALE=LANG==='fr'?'fr-FR':'en-US';", "const LOCALE=LANG==='fr'?'fr-FR':'pt-BR';", { nome: "números em pt-BR" });
 h = troca(h, "document.documentElement.lang=LANG;", "document.documentElement.lang=LANG==='en'?'pt-BR':LANG;", { nome: "lang da página" });
 h = troca(h, "const ordinal=(n)=>(LANG==='en'?", "const ordinal=(n)=>(LANG==='en'?n+'º':LANG!=='fr'?", { nome: "ordinal 1º" });
+// voz do rádio pela arma principal da classe: o pacote dela entra na lista do jogo, é baixado quando o jogador nasce com essa
+// classe (giveLoadout) e, enquanto não chega, o anúncio sai na voz padrão
+if (VOZ_GRUPOS.length) {
+  h = troca(h, /("voix_en":"sfx\/voix_en\.[0-9a-f]+\.js")/, (_, a) => a + VOZ_GRUPOS.map((v) => `,${JSON.stringify(v.chave)}:${JSON.stringify("sfx/" + v.arq)}`).join(""), { nome: "pacotes de voz por classe" });
+  const pref = Object.fromEntries(VOZ_GRUPOS.map((v) => [v.g, [v.chave, PREFIXO[v.g]]]));
+  h = troca(h, "const ANN={q:[],until:0,last:new Map()};", `const VOZ_CLASSE=${JSON.stringify(pref)};
+function vozPacote(){try{const c=CLASSES[PL.classIdx],w=c&&WEAPONS[c.primary];return VOZ_CLASSE[w&&w.cat]||null}catch(e){return null}}
+function vozPreparar(){const v=vozPacote();if(v&&AU.ctx&&!sfxReady(v[0]))sfxLoad(v[0]);}
+function vozDaClasse(l){const v=vozPacote();if(v){if(sfxReady(v[0])&&sfxHas(v[1]+l))return v[1]+l;vozPreparar();}return'v_'+l;}
+const ANN={q:[],until:0,last:new Map()};`, { nome: "voz da classe" });
+  h = troca(h, "sfxPlay('v_'+a.line,o,t+0.12,{gain:1.15})", "sfxPlay(vozDaClasse(a.line),o,t+0.12,{gain:1.15})", { nome: "anúncio na voz da classe" });
+  h = troca(h, "function giveLoadout(){classFix();", "function giveLoadout(){classFix();setTimeout(vozPreparar,0);", { nome: "baixa a voz ao nascer" });
+}
 h = troca(h, /Riposte: Frontline|Riposte Frontline/g, NOME, { nome: "nome" });
 h = troca(h, /Installer Riposte/g, "Installer " + NOME, { min: 0, nome: "instalador" });
 h = troca(h, /content="Riposte"/g, 'content="Tiro"', { min: 0, nome: "nome curto" });

@@ -1,46 +1,30 @@
-# Editor do capacete: os capacetes em pixel art como "Padrões"
+# Narrador: a apresentação do grid de largada
 
-O Thiago pediu que os capacetes das folhas de pixel art entrassem no editor de capacete como padrões.
+O Thiago pediu falas novas do narrador para a apresentação do grid.
 
-- **`f1-capacetes-padroes.js` (novo):** são 30 padrões, os 22 pilotos do grid e 8 extras que sobraram das folhas. Cada um tem:
-  - o desenho do editor. Os 22 pilotos usam o desenho deles em `f1-capacetes.js`; os extras usam um rodízio de desenhos do editor. Todos estão na lista do servidor (`DESENHOS_CAPACETE`);
-  - as três cores principais, tiradas da imagem em pixel por ferramenta: k-médias no casco, sem o visor e o que é quase preto, em ordem de quanto aparecem;
-  - a viseira escura.
-- **A aba "Padrões" (`capacete-editor-ui.js`):** é a primeira do menu. Mostra a grade com as miniaturas em pixel art e o nome de cada um, e a grade rola. O clique aplica o desenho, as cores e a viseira e volta ao primeiro "Padrão" (variante 0). Depois dá para ajustar à vontade nas outras abas.
-- **Onde aparece:** o editor é o mesmo da sala e da aba Capacete da carreira, então os padrões aparecem nos dois lugares.
-- **Conferido:** num servidor de teste, montei o editor, abri a aba e cliquei no padrão do Norris. Ficaram 30 padrões, e o capacete guardado ficou com o desenho "faixa" e o verde-neon. A página não teve erros.
-# Carreira de F1: a aba "Meu piloto"
+## As falas (`narrador/falas.js`)
 
-O Thiago pediu que a carreira de F1 tivesse uma guia "Meu piloto" para montar o piloto em pixel art.
+`FALAS_GRID` tem 36 falas novas, com 991 caracteres no total:
+- `grid-abre-1..3`: as aberturas ("Vamos ao grid de largada!");
+- `grid-pole-1..3`: "Na pole position,", "Largando em primeiro,"…;
+- `grid-lado-1..3`: "Ao lado dele, na primeira fila,"…;
+- `grid-fecha-1..3`: os fechamentos ("Grid formado. Agora é com eles!");
+- `grid-galera-1..2`: "um piloto da galera!";
+- `nome-<SIGLA>`: um nome por piloto de 2026, com a equipe ("Lando Norris, da McLaren!").
 
-- **A aba (`temporada/central.js`):** "Meu piloto" entra na Central, entre "Capacete" e "Contratos". Ela funciona como a aba Capacete: a Central marca o lugar (`data-cx-piloto`), e o módulo de `temporada/index.html` (`window.PilotoCarreira`) põe ali o montador. Ele é o mesmo da sala (`piloto-pixel-editor.js`), com a prévia no macacão da sua equipe da carreira.
-- **Onde fica guardado:** neste navegador, o mesmo do montador da sala. Vai para a pista na próxima corrida, porque a carreira passa pela classificação, onde o piloto é enviado (`sincronizarPixel`).
-- **Conserto:** o montador importava o `estado.js` direto, e ele depende do `Comum` que só existe na página do jogo. Na Central, isso derrubava o módulo inteiro. Agora o `estado.js` só é carregado quando o montador fala com a sala. Na sala, a cor do macacão e o nome para o sorteio entram pelas opções de `montarMontador` (`cor` e `nome`).
-- **Conferido:** a página da carreira e a do jogo carregam num servidor de teste, e o montador aparece e responde nas duas. Na carreira, o único aviso é o ícone da aba (`favicon`), que já faltava antes.
-# Apresentação da pista: o grid de largada fila a fila, no estilo da transmissão
+`ferramentas/narrador-pistas.js` já gera essas falas junto com as outras: é rodar o `GERAR-VOZES-CORRIDA.bat`, opção 1 (narrador), "só as que faltam". O `--estimar` conta 46 falas a gerar, com 1.518 caracteres; esse total inclui 10 falas que já faltavam antes.
 
-O Thiago pediu que, na apresentação da pista, a ordem dos pilotos passasse de 2 em 2 com os cards deles, grandes e em destaque. Depois mandou o print do "Starting grid" da transmissão do jogo da F1 como referência.
+## Como toca
 
-## O painel (`transmissao.js`: `cartaGrid`, `ladoDoGrid`, `meioDoGrid`; `transmissao.css`: `.tvGridP`, `.tgp*`)
+- **`narrador.js`:**
+  - `falarDoGrid(pole, segundo, semente)` monta a frase em pedaços: a abertura, "na pole position", o nome do pole, "ao lado dele", o nome do segundo e o fechamento. A variação de cada pedaço sai da semente do GP, igual para todos da sala.
+  - Quem é da galera, ou corre numa temporada que não é a de 2026, vira "um piloto da galera".
+  - `falarSequencia(ids)` toca os pedaços colados, com 0,12 s entre eles. Ela só corta a fala que está no ar quando **todos** os pedaços carregaram. Sem os mp3, a fala da pista continua, só abaixada, como era antes.
+  - O corte das luzes abaixa o volume de todas as partes.
+- **`transmissao.js`:** no começo do bloco do grid, o narrador abaixa a fala da pista e chama `falarDoGrid` com a primeira fila.
 
-- **O painel:** ocupa a tela quase inteira. Em cima vêm "Fórmula 1 · <pista> <ano>" e o título "Grid de largada".
-- **Cada lado, um piloto da fila da vez:**
-  - a posição enorme ("17º") no alto;
-  - o retrato em pixel art grande, de até 384 px;
-  - embaixo, o logo da equipe, o nome e o sobrenome em letras grandes;
-  - o tempo da classificação e a diferença para a pole em vermelho, quando houve classificação (`E.S.quali.tabela`).
-- **O meio:** o grid em zigue-zague, com os ímpares à esquerda e os pares à direita, um pouco abaixo. Ele é preenchido da pole para trás com a sigla na cor da equipe, e a fila da vez fica sublinhada.
-- **A ordem:** os pares vão da pole até a última fila, como na referência. A câmera do bloco agora anda no mesmo sentido, da pole para trás.
-- **No celular:** o meio some e os dois lados dividem a tela.
-
-## O tempo
-
-O Thiago pediu: "pode aumentar o tempo total para uns 20 s, aí dá tempo de exibir tudo com calma".
-
-- A transmissão da corrida avulsa passou de 8 para 20 s (`TV_AVULSA_MS`, `corrida-base.js`). A da temporada continua em 25 s.
-- Os blocos (`BASE`) ficaram assim: pista 6 s, clima 2,5 s, campeonato 4,5 s e grid 12 s. Antes eram 9,5 / 4 / 6,5 / 5.
-- Dá cerca de 1 s por fila, e ainda dá para pular.
+A novidade deste PR vai no PR que conserta o `novidades.json` da `main`, para os dois não mexerem nas mesmas linhas.
 
 ## Conferido
 
-Montei uma página estática com o CSS e uma fila de exemplo para ver o visual, e a página do jogo carrega sem erros num servidor de teste. A transmissão rodando com a câmera não foi vista.
+A página carrega sem erros num servidor de teste. A voz não foi ouvida: os mp3 ainda não existem.

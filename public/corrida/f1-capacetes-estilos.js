@@ -118,3 +118,95 @@ export const ESTILOS = {
     faixaH(x, c2, 0, 10);
   } },
 };
+
+// ---------- os capacetes dos 22 pilotos do grid (2026-11-25, o Thiago: "caprichar nos capacetes novos: alguns têm logo da equipe e livery
+// únicos; tem que ficar praticamente igual"). Pela folha de pixel art que ele mandou (public/corrida/pilotos-pixel/capacete/): as cores e o jeito
+// de cada um, por família de equipe, e `marcas` (os logos fixos): `logo` (o logo da equipe, imagem; na testa), `nome` (o texto da faixa acima do
+// visor) e `patrocinios` (marcas de MARCAS_CAPACETE por lugar). pintarFolha (f1-capacetes.js) aplica as marcas quando o capacete não traz as
+// suas: assim os robôs na pista e o padrão do editor saem iguais. ----------
+const frenteV = (x, cor, w, ate = 98) => { x.fillStyle = cor; x.fillRect(384 - w / 2, 0, w, ate); };
+// as famílias: cada uma desenha o jeito da equipe com as 3 cores do piloto (e `v`, a variação do companheiro)
+const FAMILIAS = {
+  // McLaren: o casco na cor (papaia ou neon), a coroa escura com cortes, a fita escura pelos lados e um fio na cor 3
+  mclaren(x, [c1, c2, c3], v) {
+    faixaH(x, c2, 0, 30); const r = sorteio(31 + v);
+    for (let i = 0; i < 14; i++) caco(x, c2, r() * 512, 30 + r() * 26, 40 + r() * 40, 10, 12);
+    for (const cx of LADOS) { fita(x, cx, c2, 70, 40); linhaLado(x, cx, c3, 3, 62, 20); }
+    faixaH(x, c2, 200, 56);
+  },
+  // Ferrari (Leclerc): vermelho com os blocos brancos na coroa e uma faixa preta fina; (Hamilton): o vermelho com cortes no vermelho escuro
+  ferrari(x, [c1, c2, c3], v) {
+    if (v === 0) { for (let i = 0; i < 8; i++) { x.fillStyle = c2; x.fillRect(16 + i * 64, 18 + (i % 2) * 14, 34, 22); } frenteV(x, c2, 30, 60); faixaH(x, c3, 60, 4); for (const cx of LADOS) linhaLado(x, cx, c2, 6, 70, 16); }
+    else { const r = sorteio(47); for (let i = 0; i < 22; i++) caco(x, i % 3 ? c2 : c3, r() * 512, 10 + r() * 230, 30 + r() * 50, 8 + r() * 18, 14); faixaH(x, c2, 0, 22); }
+    faixaH(x, c3, 210, 4);
+  },
+  // Mercedes: a coroa na cor 2 descendo em ponta até a testa, o queixo na cor 2 e as linhas na cor 3
+  mercedes(x, [c1, c2, c3], v) {
+    faixaH(x, c2, 0, 44); x.fillStyle = c2; for (const cx of [384, 128]) { x.beginPath(); x.moveTo(cx - 70, 44); x.lineTo(cx + 70, 44); x.lineTo(cx, 80 + v * 8); x.closePath(); x.fill(); }
+    faixaH(x, c2, 176, 80); for (const cx of LADOS) linhaLado(x, cx, c3, 4, 58, 26);
+  },
+  // Red Bull: a coroa na cor 2, o queixo na cor 3 e as faixas diagonais pelos lados
+  redbull(x, [c1, c2, c3], v) {
+    faixaH(x, c2, 0, 40 + v * 6); for (const cx of LADOS) { fita(x, cx, c2, 60, 34); fita(x, cx, c3, 92, 18, 10); }
+    faixaH(x, c3, 196, 60); const r = sorteio(53 + v); for (let i = 0; i < 6; i++) caco(x, c3, r() * 512, 12 + r() * 24, 36, 8, 10);
+  },
+  // Aston Martin: o verde com a parte de baixo na cor 2 subindo pelos lados como uma onda, e um fio na cor 3
+  aston(x, [c1, c2, c3], v) {
+    for (const cx of LADOS) { fita(x, cx, c2, 120 + v * 10, 70, 0); linhaLado(x, cx, c3, 3, 110 + v * 10, 0); }
+    faixaH(x, c2, 206, 50); faixaH(x, c3, 0, 6);
+  },
+  // Williams: o casco com o topo na cor 2 em ponta e as setas (chevrons) pelos lados
+  williams(x, [c1, c2, c3], v) {
+    faixaH(x, c2, 0, 36); x.fillStyle = c2; x.beginPath(); x.moveTo(300, 36); x.lineTo(468, 36); x.lineTo(384, 70); x.closePath(); x.fill();
+    for (const cx of LADOS) for (let k = 0; k < 3; k++) { x.strokeStyle = k === 1 ? c3 : c2; x.lineWidth = 7; x.beginPath(); const d = cx === 256 ? -1 : 1; x.moveTo(cx + d * (-60 + k * 22), 130); x.lineTo(cx + d * (-20 + k * 22), 170); x.lineTo(cx + d * (-60 + k * 22), 210); x.stroke(); }
+    faixaH(x, v ? c3 : c2, 214, 42);
+  },
+  // Sauber/Audi (o K verde da folha): o preto com as fitas verdes pelos lados e o queixo na cor 3
+  kick(x, [c1, c2, c3], v) {
+    for (const cx of LADOS) { fita(x, cx, c2, 64 + v * 6, 30); linhaLado(x, cx, c2, 4, 40, 40); }
+    faixaH(x, c2, 0, 8); faixaH(x, c3, 198, 58);
+  },
+  // Alpine: o azul com os cortes na cor 2 (rosa ou azul-claro) e a coroa na cor 3
+  alpine(x, [c1, c2, c3], v) {
+    faixaH(x, c3, 0, 26); const r = sorteio(61 + v);
+    for (let i = 0; i < 18; i++) caco(x, i % 2 ? c2 : c3, r() * 512, 40 + r() * 200, 40 + r() * 46, 8 + r() * 10, 18);
+    for (const cx of LADOS) fita(x, cx, c2, 96, 24, 20);
+  },
+  // Haas: o branco com os cortes vermelhos pelos lados e na coroa, e o preto embaixo
+  haas(x, [c1, c2, c3], v) {
+    const r = sorteio(71 + v); for (let i = 0; i < 16; i++) caco(x, c2, r() * 512, 12 + r() * 60, 30 + r() * 40, 8, 16);
+    for (const cx of LADOS) { fita(x, cx, c2, 80 + v * 10, 36); linhaLado(x, cx, c3, 3, 70, 30); }
+    faixaH(x, c3, 220, 36);
+  },
+  // Cadillac: o casco com os cortes na cor 2 (dourado ou branco) e os fios na cor 3
+  cadillac(x, [c1, c2, c3], v) {
+    const r = sorteio(83 + v); for (let i = 0; i < 20; i++) caco(x, i % 4 ? c2 : c3, r() * 512, 8 + r() * 240, 24 + r() * 44, 6 + r() * 10, 12);
+    for (const cx of LADOS) linhaLado(x, cx, c3, 3, 66, 24);
+    faixaH(x, c2, 0, 14);
+  },
+};
+const P = (nome, fam, v, cores, viseira, marcas) => ({ nome, cores, viseira, marcas, pintar: (x, c) => FAMILIAS[fam](x, c, v) });
+export const ESTILOS_PILOTOS = {
+  p_NOR: P("Norris", "mclaren", 0, ["#c4f31a", "#101114", "#ff8000"], "#0b0d12", { logo: "mclaren", nome: "McLaren", patrocinios: { lados: "gemini", nuca: "dropbox" } }),
+  p_PIA: P("Piastri", "mclaren", 1, ["#ff8000", "#101114", "#f4f4f4"], "#0b0d12", { logo: "mclaren", nome: "McLaren", patrocinios: { lados: "gemini", nuca: "dropbox" } }),
+  p_LEC: P("Leclerc", "ferrari", 0, ["#e10600", "#f4f4f4", "#101114"], "#0b0d12", { logo: "ferrari", patrocinios: { faixa: "hp", lados: "shell", nuca: "ibm" } }),
+  p_HAM: P("Hamilton", "ferrari", 1, ["#c8102e", "#8a0a1a", "#f4d22c"], "#0b0d12", { logo: "ferrari", patrocinios: { faixa: "hp", lados: "shell", nuca: "unicredit" } }),
+  p_RUS: P("Russell", "mercedes", 0, ["#6fc6f0", "#101114", "#f4f4f4"], "#0b0d12", { nome: "PETRONAS", patrocinios: { testa: "estrela", lados: "crowdstrike", nuca: "tmobile" } }),
+  p_ANT: P("Antonelli", "mercedes", 1, ["#101114", "#00a19b", "#c8ccd2"], "#0b0d12", { nome: "PETRONAS", patrocinios: { testa: "estrela", lados: "crowdstrike", nuca: "tmobile" } }),
+  p_VER: P("Verstappen", "redbull", 0, ["#1e2a5a", "#16204a", "#d3202a"], "#0b0d12", { nome: "Red Bull", patrocinios: { testa: "redbull", lados: "oracle", nuca: "mobil1" } }),
+  p_HAD: P("Hadjar", "redbull", 1, ["#f4f4f4", "#1e3d96", "#d3202a"], "#0b0d12", { nome: "Red Bull", patrocinios: { testa: "redbull", lados: "oracle", nuca: "mobil1" } }),
+  p_LAW: P("Lawson", "redbull", 2, ["#f4f4f4", "#1e3d96", "#d3202a"], "#0b0d12", { logo: "racing-bulls", patrocinios: { lados: "visa", nuca: "cashapp" } }),
+  p_LIN: P("Lindblad", "redbull", 1, ["#1e2a5a", "#16204a", "#e6f01a"], "#0b0d12", { logo: "racing-bulls", patrocinios: { lados: "visa", nuca: "cashapp" } }),
+  p_ALO: P("Alonso", "aston", 0, ["#0b4f45", "#e6f01a", "#101114"], "#0b0d12", { logo: "aston-martin", patrocinios: { faixa: "aramco", lados: "aramco", nuca: "valvoline" } }),
+  p_STR: P("Stroll", "aston", 1, ["#0b5d4a", "#229971", "#f4f4f4"], "#0b0d12", { logo: "aston-martin", patrocinios: { faixa: "aramco", lados: "aramco", nuca: "valvoline" } }),
+  p_ALB: P("Albon", "williams", 0, ["#f4f4f4", "#1868db", "#0a1b3d"], "#0b0d12", { nome: "WILLIAMS", patrocinios: { testa: "williamsw", lados: "atlassiana", nuca: "kraken" } }),
+  p_SAI: P("Sainz", "williams", 1, ["#0a1b3d", "#1868db", "#d3202a"], "#0b0d12", { nome: "WILLIAMS", patrocinios: { testa: "williamsw", lados: "atlassiana", nuca: "santander" } }),
+  p_HUL: P("Hülkenberg", "kick", 0, ["#101114", "#3cd23c", "#d3202a"], "#0b0d12", { patrocinios: { testa: "kick", lados: "revolutr", nuca: "stake" } }),
+  p_BOR: P("Bortoleto", "kick", 1, ["#101114", "#7dff2e", "#d3202a"], "#0b0d12", { patrocinios: { testa: "kick", lados: "revolutr", nuca: "stake" } }),
+  p_GAS: P("Gasly", "alpine", 0, ["#1f56d8", "#ff8fc2", "#0a1b3d"], "#0b0d12", { nome: "ALPINE", patrocinios: { testa: "alpine", lados: "castrol" } }),
+  p_COL: P("Colapinto", "alpine", 1, ["#0a1b3d", "#5fb8f0", "#f4f4f4"], "#0b0d12", { nome: "ALPINE", patrocinios: { testa: "alpine", lados: "castrol" } }),
+  p_CAM: P("Câmara", "haas", 0, ["#f4f4f4", "#d3202a", "#101114"], "#0b0d12", { nome: "HAAS", patrocinios: { testa: "haas", lados: "moneygram", nuca: "tmobile" } }),
+  p_BEA: P("Bearman", "haas", 1, ["#f4f4f4", "#d3202a", "#101114"], "#0b0d12", { nome: "HAAS", patrocinios: { testa: "haas", lados: "moneygram", nuca: "tmobile" } }),
+  p_PER: P("Pérez", "cadillac", 0, ["#101114", "#f4f4f4", "#c9a227"], "#0b0d12", { nome: "CADILLAC", patrocinios: { testa: "brasao", lados: "tmobile", nuca: "jimbeam" } }),
+  p_BOT: P("Bottas", "cadillac", 1, ["#f4f4f4", "#c9a227", "#101114"], "#0b0d12", { nome: "CADILLAC", patrocinios: { testa: "brasao", lados: "tmobile", nuca: "jimbeam" } }),
+};

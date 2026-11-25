@@ -78,6 +78,39 @@ function falarEvento(tipo) {
   ultimoEvento = agora;
   return falar(opcoes[Math.floor(Math.random() * opcoes.length)].id);
 }
-const api = { falar, falarDaPista, falarEvento, parar, abaixar, usarSaida, get tocando() { return !!atual; } };
+// (2026-11-25) várias falas em sequência, uma colada na outra (`pausa` s entre elas): o grid é narrado em pedaços. Só toma a vez (cortando o que
+// estiver no ar) quando TODOS os pedaços carregaram: sem os mp3, a fala que está tocando segue (e a frase nunca sai pela metade)
+let pedidoSeq = 0;
+function falarSequencia(ids, op = {}) {
+  if (!temDOM || !ids.length) return Promise.resolve(false);
+  const pedido = ++pedidoSeq, t0 = Date.now();
+  return Promise.all(ids.map(carregar)).then((bufs) => {
+    const x = contexto();
+    if (pedido !== pedidoSeq || bufs.some((b) => !b) || !x || !x.ligado) return false;
+    parar(0.25);
+    const minha = sessao;
+    if (Number.isFinite(op.cortarEm)) timerCorte = setTimeout(() => { if (sessao === minha) parar(0.35); }, Math.max(0, op.cortarEm - (Date.now() - t0)));
+    if (x.c.state === "suspended") x.c.resume();
+    const g = x.c.createGain(); g.gain.value = 1; g.connect(x.destino);
+    const fontes = []; let t = x.c.currentTime + 0.3; // (depois do fade do que estava no ar)
+    for (const buf of bufs) { const s = x.c.createBufferSource(); s.buffer = buf; s.connect(g); s.start(t); t += buf.duration + (op.pausa ?? 0.12); fontes.push(s); }
+    const a = { c: x.c, g, s: { stop: (q) => { for (const s of fontes) try { s.stop(q); } catch {} } } }; atual = a; // (parar() abaixa o ganho e para todas)
+    fontes[fontes.length - 1].onended = () => { if (atual === a) atual = null; };
+    return true;
+  }).catch(() => false);
+}
+// o grid narrado: abertura, pole e o nome dele, "ao lado dele" e o nome do segundo, e o fechamento. `pole` e `segundo`: { sigla, humano } (sem
+// nome gravado, "um piloto da galera"). Os pedaços variam pela semente do GP (igual para todos da sala)
+function falarDoGrid(pole, segundo, semente, op) {
+  if (!F || !F.GRID) return Promise.resolve(false);
+  const h = (s) => { let x = 2166136261; for (const c of String(s)) x = Math.imul(x ^ c.charCodeAt(0), 16777619); return (x >>> 0) / 4294967296; };
+  const uma = (tipo) => `grid-${tipo}-${1 + Math.floor(h(`${semente}:grid:${tipo}`) * F.GRID[tipo].length)}`;
+  const nome = (p) => (p && !p.humano && F.NOMES[p.sigla] ? `nome-${p.sigla}` : uma("galera"));
+  const ids = [uma("abre"), uma("pole"), nome(pole)];
+  if (segundo) ids.push(uma("lado"), nome(segundo));
+  ids.push(uma("fecha"));
+  return falarSequencia(ids, op);
+}
+const api = { falar, falarDaPista, falarEvento, falarSequencia, falarDoGrid, parar, abaixar, usarSaida, get tocando() { return !!atual; } };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Narrador = api;
 })(typeof self !== "undefined" ? self : this);

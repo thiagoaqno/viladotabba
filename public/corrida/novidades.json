@@ -1,5 +1,51 @@
 [
   {
+    "id": "piloto-vivo-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Meu piloto (carreira): ele vira a cabeça para o mouse, pisca, e de vez em quando acena, pula ou olha em volta; clique nele para ver",
+      "O macacão do piloto ganhou os patrocinadores da equipe"
+    ]
+  },
+  {
+    "id": "torre-lider-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Quando a liderança muda, a torre abre o cartão do novo líder",
+      "O seu cartão aparece também com a torre compacta, mas só às vezes",
+      "O MFD tipo 2 (o de vidro) virou o padrão"
+    ]
+  },
+  {
+    "id": "capacetes-reais-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Os capacetes dos 22 pilotos do grid ganharam desenho próprio, com o logo da equipe, o nome e os patrocínios, no editor e na pista"
+    ]
+  },
+  {
+    "id": "corpo-inteiro-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Meu piloto: o seu piloto aparece de corpo inteiro ao lado do montador",
+      "As tranças agora parecem tranças"
+    ]
+  },
+  {
+    "id": "controle-painel-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Controle no celular: visual de volante de F1 com LEDs, os pneus para pedir o box direto, zona morta ajustável, sem zoom e tela cheia"
+    ]
+  },
+  {
+    "id": "noticias-pixel-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Notícias da carreira com figurinhas em pixel art: o pódio do GP, a pole e os duelos com VS"
+    ]
+  },
+  {
     "id": "narrador-grid-2026-11-25",
     "data": "2026-11-25",
     "itens": [

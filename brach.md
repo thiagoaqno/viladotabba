@@ -1,29 +1,32 @@
-# Torre: o cartão do novo líder, o seu só às vezes e também com a torre compacta; MFD tipo 2 como padrão
+# Meu piloto: o piloto vivo e os patrocínios da equipe no macacão
 
-O Thiago pediu:
-- que o cartão também aparecesse com a torre compacta;
-- que, quando alguém assume a liderança, apareça o cartão dele, e não o seu;
-- que o seu cartão não apareça em toda troca de posição, só às vezes;
-- que o MFD novo (tipo 2) seja o padrão.
+O Thiago pediu duas coisas: que o piloto da aba "Meu piloto" não ficasse parado, interagindo às vezes e com o mouse; e os patrocinadores nas roupas.
 
-## O cartão (`hud-tv.js`)
+## O piloto vivo (`temporada/index.html`, `pixel-piloto.js` `camadasInteiro`)
 
-- **Torre compacta:** o cartão aparece com a torre compacta ou completa, em qualquer estilo de HUD.
-- **Novo líder:** quando a liderança muda (depois da primeira volta do líder), abre o cartão de quem assumiu, embaixo da linha dele.
-- **O seu cartão:**
-  - quando a sua posição muda, aparece no máximo uma vez por minuto (`MEU_INTERVALO`), e nunca por cima do cartão do novo líder;
-  - ao expandir a torre, ele abre como antes.
+- **As camadas:** o corpo inteiro virou três imagens do mesmo tamanho, o corpo, o braço esquerdo do piloto (à direita da tela) e a cabeça. Elas vêm com os pivôs: o ombro, o pescoço e onde ficam os olhos.
+- **O mouse:** a cabeça vira e inclina para onde ele está.
+- **Sozinho:**
+  - ele pisca a cada 2,5 a 5 s;
+  - a cada 6 a 11 s, se o mouse ficou parado, acena (o braço sobe e balança), pula ou olha em volta.
+- **No clique:** pula e acena.
+- **Movimento reduzido:** quem tem essa opção ligada no aparelho vê o piloto parado.
 
-## O MFD (`qualidade.js`, `configuracoes.js`)
+## Os patrocínios no macacão (`PATROCINIOS_EQUIPE`)
 
-- O tipo 2 virou o padrão.
-- Quem tinha o "1" guardado sem ter escolhido passa para o 2. Antes, o "1" era gravado junto ao mudar qualquer opção de gráfico.
-- A escolha feita pelo jogador, em Configurações ou no próprio MFD, fica marcada (`mfdEscolhido`) e é respeitada.
+- Cada equipe tem dois patrocinadores de verdade: na Ferrari, HP e Shell; na Mercedes, Petronas e CrowdStrike; na Red Bull, Oracle e Mobil 1; e assim por diante.
+- Eles entram no peito (os dois e um menor embaixo) e na perna, desenhados por cima do pixel art, em branco ou escuro no macacão claro. Cada logo cabe inteiro na sua caixa, pela proporção dele.
+- No pixel art, as plaquinhas brancas do peito saem quando há equipe.
 
-## Fica para depois
+## Consertos
 
-O Thiago contou que a página de dano do MFD tipo 2 bugou. Montada de forma estática, a página sai igual nos dois tipos, então o defeito deve aparecer só com o carro avariado. Falta um print para consertar.
+- No montador, um piloto sorteado mostrava "undefined" no brinco.
+- A `main` tinha o `lerPixel` importado duas vezes; isso já foi consertado no #973 e trazido para cá.
+
+## Novidades
+
+Entraram as do #967 ao #971, que tinham ficado para depois do conserto do JSON, e a deste PR.
 
 ## Conferido
 
-A página do jogo carrega sem erros num servidor de teste. O cartão e o MFD não foram vistos numa corrida.
+Num servidor de teste, a aba monta as 3 camadas e os 2 olhos, o clique dispara o pulo e o aceno, e o print mostra o braço acenando, a cabeça virada para o mouse e o HP e a Shell no macacão da Ferrari.

@@ -1,0 +1,51 @@
+/* Corrida da Galera — o MFD tipo 2 (2026-11-25, os prints do Thiago de uma transmissão do jogo da F1: o painel de vidro ao lado do halo).
+   Opcional: Configurações > Geral > MFD, ou a aba Ajustes do próprio MFD (graficos().mfd === "2"; mfd.js liga #race.mfd-t2). O conteúdo é o
+   mesmo do tipo 1; muda o visual: quase transparente (o carro aparece atrás), sem os cartões, as linhas em lista com a letra clara e sombra, a
+   linha escolhida em branco com a ponta cortada, os ícones das abas pequenos em cima à direita. */
+#race.mfd-t2:is(.f1hud,.f1mfd) #hMfd{right:44px;bottom:150px;width:380px;height:auto;min-height:0;max-height:min(330px,calc(100vh - 200px));border-radius:4px;
+  background:linear-gradient(170deg,rgba(70,78,96,.30),rgba(18,22,32,.42));border:1px solid rgba(255,255,255,.24);box-shadow:0 10px 30px rgba(0,0,0,.25);
+  backdrop-filter:blur(2px) saturate(1.1);-webkit-backdrop-filter:blur(2px) saturate(1.1);font-family:"Titillium Web","Barlow",var(--f1-fonte),system-ui,sans-serif;
+  clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,0 100%)}
+#race.mfd-t2:is(.f1hud,.f1mfd) #hMfd.grande{height:auto;max-height:min(460px,calc(100vh - 200px))}
+#race.mfd-t2 #hMfd,#race.mfd-t2 #hMfd *{text-shadow:0 1px 3px rgba(0,0,0,.85)}
+/* o topo: o nome da página pequeno à esquerda e os ícones das abas à direita */
+#race.mfd-t2:is(.f1hud,.f1mfd) #hMfd .mfd-topo{height:40px;padding:0 26px 0 14px;border-bottom:1px solid rgba(255,255,255,.16)}
+#race.mfd-t2 #hMfd .mfd-marca{display:none}
+#race.mfd-t2 #hMfd .mfd-nome{display:block;flex:none;margin-right:10px;font-size:13px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.85)}
+#race.mfd-t2 #hMfd .mfd-abas{justify-content:flex-end;gap:2px;padding-left:0}
+#race.mfd-t2 #hMfd .mfd-abas::before{display:none}
+#race.mfd-t2 #hMfd .mfd-abas button{flex:0 0 28px;min-width:26px;color:rgba(255,255,255,.7)}
+#race.mfd-t2 #hMfd .mfd-abas button svg{width:17px;height:17px}
+#race.mfd-t2 #hMfd .mfd-abas button.on{color:#fff}
+#race.mfd-t2 #hMfd .mfd-abas button.on::before{width:18px;height:2px;background:#fff}
+/* o corpo: sem cartões, tudo em lista */
+#race.mfd-t2 #hMfd .mfd-corpo{padding:6px 0 8px}
+#race.mfd-t2 #hMfd .mfd-pg{justify-content:flex-start}
+#race.mfd-t2 #hMfd .m3{gap:4px;padding:4px 10px}
+#race.mfd-t2 #hMfd .m3-card{padding:8px 6px 10px;border:0;border-bottom:1px solid rgba(255,255,255,.14);border-radius:0;background:none;box-shadow:none}
+#race.mfd-t2 #hMfd .m3-card:last-child{border-bottom:0}
+#race.mfd-t2 #hMfd .m3-card header{margin-bottom:6px}
+#race.mfd-t2 #hMfd .m3-card header svg{width:18px;height:18px}
+#race.mfd-t2 #hMfd .m3-card header b{font-size:13px;font-weight:600;letter-spacing:.03em;text-transform:none}
+#race.mfd-t2 #hMfd .rs3-c{background:none}
+#race.mfd-t2 #hMfd .rs3-pe{border-top-color:rgba(255,255,255,.16)}
+#race.mfd-t2 #hMfd .mp-par{min-height:30px;padding:0 10px;border-bottom:0;font-size:16px;align-items:center}
+#race.mfd-t2 #hMfd .mp-par span{color:#fff;font-weight:500}
+#race.mfd-t2 #hMfd .mp-par b{font-weight:600}
+/* a janela de parada (aba Jogos de pneu): a faixa ciano dos prints */
+#race.mfd-t2 #hMfd .m3-nota:not(:empty){margin:8px -6px 0;padding:6px 10px;font-size:15px;font-weight:700;color:#fff;text-align:left;background:linear-gradient(90deg,rgba(23,190,207,.85),rgba(23,190,207,.35))}
+/* as linhas ajustáveis: "nome   ‹ valor ›", a escolhida em branco com a ponta cortada */
+#race.mfd-t2 #hMfd .mr{height:34px;margin:2px 10px;padding:0 6px 0 12px;font-size:16px;font-weight:500;background:none;border-left:0;box-shadow:none}
+#race.mfd-t2 #hMfd .mr.sel,#race.mfd-t2 #hMfd.foco .mr.sel{background:rgba(255,255,255,.95);color:#10131b;clip-path:polygon(0 0,100% 0,calc(100% - 14px) 100%,0 100%);border-left:0}
+#race.mfd-t2 #hMfd .mr.sel *{text-shadow:none}
+#race.mfd-t2 #hMfd .mr-v b{min-width:92px;font-size:16px;font-weight:600}
+#race.mfd-t2 #hMfd .mr-b{width:22px;font-size:18px;font-weight:300;opacity:1}
+#race.mfd-t2 #hMfd .mr kbd{background:none;border-color:currentColor;opacity:.7}
+/* o botão MFD (fechado) sobe junto */
+#race.mfd-t2:is(.f1hud,.f1mfd) .mfd-botao{bottom:150px;right:44px}
+#race.mfd-t2.hud-tv:is(.f1hud,.f1mfd) #hMfd,#race.mfd-t2.hud-tv:is(.f1hud,.f1mfd) .mfd-botao{bottom:200px}
+@media (max-width:700px){
+  #race.mfd-t2:is(.f1hud,.f1mfd) #hMfd{right:auto;left:50%;transform:translateX(-50%);bottom:176px;width:min(360px,calc(100vw - 16px))}
+  #race.mfd-t2:is(.f1hud,.f1mfd) .mfd-botao{right:14px;bottom:174px}
+  #race.mfd-t2 #hMfd .mr{height:30px;font-size:14px}#race.mfd-t2 #hMfd .mp-par{font-size:14px;min-height:26px}
+}

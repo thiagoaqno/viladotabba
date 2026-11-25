@@ -16,6 +16,7 @@ const M = () => window.HudMfd, F = () => window.F1Regras;
 export const mfd = { aberto: true, pagina: "resumo", lista: [], linha: {}, ultimo: 0, entrada: "teclado" };
 // o que controles.js registra (a câmera e a torre são dele e do hud.js): { camera(d), torre(): alterna compacta/completa }
 import { estiloHud, definirEstiloHud, ESTILOS_HUD } from "./hud-telemetria.js";
+import { graficos, mudarGraficos } from "./qualidade.js";
 export const acoes = { camera: null, cameraAjuste: null, camNome: () => "", radioRival: null, torreCompacta: () => true, torreAlternar: null, mapaPerto: () => false, mapaAlternar: null };
 const LEITURA = {}; // os últimos dados que o hud passou (as linhas do painel leem daqui)
 let raiz = null, refs = {}, abas = "", paginaVista = null;
@@ -246,6 +247,7 @@ const LINHAS = {
     { rot: "Ajuste da câmera", dica: "H", valor: () => "Abrir", mudar() { if (acoes.cameraAjuste) acoes.cameraAjuste(); } },
     { rot: "Mapa", valor: () => (acoes.mapaPerto() ? "Perto" : "Pista inteira"), mudar() { if (acoes.mapaAlternar) acoes.mapaAlternar(); } },
     { rot: "Estilo do HUD", valor: () => (ESTILOS_HUD.find(([k]) => k === estiloHud()) || ESTILOS_HUD[0])[1], mudar() { const i = ESTILOS_HUD.findIndex(([k]) => k === estiloHud()); definirEstiloHud(ESTILOS_HUD[(i + 1) % ESTILOS_HUD.length][0]); } },
+    { rot: "MFD", valor: () => (graficos().mfd === "2" ? "Tipo 2" : "Tipo 1"), mudar() { mudarGraficos({ mfd: graficos().mfd === "2" ? "1" : "2" }); } }, // (hud-mfd2.css)
     { rot: "Rádio", valor: () => (window.Radio && !window.Radio.mudo ? "Ligado" : "Desligado"), mudar() { if (window.Radio) { window.Radio.silenciar(); } } },
   ],
 };
@@ -471,6 +473,7 @@ export function atualizarMfd(ctx) {
   if (mfd.aberto && t - mfd.ultimo > RECOLHE_MS) abrir(false, false);
   { const bt = $("bMfd"), B = race.box, rot = bt && bt.querySelector("span"); if (rot) set(rot, "t", B && B.pedido && !B.fase ? "BOX " + nomeDoPedido(B.pedido) : B && B.fase ? "NO BOX" : "MFD"); if (bt) set(bt, "c", "mfd-botao" + (B && (B.pedido || B.fase) ? " pedido" : "")); } // fechado, o pedido de box segue à vista no botão
   raiz.dataset.entrada = mfd.entrada;
+  { const rr = $("race"), t2 = graficos().mfd === "2"; if (rr && rr.classList.contains("mfd-t2") !== t2) rr.classList.toggle("mfd-t2", t2); } // o MFD tipo 2 (Configurações > Geral > MFD; hud-mfd2.css)
   { const m = ctx.m, eq = m && window.F1Pilotos ? window.F1Pilotos.EQUIPES[m.equipe] : null, cor = eq ? eq.cor : (m && m.color) || "#e10600"; if (raiz.dataset.cor !== cor) { raiz.dataset.cor = cor; raiz.style.setProperty("--equipe", cor); } } // (o tema é sempre o da equipe)
   const rr = $("race"); if (rr && rr.dataset.entrada !== mfd.entrada) rr.dataset.entrada = mfd.entrada;
   Object.assign(LEITURA, ctx);

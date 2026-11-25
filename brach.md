@@ -1,24 +1,13 @@
-# Retratos dos pilotos em pixel art, montados por peças
+# MFD tipo 2: o painel de vidro da transmissão, opcional
 
-O Thiago pediu uma imagem pixelada para cada piloto do grid, para ter "fotos" no card, e depois um espaço para montar o próprio piloto. Este PR faz os retratos. O montador vem no próximo.
+O Thiago pediu o MFD dos prints da transmissão do jogo da F1 como opção: um "MFD tipo 2" nas configurações.
 
-## `pixel-piloto.js`
-
-- **Sem arquivo de imagem:** cada retrato é uma grade de 32×32 montada em código, por peças:
-  - o rosto e o tom de pele (6 tons);
-  - o cabelo: curto, raspado, topete, ondulado, cacheado, longo, tranças ou calvo;
-  - a cor do cabelo;
-  - a barba: rala, cheia, bigode ou cavanhaque;
-  - a sobrancelha, os olhos e os óculos.
-- **Macacão:** vai embaixo, na cor da equipe, com a gola escura, a faixa do peito e os patrocínios.
-- **Contorno:** o contorno escuro sai sozinho em volta de tudo.
-- **`TRACOS`:** os traços dos 22 pilotos de 2026 e dos que aparecem nas temporadas de 2023 a 2025, pela sigla. Quem não está na tabela, como os jogadores, ganha traços sorteados pelo nome, sempre os mesmos.
-- **`retrato(tracos, { cor })`:** devolve a imagem (data URL), guardada por combinação. Ela aparece com `image-rendering: pixelated`.
-- **Montador:** as listas `PELES`, `CABELOS`, `CORES_CABELO`, `BARBAS` e `OLHOS` ficam exportadas para o montador do próximo PR.
-
-## Onde aparece (HUD "Transmissão (TV)", `hud-tv.js`)
-
-- **Cartão do piloto:** o retrato fica ao lado do número. O número e o nome ficaram um pouco menores para caber.
-- **Aviso de novo líder:** o retrato aparece ao lado do nome.
-
-A entrada no `novidades.json` fica para depois do #956, que conserta o JSON da `main`. Assim os dois PRs não mexem nas mesmas linhas.
+- **A opção:** `graficos().mfd` em `qualidade.js`, com "1" como padrão (o MFD de sempre) e "2" para o novo. Ela fica em Configurações > Geral > MFD e também na aba Ajustes do MFD, na linha "MFD". O `mfd.js` liga `#race.mfd-t2`.
+- **O visual, em `hud-mfd2.css`:**
+  - quase transparente, com o carro aparecendo atrás, e a ponta de cima à direita cortada;
+  - o nome da página pequeno e os ícones das abas pequenos em cima à direita;
+  - sem cartões: tudo em lista, com letra clara e sombra;
+  - a linha escolhida em branco, com a ponta cortada, no formato "nome ‹ valor ›";
+  - a janela de parada (aba Jogos de pneu) na faixa ciano;
+  - o painel fica mais alto, ao lado do halo. Com o HUD "Transmissão (TV)" do #953, ele sobe para cima da caixa de marcha.
+- **O conteúdo das páginas é o mesmo do tipo 1.** A tela de temperaturas de pneus e freios dos prints não entra, porque o jogo não simula essas temperaturas.

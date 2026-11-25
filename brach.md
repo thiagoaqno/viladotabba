@@ -1,27 +1,28 @@
-# Tiro da Galera novo (fase 1): o Riposte: Frontline no lugar do tiro antigo
+# Tiro da Galera (fase 2): o online pelo nosso servidor
 
-O Thiago pediu para trocar o tiro da Vila pelo Riposte: Frontline (github.com/BenDBSS/Riposte-Frontline-Source), um FPS completo
-no navegador com código MIT.
+Antes, o online do tiro novo ligava os navegadores direto um no outro, pelo servidor público do PeerJS. Agora tudo passa
+por um relé no nosso servidor: funciona em qualquer rede (inclusive a 4G e a do trabalho) e ninguém vê o IP de ninguém.
 
-## O que mudou
+## Como funciona
 
-- **`/tiro/`** agora é o jogo novo, montado por `ferramentas/tiro-frontline.js` a partir da pasta `dist/` deles.
-- **`/tiro-antigo/`** guarda o tiro de antes (ele continua usando o canal `/tiro` do servidor).
-- Na Vila, o card do tiro ganhou a descrição nova.
+- **`servidor/jogos/tiro-rele.js`** é um relé WebSocket que fala o protocolo que o jogo deles já tem (`src/09d-netrelay.js`):
+  - quem cria o salão roda a partida no navegador e vira o host;
+  - os outros entram pelo código, e o relé só repassa as mensagens.
+- **Endereços:** `ws /tiro/rele/room/<código>` e `GET /tiro/rele/salons`, a lista de salões públicos que o jogo mostra.
+- **O que ele cuida:**
+  - expulsão e banimento por IP dentro do salão;
+  - salão cheio (até 18 jogadores);
+  - host que caiu e voltou (o salão espera 20 s por ele);
+  - conexões mortas, que somem em até 60 s.
+- **Na página do jogo,** o `ferramentas/tiro-frontline.js` tira o PeerJS e aponta o jogo para o relé (`window.NET_RELAY_URL`).
+  Sem o PeerJS, o jogo manda tudo pelo relé sozinho.
 
-## O que o script troca (o que não é MIT, pelo NOTICE.md deles)
+## Conferido
 
-- O nome vira **Tiro da Galera**, com um logo e um fundo de menu nossos. Ícones, capa, `deck/`, manifest e service worker ficam de fora.
-- **Sem músicas:** as do menu, de subida de nível, de vitória e de derrota eram do Suno, só para uso não comercial.
-- **Som de acerto:** um clique gerado pelo script, no lugar do sample do flashkit.
-- **Contas desligadas:** a API de contas deles não existe aqui, e `/api/` é da Vila.
-- **A CSP com hashes saiu,** porque os scripts mudaram.
-- Os créditos e a licença MIT ficam em `public/tiro/CREDITOS.txt`.
+Rodei um servidor local com um host e um convidado de mentira. As 13 checagens passaram: salão inexistente, mensagens nos
+dois sentidos, lista pública, outro host recusado, queda e volta do host, banimento.
 
-## O que fica para depois
+## Atenção na VPS
 
-- **Fase 2:** o online pelo nosso servidor. Hoje o online liga navegador com navegador pelo PeerJS. O jogo já tem um modo de
-  relé por WebSocket (`meta cod-relay`, rotas `/room/` e `/serveur/`) que dá para implementar no nosso servidor.
-- **Fase 3:** as animações dos soldados ainda são as deles, feitas no Mixamo. Elas precisam ser refeitas pela nossa conta
-  (`ferramentas/animacoes-mixamo.mjs`). O jogo abre em inglês ou francês; falta o português.
-- Os testes do tiro antigo (`salas.spec.js`) foram apagados.
+Se o proxy da frente só deixa passar WebSocket em `/socket.io/`, ele precisa deixar passar também em `/tiro/rele/`.
+Pelo Cloudflare direto, já passa.

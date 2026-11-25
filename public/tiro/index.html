@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Tiro">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="cod-relay" content="">
+<script>window.NET_RELAY_URL=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/tiro/rele';</script>
 <meta name="cod-build" content="fde7a82381c9">
 <meta name="menu-music" content="">
 <title>Tiro da Galera</title>
@@ -442,7 +443,6 @@
 <div id="lockNote">Capture de la souris refusée par le navigateur. La visée suit la souris tant qu'elle reste dans la fenêtre. Passez en plein écran pour un meilleur confort. Échap met en pause.</div>
 <script src="tex/socle.010191bd.js"></script>
 <script src="tex/three.8431558f.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" integrity="sha384-x0YgkOr/3UOZP2CRDxGW9e0Q+2Qjyr3uJrm4xU32Y7ZCNAo7Cc7bjhrZMi/dwczu" crossorigin="anonymous"></script>
 <script>
 const FILTRE_MOTS={p:'nigger nigga faggot fuck asshole arsehole bitch whore slut pussy dickhead cocksuck blowjob handjob cumshot dildo jizz tranny shemale '+'rapist wetback killyourself hitler auschwitz siegheil whitepower kkk pedophil pedofil paedophil '+'encule salope connard connasse conasse filsdepute niquetamere sucemabite pouffiasse grognasse enfoire batard branl gouine fiotte '+'tarlouze negre bougnoul youpin bamboula salearabe salejuif salenoir '+'hurensohn fotze wichser schwuchtel arschloch missgeburt hijodeputa maricon pendejo gilipollas vaffanculo stronzo frocio puttana cazzo '+'caralho viado '+'himmler goebbels heydrich mengele eichmann fuhrer fuehrer totenkopf waffenss whitepride wpww bloodandhonour bloodhonour '+'nationalsocialis aryannation aryanbrotherhood kukluxklan remigration grandremplacement',n:'nazi cunt twat penis vagina vagin porn porno wank wanker',m:'pute pd pede tapette nique niquer ntm fdp suce catin teub fag spic chink kike gook paki rape raped pedo kys neger heil spast puta '+'zorra cabron',N:'putain merde shit couille hentai nsfw onlyfans boobs bastard mierda mussolini petain aryen generationidentitaire '+'wehrmacht',M:'bite chatte dick cock tits sex sexe negro adolf reich duce',};const FILTRE_SUB={'0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s','€':'e','!':'i','|':'i','а':'a','е':'e','о':'o','р':'p','с':'c','у':'y','х':'x','і':'i','ј':'j','ѕ':'s','к':'k','м':'m','т':'t','н':'h','в':'b','α':'a','β':'b','ε':'e','η':'n','ι':'i','κ':'k','ν':'v','ο':'o','ρ':'p','τ':'t','υ':'u','χ':'x','ı':'i'};function filtreNorm(s){return String(s==null?'':s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[0134578@$€!|аеорсухіјѕкмтнвαβεηικνορτυχı]/g,(c)=>FILTRE_SUB[c]||c).replace(/[^a-z]/g,'');}
 let FILTRE_RE=null;function filtreRes(){if(FILTRE_RE)return FILTRE_RE;const re=(w)=>w.split('').map((c)=>c+'+').join('');const any=(k)=>FILTRE_MOTS[k].split(' ').filter(Boolean).map(re).join('|');FILTRE_RE={chatIn:new RegExp('('+any('p')+')'),chatWord:new RegExp('^('+any('n')+'|'+any('m')+')(s|x|e)?$'),nameIn:new RegExp('('+any('p')+'|'+any('n')+'|'+any('N')+')'),nameWord:new RegExp('^('+any('m')+'|'+any('M')+')(s|x|e)?$'),};return FILTRE_RE;}

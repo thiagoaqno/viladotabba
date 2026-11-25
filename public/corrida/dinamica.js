@@ -120,7 +120,11 @@ function parametrosLento(spec) {
 
 // ---------- o pneu ----------
 // A força lateral relativa (-1..1) no ângulo de deriva `al`: sobe até o pico (|al| = alfaP) e cai um pouco depois.
-const pneuLateral = (p, al) => Math.sin(p.C * Math.atan(p.B * al));
+const pneuLateral = (p, al) => Math.sin(p.C * Math.atan(p.B * al)) * (1 - (1 - 1 / DERRAPA_DESLIZA) * limite((Math.abs(al) - p.alfaP) / p.alfaP, 0, 1));
+// (2026-11-25, o Thiago: "o derrapar faz você perder muita velocidade: perder 20% menos do que perde hoje, mas deslizar 10% a mais") depois do pico o
+// pneu segura até 1/DERRAPA_DESLIZA do que segurava (o carro escorrega mais), e o que as forças de lado tiram da velocidade, derrapando, cai para
+// DERRAPA_PERDA. Antes do pico (a curva no limite) nada muda.
+const DERRAPA_PERDA = 0.8, DERRAPA_DESLIZA = 1.1;
 
 // o ângulo máximo do volante (rad) a `vm` m/s: acompanha o que o pneu segura na velocidade (um pouco além, para o teclado
 // não ficar curto), então de batente a batente nunca é "volante demais" para a velocidade
@@ -288,6 +292,10 @@ function passo(c, ent, amb, p, dt = PASSO) {
     sub.fx = FxF * cd - FyF * sd + FxR + FxBr + FxEb + fxRes + Fg;
     sub.fy = FyF * cd + FxF * sd + FyR + fyRes + (amb.banco ? -p.massa * G * Math.sin(amb.banco) : 0); // (a gravidade na curva inclinada)
     sub.mz = p.a * (FyF * cd + FxF * sd) - p.b * FyR;
+    if (!arc && V > 1 && (Math.abs(alF) > p.alfaP || Math.abs(alR) > p.alfaP)) { // derrapando: devolve (1 − DERRAPA_PERDA) do que as forças de lado tiram da velocidade
+      const vx = u / V, vy = w / V, perda = -FyF * sd * vx + (FyF * cd + FyR) * vy;
+      if (perda < 0) { sub.fx -= (1 - DERRAPA_PERDA) * perda * vx; sub.fy -= (1 - DERRAPA_PERDA) * perda * vy; }
+    }
     // integra
     if (arc) { // arcade: só a velocidade para a frente muda aqui (o lado, no fim do passo)
       const dua = sub.fx / p.massa; let na = u + dua * h;
@@ -343,7 +351,7 @@ function lateralArcade(c, p, kGrip, ex, pn, amb) {
   if (th) c.vl -= G_U * Math.sin(th) * dt; // a gravidade puxa para o lado baixo (os pneus seguram, até o limite)
   const g = gripU * dt; // os pneus puxam o carro para o novo rumo até o limite de aderência; o resto escorrega e freia
   if (Math.abs(c.vl) <= g) c.vl = 0;
-  else { c.vl -= Math.sign(c.vl) * g; c.v -= Math.sign(c.v) * Math.min(Math.abs(c.v), p.scrub * 3 * Math.abs(c.vl) * dt); }
+  else { c.vl -= Math.sign(c.vl) * g / DERRAPA_DESLIZA; c.v -= Math.sign(c.v) * Math.min(Math.abs(c.v), DERRAPA_PERDA * p.scrub * 3 * Math.abs(c.vl) * dt); } // (escorregando: segura menos de lado e perde menos para a frente)
   c.slip = Math.abs(c.vl);
   const ca = Math.cos(c.a), sa = Math.sin(c.a);
   c.vx = c.v * ca - c.vl * sa; c.vy = c.v * sa + c.vl * ca;

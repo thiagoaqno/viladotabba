@@ -9,7 +9,8 @@
 // No site (a VPS), este arquivo só abre a rota de versão, a de recordes vindos do programa e o CORS para a origem do programa.
 // PROTOCOLO: subir de 1 em 1 quando a conversa do navegador com o servidor da Corrida mudar a ponto de um programa antigo não jogar
 // direito no site (eventos do socket, física de sim.js/dinamica.js). Com isso, o programa velho para de entrar no site e pede o update.
-const PROTOCOLO = 2; // (2: as curvas inclinadas, `banking`: a física de Zandvoort e Madri mudou, e o programa velho preveria errado nelas)
+const PROTOCOLO = 3; // (3: a derrapagem mudou em dinamica.js, 2026-11-25: perde menos velocidade e escorrega mais)
+// (antes, 2: as curvas inclinadas, `banking`: a física de Zandvoort e Madri mudou, e o programa velho preveria errado nelas)
 const ORIGEM_PC = /^http:\/\/(127\.0\.0\.1|localhost):\d+$/; // o programa abre o jogo sempre em 127.0.0.1 (desktop/Corrida.cs)
 const SITE = (process.env.CORRIDA_SITE || "").replace(/\/+$/, ""); // só no programa de PC: o endereço do site (desktop/site.txt)
 

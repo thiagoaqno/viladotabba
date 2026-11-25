@@ -1,37 +1,20 @@
-# Controle no celular também no site
+# Derrapagem: perde 20% menos velocidade e desliza 10% mais
 
-O Thiago pediu para levar o controle pelo celular para o site.
+O Thiago achou que derrapar tirava velocidade demais. Pediu que o carro perdesse 20% menos do que perde hoje e, em troca, deslizasse 10% a mais.
 
-Até aqui, ele só existia no programa de PC: o celular falava com o PC pela rede de casa, com o HTTPS da porta 31518 (`corrida-controle.js`). No site não existe essa rede, então o celular e o jogo passam a se juntar pelo servidor do site, com um código.
+## `dinamica.js`
 
-## O servidor (`corrida-controle-site.js`, novo; ligado em `server.js`)
+- **Modelo físico** (médio, duro e chuva):
+  - **Desliza mais:** depois do pico de aderência, a força lateral do pneu cai suavemente até 1/1,1 do que era (`DERRAPA_DESLIZA`), e o carro escorrega mais.
+  - **Perde menos:** derrapando (pneu da frente ou de trás além do pico), 20% da parte das forças de lado que freia o carro na direção em que ele anda é devolvida (`DERRAPA_PERDA` = 0,8).
+  - **Antes do pico** (a curva no limite, sem escorregar), nada muda.
+- **Modelo arcade** (o macio dentro da vida útil): no escorregão, a correção de lado fica em 1/1,1 e a perda pelo `scrub` em 80%.
+- **Robôs:** usam a mesma física, então também derrapam assim.
 
-- **O canal:** é o `/controle-par`, com os mesmos eventos do controle de casa. O celular manda `e` (a entrada, até 60 por segundo) e `acao`; o jogo manda `painel` e recebe `estado`.
-- **O código:** o jogo pede ("abrir") e recebe um código de 5 letras e números, sem os que se confundem, e o endereço `https://<site>/c/<código>`. O código vale enquanto o jogo estiver ligado e mais 10 minutos depois que ele sai, para voltar à sala sem trocar. O jogo guarda o código e, ao reconectar, volta para ele.
-- **Limite:** no máximo 3 celulares por jogo. Um código errado ou cheio é recusado com o motivo.
-- **Endereços:** `/c/<código>` leva para a página do controle já com o código; `/c` abre a página para digitar o código.
+## Programa de PC
 
-## O jogo (`controle-celular.js`)
+O `PROTOCOLO` subiu de 2 para 3 (`corrida-pc.js`), porque a física mudou: o programa velho preveria errado e passa a pedir a atualização antes de jogar no site.
 
-- No site, o botão "📱 Controle no celular" aparece na tela inicial, como no programa de PC.
-- A janela mostra o endereço, o código grande em amarelo e o "ou abra <site>/c e digite o código". Sem o aviso de certificado do PC, que não existe no site.
-- No programa de PC, tudo continua como era, pela rede de casa.
+## Não conferido
 
-## O celular (`controle.html`)
-
-- Fora da porta 31518, a página usa o canal do site.
-- **Com o código no endereço:** conecta sozinha.
-- **Sem o código:** a tela de começar pede o código.
-- Os avisos dizem "conectado ao jogo", "código não encontrado: confira no jogo" ou "o jogo saiu".
-- O site é HTTPS, então o iPhone entrega o giroscópio.
-
-## Conferido
-
-Num servidor de teste, uma página pediu o código como o jogo e outra abriu `/c/<código>` como o celular:
-- o celular conectou ao jogo;
-- o jogo viu 1 celular e recebeu 154 entradas em uns 2,5 s;
-- um código inexistente mostra "código não encontrado".
-
-Não testei num celular de verdade pela internet: a demora do caminho celular → site → jogo é a da conexão de cada um.
-
-A novidade fica para depois do #974, que também escreve no topo do `novidades.json`.
+Não rodei a suíte. A CI diz se algum teste de física depende do escorregão antigo.

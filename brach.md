@@ -1,46 +1,42 @@
-# Editor do capacete: os capacetes em pixel art como "Padrões"
-
-O Thiago pediu que os capacetes das folhas de pixel art entrassem no editor de capacete como padrões.
-
-- **`f1-capacetes-padroes.js` (novo):** são 30 padrões, os 22 pilotos do grid e 8 extras que sobraram das folhas. Cada um tem:
-  - o desenho do editor. Os 22 pilotos usam o desenho deles em `f1-capacetes.js`; os extras usam um rodízio de desenhos do editor. Todos estão na lista do servidor (`DESENHOS_CAPACETE`);
-  - as três cores principais, tiradas da imagem em pixel por ferramenta: k-médias no casco, sem o visor e o que é quase preto, em ordem de quanto aparecem;
-  - a viseira escura.
-- **A aba "Padrões" (`capacete-editor-ui.js`):** é a primeira do menu. Mostra a grade com as miniaturas em pixel art e o nome de cada um, e a grade rola. O clique aplica o desenho, as cores e a viseira e volta ao primeiro "Padrão" (variante 0). Depois dá para ajustar à vontade nas outras abas.
-- **Onde aparece:** o editor é o mesmo da sala e da aba Capacete da carreira, então os padrões aparecem nos dois lugares.
-- **Conferido:** num servidor de teste, montei o editor, abri a aba e cliquei no padrão do Norris. Ficaram 30 padrões, e o capacete guardado ficou com o desenho "faixa" e o verde-neon. A página não teve erros.
-# Carreira de F1: a aba "Meu piloto"
-
-O Thiago pediu que a carreira de F1 tivesse uma guia "Meu piloto" para montar o piloto em pixel art.
-
-- **A aba (`temporada/central.js`):** "Meu piloto" entra na Central, entre "Capacete" e "Contratos". Ela funciona como a aba Capacete: a Central marca o lugar (`data-cx-piloto`), e o módulo de `temporada/index.html` (`window.PilotoCarreira`) põe ali o montador. Ele é o mesmo da sala (`piloto-pixel-editor.js`), com a prévia no macacão da sua equipe da carreira.
-- **Onde fica guardado:** neste navegador, o mesmo do montador da sala. Vai para a pista na próxima corrida, porque a carreira passa pela classificação, onde o piloto é enviado (`sincronizarPixel`).
-- **Conserto:** o montador importava o `estado.js` direto, e ele depende do `Comum` que só existe na página do jogo. Na Central, isso derrubava o módulo inteiro. Agora o `estado.js` só é carregado quando o montador fala com a sala. Na sala, a cor do macacão e o nome para o sorteio entram pelas opções de `montarMontador` (`cor` e `nome`).
-- **Conferido:** a página da carreira e a do jogo carregam num servidor de teste, e o montador aparece e responde nas duas. Na carreira, o único aviso é o ícone da aba (`favicon`), que já faltava antes.
-# Apresentação da pista: o grid de largada fila a fila, no estilo da transmissão
-
-O Thiago pediu que, na apresentação da pista, a ordem dos pilotos passasse de 2 em 2 com os cards deles, grandes e em destaque. Depois mandou o print do "Starting grid" da transmissão do jogo da F1 como referência.
-
-## O painel (`transmissao.js`: `cartaGrid`, `ladoDoGrid`, `meioDoGrid`; `transmissao.css`: `.tvGridP`, `.tgp*`)
-
-- **O painel:** ocupa a tela quase inteira. Em cima vêm "Fórmula 1 · <pista> <ano>" e o título "Grid de largada".
-- **Cada lado, um piloto da fila da vez:**
-  - a posição enorme ("17º") no alto;
-  - o retrato em pixel art grande, de até 384 px;
-  - embaixo, o logo da equipe, o nome e o sobrenome em letras grandes;
-  - o tempo da classificação e a diferença para a pole em vermelho, quando houve classificação (`E.S.quali.tabela`).
-- **O meio:** o grid em zigue-zague, com os ímpares à esquerda e os pares à direita, um pouco abaixo. Ele é preenchido da pole para trás com a sigla na cor da equipe, e a fila da vez fica sublinhada.
-- **A ordem:** os pares vão da pole até a última fila, como na referência. A câmera do bloco agora anda no mesmo sentido, da pole para trás.
-- **No celular:** o meio some e os dois lados dividem a tela.
-
-## O tempo
-
-O Thiago pediu: "pode aumentar o tempo total para uns 20 s, aí dá tempo de exibir tudo com calma".
-
-- A transmissão da corrida avulsa passou de 8 para 20 s (`TV_AVULSA_MS`, `corrida-base.js`). A da temporada continua em 25 s.
-- Os blocos (`BASE`) ficaram assim: pista 6 s, clima 2,5 s, campeonato 4,5 s e grid 12 s. Antes eram 9,5 / 4 / 6,5 / 5.
-- Dá cerca de 1 s por fila, e ainda dá para pular.
-
-## Conferido
-
-Montei uma página estática com o CSS e uma fila de exemplo para ver o visual, e a página do jogo carrega sem erros num servidor de teste. A transmissão rodando com a câmera não foi vista.
+`# Capacetes dos 22 pilotos: desenho, logo da equipe e patrocínios de cada um
+`
+`O Thiago achou os padrões do editor de capacete "BEM diferentes" dos capacetes da folha de pixel art: só as cores tinham sido copiadas, e alguns têm logo da equipe e pintura únicos.
+`
+`## Os desenhos (`f1-capacetes-estilos.js`, `ESTILOS_PILOTOS`)
+`
+`Cada piloto do grid ganhou um desenho próprio (`p_NOR`, `p_LEC`…), pela folha de pixel art.
+`
+`- **As formas** seguem o jeito da equipe:
+`  - McLaren: a coroa escura com cortes e a fita escura pelos lados;
+`  - Ferrari: os blocos brancos do Leclerc, os cortes em vermelho escuro do Hamilton;
+`  - Mercedes: a coroa descendo em ponta até a testa;
+`  - Red Bull e Racing Bulls: a coroa, o queixo e as faixas diagonais;
+`  - Aston Martin: a onda de baixo;
+`  - Williams: as setas;
+`  - Sauber/Audi: as fitas verdes;
+`  - Alpine: os cortes rosa ou azul-claro;
+`  - Haas: os cortes vermelhos;
+`  - Cadillac: os cortes dourados ou brancos.
+`- **As cores** são as do piloto, e o companheiro de equipe tem uma variação.
+`- **As marcas fixas de cada um:**
+`  - o logo da equipe na testa: a imagem do logo (Ferrari, McLaren, Aston, Racing Bulls) ou a marca (a estrela, o touro, o W, o K, o Alpine, o Haas, o brasão da Cadillac);
+`  - o nome na faixa acima do visor e na nuca (PETRONAS, WILLIAMS, ALPINE…);
+`  - os patrocínios nos lados e na nuca (Shell, HP, Oracle, Aramco, Visa, MoneyGram…).
+`
+`## Onde valem
+`
+`- **Na pintura (`pintarFolha`, `f1-capacetes.js`):** as marcas fixas entram quando o capacete não traz as suas. Para pôr o logo da equipe, entrou o `logoDaEquipe`, uma imagem que chega depois e repinta.
+`- **No editor (`f1-capacetes-padroes.js`, `capacete-editor-ui.js`):** os 22 padrões usam esses desenhos. Escolher um padrão limpa os patrocínios e o nome, e aí entram os do piloto. Depois dá para mexer à vontade.
+`- **Na pista (`capacetePorSigla`):** os robôs usam o capacete desenhado quando o piloto está na equipe de 2026. Numa temporada antiga, fica o de antes.
+`- **Marcas novas:** \`MARCAS_CAPACETE\` ganhou Red Bull, Oracle, Mobil 1, CrowdStrike, Alpine, Haas, Visa e Valvoline. Os logos já existiam no projeto.
+`- **No servidor:** \`limparCapacete\` (\`corrida-base.js\`) aceita os desenhos \`p_XXX\`.
+`
+`## Conserto
+`
+`As marcas fixas no capacete de um robô, que não tem \`extra\`, quebravam em \`extra.fundoPatrocinio\`. Agora elas vão direto no casco.
+`
+`## Conferido
+`
+`- Desenhei as 22 folhas planas: todas saem com o desenho, o logo, o nome e os patrocínios, e a página do jogo não teve erros.
+`- No editor, o padrão aplica e guarda.
+`- A prévia 3D apareceu com a pintura, mas o print pelo SwiftShader trava, então não conferi os 22 em 3D.

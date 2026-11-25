@@ -8,7 +8,8 @@
 // (f1-piloto.js) ocupa y de 98 a 127 e x = 384 ± 94, então esse pedaço fica só com o casco por baixo; a faixa do patrocínio entra logo acima.
 // `cores`: [casco, segunda cor, terceira cor (filetes, detalhes)].
 import { desenharMarca } from "./f1-marcas.js";
-import { ESTILOS } from "./f1-capacetes-estilos.js";
+import { ESTILOS, ESTILOS_PILOTOS } from "./f1-capacetes-estilos.js";
+export { ESTILOS_PILOTOS };
 
 export const CAPACETES = {
   norris: { cores: ["#c4f31a", "#101114", "#d9ae2e"], desenho: "faixa" },       // verde-neon e preto, uma estrelinha dourada
@@ -37,8 +38,14 @@ export const CAPACETES = {
 // o capacete do robô pela sigla do piloto (NOR, PIA...): null = desenho genérico
 export function capacetePorSigla(sigla) {
   const lista = (typeof window !== "undefined" && window.F1Pilotos?.PILOTOS) || [], p = sigla && lista.find((q) => q.sigla === sigla);
-  return p ? CAPACETES[p.id] || null : null;
+  if (!p) return null;
+  // (2026-11-25) o capacete desenhado do piloto do grid (ESTILOS_PILOTOS), quando ele está na equipe de 2026 (numa temporada antiga, o de antes)
+  const est = ESTILOS_PILOTOS["p_" + sigla];
+  if (est && EQUIPE_2026[sigla] === p.equipe) return { cores: est.cores, desenho: "p_" + sigla };
+  return CAPACETES[p.id] || null;
 }
+const EQUIPE_2026 = { NOR: "mclaren", PIA: "mclaren", LEC: "ferrari", HAM: "ferrari", RUS: "mercedes", ANT: "mercedes", VER: "red-bull", HAD: "red-bull", LAW: "racing-bulls", LIN: "racing-bulls",
+  ALO: "aston-martin", STR: "aston-martin", ALB: "williams", SAI: "williams", HUL: "audi", BOR: "audi", GAS: "alpine", COL: "alpine", CAM: "haas", BEA: "haas", PER: "cadillac", BOT: "cadillac" };
 
 const LADOS = [0, 256, 512];
 const poli = (x, pts, cor) => { x.fillStyle = cor; x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); x.fill(); };
@@ -282,7 +289,8 @@ export const ACABAMENTOS = { brilho: "Brilhante", fosco: "Fosco", acetinado: "Ac
   flocos: "Flocos de metal", carbono: "Fibra de carbono", cromo: "Cromado" }; // (2026-11-15: acetinado, perolado, camaleão, flocos e carbono)
 export const PATROCINIOS = { "": "Nenhum", vila: "Vila do Tabba", galera: "Galera Racing", energia: "Tabba Energy", pneus: "Turbo Pneus" };
 // (2026-11-15) as marcas das pinturas dos carros (f1-marcas.js, desenhadas no canvas) também podem ir no capacete, cada uma num lugar
-export const MARCAS_CAPACETE = { hp: "HP", shell: "Shell", vpower: "V-Power", unicredit: "UniCredit", ceva: "CEVA", ibm: "IBM", zyn: "ZYN", richardmille: "Richard Mille",
+export const MARCAS_CAPACETE = { redbull: "Red Bull", oracle: "Oracle", mobil1: "Mobil 1", crowdstrike: "CrowdStrike", alpine: "Alpine", haas: "Haas", visa: "Visa", valvoline: "Valvoline", // (2026-11-25: as dos capacetes dos pilotos do grid, f1-capacetes-estilos.js ESTILOS_PILOTOS)
+  hp: "HP", shell: "Shell", vpower: "V-Power", unicredit: "UniCredit", ceva: "CEVA", ibm: "IBM", zyn: "ZYN", richardmille: "Richard Mille",
   bitdefender: "Bitdefender", bingx: "BingX", whoop: "WHOOP", pirelli: "Pirelli", genesys: "Genesys", peroni: "Peroni", rayban: "Ray-Ban", ambipar: "Ambipar", dell: "Dell",
   etihad: "Etihad", groq: "Groq", hilton: "Hilton", oneflight: "ONEflight", castrol: "Castrol", hyatt: "World of Hyatt", bp: "bp", revolutr: "Revolut", adidas: "adidas",
   twgai: "TWG AI", jimbeam: "Jim Beam", corescientific: "Core Scientific", brasao: "Brasão Cadillac", hilfiger: "Tommy Hilfiger", coherent: "Coherent", proforce: "Proforce+",
@@ -456,17 +464,24 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   const carbono = extra && extra.acabamento === "carbono" && folhaDeRelevo("carbono");
   if (carbono) { x.drawImage(carbono, 0, 0); x.globalAlpha = 0.2; x.fillStyle = c1; x.fillRect(0, 0, 512, 256); x.globalAlpha = 1; } // (o casco de carbono, puxado para a cor 1)
   x.save(); if (v === 3) { x.translate(512, 0); x.scale(-1, 1); } // (o "Padrão" espelhado: o desenho vira de lado)
-  if (ESTILOS[desenho]) ESTILOS[desenho].pintar(x, base); else (DESENHOS[desenho] || DESENHOS.generico)(x, base);
+  const EST = ESTILOS[desenho] || ESTILOS_PILOTOS[desenho];
+  if (EST) EST.pintar(x, base); else (DESENHOS[desenho] || DESENHOS.generico)(x, base);
   x.restore();
   x.fillStyle = c3; x.fillRect(282, 74, 204, 11); // a faixa estreita do patrocínio / nome acima da viseira (só cor; um pouco acima do lábio da viseira)
   // as duas entradas de ar do queixo, logo abaixo da viseira (2026-11-13, pela imagem do Thiago): fendas escuras inclinadas para fora
   x.fillStyle = "#0b0c10";
   for (const l of [-1, 1]) { x.save(); x.translate(384 + l * 34, 150); x.rotate(l * 0.18); x.beginPath(); x.roundRect ? x.roundRect(-17, -4, 34, 8, 4) : x.rect(-17, -4, 34, 8); x.fill(); x.restore(); }
-  const patr = extra ? (extra.patrocinios || patrociniosDe(extra)) : {};
+  // (2026-11-25) os capacetes dos pilotos do grid trazem as marcas deles (ESTILOS_PILOTOS: o logo da equipe, o nome da faixa e os patrocínios); valem
+  // quando o capacete não tem os seus (o robô na pista, ou o padrão do editor antes de mexer)
+  const fixas = ESTILOS_PILOTOS[desenho] && ESTILOS_PILOTOS[desenho].marcas;
+  let patr = extra ? (extra.patrocinios || patrociniosDe(extra)) : {};
+  if (fixas && !Object.keys(patr).length) patr = { ...(fixas.patrocinios || {}) };
+  if (fixas && fixas.logo && !patr.testa) { const img = logoDaEquipe(fixas.logo, aoChegar); if (img) logoNaTesta(x, img); }
+  if (fixas && fixas.nome && !(extra && String(extra.nome || "").trim())) extra = { ...(extra || {}), nome: fixas.nome };
   for (const [lugar, id] of Object.entries(patr)) {
     if (!LUGARES[lugar] || !id || !(SELOS[id] || MARCAS_CAPACETE[id])) continue;
     if (lugar === "faixa") { x.fillStyle = c3; x.fillRect(278, 66, 212, 22); } // (a faixa acima do visor, como a do nome)
-    for (const l of LUGARES[lugar]) patrocinioNoLugar(x, id, l, extra.fundoPatrocinio, c3);
+    for (const l of LUGARES[lugar]) patrocinioNoLugar(x, id, l, extra ? extra.fundoPatrocinio : "auto", c3); // (o robô não tem `extra`: as marcas fixas do capacete dele vão direto no casco)
   }
   if (extra) {
     const img = extra.bandeira ? bandeiraImg(extra.bandeira, aoChegar) : null;
@@ -484,6 +499,19 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
     x.font = "900 54px 'Arial Black', Arial, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.lineJoin = "round"; x.lineWidth = 7;
     for (const [cx, cy] of [[128, 168], [256, 172], [0, 172], [512, 172]]) { x.strokeStyle = "#0b0c10"; x.strokeText(String(numero), cx, cy); x.fillStyle = "#ffffff"; x.fillText(String(numero), cx, cy); }
   }
+}
+// o logo da equipe (a imagem de /corrida/logos, a mesma da torre) para a testa dos capacetes dos pilotos; chega depois e repinta (aoChegar)
+const LOGOS = new Map();
+function logoDaEquipe(eq, aoChegar) {
+  if (typeof Image === "undefined") return null;
+  let b = LOGOS.get(eq);
+  if (!b) { b = { img: new Image(), ok: false, espera: [] }; LOGOS.set(eq, b); b.img.onload = () => { b.ok = true; for (const f of b.espera.splice(0)) f(); }; b.img.src = (typeof window !== "undefined" && window.logoF1 ? window.logoF1(eq) : "/api/corrida/logo/" + eq); }
+  if (!b.ok && aoChegar) b.espera.push(aoChegar);
+  return b.ok ? b.img : null;
+}
+function logoNaTesta(x, img) {
+  const [cx, cy, w, h] = LUGARES.testa[0], e = Math.min(w / img.naturalWidth, (h * 1.9) / img.naturalHeight), lw = img.naturalWidth * e, lh = img.naturalHeight * e;
+  x.drawImage(img, cx - lw / 2, cy - lh / 2 - 6, lw, lh);
 }
 // a miniatura de um patrocínio para o editor (dataURL, feita uma vez): a marca ou o selo num quadro escuro
 const MINIS = new Map();

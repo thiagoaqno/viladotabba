@@ -66,15 +66,16 @@ function estilo() {
 }
 const corDaEquipe = () => { const m = me(), eq = m && m.equipe && window.F1Pilotos && window.F1Pilotos.EQUIPES[m.equipe]; return (eq && eq.cor) || (m && m.color) || "#3a6fd0"; };
 
-// monta o montador em `el` (uma vez) e devolve { atual(), redesenhar() }. op: { aoMudar (t) }
+// monta o montador em `el` (uma vez) e devolve { atual(), redesenhar() }. op: { aoMudar (t), cor () (a cor do macacão; sem ela, a da sua equipe na sala) }
 export function montarMontador(el, op = {}) {
+  if (op.cor) el._corPx = op.cor;
   if (el._pixel) { el._pixel.redesenhar(); return el._pixel; }
   estilo();
   let atual = lerPixel() || { ...tracosSorteados((me() && me().name) || "eu") };
   el.innerHTML = `<div class="px-prev"><img alt="O seu piloto em pixel art" data-px="img"><div class="px-bts"><button type="button" data-px="sortear">🎲 Sortear</button></div></div>
     <div class="px-linhas">${LINHAS.map(([campo, nome]) => `<div class="px-l" data-campo="${campo}"><span>${h(nome)}</span><span class="px-v"><button type="button" data-d="-1" aria-label="${h(nome)}: anterior">‹</button><b></b><button type="button" data-d="1" aria-label="${h(nome)}: próximo">›</button></span></div>`).join("")}</div>`;
   const pintar = () => {
-    el.querySelector('[data-px="img"]').src = retrato(atual, { cor: corDaEquipe(), escala: 3 });
+    el.querySelector('[data-px="img"]').src = retrato(atual, { cor: (el._corPx && el._corPx()) || corDaEquipe(), escala: 3 });
     for (const [campo, , lista] of LINHAS) {
       const b = el.querySelector(`[data-campo="${campo}"] b`); if (!b) continue;
       const v = campo === "risca" ? atual.risca || "" : atual[campo];

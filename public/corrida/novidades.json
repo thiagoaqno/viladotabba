@@ -7,10 +7,16 @@
       "A batalha com o carro da frente ou de trás aparece dentro da torre, com a diferença grande entre os dois",
       "Quando você ganha ou perde posição, a sua linha abre o cartão do piloto; o novo líder ganha um aviso no alto da tela",
       "A caixa de marcha no canto: marcha, velocidade e a bateria do ERS"
+    ]
+  },
+  {
     "id": "marcas-asa-2026-11-25",
     "data": "2026-11-25",
     "itens": [
       "As marcas da asa traseira ficaram maiores e mais nítidas: dá para ler o patrocinador do carro da frente"
+    ]
+  },
+  {
     "id": "camera-f1-2026-11-25",
     "data": "2026-11-25",
     "itens": [

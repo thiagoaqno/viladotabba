@@ -1,11 +1,13 @@
-# MFD: o pedido de voz entendido fica verde e o MFD fecha
+# Meu piloto: animação idle natural
 
-O Thiago pediu: ao falar com o engenheiro, a opção que ele entendeu fica verde no MFD por 2 s, e depois o MFD fecha.
+O Thiago achou a animação do piloto ruim e pediu algo "idle", natural.
 
-- **`mfd.js` (`confirmarPedido`, chamado no começo de `executarJeff`):**
-  - acha na aba Pedidos o botão do comando entendido, pelo tipo e pelo composto do pneu quando há;
-  - acende o botão em verde;
-  - 2 s depois tira o verde e, se o MFD ainda está nos Pedidos, faz ele descer.
-  - Um comando novo antes dos 2 s troca a opção acesa.
-- **`hud-mfd.css`:** o verde, com brilho e um pulinho na entrada. Vale nos dois tipos de MFD.
-- **Pedido não entendido:** nada acende, e o engenheiro continua dizendo que não entendeu.
+- **Antes:** a cada 6 a 11 s, um gesto em CSS que saltava: o braço girava 140°, a cabeça trocava de estado e o corpo pulava.
+- **Agora** (`temporada/index.html`): um laço por quadro com molas suaves, sem nada que salte:
+  - **Corpo:** respira (ciclo de 3,6 s) e passa o peso de uma perna para a outra (7 s), com um leve balanço.
+  - **Cabeça:** segue o mouse com atraso, como um olhar. Uns 3 s depois que o mouse para, passeia o olhar devagar para os lados.
+  - **Braço:** balança de leve. A cada 9 a 18 s, se o mouse está parado, faz um gesto curto, como ajeitar a luva.
+  - **Clique:** um aceno de 1,7 s (o braço sobe pela mola e balança) e um pulinho pequeno.
+  - **Piscar:** a cada 2,5 a 5,5 s, às vezes duas vezes seguidas.
+- **Movimento reduzido:** quem tem essa opção ligada no aparelho vê o piloto parado.
+- **Conferido:** num servidor de teste, o laço roda sem erros, e o print no meio do aceno mostra o braço subindo suave.

@@ -8,6 +8,7 @@ import { drawItemHud } from "./itens.js";
 import { clima } from "./clima.js";
 import { set, montarCentro, atualizarCentro, montarTempo, atualizarTempo, estrategia, minimapaF1, minimapaPertoF1, desenharBanner, montarCrono, desenharCrono } from "./hud-painel.js";
 import { montarMfd, atualizarMfd, acoes } from "./mfd.js";
+import { hudTv } from "./hud-tv.js";
 import { atualizarMenuBox } from "./box-menu.js";
 import { tocarCinematica } from "./cinematica.js";
 const cine = { chave: null, tocando: false };
@@ -496,6 +497,8 @@ function hudF1(m, st, now) {
   if (carga > (race.hudCargaAnt == null ? carga : race.hudCargaAnt) + 0.0004) race.hudHarv = t0; race.hudCargaAnt = carga; // recarregando (frear ou tirar o pé)
   const modoErs = HM.modoDoErs({ ativo: !!race.ersAtivo, carga, subindo: t0 - (race.hudHarv || -1e9) < 400 });
   atualizarCentro({ m, kmh, modoErs });
+  // o estilo "Transmissão (TV)" (hud-tv.js): a batalha dentro da torre, o cartão do piloto, o novo líder e a caixa de marcha
+  hudTv({ linhas, ver, m, fase: E.S.phase, batalha: (filaAvisos().visiveis(Date.now()).find((a) => a.tipo === "batalha") || {}).texto || null, kmh, marcha: !m ? "" : (kmh < 1 && !race.marcha ? "N" : race.marcha || 1), carga, ersAtivo: !!race.ersAtivo });
   atualizarTempo(m, st, now); // o quadro do alto à direita (setores, posição, volta atual, melhor)
   // o MFD e as punições
   const est = estrategia(m, cors, race.hudEsc);

@@ -1,24 +1,25 @@
-# Marcas da asa traseira legíveis no carro da frente
+# HUD "Transmissão (TV)": a torre da transmissão como opção
 
-O Thiago mandou prints do jogo oficial: na T-cam dá para ler o ETIHAD na asa traseira das McLaren da frente. Aqui não dava.
+O Thiago mandou prints de uma transmissão do jogo da F1 e pediu algo próximo disso **como opção**, principalmente na torre e no MFD. Este PR faz a torre e a caixa de marcha. O MFD fica para o próximo.
 
-## Por quê
+## O estilo
 
-As marcas da asa traseira, as que quem vem atrás lê, eram pequenas. Atrás da asa (a vista R, `marcaU`) tinham no máximo 8,5 cm de altura e em cima dela (a vista T) de 5 a 9 cm. A uns 30 m, com o campo de visão da câmera F1, 1 m da pista dá uns 40 pixels na tela (conta, não medida), então essas letras ficavam com uns 4 pixels. A resolução da folha não é o limite: a dos adversários tem uns 350 pixels por metro.
+É o quarto estilo de HUD (`ESTILOS_HUD` em `hud-telemetria.js`): `tv`, "Transmissão (TV)". Ele aparece em Configurações > Geral, no MFD e no ciclo da tecla H, e liga `#race.hud-tv`. Os outros estilos não mudam.
 
-## O que mudou (`f1-pintura.js`)
+- **`hud-tv.css`, a torre:**
+  - o logo da F1 grande no alto e a volta embaixo dele;
+  - linhas mais altas no azul-escuro;
+  - o número do líder no vermelho e a sua linha branca;
+  - a letra do pneu, sem o círculo, no fim da linha;
+  - o relógio roxo da volta mais rápida do lado de fora, à esquerda, sem pintar a linha de roxo.
+- **`hud-tv.js`**, chamado pela torre em `hud.js` (`hudTv`):
+  - **Batalha:** o card de distância do seu carro (`gapF1`) vira faixa dentro da torre: "BATALHA PELO Nº" acima do da frente e a diferença grande entre as duas linhas, rolando quando muda. O card do canto some neste estilo.
+  - **Cartão do piloto:** quando você ganha ou perde posição, a sua linha abre embaixo, por 6 s, um cartão na cor da equipe com o número, o nome e a equipe. Não há fotos dos pilotos, então vai só o número grande.
+  - **Novo líder:** quando a liderança troca, depois da primeira volta do líder, aparece uma faixa no alto, no meio, com o sobrenome na cor da equipe e o logo, por 4 s.
+  - **Caixa de marcha:** embaixo à direita, no lugar do mostrador grande: GEAR, a velocidade, KM/H e a bateria do ERS em %. A % fica amarela cheia ou desdobrando, azul no meio e vermelha abaixo de 20%. O MFD e o botão dele sobem para cima dela.
+- As faixas não mexem na classe das linhas: `hud.js` reescreve essas classes. O espaço delas é a margem da linha, e as faixas são posicionadas pela posição da linha na tela.
 
-- **Atrás da asa:** a altura passa a ser 1,3× a pedida, com teto de 15 cm (antes era 0,75× com teto de 8,5 cm).
-- **Em cima da asa:** as marcas lidas de trás (giro `-DE_FRENTE`, s > 3,85) ficam 1,5× maiores.
-- **Largura:** nenhuma das duas passa de 1 m, para não sair da asa (o flap tem ±0,57 m). A largura vem da proporção do logo real, pela `proporcaoMarca` nova em `f1-marcas.js`.
-- **Nitidez:** a anisotropia das folhas de pintura subiu de 4 (adversários) e 8 (o meu carro) para 16. O three corta no máximo que a placa aceita. Não gasta memória a mais.
+## Fica para depois
 
-Os números de 1,3×, 1,5× e 15 cm são o ponto de partida, para o Thiago conferir jogando. Se alguma marca vazar para fora da asa, eles ficam todos juntos no começo de `marca` (`ASA_CIMA`, `ASA_TRAS`, `ASA_TRAS_MAX`, `ASA_LARG`).
-# Câmera nova "F1"
-
-O Thiago montou na tela Câmera um ajuste da T-cam e pediu uma câmera própria chamada "F1" com ele.
-
-- `camera-ajuste.js`: "f1" nas câmeras editáveis, de dentro do carro, com o padrão do print dele: campo de visão 45°, lateral −0,05 m, altura −0,10 m, avanço 0,10 m, inclinação −7°, tremor 15%.
-- `cameras.js`: a "F1" entra no ciclo do C logo depois da T-cam e usa a mesma posição (a entrada de ar), com o ajuste dela; som e olhar para trás como a T-cam.
-- Retrovisores (`espelhos.js`, `retrovisor.js`), HUD de telemetria ancorado, prévia da sala (`ajustes-lobby.js`) e aba "F1" na tela Câmera.
-- A T-cam continua com o padrão de antes.
+- **O MFD no estilo dos prints:** o painel de vidro ao lado do halo, com as linhas "‹ valor ›" e a janela de parada. A tela de temperaturas dos prints não entra, porque o jogo não simula a temperatura dos pneus nem dos freios.
+- **O card de baixo com os dois pilotos e as velocidades.**

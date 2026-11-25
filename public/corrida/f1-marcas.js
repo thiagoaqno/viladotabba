@@ -290,6 +290,8 @@ export const marcasReaisProntas = typeof fetch === "undefined" || typeof documen
     img.src = "/corrida/logos/marcas/" + d.arquivo;
   })))).catch(() => {});
 export const temLogoReal = (id) => REAIS.has(id);
+// largura / altura do logo real (null sem o arquivo): f1-pintura.js usa para o logo da asa traseira não passar da largura dela
+export const proporcaoMarca = (id) => REAIS.get(id)?.ar || null;
 function tingida(id, r, cor) {
   const k = id + "|" + cor; let t = TINGIDAS.get(k); if (t) return t;
   t = document.createElement("canvas"); t.width = r.cv.width; t.height = r.cv.height; const x = t.getContext("2d");

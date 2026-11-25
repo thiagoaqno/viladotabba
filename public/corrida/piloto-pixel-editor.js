@@ -4,7 +4,9 @@
 // macacão da sua equipe. Os traços ficam guardados neste navegador ("corrida:piloto-pixel") e vão para a sala em `mods.pixel` (o servidor confere em
 // corrida-base.js limparPixel), assim os outros veem o seu piloto no cartão do HUD de transmissão. Como o capacete (capacete-editor.js): manda
 // 1,2 s depois do último clique, e uma vez por sala ao entrar.
-import { E, $, me, act } from "./estado.js";
+// (o estado da sala, estado.js, só é carregado quando o montador fala com a sala: ele depende do `Comum` da página do jogo, e o montador também
+// roda na Central da carreira, temporada/index.html, onde não há sala)
+let EST = null; const est = async () => EST || (EST = await import("./estado.js"));
 import { retrato, tracosSorteados, PELES, CABELOS, CORES_CABELO, BARBAS, OLHOS, ROSTOS, NARIZES, SOBRANCELHAS } from "./pixel-piloto.js";
 
 export const CHAVE_PIXEL = "corrida:piloto-pixel";
@@ -36,9 +38,9 @@ const gravar = (t) => { try { localStorage.setItem(CHAVE_PIXEL, JSON.stringify(t
 
 // ---------- a ligação com a sala ----------
 let enviarT = 0, enviadoPara = null;
-function enviar(t) { clearTimeout(enviarT); enviarT = setTimeout(() => { if (me() && E.S && E.S.phase !== "race") act("mods", { mods: { pixel: t } }); }, 1200); }
-export function sincronizarPixel() {
-  const m = me(), salvo = lerPixel(); if (!m || !salvo || !E.S || E.S.phase === "race") return;
+function enviar(t) { clearTimeout(enviarT); enviarT = setTimeout(async () => { const { E, me, act } = await est(); if (me() && E.S && E.S.phase !== "race") act("mods", { mods: { pixel: t } }); }, 1200); }
+export async function sincronizarPixel() {
+  const { E, me, act } = await est(), m = me(), salvo = lerPixel(); if (!m || !salvo || !E.S || E.S.phase === "race") return;
   const chave = E.S.code + ":" + m.id; if (enviadoPara === chave) return; enviadoPara = chave;
   if (JSON.stringify(m.mods?.pixel || null) !== JSON.stringify(salvo)) act("mods", { mods: { pixel: salvo } });
 }
@@ -64,17 +66,18 @@ function estilo() {
 @media (max-width:640px){.px-cartao{grid-template-columns:1fr}.px-prev img{width:96px;height:96px}}`;
   document.head.appendChild(s);
 }
-const corDaEquipe = () => { const m = me(), eq = m && m.equipe && window.F1Pilotos && window.F1Pilotos.EQUIPES[m.equipe]; return (eq && eq.cor) || (m && m.color) || "#3a6fd0"; };
+const corDoJogador = (m) => { const eq = m && m.equipe && window.F1Pilotos && window.F1Pilotos.EQUIPES[m.equipe]; return (eq && eq.cor) || (m && m.color) || "#3a6fd0"; };
 
-// monta o montador em `el` (uma vez) e devolve { atual(), redesenhar() }. op: { aoMudar (t) }
+// monta o montador em `el` (uma vez) e devolve { atual(), redesenhar() }. op: { aoMudar (t), cor () (a cor do macacão; sem ela, a da sua equipe na sala) }
 export function montarMontador(el, op = {}) {
+  if (op.cor) el._corPx = op.cor;
   if (el._pixel) { el._pixel.redesenhar(); return el._pixel; }
   estilo();
-  let atual = lerPixel() || { ...tracosSorteados((me() && me().name) || "eu") };
+  let atual = lerPixel() || { ...tracosSorteados(op.nome || "eu") };
   el.innerHTML = `<div class="px-prev"><img alt="O seu piloto em pixel art" data-px="img"><div class="px-bts"><button type="button" data-px="sortear">🎲 Sortear</button></div></div>
     <div class="px-linhas">${LINHAS.map(([campo, nome]) => `<div class="px-l" data-campo="${campo}"><span>${h(nome)}</span><span class="px-v"><button type="button" data-d="-1" aria-label="${h(nome)}: anterior">‹</button><b></b><button type="button" data-d="1" aria-label="${h(nome)}: próximo">›</button></span></div>`).join("")}</div>`;
   const pintar = () => {
-    el.querySelector('[data-px="img"]').src = retrato(atual, { cor: corDaEquipe(), escala: 3 });
+    el.querySelector('[data-px="img"]').src = retrato(atual, { cor: (el._corPx && el._corPx()) || "#3a6fd0", escala: 3 });
     for (const [campo, , lista] of LINHAS) {
       const b = el.querySelector(`[data-campo="${campo}"] b`); if (!b) continue;
       const v = campo === "risca" ? atual.risca || "" : atual[campo];
@@ -97,8 +100,9 @@ export function montarMontador(el, op = {}) {
   return el._pixel;
 }
 // o cartão da sala (dentro de `#pilotoPixelCartao`)
-export function renderPixel() {
-  const el = $("pilotoPixelCartao"); if (!el) return;
-  const ed = montarMontador(el, { aoMudar: enviar });
+export async function renderPixel() {
+  const el = document.getElementById("pilotoPixelCartao"); if (!el) return;
+  const { me } = await est();
+  const ed = montarMontador(el, { aoMudar: enviar, cor: () => corDoJogador(me()), nome: (me() && me().name) || "eu" });
   if (!lerPixel()) { gravar(ed.atual()); enviar(ed.atual()); } // (a primeira vez: o sorteado pelo nome já vale como o seu)
 }

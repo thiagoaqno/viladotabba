@@ -1,20 +1,11 @@
-# Derrapagem: perde 20% menos velocidade e desliza 10% mais
+# MFD: o pedido de voz entendido fica verde e o MFD fecha
 
-O Thiago achou que derrapar tirava velocidade demais. Pediu que o carro perdesse 20% menos do que perde hoje e, em troca, deslizasse 10% a mais.
+O Thiago pediu: ao falar com o engenheiro, a opção que ele entendeu fica verde no MFD por 2 s, e depois o MFD fecha.
 
-## `dinamica.js`
-
-- **Modelo físico** (médio, duro e chuva):
-  - **Desliza mais:** depois do pico de aderência, a força lateral do pneu cai suavemente até 1/1,1 do que era (`DERRAPA_DESLIZA`), e o carro escorrega mais.
-  - **Perde menos:** derrapando (pneu da frente ou de trás além do pico), 20% da parte das forças de lado que freia o carro na direção em que ele anda é devolvida (`DERRAPA_PERDA` = 0,8).
-  - **Antes do pico** (a curva no limite, sem escorregar), nada muda.
-- **Modelo arcade** (o macio dentro da vida útil): no escorregão, a correção de lado fica em 1/1,1 e a perda pelo `scrub` em 80%.
-- **Robôs:** usam a mesma física, então também derrapam assim.
-
-## Programa de PC
-
-O `PROTOCOLO` subiu de 2 para 3 (`corrida-pc.js`), porque a física mudou: o programa velho preveria errado e passa a pedir a atualização antes de jogar no site.
-
-## Não conferido
-
-Não rodei a suíte. A CI diz se algum teste de física depende do escorregão antigo.
+- **`mfd.js` (`confirmarPedido`, chamado no começo de `executarJeff`):**
+  - acha na aba Pedidos o botão do comando entendido, pelo tipo e pelo composto do pneu quando há;
+  - acende o botão em verde;
+  - 2 s depois tira o verde e, se o MFD ainda está nos Pedidos, faz ele descer.
+  - Um comando novo antes dos 2 s troca a opção acesa.
+- **`hud-mfd.css`:** o verde, com brilho e um pulinho na entrada. Vale nos dois tipos de MFD.
+- **Pedido não entendido:** nada acende, e o engenheiro continua dizendo que não entendeu.

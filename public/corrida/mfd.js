@@ -139,7 +139,20 @@ const jeff = (texto, ms = 3800) => toast("🎧 Jeff: " + texto, ms);
 // uma das variações (sem repetir a última dita daquele tipo): o Jeff não responde sempre igual
 const ultimaVar = {};
 function um(tipo, lista) { const op = lista.length > 1 ? lista.filter((_, i) => i !== ultimaVar[tipo]) : lista, x = op[Math.floor(Math.random() * op.length)]; ultimaVar[tipo] = lista.indexOf(x); return x; }
+// (2026-11-25, o Thiago: "quando eu falar com o engenheiro, a janela do MFD deve ficar verde na opção que entendeu, ficar 2 s e o MFD fechar depois")
+// o pedido entendido acende em verde na aba Pedidos; 2 s depois o MFD desce (se ninguém mexeu nele nesse meio tempo)
+let tConfirma = 0;
+function confirmarPedido(cmd) {
+  if (!raiz || !cmd) return;
+  const bts = [...raiz.querySelectorAll(".m3-ped-i[data-cmd]")], ler = (b) => { try { return JSON.parse(b.dataset.cmd); } catch (e) { return {}; } };
+  const b = bts.find((x) => { const c = ler(x); return c.tipo === cmd.tipo && (c.composto || null) === (cmd.composto || null); }) || bts.find((x) => ler(x).tipo === cmd.tipo);
+  if (!b) return;
+  for (const x of bts) x.classList.remove("ok");
+  b.classList.add("ok"); clearTimeout(tConfirma);
+  tConfirma = setTimeout(() => { b.classList.remove("ok"); if (mfd.aberto && mfd.pagina === "pedidos") abrir(false, false); }, 2000); // (só se ainda está nos Pedidos)
+}
 export function executarJeff(cmd, falado = "") {
+  if (cmd) confirmarPedido(cmd);
   const R = window.Radio, Fr = window.RadioFalas, m = LEITURA.m || me(), f1 = E.S && E.S.config && E.S.config.regras === "f1";
   if (!cmd) { jeff(falado ? um("naoentendi", [`não entendi “${falado}”. Tente “box”, “como estão meus pneus” ou “quem está na frente”.`, `“${falado}”? Não peguei. Pode pedir box, pneus, carro, previsão ou quem está perto.`, `rádio cortou: ouvi “${falado}”. Repete? Ex.: “atualização completa”.`]) : um("naoouvi", ["não ouvi nada. Aperte e fale logo depois do bipe.", "silêncio no rádio. Fale depois do bipe.", "não chegou nada aqui. Tenta de novo?"]), 4200); R?.dizer("jeffnaoentendi", { forcar: true }); return; }
   if (!race || !m || !f1 || E.S.phase !== "race") { jeff("só na corrida de F1."); return; }

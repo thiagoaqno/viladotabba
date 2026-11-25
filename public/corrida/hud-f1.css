@@ -17,6 +17,13 @@
 #hTorre.completa .tt-alt svg{transform:rotate(180deg)}
 .tt-volta{display:flex;align-items:baseline;justify-content:center;gap:6px;height:28px;padding-top:3px;background:#14161dec;border-bottom:2px solid #e10600;font-size:15px;letter-spacing:.1em;font-weight:600;white-space:nowrap}
 .tt-volta b{font-size:19px;font-weight:700;letter-spacing:.02em}
+/* (2026-11-25) a faixa da bandeira (hud.js): o amarelo com "BANDEIRA AMARELA" e, embaixo, o setor em amarelo no escuro; o safety car igual */
+.tt-flag{display:flex;flex-direction:column;align-items:stretch;text-align:center;animation:ttFlag .4s cubic-bezier(.2,1.2,.4,1)}
+.tt-flag b{padding:4px 6px 2px;background:#ffd200;color:#0b0c10;font-size:20px;font-weight:900;letter-spacing:.02em;line-height:1.05}
+.tt-flag small{padding:3px 6px;background:#14161d;color:#ffd200;font-size:15px;font-weight:700;letter-spacing:.08em}
+.tt-flag.sc b{background:#ffb000}
+@keyframes ttFlag{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+@media (prefers-reduced-motion:reduce){.tt-flag{animation:none}}
 #tLinhas{background:#0a0c12cf}
 /* as colunas têm lugar fixo (explícito): uma linha sem plaquinha não puxa as outras para o lado */
 #hTorre .tl{display:grid;grid-template-columns:26px 20px minmax(0,1fr) auto 20px 58px 18px;align-items:center;column-gap:6px;height:26px;padding:0 6px 0 0;border-bottom:1px solid #ffffff10;font-size:14px;font-weight:600;position:relative;contain:layout paint}

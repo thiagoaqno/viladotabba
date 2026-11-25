@@ -176,7 +176,7 @@ document.addEventListener("click", (ev) => { if (ev.target && ev.target.id === "
 const ICONE_RELOGIO = '<svg class="vr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 2.5h5"/></svg>';
 function montarTorre() {
   const el = $("hTorre"); if (el.dataset.ok) return; el.dataset.ok = 1;
-  el.innerHTML = `<div class="tt-topo">${LOGO_F1}<b class="tt-modo">RACE</b><button type="button" class="tt-alt" id="tAlt" aria-label="Alternar torre compacta e completa" title="Torre: compacta ou completa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="tt-volta"><span id="tVoltaRot">VOLTA</span> <b id="tVolta">1</b><span id="tVoltaTot"> / 1</span></div><div id="tLinhas"></div>`;
+  el.innerHTML = `<div class="tt-topo">${LOGO_F1}<b class="tt-modo">RACE</b><button type="button" class="tt-alt" id="tAlt" aria-label="Alternar torre compacta e completa" title="Torre: compacta ou completa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div><div class="tt-volta"><span id="tVoltaRot">VOLTA</span> <b id="tVolta">1</b><span id="tVoltaTot"> / 1</span></div><div class="tt-flag" id="tFlag" hidden><b id="tFlagTit"></b><small id="tFlagSub"></small></div><div id="tLinhas"></div>`;
   const box = $("tLinhas");
   for (let i = 0; i < 22; i++) { const d = document.createElement("div"); d.className = "tl hidden"; d.innerHTML = `<span class="n"></span><i class="eq"><img alt="" decoding="async"></i><b class="sg"></b><u class="pn"></u><small class="ic"></small><em class="df"></em><span class="vrx">${ICONE_RELOGIO}</span><span class="troca" role="img"></span>`; box.appendChild(d); }
   $("tAlt").addEventListener("click", alternarTorre);
@@ -452,6 +452,10 @@ function hudF1(m, st, now) {
   }
   if (!q) gapF1(linhas, cors, m, cron, agoraS);
   set(document.querySelector("#hTorre .tt-modo"), "t", q ? "QUALI" : "RACE"); set($("tVoltaRot"), "t", q ? "SESSÃO" : "VOLTA");
+  // (2026-11-25, a imagem do Thiago) a faixa da bandeira embaixo da volta: "BANDEIRA AMARELA" e o setor dela (a direção de prova: corrida-f1-direcao.js), ou o safety car
+  { const d = E.S.direcao, am = d && d.amarelo, sc = d && d.safety, fl = $("tFlag");
+    if (fl) { const tit = sc ? "SAFETY CAR" : am ? "BANDEIRA AMARELA" : "", sub = sc ? "MANTENHA A POSIÇÃO" : am ? `SETOR ${(am.setor | 0) + 1}` : "";
+      set(fl, "d", tit ? "" : "none"); if (tit && fl.hidden) fl.hidden = false; set($("tFlagTit"), "t", tit); set($("tFlagSub"), "t", sub); set(fl, "c", "tt-flag" + (sc ? " sc" : "")); } }
   // a volta no topo: a do SEU carro enquanto você corre (2026-11-21, o Thiago: "quando eu ainda estou atrás da linha, aparece uma volta a mais quando o
   // primeiro já passou": era a do líder, como na TV); de quem só assiste, ou depois da sua chegada, a do líder. Na classificação, a sessão e o tempo que falta
   const lid = st[0] && st[0].p, euNaPista = !!m && m.finish == null && !m.dnf, ref = euNaPista ? m : lid;

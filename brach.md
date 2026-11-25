@@ -1,8 +1,11 @@
-# Clima: a pista seca na metade do tempo depois da chuva
+# Torre: o intervalo é para o carro da frente
 
-O Thiago achou que a pista demorava demais para secar depois da chuva.
+O Thiago pediu que a torre mostrasse o tempo para o carro da frente, e não o de todos para o líder. O título já dizia "Interval".
 
-- **`AGUA_SECA_S` (`f1-regras.js`):** é o tempo para uma pista encharcada secar de vez, sem chuva. Passou de 240 s (4 minutos de corrida) para 120 s.
-- **A conta (`aguaEm`):** continua a mesma, uma queda de 1/`AGUA_SECA_S` por segundo. Agora uma pista encharcada (água 1) chega a "molhada" (0,15) em uns 102 s, contra uns 204 s antes, e a seca em 120 s.
-- **Onde vale:** o servidor, o navegador, os robôs, o visual da água e o rádio leem a mesma conta, então tudo seca junto.
-- **O teste de clima:** usa a própria constante e continua valendo.
+- **`hud-torre.js` (`torre`):** cada linha agora compara com o carro logo à frente na torre:
+  - a distância e o tempo medido pela cronometragem;
+  - as voltas de atraso;
+  - depois da bandeirada, a diferença real de chegada.
+- **O líder:** continua com "Leader".
+- **Sem dado do carro da frente** (sem notícia dele): cai para o líder, como antes.
+- **Os testes da torre e da cronometragem:** continuam valendo, porque olham o 2º colocado, cujo intervalo para o da frente é o mesmo que para o líder.

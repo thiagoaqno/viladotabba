@@ -51,7 +51,7 @@
 @keyframes tvCartao{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
 .tvc-foto,.tvl-foto{image-rendering:pixelated;flex:none}
 .tvc-foto{width:64px;height:64px;align-self:flex-end;margin-bottom:-2px}
-.tvl-foto{width:56px;height:56px;align-self:flex-end}
+.tvl-foto{width:64px;height:64px;align-self:flex-end;margin-top:-4px}
 .tvc-num{font-size:34px;line-height:1;font-weight:800;font-style:italic;color:transparent;-webkit-text-stroke:2px #ffffffd9;min-width:36px;text-align:center}
 .tvc-nome{display:flex;flex-direction:column;min-width:0;line-height:1.1}
 .tvc-nome small{font-size:12px;font-weight:600;opacity:.85}

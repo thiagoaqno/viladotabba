@@ -399,7 +399,7 @@ function estrategia(voltas, nivel = "medio", semente = 1, pista = null, fator = 
 // chegam ao mesmo valor (a tabela guardada em `dadosDoClima` é só um atalho da mesma conta).
 const CHANCE_CHUVA = 0.51, GAROA = 0.45, CHUVA_FORTE = 1; // (CHANCE_CHUVA: a média aproximada das previsões)
 const AGUA_SOBE_S = 75;   // segundos de chuva para a pista ir de seca a encharcada (a garoa para no teto dela, GAROA)
-const AGUA_SECA_S = 240;  // segundos para uma pista encharcada secar de vez, sem chuva (quatro minutos de corrida)
+const AGUA_SECA_S = 120;  // segundos para uma pista encharcada secar de vez, sem chuva (2026-11-25, o Thiago: "tá demorando muito pra pista secar depois da chuva": de 240 para 120 s, uns 2 minutos de corrida)
 const RAMPA_S = 25;       // a chuva entra, sai e muda de força em rampas suaves desse tamanho
 const CHUVA_MIN_S = 120;  // a chuva dura pelo menos isso (ou até o fim da sessão)
 const AVISO_S = 40;       // o rádio avisa que a chuva vai chegar (ou parar) com no mínimo essa antecedência, ou uma volta

@@ -36,6 +36,7 @@ let treinoPedido = (() => {
 // "Largar" (corrida rápida direto) e o contrarrelógio recarregam a página em /corrida/?solo=<config>, que liga o socket no PC (o /corrida/pc.js
 // vê o ?solo= e não manda para o site); a sala é criada aqui na volta. Saindo da corrida para o menu, a página volta para o site.
 const PC = window.CORRIDA_PC, pcOnline = !!(PC?.pc && PC.servidor && !PC.local), pcLocal = !!PC?.local;
+if (PC?.pc) { const t = document.getElementById("mnTiroPC"); if (t) t.style.display = ""; } // o Tiro da Galera também vem no programa de PC: daqui se chega nele (a janela não tem barra de endereço)
 let soloPedido = (() => {
   try {
     const q = new URLSearchParams(location.search), d = q.get("solo"); if (!d) return null;

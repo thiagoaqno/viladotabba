@@ -7,7 +7,7 @@
    O token fica no navegador (tiro_perfil) e vai no cabeçalho X-Tiro-Token. */
 (function () {
   "use strict";
-  var CH = ["cod_arsenal", "dc_settings", "cod_nick", "dc_grenade", "dc_couteau"], K = "tiro_perfil", API = "/tiro/perfil";
+  var CH = ["cod_arsenal", "dc_settings", "cod_nick", "dc_grenade", "dc_couteau"], K = "tiro_perfil", PEND = "tiro_perfil_pend", API = "/tiro/perfil";
   var ls; try { ls = window.localStorage; } catch (e) { return; }
   var set0 = Storage.prototype.setItem, P = null;
   try { P = JSON.parse(ls.getItem(K) || "null"); } catch (e) { P = null; }
@@ -15,27 +15,60 @@
   function guardaP() { if (P) set0.call(ls, K, JSON.stringify(P)); else ls.removeItem(K); }
   function coletar() { var d = {}; CH.forEach(function (k) { var v = ls.getItem(k); if (v != null) d[k] = v; }); return d; }
   function aplicar(d) { CH.forEach(function (k) { if (d && typeof d[k] === "string") set0.call(ls, k, d[k]); }); }
+  function sincronizar(x, url) { x.open("GET", url, false); x.send(); return x; }
 
-  // 1. o perfil do servidor entra antes do jogo (uma requisição curta, síncrona de propósito: o jogo lê o localStorage logo em seguida)
+  // No programa de PC (o jogo em 127.0.0.1, servidor/corrida/corrida-pc.js), o perfil é o do SITE: o servidor local diz o
+  // endereço. Sem internet, joga com o que está no aparelho; o que foi jogado fica marcado (tiro_perfil_pend) e sobe quando
+  // a internet voltar, nesta mesma abertura ou na próxima.
+  var remoto = false;
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+    try { var s = JSON.parse(sincronizar(new XMLHttpRequest(), API + "/site").responseText).site; if (s) { API = s + "/tiro/perfil"; remoto = true; } } catch (e) { /* servidor de desenvolvimento: o perfil local */ }
+  }
+
+  function pedir(metodo, rota, corpo, ms) {
+    var op = { method: metodo, headers: Object.assign({ "Content-Type": "application/json" }, P ? { "X-Tiro-Token": P.token } : {}), body: corpo ? JSON.stringify(corpo) : undefined };
+    try { if (ms && AbortSignal.timeout) op.signal = AbortSignal.timeout(ms); } catch (e) { /* navegador antigo */ }
+    return fetch(API + rota, op).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var er = new Error(j.erro || "Erro " + r.status); er.status = r.status; throw er; } return j; }); },
+      function () { throw new Error(remoto ? "Sem internet agora: tente de novo quando ela voltar." : "O servidor não respondeu. Tente de novo."); });
+  }
+  // o servidor tinha um progresso mais novo (jogado em outro aparelho): ele vale, e a página recarrega para o jogo ler
+  function pegarDoServidor(dados) { aplicar(dados); set0.call(ls, PEND, ""); if (typeof MATCH === "undefined" || MATCH.state === "menu") location.reload(); }
+
+  // 1. o perfil do servidor entra antes do jogo
   if (P) {
-    try {
-      var x = new XMLHttpRequest(); x.open("GET", API, false); x.setRequestHeader("X-Tiro-Token", P.token); x.send();
-      if (x.status === 200) { var r = JSON.parse(x.responseText); aplicar(r.dados); P.nome = r.nome; guardaP(); }
-      else if (x.status === 401) { P = null; guardaP(); }
-    } catch (e) { /* sem rede: joga com o que está no aparelho e manda depois */ }
+    if (ls.getItem(PEND)) setTimeout(enviar, 300); // tem progresso que ainda não subiu: ele vai primeiro (o servidor não deixa o XP voltar para trás)
+    else if (!remoto) {
+      // no site: uma requisição curta e síncrona de propósito, porque o jogo lê o localStorage logo em seguida
+      try {
+        var x = new XMLHttpRequest(); x.open("GET", API, false); x.setRequestHeader("X-Tiro-Token", P.token); x.send();
+        if (x.status === 200) { var r = JSON.parse(x.responseText); aplicar(r.dados); P.nome = r.nome; guardaP(); }
+        else if (x.status === 401) { P = null; guardaP(); }
+      } catch (e) { /* sem rede: joga com o que está no aparelho e manda depois */ }
+    } else {
+      // no programa de PC, sem travar a abertura se a internet estiver ruim: se o site tiver algo diferente, recarrega com ele
+      pedir("GET", "", null, 6000).then(function (r) {
+        P.nome = r.nome; guardaP();
+        var mudou = CH.some(function (k) { return typeof r.dados[k] === "string" && r.dados[k] !== ls.getItem(k); });
+        if (mudou && !ls.getItem(PEND)) pegarDoServidor(r.dados);
+      }).catch(function (e) { if (e.status === 401) { P = null; guardaP(); } });
+    }
   }
 
   // 2. as gravações do jogo vão para o servidor (no máximo uma a cada 4 s, e a que faltar ao fechar a aba)
   var pend = 0;
-  function pedir(metodo, rota, corpo) {
-    return fetch(API + rota, { method: metodo, headers: Object.assign({ "Content-Type": "application/json" }, P ? { "X-Tiro-Token": P.token } : {}), body: corpo ? JSON.stringify(corpo) : undefined })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.erro || "Erro " + r.status); return j; }); });
+  function enviar() {
+    clearTimeout(pend); pend = 0; if (!P) return;
+    pedir("POST", "/salvar", { dados: coletar() }, 10000).then(function (r) {
+      set0.call(ls, PEND, "");
+      if (r.dados) pegarDoServidor(r.dados);
+    }).catch(function (e) { if (e.status === 401) { P = null; guardaP(); return; } pend = setTimeout(enviar, 20000); });
   }
-  function enviar() { pend = 0; if (P) pedir("POST", "/salvar", { dados: coletar() }).catch(function () { pend = pend || setTimeout(enviar, 15000); }); }
-  function agendar() { if (P && !pend) pend = setTimeout(enviar, 4000); }
+  function agendar() { if (!P) return; set0.call(ls, PEND, "1"); if (!pend) pend = setTimeout(enviar, 4000); }
   Storage.prototype.setItem = function (k, v) { set0.call(this, k, v); if (this === ls && CH.indexOf(k) >= 0) agendar(); };
+  addEventListener("online", function () { if (P && ls.getItem(PEND)) enviar(); });
+  // ao fechar: o sendBeacon não diz se chegou, então a marca de pendente fica e a próxima abertura confere
   function aoSair() {
-    if (!P || !pend) return; clearTimeout(pend); pend = 0;
+    if (!P || !ls.getItem(PEND)) return; clearTimeout(pend); pend = 0;
     try { navigator.sendBeacon(API + "/salvar", new Blob([JSON.stringify({ token: P.token, dados: coletar() })], { type: "text/plain" })); } catch (e) { /* ignorado */ }
   }
   addEventListener("pagehide", aoSair);
@@ -58,7 +91,7 @@
     + "#tgJan button{font:inherit;font-weight:700;cursor:pointer;border-radius:8px;padding:10px 14px;margin:0 8px 8px 0;border:1px solid #3a404b;background:#262b33;color:#f1f2f4}#tgJan button.p{background:#ffb020;border-color:#a86a00;color:#2a1800}"
     + "#tgJan button:hover{filter:brightness(1.15)}#tgJan .cod{font:800 26px/1.2 ui-monospace,Consolas,monospace;letter-spacing:2px;color:#ffd23f;background:#0b0d10;border-radius:8px;padding:12px;text-align:center;margin:8px 0 12px;user-select:all}"
     + "#tgJan .er{color:#ff6b6b;min-height:1.2em;margin:0 0 8px}#tgJan hr{border:0;border-top:1px solid #2d323b;margin:14px 0}#tgJan ol{margin:6px 0 12px;padding-left:22px}#tgJan li{margin:2px 0}#tgJan li span{color:#99a0ab}";
-  var bt, jan;
+  var bt, jan, volta;
   function montar() {
     var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
     bt = document.createElement("button"); bt.id = "tgPerfil"; bt.type = "button"; bt.onclick = function () { abrir(); };
@@ -66,6 +99,12 @@
     jan.addEventListener("click", function (e) { if (e.target === jan) fechar(); });
     ["keydown", "keyup", "keypress"].forEach(function (t) { jan.addEventListener(t, function (e) { e.stopPropagation(); if (t === "keydown" && e.key === "Escape") fechar(); }); });
     document.body.appendChild(bt); document.body.appendChild(jan);
+    // no programa de PC a janela não tem barra de endereço: o caminho de volta para a Corrida
+    if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
+      volta = document.createElement("a"); volta.id = "tgVolta"; volta.href = "/corrida/"; volta.textContent = "🏁 Corrida";
+      volta.style.cssText = "position:fixed;left:14px;bottom:58px;z-index:2147483000;font:600 14px/1.2 Figtree,system-ui,sans-serif;padding:9px 14px;border-radius:999px;border:1px solid #3a404b;background:#0f1114e6;color:#f1f2f4;text-decoration:none;display:none";
+      document.body.appendChild(volta);
+    }
     setInterval(atualizarBotao, 700); atualizarBotao();
     // primeira visita sem perfil: oferece criar (e não insiste por 3 dias se a pessoa disser "agora não")
     var depois = +(ls.getItem("tiro_perfil_depois") || 0);
@@ -75,7 +114,9 @@
   function atualizarBotao() {
     if (!bt) return;
     bt.style.display = noMenu() && jan.style.display !== "flex" ? "block" : "none";
-    bt.innerHTML = P ? "👤 " + esc(P.nome) + " · <b>nível " + nivel() + "</b>" : "👤 <b>Criar perfil</b> (guardar meu nível)";
+    bt.innerHTML = (P ? "👤 " + esc(P.nome) + " · <b>nível " + nivel() + "</b>" : "👤 <b>Criar perfil</b> (guardar meu nível)")
+      + (P && ls.getItem(PEND) && !navigator.onLine ? ' <span title="Sem internet: o progresso fica no aparelho e sobe quando ela voltar">⏳</span>' : "");
+    if (volta) volta.style.display = bt.style.display;
   }
   function tela(html) { jan.firstChild.innerHTML = html; jan.style.display = "flex"; atualizarBotao(); var i = jan.querySelector("input"); if (i) setTimeout(function () { i.focus(); }, 30); }
   function fechar() { jan.style.display = "none"; atualizarBotao(); }

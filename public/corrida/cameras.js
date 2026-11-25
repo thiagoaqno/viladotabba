@@ -24,15 +24,15 @@ import { aereaHeli } from "./camera-aerea.js";
 import { transicaoF1 } from "./transicao-f1.js";
 import { ajusteDe } from "./camera-ajuste.js";
 
-export const ORDEM = ["cockpit", "onboard", "bico", "perto", "longe", "cima", "tv"];
+export const ORDEM = ["cockpit", "onboard", "f1", "bico", "perto", "longe", "cima", "tv"];
 export const NOMES = {
-  cockpit: "Cockpit (primeira pessoa)", onboard: "Onboard (T-cam)", bico: "Bico do carro", perto: "Perseguição próxima",
+  cockpit: "Cockpit (primeira pessoa)", onboard: "Onboard (T-cam)", f1: "F1", bico: "Bico do carro", perto: "Perseguição próxima",
   longe: "Perseguição afastada", cima: "Aérea (helicóptero)", tv: "TV (câmeras da pista)",
 };
-const DE_DENTRO = new Set(["cockpit", "onboard", "bico"]); // precisam do meu carro (quem só assiste não tem)
+const DE_DENTRO = new Set(["cockpit", "onboard", "f1", "bico"]); // precisam do meu carro (quem só assiste não tem)
 export const usavel = (id, assistindo) => !(assistindo && DE_DENTRO.has(id));
 // o som do motor e o clima só conhecem as câmeras de antes: cada nova cai na parecida
-const SOM = { onboard: "cockpit", bico: "perto", tv: "longe" };
+const SOM = { onboard: "cockpit", f1: "cockpit", bico: "perto", tv: "longe" };
 export const somDaCamera = (id) => SOM[id] || id;
 // o que o laço está usando agora (controles.js lê para trocar a partir da câmera que se vê, e não da guardada)
 export const camEstado = { modo: null, assistindo: false };
@@ -127,7 +127,7 @@ export function quadroCamera(R, o) {
   else if (mode === "cockpit") {
     const eyeU = kart.eye.u, eyeH = kart.eye.h, spec = o.spec;
     pov(ctx, { fo: (eyeU - spec.L / 2) * KS, eh: eyeH * KS, lift: 1.5, mira: 0.5, baixo: kart.kt?.olhoBaixo || 0, fovV: 14, rolar: 0.035, trem: 1, tremOff: 0.7, tremBatida: 1.6 });
-  } else if (mode === "onboard") {
+  } else if (mode === "onboard" || mode === "f1") { // (a "F1" é a T-cam no mesmo lugar, com o ajuste dela: camera-ajuste.js)
     const M = medidas(kart).tcam, esc = kart.sc * KS;
     pov(ctx, { fo: M.f * esc, eh: M.y * esc, lift: 0, mira: 0.42, fovV: 12, rolar: 0.025, trem: 0.9, tremOff: 0.6, tremBatida: 1.3 });
   } else if (mode === "bico") {
@@ -137,7 +137,7 @@ export function quadroCamera(R, o) {
   else perseguicao(ctx);
   if (o.olharTras && src) {
     const fx = Math.cos(src.a), fy = Math.sin(src.a);
-    if (mode === "cockpit" || mode === "onboard" || mode === "bico") {
+    if (DE_DENTRO.has(mode)) {
       // (2026-11-16, a referência do Thiago) em primeira pessoa, olhar para trás é virar a cabeça: a câmera fica na cabeça do piloto, um pouco acima do
       // capacete (OLHO_TRAS_ACIMA, para não ver o lado de dentro dele), e mira para trás quase na horizontal: a tampa do motor e a asa traseira enchem a
       // metade de baixo da tela e a pista aparece atrás, por cima da asa. (Antes era a câmera de fora, à frente do bico, vendo o carro inteiro.)

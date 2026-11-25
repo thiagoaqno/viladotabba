@@ -17,7 +17,7 @@
 // equipes vêm de logos/ (o projeto já os usa nos menus). O número do piloto é um decalque à parte (um atlas de dígitos
 // compartilhado) porque muda de carro para carro; o composto do pneu vira uma faixa na lateral do pneu (shader do pneu).
 import * as THREE from "three";
-import { desenharMarca } from "./f1-marcas.js";
+import { desenharMarca, proporcaoMarca } from "./f1-marcas.js";
 import { patrocinioNoHalo } from "./f1-capacetes.js";
 
 export const K = 1024 / 4.4, FW = 1024, FH = 1152;
@@ -27,6 +27,9 @@ let ESC = 1;
 // (2026-11-20, "os carros hoje têm uma resolução MUITO baixa"): eram 2× e 1×; agora 3× no carro do jogador e na garagem (3072 x 3456, ~1,4 mm por pixel
 // na lateral) e 1,5× nos outros (uma folha por equipe, não por carro: ~14 MB cada com os mipmaps)
 const ESC_ALTA = 3, ESC_OUTROS = 1.5;
+// (2026-11-25) a folha de pintura com a filtragem de textura no máximo (o three corta no que a placa aceita, em geral 16): a asa traseira do carro da
+// frente é vista quase de lado, e com 4 (adversários) ou 8 (o meu) as letras borravam. Não ocupa memória a mais, só amostras na hora de desenhar.
+const ANISO_PINTURA = 16;
 const PX = () => K * ESC;
 const CARBONO = "#0b0c0f";
 
@@ -90,7 +93,13 @@ const DE_FRENTE = Math.PI / 2;
 // (2026-11-18, Livery Studio: "a logo dos carros não está em marcas, não tenho como mexer") com GRAVANDO, as marcas não são desenhadas: viram a
 // lista de onde cada uma vai (a vista, o ponto, a altura, o giro, a tinta), para o estúdio transformar em camadas de logo editáveis
 let GRAVANDO = null, VISTA_ATUAL = null;
+// (2026-11-25, os prints do Thiago do jogo oficial: "dá para ler perfeitamente o patrocinador na traseira das McLaren da frente") as marcas da
+// asa traseira, lidas por quem vem atrás, tinham de 5 a 9 cm de altura: a 30 m davam uns 4 pixels na tela. Em cima da asa (vista T, giro
+// -DE_FRENTE, s > 3,85) elas crescem ASA_CIMA e atrás dela (vista R, marcaU) ASA_TRAS, sem passar de ASA_LARG de largura (o flap tem ±0,57 m).
+const ASA_CIMA = 1.5, ASA_TRAS = 1.3, ASA_TRAS_MAX = 0.15, ASA_LARG = 1.0;
+const cabeNaAsa = (id, h) => { const ar = proporcaoMarca(id); return ar ? Math.min(h, ASA_LARG / ar) : h; };
 function marca(c, id, a, b, h, { giro = 0, tinta, fundo } = {}) {
+  if (giro === -DE_FRENTE && a > 3.85 && VISTA_ATUAL === "T") h = cabeNaAsa(id, h * ASA_CIMA);
   if (GRAVANDO) { GRAVANDO.push({ v: VISTA_ATUAL, id, a, b, h, giro, tinta, fundo }); return; }
   const [x, y] = pt(c, a, b), e = h * PX(); c.save(); c.setTransform(1, 0, 0, 1, x, y); c.rotate(giro); c.scale(e, e); desenharMarca(c, id, { tinta, fundo }); c.restore();
 }
@@ -1256,7 +1265,7 @@ function asaBaixo(ctx, eq) {
   vista(ctx, "U", (c) => ret(c, -0.6, -0.05, 0.6, 0.75, d?.cor || "#101113")); // embaixo: só a cor
   if (d?.marcas) { TRAS = true; try { vista(ctx, "R", (c) => d.marcas(c)); } finally { TRAS = false; } }
 }
-function marcaU(c, id, x, t, h, op) { if (TRAS) return marca(c, id, x, yTras(t), Math.min(h * 0.75, 0.085), op); if (GRAVANDO) { GRAVANDO.push({ v: "U", id, a: x, b: t, h, giro: 0, tinta: op?.tinta, fundo: op?.fundo }); return; } c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
+function marcaU(c, id, x, t, h, op) { if (TRAS) return marca(c, id, x, yTras(t), cabeNaAsa(id, Math.min(h * ASA_TRAS, ASA_TRAS_MAX)), op); if (GRAVANDO) { GRAVANDO.push({ v: "U", id, a: x, b: t, h, giro: 0, tinta: op?.tinta, fundo: op?.fundo }); return; } c.save(); c.translate(x, t); c.scale(h, h); desenharMarca(c, id, op); c.restore(); }
 const ASA_BAIXO = {
   mercedes: { cor: "#0c0d0f", marcas: (c) => marcaU(c, "crowdstrike", 0, 0.32, 0.1) },
   ferrari: { cor: "#2341b3", marcas: (c) => marcaU(c, "ibm", 0, 0.32, 0.16, { tinta: "#d8dce6", fundo: "#2341b3" }) }, // (o modelo do Sketchfab: azul vivo com o IBM prateado)
@@ -1291,7 +1300,7 @@ export function folhaDaEquipe(equipe, alta = false, original = false) {
   if (!original && DO_ESTUDIO.has(equipe) && anoEmUso() === 2026) {
     const chave = "estudio:" + equipe + (alta ? "|2" : "|1"); if (FOLHAS.has(chave)) return FOLHAS.get(chave);
     const cv = folhaDeCamadas(DO_ESTUDIO.get(equipe), document.createElement("canvas"), alta ? ESC_ALTA : ESC_OUTROS);
-    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = alta ? 8 : 4; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO_PINTURA; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
     t.userData.cv = cv; FOLHAS.set(chave, t); return t;
   }
   equipe = chaveDo(equipe); // (a pintura do ano em uso, quando a equipe tem uma: "audi@2023" é a Alfa Romeo)
@@ -1303,7 +1312,7 @@ export function folhaDaEquipe(equipe, alta = false, original = false) {
   asaBaixo(ctx, equipe);
   lados(ctx, (c) => ret(c, 2.1, 0.39, 2.35, 0.46, CARBONO)); // a entrada de ar das caixas laterais é escura em qualquer pintura
   ESC = 1;
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = alta ? 8 : 4; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO_PINTURA; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter;
   t.userData.cv = cv; FOLHAS.set(chave, t); return t;
 }
 // para quem quiser ver a folha pronta (a ferramenta de conferência)

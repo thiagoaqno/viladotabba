@@ -11,15 +11,16 @@ import { store } from "./estado.js";
 
 export const CHAVE = "corrida:camera";
 // as câmeras que têm ajuste (a aérea e a TV são automáticas)
-export const EDITAVEIS = ["cockpit", "onboard", "bico", "perto", "longe"];
+export const EDITAVEIS = ["cockpit", "onboard", "f1", "bico", "perto", "longe"];
 export const PADROES = {
   cockpit: { fov: 64, x: 0, y: 0, z: 0, incl: 0, trem: 15 },
   onboard: { fov: 62, x: 0, y: 0, z: 0, incl: -7, trem: 15 }, // (a T-cam olha para baixo: o halo, o bico e as rodas da frente entram no quadro)
+  f1: { fov: 45, x: -0.05, y: -0.1, z: 0.1, incl: -7, trem: 15 }, // a "F1": a T-cam com o ajuste que o Thiago montou (print de 2026-11-25)
   bico: { fov: 70, x: 0, y: 0, z: 0, incl: 0, trem: 15 },
   perto: { fov: 60, x: 0, y: 0, z: 0, incl: 0, trem: 15 },
   longe: { fov: 54, x: 0, y: 0, z: 0, incl: 0, trem: 15 },
 };
-const DENTRO = new Set(["cockpit", "onboard", "bico"]);
+const DENTRO = new Set(["cockpit", "onboard", "f1", "bico"]);
 export const dentroDoCarro = (id) => DENTRO.has(id);
 // os campos da tela: nome, dica, limites, passo e a unidade de cada um (a dica do avanço/distância muda conforme a câmera)
 const CAMPOS = [

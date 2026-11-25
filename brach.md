@@ -13,6 +13,6 @@ Por cima do plano do domingo, o robô muda de modo pela situação, a cada passo
 
 Os números (1,5 s, 3 s, 3 voltas, 98,5%) são de ajuste, não medidos: o Thiago testa jogando.
 
-Novidade para o `novidades.json`: entra depois do #942 (os dois PRs escreveriam no topo do arquivo).
+Entrada nova no `novidades.json`.
 
 Conferido só com `node --check`.

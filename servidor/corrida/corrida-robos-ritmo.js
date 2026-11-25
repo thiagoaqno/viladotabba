@@ -151,9 +151,11 @@ function voltaLancada(room, p, sessao, tracadoId, nBots, janela = null) {
   return { tempo: Math.round(final * 1000) / 1000, em };
 }
 // quanto dura uma sessão de classificação, em segundos: dá para uma volta de saída e duas lançadas de um carro médio
+// (2026-11-24, os planos do qualify dos robôs: corrida-robos.js planoDaQuali) mais uma volta: os robôs fazem a volta de saída inteira e alguns
+// preparam uma volta ou passam no box antes de atacar (era t * 2,2; o teto foi de 260 para 340 s)
 function duracaoDaClassificacao(pista) {
   const t = tempoDaVolta(perfil(pista, "equilibrado", 0), NIVEIS.medio);
-  return Math.max(80, Math.min(260, Math.round(t * 2.2 + 12 + QUALI_SAIDA_TOTAL_S))); // (+ a saída em grupos dos robôs pilotando: prepararQuali)
+  return Math.max(80, Math.min(340, Math.round(t * 3.2 + 12 + QUALI_SAIDA_TOTAL_S))); // (+ a saída em grupos dos robôs pilotando: prepararQuali)
 }
 
 // (2026-11-23, o Thiago: "pensei em nos qualifies todo mundo correr junto, mas com modo fantasma, dando pra ver os bots também") a sessão da classificação

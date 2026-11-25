@@ -1,5 +1,22 @@
 [
   {
+    "id": "corrida-momentos-2026-11-24",
+    "data": "2026-11-24",
+    "itens": [
+      "Os robôs têm um plano em toda corrida (atacar, jogar seguro, largada forte, fim forte, esticar o pneu), não só na carreira",
+      "Durante a corrida eles mudam de modo: atacam a 1,5 s de alguém, na volta de saída do box e nas últimas voltas; em ar limpo poupam pneu e bateria para o próximo ataque"
+    ]
+  },
+  {
+    "id": "qualify-imprevisivel-2026-11-24",
+    "data": "2026-11-24",
+    "itens": [
+      "Qualify menos previsível: cada robô tem um plano na sessão. Uns atacam logo na primeira volta com o ERS todo, outros preparam uma volta antes, outros passam no box para pôr pneu novo e só depois atacam",
+      "Os robôs fazem a volta de saída inteira, e as sessões do qualify ficaram uma volta mais longas para caber os planos",
+      "O ERS no qualify recarrega a cada volta (antes o teto de recarga valia para a sessão inteira, para você e para os robôs)"
+    ]
+  },
+  {
     "id": "curvas-inclinadas-2026-11-24",
     "data": "2026-11-24",
     "itens": [

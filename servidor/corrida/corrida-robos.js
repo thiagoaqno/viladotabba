@@ -226,6 +226,35 @@ function momentoDaCorrida(room, p, ia, car, tf) {
   m.modo = modo; m.gapF = gapF;
   return m;
 }
+// (2026-11-24, o Thiago: "hoje a segunda volta deles sempre é a melhor") o plano de cada robô na sessão do qualify, sorteado pela semente a cada Q:
+//   "sempre": ataca toda volta, com o ERS automático (como era);
+//   "ja": ataca já a primeira volta com a bateria cheia, volta lenta para recarregar, ataca de novo;
+//   "tarde": a primeira volta é de preparação (devagar, recarregando), ataca na segunda e na quarta;
+//   "box": volta de preparação, entra no box no fim dela (pneu novo), volta de saída e só então ataca.
+// Na volta de ataque o ERS vai todo nas retas (o modo manual); na lenta, nada de ERS, lift and coast em toda freada e QUALI_LENTO do ritmo.
+// Se a volta lenta não deixa tempo para mais uma volta antes da bandeira, ataca nela (a última chance de todos, como na F1).
+// A volta conta pela própria classificação (p.qVoltas): no qualify o p.laps não sobe, e o teto de recarga do ERS (por volta) e o sorteio do ritmo
+// da volta ficavam iguais na sessão inteira: a bateria secava depois da segunda volta, e era ela que sempre saía melhor.
+const QUALI_LENTO = 0.9, QUALI_BOX_MS = 25000, PLANOS_QUALI = [["sempre", 0.25], ["ja", 0.3], ["tarde", 0.25], ["box", 0.2]];
+const voltaDaQuali = (p) => (p.qVoltas || 0) + (p.qIni != null ? 1 : 0); // 0: a volta de saída (do grid, mais uma volta: aoSetor); 1: a primeira cronometrada
+function planoDaQuali(room, p, ia, pf, now) {
+  const q = room.quali, k = voltaDaQuali(p);
+  let qp = ia.qPlano;
+  if (!qp || qp.sessao !== q.startAt) {
+    let r = F1.sorteio(`quali-plano:${room.semente}:${q.i}:${p.id}`)(), jeito = "sempre";
+    for (const [nome, peso] of PLANOS_QUALI) { if (r < peso) { jeito = nome; break; } r -= peso; }
+    qp = ia.qPlano = { sessao: q.startAt, jeito, k: -1, modo: "lento", box: false };
+  }
+  if (qp.k === k) return qp;
+  qp.k = k; qp.box = false;
+  const tVolta = (p.qMelhor || tempoDaVolta(pf, ia.nivel || 1)) * 1000, resta = q.fimAt - now;
+  if (qp.jeito === "box" && k === 1 && resta < tVolta * 2.2 + QUALI_BOX_MS) qp.jeito = "tarde"; // não dá tempo da parada e da volta de saída: só prepara uma volta
+  const j = qp.jeito;
+  qp.modo = k === 0 ? "lento" : j === "sempre" ? "normal" : j === "ja" ? (k % 2 ? "ataque" : "lento") : j === "tarde" ? (k % 2 ? "lento" : "ataque") : (k <= 2 ? "lento" : "ataque");
+  if (j === "box" && k === 1) qp.box = true;
+  if (k > 0 && qp.modo === "lento" && resta > 0 && resta < tVolta * 1.15) { qp.modo = "ataque"; qp.box = false; } // a bandeira chega antes de outra volta
+  return qp;
+}
 // a margem de cada piloto no limite de aderência das curvas: MARGEM_BASE para todos, mais MARGEM_POR_PONTO por ponto de constância abaixo de 95
 const MARGEM_BASE = +(process.env.ROBO_MARGEM_BASE ?? 0.006), MARGEM_POR_PONTO = +(process.env.ROBO_MARGEM_PONTO ?? 0.0004); // pontos de pista (6 u cada, ~37 m)
 function companheiroNaPista(room, p, ia, now, emit) {
@@ -308,6 +337,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const pneu = F1.aderencia(car.pneu, cl.agua), dano = F1.efeitoDoDano(p.dano), curva = pf.kf[i] > 1 / 600;
   if (ia.nivel == null) { if (!room.referenciaF1) ritmoDosRobos(room); ia.nivel = nivelDe(room, p, ia.tracadoId, 0, pf); } // (ainda não aquecido: aquecerNiveis)
   const fis = perfilF1(pf, ia.nivel), topo = topoDe(pf);
+  const quali = room.phase === "quali" && !!room.quali, qp = quali ? planoDaQuali(room, p, ia, pf, now) : null, ritmoQ = qp && qp.modo === "lento" ? QUALI_LENTO : 1; // (o plano do qualify)
   // molhado (ou pneu gasto): o freio segura menos, então o robô olha mais longe para começar a frear a tempo (no seco com o macio: 1)
   // (a conta é a da física: o freio pedido e o que o pneu segura antes de travar, `D.frenagemMaxima`, contra o do pneu de referência)
   // A cautela do pneu na água (2026-11-13, o Thiago viu robôs derrapando na chuva): o quanto a água tira deste composto agora
@@ -360,7 +390,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   // acelerador: mantém a linha e cede um pouco de ritmo, como o piloto que aceita a disputa lado a lado em vez de jogar o outro no muro
   if (T.baseDe(room.config.pista) === "monaco") for (const oid of room.order) { const q = room.players[oid]; if (!q || q === p || !q.ia || !q.ia.ult || q.ia.ult.id !== p.id || !q.pos || !p.pos) continue;
     const d = Math.hypot(q.pos.x - p.pos.x, q.pos.y - p.pos.y); if (d < TransitoRobo.L_CARRO * 1.1) { alvo *= 0.96; break; } }
-  alvo = Math.min(alvo, tf.freio);
+  alvo = Math.min(alvo * ritmoQ, tf.freio);
   let tetoPiloto = tf.freio; // o que manda acima do ritmo da linha: o trânsito, a batida, a quebra
   // a batida abala o robô como a quem joga: a física já tira a aderência (car.inst, por 0,2 a 2 s); aqui ele também perde o ritmo (tira
   // o pé e dirige com mais cuidado) por mais um tempo, mais nos níveis fáceis e menos nos difíceis
@@ -377,7 +407,9 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const relBox = tr.corredor ? (i - tr.corredor.i0 + n) % n : Infinity;
   // (só pesa a parada perto da entrada do corredor; nos 2 s antes de entrar o robô que vai parar já é fantasma: ninguém bate nele)
   const aEntrar = tr.corredor ? (n - relBox) % n : Infinity, antesDaEntrada = aEntrar * STEP < Math.max(car.v, 60) * Contato.BOX_FANTASMA_MS / 1000;
-  let proxima = relBox <= 8 || antesDaEntrada ? decidirParada(room, p, ia, car, spec, cl) : null;
+  let proxima = quali ? null : relBox <= 8 || antesDaEntrada ? decidirParada(room, p, ia, car, spec, cl) : null;
+  // o plano "box" do qualify: no fim da volta de preparação (passada a metade dela, para não parar logo depois da linha) pede o mesmo composto, novo
+  if (quali && qp.box && !car.box?.fase && (relBox <= 8 || antesDaEntrada) && p.qIni != null && now - p.qIni > (p.qMelhor || tempoDaVolta(pf, ia.nivel || 1)) * 500) proxima = car.pneu ? car.pneu.composto : p.pneuAtual || "macio";
   // stop-and-go pendente: o robô cumpre na primeira passagem pelo box (a visita é só ele, sem trocar o pneu: amb.stopGo)
   const stopGo = p.stopGo && F1.stopGoCabe(p.laps, room.config.voltas) ? p.stopGo.s : 0;
   if (!proxima && stopGo && (relBox <= 8 || antesDaEntrada)) proxima = car.pneu ? car.pneu.composto : p.pneuAtual || "medio"; // (se já ia trocar o pneu nesta passagem, o stop-and-go vem junto e depois a troca)
@@ -386,8 +418,8 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   const pedirBox = !!proxima; // (o composto pedido)
   const amb = { spec, dano: p.dano || 0, drsZona: p.drsZona ?? -1, safety: !!room.direcao?.safety, gpMods: reforcoDoNivel(room), plano: room.phase === "race" ? p.plano || null : null, // (o nível acima de 100: o carro a mais; o plano do domingo do robô, na carreira)
     // Em pista livre usa a bateria nas retas; no trânsito reserva energia e só aciona forte ao tentar passar.
-    amarela: room.direcao?.amarelo?.setor === Math.floor(i / (n / T.SECTORS)), ersAuto: !ia.ult && !tf.encontrou && !tf.tras && now - room.startAt > 6000,
-    voltas: room.config.voltas, laps: p.laps || 0, paradas: (p.paradas || []).length,
+    amarela: room.direcao?.amarelo?.setor === Math.floor(i / (n / T.SECTORS)), ersAuto: qp && qp.modo !== "normal" ? false : !ia.ult && !tf.encontrou && !tf.tras && now - room.startAt > 6000, quali, // (no plano do qualify o ERS é pelo comando, logo abaixo)
+    voltas: room.config.voltas, laps: quali ? voltaDaQuali(p) : p.laps || 0, paradas: (p.paradas || []).length,
     semente: room.semente, id: p.id, grid: p.grid, equipe: p.equipe || null, f1: true, agua: cl.agua, outros, stopGo,
     boxOcupado: Sim.garagemOcupada(Object.values(room.players), p, (o) => Sim.faseDoBox((o.sim ? o.sim.c : o.ia && o.ia.sim)?.box)), // a fila do box da equipe
     fatorDesgastePneu: Estilos.parametros(room, p, TRANSITO_NIVEL.medio).desgaste };
@@ -397,8 +429,8 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   // o ritmo varia de volta para volta (consistência), e de vez em quando o piloto erra a freada e entra forte demais na curva (taxa de erro)
   let ritmoDaVolta = 1, erroK = 1;
   if (novo) {
-    const volta = p.laps || 0;
-    if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; if (volta > 0) bonusDeUltrapassagem(room, p, ia, car); }
+    const volta = quali ? `q${room.quali.i}:${voltaDaQuali(p)}` : p.laps || 0; // (no qualify, cada volta cronometrada sorteia o seu ritmo)
+    if (ia.voltaRitmo !== volta) { const r = F1.sorteio(`ritmo:${room.semente}:${p.id}:${volta}`); ia.voltaRitmo = volta; ia.ritmoDaVolta = 1 - r() * jeitoP.sigma; if (!quali && volta > 0) bonusDeUltrapassagem(room, p, ia, car); }
     ritmoDaVolta = ia.ritmoDaVolta;
     if (ia.erroAte > now) erroK = ia.erroK;
     else if (!tf.encontrou && !amb.safety && !amb.amarela && alvo < car.v * 0.9 && Math.random() < (jeitoP.erro * Math.max(0.3, porNivel({ facil: 1.4, medio: 1, dificil: DIFICIL_ANTIGO ? 0.7 : 0.85, lendario: 0.65 }, room.config.nivel))) / 400) { ia.erroAte = now + 700; ia.erroK = erroK = 1.05 + Math.random() * 0.05; }
@@ -424,15 +456,15 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     if (novo) {
       const ctx = pf.ctxPiloto || (pf.ctxPiloto = Piloto.contexto(spec, aderRef()));
       ctx.teto = tetoPiloto;
-      const ataque = ia.ult && (!(tf.bloqPos || tf.bloqNeg) || !tf.ladoDeOutro) ? 1.04 : 1, medoK = medo > 0.01 ? 1 - 0.4 * Math.min(1, medo) : 1, tetoReta = spec.vmax * pneu.final * dano.final * ganhoReta;
-      const noPiloto = jeitoP.entradaK * ritmoDaVolta * erroK; // o jeito do piloto, o ritmo desta volta e o erro de agora
+      const ataque = ia.ult && (!(tf.bloqPos || tf.bloqNeg) || !tf.ladoDeOutro) ? 1.04 : 1, medoK = medo > 0.01 ? 1 - 0.4 * Math.min(1, medo) : 1, tetoReta = spec.vmax * pneu.final * dano.final * ganhoReta * ritmoQ;
+      const noPiloto = jeitoP.entradaK * ritmoDaVolta * erroK * ritmoQ; // o jeito do piloto, o ritmo desta volta e o erro de agora
       Piloto.comandos(car, tr, spec, latAdiante, (j) => { const v = fis[j]; return Math.min(tetoReta, (v >= topo * 0.97 ? tetoReta : v * escalaCurva * ataque * noPiloto) * medoK); }, ent, ctx, jeitoP);
       if (ent.gas && car.patina > PAT) ent.gas *= 0.6; // a traseira já está no limite: alivia o pé em vez de cortar
       // (2026-11-16, "lift and coast") com pouca bateria e sem disputa, tira o pé ~0,6 s antes da freada (a velocidade do traçado ~LIFT_PONTOS pontos à
       // frente bem abaixo da de agora): o carro rola e o MGU-K recarrega (F1 carregarErs, semGas), sem gastar freio
       // (2026-11-16, o Thiago: "ultrapassar sem ficar esperando atrás do jogador" e "andar só no embalo do carro") seguindo alguém sem os ERS_MANOBRA de
       // bateria para atacar, ele também tira o pé antes da freada: recarrega mais rápido, junta a bateria e parte para a manobra em vez de ficar atrás
-      const querCarga = !tf.encontrou ? car.ers && car.ers.carga < LIFT_CARGA : !process.env.ROBO_SEM_EMBALO && car.ers && car.ers.carga < minimoParaAtacar(p);
+      const querCarga = ritmoQ < 1 || (qp && qp.modo === "ataque" ? false : !tf.encontrou ? car.ers && car.ers.carga < LIFT_CARGA : !process.env.ROBO_SEM_EMBALO && car.ers && car.ers.carga < minimoParaAtacar(p));
       if (querCarga && !ia.ult && !amb.safety && ent.gas > 0 && !ent.brake && fis[(i + LIFT_PONTOS) % n] < car.v * 0.8) ent.gas = 0;
       else if (gerindo && !ia.ult && ent.gas > 0 && !ent.brake && fis[(i + LIFT_PONTOS) % n] < car.v * 0.8) ent.gas = 0; // gerindo: lift and coast em toda freada
     } else {
@@ -456,6 +488,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     // adiante abaixo de 1/1500, a mesma conta do ERS automático de sim.js). Medido em Suzuka, 21 robôs: com o ERS na curva, 274 batidas; só na reta, 74
     const kAqui = Math.max(Math.abs(tr.pts[car.idx].k || 0), Math.abs(tr.pts[(car.idx + 14) % n].k || 0)), retaAqui = kAqui < 1 / 1500;
     ent.ers = retaAqui && ((!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > (process.env.ROBO_PERSEGUE_ANTIGO ? ERS_ATAQUE : minimoParaAtacar(p)) && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA))));
+    if (qp && qp.modo !== "normal") ent.ers = qp.modo === "ataque" && retaAqui && cargaErs > F1.ERS_PISO_OVERTAKE; // o plano do qualify: tudo nas retas, ou nada na volta lenta
     ent.pedido = proxima;
     if (gerindo && !coladoAtras && !ia.ult) ent.ers = false; // gerindo: a bateria só para defender
     else if (atacando && retaAqui && !amb.safety && mom.gapF < MOM_ATAQUE_S && cargaErs > minimoParaAtacar(p) && T.baseDe(room.config.pista) !== "monaco") ent.ers = true; // atacando: o ERS a 1,5 s, não só colado
@@ -469,7 +502,7 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
       else if (e.t === "box" && e.fase === "sai") emit("box", { id: p.id, composto: e.composto, tempo: e.tempo, volta: e.volta, stopGo: !!e.stopGo, troca: !!e.troca, sg: e.sg, manter: !!e.manter });
       else if (e.t === "muro" && e.forca >= F1.BATIDA_MIN) emit("batida", { id: p.id, forca: e.forca, tipo: "muro" });
     }
-    amb.laps = p.laps || 0;
+    amb.laps = quali ? voltaDaQuali(p) : p.laps || 0;
     amb.paradas = (p.paradas || []).length;
   }
   ia.s = car.idx; ia.v = car.v; ia.lat = Sim.quadro(tr, car.x, car.y, car.idx).lat;

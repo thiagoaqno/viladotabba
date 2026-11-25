@@ -19,7 +19,8 @@ const CARGA_MAX_MS = 40000;
 const LUZES_MS = 3500; // regras de F1: o tempo até acender a primeira das cinco luzes (a largada vem 4 s mais a espera sorteada depois)
 // regras de F1: a transmissão de TV (a pista, o clima, o campeonato e o grid) tem tempo próprio ANTES das luzes: 25 s numa
 // temporada (com a tabela do campeonato), 20 s fora dela. `CORRIDA_TV_MS` troca os dois (0 desliga: os testes de rede usam).
-const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 8000; // (a avulsa: 20 → 8 s, a pedido do Thiago, 2026-11-11: a largada demorava demais; dá para pular nas duas)
+const TV_TEMPORADA_MS = 25000, TV_AVULSA_MS = 20000; // (2026-11-25, o Thiago: "pode aumentar o tempo total para uns 20 s, aí dá tempo de exibir tudo com calma": o grid em pares, transmissao.js)
+// (antes: a avulsa foi de 20 para 8 s em 2026-11-11, "a largada demorava demais"; dá para pular nas duas)
 const HORAS_CARREIRA = 72, SALA_VAZIA_MS = Number(process.env.CORRIDA_SALA_VAZIA_MS) || 120000; // (os GPs da carreira ficam 3 dias; a sala rápida sem ninguém, 2 min)
 const ESPERA_CHEGADA = 20000; // (depois da chegada de quem joga, o tempo para os robôs perto cruzarem a linha: estimarRobos)
 const MAX_PLAYERS = 8, COUNTDOWN_MS = 4500, AFTER_FIRST_MS = 60000, MAX_RACE_MS = 45 * 60000; // 45 min: dá para as 21 voltas

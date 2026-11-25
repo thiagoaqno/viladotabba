@@ -11,6 +11,7 @@ import { E, $, h } from "./estado.js";
 import { set } from "./hud-painel.js";
 import { estiloHud } from "./hud-telemetria.js";
 import { numeroSuave, pulsar } from "./hud-vivo.js";
+import { retratoDoJogador } from "./pixel-piloto.js";
 
 const CARTAO_MS = 6000, LIDER_MS = 4000;
 const TIT_H = 28, GAP_H = 46, CARTAO_H = 74; // (px) a faixa do título da batalha, a da diferença e o cartão do piloto
@@ -95,7 +96,7 @@ export function hudTv(o) {
     const chave = [cartao.l.id, eq, num].join("|");
     if (cart._chave !== chave) {
       cart._chave = chave; cart.style.setProperty("--tv-eq", corEquipe(eq, p));
-      cart.innerHTML = `<b class="tvc-num">${h(num)}</b><span class="tvc-nome"><small>${h(primeiro(p))}</small><b>${h(sobrenome(p))}</b><em>${imgLogo(eq, "tvc-logo")}${h(nomeEquipe(eq))}</em></span>`;
+      cart.innerHTML = `<img class="tvc-foto" src="${retratoDoJogador(p, corEquipe(eq, p))}" alt=""><b class="tvc-num">${h(num)}</b><span class="tvc-nome"><small>${h(primeiro(p))}</small><b>${h(sobrenome(p))}</b><em>${imgLogo(eq, "tvc-logo")}${h(nomeEquipe(eq))}</em></span>`;
       cart.classList.remove("entra"); void cart.offsetWidth; cart.classList.add("entra");
     }
     encaixar(cart, torre, cartao.d, CARTAO_H, true);
@@ -107,7 +108,7 @@ export function hudTv(o) {
     if (st.lider != null && st.lider !== lid.id && p && p.laps >= 1) {
       const eq = lid.equipe || p.equipe;
       lider.style.setProperty("--tv-eq", corEquipe(eq, p));
-      lider.innerHTML = `<span class="tvl-txt"><b>${h(sobrenome(p).toUpperCase())}</b> NOVO LÍDER DA CORRIDA</span>${imgLogo(eq, "tvl-logo")}`;
+      lider.innerHTML = `<img class="tvl-foto" src="${retratoDoJogador(p, corEquipe(eq, p))}" alt=""><span class="tvl-txt"><b>${h(sobrenome(p).toUpperCase())}</b> NOVO LÍDER DA CORRIDA</span>${imgLogo(eq, "tvl-logo")}`;
       lider.hidden = false; lider.classList.remove("entra"); void lider.offsetWidth; lider.classList.add("entra");
       st.liderAte = agora + LIDER_MS;
     }

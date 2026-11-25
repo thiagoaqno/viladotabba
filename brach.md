@@ -19,6 +19,16 @@ O Thiago mandou prints de uma transmissão do jogo da F1 e pediu algo próximo d
   - **Caixa de marcha:** embaixo à direita, no lugar do mostrador grande: GEAR, a velocidade, KM/H e a bateria do ERS em %. A % fica amarela cheia ou desdobrando, azul no meio e vermelha abaixo de 20%. O MFD e o botão dele sobem para cima dela.
 - As faixas não mexem na classe das linhas: `hud.js` reescreve essas classes. O espaço delas é a margem da linha, e as faixas são posicionadas pela posição da linha na tela.
 
+## Os retratos em pixel art (`pixel-piloto.js`)
+
+O Thiago pediu uma imagem pixelada para cada piloto, para ter "fotos" no card. Os retratos são montados por peças, sem nenhum arquivo de imagem.
+
+- Cada retrato é uma grade de 32×32. As peças são: o rosto e o tom de pele (6 tons), o cabelo (curto, raspado, topete, ondulado, cacheado, longo, tranças e calvo), a cor do cabelo, a barba (rala, cheia, bigode e cavanhaque), a sobrancelha, os olhos e os óculos. Embaixo vai o macacão na cor da equipe, com a gola escura, a faixa do peito e os patrocínios. O contorno escuro sai sozinho em volta de tudo.
+- `TRACOS` traz os 22 pilotos de 2026 e os que aparecem nas temporadas de 2023 a 2025, pela sigla. Quem não está na tabela, como os jogadores, ganha traços sorteados pelo nome, sempre os mesmos.
+- O retrato vira uma imagem (data URL), guardada por combinação de traços e cor, e aparece com `image-rendering: pixelated`.
+- Ele entra no cartão do piloto, ao lado do número, e no aviso de novo líder.
+- O montador do seu próprio piloto vem no próximo PR, com as mesmas listas (`PELES`, `CABELOS`, `CORES_CABELO`, `BARBAS`, `OLHOS`).
+
 ## Fica para depois
 
 - **O MFD no estilo dos prints:** o painel de vidro ao lado do halo, com as linhas "‹ valor ›" e a janela de parada. A tela de temperaturas dos prints não entra, porque o jogo não simula a temperatura dos pneus nem dos freios.

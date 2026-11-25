@@ -45,14 +45,17 @@
 @keyframes tvRolaFecha{from{transform:translateY(35%);opacity:.2;color:#5fe08f}to{transform:none;opacity:1}}
 
 /* ---- o cartão do piloto (embaixo da sua linha) ---- */
-.tv-cartao{--tv-eq:#3a6fd0;display:flex;align-items:center;gap:10px;padding:0 10px 0 8px;overflow:hidden;color:#fff;
+.tv-cartao{--tv-eq:#3a6fd0;display:flex;align-items:center;gap:7px;padding:0 8px 0 4px;overflow:hidden;color:#fff;
   background:linear-gradient(105deg,color-mix(in srgb,var(--tv-eq) 55%,#06070b) 0%,color-mix(in srgb,var(--tv-eq) 30%,#0b0d14) 60%,#0b0d14 100%);border-bottom:2px solid var(--tv-eq)}
 .tv-cartao.entra{animation:tvCartao .45s cubic-bezier(.2,1,.3,1) both}
 @keyframes tvCartao{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
-.tvc-num{font-size:54px;line-height:1;font-weight:800;font-style:italic;color:transparent;-webkit-text-stroke:2px #ffffffd9;min-width:62px;text-align:center}
+.tvc-foto,.tvl-foto{image-rendering:pixelated;flex:none}
+.tvc-foto{width:64px;height:64px;align-self:flex-end;margin-bottom:-2px}
+.tvl-foto{width:56px;height:56px;align-self:flex-end}
+.tvc-num{font-size:34px;line-height:1;font-weight:800;font-style:italic;color:transparent;-webkit-text-stroke:2px #ffffffd9;min-width:36px;text-align:center}
 .tvc-nome{display:flex;flex-direction:column;min-width:0;line-height:1.1}
 .tvc-nome small{font-size:12px;font-weight:600;opacity:.85}
-.tvc-nome b{font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvc-nome b{font-size:17px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tvc-nome em{display:flex;align-items:center;gap:5px;font-style:normal;font-size:12px;font-weight:600;opacity:.9;white-space:nowrap}
 .tvc-logo{width:16px;height:14px;object-fit:contain}
 
@@ -87,7 +90,7 @@
   #race.f1hud.hud-tv #hTorre .tl{height:23px;font-size:12px;grid-template-columns:22px 16px minmax(0,1fr) auto 46px 10px;column-gap:3px}
   #race.f1hud.hud-tv #hTorre .tl .n{width:18px;height:18px;font-size:12px}#race.f1hud.hud-tv #hTorre .tl .df{font-size:12px}
   #race.f1hud.hud-tv #hTorre .tl .vrx{left:-24px;width:19px;height:19px}
-  .tvc-num{font-size:38px;min-width:44px}.tvc-nome b{font-size:15px}
+  .tvc-num{font-size:30px;min-width:34px}.tvc-foto{width:48px;height:48px}.tvc-nome b{font-size:15px}
   #race.f1hud.hud-tv #hTvVel{width:100px}.tvv-vel b{font-size:36px}.tvv-ers{font-size:22px}.tvv-marcha b{font-size:22px}
   #race.f1hud.hud-tv #hMfd,#race.f1hud.hud-tv .mfd-botao{bottom:128px}
 }

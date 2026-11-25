@@ -33,7 +33,7 @@ const DESENHOS_CAPACETE = ["e_moderno", "e_classico", "e_mono", "e_racing", "e_g
 function limparCapacete(c) {
   if (!c || typeof c !== "object") return null;
   const cores = Array.isArray(c.cores) ? c.cores.slice(0, 3) : [];
-  if (!(DESENHOS_CAPACETE.includes(c.desenho) || /^p_[A-Z]{3}$/.test(c.desenho || "")) || // (p_XXX: os capacetes dos pilotos do grid, f1-capacetes-estilos.js ESTILOS_PILOTOS)
+  if (!(DESENHOS_CAPACETE.includes(c.desenho) || /^(p_[A-Z]{3}|t_[a-z]{3,16})$/.test(c.desenho || "")) || // (p_XXX: os capacetes dos pilotos do grid, f1-capacetes-estilos.js ESTILOS_PILOTOS)
     cores.length !== 3 || !cores.every((x) => HEX.test(x)) || !HEX.test(c.viseira || "")) return null;
   const bandeira = /^[A-Z]{2}$/.test(c.bandeira || "") ? c.bandeira : "", nome = String(c.nome || "").normalize("NFC").replace(/[^\p{L}\p{N} .\-]/gu, "").trim().slice(0, 14);
   // (2026-11-14) o "Padrão" (0 a 3), o acabamento do casco e o patrocínio: os mesmos de f1-capacetes.js (VARIANTES, ACABAMENTOS, PATROCINIOS, LUGARES_PATROCINIO)

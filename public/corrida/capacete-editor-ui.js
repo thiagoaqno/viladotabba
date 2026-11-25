@@ -8,6 +8,7 @@ import { pintarFolha, DESENHOS_CAPACETE, VISEIRAS, VISEIRAS_FURTACOR, CAPACETE_P
   patrociniosDe, extraDoCapacete, CORES_DO_ESTILO, miniaturaDoPatrocinio, LUGARES_HALO, lerHalo, gravarHalo } from "./f1-capacetes.js";
 import { previaDoCapacete } from "./capacete-3d.js";
 import { PADROES_PIXEL, imagemDoPadrao } from "./f1-capacetes-padroes.js";
+import { ESTAMPAS, imagemDaEstampa } from "./f1-capacetes.js";
 
 export const CHAVE_CAPACETE = "corrida:capacete";
 // os nomes dos países das bandeiras (as siglas de gp-info.js BANDEIRAS)
@@ -20,6 +21,7 @@ const h = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "
 const svg = (d) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ABAS = [
   ["padroes", "Padrões", svg('<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>')], // (2026-11-25: os capacetes das folhas de pixel art, f1-capacetes-padroes.js)
+  ["estampas", "Estampas", svg('<path d="M4 18 9 6l4 8 3-5 4 9z"/><circle cx="17" cy="6" r="2"/>')], // (2026-11-25: as 10 estampas da imagem do Thiago, f1-capacetes.js ESTAMPAS)
   ["desenho", "Desenho", svg('<path d="M4 15a8 8 0 0 1 16 0v2H4z"/><path d="M12 7v3M8 15h8"/>')],
   ["cores", "Cores", svg('<path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.7 1.5-1.5 0-1.2-1-1.5-1-2.5S13.3 15 14.5 15H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/>')],
   ["detalhes", "Detalhes", svg('<path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>')],
@@ -78,6 +80,9 @@ export function montarEditorCapacete(el, op = {}) {
     if (aba === "padroes") {
       painel.innerHTML = `<header class="cp2-ph"><h4>Padrões</h4><span class="cp2-pag">os capacetes dos pilotos</span></header>
         <div class="cp2-grade cp2-padroes">${PADROES_PIXEL.map((p) => { const on = atual.desenho === p.desenho && atual.cores.join() === p.cores.join(); return `<button type="button" class="cp2-mini ${on ? "on" : ""}" data-cp-padrao="${h(p.id)}" title="${h(p.nome)}" aria-pressed="${on}"><img src="${imagemDoPadrao(p.id)}" alt="" style="image-rendering:pixelated"><span class="cp2-mini-txt">${h(p.nome)}</span></button>`; }).join("")}</div>`;
+    } else if (aba === "estampas") {
+      painel.innerHTML = `<header class="cp2-ph"><h4>Estampas</h4><span class="cp2-pag">a textura no capacete inteiro</span></header>
+        <div class="cp2-grade cp2-padroes cp2-estampas">${Object.entries(ESTAMPAS).map(([id, e]) => `<button type="button" class="cp2-mini ${atual.desenho === id ? "on" : ""}" data-cp-estampa="${id}" title="${h(e.nome)}" aria-pressed="${atual.desenho === id}"><img src="${imagemDaEstampa(id)}" alt=""><span class="cp2-mini-txt">${h(e.nome)}</span><span class="cp2-swatch">${e.cores.map((c) => `<i style="background:${c}"></i>`).join("")}</span></button>`).join("")}</div>`;
     } else if (aba === "desenho") {
       const da = desenhos.slice(pagina * POR_PAGINA, (pagina + 1) * POR_PAGINA), imgs = fotosDe(da.map((d) => { const fab = CORES_DO_ESTILO(d); return fab ? [`e:${d}`, capCom({ desenho: d, ...fab, variante: 0 })] : [`d:${d}:${atual.variante}`, capCom({ desenho: d })]; })); // (os estilos novos aparecem com as cores de fábrica)
       painel.innerHTML = `<header class="cp2-ph"><h4>Desenho</h4><span class="cp2-pag"><button type="button" data-cp-pag="-1" aria-label="Página anterior" ${pagina ? "" : "disabled"}>${SETA_E}</button>${pagina + 1} / ${paginas}<button type="button" data-cp-pag="1" aria-label="Próxima página" ${pagina < paginas - 1 ? "" : "disabled"}>${SETA_D}</button></span></header>
@@ -123,6 +128,7 @@ export function montarEditorCapacete(el, op = {}) {
     const d = b.dataset;
     if (d.cpAba) { aba = d.cpAba; return desenharPainel(); }
     if (d.cpPag) { pagina = Math.max(0, Math.min(paginas - 1, pagina + Number(d.cpPag))); return desenharPainel(); }
+    if (d.cpEstampa) { const e = ESTAMPAS[d.cpEstampa]; if (e) { atual.desenho = d.cpEstampa; atual.cores = e.cores.slice(); atual.variante = 0; } return mudar(); }
     if (d.cpPadrao) { const p = PADROES_PIXEL.find((x) => x.id === d.cpPadrao); if (p) { atual.desenho = p.desenho; atual.cores = p.cores.slice(); atual.viseira = p.viseira; atual.variante = 0; if (/^p_/.test(p.desenho)) { atual.patrocinios = {}; atual.patrocinio = ""; atual.nome = ""; } } return mudar(); } // (os dos pilotos: as marcas fixas deles entram com os patrocínios e o nome vazios)
     if (d.cpDesenho) { atual.desenho = d.cpDesenho; const fab = CORES_DO_ESTILO(d.cpDesenho); if (fab) { atual.cores = fab.cores; atual.viseira = fab.viseira; atual.variante = 0; } return mudar(); } // (cada estilo novo chega com as cores dele)
     if (d.cpCor != null) { atual.cores[+d.cpCor] = d.c; slot = +d.cpCor; return mudar(); }

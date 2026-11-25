@@ -1,10 +1,13 @@
-# Mônaco: o carro para de raspar na subida depois da Sainte-Dévote
+# Capacete: 10 estampas novas, com a textura de verdade
 
-O Thiago contou que, em Mônaco, o carro ainda raspava tudo na subida depois da primeira curva.
+O Thiago pediu texturas novas para o capacete, estampas, e mandou a imagem das 10 que queria: Carbono Neon, Tigre, Geométrica, Topográfica, Bandeira Brasileira, Digital, Gradiente, Relâmpago, Onda e Hexagonal.
 
-- **A causa (`carros.js` `poseKart`):** a pancada da suspensão (`bate`) vinha da derivada crua do caimento, sem suavizar. O relevo da subida tem degrauzinhos: cada um virava uma pancada, o carro afundava, a folga do assoalho zerava e saíam faíscas.
-- **Agora:** a pancada vem da compressão, a mesma conta que já decidia as faíscas: o caimento de agora contra a média dos últimos 0,4 s. Numa rampa de inclinação constante, ela vai a zero.
-- **O mínimo (`COMPRESSAO_MIN` = 0,012 rad):** abaixo dele, a mudança de caimento conta como relevo serrilhado e não como compressão. O som da pancada passa a sair só numa compressão forte de verdade.
-- **O que não muda:** a raspada da zebra e a da asa alta demais para a altura escolhida no acerto.
-
-**Não medido:** o 0,012 rad é um ponto de partida, para o Thiago conferir jogando em Mônaco. Se ainda raspar, ou se as compressões de verdade (como a do fim da reta) sumirem, é ele que se ajusta.
+- **As texturas (`public/corrida/capacete-estampas/`, 372 KB):** as 10 recortadas da imagem dele em 512×512 (webp).
+- **No capacete (`f1-capacetes.js`):**
+  - `ESTAMPAS` traz as 10 (`t_tigre`, `t_onda`…), cada uma com as suas 3 cores, as das bolinhas da imagem.
+  - `pintarFolha` envolve a cabeça com a textura: uma metade da folha com ela e a outra espelhada. Assim a frente mostra a estampa inteira, e a emenda fica nas laterais.
+  - Acabamento, patrocínios, nome e bandeira continuam valendo por cima.
+  - A imagem chega depois e repinta.
+- **No editor (`capacete-editor-ui.js`, `capacete.css`):** a aba "Estampas" mostra as 10 miniaturas, o nome e as bolinhas de cor. O clique aplica a estampa e as cores dela.
+- **No servidor (`corrida-base.js`):** `limparCapacete` aceita os desenhos `t_xxx`.
+- **Conferido:** desenhei as 10 folhas planas. Não vi em 3D, porque a prévia trava no print.

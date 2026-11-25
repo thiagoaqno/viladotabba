@@ -17,7 +17,7 @@ const TRobo = require("./corrida-temporada-robo.js"); // o robô que leva o carr
 const bd = require("../comum/bd.js");
 const { SKINS } = require("../../public/pelada/campo.js"); // o piloto do kart usa as skins da Pelada
 const { rid, novoCodigo, limparNome: cleanName, ok, falha: fail, contexto, ligarSocket, buscarSala, quemVolta, nomeEmUso, limparSalasParadas } = require("../comum/salas.js"); // as peças de sala que todo jogo repete
-const { LUZES_MS, MAX_PLAYERS, COLORS, PAWNS, int, num, limparCapacete } = require("./corrida-base.js");
+const { LUZES_MS, MAX_PLAYERS, COLORS, PAWNS, int, num, limparCapacete, limparPixel } = require("./corrida-base.js");
 module.exports = (C) => {
   const { nsp, rooms, cleanConfig, CONFIG_SALA_NOVA, log, entrarNaEquipe, humanosDa, chefes, limparMontagens, atribuirCarros, broadcast, liberarCarga, startRace, classificacao, iniciarClassificacao, aprenderAgora, endRace, concluirParada, corredorDe, onSector, aplicarBatida, entrouNoGP, agendarAssumir } = C;
   nsp.on("connection", (socket) => {
@@ -37,7 +37,7 @@ module.exports = (C) => {
       const room = { code: novoCodigo(rooms), host: null, phase: "lobby", config: cleanConfig(data.config || CONFIG_SALA_NOVA), players: {}, order: [], finishOrder: [], log: [], t: Date.now(), ...(data.config ? {} : { salaNova: true }) };
       rooms.set(room.code, room);
       const p = addPlayer(room, name, data.skin);
-      { const cap = limparCapacete(data.capacete); if (cap) p.mods = { ...p.mods, capacete: cap }; } // o capacete de quem joga já na criação: a corrida rápida larga direto, sem passar pela sala
+      { const cap = limparCapacete(data.capacete); if (cap) p.mods = { ...p.mods, capacete: cap }; const px = limparPixel(data.pixel); if (px) p.mods = { ...p.mods, pixel: px }; } // o capacete de quem joga já na criação: a corrida rápida larga direto, sem passar pela sala
       // `inicio` vem da tela inicial (Corrida rápida e Contrarrelógio): a equipe da garagem, o pneu e, com `largar`, a corrida já começa
       const inicio = data.inicio && typeof data.inicio === "object" ? data.inicio : null, f1 = room.config.regras === "f1";
       if (f1 && (room.salaNova || inicio)) entrarNaEquipe(room, p, inicio?.equipe);
@@ -95,8 +95,10 @@ module.exports = (C) => {
           const d = data.mods || {}, n = { ...me.mods };
           if (!room.temporada) for (const k of Object.keys(T.MODS)) if (T.MODS[k][d[k]]) n[k] = d[k]; // (na carreira, a pintura é a da equipe: só o capacete muda)
           if ("capacete" in d) n.capacete = limparCapacete(d.capacete); // o capacete de quem joga (f1-capacetes.js)
-          for (const k of Object.keys(n)) if (!T.MODS[k] && k !== "capacete") delete n[k]; // opções antigas (rodas, aerofólio, faixa) saem
+          if ("pixel" in d) n.pixel = limparPixel(d.pixel); // o seu piloto em pixel art (piloto-pixel-editor.js)
+          for (const k of Object.keys(n)) if (!T.MODS[k] && k !== "capacete" && k !== "pixel") delete n[k]; // opções antigas (rodas, aerofólio, faixa) saem
           if (!n.capacete) delete n.capacete;
+          if (!n.pixel) delete n.pixel;
           me.mods = n; return;
         }
         if (type === "pneu") { // o composto da largada (regras de F1)

@@ -45,4 +45,16 @@ function limparCapacete(c) {
   return { desenho: c.desenho, cores, viseira: c.viseira, bandeira, nome, variante, acabamento, patrocinio, patrocinios, fundoPatrocinio };
 }
 
-module.exports = { nomesDe, PERF, medirPerf, ROBOS_F1_MS, CARGA_MAX_MS, LUZES_MS, TV_TEMPORADA_MS, TV_AVULSA_MS, HORAS_CARREIRA, SALA_VAZIA_MS, ESPERA_CHEGADA, MAX_PLAYERS, COUNTDOWN_MS, AFTER_FIRST_MS, MAX_RACE_MS, COLORS, PAWNS, int, num, DESENHOS_CAPACETE, HEX, limparCapacete };
+// (2026-11-25) o seu piloto em pixel art (mods.pixel; o montador, piloto-pixel-editor.js; as listas são as de pixel-piloto.js): só o que o montador oferece
+const PIXEL = { cabelo: ["curto", "raspado", "topete", "ondulado", "cacheado", "longo", "trancas", "calvo"], cor: ["preto", "castanho-escuro", "castanho", "castanho-claro", "loiro-escuro", "loiro", "ruivo", "grisalho"],
+  barba: ["nenhuma", "rala", "cheia", "bigode", "cavanhaque"], olhos: ["castanho", "escuro", "azul", "verde", "mel"], rosto: ["oval", "fino", "largo", "quadrado"], nariz: ["pequeno", "medio", "grande"], sobr: ["fina", "media", "grossa"] };
+function limparPixel(t) {
+  if (!t || typeof t !== "object") return null;
+  const r = { pele: [0, 1, 2, 3, 4, 5].includes(t.pele) ? t.pele : 1 };
+  const PADRAO = { cabelo: "curto", cor: "castanho", barba: "nenhuma", olhos: "castanho", rosto: "oval", nariz: "medio", sobr: "media" };
+  for (const [k, l] of Object.entries(PIXEL)) r[k] = l.includes(t[k]) ? t[k] : PADRAO[k];
+  r.risca = t.risca === "esq" || t.risca === "dir" ? t.risca : null;
+  for (const k of ["sorriso", "oculos", "brinco"]) r[k] = t[k] === true;
+  return r;
+}
+module.exports = { limparPixel, nomesDe, PERF, medirPerf, ROBOS_F1_MS, CARGA_MAX_MS, LUZES_MS, TV_TEMPORADA_MS, TV_AVULSA_MS, HORAS_CARREIRA, SALA_VAZIA_MS, ESPERA_CHEGADA, MAX_PLAYERS, COUNTDOWN_MS, AFTER_FIRST_MS, MAX_RACE_MS, COLORS, PAWNS, int, num, DESENHOS_CAPACETE, HEX, limparCapacete };

@@ -111,13 +111,25 @@
     if (!P && Date.now() - depois > 3 * 864e5) var t = setInterval(function () { if (noMenu()) { clearInterval(t); abrir(); } }, 800);
   }
   function noMenu() { try { return typeof MATCH !== "undefined" && MATCH.state === "menu" && !document.pointerLockElement; } catch (e) { return false; } }
+  // o cartão "Perfil" do menu do jogo (acctChip) mostra o nosso perfil: ferramentas/tiro-frontline.js faz o jogo perguntar aqui
+  var offline = function () { return P && ls.getItem(PEND) && !navigator.onLine; };
+  function rotulo() {
+    return P ? { ok: true, nome: P.nome, sub: "Nível " + nivel() + (offline() ? " · sem internet, sobe depois ⏳" : " · ver meu perfil") }
+      : { ok: false, nome: "Criar perfil", sub: "Guarde seu nível e suas classes na Vila" };
+  }
+  var ultimo = "";
+  function avisarJogo() { try { if (typeof acctChip === "function") acctChip(); } catch (e) { /* o jogo ainda não subiu */ } }
   function atualizarBotao() {
     if (!bt) return;
-    bt.style.display = noMenu() && jan.style.display !== "flex" ? "block" : "none";
+    var noJogo = !!document.getElementById("acctChip"); // com o cartão do jogo, o botão nosso não precisa aparecer
+    var ver = noMenu() && jan.style.display !== "flex";
+    bt.style.display = ver && !noJogo ? "block" : "none";
     bt.innerHTML = (P ? "👤 " + esc(P.nome) + " · <b>nível " + nivel() + "</b>" : "👤 <b>Criar perfil</b> (guardar meu nível)")
-      + (P && ls.getItem(PEND) && !navigator.onLine ? ' <span title="Sem internet: o progresso fica no aparelho e sobe quando ela voltar">⏳</span>' : "");
-    if (volta) volta.style.display = bt.style.display;
+      + (offline() ? ' <span title="Sem internet: o progresso fica no aparelho e sobe quando ela voltar">⏳</span>' : "");
+    if (volta) volta.style.display = ver ? "block" : "none";
+    var r = JSON.stringify(rotulo()); if (r !== ultimo) { ultimo = r; avisarJogo(); }
   }
+  window.tiroPerfil = { abrir: function () { if (jan) abrir(); }, rotulo: rotulo };
   function tela(html) { jan.firstChild.innerHTML = html; jan.style.display = "flex"; atualizarBotao(); var i = jan.querySelector("input"); if (i) setTimeout(function () { i.focus(); }, 30); }
   function fechar() { jan.style.display = "none"; atualizarBotao(); }
   function erro(msg) { var e = jan.querySelector(".er"); if (e) e.textContent = msg; }

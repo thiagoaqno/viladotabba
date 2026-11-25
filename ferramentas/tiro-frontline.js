@@ -143,6 +143,12 @@ const ANN={q:[],until:0,last:new Map()};`, { nome: "voz da classe" });
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });
+// a medição de visitas do Vercel (o site deles): aqui não existe, e nada de visita vai para fora
+h = troca(h, /<script>\s*window\.va = window\.va \|\| function[\s\S]*?<\/script>\s*<script defer src="\/_vercel\/insights\/script\.js"><\/script>\s*/, "", { nome: "estatísticas do Vercel" });
+// o "Perfil" do menu do jogo (a tela de contas do site deles, que aqui diria "sem contas") abre o perfil da Vila, e o cartão
+// do menu mostra o nome e o nível dele (window.tiroPerfil, no perfil-galera.js)
+h = troca(h, "function uiGo(name,push=true,fresh=push){", "function uiGo(name,push=true,fresh=push){if(name==='profile'&&ACCT.state==='off'&&window.tiroPerfil){window.tiroPerfil.abrir();return;}", { nome: "Perfil abre o da Vila" });
+h = troca(h, "acctAvatarFallback($('acctAv'),u,lv);$('acctName')", "acctAvatarFallback($('acctAv'),u,lv);if(ACCT.state==='off'&&window.tiroPerfil){const t=window.tiroPerfil.rotulo();chip.classList.toggle('out',!t.ok);$('acctName').textContent=t.nome;$('acctSub').textContent=t.sub;chip.setAttribute('aria-label',t.nome+', '+t.sub);return;}$('acctName')", { nome: "cartão do perfil" });
 h = troca(h, /Riposte: Frontline|Riposte Frontline/g, NOME, { nome: "nome" });
 h = troca(h, /Installer Riposte/g, "Installer " + NOME, { min: 0, nome: "instalador" });
 h = troca(h, /content="Riposte"/g, 'content="Tiro"', { min: 0, nome: "nome curto" });

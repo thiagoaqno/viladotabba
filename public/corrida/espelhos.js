@@ -9,7 +9,7 @@ import { renderer, scene, cam } from "./cena.js";
 import { graficos } from "./qualidade.js";
 import { ajusteEspelho } from "./retrovisores-ajuste.js";
 
-const LARG = 160, FOV_H = 34 * Math.PI / 180, DE_DENTRO = new Set(["cockpit", "onboard", "bico"]), PERTO = 120; // PERTO: até onde (unidades) uma câmera de fora ainda refaz o espelho
+const LARG = 160, FOV_H = 34 * Math.PI / 180, DE_DENTRO = new Set(["cockpit", "onboard", "f1", "bico"]), PERTO = 120; // PERTO: até onde (unidades) uma câmera de fora ainda refaz o espelho
 const GEO = new THREE.PlaneGeometry(1, 1);
 const v = new THREE.Vector3(), d = new THREE.Vector3(), cima = new THREE.Vector3(), olho = new THREE.Vector3(), M = new THREE.Matrix4();
 let contador = 0, ultimo = 0;

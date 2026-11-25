@@ -52,6 +52,11 @@ const ATAQUE_PERTO_MONACO = L_CARRO * 2.5; // Mônaco: só começa a ultrapassar
 let MARG_PARADO = 28; // Mônaco: metade da folga extra ao contornar um carro lento; a largura é 26
 const ARRANQUE_INI_MS = 2000, ARRANQUE_RAMPA_MS = 4000, ARRANQUE_SEM_ULT_MS = 3500; // a largada: a reserva de espaço à frente volta ao normal entre 2 s e 6 s, e sem ultrapassagem nos primeiros 3,5 s
 // (2026-11: mais agressivos depois dos carros parelhos: emparelham mais cedo, mais perto de lado, e o difícil defende mais)
+// (2026-11-24, o Thiago: "se o bot vem muito rápido e tem um carro na frente, frear não é a escolha certa: é colocar de lado e tentar a ultrapassagem,
+// em milissegundos") chegando DESVIO_FECHA u/s ou mais rápido que o da frente, a menos de DESVIO_T s do contato e fora de curva fechada (curvatura abaixo
+// de DESVIO_K), o robô vai para o lado livre na hora, sem esperar bateria, paciência nem reta; e durante a manobra só freia se a mudança de faixa
+// (DESVIO_LAT u/s de lado, mais DESVIO_REACAO s) não terminar antes de encostar. Números de ajuste, não medidos: o Thiago testa jogando.
+const DESVIO_FECHA = 20, DESVIO_T = 2.5, DESVIO_K = 1 / 300, DESVIO_LAT = 35, DESVIO_REACAO = 0.25;
 const ESPERA_VAGA_MS = 2500, FECHA_MANOBRA = 20, ERS_ATAQUE = 0, ERS_DEFESA = 0.6; // (2026-11-16, o Thiago: "eles frequentemente zeram a bateria, é normal": no ataque gasta até zerar; era 0,35) (a defesa só com sobra: defendendo sempre, a bateria de quem ataca e a de quem defende se anulavam e o pelotão virava trem) // FECHA_MANOBRA: u/s acima do alvo que o robô mantém, meio de lado, para emparelhar (~15 km/h)
 const _x = 0; // quanto tempo o robô espera, ainda atrás do alvo, o lado escolhido voltar a caber (transito)
 const TRANSITO_NIVEL = { facil: { margem: 40, antec: 0.95, defende: 0.2 }, medio: { margem: 32, antec: 1.3, defende: 0.55 }, dificil: { margem: 30, antec: 1.5, defende: 0.65 } };
@@ -164,6 +169,8 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
       // (o loop que o Thiago apontou: o robô chegava embalado, o freio de trânsito o segurava atrás com folga, a diferença de velocidade sumia e ele
       // desistia da manobra; e tentava de novo.) Meio de lado em relação ao alvo da manobra, ele continua FECHANDO: até FECHA_MANOBRA acima do outro
       if (alvoDaManobra && !monaco && separados >= W_CARRO * 0.5 && frente > L_CARRO * 1.15) lim = Math.max(lim, ovPlano + FECHA_MANOBRA);
+      // já indo para o lado: se a mudança de faixa termina antes de encostar, não freia (mantém a velocidade de agora); só freia se não der tempo
+      if (alvoDaManobra && !monaco && folga > 0) { const falta = Math.max(0, W_CARRO + 1 - separados); if (folga > aproxima * (DESVIO_REACAO + falta / DESVIO_LAT)) lim = Math.max(lim, ia.v); }
       else if (ia.ult && ia.ult.id === oid && frente > L_CARRO + 2) lim = Math.max(lim, V_ARRASTO);
       out.freio = Math.min(out.freio, lim);
       out.atras = Math.min(out.atras ?? Infinity, frente);
@@ -184,10 +191,11 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     let emergenciaSemEspaco = false;
     // Se está chegando muito rápido, tenta desviar ANTES de encostar, sem soltar a freada de trânsito.
     // Só inicia a manobra com tempo, pista quase reta e espaço livre até o ponto onde o carro chegará.
-    if (!ia.ult && alvo && !ia.defesa && leve && dFreio > 100) {
+    // (2026-11-24) não precisa de reta nem de estar longe da freada: basta não ser curva fechada; um carro bem mais lento (menos de 60% da minha velocidade)
+    // se desvia até na entrada da freada. Começa a até DESVIO_T s do contato, não só quando o freio já não daria conta.
+    if (!ia.ult && alvo && !ia.defesa && !monaco && k[i] < DESVIO_K && k[(i + 6) % n] < DESVIO_K && (dFreio > 30 || alvo.ov < ia.v * 0.6)) {
       const fecha = ia.v - alvo.ov, folga = alvo.frente - L_CARRO;
-      const freio = D.frenagemMaxima(c, ia.v, 0, plano.aderenciaFreio) * 0.5;
-      const risco = fecha > 25 && folga > 0 && folga / fecha > 0.8 && folga < fecha * 0.4 + fecha * fecha / (2 * Math.max(1, freio));
+      const risco = fecha > DESVIO_FECHA && folga > 0 && folga / fecha < DESVIO_T;
       if (risco) {
         const olhar = Math.ceil(Math.max(ia.v, 30) * 1.2 / STEP);
         let limite = maxLat;

@@ -133,6 +133,7 @@ export function fantasmaVisual(k, on) {
 // as faíscas, o carro encolhido pelo raio e a bala no lugar do carro.
 const _cor = new THREE.Color();
 const menosMovimento = matchMedia("(prefers-reduced-motion: reduce)");
+const COMPRESSAO_MIN = 0.012; // (rad) abaixo disso a mudança de caimento é o relevo serrilhado, não uma compressão
 export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 0, fx = {}) {
   const suave = 1 - Math.exp(-dt * 12);
   k.pitch += (pitch - k.pitch) * suave; k.roll += (lean - k.roll) * suave;
@@ -144,8 +145,11 @@ export function poseKart(k, x, y, z, a, v, steer, ground, dt, lean = 0, pitch = 
   k.rodava = !!fx.rodando;
   // a SUSPENSÃO (acerto-carro.js): afunda com a asa e a velocidade e nas compressões (a variação do caimento), com mola e amortecedor
   // (segue o alvo em ~0,08 s); a folga do assoalho é a altura parada menos o quanto afundou
-  const ac = fx.acerto || ACERTO_CARRO_PADRAO, dPitch = (pitch - (k.pitchAntes ?? pitch)) / Math.max(dt, 1e-3); k.pitchAntes = pitch;
-  const bate = Math.min(0.03, Math.max(0, dPitch) * 0.02), alvoAfunda = afundaAero(ac, v) + bate;
+  // (2026-11-25, o Thiago: "em Mônaco ele ainda raspa tudo quando está subindo depois da primeira curva") a pancada da suspensão vinha da derivada CRUA
+  // do caimento: cada degrauzinho do relevo virava pancada, o carro afundava e a folga do assoalho zerava. Agora vem da compressão (o caimento contra a
+  // média dos últimos 0,4 s), que numa rampa de inclinação constante vai a zero, e só a partir de uma compressão de verdade (COMPRESSAO_MIN)
+  const ac = fx.acerto || ACERTO_CARRO_PADRAO;
+  const bate = Math.min(0.03, Math.max(0, compressao - COMPRESSAO_MIN) * 0.3), alvoAfunda = afundaAero(ac, v) + bate;
   if (bate > 0.012 && v > 150 && performance.now() > (k.pancadaAte || 0)) { k.pancada = true; k.pancadaAte = performance.now() + 600; } // a suspensão bate no fundo (jogo.js toca o som do meu carro)
   k.afunda = (k.afunda ?? 0) + (alvoAfunda - (k.afunda ?? 0)) * (1 - Math.exp(-dt * 12));
   k.folga = alturaParada(ac) - k.afunda;

@@ -196,6 +196,26 @@ const EVENTOS = {
 };
 const FALAS_EVENTOS = Object.entries(EVENTOS).flatMap(([tipo, textos]) => textos.map((texto, i) => ({ id: `evento-${tipo}-${i + 1}`, texto, tipo })));
 const porEvento = (tipo) => FALAS_EVENTOS.filter(f => f.tipo === tipo);
-const api = { PISTAS, FALAS: lista, porPista, escolher, EVENTOS, FALAS_EVENTOS, porEvento };
+// (2026-11-25, o Thiago: "falas do narrador com apresentação do grid") o grid de largada é narrado em pedaços tocados em sequência
+// (narrador.js falarDoGrid): a abertura, "na pole position", o nome do pole, "ao lado dele" e o nome do segundo, e o fechamento. Os nomes são dos
+// 22 pilotos de 2026, pela sigla (nome-NOR...), com a equipe; quem não tem nome gravado (a galera) vira "um piloto da galera".
+const GRID = {
+  abre: ["Vamos ao grid de largada!", "Hora de conhecer o grid de largada.", "Olha o grid formado para a largada!"],
+  pole: ["Na pole position,", "Largando em primeiro,", "Na posição de honra, a pole,"],
+  lado: ["Ao lado dele, na primeira fila,", "Dividindo a primeira fila,", "E em segundo,"],
+  fecha: ["Tudo pronto. Os motores vão roncar!", "Grid formado. Agora é com eles!", "Os carros estão em posição. Que comece a corrida!"],
+  galera: ["um piloto da galera!", "um nome da nossa galera!"],
+};
+const NOMES = {
+  NOR: "Lando Norris, da McLaren!", PIA: "Oscar Piastri, da McLaren!", LEC: "Charles Leclerc, da Ferrari!", HAM: "Lewis Hamilton, da Ferrari!",
+  RUS: "George Russell, da Mercedes!", ANT: "Kimi Antonelli, da Mercedes!", VER: "Max Verstappen, da Red Bull!", HAD: "Isack Hadjar, da Red Bull!",
+  LAW: "Liam Lawson, da Racing Bulls!", LIN: "Arvid Lindblad, da Racing Bulls!", ALO: "Fernando Alonso, da Aston Martin!", STR: "Lance Stroll, da Aston Martin!",
+  ALB: "Alexander Albon, da Williams!", SAI: "Carlos Sainz, da Williams!", HUL: "Nico Hulkenberg, da Audi!", BOR: "Gabriel Bortoleto, da Audi!",
+  GAS: "Pierre Gasly, da Alpine!", COL: "Franco Colapinto, da Alpine!", CAM: "Rafael Câmara, da Haas!", BEA: "Oliver Bearman, da Haas!",
+  PER: "Sergio Pérez, da Cadillac!", BOT: "Valtteri Bottas, da Cadillac!",
+};
+const FALAS_GRID = [...Object.entries(GRID).flatMap(([tipo, textos]) => textos.map((texto, i) => ({ id: `grid-${tipo}-${i + 1}`, texto, tipo }))),
+  ...Object.entries(NOMES).map(([sigla, texto]) => ({ id: `nome-${sigla}`, texto, tipo: "nome" }))];
+const api = { PISTAS, FALAS: lista, porPista, escolher, EVENTOS, FALAS_EVENTOS, porEvento, GRID, NOMES, FALAS_GRID };
 if (typeof module !== "undefined" && module.exports) module.exports = api; else root.NarradorFalas = api;
 })(typeof self !== "undefined" ? self : this);

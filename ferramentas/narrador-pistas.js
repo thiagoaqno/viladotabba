@@ -7,8 +7,8 @@
 // ELEVENLABS_VOICE_ID é opcional. A chave só é lida do ambiente: nunca é gravada nem impressa. Node 18+.
 const fs = require("fs");
 const path = require("path");
-const { FALAS, FALAS_EVENTOS, PISTAS } = require("../public/corrida/narrador/falas.js");
-const TODAS = [...FALAS, ...FALAS_EVENTOS];
+const { FALAS, FALAS_EVENTOS, FALAS_GRID, PISTAS } = require("../public/corrida/narrador/falas.js");
+const TODAS = [...FALAS, ...FALAS_EVENTOS, ...(FALAS_GRID || [])]; // (FALAS_GRID: a apresentação do grid, 2026-11-25)
 
 const PASTA = path.join(__dirname, "..", "public", "corrida", "narrador");
 // a voz: --voz <id> (o GERAR-VOZES-CORRIDA.bat passa), senão ELEVENLABS_VOICE_ID, senão Brian (grave, encorpada, boa de narração)

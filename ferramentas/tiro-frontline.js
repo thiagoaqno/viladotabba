@@ -56,10 +56,12 @@ console.log("logo e fundo trocados");
 // os "-N" do mesmo som e sorteia um a cada anúncio (no celular, só os dois primeiros).
 const PREFIXO = { padrao: "v_", smg: "vs_", sniper: "vp_", shotgun: "ve_" };
 const VOZ_GRUPOS = [];
+let NOME_VOZ_PADRAO = "Narrador 1";
 {
   const VOZES = path.join(__dirname, "tiro-vozes");
   const ler = (f) => { const j = JSON.parse(fs.readFileSync(path.join(VOZES, f), "utf8")); delete j._; return j; };
   const falas = ler("falas.json"), grupos = ler("vozes.json");
+  if (grupos.padrao && grupos.padrao.nome) NOME_VOZ_PADRAO = grupos.padrao.nome;
   // duração em amostras a 48 kHz, contada pelos quadros do mp3 (o jogo usa para saber quando a fala acaba)
   const amostras48 = (b) => {
     let i = 0;
@@ -93,7 +95,7 @@ const VOZ_GRUPOS = [];
     const chave = g === "padrao" ? "voix_en" : "voix_" + g;
     const arq = g === "padrao" ? fs.readdirSync(path.join(OUT, "sfx")).find((f) => f.startsWith("voix_en.")) : `voix_${g}.js`;
     fs.writeFileSync(path.join(OUT, "sfx", arq), `sfxPack(${JSON.stringify(chave)},` + JSON.stringify({ rate: 44100, s }) + ");\n");
-    if (g !== "padrao") VOZ_GRUPOS.push({ g, chave, arq });
+    if (g !== "padrao") VOZ_GRUPOS.push({ g, chave, arq, nome: grupos[g].nome || g });
     console.log(`vozes ${g}: ${n} falas (${grupos[g].armas})`);
   }
 }
@@ -133,7 +135,7 @@ if (VOZ_GRUPOS.length) {
   h = troca(h, /("voix_en":"sfx\/voix_en\.[0-9a-f]+\.js")/, (_, a) => a + VOZ_GRUPOS.map((v) => `,${JSON.stringify(v.chave)}:${JSON.stringify("sfx/" + v.arq)}`).join(""), { nome: "pacotes de voz por classe" });
   const pref = Object.fromEntries(VOZ_GRUPOS.map((v) => [v.g, [v.chave, PREFIXO[v.g]]]));
   h = troca(h, "const ANN={q:[],until:0,last:new Map()};", `const VOZ_CLASSE=${JSON.stringify(pref)};
-function vozPacote(){try{const c=CLASSES[PL.classIdx],w=c&&WEAPONS[c.primary];return VOZ_CLASSE[w&&w.cat]||null}catch(e){return null}}
+function vozPacote(){try{const s=Settings.vozNarr||'padrao';if(s==='padrao')return null;if(s!=='classe')return VOZ_CLASSE[s]||null;const c=CLASSES[PL.classIdx],w=c&&WEAPONS[c.primary];return VOZ_CLASSE[w&&w.cat]||null}catch(e){return null}}
 function vozPreparar(){const v=vozPacote();if(v&&AU.ctx&&!sfxReady(v[0]))sfxLoad(v[0]);}
 function vozDaClasse(l){const v=vozPacote();if(v){if(sfxReady(v[0])&&sfxHas(v[1]+l))return v[1]+l;vozPreparar();}return'v_'+l;}
 const ANN={q:[],until:0,last:new Map()};`, { nome: "voz da classe" });
@@ -142,8 +144,9 @@ const ANN={q:[],until:0,last:new Map()};`, { nome: "voz da classe" });
 }
 // o volume só da voz do rádio (o "narrador": as falas e o chiado de abrir e fechar), separado do resto dos sons:
 // Opções > Áudio, logo abaixo de "Anúncios de voz", de 0 a 150% (por cima do volume geral)
-h = troca(h, "volume:0.8,music:0.5", "volume:0.8,music:0.5,vozVol:1", { todas: false, nome: "volume da voz (padrão)" });
-h = troca(h, "['check','voice',_t('Annonces vocales (séries, objectifs)')]", "['check','voice',_t('Annonces vocales (séries, objectifs)')],['range','vozVol','Volume da voz do rádio',0,1.5,0.05,(v)=>Math.round(v*100)+PCT]", { nome: "volume da voz (opção)" });
+h = troca(h, "volume:0.8,music:0.5", "volume:0.8,music:0.5,vozVol:1,vozNarr:'padrao'", { todas: false, nome: "volume da voz (padrão)" });
+const OPCAO_NARRADOR = VOZ_GRUPOS.length ? `['select','vozNarr','Voz do narrador',${JSON.stringify([["padrao", NOME_VOZ_PADRAO], ...VOZ_GRUPOS.map((v) => [v.g, v.nome]), ["classe", "Pela classe da arma"]]).replace(/"/g, "'")},()=>{try{vozPreparar()}catch(e){}}],` : "";
+h = troca(h, "['check','voice',_t('Annonces vocales (séries, objectifs)')]", `['check','voice',_t('Annonces vocales (séries, objectifs)')],${OPCAO_NARRADOR}['range','vozVol','Volume da voz do rádio',0,1.5,0.05,(v)=>Math.round(v*100)+PCT]`, { nome: "voz e volume do narrador (opções)" });
 const VV = "(Settings.vozVol==null?1:Settings.vozVol)";
 h = troca(h, /sfxPlay\((vozDaClasse\(a\.line\)|'v_'\+a\.line),o,t\+0\.12,\{gain:1\.15\}\)/, (_, v) => `sfxPlay(${v},o,t+0.12,{gain:1.15*${VV}})`, { nome: "volume da voz (fala)" });
 h = troca(h, "sfxPlay('r_on',o,t,{gain:0.55})", `sfxPlay('r_on',o,t,{gain:0.55*${VV}})`, { nome: "volume da voz (chiado de abrir)" });

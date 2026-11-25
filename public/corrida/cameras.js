@@ -160,6 +160,7 @@ const TREME_DE = 200, TREME_ATE = 280; // km/h
 const tremorDaVelocidade = (v) => { const kmh = Math.abs(v || 0) * 0.75, b = Math.min(kmh, TREME_DE) / TREME_DE, leve = 0.06 * b * b, t = lim((kmh - TREME_DE) / (TREME_ATE - TREME_DE), 0, 1); return leve + (1 - leve) * t * t; };
 
 // dentro do carro (cockpit, onboard e bico): a câmera anda com o carro; na subida a vista levanta e na descida abaixa
+const _ponto = new THREE.Vector3(), _giro = new THREE.Quaternion();
 function pov(x, p) {
   const { R, C, dt, tr, c, rm, speedK, fovStep, nearest } = x;
   const A = ajusteDe(x.mode), kt = A.trem / 100; // o ajuste do jogador: avanço (z) e altura (y) em metros, inclinação em graus, tremor em %, FOV de base
@@ -168,13 +169,25 @@ function pov(x, p) {
   if (!(Math.abs(ahead - c.z) < 30)) ahead = c.z; // (o ponto à frente caiu noutro trecho da pista, como em cima do túnel de Mônaco: não deixa a vista mirar o teto)
   C.lookY = C.lookY == null ? ahead : C.lookY + (ahead - C.lookY) * (1 - Math.exp(-dt * 6));
   C.pitch = (C.pitch || 0) + ((R.pitch || 0) - (C.pitch || 0)) * (1 - Math.exp(-dt * 8));
-  cam.position.set(c.x + fx * fo - fy * lat, c.z + (R.dyChao || 0) + eh + p.lift + Math.sin(C.pitch) * fo * 0.5, c.y + fy * fo + fx * lat); C.pos = null;
-  cam.lookAt(c.x + fx * (fo + 70) - fy * lat, Math.max(C.lookY, c.z + Math.tan(C.pitch) * 70 - 6) + p.eh * p.mira - (p.baixo || 0) * 70 + Math.tan(A.incl * Math.PI / 180) * 70, c.y + fy * (fo + 70) + fx * lat); // (baixo: o olhar inclinado para o volante)
+  const body = R.kart && R.kart.body;
+  if (body && !c.air) {
+    // (2026-11-24, o Thiago: "fazer a câmera ser presa no carro: quando o carro inclinar, a visão também inclina, como numa T-cam mesmo, e não uma câmera
+    // que sobrevoa o carro") a câmera é um ponto do carro desenhado (carros.js: k.body, com o pitch e o roll da inclinação, a suspensão e a guinada):
+    // a posição vem do quadro dele (+X o lado, +Y para cima, -Z a frente) e a rotação é a dele, mais o olhar para baixo da câmera e a inclinação do ajuste
+    body.updateWorldMatrix(true, false);
+    cam.position.copy(body.localToWorld(_ponto.set(lat, eh + p.lift, -fo)));
+    cam.quaternion.copy(body.getWorldQuaternion(_giro));
+    cam.rotateX(-Math.atan2(eh + p.lift - p.eh * p.mira + (p.baixo || 0) * 70, 70) + A.incl * Math.PI / 180); // (o mesmo ponto de antes: 70 u à frente, a p.eh * p.mira do chão)
+    C.pos = null;
+  } else { // no ar (ou antes do carro existir): a de antes, que segue o chão à frente
+    cam.position.set(c.x + fx * fo - fy * lat, c.z + (R.dyChao || 0) + eh + p.lift + Math.sin(C.pitch) * fo * 0.5, c.y + fy * fo + fx * lat); C.pos = null;
+    cam.lookAt(c.x + fx * (fo + 70) - fy * lat, Math.max(C.lookY, c.z + Math.tan(C.pitch) * 70 - 6) + p.eh * p.mira - (p.baixo || 0) * 70 + Math.tan(A.incl * Math.PI / 180) * 70, c.y + fy * (fo + 70) + fx * lat); // (baixo: o olhar inclinado para o volante)
+  }
   balanco(x, 0.55);
   if (!rm) { // a vibração cresce com a velocidade e o volante inclina um pouco a cabeça
     const trem = (speedK * speedK * 0.35 * tremorDaVelocidade(x.src.v) + (R.offroad ? p.tremOff : 0)) * p.trem * kt;
     cam.position.y += (Math.random() - 0.5) * trem; cam.position.x += (Math.random() - 0.5) * trem * 0.5;
-    cam.rotateZ(-c.steer * p.rolar * Math.min(1, speedK * 1.5));
+    if (!body || c.air) cam.rotateZ(-c.steer * p.rolar * Math.min(1, speedK * 1.5)); // (presa ao carro, o rolar do volante já vem do corpo: carros.js lean)
   }
   if (R.shake > 0) { R.shake -= dt; if (!rm) cam.position.y += (Math.random() - 0.5) * p.tremBatida * kt; }
   cam.fov += ((A.fov + speedK * (rm ? 6 : p.fovV) + C.surge * 4) - cam.fov) * fovStep; cam.updateProjectionMatrix();

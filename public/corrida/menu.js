@@ -3,6 +3,7 @@
 // carreira). Os números vêm do servidor: o save da carreira pelo canal /corrida-temporada e o resto por GET /api/corrida/menu.
 // Teclado e controle: setas ou direcional movem o foco, Enter ou A confirmam, Esc ou B voltam (e, sem nada aberto, levam à Vila).
 import { E, socket, PISTAS, $, h, store } from "./estado.js";
+import { lerPixel } from "./piloto-pixel-editor.js";
 import { loadBest } from "./fantasma.js";
 import { enter } from "./rede.js";
 import { alternarAcerto } from "./acerto.js";
@@ -240,7 +241,7 @@ function criar(config, inicio) {
   $("hErr").textContent = "";
   criandoSala = true;
   E.entradaDireta = inicio?.largar === true;
-  socket.emit("create", { name, skin: store.get("galera:skin"), config, inicio }, (r) => {
+  socket.emit("create", { name, skin: store.get("galera:skin"), config, inicio, pixel: lerPixel() }, (r) => { // (pixel: o seu piloto em pixel art, piloto-pixel-editor.js)
     criandoSala = false;
     if (r?.ok) enter(r);
     else { E.entradaDireta = false; $("hErr").textContent = r?.error || "Não foi possível criar a sala. Tente novamente."; }

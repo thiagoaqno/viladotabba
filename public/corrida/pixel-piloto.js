@@ -304,6 +304,7 @@ export function retrato(t, op = {}) {
 export const FIXOS = new Set(["NOR", "PIA", "LEC", "HAM", "RUS", "ANT", "VER", "HAD", "LAW", "LIN", "ALO", "STR", "ALB", "SAI", "HUL", "BOR", "GAS", "COL", "CAM", "BEA", "PER", "BOT"]);
 const fixo = (p) => { const s = String((p && p.sigla) || "").toUpperCase(); return FIXOS.has(s) && (!p || p.bot !== false) ? s : null; }; // (um humano com a mesma sigla fica com o montado)
 // o retrato de um jogador da sala: o desenhado, para os pilotos do grid; o montado por peças (sigla e nome, a cor da equipe), para os outros
-export function retratoDoJogador(p, cor) { const s = fixo(p); return s ? `/corrida/pilotos-pixel/rosto/${s}.png` : retrato(tracosDe(p && p.sigla, p && (p.nomeCompleto || p.name)), { cor }); }
+// (o seu piloto, do montador: mods.pixel; piloto-pixel-editor.js)
+export function retratoDoJogador(p, cor) { const s = fixo(p); if (s) return `/corrida/pilotos-pixel/rosto/${s}.png`; const meu = p && p.mods && p.mods.pixel; return retrato(meu && typeof meu === "object" ? meu : tracosDe(p && p.sigla, p && (p.nomeCompleto || p.name)), { cor }); }
 // o capacete desenhado do piloto do grid (null para os outros)
 export function capaceteDoJogador(p) { const s = fixo(p); return s ? `/corrida/pilotos-pixel/capacete/${s}.png` : null; }

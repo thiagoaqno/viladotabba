@@ -75,6 +75,19 @@
     window.dispatchEvent(new Event("capacete:pronto"));
   </script>
   <script type="module">
+    // (2026-11-25) o montador do seu piloto em pixel art na aba "Meu piloto" da Central (central.js chama window.PilotoCarreira.montar no lugar marcado).
+    // Fica guardado neste navegador e vai para a pista na próxima corrida (piloto-pixel-editor.js sincronizarPixel)
+    import { montarMontador } from "/corrida/piloto-pixel-editor.js";
+    let caixa = null, cor = null;
+    window.PilotoCarreira = { montar(lugar, c) {
+      const eq = c && c.s && window.F1Pilotos && window.F1Pilotos.EQUIPES[c.s.equipe]; cor = (eq && eq.cor) || null;
+      if (!caixa) { caixa = document.createElement("section"); caixa.className = "cx-card cx-piloto"; caixa.innerHTML = "<h3 class=\"cx-piloto-tit\">Meu piloto</h3><p class=\"cx-piloto-sub\">Monte o seu piloto em pixel art: ele aparece na torre, nos cards e na apresentação do grid.</p><div class=\"px-cartao\"></div>"; }
+      montarMontador(caixa.querySelector(".px-cartao"), { cor: () => cor });
+      lugar.replaceWith(caixa);
+    } };
+    window.dispatchEvent(new Event("piloto:pronto"));
+  </script>
+  <script type="module">
     // o halo do carro na aba Carro (central.js marca o lugar com data-halo-lugar e chama window.HaloCarreira.montar)
     import { montarHalo } from "/corrida/halo-editor-ui.js";
     window.HaloCarreira = { montar: montarHalo };

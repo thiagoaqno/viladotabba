@@ -4,6 +4,15 @@
     "data": "2026-11-25",
     "itens": [
       "Editor do capacete: aba nova \"Padrões\" com os capacetes dos pilotos do grid (e mais 8 extras): um clique e o seu capacete fica com o desenho e as cores deles"
+    "id": "carreira-meu-piloto-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Carreira de F1: aba nova \"Meu piloto\" na Central, para montar o seu piloto em pixel art"
+    "id": "apresentacao-grid-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Antes da largada, o grid de largada aparece fila a fila num painel grande: os dois pilotos da fila com a posição, o retrato em pixel art, o nome e o tempo da classificação, e o grid em zigue-zague no meio",
+      "A transmissão da corrida avulsa ficou com 20 s, para dar tempo de ver tudo (dá para pular)"
     ]
   },
   {

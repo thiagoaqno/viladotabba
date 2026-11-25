@@ -1,17 +1,23 @@
-# Tiro da Galera: volume próprio para a voz do rádio
+# Tiro da Galera: trocar de equipe direto no salão
 
-O Thiago pediu para separar a voz do "narrador" do resto dos sons. No jogo original, as falas do rádio só tinham liga/desliga e
-saíam no mesmo volume geral dos tiros.
+O Thiago pediu para dar para trocar de equipe no salão. O jogo já deixava, mas o botão ficava escondido: era preciso clicar no
+próprio nome na lista de jogadores.
 
 ## O que mudou
 
-- **Opções > Áudio > "Volume da voz do rádio"**, logo abaixo de "Anúncios de voz". Vai de 0 a 150% por cima do volume geral,
-  então dá para deixar a voz mais alta que os tiros ou bem baixinha. O padrão é 100%, que é o som de antes.
-- **O controle vale para a fala e para o chiado de abrir e fechar o rádio.** O sinal musical que toca antes do anúncio não muda.
-- **O valor fica nos ajustes do jogo** (`dc_settings.vozVol`), então vai junto com o perfil da Vila para os outros aparelhos.
-- Tudo é feito por `ferramentas/tiro-frontline.js`, com cinco trocas no código pronto do jogo.
+- **Botão "Trocar de equipe" à vista no salão,** logo abaixo de "Editar a classe". Ele diz em que equipe você está ("Você está
+  na Alpha. Passa você para a Bravo").
+  - Vale para quem criou o salão e para quem entrou.
+  - Aparece só em modo de equipe (mata-mata em equipe e dominação) e enquanto o salão espera a partida.
+  - O dono continua podendo mudar os outros pelo nome deles na lista.
+  - É feito por `ferramentas/tiro-frontline.js`, só no salão de amigos.
+- **Entrar pelo código ficou mais rápido.** O jogo tenta primeiro um "salão permanente" do servidor original
+  (`/tiro/rele/serveur/...`), que aqui não existe, e esperava ~1 s até desistir. Agora o relé responde "não existe" (4004) na
+  hora, e o jogo cai direto no salão de amigos.
 
-## Conferido no navegador
+## Conferido no navegador, com dois jogadores pelo relé
 
-Num servidor local, o controle apareceu na aba Áudio com 100%. Coloquei em 130%: o jogo passou a usar o valor novo e ele ficou
-guardado no navegador.
+- O dono criou o salão, viu o botão e passou da Alpha para a Bravo.
+- O convidado entrou pelo código, pelo relé do nosso servidor: é o primeiro teste do online de ponta a ponta no jogo de verdade.
+- O convidado trocou da Alpha para a Bravo, e o dono viu os dois na Bravo.
+- Depois do ajuste no relé, o convidado entra em 77 ms.

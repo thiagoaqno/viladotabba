@@ -98,6 +98,9 @@ module.exports = function ligarReleTiro(server, app) {
 
   server.on("upgrade", (req, socket, head) => {
     const u = new URL(req.url, "http://x");
+    // os "salões permanentes" do servidor deles (/serveur/) não existem aqui: quem entra por código tenta primeiro um deles e,
+    // com o 4004 na hora, cai direto no salão de amigos (sem esperar o tempo de desistência)
+    if (/^\/tiro\/rele\/serveur\/[\w-]{1,40}$/.test(u.pathname)) { wss.handleUpgrade(req, socket, head, (ws) => fechar(ws, 4004)); return; }
     const m = u.pathname.match(/^\/tiro\/rele\/room\/([A-Z0-9]{5})$/);
     if (!m) return; // não é do relé: o socket.io cuida
     const role = u.searchParams.get("role"), id = String(u.searchParams.get("id") || ""), key = String(u.searchParams.get("key") || "");

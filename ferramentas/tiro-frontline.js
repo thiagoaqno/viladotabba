@@ -149,6 +149,19 @@ h = troca(h, /sfxPlay\((vozDaClasse\(a\.line\)|'v_'\+a\.line),o,t\+0\.12,\{gain:
 h = troca(h, "sfxPlay('r_on',o,t,{gain:0.55})", `sfxPlay('r_on',o,t,{gain:0.55*${VV}})`, { nome: "volume da voz (chiado de abrir)" });
 h = troca(h, "sfxPlay('r_off',o,end+0.04,{gain:0.5})", `sfxPlay('r_off',o,end+0.04,{gain:0.5*${VV}})`, { nome: "volume da voz (chiado de fechar)" });
 
+// no salão: o botão de trocar de equipe à vista, logo abaixo de "Modificar a classe" (o jogo já deixava, mas escondido no
+// menu do próprio nome na lista). Só em modo de equipe e enquanto o salão espera; o dono continua podendo mudar os outros.
+{
+  const ini = h.indexOf("lobby:()=>{const setup=NET.role==='host'"), ancora = "{k:'link',key:'class',label:_t('Modifier la classe'),open:()=>uiGo('classes')},";
+  const i = ini < 0 ? -1 : h.indexOf(ancora, ini);
+  if (i < 0 || i - ini > 1500) throw new Error("não achei: botão de equipe no salão");
+  const botao = "...(NET.cfg.mode!=='ffa'&&NET.phase==='lobby'?[{k:'btn',key:'team',label:'Trocar de equipe',"
+    + "sub:'Você está na '+TEAM_NAMES[(NET.players.get(NET.me)||{}).t|0]+'. Passa você para a '+TEAM_NAMES[1-((NET.players.get(NET.me)||{}).t|0)],"
+    + "run:()=>{netTeamSwap(NET.me);sfxUi('click');},disabled:!NET.joined||NET.on||!!(NET.players.get(NET.me)||{}).ig}]:[]),";
+  h = h.slice(0, i + ancora.length) + botao + h.slice(i + ancora.length);
+  console.log("     1× botão de equipe no salão");
+}
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

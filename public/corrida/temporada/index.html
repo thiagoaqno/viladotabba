@@ -85,7 +85,7 @@
     } };
     // (2026-11-25) o montador do seu piloto em pixel art na aba "Meu piloto" da Central (central.js chama window.PilotoCarreira.montar no lugar marcado).
     // Fica guardado neste navegador e vai para a pista na próxima corrida (piloto-pixel-editor.js sincronizarPixel)
-    import { montarMontador, lerPixel } from "/corrida/piloto-pixel-editor.js";
+    import { montarMontador } from "/corrida/piloto-pixel-editor.js"; // (o lerPixel já vem do import de cima, das notícias: importar de novo derrubava o módulo)
     import { camadasInteiro, marcasReaisProntas } from "/corrida/pixel-piloto.js";
     let caixa = null, tela = null, cor = null;
     // (2026-11-25, o Thiago: "enquanto eu estiver fazendo o piloto, ele deve aparecer em pé, inteiro, do lado direito") a vitrine: o piloto de corpo

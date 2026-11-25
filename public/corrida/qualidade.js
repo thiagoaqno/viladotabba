@@ -46,9 +46,11 @@ export const PREDEF = {
 const ITENS_PREDEF = Object.keys(PREDEF.baixa);
 // "auto": o pixelRatio da qualidade (Baixa 1×, Média 1,25×, Alta 1,5×); "nativa": o da tela; os números: a altura do desenho em pixels
 export const RESOLUCOES = [["auto", "Automática (pela qualidade)"], ["nativa", "Nativa da tela"], ["2160", "2160p (4K)"], ["1440", "1440p"], ["1080", "1080p"], ["900", "900p"], ["720", "720p"], ["540", "540p"]];
-const EXTRAS = { retroVirtual: "desligado", painelDentro: true, mapa: "baixo", dinamica: true, mfd: "1" }; // (mfd: "1" o de cartões, "2" o de vidro dos prints da transmissão: hud-mfd2.css) // (dinamica: a resolução baixa sozinha para segurar 120 qps, pos.js) // (mapa: o minimapa embaixo à esquerda ou em cima à direita, configuracoes.css) // (fora das predefinições: o gosto de cada um)
+const EXTRAS = { retroVirtual: "desligado", painelDentro: true, mapa: "baixo", dinamica: true, mfd: "2" }; // (mfd: "1" o de cartões, "2" o de vidro dos prints da transmissão: hud-mfd2.css; o 2 é o padrão desde 2026-11-25, pedido do Thiago) // (dinamica: a resolução baixa sozinha para segurar 120 qps, pos.js) // (mapa: o minimapa embaixo à esquerda ou em cima à direita, configuracoes.css) // (fora das predefinições: o gosto de cada um)
 const lerCfg = () => { try { const c = JSON.parse(localStorage.getItem(CHAVE_CFG) || "null"); return c && typeof c === "object" ? c : null; } catch { return null; } };
 let cfgSalva = lerCfg();
+// (2026-11-25) o MFD tipo 2 virou o padrão: quem tinha o "1" guardado sem ter escolhido (ele ia junto ao mudar qualquer opção) passa para o 2
+if (cfgSalva && cfgSalva.mfd !== "2" && !cfgSalva.mfdEscolhido) cfgSalva = { ...cfgSalva, mfd: "2" };
 const montarCfg = (nivel) => ({ predef: nivel, ...PREDEF[nivel], ...EXTRAS, ...(cfgSalva || {}) });
 
 let salva = (cfgSalva && NIVEIS.includes(cfgSalva.efeitos) ? cfgSalva.efeitos : null) || lerSalva(), auto = padraoDoAparelho({ toque: ehToque(), nucleos: navigator.hardwareConcurrency || 0 }), efetiva = salva || auto, rebaixada = false;
@@ -60,6 +62,7 @@ export function aoMudarGraficos(f) { ouvintesCfg.push(f); }
 // muda um ou mais itens; `predef` (baixa, media, alta) põe a predefinição inteira
 export function mudarGraficos(parcial = {}) {
   const novo = { ...cfg, ...parcial };
+  if ("mfd" in parcial) novo.mfdEscolhido = true; // (a escolha do MFD feita pelo jogador fica)
   if (PREDEF[parcial.predef]) Object.assign(novo, PREDEF[parcial.predef]);
   else novo.predef = Object.keys(PREDEF).find((k) => ITENS_PREDEF.every((i) => PREDEF[k][i] === novo[i])) || "personalizada";
   cfg = novo; cfgSalva = cfg;

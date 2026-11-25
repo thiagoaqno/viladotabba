@@ -123,7 +123,7 @@ export function montarEditorCapacete(el, op = {}) {
     const d = b.dataset;
     if (d.cpAba) { aba = d.cpAba; return desenharPainel(); }
     if (d.cpPag) { pagina = Math.max(0, Math.min(paginas - 1, pagina + Number(d.cpPag))); return desenharPainel(); }
-    if (d.cpPadrao) { const p = PADROES_PIXEL.find((x) => x.id === d.cpPadrao); if (p) { atual.desenho = p.desenho; atual.cores = p.cores.slice(); atual.viseira = p.viseira; atual.variante = 0; } return mudar(); }
+    if (d.cpPadrao) { const p = PADROES_PIXEL.find((x) => x.id === d.cpPadrao); if (p) { atual.desenho = p.desenho; atual.cores = p.cores.slice(); atual.viseira = p.viseira; atual.variante = 0; if (/^p_/.test(p.desenho)) { atual.patrocinios = {}; atual.patrocinio = ""; atual.nome = ""; } } return mudar(); } // (os dos pilotos: as marcas fixas deles entram com os patrocínios e o nome vazios)
     if (d.cpDesenho) { atual.desenho = d.cpDesenho; const fab = CORES_DO_ESTILO(d.cpDesenho); if (fab) { atual.cores = fab.cores; atual.viseira = fab.viseira; atual.variante = 0; } return mudar(); } // (cada estilo novo chega com as cores dele)
     if (d.cpCor != null) { atual.cores[+d.cpCor] = d.c; slot = +d.cpCor; return mudar(); }
     if (d.cpRapida) { atual.cores[slot] = d.cpRapida; return mudar(); }

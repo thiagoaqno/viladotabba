@@ -13,7 +13,7 @@ import { estiloHud } from "./hud-telemetria.js";
 import { numeroSuave, pulsar } from "./hud-vivo.js";
 import { retratoDoJogador } from "./pixel-piloto.js";
 
-const CARTAO_MS = 6000, LIDER_MS = 4000;
+const CARTAO_MS = 6000, LIDER_MS = 4000, MEU_INTERVALO = 60000; // (o seu cartão por troca de posição: no máximo um por minuto)
 const TIT_H = 28, GAP_H = 46, CARTAO_H = 74; // (px) a faixa do título da batalha, a da diferença e o cartão do piloto
 const st = { pos: null, cartaoAte: 0, lider: null, liderAte: 0, corrida: null };
 
@@ -52,7 +52,8 @@ function encaixar(el, torre, d, altura, embaixo = false) {
 // o: { linhas, ver, m, batalha (o texto do card de distância ou null), kmh, marcha, carga, ersAtivo, fase }
 export function hudTv(o) {
   // (2026-11-25, o Thiago: "o card dele deve aparecer na torre quando for expandida") nos outros estilos, com a torre completa, só o cartão do piloto
-  const raiz = $("race"), on = estiloHud() === "tv", soCartao = !on && o.compacta === false;
+  // (depois: "quando ela estiver compacta também devia aparecer") o cartão vale com a torre compacta ou completa, em todo estilo
+  const raiz = $("race"), on = estiloHud() === "tv", soCartao = !on;
   if (raiz) raiz.classList.toggle("hud-tv", on);
   if (!on && !soCartao) { // (saiu do estilo no meio da corrida: as linhas perdem o espaço das faixas)
     if (st.ligado) { st.ligado = false; for (const d of $("tLinhas")?.children || []) { d.style.marginTop = d.style.marginBottom = ""; if (d._v) delete d._v["data-tv-m"]; } for (const id of ["tvBatTit", "tvBatGap", "tvCartao", "hTvLider"]) { const e = $(id); if (e) e.hidden = true; } }
@@ -62,7 +63,7 @@ export function hudTv(o) {
   montar();
   const torre = $("hTorre"), box = $("tLinhas") ? $("tLinhas").children : [], agora = performance.now();
   const { linhas, ver, m } = o, corrida = o.fase === "race";
-  if (st.corrida !== (E.S && E.S.startAt)) { st.corrida = E.S && E.S.startAt; st.pos = null; st.cartaoAte = 0; st.lider = null; st.liderAte = 0; }
+  if (st.corrida !== (E.S && E.S.startAt)) { st.corrida = E.S && E.S.startAt; st.pos = null; st.cartaoAte = 0; st.lider = null; st.liderAte = 0; st.cartaoId = null; st.meuDepois = 0; st.liderCartao = null; }
   // ---- as margens das linhas: zera e põe só as que valem neste quadro
   const margem = new Map(); // linha -> [cima, baixo]
   const abre = (d, cima, baixo) => { const a = margem.get(d) || [0, 0]; margem.set(d, [a[0] + cima, a[1] + baixo]); };
@@ -74,15 +75,20 @@ export function hudTv(o) {
     const a = linhaDe(box, linhas, ver, (l) => String(l.pos) === String(p1)), b = linhaDe(box, linhas, ver, (l) => String(l.pos) === String(p2));
     if (a && b && b.k === a.k + 1) bat = { a, b, seg, p1 };
   }
-  // o cartão do piloto: a sua posição mudou na corrida (não na largada parada)
-  const eu = m && linhaDe(box, linhas, ver, (l) => l.eu);
+  // o cartão (2026-11-25, o Thiago: "quando alguém assumir a liderança, devia aparecer o card dele, e não o meu; e o meu não deve aparecer sempre que
+  // eu estiver envolvido em troca de posição, só às vezes"): o do novo líder quando a liderança troca (depois da 1ª volta dele); o seu quando a sua
+  // posição muda, no máximo uma vez a cada MEU_INTERVALO (e nunca por cima do cartão do líder); e o seu quando a torre é expandida
+  const eu = m && linhaDe(box, linhas, ver, (l) => l.eu), lid0 = linhas[0], abrir = (id) => { st.cartaoId = id; st.cartaoAte = agora + CARTAO_MS; };
+  if (corrida && lid0) { const pl = jogador(lid0.id); if (st.liderCartao != null && st.liderCartao !== lid0.id && pl && pl.laps >= 1) abrir(lid0.id); st.liderCartao = lid0.id; }
+  const liderNoAr = agora < st.cartaoAte && st.cartaoId && lid0 && st.cartaoId === lid0.id && !(eu && eu.l.id === lid0.id);
   if (eu && corrida && m.started && m.finish == null) {
-    if (st.pos != null && st.pos !== eu.l.pos) st.cartaoAte = agora + CARTAO_MS;
+    if (st.pos != null && st.pos !== eu.l.pos && !liderNoAr && agora >= (st.meuDepois || 0)) { abrir(eu.l.id); st.meuDepois = agora + MEU_INTERVALO; }
     st.pos = eu.l.pos;
   } else if (!eu) st.pos = null;
-  if (st.compactaAnt === true && o.compacta === false) st.cartaoAte = agora + CARTAO_MS; // (a torre acabou de ser expandida: o seu cartão abre)
+  if (eu && st.compactaAnt === true && o.compacta === false && !liderNoAr) abrir(eu.l.id); // (a torre acabou de ser expandida: o seu cartão abre)
   st.compactaAnt = o.compacta;
-  const cartao = eu && agora < st.cartaoAte && !(bat && (bat.a.d === eu.d)) ? eu : null; // (com a batalha logo embaixo da sua linha, fica a batalha)
+  const alvo = agora < st.cartaoAte && st.cartaoId ? linhaDe(box, linhas, ver, (l) => l.id === st.cartaoId) : null;
+  const cartao = alvo && !(bat && bat.a.d === alvo.d) ? alvo : null; // (com a batalha logo embaixo da linha, fica a batalha)
   if (bat) { abre(bat.a.d, TIT_H, 0); abre(bat.b.d, GAP_H, 0); }
   if (cartao) { const prox = box[cartao.k + 1]; if (prox && !prox.classList.contains("hidden")) abre(prox, CARTAO_H, 0); else abre(cartao.d, 0, CARTAO_H); }
   for (const d of box) { const a = margem.get(d) || [0, 0]; set(d, "data-tv-m", a.join(",")); d.style.marginTop = a[0] ? a[0] + "px" : ""; d.style.marginBottom = a[1] ? a[1] + "px" : ""; }

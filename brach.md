@@ -1,30 +1,29 @@
-# Meu piloto: o piloto de corpo inteiro na vitrine, e as tranças de verdade
+# Torre: o cartão do novo líder, o seu só às vezes e também com a torre compacta; MFD tipo 2 como padrão
 
-O Thiago pediu duas coisas: que o piloto aparecesse de corpo inteiro, em pé, à direita, enquanto ele é montado na carreira; e que as tranças parecessem tranças.
+O Thiago pediu:
+- que o cartão também aparecesse com a torre compacta;
+- que, quando alguém assume a liderança, apareça o cartão dele, e não o seu;
+- que o seu cartão não apareça em toda troca de posição, só às vezes;
+- que o MFD novo (tipo 2) seja o padrão.
 
-## O corpo inteiro (`pixel-piloto.js`: `montarInteiro`, `retratoInteiro`)
+## O cartão (`hud-tv.js`)
 
-- **A cabeça:** é a do retrato, com as mesmas peças. Embaixo dela, a figura é desenhada numa grade de 48×116.
-- **O macacão:** na cor da equipe, com luz à esquerda e sombra à direita, faixa branca nas laterais do tronco, dos braços e das pernas, patrocínios no peito, zíper, gola e cinto com fivela.
-- **O resto do corpo:** os braços se soltam do tronco abaixo dos ombros, com luvas escuras e punho na cor da equipe. As pernas têm os joelhos marcados, e as botas têm sola cinza.
-- **O contorno:** escuro em volta de tudo, como no retrato.
+- **Torre compacta:** o cartão aparece com a torre compacta ou completa, em qualquer estilo de HUD.
+- **Novo líder:** quando a liderança muda (depois da primeira volta do líder), abre o cartão de quem assumiu, embaixo da linha dele.
+- **O seu cartão:**
+  - quando a sua posição muda, aparece no máximo uma vez por minuto (`MEU_INTERVALO`), e nunca por cima do cartão do novo líder;
+  - ao expandir a torre, ele abre como antes.
 
-## A vitrine (`temporada/index.html`, aba "Meu piloto")
+## O MFD (`qualidade.js`, `configuracoes.js`)
 
-- A tela da aba ficou em duas colunas: o montador à esquerda e o piloto inteiro à direita, ocupando o espaço vazio.
-- O piloto aparece grande (até 700 px de altura), sobre um holofote na cor da equipe e com a sombra no chão. Ele "respira" devagar.
-- A cada clique no montador, ele se redesenha com um pulinho.
-- Em tela estreita, a vitrine vai para baixo do montador.
+- O tipo 2 virou o padrão.
+- Quem tinha o "1" guardado sem ter escolhido passa para o 2. Antes, o "1" era gravado junto ao mudar qualquer opção de gráfico.
+- A escolha feita pelo jogador, em Configurações ou no próprio MFD, fica marcada (`mfdEscolhido`) e é respeitada.
 
-## As tranças (`cabelo`, estilo "trancas")
+## Fica para depois
 
-- **Antes:** saía uma touca de pontinhos.
-- **Agora, em cima:** fileiras da testa para trás, cada uma com o trançado em zigue-zague e o sulco escuro entre elas.
-- **Agora, nos lados:** três tranças soltas de cada lado, separadas por um vão, com o trançado e uma conta dourada na ponta.
-- **Onde vale:** no piloto montado. O Hamilton do grid usa a imagem desenhada.
+O Thiago contou que a página de dano do MFD tipo 2 bugou. Montada de forma estática, a página sai igual nos dois tipos, então o defeito deve aparecer só com o carro avariado. Falta um print para consertar.
 
 ## Conferido
 
-Desenhei folhas em PNG do corpo inteiro (5 pilotos) e das tranças. A aba da carreira abre num servidor de teste com a vitrine desenhada.
-
-A novidade fica para depois do #966, que conserta o `novidades.json` da `main`.
+A página do jogo carrega sem erros num servidor de teste. O cartão e o MFD não foram vistos numa corrida.

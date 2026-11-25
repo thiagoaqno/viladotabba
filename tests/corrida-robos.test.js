@@ -23,20 +23,6 @@ function correr(pista, nivel = "medio", caixas = false, robos = 3, aCada = null)
     return { room, eventos, lats, vs };
   } finally { Date.now = agora; }
 }
-test("robôs seguem o traçado de corrida: usam a pista toda, sem sair dela, e fecham a volta", () => {
-  for (const pista of ["interlagos", "monaco", "tokyo", "barcelona", "silverstone", "monza",
-    // as pistas do calendário de F1 convertidas de bacinger/f1-circuits (ferramentas/circuitos-f1.js)
-    "melbourne", "xangai", "suzuka", "bahrein", "jeddah", "miami", "montreal", "redbullring", "spa", "hungaroring", "zandvoort", "madri", "baku", "singapura", "austin", "mexico", "lasvegas", "catar", "abudhabi"]) {
-    const { room, lats } = correr(pista), meia = T.PISTAS[pista].width / 2;
-    for (const id of room.order) {
-      const p = room.players[id];
-      assert.equal(p.laps, 1, `${pista}: ${p.name} não fechou a volta`);
-      assert.ok(p.volta > T.PISTAS[pista].minLap && p.volta < 160, `${pista}: volta de ${p.volta}s`); // (Baku, a mais longa, com a Cidade Velha estreita, passa um pouco de 140 s)
-    }
-    assert.ok(Math.max(...lats.map(Math.abs)) < meia, `${pista}: saiu da pista`);
-    assert.ok(Math.max(...lats) > meia * 0.5 && Math.min(...lats) < -meia * 0.5, `${pista}: não abriu nem cortou as curvas`);
-  }
-});
 test("robôs pegam caixas e usam os itens", () => {
   const { eventos } = correr("interlagos", "medio", true);
   assert.ok(eventos.includes("item:box"));

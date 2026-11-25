@@ -32,9 +32,12 @@ const CARDS = {
   preta: ["BLACK FLAG", "#0a0a0c", "#fff"], vermelha: ["RED FLAG", "#e10600", "#fff"], sc: ["SAFETY CAR", "#ffd21f", "#111"], amarela: ["YELLOW FLAG", "#ffd21f", "#111"],
   azul: ["BLUE FLAG", "#1460e0", "#fff"], punicao: ["PENALTY"], investigacao: ["UNDER INVESTIGATION"], limite: ["TRACK LIMITS"], verde: ["GREEN FLAG", "#25c16f", "#0b1a12"],
   batida: ["INCIDENT"], dnf: ["RETIRED", "#7a0b10", "#fff"], quebra: ["MECHANICAL ISSUE"], box: ["PIT STOP", "#0b8fd9", "#fff"], drs: ["DRS ENABLED", "#19c37d", "#04210f"],
-  vmr: ["FASTEST LAP", "#9b12c8", "#fff"], chegada: ["CHEQUERED FLAG"], largada: ["LIGHTS OUT", "#25c16f", "#0b1a12"], alerta: ["WARNING"], sistema: ["INFO"], batalha: ["BATTLE FOR FIRST"],
+  vmr: ["FASTEST LAP", "#9b12c8", "#fff"], chegada: ["CHEQUERED FLAG"], largada: ["LIGHTS OUT", "#25c16f", "#0b1a12"], alerta: ["WARNING"], sistema: ["INFO"], batalha: ["GAP"],
 };
-TIPOS.batalha = { prio: 6, fundo: "#1b1f2a", txt: "#ffffff", bloco: "#3a3f4b", icone: "info", rotulo: "BATALHA PELA LIDERANÇA" };
+TIPOS.batalha = { prio: 6, fundo: "#1b1f2a", txt: "#ffffff", bloco: "#3a3f4b", icone: "info", rotulo: "DISTÂNCIA" }; // (o card de distância do seu carro: hud.js gapF1)
+// (2026-11-24, o Thiago: "aparecem muitos avisos sem sentido, tipo você entrou no pódio") o que pode aparecer na torre: a volta mais rápida
+// daquela corrida, a bandeira amarela, a verde, a punição e o card de distância. O resto (recordes, box, DRS, largada, limites...) não entra na fila.
+const NA_TORRE = new Set(["vmr", "amarela", "verde", "punicao", "batalha"]);
 for (const [k, [titulo, card, cardTxt]] of Object.entries(CARDS)) Object.assign(TIPOS[k], { titulo, card: card || null, cardTxt: cardTxt || null });
 const tipoDe = (t) => TIPOS[t] || TIPOS.sistema;
 
@@ -91,6 +94,7 @@ function deLinha(texto, nome) {
   // vermelha, amarela e verde. O que acontece com os outros pilotos fica no log, sem faixa na tela.
   if (!meu && !PARA_TODOS.has(tipo)) return null;
   if (tipo === "chegada" && /cruzou a chegada/.test(bruto)) return null; // a minha bandeirada vem do estado do meu carro
+  if (tipo === "vmr") return null; // o "recorde" do log é o da pista (de sempre); a volta mais rápida da corrida vem do hud.js
   return { tipo, texto: limpo };
 }
 
@@ -107,12 +111,13 @@ function novosDoLog(log, visto, agora, idade = 8000) {
 
 // A fila: no máximo `max` avisos na tela; os outros esperam (os mais urgentes passam na frente) até alguém sair. Um aviso com
 // `chave` é um só (o texto novo troca o velho no lugar); `fixo` fica até `remover(chave)`. `versao` sobe a cada mudança.
-function criarFila({ max = 3, espera = 8, ttl = 5200 } = {}) {
+// `tipos`: só esses tipos entram (os outros são ignorados); sem ele, todos.
+function criarFila({ max = 3, espera = 8, ttl = 5200, tipos = null } = {}) {
   const vis = [], fila = []; let seq = 0;
   const api = {
     versao: 0,
     empurrar(a, agora) {
-      const tipo = TIPOS[a.tipo] ? a.tipo : "sistema", texto = String(a.texto || ""); if (!texto) return null;
+      const tipo = TIPOS[a.tipo] ? a.tipo : "sistema", texto = String(a.texto || ""); if (!texto || (tipos && !tipos.has(tipo))) return null;
       if (a.chave) {
         const i = vis.find((x) => x.chave === a.chave) || fila.find((x) => x.chave === a.chave);
         if (i) {
@@ -158,7 +163,7 @@ const ICONES = {
 };
 const iconeDe = (tipo) => { const t = tipoDe(tipo); return (ICONES[t.icone] || ICONES.info)(t.bandeira); };
 
-const api = { TIPOS, tipoDe, limpar, tipoDoTexto, destinoDoToast, deLinha, novosDoLog, criarFila, iconeDe };
+const api = { TIPOS, NA_TORRE, tipoDe, limpar, tipoDoTexto, destinoDoToast, deLinha, novosDoLog, criarFila, iconeDe };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.AvisosF1 = api;
 })(typeof self !== "undefined" ? self : this);

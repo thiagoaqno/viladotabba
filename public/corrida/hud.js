@@ -188,7 +188,7 @@ const radioF1 = (situacao, op) => { if (window.Radio && E.S && E.S.config && E.S
 const LOGO_AVISO = LOGO_F1.replace('class="f1logo"', 'class="f1logo av-logo"');
 const NOS_AVISOS = new Map();
 let FILA_AVISOS = null;
-const filaAvisos = () => FILA_AVISOS || (FILA_AVISOS = window.AvisosF1.criarFila({ max: 1, ttl: 3000 })); // um aviso por vez (pedido do Thiago, 2026-11-11); os outros esperam a vez
+const filaAvisos = () => FILA_AVISOS || (FILA_AVISOS = window.AvisosF1.criarFila({ max: 1, ttl: 3000, tipos: window.AvisosF1.NA_TORRE })); // um aviso por vez (pedido do Thiago, 2026-11-11); os outros esperam a vez
 export function htmlAviso(tipo, texto) {
   const A = window.AvisosF1, t = A.tipoDe(tipo);
   const cab = t.direcao ? '<b>DIREÇÃO DE PROVA</b><small>RACE CONTROL</small>' : `<b>${t.rotulo}</b>`;
@@ -214,8 +214,8 @@ export function htmlCard(tipo, texto) {
   const A = window.AvisosF1, t = A.tipoDe(tipo), fase = E.S && E.S.phase === "quali" ? "QUALI" : "RACE";
   const topo = `<div class="avc-topo">${LOGO_F1}<b>${t.direcao ? "RACE CONTROL" : fase}</b></div>`;
   if (tipo === "batalha") {
-    const [s1, e1, s2, e2, gap] = String(texto).split("|");
-    return `${topo}<div class="avc-cor avc-bat"><span class="avc-p">${logoEquipe({ equipe: e1, color: "#888" }, "avc-logo")}<b>1. ${h(s1)}</b></span><span class="avc-meio"><small>${t.titulo === "BATTLE FOR FIRST" ? "Battle for first" : h(t.titulo)}</small><b class="avc-gap">+${h(gap)}</b></span><span class="avc-p">${logoEquipe({ equipe: e2, color: "#888" }, "avc-logo")}<b>2. ${h(s2)}</b></span></div>`;
+    const [s1, e1, s2, e2, gap, p1 = 1, p2 = 2, rot = "Gap"] = String(texto).split("|");
+    return `${topo}<div class="avc-cor avc-bat"><span class="avc-p">${logoEquipe({ equipe: e1, color: "#888" }, "avc-logo")}<b>${h(p1)}. ${h(s1)}</b></span><span class="avc-meio"><small>${h(rot)}</small><b class="avc-gap">+${h(gap)}</b></span><span class="avc-p">${logoEquipe({ equipe: e2, color: "#888" }, "avc-logo")}<b>${h(p2)}. ${h(s2)}</b></span></div>`;
   }
   const corpo = tipo === "vmr" ? '<i class="avc-setas" aria-hidden="true"></i>' : "";
   return `${topo}<div class="avc-cor">${corpo}<span class="avc-txt"><b class="avc-tit">${h(t.titulo || t.rotulo)}</b><small class="avc-sub">${h(texto)}</small></span><span class="avc-ic">${iconeCard(tipo)}</span></div>`;
@@ -223,7 +223,7 @@ export function htmlCard(tipo, texto) {
 function estiloCard(el, tipo) { const t = window.AvisosF1.tipoDe(tipo); el.dataset.tipo = tipo; el.classList.toggle("escuro", !t.card); el.style.setProperty("--card", t.card || "#1a1d24"); el.style.setProperty("--card-txt", t.cardTxt || "#fff"); el.style.setProperty("--card-ic", t.card ? "currentColor" : t.bloco); }
 function estiloAviso(el, tipo) { const t = window.AvisosF1.tipoDe(tipo); el.style.setProperty("--fundo", t.fundo); el.style.setProperty("--txt", t.txt); el.style.setProperty("--bloco", t.bloco); }
 // um aviso de fora (toast, tela de fim): vira uma faixa da fila
-E.avisarF1 = (texto, ms) => { const A = window.AvisosF1, l = A.limpar(texto); if (l && window.Radio && (A.tipoDoTexto(texto) !== "vmr" || (me() && texto.includes(me().name)))) window.Radio.avisoF1(A.tipoDoTexto(texto)); if (l) filaAvisos().empurrar({ tipo: A.tipoDoTexto(texto), texto: l, ttl: Math.max(2400, Math.min(3600, ms || 3000)) }, Date.now()); }; // (2026-11-23: no máximo 3,6 s; antes chegava a 10 s)
+E.avisarF1 = (texto, ms) => { const A = window.AvisosF1, l = A.limpar(texto); if (l && window.Radio && (A.tipoDoTexto(texto) !== "vmr" || (me() && texto.includes(me().name)))) window.Radio.avisoF1(A.tipoDoTexto(texto)); if (l && A.tipoDoTexto(texto) !== "vmr") filaAvisos().empurrar({ tipo: A.tipoDoTexto(texto), texto: l, ttl: Math.max(2400, Math.min(3600, ms || 3000)) }, Date.now()); }; // (2026-11-23: no máximo 3,6 s; antes chegava a 10 s)
 // o aviso que dura enquanto a situação dura (bandeira, box, perda total...): uma faixa só, troca o texto no lugar
 function estadoF1(texto) {
   const A = window.AvisosF1, f = filaAvisos(), l = A.limpar(texto);
@@ -255,16 +255,27 @@ function desenharAvisos() {
   const torre = $("hTorre"), ativo = [...NOS_AVISOS.values()].pop();
   if (torre) { const topo = ativo && ativo.querySelector(".avc-topo"), cresce = ativo ? Math.max(0, ativo.offsetHeight - (topo ? topo.offsetHeight : 38)) : 0; torre.style.setProperty("--av-h", cresce + "px"); }
 }
-// a batalha pela liderança (o card "Battle for first"): com o 2º a menos de 1 s do líder, aparece a cada 2 voltas do líder por 7 s, e o número
-// acompanha ao vivo enquanto o card está na tela
-function batalhaF1(linhas) {
-  const f = filaAvisos(), a = linhas[0], b = linhas[1], S = E.S;
-  if (!S || S.phase !== "race" || !a || !b || b.dif.tipo !== "seg") { f.remover("batalha"); race.batAte = 0; return; }
-  const gap = parseFloat(String(b.dif.texto).replace(/[^\d.,]/g, "").replace(",", ".")), lider = S.players.find((p) => p.id === a.id), volta = (lider && lider.laps) || 0, agora = Date.now();
-  if (!(gap < 1) || volta < 2) { if (agora > (race.batAte || 0)) f.remover("batalha"); return; }
-  const texto = `${a.sigla}|${a.equipe}|${b.sigla}|${b.equipe}|${gap.toFixed(3)}`;
-  if (race.batVolta !== volta && volta % 2 === 0) { race.batVolta = volta; race.batAte = agora + 5000; f.empurrar({ chave: "batalha", tipo: "batalha", texto, ttl: 5000 }, agora); }
-  else if (agora < (race.batAte || 0)) f.empurrar({ chave: "batalha", tipo: "batalha", texto }, agora);
+// (2026-11-24, o Thiago: "só aparece a distância do 2º para o 1º, e uma vez por corrida") o card de distância é do SEU carro, em qualquer posição:
+// a diferença para o carro da frente (ou, liderando, para o de trás), 3 vezes por corrida, quando você completa 1/4, 2/4 e 3/4 das voltas.
+// Fica 6 s na tela, com o número ao vivo. O texto: sigla|equipe da frente|sigla|equipe de trás|segundos|posição|posição|legenda
+function gapF1(linhas, cors, m, cron, agoraS) {
+  const f = filaAvisos(), S = E.S, HM = window.HudMfd, agora = Date.now();
+  if (!S || S.phase !== "race" || !HM || !m || !m.started || m.dnf || m.finish != null) { f.remover("batalha", agora); race.gapAte = 0; return; }
+  if (race.gapCorrida !== S.startAt) {
+    const n = Math.max(1, (S.config && S.config.voltas) || 1);
+    race.gapCorrida = S.startAt; race.gapVolta = null; race.gapAte = 0;
+    race.gapAlvos = [...new Set([1, 2, 3].map((k) => Math.max(1, Math.round((n * k) / 4))))].filter((v) => v < n);
+  }
+  const v = m.laps || 0;
+  if (v !== race.gapVolta && race.gapAlvos.includes(v)) { race.gapVolta = v; race.gapAte = agora + 6000; }
+  if (agora >= (race.gapAte || 0)) { f.remover("batalha", agora); return; }
+  const iv = HM.intervalos(cors, m.id, race.hudEsc, 22, cron, agoraS), porId = new Map(linhas.map((l) => [l.id, l])), eu = porId.get(m.id);
+  let a = null, b = null, seg = null;
+  if (iv.frente && iv.frente.seg != null && porId.get(iv.frente.id)) { a = porId.get(iv.frente.id); b = eu; seg = iv.frente.seg; }
+  else if (iv.tras && iv.tras.seg != null && porId.get(iv.tras.id)) { a = eu; b = porId.get(iv.tras.id); seg = iv.tras.seg; }
+  if (!a || !b) return;
+  const texto = [a.sigla, a.equipe, b.sigla, b.equipe, seg.toFixed(3), a.pos, b.pos, a === eu ? "Gap to car behind" : "Gap to car ahead"].join("|");
+  f.empurrar({ chave: "batalha", tipo: "batalha", texto, fixo: true }, agora);
 }
 // o que vira aviso a cada quadro: as linhas novas do log da direção de prova, o DRS liberado, a volta mais rápida, a largada e a bandeirada
 function avisosF1(m, left, now) {
@@ -426,7 +437,7 @@ function hudF1(m, st, now) {
     linhas = T.torre(cq, { n: tr.n, meuId: m && m.id, esc: race.hudEsc }).map((l) => ({ ...l, volta: !!pole && l.id === pole.id,
       dif: !tempos.has(l.id) ? { tipo: "m", texto: "Sem tempo" } : pole && l.id === pole.id ? { tipo: "lider", texto: tempo3(tempos.get(l.id)) } : { tipo: "seg", texto: `+${(tempos.get(l.id) - pole.tempo).toFixed(3)}` } }));
   }
-  if (!q) batalhaF1(linhas);
+  if (!q) gapF1(linhas, cors, m, cron, agoraS);
   set(document.querySelector("#hTorre .tt-modo"), "t", q ? "QUALI" : "RACE"); set($("tVoltaRot"), "t", q ? "SESSÃO" : "VOLTA");
   // a volta no topo: a do SEU carro enquanto você corre (2026-11-21, o Thiago: "quando eu ainda estou atrás da linha, aparece uma volta a mais quando o
   // primeiro já passou": era a do líder, como na TV); de quem só assiste, ou depois da sua chegada, a do líder. Na classificação, a sessão e o tempo que falta

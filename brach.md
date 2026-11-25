@@ -1,19 +1,17 @@
-# Robôs: ataque na saída de curva com ERS
+# Torre: só os avisos que importam e o card de distância do seu carro
 
-O Thiago: "saída de curva... reta longa na frente... você tem bateria... o que você faz? já sai da curva com ERS ligado e coloca de lado pra ultrapassar. sinto que falta isso".
+O Thiago: na torre apareciam muitos avisos sem sentido (o "entrou no quadro de recordes", que parecia "pódio", box, DRS, largada...) e o card de distância só mostrava o 2º para o 1º, uma vez por corrida.
 
-## Como era
-- O ERS do robô só ligava com o carro já em reta (curvatura baixa no ponto e ~2 carros à frente) e colado no da frente (a 3 carros).
-- A ultrapassagem planejada só começava na reta e com diferença de velocidade já feita: na saída de curva o robô ficava atrás e só tentava no meio da reta, quando já era tarde.
+## Avisos da torre
 
-## Como fica
-- `corrida-robos.js` `passoF1`: **saída para reta longa** = em corrida, ainda abaixo de 90% do topo, uma reta de 1200 u ou mais começando até 30 pontos à frente, bateria acima do mínimo de ataque do piloto, fora da chuva, de Mônaco e do safety car.
-- Nessa saída, com alguém a até 1,2 s (ou já na manobra), o **ERS liga desde a saída**, com a curva já aberta (curvatura abaixo de 1/600) e a traseira sem patinar. Fica de fora o meio da curva, onde o ERS dava muito mais batida (medido em 21/nov em Suzuka: 274 contra 74).
-- `corrida-robos-transito.js` `transito`: com o da frente a até 5 carros nessa saída, **parte para o lado já ali**, sem esperar diferença de velocidade (ela vem do ERS).
-- `retaAdiante`: o tamanho da reta à frente, guardado no perfil da pista (calculado uma vez).
+- A fila dos cards da torre (`criarFila` em `avisos-f1.js`, opção nova `tipos`) só aceita `NA_TORRE`: **volta mais rápida** da corrida, **bandeira amarela**, **bandeira verde**, **punição** e o card de distância. Todo o resto (recorde da pista, box, DRS, luzes da largada, bandeirada, limites da pista, bandeira azul, investigação, abandono...) não entra mais na torre.
+- A volta mais rápida é só a daquela corrida (a sua, quando você baixa o melhor tempo da corrida): o "recorde" do log do servidor (o da pista, de sempre) não vira mais card, nem pelo log (`deLinha`) nem pelo toast (`E.avisarF1`).
+- O rádio e o narrador continuam falando o que já falavam; só a torre ficou mais limpa.
 
-Os números (1200 u, 1,2 s, 5 carros, 1/600) são de ajuste, não medidos: o Thiago testa jogando.
+## Card de distância (gap)
 
-Novidade no `novidades.json` (com a da T-cam do #947).
+- O card "Battle for first" virou o card de distância do **seu** carro (`gapF1` em `hud.js`, no lugar de `batalhaF1`), em qualquer posição: a diferença para o carro da frente, ou para o de trás quando você lidera, com posição, sigla e equipe dos dois e o número ao vivo.
+- Aparece **3 vezes por corrida**, quando você completa 1/4, 2/4 e 3/4 das voltas (em corrida curta, as voltas repetidas viram uma só), e fica 6 s na tela.
+- Não aparece na classificação, depois da sua chegada nem com o carro fora da corrida.
 
-Conferido só com `node --check`.
+Conferido com `node --check` em `hud.js` e `avisos-f1.js`; o Thiago testa jogando.

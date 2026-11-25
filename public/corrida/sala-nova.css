@@ -336,6 +336,15 @@ body.sala-escura:has(#lobby:not(.hidden)) .wrap{padding-bottom:84px}
 }
 
 /* ---------- o editor do capacete (capacete-editor.js) ---------- */
+/* (2026-11-25) o volante e o painel (volante-ui.js): a prévia da tela e as opções */
+.vl-cartao{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.vl-previa{width:256px;height:144px;border-radius:10px;box-shadow:0 0 0 3px #1b1e25,0 8px 22px #0007;background:#000}
+.vl-linhas{display:flex;flex-direction:column;gap:8px;flex:1;min-width:260px}
+.vl-linha small{display:block;margin-bottom:4px;opacity:.7;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.vl-ops{display:flex;flex-wrap:wrap;gap:6px}
+.vl-op{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;border:2px solid transparent;background:#ffffff0d;color:inherit;font:600 12px inherit;cursor:pointer}
+.vl-op i{display:block;width:26px;height:8px;border-radius:4px}
+.vl-op.on{border-color:var(--eq,#e10600);background:#ffffff1a}.vl-op:hover{background:#ffffff1f}
 /* (2026-11-25) o acabamento do carro (acabamento-carro-ui.js): as amostras de reflexo, a escolhida com o contorno */
 .sn-acab{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .sn-acab-op{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 8px 8px;border-radius:10px;border:2px solid transparent;background:#ffffff0d;color:inherit;font:600 12px inherit;cursor:pointer}

@@ -172,7 +172,7 @@ function montarCorpoNovo(k) {
   // o volante (com as luzes e os mostradores): vira em torno do eixo z
   if (D.volante) {
     const piv = new THREE.Group(); piv.position.copy(D.volante.centro); k.carro.add(piv); k.volante = piv;
-    peca("volante", D.volante.geo, mat.volante(), piv); if (D.volanteDet) peca("volante-det", D.volanteDet, mat.miudezas(), piv);
+    peca("volante", D.volante.geo, mat.volante(), piv); k.matVolante = mats.get("volante"); if (D.volanteDet) peca("volante-det", D.volanteDet, mat.miudezas(), piv);
     // a tela e as luzes de troca do volante: só o carro do jogador (op.volante) tem textura e liga; nos outros ficam apagadas e paradas
     const volanteVivo = k.volanteVivo;
     if (D.tela) {
@@ -300,39 +300,106 @@ function iniciarTela(T) {
 }
 function apagarLeds(L) { pintarLeds(L, 0); }
 // acende as n primeiras luzes (da esquerda para a direita; as mesmas faixas de cor do mostrador do HUD: verde, vermelho e azul)
-function pintarLeds(L, n) {
-  if (L.n === n) return; L.n = n; const g = L.geo, c = g.attributes.color, idx = g.userData.led;
-  for (let i = 0; i < c.count; i++) { const k = idx[i], v = k >= n ? LED_COR.off : LED_COR[k < N_LEDS_PK * 0.45 ? "g" : k < N_LEDS_PK * 0.8 ? "r" : "b"]; c.setXYZ(i, v[0], v[1], v[2]); }
+function pintarLeds(L, n, esquema = "f1", corEq = null) {
+  const chave = n + "|" + esquema + "|" + corEq; if (L.chave === chave) return; L.chave = chave; L.n = n; const g = L.geo, c = g.attributes.color, idx = g.userData.led;
+  for (let i = 0; i < c.count; i++) { const k = idx[i], v = k >= n ? LED_COR.off : corDoLed(k, esquema, corEq); c.setXYZ(i, v[0], v[1], v[2]); }
   c.needsUpdate = true;
 }
-const N_LEDS_PK = 15;
-function desenharTela(T, d) {
-  const x = T.cv.getContext("2d"), W = TELA_W, H = TELA_H;
-  x.fillStyle = "#06080b"; x.fillRect(0, 0, W, H);
-  // marcha grande, à esquerda
-  x.textBaseline = "middle"; x.textAlign = "center"; x.fillStyle = "#ffffff"; x.font = "900 96px 'Arial Black', Arial, sans-serif"; x.fillText(String(d.marcha), 52, 64);
-  // velocidade, à direita
-  x.textAlign = "right"; x.font = "900 58px 'Arial Black', Arial, sans-serif"; x.fillText(String(d.kmh), W - 12, 54);
-  x.fillStyle = "#8d96a3"; x.font = "700 18px Arial, sans-serif"; x.fillText("KM/H", W - 12, 92);
-  // DRS: apagado, pronto (âmbar) ou aberto (verde)
-  x.textAlign = "center"; x.fillStyle = d.drs === 2 ? "#18c060" : d.drs === 1 ? "#e0a020" : "#2a2f37"; x.beginPath(); x.roundRect(8, 8, 62, 26, 5); x.fill();
-  x.fillStyle = d.drs ? "#06080b" : "#7b8492"; x.font = "800 17px Arial, sans-serif"; x.fillText("DRS", 39, 22);
-  // bateria do ERS
-  const b = Math.max(0, Math.min(1, d.bateria)), cor = d.modo === "OVERTAKE" ? "#ff4fd8" : b < 0.2 ? "#ff3b30" : b < 0.5 ? "#ffb020" : "#27d46a";
-  x.fillStyle = "#1a1f26"; x.fillRect(10, 112, 150, 16); x.fillStyle = cor; x.fillRect(10, 112, 150 * b, 16);
-  x.textAlign = "left"; x.fillStyle = "#8d96a3"; x.font = "700 15px Arial, sans-serif"; x.fillText("BATT " + Math.round(b * 100) + "%", 10, 102);
-  x.textAlign = "right"; x.fillStyle = cor; x.font = "800 17px Arial, sans-serif"; x.fillText(d.modo, W - 10, 120);
-  T.tex.needsUpdate = true;
+// (2026-11-25) as cores das luzes de troca por esquema (volante-ui.js): o de F1 (verde, vermelho, azul), azul, âmbar, arco-íris ou a cor da equipe
+const _cl = new THREE.Color();
+function corDoLed(k, esquema, corEq) {
+  const u = k / (N_LEDS_PK - 1);
+  if (esquema === "azul") return [0.15, 0.5 + 0.3 * u, 1];
+  if (esquema === "ambar") return [1, 0.55 - 0.25 * u, 0.05];
+  if (esquema === "arcoiris") { _cl.setHSL((0.33 - 0.33 * u + 1) % 1, 1, 0.5); return [_cl.r, _cl.g, _cl.b]; }
+  if (esquema === "equipe" && corEq) { _cl.set(corEq); return [_cl.r, _cl.g, _cl.b]; }
+  return LED_COR[k < N_LEDS_PK * 0.45 ? "g" : k < N_LEDS_PK * 0.8 ? "r" : "b"];
 }
+const N_LEDS_PK = 15;
+function desenharTela(T, d) { desenharTelaEm(T.cv, d, lerEstiloVolante().tela); T.tex.needsUpdate = true; }
+// ---------- (2026-11-25, o Thiago: "os volantes/painéis dos carros deviam ser personalizáveis") o estilo do volante do SEU carro ----------
+// tela: o modelo da tela do meio; leds: o esquema das luzes de troca; punho: a cor do punho. Guardado neste navegador e lido a cada quadro (troca na hora)
+export const ESTILOS_VOLANTE = {
+  tela: [["f1", "F1 2026"], ["classico", "Clássico"], ["minimal", "Minimalista"], ["retro", "Retrô"], ["neon", "Neon"]],
+  leds: [["f1", "F1"], ["azul", "Azul"], ["ambar", "Âmbar"], ["arcoiris", "Arco-íris"], ["equipe", "Cor da equipe"]],
+  punho: [["carbono", "Carbono"], ["alcantara", "Alcântara"], ["vermelho", "Vermelho"], ["equipe", "Cor da equipe"]],
+};
+const CHAVE_VOL = "corrida:volante-estilo";
+let estiloVolCache = null;
+export function lerEstiloVolante() {
+  if (estiloVolCache) return estiloVolCache;
+  let v = {}; try { v = JSON.parse(localStorage.getItem(CHAVE_VOL)) || {}; } catch (e) { /* sem armazenamento */ }
+  const ok = (campo, val) => (ESTILOS_VOLANTE[campo].some(([k]) => k === val) ? val : ESTILOS_VOLANTE[campo][0][0]);
+  return (estiloVolCache = { tela: ok("tela", v.tela), leds: ok("leds", v.leds), punho: ok("punho", v.punho) });
+}
+export function gravarEstiloVolante(e) {
+  const novo = { ...lerEstiloVolante(), ...e }; estiloVolCache = null;
+  try { localStorage.setItem(CHAVE_VOL, JSON.stringify(novo)); } catch (er) { /* sem armazenamento */ }
+}
+// desenha a tela num canvas de 256×144 (o do volante, ou a prévia da sala)
+export function desenharTelaEm(cv, d, tela = "f1") {
+  const x = cv.getContext("2d"), W = cv.width, H = cv.height;
+  const b = Math.max(0, Math.min(1, d.bateria || 0)), corB = d.modo === "OVERTAKE" ? "#ff4fd8" : b < 0.2 ? "#ff3b30" : b < 0.5 ? "#ffb020" : "#27d46a";
+  x.save(); x.shadowBlur = 0; x.textBaseline = "middle";
+  if (tela === "classico") {
+    x.fillStyle = "#0b0d10"; x.fillRect(0, 0, W, H);
+    x.textAlign = "center"; x.fillStyle = "#ffffff"; x.font = "900 84px Arial, sans-serif"; x.fillText(String(d.marcha), W / 2, 56);
+    x.fillStyle = "#cfd6df"; x.font = "800 26px Arial, sans-serif"; x.fillText(d.kmh + " KM/H", W / 2, 112);
+    for (let k = 0; k < 10; k++) { x.fillStyle = k < Math.round(b * 10) ? corB : "#1c2027"; x.fillRect(12 + k * 23.5, 128, 20, 10); }
+    x.fillStyle = d.drs === 2 ? "#18c060" : d.drs === 1 ? "#e0a020" : "#2a2f37"; x.fillRect(8, 8, 46, 20); x.fillStyle = d.drs ? "#06080b" : "#7b8492"; x.font = "800 14px Arial, sans-serif"; x.fillText("DRS", 31, 18);
+  } else if (tela === "minimal") {
+    x.fillStyle = "#000000"; x.fillRect(0, 0, W, H);
+    x.textAlign = "center"; x.fillStyle = "#ffffff"; x.font = "900 120px Arial, sans-serif"; x.fillText(String(d.marcha), W / 2, 70);
+    x.fillStyle = "#6b7380"; x.font = "700 18px Arial, sans-serif"; x.fillText(String(d.kmh), W / 2, 132);
+    x.fillStyle = corB; x.fillRect(0, H - 4, W * b, 4);
+  } else if (tela === "retro") {
+    x.fillStyle = "#14120e"; x.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = 122, R = 100, a0 = Math.PI * 1.05, a1 = Math.PI * 1.95, rpm = Math.max(0, Math.min(1, d.rpm || 0));
+    x.lineWidth = 3; x.strokeStyle = "#e8dcc2"; x.beginPath(); x.arc(cx, cy, R, a0, a1); x.stroke();
+    for (let k = 0; k <= 12; k++) { const a = a0 + (a1 - a0) * k / 12, r1 = k % 2 ? R - 8 : R - 14; x.strokeStyle = k >= 10 ? "#e0302a" : "#e8dcc2"; x.lineWidth = k % 2 ? 2 : 3; x.beginPath(); x.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); x.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.stroke(); }
+    const ap = a0 + (a1 - a0) * rpm; x.strokeStyle = "#ff6a1a"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(ap) * (R - 6), cy + Math.sin(ap) * (R - 6)); x.stroke();
+    x.textAlign = "center"; x.fillStyle = "#f3e7cc"; x.font = "900 44px Georgia, serif"; x.fillText(String(d.marcha), cx, cy - 34);
+    x.font = "700 16px Georgia, serif"; x.fillStyle = "#c9b99a"; x.fillText(d.kmh + " km/h", cx, cy - 6);
+  } else if (tela === "neon") {
+    x.fillStyle = "#07020f"; x.fillRect(0, 0, W, H);
+    x.shadowColor = "#ff2fd0"; x.shadowBlur = 14; x.textAlign = "left"; x.fillStyle = "#ff5ce0"; x.font = "900 92px Arial, sans-serif"; x.fillText(String(d.marcha), 12, 66);
+    x.shadowColor = "#19e6ff"; x.textAlign = "right"; x.fillStyle = "#5ff2ff"; x.font = "900 52px Arial, sans-serif"; x.fillText(String(d.kmh), W - 12, 52);
+    x.font = "700 16px Arial, sans-serif"; x.fillText("KM/H", W - 12, 90);
+    x.shadowBlur = 10; x.shadowColor = corB; x.fillStyle = corB; x.fillRect(12, 116, 232 * b, 12); x.shadowBlur = 0; x.strokeStyle = "#5ff2ff66"; x.strokeRect(12, 116, 232, 12);
+  } else {
+    // F1 2026 (o de antes): a marcha grande à esquerda, a velocidade à direita, o DRS, a bateria e o modo do ERS
+    x.fillStyle = "#06080b"; x.fillRect(0, 0, W, H);
+    x.textAlign = "center"; x.fillStyle = "#ffffff"; x.font = "900 96px Arial, sans-serif"; x.fillText(String(d.marcha), 52, 64);
+    x.textAlign = "right"; x.font = "900 58px Arial, sans-serif"; x.fillText(String(d.kmh), W - 12, 54);
+    x.fillStyle = "#8d96a3"; x.font = "700 18px Arial, sans-serif"; x.fillText("KM/H", W - 12, 92);
+    x.textAlign = "center"; x.fillStyle = d.drs === 2 ? "#18c060" : d.drs === 1 ? "#e0a020" : "#2a2f37"; x.beginPath(); if (x.roundRect) x.roundRect(8, 8, 62, 26, 5); else x.rect(8, 8, 62, 26); x.fill();
+    x.fillStyle = d.drs ? "#06080b" : "#7b8492"; x.font = "800 17px Arial, sans-serif"; x.fillText("DRS", 39, 22);
+    x.fillStyle = "#1a1f26"; x.fillRect(10, 112, 150, 16); x.fillStyle = corB; x.fillRect(10, 112, 150 * b, 16);
+    x.textAlign = "left"; x.fillStyle = "#8d96a3"; x.font = "700 15px Arial, sans-serif"; x.fillText("BATT " + Math.round(b * 100) + "%", 10, 102);
+    x.textAlign = "right"; x.fillStyle = corB; x.font = "800 17px Arial, sans-serif"; x.fillText(d.modo || "BALANCED", W - 10, 120);
+  }
+  x.restore();
+}
+// o punho: a cor multiplicada sobre o material do volante (o carbono é a cor de fábrica dele)
+const PUNHO_COR = { alcantara: "#7a7f88", vermelho: "#d01818" };
+function aplicarPunho(k, punho) {
+  const m = k.matVolante; if (!m || m.userData.punho === punho + "|" + k.cores[0]) return;
+  if (m.userData.cor0 == null) m.userData.cor0 = m.color.getHex();
+  m.userData.punho = punho + "|" + k.cores[0];
+  if (punho === "carbono") m.color.setHex(m.userData.cor0); else m.color.set(punho === "equipe" ? k.cores[0] : PUNHO_COR[punho] || "#ffffff");
+}
+
 // d: { marcha, kmh, rpm (0 a 1), bateria (0 a 1), ersAtivo, drsAberto, drsPronto }. A tela só se refaz quando algo muda e no máximo a ~12 quadros por segundo.
 export function atualizarVolante(k, d, agora = performance.now()) {
-  if (k.leds) pintarLeds(k.leds, Math.round(Math.max(0, Math.min(1, d.rpm)) * N_LEDS_PK));
+  const est = lerEstiloVolante();
+  if (k.leds) pintarLeds(k.leds, Math.round(Math.max(0, Math.min(1, d.rpm)) * N_LEDS_PK), est.leds, k.cores && k.cores[0]);
+  aplicarPunho(k, est.punho);
   const T = k.tela; if (!T || !T.cv || agora < T.prox) return;
   if (d.bateria > T.cargaAnt + 0.0004) T.colheAte = agora + 400; T.cargaAnt = d.bateria; // recarregando (frear ou tirar o pé)
   const modo = d.ersAtivo ? "OVERTAKE" : agora < T.colheAte ? "HARVEST" : "BALANCED", drs = d.drsAberto ? 2 : d.drsPronto ? 1 : 0;
-  const chave = d.marcha + "|" + d.kmh + "|" + Math.round(d.bateria * 100) + "|" + modo + "|" + drs;
+  const chave = d.marcha + "|" + d.kmh + "|" + Math.round(d.bateria * 100) + "|" + modo + "|" + drs + "|" + est.tela + (est.tela === "retro" ? "|" + Math.round((d.rpm || 0) * 40) : "");
   if (chave === T.ult) return; T.ult = chave; T.prox = agora + 80;
-  desenharTela(T, { marcha: d.marcha, kmh: d.kmh, bateria: d.bateria, modo, drs });
+  desenharTela(T, { marcha: d.marcha, kmh: d.kmh, bateria: d.bateria, modo, drs, rpm: d.rpm });
 }
 // o composto que o carro está usando (macio, medio, duro, chuva; null = sem faixa): só mexe em dois uniforms, e só quando muda
 export function trocarComposto(k, composto) {

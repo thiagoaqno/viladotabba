@@ -12,7 +12,8 @@ import { alternarAcerto } from "./acerto.js";
 import { usarPista } from "./acerto-carro.js";
 import { renderCapacete, sincronizarCapacete } from "./capacete-editor.js"; // o capacete de quem joga
 import { renderPixel, sincronizarPixel } from "./piloto-pixel-editor.js"; // o seu piloto em pixel art
-import { renderAcabamento } from "./acabamento-carro-ui.js"; // o acabamento do seu carro (cromado, metálico, brilhante, acetinado, fosco)
+import { renderAcabamento } from "./acabamento-carro-ui.js";
+import { renderVolante } from "./volante-ui.js"; // o volante e o painel do seu carro (a tela, as luzes de troca, o punho) // o acabamento do seu carro (cromado, metálico, brilhante, acetinado, fosco)
 import { montarGuia, soltarGuia } from "./gp-guia.js"; // a miniatura 3D do circuito e o guia do GP na ficha "Sobre o GP"
 const EQUIPES_F1 = window.EQUIPES_F1 || {};
 // o logo da equipe sozinho (sem a sigla por trás, que aparecia pelas transparências do PNG); só sem arquivo, ou se ele não carregar, entra a sigla
@@ -207,7 +208,7 @@ function renderCarro(m, f1, c) {
   }
   // o acerto do carro (asa e altura, um por pista: acerto-carro.js), o mesmo painel da tecla P na corrida (acerto.js). Só nas regras de F1
   { const b = $("btnAcertoSala"); if (b) { b.hidden = !f1; const pn = PISTAS[E.S.config.pista]; if (f1) $("acertoSalaSub").textContent = `asa e altura para ${pn ? pn.name : "esta pista"}`; } }
-  renderCapacete(); renderPixel(); renderAcabamento(); // (o seu piloto em pixel art: piloto-pixel-editor.js; o acabamento do carro: acabamento-carro-ui.js)
+  renderCapacete(); renderPixel(); renderAcabamento(); renderVolante(); // (o seu piloto em pixel art: piloto-pixel-editor.js; o acabamento do carro: acabamento-carro-ui.js)
   $("garagemSub").textContent = f1 && m.equipe ? "do carro da equipe" : "carro e cor";
   return vista;
 }

@@ -10,6 +10,7 @@ import { E, PISTAS, $, sNow, me, act } from "./estado.js";
 import { transicaoF1 } from "./transicao-f1.js";
 import { cargaAberta } from "./carregando.js";
 import { DESTAQUES, cameraDestaque } from "./destaques-tv.js";
+import { retratoDoJogador } from "./pixel-piloto.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const lim = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), suave = (x) => x * x * (3 - 2 * x);
@@ -214,11 +215,17 @@ function cartaCampeonato(S) {
   return `<div class="tvCarta tvCamp" data-b="camp"><div class="tvKicker">Campeonato · após ${d.gp - 1} GP${d.gp - 1 > 1 ? "s" : ""}</div>
     <div class="tvDuas"><div><h3>Pilotos</h3><ol>${d.pilotos.map((p) => linha(p, "p")).join("")}</ol></div><div><h3>Equipes</h3><ol>${d.equipes.map((p) => linha(p, "e")).join("")}</ol></div></div></div>`;
 }
+// (2026-11-25, o Thiago: "durante a apresentação da pista, exibir de 2 em 2 a ordem dos pilotos com os cards deles e nome") o grid em pares:
+// a câmera vai da última fila até a pole e os cards acompanham, dois por vez (cada fila), com o retrato em pixel art, a posição, o nome e a equipe
+function paresDoGrid(S) { const l = [...S.players].filter((p) => p.grid != null && !p.dnf).sort((a, b) => a.grid - b.grid), r = []; for (let i = 0; i < l.length; i += 2) r.push(l.slice(i, i + 2)); return r; }
+function cardDoGrid(p) {
+  const eq = equipeDe(p.equipe), cor = corDe(p), nome = String(p.nomeCompleto || p.name || "").trim().split(/s+/), sobrenome = nome.length > 1 ? nome.slice(1).join(" ") : nome[0];
+  const logo = p.equipe && window.EQUIPES_F1 && window.EQUIPES_F1[p.equipe] && window.EQUIPES_F1[p.equipe].arquivo ? `<img class="tvpLogo" src="${(window.logoF1 || ((i) => "/api/corrida/logo/" + i))(p.equipe)}" alt="">` : "";
+  const eu = me() && p.id === me().id;
+  return `<div class="tvpCard${p.grid === 0 ? " pole" : ""}${eu ? " eu" : ""}" style="--c:${cor}"><img class="tvpFoto" src="${retratoDoJogador(p, cor)}" alt=""><div class="tvpTxt"><b class="tvpPos">${p.grid + 1}</b><small>${esc(nome.length > 1 ? nome[0] : "")}</small><strong>${esc(sobrenome.toUpperCase())}</strong><em>${logo}${esc((eq && eq.nome) || "")}${p.numero != null ? ` · #${esc(p.numero)}` : ""}</em></div>${p.grid === 0 ? '<i class="tvpTag">POLE</i>' : ""}</div>`;
+}
 function cartaGrid(S) {
-  const eu = me(), lista = [...S.players].sort((a, b) => a.grid - b.grid);
-  const linha = (p) => `<li class="${p.grid === 0 ? "pole" : ""}${eu && p.id === eu.id ? " eu" : ""}" style="--c:${corDe(p)}"><b>${p.grid + 1}</b><span>${esc(p.nomeCompleto || p.name)}</span><em>${esc(p.grid === 0 ? "POLE" : (equipeDe(p.equipe) || {}).sigla || "")}</em></li>`;
-  const meio = Math.ceil(lista.length / 2);
-  return `<div class="tvCarta tvGrid" data-b="grid"><div class="tvKicker">Grid de largada</div><div class="tvDuas"><ol>${lista.slice(0, meio).map(linha).join("")}</ol><ol start="${meio + 1}">${lista.slice(meio).map(linha).join("")}</ol></div></div>`;
+  return `<div class="tvCarta tvGrid tvPares" data-b="grid"><div class="tvKicker">Grid de largada <span class="tvpFila"></span></div><div class="tvpDupla"></div></div>`;
 }
 // o traçado no minimapa (a mesma largura em todo circuito) e os pontos de DRS em verde
 function desenharMini(cv, tr) {
@@ -234,7 +241,7 @@ function desenharMini(cv, tr) {
 }
 
 // ---------- a sequência ----------
-const BASE = { pista: 9.5, clima: 4, camp: 6.5, grid: 5 }; // segundos; encolhem se faltar tempo e o grid pega a sobra
+const BASE = { pista: 7, clima: 3, camp: 5.5, grid: 9.5 }; // segundos; encolhem se faltar tempo e o grid pega a sobra (2026-11-25: o grid subiu de 5 para 9,5 s, para os pares de cards)
 const TITULO = { pista: "O circuito", clima: "O clima", camp: "O campeonato", grid: "O grid de largada" };
 const MIN_S = 7; // com menos que isso para o fim da transmissão, não vale começar
 let ultimo = null;
@@ -301,7 +308,7 @@ function iniciar(race, tr, reduzMov) {
   }).catch(() => {});
   let climaF = tr.n * 0.5; // o trecho do bloco do clima: fora de túnel
   for (let k = 0; k < 12; k++) { const f = tr.n * (0.4 + 0.045 * k); if (!tr.coberto || !tr.coberto(Math.floor(f % tr.n)) && !tr.coberto(Math.floor((f + 40) % tr.n))) { climaF = f; break; } }
-  return { el, ini: agora, faixas, total: t, med, desenho, climaF, bloco: "", alvo: [0, 0], voo: montarVoo(tr), reduz: reduzMov };
+  return { el, ini: agora, faixas, total: t, med, desenho, climaF, bloco: "", alvo: [0, 0], voo: montarVoo(tr), reduz: reduzMov, pares: paresDoGrid(S), par: -1 };
 }
 
 // Chamado a cada quadro de `draw` (jogo.js), depois da câmera normal. Põe a câmera da TV por cima, ou deixa a normal.
@@ -329,6 +336,10 @@ export function quadroTV(race, tr, cam, reduzMov) {
       if (f.k === "pista") window.Narrador.falarDaPista(window.Pistas.baseDe(E.S.config.pista), E.S.semente, { cortarEm: race.startAt - ((race.luzes?.espera || 0) + 4) * 1000 - sNow() });
       else if (f.k === "grid") window.Narrador.abaixar(0.3, 0.6);
     }
+  }
+  if (f.k === "grid" && tv.pares.length) { // os pares, da última fila até a pole (a pole fica no fim, parada)
+    const n = tv.pares.length, k = Math.max(0, n - 1 - Math.min(n - 1, Math.floor(u * n * 1.15)));
+    if (k !== tv.par) { tv.par = k; const box = tv.el.querySelector(".tvpDupla"); box.innerHTML = tv.pares[k].map(cardDoGrid).join(""); box.classList.remove("entra"); void box.offsetWidth; box.classList.add("entra"); tv.el.querySelector(".tvpFila").textContent = `· ${k + 1}ª fila`; }
   }
   const c = camera(tv, tr, f.k, u);
   if (tv.desenho && f.k === "pista") { const [px, py] = tv.desenho.ondeXY(tv.alvo[0], tv.alvo[1]), pt = tv.el.querySelector(".tvPonto"); pt.style.left = px + "%"; pt.style.top = py + "%"; }

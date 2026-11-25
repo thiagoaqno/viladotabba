@@ -1,25 +1,14 @@
-# O montador do seu piloto em pixel art
+# Apresentação da pista: o grid de 2 em 2 com os cards dos pilotos
 
-O Thiago pediu um espaço para montar o próprio piloto em pixel art, com as mesmas peças dos retratos.
+O Thiago pediu que, na apresentação da pista, a ordem dos pilotos passasse de 2 em 2, com os cards deles e o nome.
 
-**Entra depois do #959.** Este branch traz o gerador novo dele (grade de 48×48, olhos refeitos), e o montador usa esse gerador.
-
-## A tela (`piloto-pixel-editor.js`)
-
-- Fica na gaveta da sala, que agora se chama "Peças, pintura, capacete e piloto", logo abaixo do capacete (`#pilotoPixelCartao`).
-- A prévia grande, em 144 px, mostra o piloto com o macacão na cor da sua equipe e muda a cada clique.
-- Ao lado, uma linha "‹ valor ›" para cada peça: pele, cabelo, cor do cabelo, risca, barba, olhos, sobrancelha, rosto, nariz, sorriso, óculos e brinco.
-- O botão 🎲 Sortear monta um piloto aleatório.
-- Na primeira vez, o piloto vem sorteado pelo seu nome, sempre o mesmo para o mesmo nome.
-
-## Onde fica guardado e quem vê
-
-- **Guardado neste navegador:** em `corrida:piloto-pixel`.
-- **Na sala:** vai em `mods.pixel`, do mesmo jeito que o capacete. É enviado 1,2 s depois do último clique e uma vez em cada sala em que você entra (`sincronizarPixel`, em `menus.js` e `rede.js`).
-- **Na corrida rápida:** vai junto com o pedido de criar a sala (`menu.js`), porque ela larga direto, sem passar pela sala de espera.
-- **No servidor:** `limparPixel`, em `corrida-base.js`, só deixa passar o que o montador oferece. Ele é chamado em `corrida-conexao.js`, na criação da sala e no `act "mods"`.
-- **No jogo:** `retratoDoJogador` (`pixel-piloto.js`) usa o seu `mods.pixel`. Assim a galera vê o seu piloto no cartão do HUD de transmissão.
-
-## Conferido
-
-Subi um servidor de teste (`DB_PATH=:memory:`) e abri `/corrida/` no Edge sem tela. A página carrega sem nenhum erro no console. O montador monta as 12 linhas, e o clique troca o valor e redesenha a prévia.
+- **O bloco "O grid de largada"** (`transmissao.js`) não mostra mais a lista inteira: mostra os dois cards de cada fila, da última até a pole. É o mesmo caminho que a câmera já faz entre os carros. A pole fica parada no fim, com a etiqueta POLE dourada.
+- **Cada card (`cardDoGrid`):**
+  - na cor da equipe;
+  - o retrato em pixel art em 96 px (`retratoDoJogador`: o desenhado para os pilotos do grid, o do montador para os jogadores);
+  - a posição grande, o nome e o sobrenome;
+  - o logo e o nome da equipe e o número do carro;
+  - o seu card ganha um contorno branco.
+- **Tempos dos blocos (`BASE`):** o grid passou de 5 para 9,5 s, para os 11 pares terem tempo de aparecer. A pista passou de 9,5 para 7 s, o clima de 4 para 3 s e o campeonato de 6,5 para 5,5 s. O total é o mesmo (25 s numa temporada), porque quem define é o servidor (`tvAte`).
+- **CSS (`transmissao.css`):** `.tvPares` e `.tvp*`, com uma versão menor para celular.
+- **Conferido:** montei uma página estática com o CSS e dois cards para ver o visual, e a página do jogo carrega sem erros num servidor de teste. A transmissão em si não foi vista rodando.

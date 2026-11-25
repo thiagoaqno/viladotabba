@@ -8,7 +8,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import { temDesenho, folhaDaEquipe, corDoNumero, numPosDe, carbonoDe, texturaDasLetrasDoPneu, texturaDosDigitos, logosProntos, FAIXAS, aroDaRoda,
   LIV_VERT_DECL, LIV_VERT_MAIN, LIV_FRAG_DECL, LIV_FRAG_MAIN, aplicarVerniz, limitarBrilhoCarro, texturaDoHalo, aplicarHalo, texturaDoCockpit, aplicarCockpit, SOL_FRAG_DECL, SOL_FRAG_MAIN, PNEU_VERT_DECL, PNEU_VERT_MAIN, PNEU_FRAG_DECL, PNEU_FRAG_MAIN } from "./f1-pintura.js";
 import { lerHalo } from "./f1-capacetes.js";
-import { pinturasProntas } from "./f1-pintura.js";
+import { pinturasProntas, lerAcabamentoCarro } from "./f1-pintura.js";
 import { marcasReaisProntas } from "./f1-marcas.js";
 import { construir2026, visibilidade } from "./f1-2026.js";
 import { construir2022 } from "./f1-2022.js";
@@ -81,7 +81,7 @@ function pintura(base, cor1, cor2, equipe, numero, fundo = false, novo = false, 
   const halo = novo && liv ? texturaDoHalo(equipe, cromo ? lerHalo() : null) : null, /* (o carro do jogador leva os patrocínios do halo que ele escolheu) */ cockpit = novo && liv ? texturaDoCockpit(equipe) : null;
   m.onBeforeCompile = (sh) => { montar(sh); if (halo) aplicarHalo(sh, halo); if (cockpit) aplicarCockpit(sh, cockpit); aplicarVerniz(sh, cromo); };
   if (fundo) { m.metalness = 0; m.metalnessMap = null; } // o painel pintado não é metal (sem reflexo, o metal ficaria cinza)
-  m.customProgramCacheKey = () => (novo ? (liv ? "f1-novo-livery" : "f1-novo-solido") : liv ? (fundo ? "f1-livery-fundo" : "f1-livery") : "f1-pintura") + "-verniz" + (halo ? "-halo" : "") + (cockpit ? "-cockpit" : "") + (cromo ? "-cromo" : ""); // (o cromado do carro do jogador é outro programa)
+  m.customProgramCacheKey = () => (novo ? (liv ? "f1-novo-livery" : "f1-novo-solido") : liv ? (fundo ? "f1-livery-fundo" : "f1-livery") : "f1-pintura") + "-verniz" + (halo ? "-halo" : "") + (cockpit ? "-cockpit" : "") + (cromo ? "-acab-" + cromo : ""); // (o acabamento do carro do jogador é outro programa)
   if (liv) setNumero(m, numero);
   return m;
 }
@@ -127,7 +127,7 @@ function montarCorpoNovo(k) {
   const dupla = (m) => { m.side = THREE.DoubleSide; return m; };
   const carbono = () => dupla(new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.62, metalness: 0 })); // (carbono acetinado: com menos que isso ele espelha o céu e o assoalho fica claro)
   const mat = {
-    corpo: () => M("corpo", () => { const m = pintura(carbono(), k.cores[0], k.cores[1], k.equipe, num, false, true, D.numPos, !k.leve, !!k.volanteVivo);
+    corpo: () => M("corpo", () => { const m = pintura(carbono(), k.cores[0], k.cores[1], k.equipe, num, false, true, D.numPos, !k.leve, k.volanteVivo ? lerAcabamentoCarro() : false) /* (o seu carro: o acabamento escolhido na sala) */;
       // o mapa de visibilidade da pintura (f1-2026.js): um por modelo carregado (o de 2026, o de 2022, o leve de cada um), feito na primeira vez
       if (m.userData.liv) { if (!D.vis && D.corpo) D.vis = visibilidade([D.corpo, D.flap?.geo]); m.userData.liv.vis = { value: D.vis }; }
       return m; }), // (o carro do jogador e o da garagem levam a folha em 3×; os outros, a de 1,5×)

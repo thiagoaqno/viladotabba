@@ -1,17 +1,16 @@
-# Torre: só os avisos que importam e o card de distância do seu carro
+# Marcas da asa traseira legíveis no carro da frente
 
-O Thiago: na torre apareciam muitos avisos sem sentido (o "entrou no quadro de recordes", que parecia "pódio", box, DRS, largada...) e o card de distância só mostrava o 2º para o 1º, uma vez por corrida.
+O Thiago mandou prints do jogo oficial: na T-cam dá para ler o ETIHAD na asa traseira das McLaren da frente. Aqui não dava.
 
-## Avisos da torre
+## Por quê
 
-- A fila dos cards da torre (`criarFila` em `avisos-f1.js`, opção nova `tipos`) só aceita `NA_TORRE`: **volta mais rápida** da corrida, **bandeira amarela**, **bandeira verde**, **punição** e o card de distância. Todo o resto (recorde da pista, box, DRS, luzes da largada, bandeirada, limites da pista, bandeira azul, investigação, abandono...) não entra mais na torre.
-- A volta mais rápida é só a daquela corrida (a sua, quando você baixa o melhor tempo da corrida): o "recorde" do log do servidor (o da pista, de sempre) não vira mais card, nem pelo log (`deLinha`) nem pelo toast (`E.avisarF1`).
-- O rádio e o narrador continuam falando o que já falavam; só a torre ficou mais limpa.
+As marcas da asa traseira, as que quem vem atrás lê, eram pequenas. Atrás da asa (a vista R, `marcaU`) tinham no máximo 8,5 cm de altura e em cima dela (a vista T) de 5 a 9 cm. A uns 30 m, com o campo de visão da câmera F1, 1 m da pista dá uns 40 pixels na tela (conta, não medida), então essas letras ficavam com uns 4 pixels. A resolução da folha não é o limite: a dos adversários tem uns 350 pixels por metro.
 
-## Card de distância (gap)
+## O que mudou (`f1-pintura.js`)
 
-- O card "Battle for first" virou o card de distância do **seu** carro (`gapF1` em `hud.js`, no lugar de `batalhaF1`), em qualquer posição: a diferença para o carro da frente, ou para o de trás quando você lidera, com posição, sigla e equipe dos dois e o número ao vivo.
-- Aparece **3 vezes por corrida**, quando você completa 1/4, 2/4 e 3/4 das voltas (em corrida curta, as voltas repetidas viram uma só), e fica 6 s na tela.
-- Não aparece na classificação, depois da sua chegada nem com o carro fora da corrida.
+- **Atrás da asa:** a altura passa a ser 1,3× a pedida, com teto de 15 cm (antes era 0,75× com teto de 8,5 cm).
+- **Em cima da asa:** as marcas lidas de trás (giro `-DE_FRENTE`, s > 3,85) ficam 1,5× maiores.
+- **Largura:** nenhuma das duas passa de 1 m, para não sair da asa (o flap tem ±0,57 m). A largura vem da proporção do logo real, pela `proporcaoMarca` nova em `f1-marcas.js`.
+- **Nitidez:** a anisotropia das folhas de pintura subiu de 4 (adversários) e 8 (o meu carro) para 16. O three corta no máximo que a placa aceita. Não gasta memória a mais.
 
-Conferido com `node --check` em `hud.js` e `avisos-f1.js`; o Thiago testa jogando.
+Os números de 1,3×, 1,5× e 15 cm são o ponto de partida, para o Thiago conferir jogando. Se alguma marca vazar para fora da asa, eles ficam todos juntos no começo de `marca` (`ASA_CIMA`, `ASA_TRAS`, `ASA_TRAS_MAX`, `ASA_LARG`).

@@ -1475,8 +1475,25 @@ const VERNIZ_TETO_BASE = 0.14;  // e o da tinta por baixo, de dia
 // (2026-11-16, o Thiago: "quero o carro com acabamento cromado, brilhoso igual o capacete, mas só o meu") `cromo`: só o carro do jogador (f1.js, o do
 // volante vivo): sem o acetinado e sempre metálico espelhado (o cromado do capacete: metalness 0,92, rugosidade 0,12), de dia e de noite
 const CROMO_LIGADO = { value: 1 }, CROMO_SEM_VERNIZ = { value: 0 };
+// (2026-11-25, o Thiago: "uma opção de poder escolher o material do carro, o acabamento") o acabamento do SEU carro, escolhido na gaveta da sala
+// (acabamento-carro-ui.js) e guardado neste navegador; o cromado de antes é o padrão. Cada perfil: verniz (0 tira a camada acetinada), metal (0/1),
+// a rugosidade e o metal da tinta quando é metálica, a rugosidade da tinta quando não é, e a força da camada de verniz
+export const ACABAMENTOS_CARRO = [["cromo", "Cromado"], ["metal", "Metálico"], ["brilho", "Brilhante"], ["acetinado", "Acetinado"], ["fosco", "Fosco"]];
+const CHAVE_ACAB = "corrida:acabamento-carro";
+export function lerAcabamentoCarro() { try { const v = localStorage.getItem(CHAVE_ACAB); return ACABAMENTOS_CARRO.some(([k]) => k === v) ? v : "cromo"; } catch (e) { return "cromo"; } }
+export function gravarAcabamentoCarro(v) { try { localStorage.setItem(CHAVE_ACAB, v); } catch (e) { /* sem armazenamento */ } }
+const PERFIS_ACAB = {
+  cromo: { verniz: 0, metal: 1, metalV: 0.92, metalR: 0.12, aspero: VERNIZ_ASPERO, camada: VERNIZ_CAMADA },
+  metal: { verniz: 0, metal: 1, metalV: 0.7, metalR: 0.3, aspero: VERNIZ_ASPERO, camada: VERNIZ_CAMADA },
+  brilho: { verniz: 1, metal: 0, metalV: 0, metalR: 0.3, aspero: 0.22, camada: 0.6 },
+  acetinado: { verniz: 1, metal: 0, metalV: 0, metalR: 0.3, aspero: VERNIZ_ASPERO, camada: VERNIZ_CAMADA },
+  fosco: { verniz: 1, metal: 0, metalV: 0, metalR: 0.3, aspero: 0.92, camada: 0 },
+};
+// `cromo`: false (os outros carros: o acetinado de dia e o metálico do teste), true (o cromado de antes) ou o nome de um acabamento (o seu carro)
 export function aplicarVerniz(sh, cromo = false) {
-  sh.uniforms.uVerniz = cromo ? CROMO_SEM_VERNIZ : VERNIZ; sh.uniforms.uMetal = cromo ? CROMO_LIGADO : METAL;
+  const P = cromo === true ? PERFIS_ACAB.cromo : typeof cromo === "string" ? PERFIS_ACAB[cromo] || PERFIS_ACAB.cromo : null;
+  sh.uniforms.uVerniz = P ? { value: P.verniz } : VERNIZ; sh.uniforms.uMetal = P ? { value: P.metal } : METAL;
+  const aspero = P ? P.aspero : VERNIZ_ASPERO, metalR = P ? P.metalR : METAL_ASPERO, metalV = P ? P.metalV : METAL_TINTA, camada = P ? P.camada : VERNIZ_CAMADA;
   sh.fragmentShader = VERNIZ_DECL + sh.fragmentShader
     .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
 #ifdef NOVO
@@ -1484,19 +1501,19 @@ export function aplicarVerniz(sh, cromo = false) {
 #else
   float vern = uVerniz;
 #endif
-  roughnessFactor = mix(roughnessFactor, max(roughnessFactor, ${VERNIZ_ASPERO.toFixed(2)}), vern);
+  roughnessFactor = mix(roughnessFactor, ${P ? aspero.toFixed(2) : `max(roughnessFactor, ${aspero.toFixed(2)})`}, vern);
 #ifdef NOVO
   float metalTinta = uMetal * vMc;
 #else
   float metalTinta = uMetal;
 #endif
-  roughnessFactor = mix(roughnessFactor, ${(cromo ? 0.12 : METAL_ASPERO).toFixed(2)}, metalTinta);`)
+  roughnessFactor = mix(roughnessFactor, ${metalR.toFixed(2)}, metalTinta);`)
     .replace("#include <metalnessmap_fragment>", `#include <metalnessmap_fragment>
-  metalnessFactor = mix(metalnessFactor, ${(cromo ? 0.92 : METAL_TINTA).toFixed(2)}, metalTinta);`)
+  metalnessFactor = mix(metalnessFactor, ${metalV.toFixed(2)}, metalTinta);`)
     .replace("#include <lights_physical_fragment>", `#include <lights_physical_fragment>
 #ifdef USE_CLEARCOAT
-  material.clearcoat *= vern * ${VERNIZ_CAMADA.toFixed(2)};
-  material.clearcoatRoughness = max(material.clearcoatRoughness, ${VERNIZ_CAMADA_ASP.toFixed(2)});
+  material.clearcoat *= vern * ${camada.toFixed(2)};
+  material.clearcoatRoughness = max(material.clearcoatRoughness, ${(P && P.aspero < 0.3 ? 0.18 : VERNIZ_CAMADA_ASP).toFixed(2)});
 #endif`)
     .replace("#include <lights_fragment_end>", `#include <lights_fragment_end>
 #ifdef USE_CLEARCOAT
@@ -1505,6 +1522,7 @@ export function aplicarVerniz(sh, cromo = false) {
 #endif
   reflectedLight.directSpecular = min(reflectedLight.directSpecular, vec3(mix(64.0, ${VERNIZ_TETO_BASE.toFixed(2)}, vern)));`);
 }
+
 
 // a posição de cada ponto da roda em relação ao eixo, em raios (1 = a borda do pneu): a faixa do composto é um anel nesse
 // espaço (o shader mede o comprimento do vetor em cada pixel, então o anel sai redondo mesmo com poucos vértices)

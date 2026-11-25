@@ -1,13 +1,14 @@
-# Capacete: 10 estampas novas, com a textura de verdade
+# Acabamento do carro: cromado, metálico, brilhante, acetinado ou fosco
 
-O Thiago pediu texturas novas para o capacete, estampas, e mandou a imagem das 10 que queria: Carbono Neon, Tigre, Geométrica, Topográfica, Bandeira Brasileira, Digital, Gradiente, Relâmpago, Onda e Hexagonal.
+O Thiago pediu a opção de escolher o material do carro, o acabamento.
 
-- **As texturas (`public/corrida/capacete-estampas/`, 372 KB):** as 10 recortadas da imagem dele em 512×512 (webp).
-- **No capacete (`f1-capacetes.js`):**
-  - `ESTAMPAS` traz as 10 (`t_tigre`, `t_onda`…), cada uma com as suas 3 cores, as das bolinhas da imagem.
-  - `pintarFolha` envolve a cabeça com a textura: uma metade da folha com ela e a outra espelhada. Assim a frente mostra a estampa inteira, e a emenda fica nas laterais.
-  - Acabamento, patrocínios, nome e bandeira continuam valendo por cima.
-  - A imagem chega depois e repinta.
-- **No editor (`capacete-editor-ui.js`, `capacete.css`):** a aba "Estampas" mostra as 10 miniaturas, o nome e as bolinhas de cor. O clique aplica a estampa e as cores dela.
-- **No servidor (`corrida-base.js`):** `limparCapacete` aceita os desenhos `t_xxx`.
-- **Conferido:** desenhei as 10 folhas planas. Não vi em 3D, porque a prévia trava no print.
+- **A escolha (`acabamento-carro-ui.js`, novo):** fica na gaveta da sala, na seção Pintura, com uma amostra de reflexo para cada opção: Cromado (o de antes, que continua o padrão), Metálico, Brilhante, Acetinado e Fosco. Fica guardada neste navegador.
+- **O material (`f1-pintura.js`):** `aplicarVerniz` aceita um perfil por acabamento, com:
+  - a camada acetinada ligada ou não;
+  - a tinta metálica ou não;
+  - a rugosidade da tinta (o brilhante bem liso, o fosco bem áspero);
+  - a força do verniz.
+  - Os outros carros seguem o acetinado de sempre.
+- **No carro (`f1.js`):** o seu carro, o do volante vivo, usa o acabamento escolhido. Cada acabamento é um programa de shader próprio, com a chave de cache dele.
+- **Quando vale:** a partir da próxima corrida, porque o material é montado na largada.
+- **Não conferido:** não vi o carro com cada acabamento numa corrida. O shader só compila quando o carro aparece, então um erro nele só aparece jogando.

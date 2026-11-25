@@ -7,7 +7,7 @@
    - som de acerto (flashkit) → um clique gerado aqui;
    - animações Mixamo: ainda as deles (fase 3: refazer pela nossa conta, ferramentas/animacoes-mixamo.mjs).
    Também: contas desligadas (a API deles não existe aqui, e /api/ é da Vila), sem service worker e sem a CSP com hashes
-   (os scripts mudaram). O online continua o deles: navegador com navegador pelo PeerJS. */
+   (os scripts mudaram). O online passa pelo relé do nosso servidor (servidor/jogos/tiro-rele.js), sem PeerJS. */
 const fs = require("fs"), path = require("path"), vm = require("vm");
 
 const DIST = path.resolve(process.argv[2] || "");
@@ -86,6 +86,9 @@ h = troca(h, "if(location.protocol==='file:')return{ok:false,status:0,data:null}
 h = troca(h, "location.protocol==='file:')break;", "true)break;", { nome: "sem esperar a API" });
 h = troca(h, "if('serviceWorker'in navigator){", "if(false){", { nome: "sem service worker" });
 h = troca(h, "fetch(new URL('/version.json?t='", "fetch(new URL('version.json?t='", { min: 0, nome: "version.json relativo" });
+// online pelo nosso servidor (servidor/jogos/tiro-rele.js): sem o PeerJS, o jogo manda tudo pelo relé
+h = troca(h, /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/peerjs[^>]*><\/script>\s*/, "", { nome: "PeerJS" });
+h = troca(h, /<meta name="cod-relay" content="[^"]*">/, `<meta name="cod-relay" content="">\n<script>window.NET_RELAY_URL=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/tiro/rele';</script>`, { nome: "relé" });
 h = troca(h, /Riposte: Frontline|Riposte Frontline/g, NOME, { nome: "nome" });
 h = troca(h, /Installer Riposte/g, "Installer " + NOME, { min: 0, nome: "instalador" });
 h = troca(h, /content="Riposte"/g, 'content="Tiro"', { min: 0, nome: "nome curto" });

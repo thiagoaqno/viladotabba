@@ -63,7 +63,7 @@ export function hudTv(o) {
   montar();
   const torre = $("hTorre"), box = $("tLinhas") ? $("tLinhas").children : [], agora = performance.now();
   const { linhas, ver, m } = o, corrida = o.fase === "race";
-  if (st.corrida !== (E.S && E.S.startAt)) { st.corrida = E.S && E.S.startAt; st.pos = null; st.cartaoAte = 0; st.lider = null; st.liderAte = 0; st.cartaoId = null; st.meuDepois = 0; st.liderCartao = null; }
+  if (st.corrida !== (E.S && E.S.startAt)) { st.corrida = E.S && E.S.startAt; st.pos = null; st.cartaoAte = 0; st.lider = null; st.liderAte = 0; st.cartaoId = null; st.meuDepois = 0; st.liderCartao = null; st.posicoes = null; }
   // ---- as margens das linhas: zera e põe só as que valem neste quadro
   const margem = new Map(); // linha -> [cima, baixo]
   const abre = (d, cima, baixo) => { const a = margem.get(d) || [0, 0]; margem.set(d, [a[0] + cima, a[1] + baixo]); };
@@ -75,17 +75,18 @@ export function hudTv(o) {
     const a = linhaDe(box, linhas, ver, (l) => String(l.pos) === String(p1)), b = linhaDe(box, linhas, ver, (l) => String(l.pos) === String(p2));
     if (a && b && b.k === a.k + 1) bat = { a, b, seg, p1 };
   }
-  // o cartão (2026-11-25, o Thiago: "quando alguém assumir a liderança, devia aparecer o card dele, e não o meu; e o meu não deve aparecer sempre que
-  // eu estiver envolvido em troca de posição, só às vezes"): o do novo líder quando a liderança troca (depois da 1ª volta dele); o seu quando a sua
-  // posição muda, no máximo uma vez a cada MEU_INTERVALO (e nunca por cima do cartão do líder); e o seu quando a torre é expandida
-  const eu = m && linhaDe(box, linhas, ver, (l) => l.eu), lid0 = linhas[0], abrir = (id) => { st.cartaoId = id; st.cartaoAte = agora + CARTAO_MS; };
-  if (corrida && lid0) { const pl = jogador(lid0.id); if (st.liderCartao != null && st.liderCartao !== lid0.id && pl && pl.laps >= 1) abrir(lid0.id); st.liderCartao = lid0.id; }
-  const liderNoAr = agora < st.cartaoAte && st.cartaoId && lid0 && st.cartaoId === lid0.id && !(eu && eu.l.id === lid0.id);
-  if (eu && corrida && m.started && m.finish == null) {
-    if (st.pos != null && st.pos !== eu.l.pos && !liderNoAr && agora >= (st.meuDepois || 0)) { abrir(eu.l.id); st.meuDepois = agora + MEU_INTERVALO; }
-    st.pos = eu.l.pos;
-  } else if (!eu) st.pos = null;
-  if (eu && st.compactaAnt === true && o.compacta === false && !liderNoAr) abrir(eu.l.id); // (a torre acabou de ser expandida: o seu cartão abre)
+  // o cartão (2026-11-25, o Thiago: "o card do piloto expandido deve parar de aparecer nas ultrapassagens e aparecer só quando ele conquistar alguma
+  // posição do TOP 3"): abre o de quem acabou de GANHAR uma posição e ficou entre os 3 primeiros (a liderança também conta), na corrida e depois da 1ª
+  // volta dele; perder posição, ou ganhar fora do top 3, não abre nada. Ao expandir a torre, abre o seu
+  const eu = m && linhaDe(box, linhas, ver, (l) => l.eu), abrir = (id) => { st.cartaoId = id; st.cartaoAte = agora + CARTAO_MS; };
+  const posAnt = st.posicoes || new Map(), novas = new Map();
+  for (const l of linhas) {
+    novas.set(l.id, l.pos);
+    const antes = posAnt.get(l.id), pl = jogador(l.id);
+    if (corrida && antes != null && l.pos < antes && l.pos <= 3 && pl && pl.laps >= 1 && !pl.dnf) abrir(l.id);
+  }
+  st.posicoes = novas;
+  if (eu && st.compactaAnt === true && o.compacta === false) abrir(eu.l.id); // (a torre acabou de ser expandida: o seu cartão abre)
   st.compactaAnt = o.compacta;
   const alvo = agora < st.cartaoAte && st.cartaoId ? linhaDe(box, linhas, ver, (l) => l.id === st.cartaoId) : null;
   const cartao = alvo && !(bat && bat.a.d === alvo.d) ? alvo : null; // (com a batalha logo embaixo da linha, fica a batalha)

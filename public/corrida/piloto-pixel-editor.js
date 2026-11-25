@@ -80,7 +80,7 @@ export function montarMontador(el, op = {}) {
     el.querySelector('[data-px="img"]').src = retrato(atual, { cor: (el._corPx && el._corPx()) || "#3a6fd0", escala: 3 });
     for (const [campo, , lista] of LINHAS) {
       const b = el.querySelector(`[data-campo="${campo}"] b`); if (!b) continue;
-      const v = campo === "risca" ? atual.risca || "" : atual[campo];
+      const v = campo === "risca" ? atual.risca || "" : typeof lista[0] === "boolean" ? !!atual[campo] : atual[campo]; // (sorteado, o brinco vinha sem valor)
       b.innerHTML = (campo === "pele" ? `<i class="px-pele" style="background:${PELES[v] || PELES[1]}"></i>` : "") + h(rotulo(campo, v));
       void lista;
     }

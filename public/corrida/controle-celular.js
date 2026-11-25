@@ -12,15 +12,18 @@ import { jogosDe } from "./box.js";
 import { comecarVoz } from "./voz.js";
 import { standings } from "./hud.js";
 
-const ligado = !!window.CORRIDA_PC?.pc || new URLSearchParams(location.search).has("controle");
+// (2026-11-25) no site o controle também existe: o celular e o jogo se juntam pelo servidor do site, com um código (corrida-controle-site.js, o canal
+// /controle-par); no programa de PC (ou com ?controle=1) continua o de casa, pela rede local (corrida-controle.js)
+const ligado = !!window.CORRIDA_PC?.pc || new URLSearchParams(location.search).has("controle"), site = !ligado;
+const CHAVE_COD = "corrida:controle-codigo", codGuardado = () => { try { return localStorage.getItem(CHAVE_COD) || ""; } catch (e) { return ""; } };
 const naoAqui = new URLSearchParams(location.search).has("replay") || new URLSearchParams(location.search).has("editor");
 let sock = null, est = { ligado: false, enderecos: [], celulares: 0 }, janela = null, bt = null; // (o bt aqui em cima: iniciar() roda já na linha de baixo e chama botao())
 
-if (ligado && !naoAqui && window.io) iniciar();
+if (!naoAqui && window.io) iniciar();
 
 function iniciar() {
-  sock = window.io(location.origin + "/controle", { transports: ["websocket"] });
-  sock.on("connect", () => sock.emit("jogo", null, (e) => { if (e) mudou(e); }));
+  sock = window.io(location.origin + (site ? "/controle-par" : "/controle"), { transports: ["websocket"] });
+  sock.on("connect", () => sock.emit("jogo", site ? { codigo: codGuardado() } : null, (e) => { if (e) mudou(e); }));
   sock.on("estado", mudou);
   sock.on("e", (d) => {
     celular.ate = performance.now() + 400;
@@ -32,6 +35,7 @@ function iniciar() {
 }
 function mudou(e) {
   const antes = est.celulares; est = { ...est, ...e };
+  if (site && e && e.codigo) { try { localStorage.setItem(CHAVE_COD, e.codigo); } catch (er) { /* sem armazenamento */ } } // (o mesmo código da próxima vez)
   if (est.celulares > antes) toast("📱 Celular conectado: ele é o seu controle", 2600);
   pintarJanela(); pintarBotao();
 }
@@ -84,17 +88,17 @@ function abrirJanela() {
     document.body.appendChild(janela);
   }
   pintarJanela();
-  sock.emit("abrir", null, (e) => { if (e) mudou(e); });
+  sock.emit("abrir", site ? { codigo: codGuardado() } : null, (e) => { if (e) mudou(e); });
 }
 function pintarJanela() {
   if (!janela) return;
   const end = est.enderecos || [], esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   janela.innerHTML = `<div role="dialog" aria-label="Controle no celular" style="max-width:520px;margin:16px;padding:22px 24px;background:#11141c;border-top:4px solid #e10600;border-radius:10px;box-shadow:0 10px 40px #000a">
     <b style="font-size:20px">📱 Controle no celular</b>
-    <p style="margin:10px 0 6px">O celular e este PC na <b>mesma rede Wi-Fi</b> (sem internet também vale: o PC pode entrar no hotspot do iPhone). No Safari do celular, digite:</p>
-    ${!est.ligado ? `<p style="opacity:.7">Abrindo o controle… (o Windows pode perguntar se o programa pode usar a rede: permita nas redes privadas)</p>` : end.length ? end.map((u, i) => `<p style="margin:6px 0;font:700 ${i ? 17 : 24}px ui-monospace,Consolas,monospace;color:${i ? "#9aa4b5" : "#fff"};user-select:all">${esc(u)}</p>`).join("") : `<p style="color:#ff8a80">O PC não está em nenhuma rede. Ligue o Wi-Fi.</p>`}
+    ${site ? `<p style="margin:10px 0 6px">No celular (em qualquer internet), abra este endereço no navegador:</p>${est.codigo ? `<p style="margin:6px 0 2px;color:#9aa4b5;font-size:14px">ou abra <b>${esc(location.host)}/c</b> e digite o código</p><p style="margin:2px 0 6px;font:900 40px ui-monospace,Consolas,monospace;letter-spacing:.18em;color:#ffd23f;user-select:all">${esc(est.codigo)}</p>` : ""}` : `<p style="margin:10px 0 6px">O celular e este PC na <b>mesma rede Wi-Fi</b> (sem internet também vale: o PC pode entrar no hotspot do iPhone). No Safari do celular, digite:</p>`}
+    ${!est.ligado ? `<p style="opacity:.7">${site ? "Pedindo o código ao servidor…" : "Abrindo o controle… (o Windows pode perguntar se o programa pode usar a rede: permita nas redes privadas)"}</p>` : end.length ? end.map((u, i) => `<p style="margin:6px 0;font:700 ${i ? 17 : 24}px ui-monospace,Consolas,monospace;color:${i ? "#9aa4b5" : "#fff"};user-select:all">${esc(u)}</p>`).join("") : `<p style="color:#ff8a80">O PC não está em nenhuma rede. Ligue o Wi-Fi.</p>`}
     <ol style="margin:12px 0 0;padding-left:20px;color:#c9d1dd;font-size:14px">
-      <li>Na primeira vez o Safari avisa "Esta conexão não é privada": toque em <b>Mostrar Detalhes</b> e em <b>visitar este site</b> (o certificado é deste PC).</li>
+      ${site ? "" : `<li>Na primeira vez o Safari avisa "Esta conexão não é privada": toque em <b>Mostrar Detalhes</b> e em <b>visitar este site</b> (o certificado é deste PC).</li>`}
       <li>Vire o celular de lado, toque em <b>Começar</b> e permita o movimento: o celular vira o volante. <b>CAL</b> zera o centro.</li>
       <li>Dica: no Safari, Compartilhar → <b>Adicionar à Tela de Início</b>, e ele abre como um app, em tela cheia.</li>
     </ol>

@@ -3,19 +3,18 @@
    Uso: node ferramentas/tiro-frontline.js <pasta dist/ do Riposte> [saída = public/tiro]
    O que NÃO é MIT no Riposte fica de fora ou é trocado aqui (NOTICE.md deles):
    - nome e logo → "Tiro da Galera" e um logo nosso; ícones, capa (key art), deck/ e manifest ficam de fora;
-   - músicas do Suno (menu, subida de nível, vitória, derrota) → sem música;
-   - som de acerto (flashkit) → um clique gerado aqui;
+   - músicas do Suno (uso não comercial: a Vila é) e som de acerto (flashkit): ficam os deles;
    - animações Mixamo: ainda as deles (fase 3: refazer pela nossa conta, ferramentas/animacoes-mixamo.mjs).
    Também: contas desligadas (a API deles não existe aqui, e /api/ é da Vila), sem service worker e sem a CSP com hashes
    (os scripts mudaram). O online passa pelo relé do nosso servidor (servidor/jogos/tiro-rele.js), sem PeerJS. */
-const fs = require("fs"), path = require("path"), vm = require("vm");
+const fs = require("fs"), path = require("path");
 
 const DIST = path.resolve(process.argv[2] || "");
 const OUT = path.resolve(process.argv[3] || path.join(__dirname, "..", "public", "tiro"));
 if (!fs.existsSync(path.join(DIST, "riposte-frontline.html"))) { console.error("Passe a pasta dist/ do Riposte."); process.exit(1); }
 
 const NOME = "Tiro da Galera";
-const FORA = new Set(["deck", "icons", "menu-theme.mp3", "favicon.ico", "manifest.webmanifest", "sw.js", "robots.txt", "sitemap.xml", "version.json", "riposte-frontline.html"]);
+const FORA = new Set(["deck", "icons", "favicon.ico", "manifest.webmanifest", "sw.js", "robots.txt", "sitemap.xml", "version.json", "riposte-frontline.html"]);
 
 function troca(txt, de, para, { min = 1, todas = true, nome = String(de) } = {}) {
   let n = 0;
@@ -48,29 +47,7 @@ const ui = fs.readdirSync(path.join(OUT, "tex")).find((f) => f.startsWith("socle
 fs.writeFileSync(path.join(OUT, "tex", ui), `(function(s){s.setProperty('--key-art',${JSON.stringify(svgUrl(FUNDO))});s.setProperty('--logo',${JSON.stringify(svgUrl(LOGO))})})(document.documentElement.style);\n`);
 console.log("logo e fundo trocados");
 
-// ---------- músicas ----------
-const socle = fs.readdirSync(path.join(OUT, "tex")).find((f) => /^socle\.[0-9a-f]+\.js$/.test(f));
-{
-  const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync(path.join(OUT, "tex", socle), "utf8"), ctx);
-  delete ctx.window.SOCLE.rankup;
-  fs.writeFileSync(path.join(OUT, "tex", socle), "window.SOCLE=" + JSON.stringify(ctx.window.SOCLE) + ";\n");
-}
-const fin = fs.readdirSync(path.join(OUT, "sfx")).find((f) => f.startsWith("fin."));
-fs.writeFileSync(path.join(OUT, "sfx", fin), 'sfxPack("fin",{"rate":48000,"s":{}});\n'); // sem música de vitória e derrota
-console.log("músicas tiradas");
-
-// ---------- som de acerto: clique curto gerado aqui (int8 a 48 kHz, como o deles) ----------
-function clique() {
-  const n = 2400, b = Buffer.alloc(n); let semente = 7;
-  const rnd = () => ((semente = (semente * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff) * 2 - 1;
-  for (let i = 0; i < n; i++) {
-    const t = i / 48000, env = Math.exp(-t * 90);
-    const v = (0.55 * Math.sin(2 * Math.PI * 2100 * t) + 0.35 * Math.sin(2 * Math.PI * 3400 * t) + 0.25 * rnd() * Math.exp(-t * 400)) * env;
-    b[i] = Math.max(-127, Math.min(127, Math.round(v * 120))) & 0xff;
-  }
-  return b.toString("latin1");
-}
-const HIT = Buffer.from(clique(), "latin1").toString("base64");
+// as músicas (Suno, só uso não comercial, como a Vila) e o som de acerto (flashkit) ficam os deles
 
 // ---------- a página ----------
 let h = fs.readFileSync(path.join(DIST, "riposte-frontline.html"), "utf8");
@@ -78,10 +55,8 @@ h = troca(h, /<meta http-equiv="Content-Security-Policy"[^>]*>\s*/, "", { nome: 
 h = troca(h, /<link rel="(?:canonical|icon|apple-touch-icon|manifest)"[^>]*>\s*/g, "", { nome: "links de ícone/manifest/canonical" });
 h = troca(h, /<meta (?:property="og:|name="twitter:|name="google-site-verification)[^>]*>\s*/g, "", { nome: "metas de compartilhamento" });
 h = troca(h, /<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/g, "", { nome: "ld+json" });
-h = troca(h, /<meta name="menu-music" content="[^"]*">/, '<meta name="menu-music" content="">', { nome: "música do menu" });
 h = troca(h, /<title>[^<]*<\/title>/, `<title>${NOME}</title>\n<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">`, { nome: "título" });
 h = troca(h, /<meta name="description" content="[^"]*">/, `<meta name="description" content="${NOME}: FPS da Vila do Tabba, no navegador, contra bots ou com os amigos.">`, { min: 0, nome: "descrição" });
-h = troca(h, /(const HIT_SAMPLE\s*=\s*')[^']*'/, (_, a) => a + HIT + "'", { nome: "som de acerto" });
 h = troca(h, "if(location.protocol==='file:')return{ok:false,status:0,data:null};", "return{ok:false,status:0,data:null};", { nome: "contas desligadas" });
 h = troca(h, "location.protocol==='file:')break;", "true)break;", { nome: "sem esperar a API" });
 h = troca(h, "if('serviceWorker'in navigator){", "if(false){", { nome: "sem service worker" });
@@ -98,8 +73,8 @@ fs.writeFileSync(path.join(OUT, "index.html"), h);
 
 // ---------- créditos (MIT pede a nota de copyright) ----------
 fs.writeFileSync(path.join(OUT, "CREDITOS.txt"), `${NOME} é feito a partir do código de Riposte: Frontline, de BenDBSS,
-https://github.com/BenDBSS/Riposte-Frontline-Source, sob a licença MIT abaixo. Nome, logo, músicas e som de acerto
-originais não são usados aqui. Texturas e céus: Poly Haven e ambientCG (CC0). three.js: MIT.
+https://github.com/BenDBSS/Riposte-Frontline-Source, sob a licença MIT abaixo. O nome e o logo originais não são usados aqui.
+Músicas: BenDBSS com o Suno (uso não comercial). Som de acerto: flashkit.com. Texturas e céus: Poly Haven e ambientCG (CC0). three.js: MIT.
 Sons em CC BY:
 - Woodpecker by Benboncan (freesound.org/s/66955), CC BY 3.0
 - Waterfall by Samuel Strågefors (straget, freesound.org/s/489073), CC BY

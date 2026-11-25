@@ -8,6 +8,8 @@
 // com image-rendering: pixelated (de preferência em 48, 96 ou 144 px, múltiplos da grade). Os traços dos pilotos de verdade estão em TRACOS
 // (pela sigla); quem não está lá ganha um sorteado pelo nome, sempre o mesmo. O montador do seu piloto usa as mesmas listas.
 
+import { desenharMarca, marcasReaisProntas } from "./f1-marcas.js";
+export { marcasReaisProntas };
 export const N = 48; // a grade
 const CX = 24; // o meio (as colunas 23 e 24 são as do centro)
 
@@ -322,8 +324,7 @@ export function montarInteiro(t, op = {}) {
   L(42, CX - 9, CX - 7, c.funda); L(42, CX + 6, CX + 8, c.funda); // a gola do macacão
   for (let y = 42; y <= 71; y++) { P(CX - 1, y, c.sombra); P(CX, y, c.funda); } // o zíper
   for (let y = 46; y <= 71; y++) { P(CX - 11, y, branco); P(CX + 10, y, mistura(branco, c.funda, 0.35)); } // a faixa branca das laterais
-  for (const [a, b] of [[CX - 9, CX - 4], [CX + 3, CX + 8]]) { L(48, a, b, branco); L(49, a, b, branco); } // os patrocínios do peito
-  L(53, CX - 8, CX - 5, branco); L(53, CX + 4, CX + 7, mistura(branco, c.base, 0.3));
+  if (!op.equipe) { for (const [a, b] of [[CX - 9, CX - 4], [CX + 3, CX + 8]]) { L(48, a, b, branco); L(49, a, b, branco); } L(53, CX - 8, CX - 5, branco); L(53, CX + 4, CX + 7, mistura(branco, c.base, 0.3)); } // os patrocínios do peito (com a equipe, os logos de verdade entram por cima: patrociniosNoMacacao)
   for (let y = 71; y <= 73; y++) L(y, CX - 12, CX + 11, y === 71 ? c.funda : bal.base); L(72, CX - 2, CX + 1, "#9aa0a8"); // o cinto e a fivela
   // os braços e as luvas
   for (let y = 43; y <= 77; y++) { for (let k = 0; k < 4; k++) { P(CX - 19 + k, y, k === 0 ? c.sombra : k === 3 ? c.base : c.luz); P(CX + 15 + k, y, k === 3 ? c.funda : c.sombra); } }
@@ -345,13 +346,49 @@ export function montarInteiro(t, op = {}) {
   for (const [x, y] of fora) g[y][x] = CONTORNO;
   return g;
 }
+// (2026-11-25, o Thiago: "faltam os patrocinadores nas roupas deles") os logos de verdade no macacão, por cima do pixel art, em branco (ou escuro, no
+// macacão claro): dois no peito e um na perna, pelos patrocinadores da equipe
+export const PATROCINIOS_EQUIPE = { mclaren: ["okx", "mastercard"], ferrari: ["hp", "shell"], mercedes: ["petronas", "crowdstrike"], "red-bull": ["oracle", "mobil1"],
+  "racing-bulls": ["visa", "cashapp"], "aston-martin": ["aramco", "valvoline"], williams: ["atlassian", "santander"], audi: ["revolut", "adidas"], alpine: ["alpine", "castrol"],
+  haas: ["moneygram", "haas"], cadillac: ["tmobile", "jimbeam"] };
+const claro = (c) => { const [r, g, b] = hex(c); return r * 0.3 + g * 0.59 + b * 0.11 > 150; };
+function marcaNaCaixa(x, id, cx, cy, w, h, tinta, giro = 0) {
+  x.save(); x.beginPath(); x.translate(cx, cy); x.rotate(giro); x.rect(-w / 2, -h / 2, w, h); x.clip(); x.scale(h * 0.9, h * 0.9);
+  try { desenharMarca(x, id, { tinta }); } catch (e) { /* sem o logo: o macacão fica liso */ }
+  x.restore();
+}
+function patrociniosNoMacacao(x, e, op) {
+  const ps = op.equipe && PATROCINIOS_EQUIPE[op.equipe]; if (!ps) return;
+  const tinta = claro(op.cor || "#3a6fd0") ? "#15161b" : "#f6f7f9";
+  marcaNaCaixa(x, ps[0], (CX - 6.5) * e, 49 * e, 9 * e, 3.2 * e, tinta); marcaNaCaixa(x, ps[1], (CX + 5.5) * e, 49 * e, 9 * e, 3.2 * e, tinta);
+  marcaNaCaixa(x, ps[1], (CX - 6.5) * e, 54 * e, 7 * e, 2.2 * e, tinta);
+  marcaNaCaixa(x, ps[0], (CX + 7) * e, 88 * e, 14 * e, 2.6 * e, tinta, Math.PI / 2); // (a perna)
+}
+// as camadas do corpo inteiro para a vitrine animada (temporada/index.html): o corpo, o braço que acena (o esquerdo do piloto, à direita da tela) e a
+// cabeça, cada uma numa imagem do tamanho todo (transparente fora), e onde ficam os olhos (para piscar), o ombro e o pescoço (os pivôs), em pixels da grade
+export function camadasInteiro(t, op = {}) {
+  if (typeof document === "undefined") return null;
+  const e = op.escala || 6, H = ALTURA_INTEIRO, W = N * e, cv = document.createElement("canvas"); cv.width = W; cv.height = H * e;
+  const x = cv.getContext("2d"), g = montarInteiro(t, op);
+  for (let y = 0; y < H; y++) for (let k = 0; k < N; k++) if (g[y][k]) { x.fillStyle = g[y][k]; x.fillRect(k * e, y * e, e, e); }
+  patrociniosNoMacacao(x, e, op);
+  const parte = (dentro, regra = "nonzero") => { const c = document.createElement("canvas"); c.width = W; c.height = H * e; const y = c.getContext("2d"); y.save(); y.beginPath(); dentro(y); y.clip(regra); y.drawImage(cv, 0, 0); y.restore(); return c.toDataURL("image/png"); };
+  const xb = (CX + 13.5) * e, yb0 = 46 * e, yb1 = 84 * e, yc = 40.5 * e;
+  return {
+    cabeca: parte((y) => y.rect(0, 0, W, yc)),
+    braco: parte((y) => y.rect(xb, yb0, W - xb, yb1 - yb0)),
+    corpo: parte((y) => { y.rect(0, yc, W, H * e - yc); y.rect(xb, yb0, W - xb, yb1 - yb0); }, "evenodd"), // (o retângulo do braço, dentro do outro: o "evenodd" o tira)
+    olhos: [[CX - 8, 21, 4, 3], [CX + 4, 21, 4, 3]], pele: PELES[Math.max(0, Math.min(PELES.length - 1, t.pele | 0))], W: N, H, ombro: [CX + 16.5, 46], pescoco: [CX, 38],
+  };
+}
 export function retratoInteiro(t, op = {}) {
-  const chave = JSON.stringify(["inteiro", t, op.cor || "", op.escala || 4]);
+  const chave = JSON.stringify(["inteiro", t, op.cor || "", op.escala || 4, op.equipe || ""]);
   if (CACHE.has(chave)) return CACHE.get(chave);
   if (typeof document === "undefined") return "";
   const e = op.escala || 4, H = ALTURA_INTEIRO, cv = document.createElement("canvas"); cv.width = N * e; cv.height = H * e;
   const x = cv.getContext("2d"), g = montarInteiro(t, op);
   for (let y = 0; y < H; y++) for (let k = 0; k < N; k++) if (g[y][k]) { x.fillStyle = g[y][k]; x.fillRect(k * e, y * e, e, e); }
+  patrociniosNoMacacao(x, e, op);
   const url = cv.toDataURL("image/png"); CACHE.set(chave, url); return url;
 }
 // a imagem (data URL) do retrato, guardada por combinação; `fundo` pinta o quadrado inteiro atrás (sem fundo, transparente)

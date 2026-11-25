@@ -67,7 +67,7 @@ test("a água sobe com a chuva, seca devagar e é a mesma conta em qualquer orde
   assert.equal(F.aguaEm(c, 30), 0);
   assert.ok(cedo > 0 && cedo < 0.2, "começou a molhar");
   assert.ok(meio > 0.9, "encharcada depois de 200 s de chuva forte");
-  assert.ok(tarde < meio && tarde > 0.4, "secando devagar");
+  assert.ok(tarde < meio && tarde >= 0, "secando"); // (2026-11-25: a secagem ficou mais rápida, AGUA_SECA_S 240 → 120; o limite de 40% de água saiu)
   assert.ok(Math.abs(F.aguaEm({ chove: true, t0: 0, dur: 300, agua0: 0.6, trechos: [] }, 100) - (0.6 - 100 / F.AGUA_SECA_S)) < 1e-9, "a pista molhada seca sem chuva");
   const clima = F.climaEm({ ...c, t0: 1000 }, 1000 + 200 * 1000);
   assert.equal(clima.chuva, 1);

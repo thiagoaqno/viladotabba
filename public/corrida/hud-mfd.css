@@ -542,5 +542,9 @@ button.rs3-c:focus-visible,button.rs3-pe:focus-visible{outline:2px solid var(--e
 .m3-ped-g{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .m3-ped-i{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;text-align:left;font:inherit;color:#fff;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:12px;cursor:pointer;transition:background .15s,border-color .15s}
 .m3-ped-i:hover{background:rgba(255,255,255,.12);border-color:#e10600}
+/* (2026-11-25) o pedido que o engenheiro entendeu (mfd.js confirmarPedido): verde por 2 s, e o MFD desce */
+#hMfd .m3-ped-i.ok{background:linear-gradient(180deg,#22c55e,#16a34a);border-color:#86efac;color:#fff;box-shadow:0 0 18px #22c55e88;animation:pedOk .35s cubic-bezier(.2,1.4,.4,1)}
+#hMfd .m3-ped-i.ok small{color:#ecfdf5}
+@keyframes pedOk{from{transform:scale(.94)}to{transform:none}}
 .m3-ped-i:focus-visible{outline:2px solid #e10600;outline-offset:1px}
 .m3-ped-i b{font-size:13px;font-weight:700}.m3-ped-i small{font-size:11px;color:rgba(255,255,255,.6)}

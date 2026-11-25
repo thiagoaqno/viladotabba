@@ -1,30 +1,27 @@
-# Narrador: a apresentação do grid de largada
-
-O Thiago pediu falas novas do narrador para a apresentação do grid.
-
-## As falas (`narrador/falas.js`)
-
-`FALAS_GRID` tem 36 falas novas, com 991 caracteres no total:
-- `grid-abre-1..3`: as aberturas ("Vamos ao grid de largada!");
-- `grid-pole-1..3`: "Na pole position,", "Largando em primeiro,"…;
-- `grid-lado-1..3`: "Ao lado dele, na primeira fila,"…;
-- `grid-fecha-1..3`: os fechamentos ("Grid formado. Agora é com eles!");
-- `grid-galera-1..2`: "um piloto da galera!";
-- `nome-<SIGLA>`: um nome por piloto de 2026, com a equipe ("Lando Norris, da McLaren!").
-
-`ferramentas/narrador-pistas.js` já gera essas falas junto com as outras: é rodar o `GERAR-VOZES-CORRIDA.bat`, opção 1 (narrador), "só as que faltam". O `--estimar` conta 46 falas a gerar, com 1.518 caracteres; esse total inclui 10 falas que já faltavam antes.
-
-## Como toca
-
-- **`narrador.js`:**
-  - `falarDoGrid(pole, segundo, semente)` monta a frase em pedaços: a abertura, "na pole position", o nome do pole, "ao lado dele", o nome do segundo e o fechamento. A variação de cada pedaço sai da semente do GP, igual para todos da sala.
-  - Quem é da galera, ou corre numa temporada que não é a de 2026, vira "um piloto da galera".
-  - `falarSequencia(ids)` toca os pedaços colados, com 0,12 s entre eles. Ela só corta a fala que está no ar quando **todos** os pedaços carregaram. Sem os mp3, a fala da pista continua, só abaixada, como era antes.
-  - O corte das luzes abaixa o volume de todas as partes.
-- **`transmissao.js`:** no começo do bloco do grid, o narrador abaixa a fala da pista e chama `falarDoGrid` com a primeira fila.
-
-A novidade deste PR vai no PR que conserta o `novidades.json` da `main`, para os dois não mexerem nas mesmas linhas.
-
-## Conferido
-
-A página carrega sem erros num servidor de teste. A voz não foi ouvida: os mp3 ainda não existem.
+`# Notícias da carreira com os retratos em pixel art: figurinhas, duelos e o pódio
+`
+`O Thiago pediu que os retratos novos dos pilotos rendessem mais notícias e animações.
+`
+`## As figurinhas (`temporada/stories.js` `figurinhas`, `stories.css`)
+`
+`- **Figurinha:** é um adesivo com o retrato em pixel art, a borda na cor da equipe com contorno branco e um brilho que passa a cada 2,6 s. Ela entra com um "pop" girando, logo depois que o card abre.
+`- **Notícias com um piloto:** o líder do campeonato (ou você, quando lidera), o destaque do GP, a volta mais rápida e o box mais rápido ganham a figurinha dele.
+`- **Duelos:** o rival na tabela e o duelo com o companheiro de equipe mostram as duas figurinhas frente a frente. Cada uma entra de um lado, e o "VS" aparece no meio, crescendo.
+`- **Seu retrato:** é o do montador (`lerPixel`), com o macacão da sua equipe.
+`
+`## Notícias novas
+`
+`- **"Pódio do GP":** os três primeiros do último GP caem nos degraus, nesta ordem: o 3º, o 2º e o 1º, no degrau dourado do meio. O texto vem em cima ("Verstappen no topo, Leclerc e Norris ao lado").
+`- **"Pole do GP":** quem largou em 1º no último GP, pela análise do GP (posição no grid = 1), com a figurinha dele.
+`- **Textos:** as situações novas `podio_gp` e `pole` têm títulos e textos que se combinam (`stories-textos.js`), como as outras.
+`
+`## Os retratos na página da carreira (`temporada/index.html`)
+`
+`O `window.PixelPiloto.porId(id, cor)` devolve o retrato de um piloto da tabela, pela sigla do grid do ano: o desenhado, para os 22 de 2026. Com "voce", devolve o seu, do montador. Sem a página pronta, a notícia sai sem figurinha.
+`
+`## Conferido
+`
+`- A página da carreira carrega e entrega os retratos.
+`- Montei uma prévia estática do pódio e do duelo e acertei dois problemas: um nome de classe repetido, \`.st-vs\`, que desenhava um anel em volta da figurinha (o meu virou \`.st-pxvs\`), e o duelo que cobria o título.
+`
+`A novidade fica para depois do #966, que conserta o \`novidades.json\` da \`main\`.

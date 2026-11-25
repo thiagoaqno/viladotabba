@@ -75,6 +75,14 @@
     window.dispatchEvent(new Event("capacete:pronto"));
   </script>
   <script type="module">
+    // (2026-11-25) os retratos em pixel art para as notícias (stories.js pxDe): os pilotos da tabela pelo id (a sigla do grid do ano) e o seu, do montador
+    import { retratoDoJogador, retrato, tracosSorteados } from "/corrida/pixel-piloto.js";
+    import { lerPixel } from "/corrida/piloto-pixel-editor.js";
+    window.PixelPiloto = { porId(id, cor) {
+      const P = window.F1Pilotos, pl = P && P.PILOTOS.find((p) => p.id === id), eq = pl && P.EQUIPES[pl.equipe];
+      if (id === "voce") return retrato(lerPixel() || tracosSorteados("voce"), { cor: cor || "#e10600" });
+      return pl ? retratoDoJogador({ sigla: pl.sigla, nomeCompleto: pl.nome, equipe: pl.equipe, bot: true }, eq && eq.cor) : "";
+    } };
     // (2026-11-25) o montador do seu piloto em pixel art na aba "Meu piloto" da Central (central.js chama window.PilotoCarreira.montar no lugar marcado).
     // Fica guardado neste navegador e vai para a pista na próxima corrida (piloto-pixel-editor.js sincronizarPixel)
     import { montarMontador } from "/corrida/piloto-pixel-editor.js";

@@ -51,11 +51,12 @@ function encaixar(el, torre, d, altura, embaixo = false) {
 
 // o: { linhas, ver, m, batalha (o texto do card de distância ou null), kmh, marcha, carga, ersAtivo, fase }
 export function hudTv(o) {
-  const raiz = $("race"), on = estiloHud() === "tv";
+  // (2026-11-25, o Thiago: "o card dele deve aparecer na torre quando for expandida") nos outros estilos, com a torre completa, só o cartão do piloto
+  const raiz = $("race"), on = estiloHud() === "tv", soCartao = !on && o.compacta === false;
   if (raiz) raiz.classList.toggle("hud-tv", on);
-  if (!on) { // (saiu do estilo no meio da corrida: as linhas perdem o espaço das faixas)
+  if (!on && !soCartao) { // (saiu do estilo no meio da corrida: as linhas perdem o espaço das faixas)
     if (st.ligado) { st.ligado = false; for (const d of $("tLinhas")?.children || []) { d.style.marginTop = d.style.marginBottom = ""; if (d._v) delete d._v["data-tv-m"]; } for (const id of ["tvBatTit", "tvBatGap", "tvCartao", "hTvLider"]) { const e = $(id); if (e) e.hidden = true; } }
-    return;
+    st.compactaAnt = o.compacta; return;
   }
   st.ligado = true;
   montar();
@@ -68,7 +69,7 @@ export function hudTv(o) {
   // a batalha: sigla|equipe|sigla|equipe|segundos|posição|posição|legenda
   const tit = $("tvBatTit"), gap = $("tvBatGap"), cart = $("tvCartao");
   let bat = null;
-  if (o.batalha && corrida) {
+  if (on && o.batalha && corrida) {
     const [, , , , seg, p1, p2] = String(o.batalha).split("|");
     const a = linhaDe(box, linhas, ver, (l) => String(l.pos) === String(p1)), b = linhaDe(box, linhas, ver, (l) => String(l.pos) === String(p2));
     if (a && b && b.k === a.k + 1) bat = { a, b, seg, p1 };
@@ -79,6 +80,8 @@ export function hudTv(o) {
     if (st.pos != null && st.pos !== eu.l.pos) st.cartaoAte = agora + CARTAO_MS;
     st.pos = eu.l.pos;
   } else if (!eu) st.pos = null;
+  if (st.compactaAnt === true && o.compacta === false) st.cartaoAte = agora + CARTAO_MS; // (a torre acabou de ser expandida: o seu cartão abre)
+  st.compactaAnt = o.compacta;
   const cartao = eu && agora < st.cartaoAte && !(bat && (bat.a.d === eu.d)) ? eu : null; // (com a batalha logo embaixo da sua linha, fica a batalha)
   if (bat) { abre(bat.a.d, TIT_H, 0); abre(bat.b.d, GAP_H, 0); }
   if (cartao) { const prox = box[cartao.k + 1]; if (prox && !prox.classList.contains("hidden")) abre(prox, CARTAO_H, 0); else abre(cartao.d, 0, CARTAO_H); }
@@ -103,7 +106,7 @@ export function hudTv(o) {
   } else cart._chave = null;
   // ---- o novo líder (só na corrida, depois da primeira volta do líder)
   const lid = linhas[0], lider = $("hTvLider");
-  if (corrida && lid) {
+  if (on && corrida && lid) {
     const p = jogador(lid.id);
     if (st.lider != null && st.lider !== lid.id && p && p.laps >= 1) {
       const eq = lid.equipe || p.equipe;

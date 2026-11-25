@@ -63,6 +63,16 @@ T.aoTrocarEscala((real) => {
   for (const [k, m] of Object.entries(real ? MARGENS_REAIS : MARGENS_ANTIGAS)) TRANSITO_NIVEL[k].margem = m;
 }); // (o difícil disputa como o médio: só o ritmo é maior, sem jogar ninguém para fora)
 // a distância (u) até o ponto em que o perfil exige frear a partir da velocidade `v` (0: já freando; Infinity: nada nos próximos 540 u)
+// (2026-11-24, o Thiago: "saída de curva, reta longa na frente, você tem bateria: já sai da curva com o ERS ligado e coloca de lado para ultrapassar")
+// o tamanho da reta (em u) que começa até SAIDA_PONTOS pontos à frente; 0 se não há reta logo ali. Reta: curvatura abaixo de 1/1500 (a mesma do ERS).
+// As corridas de pontos retos ficam guardadas no perfil (pf.retas), contadas de trás para a frente uma vez só.
+const SAIDA_PONTOS = 30, RETA_K = 1 / 1500;
+function retaAdiante(pf, i) {
+  const n = pf.n;
+  if (!pf.retas) { const r = new Int32Array(n); for (let volta = 0; volta < 2; volta++) for (let j = n - 1; j >= 0; j--) r[j] = pf.kf[j] < RETA_K ? Math.min(n, 1 + r[(j + 1) % n]) : 0; pf.retas = r; }
+  for (let k = 0; k <= SAIDA_PONTOS; k++) { const c = pf.retas[(i + k) % n]; if (c > 0) return c * STEP; }
+  return 0;
+}
 function distanciaDaFreada(fis, n, i, v) { const lim = v * 0.9; for (let k = 0; k <= 90; k++) if (fis[(i + k) % n] < lim) return k * STEP; return Infinity; }
 // o lado de dentro da próxima curva de verdade (+1: lado de lat positivo; -1; 0 sem curva nos próximos ~600 u)
 function ladoDeDentro(pf, i) { for (let k = 0; k <= 100; k++) { const j = (i + k) % pf.n; if (pf.kf[j] > 1 / 400) return pf.linha.sinal[j]; } return 0; }
@@ -200,13 +210,16 @@ function transito(room, p, ia, pf, i, baseLat, maxLat, vLivre = 0, plano = {}) {
     }
     const limiteLento = 40; // o tratamento especial de um carro quase parado não é um limite de velocidade para atacar
     const curvaDisputavel = monaco && !!alvo;
-    if (!ia.ult && !emergenciaSemEspaco && alvo && now > (ia.ultAte || 0) && (!monaco || alvo.dist < ATAQUE_PERTO_MONACO) && (monaco || reta || alvo.ov < limiteLento || (preso && leve) || dFreio === Infinity)) {
+    // o ataque na saída (passoF1 manda `plano.saidaReta`: saindo de curva para uma reta longa, com bateria): parte para o lado já na saída, com o carro
+    // da frente a até SAIDA_PERTO carros, sem esperar ter diferença de velocidade (ela vem do ERS ligado desde a saída)
+    const saidaAtaque = !!plano.saidaReta && !!alvo && alvo.frente < L_CARRO * SAIDA_PERTO && k[i] < 1 / 600;
+    if (!ia.ult && !emergenciaSemEspaco && alvo && now > (ia.ultAte || 0) && (!monaco || alvo.dist < ATAQUE_PERTO_MONACO) && (monaco || reta || saidaAtaque || alvo.ov < limiteLento || (preso && leve) || dFreio === Infinity)) {
       // Usa a velocidade que teria com pista livre: depois de alcançar o carro o freio de trânsito já reduziu ia.v.
       const fecha = Math.max(ia.v, vLivre) - alvo.ov, lento = alvo.ov < limiteLento;
       // quanto tempo até emparelhar (o bico no meio do outro carro; a mudança de linha leva ~0,9 s em paralelo) contra o tempo até frear
       const tAlcance = Math.max(0.9, (alvo.frente - L_CARRO * 0.5) / Math.max(fecha, 10)), tFreio = dFreio / Math.max(ia.v, 30);
       const chega = lento || dFreio === Infinity || tAlcance < tFreio * estilo.antec || curvaDisputavel, foraDaFreada = lento || dFreio > 30 || curvaDisputavel;
-      const querPassar = monaco ? (fecha > estilo.diferencaMinima * 0.5 || (ia.v < 12 && alvo.ov < 12)) : ((fecha > estilo.diferencaMinima && ia.v > 30) || (preso && (ia.v > 30 || lento)) || (ia.v < 12 && alvo.ov < 12));
+      const querPassar = saidaAtaque || (monaco ? (fecha > estilo.diferencaMinima * 0.5 || (ia.v < 12 && alvo.ov < 12)) : ((fecha > estilo.diferencaMinima && ia.v > 30) || (preso && (ia.v > 30 || lento)) || (ia.v < 12 && alvo.ov < 12)));
       // (2026-11-16, o Thiago: "eles só entram no modo ultrapassagem se tiverem bateria, exceto na garoa e na chuva") sem ERS_MANOBRA de bateria o
       // robô não parte para a manobra: fica atrás guardando energia. Na garoa e na chuva a bateria não conta (passa quando quiser), e um carro quase
       // parado à frente sempre pode ser passado.
@@ -303,4 +316,5 @@ const ERS_MANOBRA = +(process.env.ROBO_ERS_MANOBRA ?? 0.3);
 // ataque (corrida-estilos.js, 0 a 1, com a pressão do campeonato): o mais agressivo (1) parte com 18%, o do meio (0,5) com 30%, o mais cauteloso (0) espera 42%
 const minimoParaAtacar = (p) => { const a = p && p.piloto ? Estilos.dePiloto(p.piloto).ataque : 0.5; return ERS_MANOBRA * (1.4 - 0.8 * Math.max(0, Math.min(1, Number.isFinite(a) ? a : 0.5))); }; // a bateria mínima para partir para uma ultrapassagem (fora da chuva)
 
-module.exports = { get L_CARRO() { return L_CARRO; }, forcaDoContato, ALEM_MONACO, ERS_ATAQUE, ERS_DEFESA, TRANSITO_NIVEL, distanciaDaFreada, ladoDeDentro, transito, minimoParaAtacar };
+const SAIDA_PERTO = 5; // (carros: ~1 s a 200 km/h)
+module.exports = { retaAdiante, get L_CARRO() { return L_CARRO; }, forcaDoContato, ALEM_MONACO, ERS_ATAQUE, ERS_DEFESA, TRANSITO_NIVEL, distanciaDaFreada, ladoDeDentro, transito, minimoParaAtacar };

@@ -1,23 +1,17 @@
-# Tiro da Galera: o "Perfil" do menu do jogo abre o perfil da Vila
+# Tiro da Galera: volume próprio para a voz do rádio
 
-O Thiago clicou em Perfil no menu do jogo e caiu na tela de contas do site original, que aqui dizia "Aqui o jogo não tem
-contas". O perfil da Vila (#995) estava num botão separado, no canto de baixo.
+O Thiago pediu para separar a voz do "narrador" do resto dos sons. No jogo original, as falas do rádio só tinham liga/desliga e
+saíam no mesmo volume geral dos tiros.
 
 ## O que mudou
 
-- **O cartão "Perfil" do menu do jogo agora é o perfil da Vila.** Ele mostra o nome e o nível ("Thiago · Nível 7 · ver meu
-  perfil"), ou "Criar perfil" para quem ainda não tem. Clicar nele abre a janela do perfil (criar, entrar com o código, código
-  para outro aparelho, placar) no lugar da tela de contas.
-  - `ferramentas/tiro-frontline.js` faz o `uiGo('profile')` e o `acctChip` do jogo perguntarem ao `window.tiroPerfil`.
-  - O `perfil-galera.js` atualiza o cartão quando o nome ou o nível mudam.
-- **O botão separado do canto** só aparece se o cartão do jogo não estiver na tela. O "🏁 Corrida" do programa de PC continua.
-- **Saiu o script de estatísticas de visita do Vercel** (`/_vercel/insights`), do site original. Aqui ele dava 404, e assim
-  nada de visita sai para fora.
+- **Opções > Áudio > "Volume da voz do rádio"**, logo abaixo de "Anúncios de voz". Vai de 0 a 150% por cima do volume geral,
+  então dá para deixar a voz mais alta que os tiros ou bem baixinha. O padrão é 100%, que é o som de antes.
+- **O controle vale para a fala e para o chiado de abrir e fechar o rádio.** O sinal musical que toca antes do anúncio não muda.
+- **O valor fica nos ajustes do jogo** (`dc_settings.vozVol`), então vai junto com o perfil da Vila para os outros aparelhos.
+- Tudo é feito por `ferramentas/tiro-frontline.js`, com cinco trocas no código pronto do jogo.
 
 ## Conferido no navegador
 
-Num servidor local:
-- o cartão mostrava "Criar perfil", e clicar nele abriu a janela do perfil, com o jogo parado no menu principal;
-- o perfil foi criado e o código apareceu;
-- o cartão passou a mostrar "Teste · Nível 1 · ver meu perfil";
-- no console, nenhum erro de script.
+Num servidor local, o controle apareceu na aba Áudio com 100%. Coloquei em 130%: o jogo passou a usar o valor novo e ele ficou
+guardado no navegador.

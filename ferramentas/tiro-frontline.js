@@ -140,6 +140,15 @@ const ANN={q:[],until:0,last:new Map()};`, { nome: "voz da classe" });
   h = troca(h, "sfxPlay('v_'+a.line,o,t+0.12,{gain:1.15})", "sfxPlay(vozDaClasse(a.line),o,t+0.12,{gain:1.15})", { nome: "anúncio na voz da classe" });
   h = troca(h, "function giveLoadout(){classFix();", "function giveLoadout(){classFix();setTimeout(vozPreparar,0);", { nome: "baixa a voz ao nascer" });
 }
+// o volume só da voz do rádio (o "narrador": as falas e o chiado de abrir e fechar), separado do resto dos sons:
+// Opções > Áudio, logo abaixo de "Anúncios de voz", de 0 a 150% (por cima do volume geral)
+h = troca(h, "volume:0.8,music:0.5", "volume:0.8,music:0.5,vozVol:1", { todas: false, nome: "volume da voz (padrão)" });
+h = troca(h, "['check','voice',_t('Annonces vocales (séries, objectifs)')]", "['check','voice',_t('Annonces vocales (séries, objectifs)')],['range','vozVol','Volume da voz do rádio',0,1.5,0.05,(v)=>Math.round(v*100)+PCT]", { nome: "volume da voz (opção)" });
+const VV = "(Settings.vozVol==null?1:Settings.vozVol)";
+h = troca(h, /sfxPlay\((vozDaClasse\(a\.line\)|'v_'\+a\.line),o,t\+0\.12,\{gain:1\.15\}\)/, (_, v) => `sfxPlay(${v},o,t+0.12,{gain:1.15*${VV}})`, { nome: "volume da voz (fala)" });
+h = troca(h, "sfxPlay('r_on',o,t,{gain:0.55})", `sfxPlay('r_on',o,t,{gain:0.55*${VV}})`, { nome: "volume da voz (chiado de abrir)" });
+h = troca(h, "sfxPlay('r_off',o,end+0.04,{gain:0.5})", `sfxPlay('r_off',o,end+0.04,{gain:0.5*${VV}})`, { nome: "volume da voz (chiado de fechar)" });
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

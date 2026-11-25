@@ -140,6 +140,9 @@ const ANN={q:[],until:0,last:new Map()};`, { nome: "voz da classe" });
   h = troca(h, "sfxPlay('v_'+a.line,o,t+0.12,{gain:1.15})", "sfxPlay(vozDaClasse(a.line),o,t+0.12,{gain:1.15})", { nome: "anúncio na voz da classe" });
   h = troca(h, "function giveLoadout(){classFix();", "function giveLoadout(){classFix();setTimeout(vozPreparar,0);", { nome: "baixa a voz ao nascer" });
 }
+// o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
+fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
+h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });
 h = troca(h, /Riposte: Frontline|Riposte Frontline/g, NOME, { nome: "nome" });
 h = troca(h, /Installer Riposte/g, "Installer " + NOME, { min: 0, nome: "instalador" });
 h = troca(h, /content="Riposte"/g, 'content="Tiro"', { min: 0, nome: "nome curto" });

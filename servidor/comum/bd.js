@@ -597,3 +597,60 @@ const historicoPokemon = (treinador, limite = 20) => bd().prepare("SELECT ator, 
 
 module.exports = { aprenderRitmoCorrida, ritmoAprendidoCorrida, aprenderProximidadeCorrida, proximidadeCorrida, hashesDaTemporadaCorrida, receberTemporadaDoPC, registrarSetorCorrida, setoresCorrida, perfisPilotoCorrida, salvarPerfilPilotoCorrida, reporPerfilPilotoCorrida, melhorVoltaCorrida, melhoresTracadosCorrida, ritmoCorrida, salvarVoltaCorrida, registrarRecordeCorrida, recordesCorrida, treinadoresPokemon, capturaPorId, nomeDoTreinador, editarCapturaAdmin, darPokemonAdmin, tirarPokemonAdmin, nivelDeTodosAdmin, historicoPokemon, guardarCaptura, registrarNaPokedex, garantirIniciais, pokemonsDe, atualizarPokemon, pokedexDe, capturasDe, rankingCapturas, abrir, fechar, migrar, timesPokemonGinasio, salvarTimePokemonGinasio, reporTimePokemonGinasio, fotoJogador, guardarFotoJogador, criarCarreira, carreiraPorToken, recuperarCarreira, salvarCarreira, novoCodigoDe, excluirCarreira, salvarSalaCarreira, salvarEdicaoModeracao, listarCarreiras, carreiraPorId, salvarEdicaoCarreira, historicoModeracao, salasCarreira, apagarSalaCarreira, limparCodigo, cartasSaidas, marcarCarta, zerarCartas, chaveTecnico, guardarConquistas, estante, guardarEstanteCorrida, estanteCorrida };
 Object.assign(module.exports, { guardarReplayCorrida, replayCorrida, apagarReplaysCorrida, excluirTemporadaCorrida, criarTemporadaCorrida, importarTemporadaCorrida, temporadaCorridaPorToken, temporadaCorridaPorId, recuperarTemporadaCorrida, salvarTemporadaCorrida, novoCodigoTemporadaCorrida, salvarSalaTemporadaCorrida, salasTemporadaCorrida, apagarSalaTemporadaCorrida });
+
+// ---------- perfis do Tiro da Galera (migracoes/056-tiro-perfis.sql) ----------
+// Igual às carreiras: o token fica no navegador, o código de recuperação serve para outro aparelho, o banco só guarda os hashes.
+// dados: o progresso que o jogo guarda no navegador ({ chave: texto }), copiado pelo public/tiro/perfil.js.
+function lerPerfilTiro(linha) {
+  if (!linha) return null;
+  let dados = {};
+  try { dados = JSON.parse(linha.dados); } catch {}
+  return { id: Number(linha.id), nome: linha.nome, dados, atualizadoEm: Number(linha.atualizado_em) };
+}
+function criarPerfilTiro(nome, dados = {}) {
+  const token = novoToken(), recuperacao = novoCodigoRecuperacao(), agora = Date.now();
+  const r = bd().prepare("INSERT INTO tiro_perfis (token_hash, recuperacao_hash, nome, dados, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(hash(token), hash(recuperacao), String(nome).slice(0, 24), JSON.stringify(dados), agora, agora);
+  return { id: Number(r.lastInsertRowid), token, recuperacao };
+}
+function perfilTiroPorToken(token) {
+  if (!tokenValido(token)) return null;
+  return lerPerfilTiro(bd().prepare("SELECT * FROM tiro_perfis WHERE token_hash = ?").get(hash(token)));
+}
+// entrar em outro aparelho: o código vale e nasce um token novo para este navegador (o do outro aparelho continua valendo:
+// a mesma pessoa joga no PC e no celular)
+function recuperarPerfilTiro(codigo) {
+  const c = limparCodigo(codigo);
+  if (c.length !== 12) return null;
+  const linha = bd().prepare("SELECT * FROM tiro_perfis WHERE recuperacao_hash = ?").get(hash(c));
+  return linha ? { ...lerPerfilTiro(linha), token: novoTokenTiro(linha.id) } : null;
+}
+// um aparelho a mais: os tokens extras ficam numa tabela à parte para cada aparelho ter o seu
+function novoTokenTiro(id) {
+  const token = novoToken();
+  bd().prepare("INSERT INTO tiro_perfis_aparelhos (perfil, token_hash, criado_em) VALUES (?, ?, ?)").run(id, hash(token), Date.now());
+  return token;
+}
+function perfilTiroPorQualquerToken(token) {
+  const p = perfilTiroPorToken(token); if (p || !tokenValido(token)) return p;
+  const a = bd().prepare("SELECT perfil FROM tiro_perfis_aparelhos WHERE token_hash = ?").get(hash(token));
+  return a ? lerPerfilTiro(bd().prepare("SELECT * FROM tiro_perfis WHERE id = ?").get(a.perfil)) : null;
+}
+function salvarPerfilTiro(id, dados, nome) {
+  const r = nome ? bd().prepare("UPDATE tiro_perfis SET dados = ?, nome = ?, atualizado_em = ? WHERE id = ?").run(JSON.stringify(dados), String(nome).slice(0, 24), Date.now(), id)
+    : bd().prepare("UPDATE tiro_perfis SET dados = ?, atualizado_em = ? WHERE id = ?").run(JSON.stringify(dados), Date.now(), id);
+  return r.changes > 0;
+}
+function novoCodigoTiro(id) {
+  const recuperacao = novoCodigoRecuperacao();
+  const r = bd().prepare("UPDATE tiro_perfis SET recuperacao_hash = ?, atualizado_em = ? WHERE id = ?").run(hash(recuperacao), Date.now(), id);
+  return r.changes > 0 ? recuperacao : null;
+}
+// o placar da galera: nome e o nível (o XP do jogador, px, fica dentro do cod_arsenal)
+function placarTiro() {
+  return bd().prepare("SELECT nome, dados, atualizado_em FROM tiro_perfis ORDER BY atualizado_em DESC LIMIT 100").all().map((l) => {
+    let px = 0; try { px = Number(JSON.parse(JSON.parse(l.dados).cod_arsenal || "{}").px) || 0; } catch {}
+    return { nome: l.nome, xp: Math.max(0, Math.floor(px)), em: Number(l.atualizado_em) };
+  });
+}
+Object.assign(module.exports, { criarPerfilTiro, perfilTiroPorToken: perfilTiroPorQualquerToken, recuperarPerfilTiro, salvarPerfilTiro, novoCodigoTiro, placarTiro });

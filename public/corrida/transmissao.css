@@ -46,28 +46,29 @@
 .tvDuas li.pole{background:linear-gradient(90deg,#c9a22780,#c9a22722)}
 .tvDuas li.pole em{color:#ffd966}
 /* o grid em pares (2026-11-25): os dois cards da fila, com o retrato em pixel art, embaixo à esquerda */
-.tvPares{top:auto;bottom:clamp(70px,14vh,130px);width:min(760px,calc(100% - 20px))}
+.tvPares{top:auto;left:0;right:0;margin:0 auto;bottom:clamp(64px,11vh,120px);width:min(1180px,calc(100% - 20px));padding:16px 20px 20px} /* (centrado sem transform: o .tvCarta.on zera o transform) */
+.tvPares .tvKicker{font-size:clamp(14px,1.6vw,20px)}
 .tvpFila{color:#ffffffa8;font-weight:700}
-.tvpDupla{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.tvpDupla{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px}
 .tvpDupla.entra .tvpCard{animation:tvpEntra .42s cubic-bezier(.2,1,.3,1) both}.tvpDupla.entra .tvpCard+.tvpCard{animation-delay:.08s}
 @keyframes tvpEntra{from{opacity:0;transform:translateY(14px);clip-path:inset(0 100% 0 0)}to{opacity:1;transform:none;clip-path:inset(0 0 0 0)}}
-.tvpCard{--c:#888;position:relative;display:flex;align-items:flex-end;gap:10px;min-height:104px;padding:0 12px 0 6px;overflow:hidden;text-transform:none;
+.tvpCard{--c:#888;position:relative;display:flex;align-items:flex-end;gap:16px;min-height:clamp(120px,24vh,212px);padding:0 18px 0 8px;overflow:hidden;text-transform:none;
   background:linear-gradient(105deg,color-mix(in srgb,var(--c) 62%,#06070b) 0%,color-mix(in srgb,var(--c) 26%,#0b0c10) 55%,#0b0c10 100%);border-bottom:3px solid var(--c)}
 .tvpCard.eu{outline:2px solid #fff}
-.tvpFoto{width:96px;height:96px;image-rendering:pixelated;flex:none;align-self:flex-end}
-.tvpTxt{display:flex;flex-direction:column;min-width:0;padding:8px 0 10px;line-height:1.1}
-.tvpPos{font:900 34px/1 var(--display,"Barlow Condensed","Titillium Web",system-ui,sans-serif);color:#fff;text-shadow:0 2px 6px #0008}
-.tvpTxt small{font-size:13px;font-weight:600;opacity:.85}
-.tvpTxt strong{font-size:22px;font-weight:800;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tvpTxt em{display:flex;align-items:center;gap:6px;font-style:normal;font-size:12.5px;font-weight:600;opacity:.92;white-space:nowrap}
-.tvpLogo{width:18px;height:16px;object-fit:contain}
-.tvpTag{position:absolute;top:8px;right:10px;padding:2px 8px;font:800 12px var(--f1-fonte,system-ui,sans-serif);font-style:normal;letter-spacing:.1em;color:#1a1300;background:#ffd966}
+.tvpFoto{width:clamp(112px,22vh,192px);height:clamp(112px,22vh,192px);image-rendering:pixelated;flex:none;align-self:flex-end}
+.tvpTxt{display:flex;flex-direction:column;min-width:0;padding:12px 0 16px;line-height:1.08}
+.tvpPos{font:900 clamp(40px,7vh,76px)/1 var(--display,"Barlow Condensed","Titillium Web",system-ui,sans-serif);color:#fff;text-shadow:0 2px 6px #0008}
+.tvpTxt small{font-size:clamp(13px,2.2vh,20px);font-weight:600;opacity:.85}
+.tvpTxt strong{font-size:clamp(22px,4.6vh,44px);font-weight:800;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvpTxt em{display:flex;align-items:center;gap:8px;font-style:normal;font-size:clamp(12.5px,2vh,18px);font-weight:600;opacity:.92;white-space:nowrap}
+.tvpLogo{width:clamp(18px,3vh,28px);height:clamp(16px,2.6vh,24px);object-fit:contain}
+.tvpTag{position:absolute;top:12px;right:14px;padding:3px 12px;font:800 clamp(12px,1.9vh,17px) var(--f1-fonte,system-ui,sans-serif);font-style:normal;letter-spacing:.1em;color:#1a1300;background:#ffd966}
 /* pular e a espera */
 .tvPular{position:absolute;right:clamp(10px,3vw,40px);bottom:clamp(14px,5vh,44px);padding:9px 18px;font:800 14px var(--f1-fonte,system-ui,sans-serif);letter-spacing:.12em;text-transform:uppercase;color:#fff;background:#000a;border:1px solid #fff9;border-radius:0;cursor:pointer}
 .tvPular:hover{background:#e10600}
 .tvEspera{position:absolute;left:50%;bottom:clamp(14px,5vh,44px);transform:translateX(-50%);z-index:20;padding:7px 16px;background:#0a0c12ee;border-left:4px solid #e10600;font:700 13px var(--f1-fonte,system-ui,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#fff;pointer-events:none;white-space:nowrap}
 @media (max-width:700px){
-  .tvPares{top:auto;bottom:96px}.tvpDupla{gap:6px}.tvpCard{min-height:76px;gap:6px}.tvpFoto{width:64px;height:64px}.tvpPos{font-size:24px}.tvpTxt strong{font-size:15px}.tvpTxt em{font-size:11px}
+  .tvPares{top:auto;bottom:96px;left:8px;right:8px;width:auto}.tvpDupla{gap:6px}.tvpCard{min-height:76px;gap:6px}.tvpFoto{width:64px;height:64px}.tvpPos{font-size:24px}.tvpTxt strong{font-size:15px}.tvpTxt em{font-size:11px}
   .tvCarta{right:8px;left:8px;width:auto;top:42px;padding:10px 12px 12px}
   .tvGrid,.tvCamp{left:8px;right:8px;width:auto}
   .tvCarta dl{gap:8px}

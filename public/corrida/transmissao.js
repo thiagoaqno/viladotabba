@@ -241,7 +241,7 @@ function desenharMini(cv, tr) {
 }
 
 // ---------- a sequência ----------
-const BASE = { pista: 7, clima: 3, camp: 5.5, grid: 9.5 }; // segundos; encolhem se faltar tempo e o grid pega a sobra (2026-11-25: o grid subiu de 5 para 9,5 s, para os pares de cards)
+const BASE = { pista: 6, clima: 2.5, camp: 4.5, grid: 12 }; // segundos; encolhem se faltar tempo e o grid pega a sobra (2026-11-25: o grid subiu de 5 para 12 s, para os pares de cards; a avulsa passou de 8 para 20 s)
 const TITULO = { pista: "O circuito", clima: "O clima", camp: "O campeonato", grid: "O grid de largada" };
 const MIN_S = 7; // com menos que isso para o fim da transmissão, não vale começar
 let ultimo = null;

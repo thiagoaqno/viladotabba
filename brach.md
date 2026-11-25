@@ -9,6 +9,7 @@ O Thiago pediu que, na apresentação da pista, a ordem dos pilotos passasse de 
   - a posição grande, o nome e o sobrenome;
   - o logo e o nome da equipe e o número do carro;
   - o seu card ganha um contorno branco.
-- **Tempos dos blocos (`BASE`):** o grid passou de 5 para 9,5 s, para os 11 pares terem tempo de aparecer. A pista passou de 9,5 para 7 s, o clima de 4 para 3 s e o campeonato de 6,5 para 5,5 s. O total é o mesmo (25 s numa temporada), porque quem define é o servidor (`tvAte`).
+- **Tempo (pedido do Thiago: "aumentar o tempo total para uns 20 s, aí dá tempo de exibir tudo com calma"):** a transmissão da corrida avulsa passou de 8 para 20 s (`TV_AVULSA_MS`, `corrida-base.js`); a da temporada continua em 25 s. Os blocos (`BASE`) ficaram assim: pista 6 s, clima 2,5 s, campeonato 4,5 s e grid 12 s (antes 9,5 / 4 / 6,5 / 5). Dá cerca de 1 s por fila; ainda dá para pular.
+- **Os cards grandes e em destaque:** a carta do grid fica centralizada embaixo, com até 1180 px de largura. Cada card tem até 212 px de altura, o retrato até 192 px, a posição até 76 px e o sobrenome até 44 px, tudo escalando com a altura da tela.
 - **CSS (`transmissao.css`):** `.tvPares` e `.tvp*`, com uma versão menor para celular.
 - **Conferido:** montei uma página estática com o CSS e dois cards para ver o visual, e a página do jogo carrega sem erros num servidor de teste. A transmissão em si não foi vista rodando.

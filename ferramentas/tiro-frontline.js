@@ -49,6 +49,46 @@ console.log("logo e fundo trocados");
 
 // as músicas (Suno, só uso não comercial, como a Vila) e o som de acerto (flashkit) ficam os deles
 
+// ---------- vozes do rádio em português (ferramentas/tiro-vozes/*.mp3, feitas por ferramentas/tiro-vozes.js) ----------
+// O jogo carrega o pacote voix_en (é o idioma 'en', que aqui é o português): ele é trocado pelo nosso. Cada mp3 <id>_N vira
+// "v_<id>-N": o motor de som do jogo junta os "-N" do mesmo som e sorteia um a cada anúncio (no celular, só os dois primeiros).
+{
+  const VOZES = path.join(__dirname, "tiro-vozes");
+  const falas = JSON.parse(fs.readFileSync(path.join(VOZES, "falas.json"), "utf8")); delete falas._;
+  const faltam = Object.keys(falas).filter((id) => !fs.existsSync(path.join(VOZES, id + ".mp3")));
+  const pack = fs.readdirSync(path.join(OUT, "sfx")).find((f) => f.startsWith("voix_en."));
+  if (faltam.length) console.log(`vozes: faltam ${faltam.length} de ${Object.keys(falas).length} falas em português (${faltam.slice(0, 4).join(", ")}...): fica a voz em inglês`);
+  else {
+    // duração em amostras a 48 kHz, contada pelos quadros do mp3 (o jogo usa para saber quando a fala acaba)
+    const amostras48 = (b) => {
+      let i = 0;
+      if (b.slice(0, 3).toString() === "ID3") i = 10 + ((b[6] & 127) << 21 | (b[7] & 127) << 14 | (b[8] & 127) << 7 | (b[9] & 127));
+      // camada III: MPEG-1 (1152 amostras por quadro) e MPEG-2/2.5 (576)
+      const BR1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320], BR2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
+      const SR = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+      let seg = 0;
+      while (i + 4 <= b.length) {
+        const v = (b[i + 1] >> 3) & 3;
+        if (b[i] !== 0xff || (b[i + 1] & 0xe0) !== 0xe0 || ((b[i + 1] >> 1) & 3) !== 1 || v === 1) { i++; continue; }
+        const br = (v === 3 ? BR1 : BR2)[b[i + 2] >> 4], s = SR[v][(b[i + 2] >> 2) & 3];
+        if (!br || !s) { i++; continue; }
+        const spf = v === 3 ? 1152 : 576;
+        seg += spf / s; i += Math.floor(spf / 8 * br * 1000 / s) + ((b[i + 2] >> 1) & 1);
+      }
+      return Math.round(seg * 48000);
+    };
+    const s = {}; let n = 0;
+    for (const [id, textos] of Object.entries(falas)) textos.forEach((_, k) => {
+      const f = path.join(VOZES, id + (k ? "_" + (k + 1) : "") + ".mp3"); if (!fs.existsSync(f)) return;
+      const b = fs.readFileSync(f), am = amostras48(b);
+      // [duração, crista, mp3]: a crista só serve para achar o atraso do codificador; com a duração cheia o jogo não corta nada
+      s["v_" + id + (k ? "-" + (k + 1) : "")] = [am, Math.round(am / 3), b.toString("base64")]; n++;
+    });
+    fs.writeFileSync(path.join(OUT, "sfx", pack), "sfxPack(\"voix_en\"," + JSON.stringify({ rate: 44100, s }) + ");\n");
+    console.log(`vozes em português: ${n} falas (${Object.keys(falas).length} anúncios)`);
+  }
+}
+
 // ---------- a página ----------
 let h = fs.readFileSync(path.join(DIST, "riposte-frontline.html"), "utf8");
 h = troca(h, /<meta http-equiv="Content-Security-Policy"[^>]*>\s*/, "", { nome: "CSP com hashes" });

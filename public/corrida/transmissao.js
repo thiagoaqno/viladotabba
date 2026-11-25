@@ -350,7 +350,11 @@ export function quadroTV(race, tr, cam, reduzMov) {
     tv.el.querySelector(".tvRotulo").textContent = TITULO[f.k];
     if (window.Narrador) { // o narrador apresenta a pista junto do voo; no grid ele abaixa; as luzes cortam (narrador.js)
       if (f.k === "pista") window.Narrador.falarDaPista(window.Pistas.baseDe(E.S.config.pista), E.S.semente, { cortarEm: race.startAt - ((race.luzes?.espera || 0) + 4) * 1000 - sNow() });
-      else if (f.k === "grid") window.Narrador.abaixar(0.3, 0.6);
+      else if (f.k === "grid") { // (2026-11-25) o narrador apresenta a primeira fila do grid, pelo nome (narrador/falas.js GRID e NOMES); sem os mp3, segue a fala da pista abaixada
+        const ano = (E.S.config && E.S.config.ano) || 2026, fila = tv.pares[0] || [], quem = (p) => p && { sigla: siglaDe(p), humano: p.bot === false || ano !== 2026 };
+        window.Narrador.abaixar(0.3, 0.6);
+        if (window.Narrador.falarDoGrid && fila[0]) window.Narrador.falarDoGrid(quem(fila[0]), quem(fila[1]), E.S.semente, { cortarEm: race.startAt - ((race.luzes?.espera || 0) + 4) * 1000 - sNow() });
+      }
     }
   }
   if (f.k === "grid" && tv.pares.length) { // os pares, da pole para trás (a última fila fica no fim, parada)

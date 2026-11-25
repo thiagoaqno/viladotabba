@@ -9,6 +9,7 @@ import { clima } from "./clima.js";
 import { set, montarCentro, atualizarCentro, montarTempo, atualizarTempo, estrategia, minimapaF1, minimapaPertoF1, desenharBanner, montarCrono, desenharCrono } from "./hud-painel.js";
 import { montarMfd, atualizarMfd, acoes } from "./mfd.js";
 import { hudTv } from "./hud-tv.js";
+import { retratoDoJogador } from "./pixel-piloto.js";
 import { atualizarMenuBox } from "./box-menu.js";
 import { tocarCinematica } from "./cinematica.js";
 const cine = { chave: null, tocando: false };
@@ -211,12 +212,20 @@ function iconeCard(tipo) {
   if (t.card && t.icone === "bandeira") return ICONE_CARD.bandeira;
   return A.iconeDe(tipo);
 }
+// o retrato do piloto da sala pela sigla da torre (e a equipe, para desempatar)
+function fotoPorSigla(sigla, equipe) {
+  const T = window.HudTorre, ps = (E.S && E.S.players) || [], p = ps.find((q) => (q.sigla || (T && T.siglaDe ? T.siglaDe(q) : "")) === sigla && (!equipe || !q.equipe || q.equipe === equipe));
+  const eq = p && p.equipe && window.F1Pilotos && window.F1Pilotos.EQUIPES[p.equipe];
+  return p ? retratoDoJogador(p, (eq && eq.cor) || p.color) : "";
+}
 export function htmlCard(tipo, texto) {
   const A = window.AvisosF1, t = A.tipoDe(tipo), fase = E.S && E.S.phase === "quali" ? "QUALI" : "RACE";
   const topo = `<div class="avc-topo">${LOGO_F1}<b>${t.direcao ? "RACE CONTROL" : fase}</b></div>`;
   if (tipo === "batalha") {
     const [s1, e1, s2, e2, gap, p1 = 1, p2 = 2, rot = "Gap"] = String(texto).split("|");
-    return `${topo}<div class="avc-cor avc-bat"><span class="avc-p">${logoEquipe({ equipe: e1, color: "#888" }, "avc-logo")}<b>${h(p1)}. ${h(s1)}</b></span><span class="avc-meio"><small>${h(rot)}</small><b class="avc-gap">+${h(gap)}</b></span><span class="avc-p">${logoEquipe({ equipe: e2, color: "#888" }, "avc-logo")}<b>${h(p2)}. ${h(s2)}</b></span></div>`;
+    // (2026-11-25) o retrato em pixel art de cada um em cima do logo da equipe (pixel-piloto.js)
+    const foto = (s, e) => { const u = fotoPorSigla(s, e); return u ? `<img class="avc-foto" src="${u}" alt="">` : ""; };
+    return `${topo}<div class="avc-cor avc-bat"><span class="avc-p">${foto(s1, e1)}${logoEquipe({ equipe: e1, color: "#888" }, "avc-logo")}<b>${h(p1)}. ${h(s1)}</b></span><span class="avc-meio"><small>${h(rot)}</small><b class="avc-gap">+${h(gap)}</b></span><span class="avc-p">${foto(s2, e2)}${logoEquipe({ equipe: e2, color: "#888" }, "avc-logo")}<b>${h(p2)}. ${h(s2)}</b></span></div>`;
   }
   const corpo = tipo === "vmr" ? '<i class="avc-setas" aria-hidden="true"></i>' : "";
   return `${topo}<div class="avc-cor">${corpo}<span class="avc-txt"><b class="avc-tit">${h(t.titulo || t.rotulo)}</b><small class="avc-sub">${h(texto)}</small></span><span class="avc-ic">${iconeCard(tipo)}</span></div>`;
@@ -501,7 +510,7 @@ function hudF1(m, st, now) {
   const modoErs = HM.modoDoErs({ ativo: !!race.ersAtivo, carga, subindo: t0 - (race.hudHarv || -1e9) < 400 });
   atualizarCentro({ m, kmh, modoErs });
   // o estilo "Transmissão (TV)" (hud-tv.js): a batalha dentro da torre, o cartão do piloto, o novo líder e a caixa de marcha
-  hudTv({ linhas, ver, m, fase: E.S.phase, batalha: (filaAvisos().visiveis(Date.now()).find((a) => a.tipo === "batalha") || {}).texto || null, kmh, marcha: !m ? "" : (kmh < 1 && !race.marcha ? "N" : race.marcha || 1), carga, ersAtivo: !!race.ersAtivo });
+  hudTv({ linhas, ver, m, compacta, fase: E.S.phase, batalha: (filaAvisos().visiveis(Date.now()).find((a) => a.tipo === "batalha") || {}).texto || null, kmh, marcha: !m ? "" : (kmh < 1 && !race.marcha ? "N" : race.marcha || 1), carga, ersAtivo: !!race.ersAtivo });
   atualizarTempo(m, st, now); // o quadro do alto à direita (setores, posição, volta atual, melhor)
   // o MFD e as punições
   const est = estrategia(m, cors, race.hudEsc);

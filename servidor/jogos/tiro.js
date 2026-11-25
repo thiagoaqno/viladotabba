@@ -4,7 +4,7 @@
 // Os tiros são conferidos AQUI: o servidor guarda o último segundo de posições de cada um e "volta no tempo"
 // (compensação de lag) para ver onde o alvo estava na tela de quem atirou, testando paredes, cabeça, corpo e pernas.
 // Quem decide dano, morte, rodada e placar é o servidor.
-const A = require("../../public/tiro/arena.js");
+const A = require("../../public/tiro-antigo/arena.js");
 const { rid, novoCodigo, limparNome: cleanName, ok, falha: fail, contexto, ligarSocket, buscarSala, quemVolta, nomeEmUso, limparSalasParadas, medirPing } = require("../comum/salas.js"); // as peças de sala que todo jogo repete
 const noite = require("./noite.js"); // o placar da Noite da Galera (quem ganhou e quem perdeu cada partida)
 const nomesDe = (room, ids) => ids.map((id) => room.players[id] && room.players[id].name).filter(Boolean);

@@ -1,8 +1,11 @@
-# Torre: o cartão do piloto em todo estilo e os retratos no card de distância
+# Editor do capacete: os capacetes em pixel art como "Padrões"
 
-O Thiago pediu que o card do piloto aparecesse na torre quando ela é expandida, e que a imagem do piloto aparecesse no card que abre sobre a torre.
+O Thiago pediu que os capacetes das folhas de pixel art entrassem no editor de capacete como padrões.
 
-- **Cartão do piloto (`hud-tv.js`):** antes só existia no HUD "Transmissão (TV)". Agora também vale nos outros estilos, com a torre completa (`compacta: false`, passado por `hud.js`). Nesses estilos entra só o cartão: a batalha dentro da torre, o aviso de novo líder e a caixa de marcha continuam só no estilo TV.
-- **Quando o cartão abre:** quando você ganha ou perde posição, e agora também no momento em que você expande a torre. Fica 6 s.
-- **Card de distância (`hud.js`, `htmlCard` "batalha"):** o card que abre sobre o cabeçalho da torre mostra o retrato em pixel art de cada piloto em cima do logo da equipe. O retrato vem de `retratoDoJogador`, buscando o piloto pela sigla. Os pilotos do grid usam o retrato desenhado e os jogadores, o do montador.
-- Conferido: a página carrega sem erros num servidor de teste (Edge sem tela).
+- **`f1-capacetes-padroes.js` (novo):** são 30 padrões, os 22 pilotos do grid e 8 extras que sobraram das folhas. Cada um tem:
+  - o desenho do editor. Os 22 pilotos usam o desenho deles em `f1-capacetes.js`; os extras usam um rodízio de desenhos do editor. Todos estão na lista do servidor (`DESENHOS_CAPACETE`);
+  - as três cores principais, tiradas da imagem em pixel por ferramenta: k-médias no casco, sem o visor e o que é quase preto, em ordem de quanto aparecem;
+  - a viseira escura.
+- **A aba "Padrões" (`capacete-editor-ui.js`):** é a primeira do menu. Mostra a grade com as miniaturas em pixel art e o nome de cada um, e a grade rola. O clique aplica o desenho, as cores e a viseira e volta ao primeiro "Padrão" (variante 0). Depois dá para ajustar à vontade nas outras abas.
+- **Onde aparece:** o editor é o mesmo da sala e da aba Capacete da carreira, então os padrões aparecem nos dois lugares.
+- **Conferido:** num servidor de teste, montei o editor, abri a aba e cliquei no padrão do Norris. Ficaram 30 padrões, e o capacete guardado ficou com o desenho "faixa" e o verde-neon. A página não teve erros.

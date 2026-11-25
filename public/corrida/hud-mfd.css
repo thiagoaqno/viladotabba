@@ -423,16 +423,21 @@ button.rs3-c:focus-visible,button.rs3-pe:focus-visible{outline:2px solid var(--e
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-family:"Barlow","Titillium Web",system-ui,sans-serif}
 #race:is(.f1hud,.f1mfd) #hMfd .mfd-topo{height:62px;padding:0 16px 0 20px;gap:0;background:none;border-bottom:1px solid rgba(255,255,255,.1)}
 #hMfd .mfd-topo::after{display:none}
-#hMfd .mfd-marca{width:50px;height:18px;margin-right:16px;background:var(--eq);clip-path:polygon(22% 0,100% 0,90% 30%,38% 30%,33% 45%,82% 45%,72% 75%,26% 75%,18% 100%,0 100%);box-shadow:none}
+#hMfd .mfd-marca{flex:none;align-self:center;width:50px;height:18px;margin-right:16px;background:var(--eq);clip-path:polygon(22% 0,100% 0,90% 30%,38% 30%,33% 45%,82% 45%,72% 75%,26% 75%,18% 100%,0 100%);box-shadow:none}
 #hMfd .mfd-nome{display:none}
-#hMfd .mfd-abas{flex:1;justify-content:space-around;align-items:stretch;height:100%;padding-left:14px;border-left:1px solid rgba(255,255,255,.14);margin:14px 0;height:auto}
-#hMfd .mfd-abas button{min-width:40px;height:auto;padding:0;color:rgba(255,255,255,.62);background:none;border:0;border-radius:8px;transition:color .15s,background .15s}
+/* (2026-11-24, o Thiago: "quando mudo de aba aquela linha vermelha fica torta") as abas ocupam a altura toda do topo e a linha da ativa fica
+   presa no pé dele (bottom:0), com a mesma largura e centrada no ícone: antes ela ficava 15 px abaixo de um botão cuja altura dependia do ícone */
+#hMfd .mfd-abas{position:relative;flex:1;align-self:stretch;justify-content:space-around;align-items:stretch;height:auto;margin:0;padding-left:14px;border-left:0}
+#hMfd .mfd-abas::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:1px;background:rgba(255,255,255,.14)}
+#hMfd .mfd-abas button{position:relative;display:flex;align-items:center;justify-content:center;flex:0 1 40px;min-width:30px;height:auto;padding:0;color:rgba(255,255,255,.62);background:none;border:0;border-radius:0;transition:color .15s}
+#hMfd .mfd-abas button svg{display:block;flex:none}
 #hMfd .mfd-abas button svg{width:22px;height:22px;stroke-width:1.8}
 #hMfd .mfd-abas button span,#hMfd .mfd-abas button:hover span,#hMfd .mfd-abas button.on span{display:none}
-#hMfd .mfd-abas button:hover{color:#fff;background:rgba(255,255,255,.06)}
+#hMfd .mfd-abas button:hover{color:#fff;background:none}
 #hMfd .mfd-abas button.on{color:#fff;background:none}
 #hMfd .mfd-abas button::after,#hMfd .mfd-abas button.on::after{display:none}
-#hMfd .mfd-abas button.on::before{content:"";position:absolute;left:4px;right:4px;bottom:-15px;height:4px;border-radius:3px;background:#e10600}
+#hMfd .mfd-abas button.on::before{content:"";position:absolute;left:50%;bottom:0;width:32px;height:3px;transform:translateX(-50%);border-radius:3px 3px 0 0;background:#e10600}
+#hMfd .mfd-abas button:focus-visible{outline:none}#hMfd .mfd-abas button:focus-visible svg{outline:2px solid #fff;outline-offset:4px;border-radius:4px}
 #hMfd .mfd-abas button.sec{margin-left:0;border-left:0}
 #hMfd .mfd-pos,#hMfd .mfd-x{display:none}
 #hMfd .mfd-corpo,#hMfd .mfd-pg{padding:0}

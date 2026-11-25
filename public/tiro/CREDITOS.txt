@@ -1,6 +1,6 @@
 Tiro da Galera é feito a partir do código de Riposte: Frontline, de BenDBSS,
-https://github.com/BenDBSS/Riposte-Frontline-Source, sob a licença MIT abaixo. Nome, logo, músicas e som de acerto
-originais não são usados aqui. Texturas e céus: Poly Haven e ambientCG (CC0). three.js: MIT.
+https://github.com/BenDBSS/Riposte-Frontline-Source, sob a licença MIT abaixo. O nome e o logo originais não são usados aqui.
+Músicas: BenDBSS com o Suno (uso não comercial). Som de acerto: flashkit.com. Texturas e céus: Poly Haven e ambientCG (CC0). three.js: MIT.
 Sons em CC BY:
 - Woodpecker by Benboncan (freesound.org/s/66955), CC BY 3.0
 - Waterfall by Samuel Strågefors (straget, freesound.org/s/489073), CC BY

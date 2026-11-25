@@ -195,6 +195,7 @@ function passoNoBox(room, p, ia, pf, dt, emit) {
 const PERTO_EQUIPE = 30;
 // (2026-11-16, as estratégias de bateria do Thiago) lift and coast: abaixo de LIFT_CARGA, a LIFT_PONTOS pontos de uma freada forte; o bônus de
 // ultrapassagem: cruzou a linha a menos de 1 s do carro da frente, +BONUS_ULTRAPASSAGEM de bateria (0,5 MJ da janela de 4 MJ) na volta seguinte
+const SAIDA_RETA_U = 1200, SAIDA_GAP_S = 1.2; // (o ataque na saída de curva: a reta mínima, ~250 m, e a distância ao da frente; de ajuste, não medidos)
 const LIFT_CARGA = 0.25, LIFT_PONTOS = 20, BONUS_ULTRAPASSAGEM = 0.125;
 function bonusDeUltrapassagem(room, p, ia, car) {
   if (!car.ers || ia.bonusVolta === p.laps) return; ia.bonusVolta = p.laps;
@@ -359,8 +360,12 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
   // Colado, o limite de trânsito não deixa o DRS virar velocidade: para decidir o ataque conta metade do ganho que ele teria ao sair da faixa (a velocidade leva tempo para chegar).
   const drsPronto = alvo >= topo * 0.97 && (car.drsAtivo || (p.drsZona >= 0 && p.drsZona === F1.zonaDRS(i / n, tr.t.drs)));
   const vAtaque = Math.min(spec.vmax * pneu.final * dano.final * F1.TETO_VELOCIDADE, vLivre * (drsPronto ? 1 + F1.DRS_GANHO * (spec.drs ?? 1) * 0.5 : 1));
+  // (2026-11-24) o ataque na saída: saindo de curva (ainda abaixo do topo) para uma reta de SAIDA_RETA_U ou mais, com a bateria acima do mínimo do piloto,
+  // fora da chuva, de Mônaco e do safety car: o trânsito parte para o lado já na saída e o ERS liga desde ali (corrida-robos-transito.js retaAdiante)
+  const saidaReta = room.phase === "race" && car.v < topo * 0.9 && !room.direcao?.safety && T.baseDe(room.config.pista) !== "monaco" && !F1.ersBloqueadoNaChuva(cl.agua) &&
+    !!car.ers && car.ers.carga >= minimoParaAtacar(p) && TransitoRobo.retaAdiante(pf, i) >= SAIDA_RETA_U;
   // o plano da frente para o trânsito: a que distância é a próxima freada e qual é o lado de dentro da próxima curva
-  const tf = transito(room, p, ia, pf, i, baseLat, maxLatDisputa, vAtaque, { dFreio: distanciaDaFreada(fis, n, i, car.v), dentro: ladoDeDentro(pf, i), maxLatLento, linhaEm: (k) => linhaEm(k, car.prog + (k - i + n) % n), aderenciaFreio: cl.agua > 0 ? { freio: pneu.freio * dano.freio, grip: pneu.grip * dano.grip } : undefined });
+  const tf = transito(room, p, ia, pf, i, baseLat, maxLatDisputa, vAtaque, { dFreio: distanciaDaFreada(fis, n, i, car.v), dentro: ladoDeDentro(pf, i), maxLatLento, linhaEm: (k) => linhaEm(k, car.prog + (k - i + n) % n), aderenciaFreio: cl.agua > 0 ? { freio: pneu.freio * dano.freio, grip: pneu.grip * dano.grip } : undefined, saidaReta });
   ia.desvio += (tf.desvio - ia.desvio) * Math.min(1, dt * 1.8);
   ia.colado = (tf.atras ?? Infinity) < TransitoRobo.L_CARRO * 2.2; ia.arLimpo = !tf.encontrou; // (para o undercut e o overcut, em decidirParada)
   const mom = momentoDaCorrida(room, p, ia, car, tf), gerindo = mom.modo === "gerir", atacando = mom.modo === "ataque"; // (o momento da corrida)
@@ -488,6 +493,8 @@ function passoF1(room, p, ia, pf, dt, now, setor, emit, outros) {
     // adiante abaixo de 1/1500, a mesma conta do ERS automático de sim.js). Medido em Suzuka, 21 robôs: com o ERS na curva, 274 batidas; só na reta, 74
     const kAqui = Math.max(Math.abs(tr.pts[car.idx].k || 0), Math.abs(tr.pts[(car.idx + 14) % n].k || 0)), retaAqui = kAqui < 1 / 1500;
     ent.ers = retaAqui && ((!!ia.ult && !ia.ult.emergencia) || (!amb.safety && reta && ((pertoDaFrente && cargaErs > (process.env.ROBO_PERSEGUE_ANTIGO ? ERS_ATAQUE : minimoParaAtacar(p)) && T.baseDe(room.config.pista) !== "monaco") || (coladoAtras && cargaErs > ERS_DEFESA))));
+    // o ataque na saída: com alguém a até 1,2 s (ou já na manobra), o ERS liga desde a saída da curva (já aberta: curvatura abaixo de 1/600, não no meio dela), só com a traseira sem patinar
+    if (saidaReta && !amb.safety && car.patina <= PAT && kAqui < 1 / 600 && (ia.ult || (tf.atras ?? Infinity) / Math.max(car.v, 30) < SAIDA_GAP_S)) ent.ers = true;
     if (qp && qp.modo !== "normal") ent.ers = qp.modo === "ataque" && retaAqui && cargaErs > F1.ERS_PISO_OVERTAKE; // o plano do qualify: tudo nas retas, ou nada na volta lenta
     ent.pedido = proxima;
     if (gerindo && !coladoAtras && !ia.ult) ent.ers = false; // gerindo: a bateria só para defender

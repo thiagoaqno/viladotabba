@@ -14,3 +14,11 @@ As marcas da asa traseira, as que quem vem atrás lê, eram pequenas. Atrás da 
 - **Nitidez:** a anisotropia das folhas de pintura subiu de 4 (adversários) e 8 (o meu carro) para 16. O three corta no máximo que a placa aceita. Não gasta memória a mais.
 
 Os números de 1,3×, 1,5× e 15 cm são o ponto de partida, para o Thiago conferir jogando. Se alguma marca vazar para fora da asa, eles ficam todos juntos no começo de `marca` (`ASA_CIMA`, `ASA_TRAS`, `ASA_TRAS_MAX`, `ASA_LARG`).
+# Câmera nova "F1"
+
+O Thiago montou na tela Câmera um ajuste da T-cam e pediu uma câmera própria chamada "F1" com ele.
+
+- `camera-ajuste.js`: "f1" nas câmeras editáveis, de dentro do carro, com o padrão do print dele: campo de visão 45°, lateral −0,05 m, altura −0,10 m, avanço 0,10 m, inclinação −7°, tremor 15%.
+- `cameras.js`: a "F1" entra no ciclo do C logo depois da T-cam e usa a mesma posição (a entrada de ar), com o ajuste dela; som e olhar para trás como a T-cam.
+- Retrovisores (`espelhos.js`, `retrovisor.js`), HUD de telemetria ancorado, prévia da sala (`ajustes-lobby.js`) e aba "F1" na tela Câmera.
+- A T-cam continua com o padrão de antes.

@@ -13,7 +13,7 @@ import { standings } from "./hud.js";
 
 const ligado = !!window.CORRIDA_PC?.pc || new URLSearchParams(location.search).has("controle");
 const naoAqui = new URLSearchParams(location.search).has("replay") || new URLSearchParams(location.search).has("editor");
-let sock = null, est = { ligado: false, enderecos: [], celulares: 0 }, janela = null;
+let sock = null, est = { ligado: false, enderecos: [], celulares: 0 }, janela = null, bt = null; // (o bt aqui em cima: iniciar() roda já na linha de baixo e chama botao())
 
 if (ligado && !naoAqui && window.io) iniciar();
 
@@ -62,7 +62,7 @@ function painel() {
 }
 
 // ---------- o botão do menu e a janela do endereço ----------
-let bt = null;
+
 function botao() {
   bt = document.createElement("button"); bt.type = "button"; bt.id = "bCelular";
   bt.style.cssText = "position:fixed;right:8px;bottom:40px;z-index:99998;padding:6px 11px;border:0;border-radius:6px;font:600 12px system-ui,sans-serif;color:#fff;background:#1d2330e6;cursor:pointer;box-shadow:0 4px 14px #0006";

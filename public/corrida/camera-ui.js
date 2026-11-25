@@ -9,7 +9,7 @@ import { acoes } from "./mfd.js";
 import { camEstado, NOMES, usavel } from "./cameras.js";
 import { EDITAVEIS, camposDe, ajusteDe, padraoDe, mudou, temTrocas, definir, restaurarCamera, restaurarTudo, dentroDoCarro } from "./camera-ajuste.js";
 
-const ROTULO = { cockpit: "Cockpit", onboard: "T-cam", bico: "Bico", perto: "Perto", longe: "Longe" };
+const ROTULO = { cockpit: "Cockpit", onboard: "T-cam", f1: "F1", bico: "Bico", perto: "Perto", longe: "Longe" };
 let tela = null, aba = "perto", sel = 0, raf = 0, antes = [], rep = null;
 
 const fmt = (c, v) => (+v).toFixed(c.dec || 0) + c.un;

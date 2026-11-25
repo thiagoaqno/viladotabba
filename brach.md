@@ -1,24 +1,20 @@
-# Tiro da Galera: rádio em português, e uma voz para cada tipo de classe
+# Vila: a Base do Tiro, prédio novo do Tiro da Galera
 
-## O que entra agora
+O tiro deixou de ser um hangar igual aos outros e ganhou um prédio próprio, quase o dobro do tamanho (11 × 12 casas), na
+faixa dos hangares a leste da pista, logo abaixo do F1 parado.
 
-- **Os 69 áudios que o Thiago gerou** (23 anúncios × 3 variações) estão no jogo, no lugar das vozes em inglês. Ficam em
-  `ferramentas/tiro-vozes/`. O motor de som sorteia uma variação a cada anúncio.
+## O desenho (`drawBaseTiro`, estilo `base` em `public/vila/gp-desenho.js`)
 
-## Vozes por classe (prontas para gerar)
+Um estande de tiro visto de cima:
+- o pátio de terra batida cercado por um muro de sacos de areia;
+- o barracão do fundo com cobertura camuflada e o letreiro "TIRO";
+- a torre de vigia no canto, com a guarita e o refletor;
+- cinco raias com os alvos e o talude de grama atrás deles, e o balcão de tiro com a turma mirando;
+- na frente, um bunker de concreto com o portão de aço, as faixas de aviso, as seteiras e os sacos de areia.
 
-A voz do rádio depende da arma principal da classe, então as classes personalizadas também ganham voz:
+## O resto
 
-| Arma principal | Classe pronta | Voz |
-| --- | --- | --- |
-| Fuzil de assalto (e o resto) | Assalto | `oCWW6YTSEVFt26dBO8vU` (a que já foi gerada) |
-| Submetralhadora | Faxineiro | `cPoqAvGWCPfCfyPMwe4z` |
-| Fuzil de precisão | Atirador | `Bj9UqZbhQsanLzgalpEG` |
-| Escopeta | Arrombador | `jqcCZkN6Knx8BJ5TBdYR` |
-
-- **`ferramentas/tiro-vozes/vozes.json`** define as vozes. O `tiro-vozes.js` e o `VOZES-TIRO.bat` geram as 4 (só o que falta)
-  e salvam cada voz nova em `tiro-vozes/<grupo>/`. Faltam 207 falas, 5.556 caracteres.
-- **No jogo:** cada voz nova vira um pacote próprio (`sfx/voix_smg.js`, etc.), que só é baixado quando alguém nasce com
-  aquela classe. Até o pacote chegar, e para qualquer voz que ainda não foi gerada, o anúncio sai na voz padrão.
-- **Conferido:** fiz uma montagem de teste com uma pasta falsa de submetralhadora. O pacote, a lista do jogo e a troca de voz
-  entraram, e a página continua sem erro de sintaxe.
+- **`public/vila/gp-mapa.js`:** `tiro` passa para `[186, 95, 11, 12, "base"]`. O lugar do hangar antigo fica livre.
+- **`public/index.html`:** o card passa a se chamar "Base do Tiro", com as cores do jogo novo.
+- **Conferido no mapa de verdade** (rodando o `gp-mapa.js` no Node): embaixo do prédio só tem asfalto, sem poste, caixa ou
+  F1 dentro; sobra uma casa livre de cada lado para passar, e o capacho dá para a rua.

@@ -332,6 +332,60 @@ function drawHangar(c, g) {
   arteHangar(c, g, X + W / 2, RY + RH / 2 - 2);
   px(c, TINTA, X - 3, RY + RH - 7, W + 6, 1); px(c, ac, X - 2, RY + RH - 6, W + 4, 6); px(c, claro(ac, 0.4), X - 2, RY + RH - 6, W + 4, 1);
 }
+// a Base do Tiro da Galera (estilo "base"): o estande visto de cima, cercado de sacos de areia, com as raias e os alvos
+// no fundo, o barracão de cobertura camuflada, a torre de vigia e, na frente, o bunker de concreto com o portão de aço
+function sacoDeAreia(c, x, y, k) { px(c, TINTA, x, y, 9, 6); px(c, k % 3 ? "#c9b27c" : "#bba26b", x + 1, y + 1, 7, 4); px(c, "#ddc995", x + 2, y + 1, 4, 1); px(c, "#9c8653", x + 4, y + 3, 1, 1); }
+function alvo(c, cx, cy) {
+  px(c, TINTA, cx - 1, cy + 6, 3, 8); px(c, "#6b4a2c", cx, cy + 6, 1, 8); // o poste
+  px(c, TINTA, cx - 8, cy - 8, 17, 15); px(c, "#efe7d2", cx - 7, cy - 7, 15, 13);
+  for (const [r, cor] of [[6, "#1a1c2c"], [5, "#efe7d2"], [4, "#e10600"], [2, "#efe7d2"], [1, "#e10600"]]) { c.fillStyle = cor; c.beginPath(); c.arc(cx + 0.5, cy - 0.5, r, 0, 7); c.fill(); }
+}
+function drawBaseTiro(c, g) {
+  const X = g.x * TS, Y = g.y * TS, W = g.w * TS, H = g.h * TS, FH = 30, TY = Y - 6, TH = H - FH + 6, ac = acentoDe(g);
+  sombra(c, X, TY + 6, W, H, 6);
+  // o pátio do estande: terra batida, com as pedrinhas
+  px(c, TINTA, X - 1, TY - 1, W + 2, TH + 2); px(c, "#b08a5a", X, TY, W, TH);
+  for (let k = 0; k < 90; k++) { const h = hash(g.x * 31 + k, g.y, 9); px(c, k & 1 ? "#9c784c" : "#c29d6c", X + 6 + h % (W - 12), TY + 8 + (h >>> 8) % (TH - 16), 2, 1); }
+  // o barracão no fundo, com a cobertura camuflada e o letreiro
+  const BY = TY + 4, BH = 34;
+  px(c, TINTA, X + 5, BY - 1, W - 10, BH + 2); px(c, "#4f5a34", X + 6, BY, W - 12, BH);
+  for (let k = 0; k < 26; k++) { const h = hash(g.x + k, g.y * 7, 3); px(c, ["#3c4628", "#66703f", "#2f3820", "#7a7a4a"][k % 4], X + 8 + h % (W - 30), BY + 2 + (h >>> 9) % (BH - 10), 6 + (h >>> 4) % 10, 3 + (h >>> 12) % 4); }
+  px(c, "#3a4326", X + 6, BY + BH - 4, W - 12, 4);
+  px(c, TINTA, X + W / 2 - 46, BY + 9, 92, 16); px(c, "#1b1f24", X + W / 2 - 45, BY + 10, 90, 14); px(c, ac, X + W / 2 - 45, BY + 22, 90, 2);
+  letreiro(c, g.logo || "TIRO", X + W / 2, BY + 17, 84, 12, "#ffd23f", TINTA);
+  // a torre de vigia no canto, mais alta que tudo
+  const TX = X + W - 30, TTY = TY - 22;
+  px(c, TINTA, TX - 1, TTY - 1, 28, 28); px(c, "#6b4a2c", TX, TTY, 26, 26); px(c, "#8a6440", TX + 2, TTY + 2, 22, 22);
+  px(c, TINTA, TX + 5, TTY + 6, 16, 14); px(c, "#2b2f36", TX + 6, TTY + 7, 14, 12); px(c, "#fff3c4", TX + 7, TTY + 8, 4, 3); // a guarita e o refletor
+  px(c, "#3c4628", TX - 3, TTY - 4, 32, 5); px(c, TINTA, TX - 3, TTY + 1, 32, 1); // o telhado
+  // as raias: cada uma com o alvo no fundo, a faixa branca no chão e o balcão de tiro na frente
+  const R0 = X + 10, RW = W - 20, NR = 5, lw = RW / NR, RY0 = BY + BH + 6, RY1 = TY + TH - 16;
+  px(c, "#7d9a46", R0, RY0, RW, 10); for (let x = R0; x < R0 + RW; x += 3) px(c, "#5f7a33", x, RY0 + (x % 2) * 3, 1, 4); // o talude de grama atrás dos alvos
+  for (let i = 0; i < NR; i++) {
+    const lx = Math.round(R0 + i * lw);
+    if (i) for (let y = RY0 + 12; y < RY1 - 4; y += 6) px(c, "#efe7d2", lx, y, 1, 3);
+    alvo(c, Math.round(lx + lw / 2), RY0 + 12 + (i % 2) * 6);
+    for (const [dy, cor] of [[26, "#d9c9a0"], [44, "#d9c9a0"]]) px(c, cor, Math.round(lx + lw / 2) - 1, RY0 + 12 + dy, 3, 1); // as marcas de distância
+  }
+  // o balcão de tiro, com a turma mirando
+  px(c, TINTA, R0 - 1, RY1 - 1, RW + 2, 8); px(c, "#8a6440", R0, RY1, RW, 6); px(c, "#a67c50", R0, RY1, RW, 1);
+  for (let i = 0; i < NR; i++) { const h = hash(g.x + i, g.y, 41); if (h % 4) { const sx = Math.round(R0 + i * lw + lw / 2) - 2; pessoinha(c, sx, RY1 + 8, h); px(c, "#1b1f24", sx + 1, RY1 + 2, 2, 7); } }
+  // o muro de sacos de areia em volta do pátio
+  for (let x = X - 3, k = 0; x < X + W - 4; x += 8, k++) sacoDeAreia(c, x, TY - 4, k);
+  for (let y = TY + 2, k = 1; y < TY + TH - 4; y += 5, k++) { sacoDeAreia(c, X - 5, y, k); sacoDeAreia(c, X + W - 4, y, k + 1); }
+  // a frente: o bunker de concreto com o portão de aço, as faixas de aviso e a placa
+  const FY = Y + H - FH;
+  px(c, TINTA, X - 1, FY - 1, W + 2, FH + 1); px(c, "#8d8f84", X, FY, W, FH);
+  for (let k = 0; k < 14; k++) { const h = hash(g.x + k, g.y, 17); px(c, "#7c7e72", X + h % (W - 8), FY + 3 + (h >>> 8) % (FH - 8), 4 + (h >>> 3) % 6, 2); }
+  px(c, ac, X, FY, W, 3); px(c, claro(ac, 0.4), X, FY, W, 1);
+  const dx0 = g.doors[0] * TS - 10, dw = g.doors.length * TS + 20;
+  px(c, TINTA, dx0 - 1, FY + 5, dw + 2, FH - 5); px(c, "#4c525e", dx0, FY + 6, dw, FH - 6);
+  for (let yy = FY + 8; yy < Y + H - 1; yy += 3) px(c, "#5d6470", dx0, yy, dw, 1);
+  px(c, "#16181d", g.doors[0] * TS, Y + H - 14, g.doors.length * TS, 14);
+  for (let x = dx0; x < dx0 + dw; x += 8) { px(c, "#ffd23f", x, Y + H - 3, 4, 3); px(c, "#1b1f24", x + 4, Y + H - 3, 4, 3); }
+  for (const lx of [X + 8, X + W - 40]) { px(c, TINTA, lx - 1, FY + 8, 34, 12); px(c, "#1b1f24", lx, FY + 9, 32, 10); px(c, "#ffd23f", lx + 2, FY + 13, 28, 2); } // as seteiras
+  for (const [sx, n] of [[X - 4, 3], [X + W - 23, 3]]) for (let r = 0; r < 2; r++) for (let k = 0; k < n - r; k++) sacoDeAreia(c, sx + k * 8 + r * 4, Y + H - 8 - r * 5, k + r); // os sacos na frente
+}
 // o bico de um F1 visto de frente, dentro da garagem
 function carroDeFrente(c, cx, base, cor, cor2) {
   px(c, "#16161a", cx - 13, base - 8, 5, 8); px(c, "#16161a", cx + 8, base - 8, 5, 8); px(c, "#3a3a40", cx - 12, base - 7, 3, 2); px(c, "#3a3a40", cx + 9, base - 7, 3, 2);
@@ -390,7 +444,7 @@ function drawAutodromo(c, g) {
   for (let x = X + 46; x < X + W - 40; x += 96) { px(c, TINTA, x - 1, fy + 1, 14, FH - 2); px(c, "#e10600", x, fy + 2, 12, FH - 4); px(c, "#ffffff", x + 4, fy + 6, 4, FH - 12); }
   portaVidro(c, g, Y + H - 24, 24, "#e10600");
 }
-function drawBuilding(c, g) { ({ tenda: drawTenda, quadra: drawQuadra, hangar: drawHangar, box: drawBox, autodromo: drawAutodromo }[g.estilo] || drawPavilhao)(c, g); }
+function drawBuilding(c, g) { ({ tenda: drawTenda, quadra: drawQuadra, hangar: drawHangar, base: drawBaseTiro, box: drawBox, autodromo: drawAutodromo }[g.estilo] || drawPavilhao)(c, g); }
 function drawPredio(c, p) { (p.estilo === "torre" ? drawTorreControle : drawPavilhao)(c, p); }
 
 // ---------- os enfeites ----------

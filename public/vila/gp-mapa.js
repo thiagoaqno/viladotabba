@@ -33,7 +33,8 @@ const LUGARES = {
   // ao sul da reta: a tribuna principal é a Corrida; a leste da pista, os hangares
   corrida: [92, 111, 36, 8, "autodromo", "autodromo"],
   drag: [187, 40, 10, 6, "hangar", "autodromo"], rocket: [187, 50, 10, 6, "hangar", "autodromo"],
-  batalha: [187, 66, 10, 6, "hangar", "autodromo"], tiro: [187, 78, 10, 6, "hangar", "autodromo"],
+  batalha: [187, 66, 10, 6, "hangar", "autodromo"],
+  tiro: [186, 95, 11, 12, "base", "autodromo"], // a Base do Tiro: o estande de tiro, mais embaixo na faixa dos hangares
 };
 const LOGOS = { carreira: "CARREIRA", leilao: "LEILÃO", ginasio: "GINÁSIO", corrida: "GRANDE PRÊMIO DA GALERA", digita: "MÍDIA" }; // o nome pintado no telhado
 const portas = (x, w) => (w >= 8 ? [x + (w >> 1) - 1, x + (w >> 1)] : [x + (w >> 1)]);

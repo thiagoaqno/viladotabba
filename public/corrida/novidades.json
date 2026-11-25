@@ -1,5 +1,59 @@
 [
   {
+    "id": "volantes-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Volante e painel personalizáveis na sala: 5 telas (F1 2026, Clássico, Minimalista, Retrô, Neon), as cores das luzes de troca e do punho"
+    ]
+  },
+  {
+    "id": "acabamento-carro-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Escolha o acabamento do seu carro na sala: cromado, metálico, brilhante, acetinado ou fosco"
+    ]
+  },
+  {
+    "id": "capacete-estampas-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "10 estampas novas para o capacete: Carbono Neon, Tigre, Geométrica, Topográfica, Bandeira Brasileira, Digital, Gradiente, Relâmpago, Onda e Hexagonal"
+    ]
+  },
+  {
+    "id": "torre-amarela-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "A torre mostra a faixa da bandeira amarela com o setor (e a do safety car)",
+      "O cartão do piloto abre quando alguém ganha uma posição no TOP 3",
+      "Os tempos da torre são o intervalo para o carro da frente"
+    ]
+  },
+  {
+    "id": "pilotagem-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Derrapar tira menos velocidade (20% menos), mas o carro desliza um pouco mais",
+      "A pista seca na metade do tempo depois da chuva",
+      "Em Mônaco o carro para de raspar na subida depois da primeira curva"
+    ]
+  },
+  {
+    "id": "mfd-voz-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Quando o engenheiro entende o seu pedido de voz, a opção fica verde no MFD e ele fecha sozinho",
+      "O piloto da aba Meu piloto ficou mais natural: respira, troca o peso, olha o mouse e acena"
+    ]
+  },
+  {
+    "id": "controle-site-2026-11-25",
+    "data": "2026-11-25",
+    "itens": [
+      "Controle no celular também no site: abra o endereço com o código que o jogo mostra"
+    ]
+  },
+  {
     "id": "piloto-vivo-2026-11-25",
     "data": "2026-11-25",
     "itens": [

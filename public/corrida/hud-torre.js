@@ -66,12 +66,15 @@ function torre(corredores, { n, meuId, esc = 1, atraso = null }) { // esc: unida
   const ordem = corredores.filter((c) => !c.dnf).concat(corredores.filter((c) => c.dnf));
   const lider = ordem.find((c) => !c.dnf) || ordem[0];
   const melhor = corredores.reduce((a, c) => (c.best != null && (a == null || c.best < a.best) ? c : a), null);
+  // (2026-11-25, o Thiago: "os tempos da torre devem ser o tempo para o carro da frente, e não todos em relação ao líder") o intervalo: cada um contra o
+  // carro logo à frente na torre (o líder mostra "Leader"); as voltas de atraso também contam contra ele
   return ordem.map((c, i) => {
-    const eLider = c === lider, atraso_ = lider && c.prog > -1e8 ? Math.max(0, lider.prog - c.prog) : 0;
+    const eLider = c === lider, frente = i > 0 && !c.dnf ? ordem[i - 1] : lider, ref = frente && !frente.dnf && frente.prog > -1e8 ? frente : lider;
+    const atraso_ = ref && c.prog > -1e8 ? Math.max(0, ref.prog - c.prog) : 0;
     let dif = diferenca({ lider: eLider, dist: atraso_ * esc, v: c.v, voltas: Math.floor(atraso_ / n + 0.02), dnf: c.dnf });
     if (!eLider && !c.dnf && dif.tipo !== "voltas" && !(c.prog > -1e8)) dif = { tipo: "m", texto: "—" }; // ainda sem notícia deste carro (o progresso é -1e9): nada de "+999999 V"
-    else if (atraso && !eLider && !c.dnf && dif.tipo !== "voltas" && lider) { const s = atraso(c, lider); if (s != null) dif = { tipo: "seg", texto: `+${tempoCurto(s)}` }; } // o tempo medido (cronometragem), quando existe
-    if (!eLider && !c.dnf && c.done != null && lider.done != null) dif = { tipo: "seg", texto: `+${tempoCurto(Math.max(0, c.done - lider.done))}` }; // os dois já chegaram: o tempo de verdade
+    else if (atraso && !eLider && !c.dnf && dif.tipo !== "voltas" && ref) { const s = atraso(c, ref); if (s != null) dif = { tipo: "seg", texto: `+${tempoCurto(s)}` }; } // o tempo medido (cronometragem), quando existe
+    if (!eLider && !c.dnf && c.done != null && ref && ref.done != null) dif = { tipo: "seg", texto: `+${tempoCurto(Math.max(0, c.done - ref.done))}` }; // os dois já chegaram: o tempo de verdade
     else if (c.done != null && !c.dnf && !eLider && dif.tipo === "m") dif = { tipo: "fim", texto: "Fim" }; // parou depois da bandeirada
     return { pos: i + 1, id: c.id, sigla: c.sigla, nome: c.nome, equipe: c.equipe || "", cor: c.cor, bot: !!c.bot, eu: c.id === meuId, dif, letra: LETRA[c.pneu] || "M", pneu: c.pneu,
       volta: !!melhor && melhor.id === c.id, noBox: !!c.noBox, penal: c.penal || 0, dsq: !!c.dsq, sg: !!c.sg, acabou: c.done != null };

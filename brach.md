@@ -1,32 +1,37 @@
-# Meu piloto: o piloto vivo e os patrocínios da equipe no macacão
+# Controle no celular também no site
 
-O Thiago pediu duas coisas: que o piloto da aba "Meu piloto" não ficasse parado, interagindo às vezes e com o mouse; e os patrocinadores nas roupas.
+O Thiago pediu para levar o controle pelo celular para o site.
 
-## O piloto vivo (`temporada/index.html`, `pixel-piloto.js` `camadasInteiro`)
+Até aqui, ele só existia no programa de PC: o celular falava com o PC pela rede de casa, com o HTTPS da porta 31518 (`corrida-controle.js`). No site não existe essa rede, então o celular e o jogo passam a se juntar pelo servidor do site, com um código.
 
-- **As camadas:** o corpo inteiro virou três imagens do mesmo tamanho, o corpo, o braço esquerdo do piloto (à direita da tela) e a cabeça. Elas vêm com os pivôs: o ombro, o pescoço e onde ficam os olhos.
-- **O mouse:** a cabeça vira e inclina para onde ele está.
-- **Sozinho:**
-  - ele pisca a cada 2,5 a 5 s;
-  - a cada 6 a 11 s, se o mouse ficou parado, acena (o braço sobe e balança), pula ou olha em volta.
-- **No clique:** pula e acena.
-- **Movimento reduzido:** quem tem essa opção ligada no aparelho vê o piloto parado.
+## O servidor (`corrida-controle-site.js`, novo; ligado em `server.js`)
 
-## Os patrocínios no macacão (`PATROCINIOS_EQUIPE`)
+- **O canal:** é o `/controle-par`, com os mesmos eventos do controle de casa. O celular manda `e` (a entrada, até 60 por segundo) e `acao`; o jogo manda `painel` e recebe `estado`.
+- **O código:** o jogo pede ("abrir") e recebe um código de 5 letras e números, sem os que se confundem, e o endereço `https://<site>/c/<código>`. O código vale enquanto o jogo estiver ligado e mais 10 minutos depois que ele sai, para voltar à sala sem trocar. O jogo guarda o código e, ao reconectar, volta para ele.
+- **Limite:** no máximo 3 celulares por jogo. Um código errado ou cheio é recusado com o motivo.
+- **Endereços:** `/c/<código>` leva para a página do controle já com o código; `/c` abre a página para digitar o código.
 
-- Cada equipe tem dois patrocinadores de verdade: na Ferrari, HP e Shell; na Mercedes, Petronas e CrowdStrike; na Red Bull, Oracle e Mobil 1; e assim por diante.
-- Eles entram no peito (os dois e um menor embaixo) e na perna, desenhados por cima do pixel art, em branco ou escuro no macacão claro. Cada logo cabe inteiro na sua caixa, pela proporção dele.
-- No pixel art, as plaquinhas brancas do peito saem quando há equipe.
+## O jogo (`controle-celular.js`)
 
-## Consertos
+- No site, o botão "📱 Controle no celular" aparece na tela inicial, como no programa de PC.
+- A janela mostra o endereço, o código grande em amarelo e o "ou abra <site>/c e digite o código". Sem o aviso de certificado do PC, que não existe no site.
+- No programa de PC, tudo continua como era, pela rede de casa.
 
-- No montador, um piloto sorteado mostrava "undefined" no brinco.
-- A `main` tinha o `lerPixel` importado duas vezes; isso já foi consertado no #973 e trazido para cá.
+## O celular (`controle.html`)
 
-## Novidades
-
-Entraram as do #967 ao #971, que tinham ficado para depois do conserto do JSON, e a deste PR.
+- Fora da porta 31518, a página usa o canal do site.
+- **Com o código no endereço:** conecta sozinha.
+- **Sem o código:** a tela de começar pede o código.
+- Os avisos dizem "conectado ao jogo", "código não encontrado: confira no jogo" ou "o jogo saiu".
+- O site é HTTPS, então o iPhone entrega o giroscópio.
 
 ## Conferido
 
-Num servidor de teste, a aba monta as 3 camadas e os 2 olhos, o clique dispara o pulo e o aceno, e o print mostra o braço acenando, a cabeça virada para o mouse e o HP e a Shell no macacão da Ferrari.
+Num servidor de teste, uma página pediu o código como o jogo e outra abriu `/c/<código>` como o celular:
+- o celular conectou ao jogo;
+- o jogo viu 1 celular e recebeu 154 entradas em uns 2,5 s;
+- um código inexistente mostra "código não encontrado".
+
+Não testei num celular de verdade pela internet: a demora do caminho celular → site → jogo é a da conexão de cada um.
+
+A novidade fica para depois do #974, que também escreve no topo do `novidades.json`.

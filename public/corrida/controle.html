@@ -81,6 +81,9 @@ body.sem-giro #toque{display:block}
 /* ---- as telas por cima ---- */
 #tela0{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#050608f2;text-align:center;padding:24px}
 #tela0 h1{margin:0 0 8px;font-size:24px}#tela0 p{margin:6px auto;max-width:480px;color:#c3cad6;font-weight:500}
+#codigoBox{margin:12px auto 0;display:flex;flex-direction:column;align-items:center;gap:6px}#codigoBox[hidden]{display:none}
+#codigo{width:min(260px,70vw);padding:12px 14px;border-radius:12px;border:2px solid #ffffff2a;background:#0b0d12;color:#ffd23f;font:900 28px ui-monospace,Menlo,monospace;letter-spacing:.3em;text-align:center;text-transform:uppercase;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+#codigoBox small{color:var(--fraco);font-weight:500}
 #tela0 button{margin-top:14px;padding:14px 28px;border:0;border-radius:999px;background:var(--eq);color:#fff;font:800 17px -apple-system,system-ui,sans-serif;box-shadow:0 0 22px var(--eq)}
 #estado{position:fixed;left:50%;top:max(2px,env(safe-area-inset-top));transform:translateX(-50%);z-index:5;font-size:10px;padding:2px 10px;border-radius:10px;background:#000a;color:var(--fraco)}
 #estado.ok{color:#7fe08a;animation:somir .6s 3s forwards}@keyframes somir{to{opacity:0}}#estado.mal{color:#ff8a80}
@@ -120,7 +123,7 @@ body.sem-giro #toque{display:block}
   <div class="pedal" id="gas"><b>ACELERA</b></div>
 </div>
 <div id="estado">conectando…</div>
-<div id="tela0"><div><h1>🏎️ Volante da Corrida</h1><p>Deite o celular e segure como um volante. Na hora de começar, o iPhone pergunta se pode usar o movimento: permita.</p><p>Freio à esquerda, acelerador à direita: quanto mais alto o dedo, mais forte.</p><button type="button" id="comecar">Começar</button></div></div>
+<div id="tela0"><div><h1>🏎️ Volante da Corrida</h1><p>Deite o celular e segure como um volante. Na hora de começar, o iPhone pergunta se pode usar o movimento: permita.</p><p>Freio à esquerda, acelerador à direita: quanto mais alto o dedo, mais forte.</p><div id="codigoBox"><input id="codigo" maxlength="5" placeholder="CÓDIGO" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="O código que aparece no jogo"><small>o código que aparece no jogo, em 📱 Controle no celular</small></div><button type="button" id="comecar">Começar</button></div></div>
 <div class="janela" id="ajustes"><div>
   <b style="font-size:17px">Ajustes do volante</b>
   <label>Giro para virar tudo <input type="range" id="sens" min="20" max="90" step="5"><output id="sensV"></output></label>
@@ -155,11 +158,21 @@ body.sem-giro #toque{display:block}
   for (const [c, l, cor] of PNEUS) { const b = document.createElement("button"); b.className = "pn"; b.dataset.pneu = c; b.style.setProperty("--p", cor); b.innerHTML = `${l}<sub>2</sub>`; b.setAttribute("aria-label", "Box com o pneu " + c); $("pneus").appendChild(b); }
 
   // ---------- a conexão (o servidor HTTPS do PC) ----------
-  const sock = io("/controle", { transports: ["websocket"] }), est = $("estado");
+  // (2026-11-25) no site o celular fala com o servidor do site e se junta ao jogo por um código (corrida-controle-site.js): /c/<código> traz ?k=; sem
+  // ele, a tela de começar pede o código. Na rede de casa (o HTTPS do programa de PC, porta 31518) é o canal /controle de sempre
+  const k = (new URLSearchParams(location.search).get("k") || "").toUpperCase().replace(/[^A-Z0-9]/g, ""), naCasa = location.port === "31518";
+  const sock = naCasa ? io("/controle", { transports: ["websocket"] }) : io("/controle-par", { transports: ["websocket"], autoConnect: false, auth: { celular: true, codigo: k } }), est = $("estado");
   const marca = (t, c) => { est.textContent = t; est.className = c || ""; };
-  sock.on("connect", () => marca("conectado ao PC", "ok"));
-  sock.on("disconnect", () => marca("sem conexão com o PC", "mal"));
-  sock.on("jogo", (j) => marca(j && j.ligado ? "conectado ao jogo" : "o jogo não está aberto no PC", j && j.ligado ? "ok" : "mal"));
+  sock.on("connect", () => marca(naCasa ? "conectado ao PC" : "conectado ao site", "ok"));
+  let recusado = false; // (o servidor recusou o código: o aviso fica, a desconexão que vem junto não o apaga)
+  sock.on("disconnect", () => { if (!recusado) marca(naCasa ? "sem conexão com o PC" : "sem conexão", "mal"); });
+  sock.on("jogo", (j) => {
+    if (j && (j.erro === "código" || j.erro === "cheio")) { recusado = true; marca(j.erro === "cheio" ? "esse jogo já tem 3 celulares" : "código não encontrado: confira no jogo", "mal"); const bx = $("codigoBox"); if (bx && document.getElementById("tela0")) bx.hidden = false; return; }
+    recusado = false;
+    marca(j && j.ligado ? "conectado ao jogo" : naCasa ? "o jogo não está aberto no PC" : "o jogo saiu: volte para a sala e ele reconecta", j && j.ligado ? "ok" : "mal");
+  });
+  if (!naCasa) { $("codigoBox").hidden = !!k; $("codigo").value = k; if (k) sock.connect(); else marca("digite o código do jogo", ""); }
+  else $("codigoBox").hidden = true;
   setInterval(() => { if (sock.connected) sock.volatile.emit("e", ent); }, 1000 / 60);
 
   // ---------- o volante: o giro do celular no plano da tela, pela gravidade ----------
@@ -272,6 +285,7 @@ body.sem-giro #toque{display:block}
 
   // ---------- começar: o iPhone só dá o giroscópio depois de um toque e da permissão ----------
   $("comecar").addEventListener("click", async () => {
+    if (!naCasa && !sock.connected) { const c = $("codigo").value.toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length < 5) { $("codigo").focus(); marca("digite o código de 5 letras do jogo", "mal"); return; } recusado = false; sock.auth.codigo = c; sock.connect(); try { history.replaceState(null, "", "?k=" + c); } catch (e) {} }
     try { if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === "function") { const r = await DeviceMotionEvent.requestPermission(); if (r !== "granted") cfg.toque = true; } } catch (e) { cfg.toque = true; }
     addEventListener("devicemotion", movimento);
     setTimeout(modoToque, 800); // (sem nenhuma leitura em 0,8 s: o aparelho não tem giroscópio, ou a página não é segura; vira no dedo)

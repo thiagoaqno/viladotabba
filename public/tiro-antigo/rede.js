@@ -24,7 +24,7 @@ function enter(r) {
   if (!r.ok) { $("hErr").textContent = r.error; return; }
   E.ME = { code: r.code, id: r.id, token: r.token };
   if (r.id) store.set("tiro:" + r.code, E.ME);
-  history.replaceState(null, "", "/tiro/?sala=" + r.code);
+  history.replaceState(null, "", "/tiro-antigo/?sala=" + r.code);
   $("roomTag").classList.remove("hidden"); $("rCode").textContent = r.code;
 }
 $("btnCreate").onclick = () => { const name = $("hName").value.trim(); store.set("galera:name", name); socket.emit("create", { name, config: store.get("tiro:cfg") || {} }, enter); };
@@ -36,7 +36,7 @@ $("btnJoin").onclick = () => {
 };
 $("btnWatch").onclick = () => { const code = $("hCode").value.trim().toUpperCase(); if (code.length !== 5) return ($("hErr").textContent = "Coloque o código da sala."); socket.emit("join", { code, watch: true }, enter); };
 $("hCode").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnJoin").click(); });
-$("btnInvite").onclick = async () => { const link = location.origin + "/tiro/?sala=" + E.ME.code; try { await navigator.clipboard.writeText(link); toast("Convite copiado! Manda no grupo."); } catch { prompt("Copie o convite:", link); } };
+$("btnInvite").onclick = async () => { const link = location.origin + "/tiro-antigo/?sala=" + E.ME.code; try { await navigator.clipboard.writeText(link); toast("Convite copiado! Manda no grupo."); } catch { prompt("Copie o convite:", link); } };
 function autoJoin() {
   syncClock();
   const code = E.urlCode ? E.urlCode.toUpperCase() : null, saved = code && store.get("tiro:" + code);
@@ -46,7 +46,7 @@ function autoJoin() {
 }
 socket.on("connect", autoJoin);
 setInterval(() => socket.connected && syncClock(2), 15000);
-socket.on("kicked", () => { toast("O organizador tirou você da sala."); E.urlCode = null; E.ME = null; E.S = null; history.replaceState(null, "", "/tiro/"); $("roomTag").classList.add("hidden"); stopGame(); show("home"); });
+socket.on("kicked", () => { toast("O organizador tirou você da sala."); E.urlCode = null; E.ME = null; E.S = null; history.replaceState(null, "", "/tiro-antigo/"); $("roomTag").classList.add("hidden"); stopGame(); show("home"); });
 // ---------- estado vindo do servidor ----------
 socket.on("state", (st) => {
   const old = E.S; E.S = st;

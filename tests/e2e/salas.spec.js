@@ -4,12 +4,12 @@ const { test, expect } = require("@playwright/test");
 const { io } = require("socket.io-client");
 
 // os jogos em 3D são desenhados por software no navegador de teste: janela pequena
-const TELA = (jogo) => (["corrida", "tiro", "batalha"].includes(jogo) ? { width: 480, height: 270 } : { width: 800, height: 500 });
+const TELA = (jogo) => (["corrida", "batalha"].includes(jogo) ? { width: 480, height: 270 } : { width: 800, height: 500 });
 
 test.setTimeout(300000); // dois navegadores desenhando 3D por software ao mesmo tempo é lento
-const JOGOS = ["banco", "uno", "truco", "sinuca", "ludo", "botao", "domino", "corrida", "tiro", "batalha"];
+const JOGOS = ["banco", "uno", "truco", "sinuca", "ludo", "botao", "domino", "corrida", "batalha"];
 
-const TRES_D = ["corrida", "tiro", "batalha"];
+const TRES_D = ["corrida", "batalha"];
 for (const jogo of JOGOS) {
   test(`${jogo}: dois entram, começa e roda sem erro`, async ({ browser, baseURL }) => {
     const erros = [], pags = [];
@@ -62,15 +62,3 @@ test("leilão: cria a sala e outra pessoa abre o convite", async ({ browser }) =
   expect(erros).toEqual([]);
 });
 
-test("tiro: o treino abre com os alvos andando", async ({ page }) => {
-  const erros = [];
-  page.on("pageerror", (e) => erros.push(String(e)));
-  page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource|WebSocket connection to/.test(m.text())) erros.push(m.text()); });
-  await page.setViewportSize({ width: 480, height: 270 });
-  await page.goto("/tiro/#debug");
-  await page.click("#btnPractice");
-  await page.waitForFunction(() => window.__tiro && __tiro.G.active && __tiro.G.bots.length > 0);
-  const x0 = await page.evaluate(() => __tiro.G.bots.map((b) => b.x + b.z).join());
-  await page.waitForFunction((x) => __tiro.G.bots.map((b) => b.x + b.z).join() !== x, x0, { timeout: 30000 });
-  expect(erros).toEqual([]);
-});

@@ -45,7 +45,7 @@ export function stopGame() {
 }
 export function leaveGame() {
   if (G.mode === "treino") { stopGame(); if (E.S) { show(E.S.phase === "lobby" ? "lobby" : "game"); if (E.S.phase !== "lobby") startGame("online"); else renderLobby(); } else show("home"); return; }
-  if (confirm("Sair da arena? A partida continua sem você.")) { socket.disconnect(); E.urlCode = null; E.ME = null; E.S = null; stopGame(); history.replaceState(null, "", "/tiro/"); $("roomTag").classList.add("hidden"); show("home"); socket.connect(); }
+  if (confirm("Sair da arena? A partida continua sem você.")) { socket.disconnect(); E.urlCode = null; E.ME = null; E.S = null; stopGame(); history.replaceState(null, "", "/tiro-antigo/"); $("roomTag").classList.add("hidden"); show("home"); socket.connect(); }
 }
 
 // ======================================================================

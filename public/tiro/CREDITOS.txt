@@ -1,0 +1,31 @@
+Tiro da Galera é feito a partir do código de Riposte: Frontline, de BenDBSS,
+https://github.com/BenDBSS/Riposte-Frontline-Source, sob a licença MIT abaixo. Nome, logo, músicas e som de acerto
+originais não são usados aqui. Texturas e céus: Poly Haven e ambientCG (CC0). three.js: MIT.
+Sons em CC BY:
+- Woodpecker by Benboncan (freesound.org/s/66955), CC BY 3.0
+- Waterfall by Samuel Strågefors (straget, freesound.org/s/489073), CC BY
+- "Grenade pin pull" by CGEffex (freesound.org/s/93837), CC BY 4.0
+- Voz de referência inglesa: LibriTTS-R (Y. Koizumi et al., Google, 2023), LibriVox, CC BY 4.0
+- Voz de referência francesa: Multilingual LibriSpeech (V. Pratap et al., Facebook AI, 2020), LibriVox, CC BY 4.0
+
+MIT License
+
+Copyright (c) 2026 BenDBSS
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

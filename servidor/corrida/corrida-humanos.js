@@ -85,7 +85,7 @@ function ambiente(room, p, S, agora = Date.now()) {
   amb.agua = F1.climaEm(room.clima, agora).agua; // a água na pista agora (o relógio do roteiro do clima: f1-regras.js)
   amb.spec = specDoPiloto(p); amb.manual = room.config.cambio === "manual"; amb.dano = p.dano || 0; amb.bonusBox = p.bonusBox || 0; amb.quebrou = !!p.quebrou; amb.drsZona = p.drsZona ?? -1;
   amb.safety = !!(d && d.safety); amb.setorAmarelo = d && d.amarelo ? d.amarelo.setor : -1; amb.ersAuto = room.config.ers !== "manual";
-  amb.voltas = room.config.voltas; amb.laps = p.laps || 0; amb.paradas = (p.paradas || []).length; amb.semente = room.semente; amb.id = p.id; amb.grid = p.grid; amb.equipe = p.equipe || null;
+  amb.voltas = room.config.voltas; amb.laps = quali ? (p.qVoltas || 0) + (p.qIni != null ? 1 : 0) : p.laps || 0; // (2026-11-24: no qualify o p.laps não sobe, e o teto de recarga do ERS por volta valia para a sessão inteira) amb.paradas = (p.paradas || []).length; amb.semente = room.semente; amb.id = p.id; amb.grid = p.grid; amb.equipe = p.equipe || null;
   amb.boxOcupado = Sim.garagemOcupada(Object.values(room.players), p, (o) => Sim.faseDoBox((o.sim ? o.sim.c : o.ia && o.ia.sim)?.box)); // a fila do box da equipe
   amb.finish = p.finish; amb.dnf = !!p.dnf; amb.quali = quali; amb.fantasma = p.finish != null; amb.f1 = true; amb.plano = p.plano || null; amb.gpMods = p.gpMods || null; // (o plano da carreira: sim.js PLANO)
   amb.jogos = F1.jogosRestantes(p); // (os jogos de pneu: a recomendação do menu do box usa os mesmos nos dois lados)

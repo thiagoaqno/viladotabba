@@ -91,7 +91,7 @@ function abrirSessao(room, deps) {
   let g = 0;
   for (const id of q.ativos) {
     const p = room.players[id];
-    Object.assign(p, { sector: T.SECTORS - 1, qIni: null, qMelhor: null, qQuando: null, qVoltas: 0, qSet: null, qMelhorSet: null, qFim: false, qPronto: false, pos: null });
+    Object.assign(p, { sector: T.SECTORS - 1, qIni: null, qMelhor: null, qQuando: null, qVoltas: 0, qSet: null, qMelhorSet: null, qFim: false, qPronto: false, qSaiu: false, pos: null });
     if (!p.bot) p.grid = g++; // cada um na sua fila do grid, só para sair de um lugar diferente (na classificação não tem batida)
     else if (!quemJoga) q.robos[id] = Robos.voltaLancada(room, p, q.i, bots.indexOf(id), bots.length, { startAt: q.startAt, durMs: q.durMs }); // (sem ninguém na pista: a conta rápida de sempre)
   }
@@ -177,6 +177,9 @@ function aoSetor(room, p, s, quando) { // (`quando`: a hora do passo da física 
   if (s !== (p.sector + 1) % T.SECTORS) return false;
   p.sector = s;
   if (s !== 0) { if (p.qIni != null) (p.qSet ||= [])[s - 1] = agora; return true; } // (a hora de cada setor da volta aberta)
+  // (2026-11-24) o robô faz a volta de saída inteira: a passagem pela linha logo depois do grid não abre a volta (saindo quase parado, a primeira
+  // cronometrada nunca podia ser a melhor); quem joga segue abrindo a volta na primeira passagem
+  if (p.qIni == null && p.bot && !p.qSaiu) { p.qSaiu = true; if (agora > q.fimAt) p.qFim = true; return true; }
   if (p.qIni == null) { if (agora > q.fimAt) p.qFim = true; else p.qIni = agora; return true; }
   const volta = (agora - p.qIni) / 1000;
   if (volta < T.PISTAS[room.config.pista].minLap) return false; // atalho: não conta, mas o setor segue o do navegador

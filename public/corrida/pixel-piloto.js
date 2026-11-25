@@ -8,7 +8,7 @@
 // com image-rendering: pixelated (de preferência em 48, 96 ou 144 px, múltiplos da grade). Os traços dos pilotos de verdade estão em TRACOS
 // (pela sigla); quem não está lá ganha um sorteado pelo nome, sempre o mesmo. O montador do seu piloto usa as mesmas listas.
 
-import { desenharMarca, marcasReaisProntas } from "./f1-marcas.js";
+import { desenharMarca, marcasReaisProntas, proporcaoMarca } from "./f1-marcas.js";
 export { marcasReaisProntas };
 export const N = 48; // a grade
 const CX = 24; // o meio (as colunas 23 e 24 são as do centro)
@@ -353,7 +353,8 @@ export const PATROCINIOS_EQUIPE = { mclaren: ["okx", "mastercard"], ferrari: ["h
   haas: ["moneygram", "haas"], cadillac: ["tmobile", "jimbeam"] };
 const claro = (c) => { const [r, g, b] = hex(c); return r * 0.3 + g * 0.59 + b * 0.11 > 150; };
 function marcaNaCaixa(x, id, cx, cy, w, h, tinta, giro = 0) {
-  x.save(); x.beginPath(); x.translate(cx, cy); x.rotate(giro); x.rect(-w / 2, -h / 2, w, h); x.clip(); x.scale(h * 0.9, h * 0.9);
+  const ar = proporcaoMarca(id) || 3, alt = Math.min(h * 0.9, (w * 0.95) / ar); // (o logo inteiro na caixa: pela altura ou, se for comprido, pela largura)
+  x.save(); x.beginPath(); x.translate(cx, cy); x.rotate(giro); x.rect(-w / 2, -h / 2, w, h); x.clip(); x.scale(alt, alt);
   try { desenharMarca(x, id, { tinta }); } catch (e) { /* sem o logo: o macacão fica liso */ }
   x.restore();
 }

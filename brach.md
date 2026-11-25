@@ -1,8 +1,8 @@
-# Torre: o cartão do piloto em todo estilo e os retratos no card de distância
+# Carreira de F1: a aba "Meu piloto"
 
-O Thiago pediu que o card do piloto aparecesse na torre quando ela é expandida, e que a imagem do piloto aparecesse no card que abre sobre a torre.
+O Thiago pediu que a carreira de F1 tivesse uma guia "Meu piloto" para montar o piloto em pixel art.
 
-- **Cartão do piloto (`hud-tv.js`):** antes só existia no HUD "Transmissão (TV)". Agora também vale nos outros estilos, com a torre completa (`compacta: false`, passado por `hud.js`). Nesses estilos entra só o cartão: a batalha dentro da torre, o aviso de novo líder e a caixa de marcha continuam só no estilo TV.
-- **Quando o cartão abre:** quando você ganha ou perde posição, e agora também no momento em que você expande a torre. Fica 6 s.
-- **Card de distância (`hud.js`, `htmlCard` "batalha"):** o card que abre sobre o cabeçalho da torre mostra o retrato em pixel art de cada piloto em cima do logo da equipe. O retrato vem de `retratoDoJogador`, buscando o piloto pela sigla. Os pilotos do grid usam o retrato desenhado e os jogadores, o do montador.
-- Conferido: a página carrega sem erros num servidor de teste (Edge sem tela).
+- **A aba (`temporada/central.js`):** "Meu piloto" entra na Central, entre "Capacete" e "Contratos". Ela funciona como a aba Capacete: a Central marca o lugar (`data-cx-piloto`), e o módulo de `temporada/index.html` (`window.PilotoCarreira`) põe ali o montador. Ele é o mesmo da sala (`piloto-pixel-editor.js`), com a prévia no macacão da sua equipe da carreira.
+- **Onde fica guardado:** neste navegador, o mesmo do montador da sala. Vai para a pista na próxima corrida, porque a carreira passa pela classificação, onde o piloto é enviado (`sincronizarPixel`).
+- **Conserto:** o montador importava o `estado.js` direto, e ele depende do `Comum` que só existe na página do jogo. Na Central, isso derrubava o módulo inteiro. Agora o `estado.js` só é carregado quando o montador fala com a sala. Na sala, a cor do macacão e o nome para o sorteio entram pelas opções de `montarMontador` (`cor` e `nome`).
+- **Conferido:** a página da carreira e a do jogo carregam num servidor de teste, e o montador aparece e responde nas duas. Na carreira, o único aviso é o ícone da aba (`favicon`), que já faltava antes.

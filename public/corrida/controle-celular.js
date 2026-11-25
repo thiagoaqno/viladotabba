@@ -7,7 +7,8 @@
 import { E, me, $, toast } from "./estado.js";
 import { race, respawn } from "./jogo.js";
 import { celular, trocarMarcha, nextCam } from "./controles.js";
-import { teclaBox } from "./mfd.js";
+import { teclaBox, digitoPneu } from "./mfd.js";
+import { jogosDe } from "./box.js";
 import { comecarVoz } from "./voz.js";
 import { standings } from "./hud.js";
 
@@ -44,7 +45,9 @@ const ACOES = {
   "marcha+": () => trocarMarcha(1),
   "marcha-": () => trocarMarcha(-1),
 };
-function acao(a) { if (race && ACOES[a]) { try { ACOES[a](); } catch (e) { console.warn("Controle no celular:", a, e); } } }
+// (2026-11-25, o Thiago: "poder escolher diretamente o pneu") "pneu:<composto>" pede o box com aquele pneu (o mesmo das teclas 1 a 5 e do MFD)
+const COMPOSTOS = ["macio", "medio", "duro", "intermediario", "chuva"];
+function acao(a) { if (race && typeof a === "string" && a.startsWith("pneu:") && COMPOSTOS.includes(a.slice(5))) { try { digitoPneu(a.slice(5)); } catch (e) { console.warn("Controle no celular:", a, e); } return; } if (race && ACOES[a]) { try { ACOES[a](); } catch (e) { console.warn("Controle no celular:", a, e); } } }
 
 // o painel do celular (o mesmo que o HUD mostra)
 function painel() {
@@ -58,6 +61,7 @@ function painel() {
     ers: race.ers ? Math.round(race.ers.carga * 100) : null, ersAtivo: !!race.ersAtivo,
     pneu: race.pneu ? race.pneu.composto : null, vida: race.pneu ? Math.max(0, Math.round((1 - (race.pneu.desgaste || 0)) * 100)) : null,
     box: !!race.box?.fase, cor: eq?.cor || m.color || "#e10600", manual: S.config.cambio === "manual",
+    pedido: race.box && !race.box.fase ? race.box.pedido || null : null, jogos: jogosDe(m), // (os pneus do celular: o pedido de box e quantos jogos sobram)
   });
 }
 

@@ -2,87 +2,138 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Volante">
-<meta name="theme-color" content="#07090d">
+<meta name="theme-color" content="#050608">
 <link rel="apple-touch-icon" href="/corrida/icone-192.png">
 <title>Controle — Corrida da Galera</title>
 <!-- Corrida da Galera — o controle no celular (corrida-controle.js no PC, controle-celular.js no jogo). Aberto pelo Safari do celular em
      https://<IP do PC>:31518/c, na mesma rede Wi-Fi do PC. Deitado: o freio à esquerda e o acelerador à direita (a força pela altura do dedo),
-     o volante pelo giroscópio (ou arrastando o dedo no meio, sem giroscópio), o painel no meio e os botões em volta. -->
+     o volante pelo giroscópio (ou arrastando o dedo no meio, sem giroscópio), o painel no meio e os botões em volta.
+     (2026-11-25, o Thiago: "escolher diretamente o pneu, não dar zoom, zona morta maior, mudar o estilo para um painel de carro com LED, e tela
+     cheia, que no Safari é foda") o visual de volante de F1: a barra de LEDs de troca de marcha, o display de vidro, os botões redondos com aro de
+     LED, os pedais com medidor de segmentos e os cinco pneus para pedir o box direto. -->
 <style>
-:root{--eq:#e10600;--fundo:#07090d;--cartao:#121722;--linha:#ffffff1c;--txt:#eef1f6;--fraco:#8b95a7}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-html,body{margin:0;height:100%;background:var(--fundo);color:var(--txt);font:600 14px/1.2 -apple-system,system-ui,"Segoe UI",sans-serif;overflow:hidden;touch-action:none;overscroll-behavior:none}
-#tudo{position:fixed;inset:0;display:grid;grid-template-columns:clamp(84px,17vw,150px) 1fr clamp(84px,17vw,150px);gap:10px;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
-.pedal{position:relative;border-radius:18px;background:var(--cartao);border:1px solid var(--linha);overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
-.pedal i{position:absolute;left:0;right:0;bottom:0;height:calc(var(--u,0)*100%);transition:height 40ms linear}
-#freio i{background:linear-gradient(0deg,#ff3b3b,#ff3b3b66)}#gas i{background:linear-gradient(0deg,#22d17a,#22d17a66)}
-.pedal b{position:relative;margin-bottom:14px;font-size:13px;letter-spacing:.14em;writing-mode:vertical-rl;transform:rotate(180deg);opacity:.9}
-.pedal.on{border-color:#ffffff55}
-#meio{display:grid;grid-template-rows:auto 1fr auto;gap:8px;min-width:0}
-.linha{display:flex;gap:8px;justify-content:center}
-.bt{flex:1;min-width:0;height:clamp(40px,11vh,58px);border-radius:12px;border:1px solid var(--linha);background:var(--cartao);color:var(--txt);font:800 13px/1 -apple-system,system-ui,sans-serif;letter-spacing:.06em;display:grid;place-items:center;padding:0 4px}
-.bt.on,.bt:active{background:var(--eq);border-color:var(--eq)}
-.bt.ers.on{background:#ffd23f;border-color:#ffd23f;color:#111}
-#painel{position:relative;border-radius:18px;background:radial-gradient(120% 120% at 50% 0%,#1a2130,#0d1118);border:1px solid var(--linha);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:6px 14px;overflow:hidden}
-#painel::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--eq)}
-.lado{display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}.lado.d{align-items:flex-end;text-align:right}
-.lado small{color:var(--fraco);font-size:11px;letter-spacing:.12em}.lado strong{font-size:clamp(18px,5vh,30px)}
-#marcha{font:900 clamp(56px,24vh,120px)/1 -apple-system,system-ui,sans-serif;text-align:center;min-width:1.2em;font-variant-numeric:tabular-nums}
-#kmh{font:800 clamp(16px,5vh,26px) -apple-system,system-ui,sans-serif;text-align:center;color:var(--fraco)}
-#rpm{position:absolute;left:14px;right:14px;bottom:6px;height:5px;border-radius:3px;background:#ffffff14;overflow:hidden}#rpm i{display:block;height:100%;width:calc(var(--u,0)*100%);background:linear-gradient(90deg,#22d17a,#ffd23f 70%,#ff3b3b)}
-#ersBarra{width:100%;height:6px;border-radius:3px;background:#ffffff14;overflow:hidden}#ersBarra i{display:block;height:100%;width:calc(var(--u,0)*100%);background:#ffd23f}
-#volante{position:absolute;left:50%;top:50%;width:min(46vh,40%);aspect-ratio:1;transform:translate(-50%,-50%) rotate(var(--a,0deg));opacity:.09;pointer-events:none}
+:root{--eq:#e10600;--fundo:#050608;--txt:#eef1f6;--fraco:#7d8799}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
+html,body{margin:0;height:100%;color:var(--txt);font:600 14px/1.2 -apple-system,system-ui,"Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none;
+  background:radial-gradient(130% 90% at 50% 0%,#1b1f27,#07080b 60%),repeating-linear-gradient(45deg,#ffffff05 0 2px,transparent 2px 6px),var(--fundo)}
+#tudo{position:fixed;inset:0;display:grid;grid-template-columns:clamp(78px,15vw,140px) 1fr clamp(78px,15vw,140px);gap:10px;
+  padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+
+/* ---- os pedais: o medidor de segmentos acende de baixo para cima ---- */
+.pedal{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:10px 10px 30px;border-radius:20px;overflow:hidden;
+  background:linear-gradient(180deg,#14171e,#0b0d12);box-shadow:inset 0 0 0 1px #ffffff14,inset 0 -30px 40px #0006}
+.pedal i{display:block;flex:1;border-radius:4px;background:#ffffff0d;transition:background .06s,box-shadow .06s}
+#freio i.on{background:#ff3048;box-shadow:0 0 12px #ff3048aa}#gas i.on{background:#1fe07a;box-shadow:0 0 12px #1fe07aaa}
+#gas i.on.alto{background:#9dff3a}#freio i.on.alto{background:#ff7a30}
+.pedal b{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:11px;letter-spacing:.2em;color:var(--fraco)}
+.pedal.on b{color:#fff}
+
+/* ---- o meio ---- */
+#meio{display:grid;grid-template-rows:auto auto 1fr auto auto;gap:7px;min-width:0}
+/* os LEDs de troca de marcha (5 verdes, 5 vermelhos, 5 azuis), como no volante de F1 */
+#leds{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;padding:5px 10px;border-radius:12px;background:#000;box-shadow:inset 0 0 0 1px #ffffff12}
+#leds i{justify-self:center;width:clamp(9px,3.4vh,16px);aspect-ratio:1;border-radius:50%;background:#1a1d24;transition:background .05s,box-shadow .05s}
+#leds i.g{background:#1fe07a;box-shadow:0 0 10px #1fe07a}#leds i.r{background:#ff3048;box-shadow:0 0 10px #ff3048}#leds i.b{background:#2e8bff;box-shadow:0 0 10px #2e8bff}
+#leds.corte i{animation:pisca .12s steps(1) infinite;background:#2e8bff;box-shadow:0 0 12px #2e8bff}
+@keyframes pisca{50%{background:#1a1d24;box-shadow:none}}
+.linha{display:flex;gap:7px;justify-content:center}
+/* os botões: redondos, com o aro de LED da cor de cada um */
+.bt{--b:#8b95a7;flex:1;min-width:0;height:clamp(38px,10.5vh,54px);border-radius:999px;border:0;color:var(--txt);font:800 12px/1 -apple-system,system-ui,sans-serif;letter-spacing:.08em;
+  background:radial-gradient(120% 120% at 50% 20%,#262b36,#11141b);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--b) 55%,transparent),0 3px 8px #0008;display:grid;place-items:center;padding:0 4px;transition:transform .06s,box-shadow .12s,background .12s}
+.bt.on,.bt:active{transform:scale(.94);background:radial-gradient(120% 120% at 50% 20%,color-mix(in srgb,var(--b) 70%,#fff),var(--b));color:#0b0d12;box-shadow:inset 0 0 0 2px #fff6,0 0 16px var(--b)}
+.bt.ers{--b:#ffd23f}.bt.box{--b:#2e8bff}.bt.radio{--b:#1fe07a}.bt.mfd{--b:#eef1f6}.bt.olhar{--b:#b07cff}.bt.cam{--b:#00d2be}.bt.pista{--b:#ff8a3d}.bt.marcha{--b:var(--eq)}
+.bt.pequeno{flex:0 0 auto;width:clamp(38px,10.5vh,54px)}
+/* o display: vidro escuro com a marcha enorme e os números em volta */
+#painel{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:8px 16px;border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,#0a1016,#04070a);box-shadow:inset 0 0 0 2px #1c2430,inset 0 0 40px #00000090,0 0 0 4px #0b0d12}
+#painel::before{content:"";position:absolute;inset:0;background:linear-gradient(170deg,#ffffff12,transparent 40%);pointer-events:none}
+#painel::after{content:"";position:absolute;left:16px;right:16px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--eq);box-shadow:0 0 12px var(--eq)}
+.lado{display:flex;flex-direction:column;gap:3px;font-variant-numeric:tabular-nums;min-width:0}.lado.d{align-items:flex-end;text-align:right}
+.lado small{color:var(--fraco);font-size:10px;letter-spacing:.16em}
+.lado strong{font:800 clamp(17px,5.4vh,30px)/1 ui-monospace,"SF Mono",Menlo,monospace;color:#d6f5ff;text-shadow:0 0 10px #5fd3ff66}
+#marcha{font:900 clamp(60px,27vh,132px)/.9 ui-monospace,"SF Mono",Menlo,monospace;text-align:center;min-width:1.1em;color:#fff;text-shadow:0 0 18px var(--eq),0 0 2px #fff;font-variant-numeric:tabular-nums}
+#marcha.pop{animation:pop .18s ease-out}@keyframes pop{from{transform:scale(1.25)}to{transform:none}}
+#kmh{font:800 clamp(15px,5vh,24px) ui-monospace,"SF Mono",Menlo,monospace;text-align:center;color:#9fb0c4}
+/* o ERS e a vida do pneu: barras de segmentos */
+.seg{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;width:clamp(70px,16vw,130px)}
+.seg i{height:6px;border-radius:2px;background:#ffffff12}
+#ersSeg i.on{background:#ffd23f;box-shadow:0 0 6px #ffd23f}#ersSeg.ativo i.on{background:#fff27a;animation:pisca .25s steps(1) infinite}
+#vidaSeg i.on{background:#1fe07a}#vidaSeg.meio i.on{background:#ffd23f}#vidaSeg.fim i.on{background:#ff3048}
+#volante{position:absolute;left:50%;top:50%;width:min(46vh,40%);aspect-ratio:1;transform:translate(-50%,-50%) rotate(var(--a,0deg));opacity:.07;pointer-events:none}
 #toque{display:none;position:absolute;inset:0}
 body.sem-giro #toque{display:block}
-#tela0{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#07090df2;text-align:center;padding:24px}
+/* os pneus: pedir o box direto com o composto */
+#pneus{display:flex;gap:7px;justify-content:center;align-items:center}
+#pneus span{font-size:10px;letter-spacing:.14em;color:var(--fraco);margin-right:2px}
+.pn{--p:#fff;position:relative;width:clamp(36px,10vh,50px);aspect-ratio:1;border-radius:50%;border:0;padding:0;font:900 clamp(13px,4vh,19px)/1 -apple-system,system-ui,sans-serif;color:#fff;
+  background:radial-gradient(circle,#15171c 52%,var(--p) 53% 66%,#15171c 67%);box-shadow:0 0 0 2px #0008,0 3px 8px #0008;transition:transform .08s,box-shadow .15s,opacity .2s}
+.pn sub{position:absolute;right:-3px;bottom:-3px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#000;color:#cfd6e0;font:800 10px/16px -apple-system,system-ui,sans-serif}
+.pn:active{transform:scale(.9)}.pn.pedido{box-shadow:0 0 0 3px #fff,0 0 18px var(--p);animation:respira 1.2s ease-in-out infinite}
+.pn.atual::after{content:"";position:absolute;left:50%;top:-6px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#fff}
+.pn.sem{opacity:.28}
+@keyframes respira{50%{box-shadow:0 0 0 3px #fff,0 0 4px var(--p)}}
+
+/* ---- as telas por cima ---- */
+#tela0{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#050608f2;text-align:center;padding:24px}
 #tela0 h1{margin:0 0 8px;font-size:24px}#tela0 p{margin:6px auto;max-width:480px;color:#c3cad6;font-weight:500}
-#tela0 button{margin-top:14px;padding:14px 28px;border:0;border-radius:12px;background:var(--eq);color:#fff;font:800 17px -apple-system,system-ui,sans-serif}
-#estado{position:fixed;left:50%;top:max(4px,env(safe-area-inset-top));transform:translateX(-50%);z-index:5;font-size:11px;padding:3px 10px;border-radius:10px;background:#000a;color:var(--fraco)}
-#estado.ok{color:#7fe08a}#estado.mal{color:#ff8a80}
-#ajustes{position:fixed;inset:0;z-index:8;display:none;place-items:center;background:#07090df2}#ajustes.on{display:grid}
-#ajustes div{background:var(--cartao);border:1px solid var(--linha);border-radius:16px;padding:18px 20px;width:min(420px,90vw)}
-#ajustes label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0;font-weight:600}
-#ajustes input[type=range]{flex:1;accent-color:var(--eq)}
+#tela0 button{margin-top:14px;padding:14px 28px;border:0;border-radius:999px;background:var(--eq);color:#fff;font:800 17px -apple-system,system-ui,sans-serif;box-shadow:0 0 22px var(--eq)}
+#estado{position:fixed;left:50%;top:max(2px,env(safe-area-inset-top));transform:translateX(-50%);z-index:5;font-size:10px;padding:2px 10px;border-radius:10px;background:#000a;color:var(--fraco)}
+#estado.ok{color:#7fe08a;animation:somir .6s 3s forwards}@keyframes somir{to{opacity:0}}#estado.mal{color:#ff8a80}
+.janela{position:fixed;inset:0;z-index:8;display:none;place-items:center;background:#050608f2}.janela.on{display:grid}
+.janela>div{background:#11141b;box-shadow:inset 0 0 0 1px #ffffff1c;border-radius:16px;padding:18px 20px;width:min(440px,90vw)}
+.janela label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0;font-weight:600}
+.janela input[type=range]{flex:1;accent-color:var(--eq)}
+.janela ol{margin:10px 0;padding-left:22px;color:#c3cad6;font-weight:500;line-height:1.5}
 #girar{display:none;position:fixed;inset:0;z-index:20;place-items:center;background:var(--fundo);text-align:center;font-size:18px;padding:20px}
 @media (orientation:portrait){#girar{display:grid}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div id="tudo">
-  <div class="pedal" id="freio"><i></i><b>FREIO</b></div>
+  <div class="pedal" id="freio"><b>FREIO</b></div>
   <div id="meio">
+    <div id="leds" aria-hidden="true"></div>
     <div class="linha">
-      <button class="bt ers" data-hold="ers">ERS</button><button class="bt" data-acao="box">BOX</button><button class="bt" data-acao="radio">RÁDIO</button>
-      <button class="bt" data-acao="mfd">MFD</button><button class="bt" data-hold="olhar">OLHAR</button>
+      <button class="bt ers" data-hold="ers">ERS</button><button class="bt box" data-acao="box">BOX</button><button class="bt radio" data-acao="radio">RÁDIO</button>
+      <button class="bt mfd" data-acao="mfd">MFD</button><button class="bt olhar" data-hold="olhar">OLHAR</button>
+      <button class="bt pequeno" data-tela-cheia aria-label="Tela cheia">⛶</button><button class="bt pequeno" data-ajustes aria-label="Ajustes">⚙</button>
     </div>
     <div id="painel">
       <svg id="volante" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#fff" stroke-width="7"/><path d="M8 50h28M64 50h28M50 58v34" stroke="#fff" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="#fff"/></svg>
       <div id="toque" aria-label="Arraste para virar"></div>
       <div class="lado"><small>VOLTA</small><strong id="volta">—</strong><small>POSIÇÃO</small><strong id="pos">—</strong></div>
       <div><div id="marcha">N</div><div id="kmh">0 km/h</div></div>
-      <div class="lado d"><small>ERS</small><strong id="ers">—</strong><div id="ersBarra"><i></i></div><small>PNEU</small><strong id="pneu">—</strong></div>
-      <div id="rpm"><i></i></div>
+      <div class="lado d"><small>ERS <b id="ers" style="color:#ffd23f">—</b></small><div class="seg" id="ersSeg"></div><small>PNEU <b id="pneu">—</b></small><div class="seg" id="vidaSeg"></div></div>
     </div>
+    <div id="pneus"><span>BOX COM</span></div>
     <div class="linha">
-      <button class="bt" data-acao="marcha-">− MARCHA</button><button class="bt" data-acao="camera">CÂMERA</button><button class="bt" data-acao="voltar">PISTA</button>
-      <button class="bt" data-cal>CAL</button><button class="bt" data-ajustes>⚙</button><button class="bt" data-acao="marcha+">MARCHA +</button>
+      <button class="bt marcha" data-acao="marcha-">− MARCHA</button><button class="bt cam" data-acao="camera">CÂMERA</button><button class="bt pista" data-acao="voltar">PISTA</button>
+      <button class="bt" data-cal>CAL</button><button class="bt marcha" data-acao="marcha+">MARCHA +</button>
     </div>
   </div>
-  <div class="pedal" id="gas"><i></i><b>ACELERADOR</b></div>
+  <div class="pedal" id="gas"><b>ACELERA</b></div>
 </div>
 <div id="estado">conectando…</div>
 <div id="tela0"><div><h1>🏎️ Volante da Corrida</h1><p>Deite o celular e segure como um volante. Na hora de começar, o iPhone pergunta se pode usar o movimento: permita.</p><p>Freio à esquerda, acelerador à direita: quanto mais alto o dedo, mais forte.</p><button type="button" id="comecar">Começar</button></div></div>
-<div id="ajustes"><div>
+<div class="janela" id="ajustes"><div>
   <b style="font-size:17px">Ajustes do volante</b>
   <label>Giro para virar tudo <input type="range" id="sens" min="20" max="90" step="5"><output id="sensV"></output></label>
+  <label>Zona morta no centro <input type="range" id="morta" min="0" max="15" step="1"><output id="mortaV"></output></label>
   <label>Inverter o lado <input type="checkbox" id="inv"></label>
   <label>Virar arrastando o dedo (sem giroscópio) <input type="checkbox" id="toqueOn"></label>
   <button class="bt" data-fechar style="width:100%;margin-top:6px">Pronto</button>
+</div></div>
+<div class="janela" id="iosCheia"><div>
+  <b style="font-size:17px">Tela cheia no iPhone</b>
+  <p style="color:#c3cad6;font-weight:500;margin:8px 0 0">O Safari do iPhone não deixa uma página ocupar a tela toda. Mas dá para abrir o controle como um app, sem as barras:</p>
+  <ol><li>Toque em <b>Compartilhar</b> (o quadrado com a seta para cima).</li><li>Escolha <b>Adicionar à Tela de Início</b> e toque em <b>Adicionar</b>.</li><li>Abra o <b>Volante</b> pelo ícone na tela de início: ele abre em tela cheia.</li></ol>
+  <button class="bt" data-fechar style="width:100%;margin-top:6px">Entendi</button>
 </div></div>
 <div id="girar"><div>↻<br>Vire o celular de lado</div></div>
 <script src="/socket.io/socket.io.js"></script>
@@ -90,9 +141,18 @@ body.sem-giro #toque{display:block}
 (function () {
   const $ = (id) => document.getElementById(id), guardar = (k, v) => { try { localStorage.setItem("controle:" + k, JSON.stringify(v)); } catch (e) {} };
   const lido = (k, p) => { try { const v = JSON.parse(localStorage.getItem("controle:" + k)); return v == null ? p : v; } catch (e) { return p; } };
-  const cfg = { sens: lido("sens", 45), inv: lido("inv", false), toque: lido("toque", false) };
+  // morta: a zona morta no centro, em graus (2026-11-25: de 1° fixo para 4° por padrão, ajustável de 0 a 15)
+  const cfg = { sens: lido("sens", 45), morta: lido("morta", 4), inv: lido("inv", false), toque: lido("toque", false) };
   const ent = { v: 0, g: 0, f: 0, ers: false, olhar: false };
   let centro = null, angulo = 0, giroOk = false, toqueV = 0;
+
+  // ---------- as peças que se repetem ----------
+  const N_PEDAL = 12, N_LED = 15;
+  for (const id of ["freio", "gas"]) { const el = $(id); for (let k = 0; k < N_PEDAL; k++) el.insertBefore(document.createElement("i"), el.firstChild); }
+  for (let k = 0; k < N_LED; k++) $("leds").appendChild(document.createElement("i"));
+  for (const id of ["ersSeg", "vidaSeg"]) for (let k = 0; k < 10; k++) $(id).appendChild(document.createElement("i"));
+  const PNEUS = [["macio", "S", "#ff3048"], ["medio", "M", "#ffd23f"], ["duro", "H", "#eef1f6"], ["intermediario", "I", "#1fe07a"], ["chuva", "W", "#2e8bff"]];
+  for (const [c, l, cor] of PNEUS) { const b = document.createElement("button"); b.className = "pn"; b.dataset.pneu = c; b.style.setProperty("--p", cor); b.innerHTML = `${l}<sub>2</sub>`; b.setAttribute("aria-label", "Box com o pneu " + c); $("pneus").appendChild(b); }
 
   // ---------- a conexão (o servidor HTTPS do PC) ----------
   const sock = io("/controle", { transports: ["websocket"] }), est = $("estado");
@@ -114,8 +174,9 @@ body.sem-giro #toque{display:block}
   }
   function volanteAgora() {
     if (cfg.toque || !giroOk) return toqueV;
-    let d = angulo; if (Math.abs(d) < 1) d = 0; // (1° de folga no centro)
-    return Math.max(-1, Math.min(1, (cfg.inv ? -d : d) / cfg.sens));
+    // a zona morta: dentro dela, reto; fora, a conta recomeça do zero na borda (sem degrau) e chega a 1 no giro total
+    const d = cfg.inv ? -angulo : angulo, m = Math.min(cfg.morta, cfg.sens - 5), fora = Math.max(0, Math.abs(d) - m);
+    return Math.sign(d) * Math.min(1, fora / (cfg.sens - m));
   }
   function quadro() {
     ent.v = volanteAgora();
@@ -129,45 +190,84 @@ body.sem-giro #toque{display:block}
   for (const ev of ["pointerup", "pointercancel"]) tq.addEventListener(ev, () => { tqX = null; toqueV = 0; });
   const modoToque = () => document.body.classList.toggle("sem-giro", cfg.toque || !giroOk);
 
-  // ---------- os pedais: a força pela altura do dedo (embaixo = leve, em cima = tudo) ----------
+  // ---------- os pedais: a força pela altura do dedo (embaixo = leve, em cima = tudo); o medidor acende os segmentos ----------
   function pedal(el, k) {
-    const ids = new Map();
-    const valor = () => { let u = 0; for (const y of ids.values()) { const r = el.getBoundingClientRect(); u = Math.max(u, Math.min(1, Math.max(0.35, (r.bottom - y) / r.height * 1.15))); } ent[k] = u; el.style.setProperty("--u", u.toFixed(2)); el.classList.toggle("on", u > 0); };
+    const ids = new Map(), segs = [...el.querySelectorAll("i")].reverse();
+    const valor = () => {
+      let u = 0; for (const y of ids.values()) { const r = el.getBoundingClientRect(); u = Math.max(u, Math.min(1, Math.max(0.35, (r.bottom - y) / r.height * 1.15))); }
+      ent[k] = u; el.classList.toggle("on", u > 0);
+      const n = Math.round(u * segs.length); segs.forEach((s, i) => { s.classList.toggle("on", i < n); s.classList.toggle("alto", i < n && i >= segs.length * 0.75); });
+    };
     el.addEventListener("pointerdown", (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); ids.set(e.pointerId, e.clientY); valor(); });
     el.addEventListener("pointermove", (e) => { if (ids.has(e.pointerId)) { ids.set(e.pointerId, e.clientY); valor(); } });
     for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) el.addEventListener(ev, (e) => { ids.delete(e.pointerId); valor(); });
   }
   pedal($("freio"), "f"); pedal($("gas"), "g");
 
-  // ---------- os botões: segurar (ERS, olhar para trás) e tocar (o resto) ----------
+  // ---------- os botões: segurar (ERS, olhar para trás) e tocar (o resto); os pneus pedem o box com aquele composto ----------
+  const vibra = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
   for (const b of document.querySelectorAll("[data-hold]")) {
     const k = b.dataset.hold, set = (v) => { ent[k] = v; b.classList.toggle("on", v); };
-    b.addEventListener("pointerdown", (e) => { e.preventDefault(); b.setPointerCapture(e.pointerId); set(true); });
+    b.addEventListener("pointerdown", (e) => { e.preventDefault(); b.setPointerCapture(e.pointerId); set(true); vibra(8); });
     for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(ev, () => set(false));
   }
-  for (const b of document.querySelectorAll("[data-acao]")) b.addEventListener("pointerdown", (e) => { e.preventDefault(); sock.emit("acao", b.dataset.acao); });
-  document.querySelector("[data-cal]").addEventListener("pointerdown", (e) => { e.preventDefault(); centro = null; angulo = 0; });
+  for (const b of document.querySelectorAll("[data-acao]")) b.addEventListener("pointerdown", (e) => { e.preventDefault(); sock.emit("acao", b.dataset.acao); vibra(10); });
+  for (const b of document.querySelectorAll("[data-pneu]")) b.addEventListener("pointerdown", (e) => { e.preventDefault(); sock.emit("acao", "pneu:" + b.dataset.pneu); vibra(14); });
+  document.querySelector("[data-cal]").addEventListener("pointerdown", (e) => { e.preventDefault(); centro = null; angulo = 0; vibra(20); });
 
   // ---------- os ajustes ----------
-  const aj = $("ajustes"), sens = $("sens"), inv = $("inv"), toqueOn = $("toqueOn");
-  const pintarAj = () => { sens.value = cfg.sens; $("sensV").textContent = cfg.sens + "°"; inv.checked = cfg.inv; toqueOn.checked = cfg.toque; };
+  const aj = $("ajustes"), sens = $("sens"), morta = $("morta"), inv = $("inv"), toqueOn = $("toqueOn");
+  const pintarAj = () => { sens.value = cfg.sens; $("sensV").textContent = cfg.sens + "°"; morta.value = cfg.morta; $("mortaV").textContent = cfg.morta + "°"; inv.checked = cfg.inv; toqueOn.checked = cfg.toque; };
   document.querySelector("[data-ajustes]").addEventListener("click", () => { pintarAj(); aj.classList.add("on"); });
-  aj.querySelector("[data-fechar]").addEventListener("click", () => aj.classList.remove("on"));
+  for (const j of document.querySelectorAll(".janela")) j.querySelector("[data-fechar]").addEventListener("click", () => j.classList.remove("on"));
   sens.addEventListener("input", () => { cfg.sens = +sens.value; guardar("sens", cfg.sens); pintarAj(); });
+  morta.addEventListener("input", () => { cfg.morta = +morta.value; guardar("morta", cfg.morta); pintarAj(); });
   inv.addEventListener("change", () => { cfg.inv = inv.checked; guardar("inv", cfg.inv); });
   toqueOn.addEventListener("change", () => { cfg.toque = toqueOn.checked; guardar("toque", cfg.toque); modoToque(); });
 
+  // ---------- a tela cheia: a de verdade onde existe (Android, iPad); no iPhone, o caminho do "Adicionar à Tela de Início" ----------
+  const de = document.documentElement, app = window.navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+  const podeCheia = !!(de.requestFullscreen || de.webkitRequestFullscreen);
+  function telaCheia() {
+    if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    if (podeCheia) { try { const r = (de.requestFullscreen || de.webkitRequestFullscreen).call(de, { navigationUI: "hide" }); if (r && r.catch) r.catch(() => $("iosCheia").classList.add("on")); } catch (e) { $("iosCheia").classList.add("on"); } return; }
+    $("iosCheia").classList.add("on");
+  }
+  const btCheia = document.querySelector("[data-tela-cheia]");
+  if (app) btCheia.remove(); else btCheia.addEventListener("click", telaCheia);
+
+  // ---------- sem zoom: o toque duplo, a pinça e o arrastar com dois dedos do Safari ----------
+  let ultimoToque = 0;
+  document.addEventListener("touchend", (e) => { const t = Date.now(); if (t - ultimoToque < 350) e.preventDefault(); ultimoToque = t; }, { passive: false });
+  document.addEventListener("touchmove", (e) => { if (e.touches.length > 1 || e.scale && e.scale !== 1) e.preventDefault(); }, { passive: false });
+  for (const ev of ["gesturestart", "gesturechange", "gestureend", "dblclick"]) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+
   // ---------- o painel do jogo ----------
   const NOME_PNEU = { macio: "MACIO", medio: "MÉDIO", duro: "DURO", chuva: "CHUVA", intermediario: "INTER" };
+  const leds = [...$("leds").children], ersSeg = [...$("ersSeg").children], vidaSeg = [...$("vidaSeg").children];
+  let marchaAnt = null;
   sock.on("painel", (p) => {
-    if (!p || !p.ativo) { $("marcha").textContent = "—"; $("kmh").textContent = "fora da pista"; return; }
+    if (!p || !p.ativo) { $("marcha").textContent = "—"; $("kmh").textContent = "fora da pista"; leds.forEach((l) => (l.className = "")); return; }
     document.documentElement.style.setProperty("--eq", /^#[0-9a-f]{6}$/i.test(p.cor || "") ? p.cor : "#e10600");
-    $("marcha").textContent = p.box ? "P" : p.m || "N"; $("kmh").textContent = p.kmh + " km/h";
+    const m = String(p.box ? "P" : p.m || "N"), mEl = $("marcha");
+    if (marchaAnt != null && m !== marchaAnt) { mEl.classList.remove("pop"); void mEl.offsetWidth; mEl.classList.add("pop"); } marchaAnt = m;
+    mEl.textContent = m; $("kmh").textContent = p.kmh + " km/h";
     $("volta").textContent = p.voltas ? `${p.volta}/${p.voltas}` : p.volta; $("pos").textContent = p.pos ? `P${p.pos}` : "—";
-    $("ers").textContent = p.ers == null ? "—" : p.ers + "%"; $("ersBarra").style.setProperty("--u", ((p.ers || 0) / 100).toFixed(2));
-    $("pneu").textContent = p.pneu ? `${NOME_PNEU[p.pneu] || p.pneu}${p.vida != null ? " " + p.vida + "%" : ""}` : "—";
-    $("rpm").style.setProperty("--u", Math.max(0, Math.min(1, p.rpm || 0)).toFixed(2));
+    // os LEDs: acendem com a rotação (de 45% em diante), e no corte piscam todos em azul
+    const rpm = Math.max(0, Math.min(1, p.rpm || 0)), acesos = Math.round(Math.max(0, (rpm - 0.45) / 0.5) * N_LED);
+    leds.forEach((l, i) => (l.className = i < acesos ? (i < 5 ? "g" : i < 10 ? "r" : "b") : ""));
+    $("leds").classList.toggle("corte", rpm > 0.97);
+    const ers = p.ers == null ? null : p.ers; $("ers").textContent = ers == null ? "—" : ers + "%";
+    ersSeg.forEach((s, i) => s.classList.toggle("on", ers != null && i < Math.round(ers / 10))); $("ersSeg").classList.toggle("ativo", !!p.ersAtivo);
     document.querySelector(".bt.ers").classList.toggle("on", !!p.ersAtivo || ent.ers);
+    $("pneu").textContent = p.pneu ? NOME_PNEU[p.pneu] || p.pneu : "—";
+    const vida = p.vida == null ? null : p.vida; vidaSeg.forEach((s, i) => s.classList.toggle("on", vida != null && i < Math.round(vida / 10)));
+    $("vidaSeg").className = "seg" + (vida == null ? "" : vida < 25 ? " fim" : vida < 55 ? " meio" : "");
+    for (const b of document.querySelectorAll("[data-pneu]")) {
+      const c = b.dataset.pneu, n = p.jogos ? p.jogos[c] : null;
+      b.classList.toggle("pedido", p.pedido === c); b.classList.toggle("atual", p.pneu === c); b.classList.toggle("sem", n != null && n <= 0);
+      b.querySelector("sub").textContent = n == null ? "" : n;
+    }
   });
 
   // ---------- começar: o iPhone só dá o giroscópio depois de um toque e da permissão ----------
@@ -176,10 +276,10 @@ body.sem-giro #toque{display:block}
     addEventListener("devicemotion", movimento);
     setTimeout(modoToque, 800); // (sem nenhuma leitura em 0,8 s: o aparelho não tem giroscópio, ou a página não é segura; vira no dedo)
     try { await navigator.wakeLock?.request("screen"); } catch (e) { /* a tela pode apagar sozinha */ }
+    if (podeCheia && !app) try { await (de.requestFullscreen || de.webkitRequestFullscreen).call(de); } catch (e) { /* sem tela cheia: segue */ }
     $("tela0").remove(); requestAnimationFrame(quadro);
   });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { try { navigator.wakeLock?.request("screen"); } catch (e) {} } else { ent.g = ent.f = 0; ent.ers = ent.olhar = false; } });
-  document.addEventListener("gesturestart", (e) => e.preventDefault()); // (o zoom de pinça do Safari)
 })();
 </script>
 </body>

@@ -457,6 +457,30 @@ function bandeiraNoTopo(x, sigla, img) {
 }
 // pinta a folha inteira: o casco, o desenho e o que todo capacete tem (a faixa do patrocínio acima da viseira, o filete embaixo e o número);
 // `extra` (o capacete de quem joga): a bandeira num círculo no topo e o nome na faixa acima da viseira e na nuca. `aoChegar`: a bandeira chegou depois, repinte
+// (2026-11-25, o Thiago: "quero novas texturas para o capacete, tipo estampas novas", com a imagem das 10) as estampas: a textura de verdade
+// (public/corrida/capacete-estampas/<arquivo>.webp, 512×512, recortada da imagem dele) envolvendo o capacete: uma metade da folha com ela e a outra com ela
+// espelhada, assim não fica emenda na frente nem atrás. As cores são as da estampa (a faixa e o resto usam as 3); chega depois e repinta (aoChegar)
+export const ESTAMPAS = {
+  t_carbononeon: { nome: "Carbono Neon", arquivo: "carbononeon", cores: ["#151515", "#9cff1a", "#6b6b6b"] },
+  t_tigre: { nome: "Tigre", arquivo: "tigre", cores: ["#f05a00", "#111111", "#f2f2f2"] },
+  t_geometrica: { nome: "Geométrica", arquivo: "geometrica", cores: ["#0b2e8a", "#e01020", "#f2f2f2"] },
+  t_topografica: { nome: "Topográfica", arquivo: "topografica", cores: ["#1ed6d0", "#1a1a1a", "#555555"] },
+  t_brasil: { nome: "Bandeira Brasileira", arquivo: "brasil", cores: ["#0f8a2e", "#f2d000", "#123a9a"] },
+  t_digital: { nome: "Digital", arquivo: "digital", cores: ["#a0a0a0", "#141414", "#e01020"] },
+  t_gradiente: { nome: "Gradiente", arquivo: "gradiente", cores: ["#8a12c8", "#19d0f0", "#2a2a2a"] },
+  t_relampago: { nome: "Relâmpago", arquivo: "relampago", cores: ["#f2d200", "#111111", "#f2f2f2"] },
+  t_onda: { nome: "Onda", arquivo: "onda", cores: ["#0b2a7a", "#1f5fc0", "#f2f2f2"] },
+  t_hexagonal: { nome: "Hexagonal", arquivo: "hexagonal", cores: ["#e01020", "#1a1a1a", "#555555"] },
+};
+export const imagemDaEstampa = (id) => `/corrida/capacete-estampas/${ESTAMPAS[id].arquivo}.webp`;
+const ESTAMPA_IMG = new Map();
+function estampaImg(id, aoChegar) {
+  if (typeof Image === "undefined" || !ESTAMPAS[id]) return null;
+  let b = ESTAMPA_IMG.get(id);
+  if (!b) { b = { img: new Image(), ok: false, espera: [] }; ESTAMPA_IMG.set(id, b); b.img.onload = () => { b.ok = true; for (const f of b.espera.splice(0)) f(); }; b.img.src = imagemDaEstampa(id); }
+  if (!b.ok && aoChegar) b.espera.push(aoChegar);
+  return b.ok ? b.img : null;
+}
 export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = null) {
   const v = extra && extra.variante | 0, base = v === 1 ? [cores[0], cores[2], cores[1]] : v === 2 ? [cores[1], cores[0], cores[2]] : cores; // (o "Padrão": as cores trocadas)
   const [c1, c2, c3] = base;
@@ -465,7 +489,8 @@ export function pintarFolha(x, cores, desenho, numero, extra = null, aoChegar = 
   if (carbono) { x.drawImage(carbono, 0, 0); x.globalAlpha = 0.2; x.fillStyle = c1; x.fillRect(0, 0, 512, 256); x.globalAlpha = 1; } // (o casco de carbono, puxado para a cor 1)
   x.save(); if (v === 3) { x.translate(512, 0); x.scale(-1, 1); } // (o "Padrão" espelhado: o desenho vira de lado)
   const EST = ESTILOS[desenho] || ESTILOS_PILOTOS[desenho];
-  if (EST) EST.pintar(x, base); else (DESENHOS[desenho] || DESENHOS.generico)(x, base);
+  if (ESTAMPAS[desenho]) { const img = estampaImg(desenho, aoChegar); if (img) { x.drawImage(img, 0, 0, 256, 256); x.save(); x.translate(512, 0); x.scale(-1, 1); x.drawImage(img, 0, 0, 256, 256); x.restore(); } }
+  else if (EST) EST.pintar(x, base); else (DESENHOS[desenho] || DESENHOS.generico)(x, base);
   x.restore();
   x.fillStyle = c3; x.fillRect(282, 74, 204, 11); // a faixa estreita do patrocínio / nome acima da viseira (só cor; um pouco acima do lábio da viseira)
   // as duas entradas de ar do queixo, logo abaixo da viseira (2026-11-13, pela imagem do Thiago): fendas escuras inclinadas para fora

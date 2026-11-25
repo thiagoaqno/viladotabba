@@ -97,5 +97,7 @@
 /* (2026-11-25) os Padrões: as miniaturas em pixel art dos capacetes dos pilotos, com o nome embaixo; a grade rola */
 .cp2-padroes{max-height:min(460px,62vh);overflow-y:auto;padding-right:4px}
 .cp2-padroes .cp2-mini img{width:100%;aspect-ratio:64/49;object-fit:contain;border-radius:6px;background:#0d0f14}
+.cp2-estampas .cp2-mini img{aspect-ratio:1;object-fit:cover}
+.cp2-swatch{display:flex;gap:3px;justify-content:center;margin-top:2px}.cp2-swatch i{width:12px;height:12px;border-radius:3px;box-shadow:0 0 0 1px #0006}
 .cp2-padroes .cp2-mini-txt{aspect-ratio:auto;font-size:11px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){.cp2-mini{animation:none}}

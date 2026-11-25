@@ -64,6 +64,20 @@ h = troca(h, "fetch(new URL('/version.json?t='", "fetch(new URL('version.json?t=
 // online pelo nosso servidor (servidor/jogos/tiro-rele.js): sem o PeerJS, o jogo manda tudo pelo relé
 h = troca(h, /<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/peerjs[^>]*><\/script>\s*/, "", { nome: "PeerJS" });
 h = troca(h, /<meta name="cod-relay" content="[^"]*">/, `<meta name="cod-relay" content="">\n<script>window.NET_RELAY_URL=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/tiro/rele';</script>`, { nome: "relé" });
+// português (ferramentas/tiro-pt.json: texto francês do jogo → português). O jogo só conhece 'fr' e 'en': o 'en' vira o
+// português (o dicionário dele é trocado pelo nosso), e é o padrão; o francês continua nas Opções
+const PT = JSON.parse(fs.readFileSync(path.join(__dirname, "tiro-pt.json"), "utf8"));
+h = troca(h, /const I18N_EN=(\{[\s\S]*?\});const I18N_MISS/, (_, d) => {
+  const en = JSON.parse(d), sem = Object.keys(en).filter((k) => !(k in PT));
+  if (sem.length) console.log(`  ${sem.length} textos sem português (ficam em francês), ex.: ${sem.slice(0, 3).join(" | ")}`);
+  const dic = {}; for (const k of Object.keys(en)) dic[k] = k in PT ? PT[k] : k;
+  return "const I18N_EN=" + JSON.stringify(dic) + ";const I18N_MISS";
+}, { nome: "dicionário português" });
+h = troca(h, "['en','English']", "['en','Português']", { nome: "opção Português" });
+h = troca(h, "if(c==='fr'||c==='en')return c;", "if(c==='fr')return c;", { nome: "português por padrão" });
+h = troca(h, "const LOCALE=LANG==='fr'?'fr-FR':'en-US';", "const LOCALE=LANG==='fr'?'fr-FR':'pt-BR';", { nome: "números em pt-BR" });
+h = troca(h, "document.documentElement.lang=LANG;", "document.documentElement.lang=LANG==='en'?'pt-BR':LANG;", { nome: "lang da página" });
+h = troca(h, "const ordinal=(n)=>(LANG==='en'?", "const ordinal=(n)=>(LANG==='en'?n+'º':LANG!=='fr'?", { nome: "ordinal 1º" });
 h = troca(h, /Riposte: Frontline|Riposte Frontline/g, NOME, { nome: "nome" });
 h = troca(h, /Installer Riposte/g, "Installer " + NOME, { min: 0, nome: "instalador" });
 h = troca(h, /content="Riposte"/g, 'content="Tiro"', { min: 0, nome: "nome curto" });

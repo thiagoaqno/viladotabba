@@ -336,3 +336,10 @@ body.sala-escura:has(#lobby:not(.hidden)) .wrap{padding-bottom:84px}
 }
 
 /* ---------- o editor do capacete (capacete-editor.js) ---------- */
+/* (2026-11-25) o acabamento do carro (acabamento-carro-ui.js): as amostras de reflexo, a escolhida com o contorno */
+.sn-acab{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sn-acab-op{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 8px 8px;border-radius:10px;border:2px solid transparent;background:#ffffff0d;color:inherit;font:600 12px inherit;cursor:pointer}
+.sn-acab-op i{display:block;width:44px;height:28px;border-radius:7px;box-shadow:inset 0 0 0 1px #0004}
+.sn-acab-op.on{border-color:var(--eq,#e10600);background:#ffffff1a}
+.sn-acab-op:hover{background:#ffffff1f}
+.sn-acab-nota{flex-basis:100%;opacity:.65;font-size:11px}

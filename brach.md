@@ -1,6 +1,14 @@
-# Torre: o cartão só no TOP 3 e a faixa da bandeira amarela com o setor
+# Acabamento do carro: cromado, metálico, brilhante, acetinado ou fosco
 
-O Thiago pediu duas coisas: que o cartão do piloto parasse de aparecer nas ultrapassagens e aparecesse só quando alguém conquista uma posição do TOP 3; e a faixa "bandeira amarela" com o setor, como na transmissão.
+O Thiago pediu a opção de escolher o material do carro, o acabamento.
 
-- **O cartão (`hud-tv.js`):** abre só quando um piloto ganha uma posição e fica entre os 3 primeiros, a liderança incluída. Vale na corrida, depois da primeira volta dele. Perder posição, ou ganhar fora do top 3, não abre nada. Ao expandir a torre, o seu continua abrindo.
-- **A faixa (`hud.js`, `hud-f1.css`):** embaixo da volta, o amarelo com "BANDEIRA AMARELA" e, embaixo dele, "SETOR N" em amarelo sobre o escuro. O setor vem da direção de prova (`E.S.direcao.amarelo`). Com o safety car, a faixa mostra "SAFETY CAR / MANTENHA A POSIÇÃO". Some quando a pista é liberada. Vale em todos os estilos de HUD.
+- **A escolha (`acabamento-carro-ui.js`, novo):** fica na gaveta da sala, na seção Pintura, com uma amostra de reflexo para cada opção: Cromado (o de antes, que continua o padrão), Metálico, Brilhante, Acetinado e Fosco. Fica guardada neste navegador.
+- **O material (`f1-pintura.js`):** `aplicarVerniz` aceita um perfil por acabamento, com:
+  - a camada acetinada ligada ou não;
+  - a tinta metálica ou não;
+  - a rugosidade da tinta (o brilhante bem liso, o fosco bem áspero);
+  - a força do verniz.
+  - Os outros carros seguem o acetinado de sempre.
+- **No carro (`f1.js`):** o seu carro, o do volante vivo, usa o acabamento escolhido. Cada acabamento é um programa de shader próprio, com a chave de cache dele.
+- **Quando vale:** a partir da próxima corrida, porque o material é montado na largada.
+- **Não conferido:** não vi o carro com cada acabamento numa corrida. O shader só compila quando o carro aparece, então um erro nele só aparece jogando.

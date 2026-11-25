@@ -86,7 +86,7 @@
     // (2026-11-25) o montador do seu piloto em pixel art na aba "Meu piloto" da Central (central.js chama window.PilotoCarreira.montar no lugar marcado).
     // Fica guardado neste navegador e vai para a pista na próxima corrida (piloto-pixel-editor.js sincronizarPixel)
     import { montarMontador, lerPixel } from "/corrida/piloto-pixel-editor.js";
-    import { retratoInteiro } from "/corrida/pixel-piloto.js";
+    import { camadasInteiro, marcasReaisProntas } from "/corrida/pixel-piloto.js";
     let caixa = null, tela = null, cor = null;
     // (2026-11-25, o Thiago: "enquanto eu estiver fazendo o piloto, ele deve aparecer em pé, inteiro, do lado direito") a vitrine: o piloto de corpo
     // inteiro (pixel-piloto.js retratoInteiro), grande, sobre um holofote, respirando; muda a cada clique do montador
@@ -100,12 +100,49 @@
       @keyframes pxRespira{50%{transform:scaleY(1.012) translateY(-2px)}}
       @keyframes pxTroca{from{transform:scale(.94) translateY(8px);opacity:.6}}
       @media (max-width:900px){.cx-piloto-tela{grid-template-columns:1fr}.cx-piloto-vitrine{min-height:0}.cx-piloto-vitrine img{height:52vh}}
-      @media (prefers-reduced-motion:reduce){.cx-piloto-vitrine img{animation:none}}`;
+      @media (prefers-reduced-motion:reduce){.cx-piloto-vitrine img{animation:none}}
+      /* (2026-11-25, o Thiago: "o piloto não devia ficar parado; devia interagir às vezes e interagir com o mouse") as camadas: o corpo, o braço e a cabeça */
+      .px-fig{position:relative;z-index:1;height:min(74vh,700px);aspect-ratio:var(--px-ar,48/116);cursor:pointer;filter:drop-shadow(0 14px 24px #0005);animation:pxRespira 3.2s ease-in-out infinite;transform-origin:50% 100%}
+      .px-fig>*{position:absolute;inset:0}.px-fig img{width:100%;height:100%;image-rendering:pixelated;animation:none;filter:none;height:100%}
+      .px-cab,.px-braco{transition:transform .18s ease-out}
+      .px-olho{position:absolute;background:var(--px-pele);transform:scaleY(0);transform-origin:50% 0;transition:transform .06s}
+      .px-fig.pisca .px-olho{transform:scaleY(1)}
+      .px-fig.pula{animation:pxPula .7s cubic-bezier(.3,1.4,.5,1)}
+      .px-fig.acena .px-braco{animation:pxAcena 1.4s ease-in-out}
+      .px-fig.olha .px-cab{animation:pxOlha 1.6s ease-in-out}
+      .px-fig.troca{animation:pxTroca .35s cubic-bezier(.2,1.4,.4,1)}
+      @keyframes pxPula{0%{transform:none}30%{transform:translateY(-9%) scaleY(1.03)}55%{transform:translateY(0) scaleY(.95)}75%{transform:translateY(-2%)}100%{transform:none}}
+      @keyframes pxAcena{0%{transform:rotate(0)}18%{transform:rotate(-140deg)}32%{transform:rotate(-118deg)}46%{transform:rotate(-145deg)}60%{transform:rotate(-118deg)}74%{transform:rotate(-140deg)}100%{transform:rotate(0)}}
+      @keyframes pxOlha{0%,100%{transform:none}25%{transform:translateX(-1.5%) rotate(-6deg)}65%{transform:translateX(1.5%) rotate(6deg)}}
+      @media (prefers-reduced-motion:reduce){.px-fig,.px-fig *{animation:none!important;transition:none!important}}`;
     document.head.appendChild(st);
-    const pintarInteiro = (t) => { const img = tela && tela.querySelector(".cx-piloto-vitrine img"); if (!img || !t) return; const u = retratoInteiro(t, { cor: cor || "#e10600", escala: 6 }); if (img.src !== u) { img.src = u; img.classList.remove("troca"); void img.offsetWidth; img.classList.add("troca"); } };
+    // a figura: as camadas de pixel-piloto.js camadasInteiro; a cabeça segue o mouse, pisca, e de vez em quando ele acena, pula ou olha em volta; no
+    // clique, pula e acena. Os logos de verdade do macacão chegam depois (marcasReaisProntas) e a figura se refaz
+    let ultimoT = null, equipeAtual = null, ultimoMouse = 0;
+    const fig = () => tela && tela.querySelector(".px-fig");
+    const fazer = (cls, ms) => { const f = fig(); if (!f || f.classList.contains(cls)) return; f.classList.add(cls); setTimeout(() => f.classList.remove(cls), ms); };
+    const pintarInteiro = (t, forcar) => {
+      const f = fig(); if (!f || !t) return; const chave = JSON.stringify([t, cor, equipeAtual]); if (f._chave === chave && !forcar) return; f._chave = chave; ultimoT = t;
+      const c = camadasInteiro(t, { cor: cor || "#e10600", equipe: equipeAtual, escala: 6 }); if (!c) return;
+      const pct = (v, tot) => (v / tot * 100) + "%";
+      f.style.setProperty("--px-ar", c.W + "/" + c.H); f.style.setProperty("--px-pele", c.pele);
+      f.innerHTML = `<div class="px-corpo"><img alt="" src="${c.corpo}"></div><div class="px-braco" style="transform-origin:${pct(c.ombro[0], c.W)} ${pct(c.ombro[1], c.H)}"><img alt="" src="${c.braco}"></div>
+        <div class="px-cab" style="transform-origin:${pct(c.pescoco[0], c.W)} ${pct(c.pescoco[1], c.H)}"><img alt="" src="${c.cabeca}">${c.olhos.map(([x, y, w, h]) => `<i class="px-olho" style="left:${pct(x, c.W)};top:${pct(y, c.H)};width:${pct(w, c.W)};height:${pct(h, c.H)}"></i>`).join("")}</div>`;
+      if (!forcar) { f.classList.remove("troca"); void f.offsetWidth; f.classList.add("troca"); setTimeout(() => f.classList.remove("troca"), 400); }
+    };
+    marcasReaisProntas.then(() => { if (ultimoT) pintarInteiro(ultimoT, true); });
+    // o mouse: a cabeça vira e inclina para onde ele está (e o corpo inclina de leve)
+    addEventListener("pointermove", (e) => {
+      const f = fig(); if (!f || !f.isConnected) return; ultimoMouse = performance.now();
+      const r = f.getBoundingClientRect(), dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth * 0.4))), dy = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height * 0.2)) / (innerHeight * 0.5)));
+      const cab = f.querySelector(".px-cab"); if (cab && !f.classList.contains("olha")) cab.style.transform = `translate(${(dx * 1.6).toFixed(2)}%, ${(dy * 0.6).toFixed(2)}%) rotate(${(dx * 7).toFixed(1)}deg)`;
+    });
+    // piscar (a cada 2,5 a 5 s) e as ações sozinhas (a cada 6 a 11 s, se o mouse não mexeu há 1,5 s)
+    (function piscar() { setTimeout(() => { fazer("pisca", 130); piscar(); }, 2500 + Math.random() * 2500); })();
+    (function agir() { setTimeout(() => { if (performance.now() - ultimoMouse > 1500) { const a = ["acena", "pula", "olha"][Math.floor(Math.random() * 3)]; fazer(a, a === "acena" ? 1450 : a === "olha" ? 1650 : 750); } agir(); }, 6000 + Math.random() * 5000); })();
     window.PilotoCarreira = { montar(lugar, c) {
-      const eq = c && c.s && window.F1Pilotos && window.F1Pilotos.EQUIPES[c.s.equipe]; cor = (eq && eq.cor) || null;
-      if (!tela) { tela = document.createElement("div"); tela.className = "cx-piloto-tela"; tela.innerHTML = '<div class="cx-piloto-vitrine" aria-label="O seu piloto de corpo inteiro"><img alt=""></div>'; }
+      const eq = c && c.s && window.F1Pilotos && window.F1Pilotos.EQUIPES[c.s.equipe]; cor = (eq && eq.cor) || null; equipeAtual = (c && c.s && c.s.equipe) || null;
+      if (!tela) { tela = document.createElement("div"); tela.className = "cx-piloto-tela"; tela.innerHTML = '<div class="cx-piloto-vitrine" aria-label="O seu piloto de corpo inteiro"><div class="px-fig" title="Clique: ele acena"></div></div>'; tela.querySelector(".px-fig").addEventListener("click", () => { fazer("pula", 750); setTimeout(() => fazer("acena", 1450), 250); }); }
       tela.style.setProperty("--px-cor", cor || "#e10600");
       if (!caixa) { caixa = document.createElement("section"); caixa.className = "cx-card cx-piloto"; caixa.innerHTML = "<h3 class=\"cx-piloto-tit\">Meu piloto</h3><p class=\"cx-piloto-sub\">Monte o seu piloto em pixel art: ele aparece na torre, nos cards e na apresentação do grid.</p><div class=\"px-cartao\"></div>"; }
       const ed = montarMontador(caixa.querySelector(".px-cartao"), { cor: () => cor, aoMudar: pintarInteiro });

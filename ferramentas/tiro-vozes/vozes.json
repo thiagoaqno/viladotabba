@@ -1,0 +1,7 @@
+{
+  "_": "Uma voz de rádio por tipo de arma principal da classe (WEAPONS[classe.primary].cat no jogo). A 'padrao' fica na pasta tiro-vozes/ e vale para fuzil de assalto, pistola e o que não tiver voz própria; as outras ficam em tiro-vozes/<grupo>/ e viram um pacote separado (sfx/voix_<grupo>.js), baixado só quando alguém usa aquela classe.",
+  "padrao": { "voz": "oCWW6YTSEVFt26dBO8vU", "armas": "fuzis de assalto (classe Assalto)" },
+  "smg": { "voz": "cPoqAvGWCPfCfyPMwe4z", "armas": "submetralhadoras (classe Faxineiro)" },
+  "sniper": { "voz": "Bj9UqZbhQsanLzgalpEG", "armas": "fuzis de precisão (classe Atirador)" },
+  "shotgun": { "voz": "jqcCZkN6Knx8BJ5TBdYR", "armas": "escopetas (classe Arrombador)" }
+}

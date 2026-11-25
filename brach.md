@@ -1,35 +1,23 @@
-# Tiro da Galera sem internet, no programa de PC, com o perfil subindo depois
+# Tiro da Galera: o "Perfil" do menu do jogo abre o perfil da Vila
 
-## Jogar sem internet
+O Thiago clicou em Perfil no menu do jogo e caiu na tela de contas do site original, que aqui dizia "Aqui o jogo não tem
+contas". O perfil da Vila (#995) estava num botão separado, no canto de baixo.
 
-O programa de PC da Corrida já leva a pasta `public/` inteira e roda o servidor no próprio PC, então o tiro já vinha junto.
-Faltava um jeito de chegar nele, porque a janela do programa não tem barra de endereço:
+## O que mudou
 
-- **`public/corrida/index.html` + `menu.js`:** no programa de PC, o menu da Corrida ganha o item "Tiro da Galera" (`/tiro/`).
-  No site, o item fica escondido.
-- **No tiro, dentro do programa,** aparece o botão "🏁 Corrida" para voltar.
-- **Contra os bots, tudo roda no PC.** O online continua precisando de internet, porque passa pelo relé da VPS.
+- **O cartão "Perfil" do menu do jogo agora é o perfil da Vila.** Ele mostra o nome e o nível ("Thiago · Nível 7 · ver meu
+  perfil"), ou "Criar perfil" para quem ainda não tem. Clicar nele abre a janela do perfil (criar, entrar com o código, código
+  para outro aparelho, placar) no lugar da tela de contas.
+  - `ferramentas/tiro-frontline.js` faz o `uiGo('profile')` e o `acctChip` do jogo perguntarem ao `window.tiroPerfil`.
+  - O `perfil-galera.js` atualiza o cartão quando o nome ou o nível mudam.
+- **O botão separado do canto** só aparece se o cartão do jogo não estiver na tela. O "🏁 Corrida" do programa de PC continua.
+- **Saiu o script de estatísticas de visita do Vercel** (`/_vercel/insights`), do site original. Aqui ele dava 404, e assim
+  nada de visita sai para fora.
 
-## O perfil é o do site, também no programa
+## Conferido no navegador
 
-- **`servidor/jogos/tiro-perfil.js`:**
-  - `GET /tiro/perfil/site` diz o endereço do site (o `CORRIDA_SITE` do programa; no site, vazio);
-  - o CORS do perfil vale só para a origem do programa (`http://127.0.0.1:<porta>`), com o preflight do `X-Tiro-Token`.
-- **`perfil-galera.js`:** em 127.0.0.1, ele fala com o perfil do site.
-  - Sem internet, o jogo usa o que está no aparelho, e o que for jogado fica marcado como pendente (`tiro_perfil_pend`, com ⏳
-    no botão do perfil).
-  - Esse progresso sobe quando a internet volta: na hora, pelo evento `online`, ou na próxima abertura.
-  - Se, ao abrir, o site tiver algo diferente (jogado em outro aparelho), a página recarrega com o que está no site.
-- **O progresso nunca volta para trás:** o `salvar` recusa um `cod_arsenal` com XP total (`px`) menor que o guardado e responde
-  com os dados do servidor, que o aparelho então adota. Os ajustes seguem a última gravação.
-
-## Conferido
-
-Rodei dois servidores locais, um fazendo o papel do site e outro o do programa apontando para ele:
-- o programa descobre o endereço do site;
-- o preflight do CORS responde 204 para a origem do programa, e uma origem qualquer não recebe a liberação;
-- um XP menor não apaga o maior, e o aparelho recebe os dados do servidor;
-- o item do tiro aparece no menu da Corrida;
-- o `/tiro/` abre no "programa".
-
-Também entrou uma linha em `public/corrida/novidades.json`, conferida com `JSON.parse`.
+Num servidor local:
+- o cartão mostrava "Criar perfil", e clicar nele abriu a janela do perfil, com o jogo parado no menu principal;
+- o perfil foi criado e o código apareceu;
+- o cartão passou a mostrar "Teste · Nível 1 · ver meu perfil";
+- no console, nenhum erro de script.

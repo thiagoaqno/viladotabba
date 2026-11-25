@@ -44,7 +44,8 @@ const Ritmo = require("./public/leilao/ritmo.js"); // quanto dura cada parte do 
 try { require("./servidor/comum/bd.js").abrir(); } catch (e) { console.warn("Banco de dados não abriu:", e.message); }
 require("./servidor/corrida/corrida-temporada.js")(io, corrida); // temporada solo de Fórmula 1, canal /corrida-temporada
 require("./servidor/corrida/corrida-temporada-grupo.js")(io, corrida); // temporada de Fórmula 1 com os amigos, sala com código, canal /corrida-temporada-grupo
-require("./servidor/corrida/corrida-controle.js").attach(io, app); // o controle no celular (só no programa de PC: um servidor HTTPS na rede local, aberto quando o jogo pede)
+require("./servidor/corrida/corrida-controle.js").attach(io, app);
+require("./servidor/corrida/corrida-controle-site.js").attach(io, app); // o controle no celular pelo site: o celular e o jogo juntos por um código (2026-11-25) // o controle no celular (só no programa de PC: um servidor HTTPS na rede local, aberto quando o jogo pede)
 require("./servidor/carreira/fotos-jogadores.js").attach(app);
 require("./servidor/carreira/carreira.js")(io); // Carreira de Treinador: a temporada contra o computador, salva no banco, canal /carreira
 const carreiraOnline = require("./servidor/carreira/carreira-online.js")(io); // Carreira em grupo: a sala com código, cada amigo num clube do mesmo mundo, canal /carreira-online

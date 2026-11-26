@@ -1,5 +1,7 @@
-# Tiro da Galera: prévia temporária das skins
+# Tiro da Galera: peças de iate para o editor de mapas
 
-O modo `?camos=todas` ficava gravado no navegador e continuava liberando todas as camuflagens e skins da faca nas aberturas seguintes. Agora a prévia vale apenas para aquela abertura do jogo, remove a antiga preferência persistente e retira o parâmetro do endereço para que uma atualização volte ao modo normal.
+O editor ganha peças para montar um navio de luxo: salão e ponte envidraçados, cassino, escada externa com patamar, piscina e mobiliário de convés, heliponto, lanchas, equipamentos e detalhes náuticos. Os prédios têm portas de 2,4 m e laje andável; a escada registra a rampa usada por jogadores e bots.
 
-As travas voltam a seguir o nível da arma e os abates com a faca, sem alterar XP ou progresso. Validação: `node --check` e remontagem do jogo com `tiro-frontline.js`.
+Os vidros do salão e da ponte aparecem na prévia e são montados como painéis destrutíveis no jogo. A documentação reúne as medidas e orienta o uso da escada e do corrimão com parede invisível. Os mapas Navio e Favela não foram alterados.
+
+Validação: `node --check` nos três arquivos alterados do editor e remontagem de `public/tiro/index.html` com `tiro-frontline.js`. A aparência, os vidros e a navegação dos bots ainda precisam ser conferidos no jogo.

@@ -126,6 +126,58 @@ function edInvPrefab(P) {
   const tr = (x, z) => [px + x * c + z * s, pz - x * s + z * c];
   for (const [x0, x1, y0, y1, z0, z1] of E) { const a = tr(x0, z0), b = tr(x1, z1); glassWall(a[0], b[0], py + y0, py + y1, a[1], b[1]); }
 }
+/* ---------- grafite: texto pintado com spray numa parede (peça "grafite" do editor) ----------
+   { t: 'grafite', p: [x, y, z] (centro de baixo), r: graus, s: [largura, altura], texto, estilo, cor: [r,g,b], borda: [r,g,b] }
+   estilo: 'bomb' (letra gorda com contorno e sombra), 'pixo' (pichação reta, letra alta e fina), 'escorre' (com tinta
+   escorrendo) ou 'tag' (assinatura rabiscada). Desenhado num canvas na hora: o .json só guarda o texto, o estilo e as cores. */
+const ED_GRAF_ESTILOS = [['bomb', 'Grafite gordo'], ['pixo', 'Pixo reto'], ['escorre', 'Escorrendo'], ['tag', 'Tag (assinatura)']];
+const edRgb = (c, a = 1) => 'rgba(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ',' + a + ')';
+function edGrafiteCanvas(G) {
+  const [w, h] = G.s || [3, 1.2], W = 1024, H = Math.max(96, Math.min(1024, Math.round((W * h) / w)));
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const txt = String(G.texto || ' ').slice(0, 40), est = G.estilo || 'bomb', cor = G.cor || [0.98, 0.8, 0.1], bor = G.borda || [0.08, 0.08, 0.1];
+  const R = rngOf(txt.length * 31 + (txt.charCodeAt(0) || 1));
+  const fontes = { bomb: '900 {s}px Impact, "Arial Black", sans-serif', escorre: '900 {s}px Impact, "Arial Black", sans-serif', pixo: '700 {s}px "Arial Narrow", Impact, sans-serif', tag: 'italic 700 {s}px "Segoe Script", "Brush Script MT", cursive' };
+  const fonte = fontes[est] || fontes.bomb, texto = est === 'tag' ? txt : txt.toUpperCase(), estica = est === 'pixo' ? 1.9 : 1; // o pixo é alto e fino
+  g.font = fonte.replace('{s}', 100);
+  const larg = g.measureText(texto).width || 1;
+  const s = Math.min(H * (est === 'pixo' ? 0.48 : 0.72), (W * 0.9 * 100) / larg); g.font = fonte.replace('{s}', Math.round(s));
+  g.save(); g.translate(W / 2, H / 2 + (est === 'pixo' ? 0 : s * 0.05)); g.rotate(est === 'tag' ? -0.12 : est === 'pixo' ? 0 : -0.05); g.scale(1, estica);
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  g.shadowColor = edRgb(cor, 0.55); g.shadowBlur = s * 0.12; // névoa do spray em volta
+  if (est === 'bomb' || est === 'escorre') {
+    g.fillStyle = edRgb(bor, 0.55); g.fillText(texto, s * 0.07, s * 0.07); // sombra
+    g.shadowBlur = s * 0.06; g.lineWidth = s * 0.18; g.strokeStyle = edRgb(bor); g.strokeText(texto, 0, 0);
+    const gr = g.createLinearGradient(0, -s / 2, 0, s / 2); gr.addColorStop(0, edRgb(cor.map((v) => Math.min(1, v * 1.25 + 0.1)))); gr.addColorStop(1, edRgb(cor.map((v) => v * 0.75)));
+    g.shadowBlur = 0; g.fillStyle = gr; g.fillText(texto, 0, 0);
+    g.fillStyle = 'rgba(255,255,255,0.85)'; for (let i = 0; i < 6; i++) { const x = (R() - 0.5) * W * 0.7, y = (R() - 0.7) * s * 0.4; g.beginPath(); g.arc(x, y, s * R.range(0.02, 0.045), 0, TAU); g.fill(); }
+  } else if (est === 'pixo') {
+    g.shadowBlur = s * 0.04; g.lineWidth = s * 0.06; g.strokeStyle = edRgb(cor); g.strokeText(texto, 0, 0); g.fillStyle = edRgb(cor); g.fillText(texto, 0, 0);
+  } else {
+    g.lineWidth = s * 0.05; g.strokeStyle = edRgb(bor, 0.8); g.strokeText(texto, 0, 0); g.fillStyle = edRgb(cor); g.fillText(texto, 0, 0);
+    const lt = (larg * s) / 100; g.lineWidth = s * 0.06; g.strokeStyle = edRgb(cor); g.beginPath(); g.moveTo(-lt * 0.5, s * 0.45); g.quadraticCurveTo(0, s * 0.62, lt * 0.55, s * 0.38); g.stroke();
+  }
+  g.restore();
+  if (est === 'escorre') { // tinta escorrendo de baixo das letras
+    g.fillStyle = edRgb(cor.map((v) => v * 0.85)); const base = H / 2 + s * 0.3;
+    for (let i = 0; i < 14; i++) { const x = W * 0.08 + R() * W * 0.84, L = R.range(0.08, 0.38) * H, r = s * R.range(0.012, 0.03); g.fillRect(x - r, base - s * 0.1, 2 * r, L); g.beginPath(); g.arc(x, base - s * 0.1 + L, r * 1.4, 0, TAU); g.fill(); }
+  }
+  g.fillStyle = edRgb(cor, 0.6); // pontinhos de spray soltos
+  for (let i = 0; i < 260; i++) { const x = W / 2 + (R() - 0.5) * W * 0.95, y = H / 2 + (R() - 0.5) * H * 0.85; g.fillRect(x, y, R.range(1, 2.6), R.range(1, 2.6)); }
+  return cv;
+}
+const ED_GRAF_TEX = new Map();
+function edGrafiteMaterial(G) {
+  const k = JSON.stringify([G.texto, G.estilo, G.cor, G.borda, G.s]);
+  if (!ED_GRAF_TEX.has(k)) { const t = new THREE.CanvasTexture(edGrafiteCanvas(G)); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; ED_GRAF_TEX.set(k, t); }
+  return new THREE.MeshStandardMaterial({ map: ED_GRAF_TEX.get(k), transparent: true, depthWrite: false, roughness: 0.92, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+}
+// a malha do grafite: um plano encostado na frente (+z) da posição, com o pé no y da peça
+function edGrafiteMalha(G) {
+  const [w, h] = G.s || [3, 1.2], m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), edGrafiteMaterial(G));
+  const ry = ((G.r || 0) * Math.PI) / 180; m.position.set(G.p[0] + Math.sin(ry) * 0.02, G.p[1] + h / 2, G.p[2] + Math.cos(ry) * 0.02); m.rotation.y = ry;
+  return m;
+}
 // monta as peças (também usado pelo botão "Jogar" do editor)
 function edConstruir(J) {
   for (const P of J.pecas || []) {
@@ -136,6 +188,7 @@ function edConstruir(J) {
       else if (P.t === 'escada') edEscada(P);
       else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); edColAuto(P, x, y, z, ry); }
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
+      else if (P.t === 'grafite') { const m = edGrafiteMalha(P); m.updateMatrix(); m.matrixAutoUpdate = false; (MAPL.root || scene).add(m); }
       else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
     } catch (e) { console.warn('peça do mapa', P, e); }
   }

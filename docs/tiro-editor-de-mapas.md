@@ -97,6 +97,11 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
 - **`prop` e `prefab`:** `prop` é objeto solto, que voa com tiro e explosão (barril, cadeira, garrafa...). `prefab` é cenário
   fixo, com colisão.
 - **`e`:** a escala do prefab ou do objeto.
+- **`grafite`:** texto pintado com spray numa parede, em `{ "t": "grafite", "p": [x, y, z], "r": graus, "s": [largura, altura], "texto": "...", "estilo": "bomb", "cor": [r, g, b], "borda": [r, g, b] }`.
+  - O texto tem até 40 letras.
+  - O estilo pode ser `bomb` (letra gorda com contorno), `pixo` (pichação reta), `escorre` (com tinta escorrendo) ou `tag` (assinatura).
+  - A pintura fica na frente da peça (+z), a 2 cm de `p`. Ela não colide nem segura bala.
+  - No editor, fica no fim da aba Básico ("Grafite").
 - **`poi`:** os pontos que os bots visitam, `[x, y, z]` ou `[x, y, z, 1]` (com o 1, o bot para e segura a posição: laje,
   janela, canto). É opcional.
 - **Outros campos opcionais:** `zonas` (`[nome, x0, x1, z0, z1]`, o nome da área no mapinho), `sniper` (`[x, y, z]`, onde o

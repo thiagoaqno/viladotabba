@@ -11184,6 +11184,58 @@ function edInvPrefab(P) {
   const tr = (x, z) => [px + x * c + z * s, pz - x * s + z * c];
   for (const [x0, x1, y0, y1, z0, z1] of E) { const a = tr(x0, z0), b = tr(x1, z1); glassWall(a[0], b[0], py + y0, py + y1, a[1], b[1]); }
 }
+/* ---------- grafite: texto pintado com spray numa parede (peça "grafite" do editor) ----------
+   { t: 'grafite', p: [x, y, z] (centro de baixo), r: graus, s: [largura, altura], texto, estilo, cor: [r,g,b], borda: [r,g,b] }
+   estilo: 'bomb' (letra gorda com contorno e sombra), 'pixo' (pichação reta, letra alta e fina), 'escorre' (com tinta
+   escorrendo) ou 'tag' (assinatura rabiscada). Desenhado num canvas na hora: o .json só guarda o texto, o estilo e as cores. */
+const ED_GRAF_ESTILOS = [['bomb', 'Grafite gordo'], ['pixo', 'Pixo reto'], ['escorre', 'Escorrendo'], ['tag', 'Tag (assinatura)']];
+const edRgb = (c, a = 1) => 'rgba(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ',' + a + ')';
+function edGrafiteCanvas(G) {
+  const [w, h] = G.s || [3, 1.2], W = 1024, H = Math.max(96, Math.min(1024, Math.round((W * h) / w)));
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const txt = String(G.texto || ' ').slice(0, 40), est = G.estilo || 'bomb', cor = G.cor || [0.98, 0.8, 0.1], bor = G.borda || [0.08, 0.08, 0.1];
+  const R = rngOf(txt.length * 31 + (txt.charCodeAt(0) || 1));
+  const fontes = { bomb: '900 {s}px Impact, "Arial Black", sans-serif', escorre: '900 {s}px Impact, "Arial Black", sans-serif', pixo: '700 {s}px "Arial Narrow", Impact, sans-serif', tag: 'italic 700 {s}px "Segoe Script", "Brush Script MT", cursive' };
+  const fonte = fontes[est] || fontes.bomb, texto = est === 'tag' ? txt : txt.toUpperCase(), estica = est === 'pixo' ? 1.9 : 1; // o pixo é alto e fino
+  g.font = fonte.replace('{s}', 100);
+  const larg = g.measureText(texto).width || 1;
+  const s = Math.min(H * (est === 'pixo' ? 0.48 : 0.72), (W * 0.9 * 100) / larg); g.font = fonte.replace('{s}', Math.round(s));
+  g.save(); g.translate(W / 2, H / 2 + (est === 'pixo' ? 0 : s * 0.05)); g.rotate(est === 'tag' ? -0.12 : est === 'pixo' ? 0 : -0.05); g.scale(1, estica);
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  g.shadowColor = edRgb(cor, 0.55); g.shadowBlur = s * 0.12; // névoa do spray em volta
+  if (est === 'bomb' || est === 'escorre') {
+    g.fillStyle = edRgb(bor, 0.55); g.fillText(texto, s * 0.07, s * 0.07); // sombra
+    g.shadowBlur = s * 0.06; g.lineWidth = s * 0.18; g.strokeStyle = edRgb(bor); g.strokeText(texto, 0, 0);
+    const gr = g.createLinearGradient(0, -s / 2, 0, s / 2); gr.addColorStop(0, edRgb(cor.map((v) => Math.min(1, v * 1.25 + 0.1)))); gr.addColorStop(1, edRgb(cor.map((v) => v * 0.75)));
+    g.shadowBlur = 0; g.fillStyle = gr; g.fillText(texto, 0, 0);
+    g.fillStyle = 'rgba(255,255,255,0.85)'; for (let i = 0; i < 6; i++) { const x = (R() - 0.5) * W * 0.7, y = (R() - 0.7) * s * 0.4; g.beginPath(); g.arc(x, y, s * R.range(0.02, 0.045), 0, TAU); g.fill(); }
+  } else if (est === 'pixo') {
+    g.shadowBlur = s * 0.04; g.lineWidth = s * 0.06; g.strokeStyle = edRgb(cor); g.strokeText(texto, 0, 0); g.fillStyle = edRgb(cor); g.fillText(texto, 0, 0);
+  } else {
+    g.lineWidth = s * 0.05; g.strokeStyle = edRgb(bor, 0.8); g.strokeText(texto, 0, 0); g.fillStyle = edRgb(cor); g.fillText(texto, 0, 0);
+    const lt = (larg * s) / 100; g.lineWidth = s * 0.06; g.strokeStyle = edRgb(cor); g.beginPath(); g.moveTo(-lt * 0.5, s * 0.45); g.quadraticCurveTo(0, s * 0.62, lt * 0.55, s * 0.38); g.stroke();
+  }
+  g.restore();
+  if (est === 'escorre') { // tinta escorrendo de baixo das letras
+    g.fillStyle = edRgb(cor.map((v) => v * 0.85)); const base = H / 2 + s * 0.3;
+    for (let i = 0; i < 14; i++) { const x = W * 0.08 + R() * W * 0.84, L = R.range(0.08, 0.38) * H, r = s * R.range(0.012, 0.03); g.fillRect(x - r, base - s * 0.1, 2 * r, L); g.beginPath(); g.arc(x, base - s * 0.1 + L, r * 1.4, 0, TAU); g.fill(); }
+  }
+  g.fillStyle = edRgb(cor, 0.6); // pontinhos de spray soltos
+  for (let i = 0; i < 260; i++) { const x = W / 2 + (R() - 0.5) * W * 0.95, y = H / 2 + (R() - 0.5) * H * 0.85; g.fillRect(x, y, R.range(1, 2.6), R.range(1, 2.6)); }
+  return cv;
+}
+const ED_GRAF_TEX = new Map();
+function edGrafiteMaterial(G) {
+  const k = JSON.stringify([G.texto, G.estilo, G.cor, G.borda, G.s]);
+  if (!ED_GRAF_TEX.has(k)) { const t = new THREE.CanvasTexture(edGrafiteCanvas(G)); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; ED_GRAF_TEX.set(k, t); }
+  return new THREE.MeshStandardMaterial({ map: ED_GRAF_TEX.get(k), transparent: true, depthWrite: false, roughness: 0.92, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+}
+// a malha do grafite: um plano encostado na frente (+z) da posição, com o pé no y da peça
+function edGrafiteMalha(G) {
+  const [w, h] = G.s || [3, 1.2], m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), edGrafiteMaterial(G));
+  const ry = ((G.r || 0) * Math.PI) / 180; m.position.set(G.p[0] + Math.sin(ry) * 0.02, G.p[1] + h / 2, G.p[2] + Math.cos(ry) * 0.02); m.rotation.y = ry;
+  return m;
+}
 // monta as peças (também usado pelo botão "Jogar" do editor)
 function edConstruir(J) {
   for (const P of J.pecas || []) {
@@ -11194,6 +11246,7 @@ function edConstruir(J) {
       else if (P.t === 'escada') edEscada(P);
       else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); edColAuto(P, x, y, z, ry); }
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
+      else if (P.t === 'grafite') { const m = edGrafiteMalha(P); m.updateMatrix(); m.matrixAutoUpdate = false; (MAPL.root || scene).add(m); }
       else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
     } catch (e) { console.warn('peça do mapa', P, e); }
   }
@@ -11259,6 +11312,7 @@ const ED_BASICO = [
   { rot: 'Escada (sobe 1,5 m)', P: { t: 'escada', s: [2, 1.5, 3], m: 'wood', cor: [0.66, 0.46, 0.3] } },
   { rot: 'Escada (sobe 3 m)', P: { t: 'escada', s: [2, 3, 5.5], m: 'wood', cor: [0.66, 0.46, 0.3] } },
   { rot: 'Luz', P: { t: 'luz', forca: 1.4, raio: 7, cor: [1, 0.85, 0.65] } },
+  { rot: 'Grafite (texto na parede)', P: { t: 'grafite', s: [3, 1.2], texto: 'VILA DO TABBA', estilo: 'bomb', cor: [0.98, 0.8, 0.1], borda: [0.08, 0.08, 0.1] } },
   { rot: '▲ Nascer (time Alpha)', P: { t: 'nascer' } },
   { rot: '◆ Ponto de dominação', P: { t: 'dom' } },
   { rot: '■ Queda do mecha', P: { t: 'mecha' } },
@@ -11376,6 +11430,7 @@ function edMalha(P) {
     }
     return o;
   }
+  if (P.t === 'grafite') return edGrafiteMalha(P);
   const marcador = (cor, r, h, forma) => { const g = new THREE.Group(); const m = new THREE.Mesh(forma === 'cone' ? new THREE.ConeGeometry(r, h, 12) : new THREE.CylinderGeometry(r, r, h, 16), new THREE.MeshBasicMaterial({ color: cor, transparent: true, opacity: 0.75 })); m.position.y = h / 2; g.add(m); return g; };
   if (P.t === 'nascer') { o = marcador(0x3a8dde, 0.35, 1.8, 'cone'); const b = marcador(0xd84a3a, 0.35, 1.8, 'cone'); b.position.set(0, 0, -2 * P.p[2]); b.children[0].material.opacity = 0.35; o.add(b); }
   else if (P.t === 'dom') o = marcador(0x3ad86a, 2.0, 0.12);
@@ -11591,10 +11646,10 @@ function edPainel() {
   const n = ED.J.pecas, cont = (t) => n.filter((p) => p.t === t).length;
   d.appendChild(edEl('div', 'color:#aaa;font-size:12px;line-height:1.5', `<b style="color:#eee">${ED.J.meta.nome}</b> · id ${ED.J.meta.id}<br>${n.length} peças · ${cont('nascer')} nascer (+${cont('nascer')} Bravo espelhado) · ${cont('dom')}/3 pontos · ${cont('mecha')}/3 mecha`));
   if (!P) { d.appendChild(edEl('p', 'color:#888;margin-top:14px', 'Escolha uma peça no catálogo e clique na cena, ou clique numa peça para mexer nela.<br><br>O chão das aparições tem de estar em y = 0. O time Bravo nasce espelhado (z vira -z).')); return; }
-  d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha' }[P.t]));
+  d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', grafite: 'Grafite', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha' }[P.t]));
   const vec = (rot, arr, step, f) => { d.appendChild(edEl('label', '', rot)); const r = edEl('div'); r.className = 'row3'; arr.forEach((v, i) => { const x = edEl('input'); x.type = 'number'; x.step = step; x.value = +(+v).toFixed(3); x.onchange = () => { edAntes(); f(i, +x.value); edMudou(true); }; r.appendChild(x); }); d.appendChild(r); };
   vec('Posição x · y · z (m)', P.p, 0.25, (i, v) => { P.p[i] = v; });
-  if (P.s) vec('Tamanho larg · alt · prof (m)', P.s, 0.25, (i, v) => { P.s[i] = Math.max(0.05, v); });
+  if (P.s) vec(P.t === 'grafite' ? 'Tamanho larg · alt (m)' : 'Tamanho larg · alt · prof (m)', P.s, 0.25, (i, v) => { P.s[i] = Math.max(0.05, v); });
   if (!['nascer', 'dom', 'mecha'].includes(P.t)) vec('Giro (graus)' + (P.t === 'caixa' || P.t === 'escada' ? ' — de 90 em 90' : ''), [P.r || 0], P.t === 'caixa' || P.t === 'escada' ? 90 : 15, (i, v) => { P.r = v; });
   if (P.t === 'prefab' || P.t === 'prop') vec('Escala', [P.e || 1], 0.1, (i, v) => { P.e = v === 1 ? undefined : Math.max(0.1, v); });
   if (P.t === 'caixa' || P.t === 'escada') {
@@ -11618,6 +11673,20 @@ function edPainel() {
   }
   if (P.t === 'caixa') {
     const l = edEl('label', 'display:flex;gap:6px;align-items:center;color:#ddd'); const k = edEl('input'); k.type = 'checkbox'; k.checked = P.col !== false; k.onchange = () => { edAntes(); P.col = k.checked ? undefined : false; edMudou(true); }; l.append(k, 'Colide (segura gente e bala)'); d.appendChild(l);
+  }
+  if (P.t === 'grafite') {
+    d.appendChild(edEl('label', '', 'Texto (até 40 letras)'));
+    const t = edEl('input', 'width:100%;box-sizing:border-box'); t.value = P.texto || ''; t.maxLength = 40;
+    t.onchange = () => { edAntes(); P.texto = t.value; edMudou(true); }; d.appendChild(t);
+    d.appendChild(edEl('label', '', 'Estilo'));
+    const es = edEl('select', 'width:100%'); for (const [k, nome] of ED_GRAF_ESTILOS) es.appendChild(new Option(nome, k)); es.value = P.estilo || 'bomb';
+    es.onchange = () => { edAntes(); P.estilo = es.value; edMudou(true); }; d.appendChild(es);
+    for (const [rot, campo, pad] of [['Cor', 'cor', [0.98, 0.8, 0.1]], ['Contorno e sombra', 'borda', [0.08, 0.08, 0.1]]]) {
+      d.appendChild(edEl('label', '', rot));
+      const c = edEl('input', 'width:100%;height:30px;padding:0'); c.type = 'color'; c.value = '#' + edCorHex(P[campo] || pad).getHexString();
+      c.onchange = () => { edAntes(); const k = new THREE.Color(c.value); P[campo] = [+k.r.toFixed(3), +k.g.toFixed(3), +k.b.toFixed(3)]; edMudou(true); }; d.appendChild(c);
+    }
+    d.appendChild(edEl('p', 'color:#888;font-size:11px;margin:6px 0 0', 'Encoste na parede: a pintura fica na frente da peça (+z). Não colide nem segura bala.'));
   }
   if (P.t === 'luz') { vec('Força · alcance (m)', [P.forca || 1.4, P.raio || 7], 0.1, (i, v) => { if (i) P.raio = v; else P.forca = v; }); }
   const bts = edEl('div', 'display:flex;gap:6px;margin-top:14px'); const dup = edEl('button', '', 'Duplicar'); dup.onclick = edDuplicar; const del = edEl('button', 'color:#f88', 'Apagar'); del.onclick = edApagar; bts.append(dup, del); d.appendChild(bts);

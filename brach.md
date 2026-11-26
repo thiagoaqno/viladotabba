@@ -1,10 +1,13 @@
-# Tiro da Galera: prefabs do editor separados em grupos
+# Tiro da Galera: grafite nas paredes (peça Grafite no editor)
 
-A aba Prefabs do editor de mapas agora separa as peças em grupos, com título na lista e botões para ver um grupo só: Todos, Favela (63), Navio, Praça e esporte (13), Veículos (9), Cobertura (27) e Jogo original (216).
+Peça nova no editor de mapas: **Grafite (texto na parede)**, na aba Básico. Ela pinta um texto com spray em qualquer parede.
 
-- **Peça nova:** entra no grupo pelo nome. `kcN...` vai para o Navio; as outras kc vão para a Favela, a não ser que estejam nas listas de Praça e esporte, Veículos ou Cobertura (`ED_GRUPO_LISTA` no `editor.js`).
-- **Busca:** continua procurando em todos os grupos (ou no grupo escolhido).
+- **Painel:** texto (até 40 letras), estilo, cor e cor do contorno, e o tamanho (largura x altura).
+- **Estilos:** Grafite gordo (letra gorda com contorno, sombra e brilho), Pixo reto, Escorrendo (com a tinta pingando) e Tag (assinatura rabiscada).
+- **Como desenha:** o grafite é desenhado num canvas na hora. O `.json` guarda só o texto, o estilo e as cores, então o mapa continua leve.
+- **No jogo:** o `mapa-json.js` põe o plano pintado no mapa. Ele não colide nem segura bala.
+- **Guia:** `docs/tiro-editor-de-mapas.md` explica o campo `grafite`.
 
-Conferido no navegador: os grupos e o filtro funcionam.
+Conferido no navegador: os quatro estilos aparecem no editor e numa partida com bots.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

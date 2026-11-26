@@ -234,6 +234,19 @@ addEventListener('load',()=>{miraAplicar();brilhoAplicar();});
 `;
 h = troca(h, "</body>", CSS_MIRA + "</body>", { todas: false, nome: "mira (CSS e funções)" });
 
+// ---------- visibilidade no Tephra (2026-11-26) ----------
+// Os amigos reclamaram que não enxergavam ninguém no Tephra. O mapa é uma noite de erupção (ATMO_TEPHRA, 02yh-tephra.js): sol a 0,5
+// (o padrão é 2,9), luz ambiente a 0,15 (padrão 0,62) e névoa marrom-escura; um inimigo escuro some contra o chão e a névoa escuros a
+// média distância. Os grãos no ar (motes) só aparecem entre 2,5 e 9 m e são fracos: não são o problema. Aqui sobem a luz ambiente
+// (0,15 → 0,4, que é o que ilumina quem está na sombra), o sol (0,5 → 0,9), a luz rebatida (bounce) e a exposição (1,2 → 1,3, com
+// os pretos um pouco erguidos: lift 0,08 em vez de 0,06), e a névoa fica mais rala (0,0062 → 0,0042: a 60 m esconde 6 % em vez de
+// 13 %; a 100 m, 16 % em vez de 32 %) e um pouco mais clara, para a silhueta destacar dela. O céu de cinza, a cor vermelha da luz,
+// a cinza depositada no cenário e os relâmpagos ficam como estão: o clima do vulcão continua.
+h = troca(h, "sunI:0.5,vmSun:0xff4a20,fog:[0.12,0.05,0.04],fogD:0.0062,hemi:[0x2a1010,0x401008,0.15]",
+  "sunI:0.9,vmSun:0xff4a20,fog:[0.16,0.07,0.05],fogD:0.0042,hemi:[0x2a1010,0x401008,0.4]", { todas: false, nome: "Tephra: luz e névoa" });
+h = troca(h, "bounce:[0.25,0.08,0.04],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25],grade:{lo:[1.0,0.92,0.95],hi:[1.1,0.92,0.8],exp:1.2}",
+  "bounce:[0.45,0.15,0.08],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25],grade:{lo:[1.0,0.92,0.95],hi:[1.1,0.92,0.8],exp:1.3,lift:0.08}", { todas: false, nome: "Tephra: exposição" });
+
 // ---------- mapas nossos (ferramentas/tiro-mapas/) ----------
 // Iate Esmeralda (2026-11-26): o código do mapa entra no fim do script do jogo, logo antes do boot, e se registra sozinho
 // (MAP_DEFS, MAPS, MAP_ART). A água do porto só tinha mar a oeste do cais: o iate traz a própria grade de água (iate.js) e aqui

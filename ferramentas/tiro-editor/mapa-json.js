@@ -146,7 +146,8 @@ function tiroMapaRegistrar(J) {
     materials: () => {},
     art: { cam: [L.x0 - 8, 10, L.z1 + 8], look: [0, 1, 0], fov: 55 },
     splat: { x0: -128, z0: -128, w: 256, d: 256, ppm: 2 }, far: 600,
-    build() { if (mar) waterSetup({ y: mar.y, box: [-2000, 2000, -2000, 2000], open: [-260, -120], east: 900 }); edConstruir(J); if (mar) waterLand(L.x0, L.x1, L.z0, L.z1); },
+    build() {
+      if (mar) waterSetup({ y: mar.y, box: [-2000, 2000, -2000, 2000], open: [-260, -120], east: 900 }); edConstruir(J); if (mar) waterLand(L.x0, L.x1, L.z0, L.z1); },
     after: mar ? () => waterBuild({ deep: [0.0, 0.03, 0.1], shallow: [0.0, 0.08, 0.14], scatter: [0.01, 0.07, 0.11], foam: [0.85, 0.88, 0.88], refl: 1.0, caus: 0, foamK: 0.6 }) : undefined,
     ready: mar ? () => waterReady({ from: [L.x0 - 30, mar.y + 2.5, 0] }) : undefined,
     spawns: (J.nascer && J.nascer.length ? J.nascer : [[0, Math.max(4, L.z1 - 4)]]).map(([x, z]) => [x, z]),

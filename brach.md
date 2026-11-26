@@ -1,7 +1,7 @@
-# Tiro da Galera: quadra de futsal no editor de mapas
+# Tiro da Galera: campo de várzea e peças de rua
 
-Peça nova kcQuadra (aba Prefabs): quadra de futsal de cimento pintado, 30 x 18 m (jogo de 28 x 16), linhas brancas (meio, círculo, áreas, pênalti) e duas traves de 3 x 2 m com rede. Só os postes colidem; o chão não, então ponha a quadra em cima de um chão do mapa.
+O editor ganha um campo de futebol de terra de 40 x 22 m, com marcações, traves, alambrado com dois portões, quatro refletores e bancos de reservas cobertos. A arquibancada de concreto tem três degraus, escada e patamar; sua escada é registrada para jogadores e bots e deve ser girada em múltiplos de 90 graus.
 
-Conferido no navegador: a peça monta sem erro.
+Também entram dez peças de rua: quiosque de açaí, barraca de churrasquinho, ponto de mototáxi, orelhão, lixeira, banco de praça, poste com fios, mesa de dominó, carrinho de pipoca e balcão de bar com fliperama. O catálogo documenta as medidas e o uso da escada.
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Validação: node --check em pecas.js e remontagem de public/tiro/index.html com tiro-frontline.js.

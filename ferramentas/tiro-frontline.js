@@ -311,6 +311,9 @@ if (IATE_ATIVO) {
   const mapas = fs.existsSync(PASTA) ? fs.readdirSync(PASTA).filter((f) => f.endsWith(".json")).sort().map((f) => JSON.parse(fs.readFileSync(path.join(PASTA, f), "utf8"))) : [];
   const codigo = fs.readFileSync(path.join(ED, "pecas.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "texturas.js"), "utf8") + "\nconst TIRO_MAPAS_JSON = " + JSON.stringify(mapas) + ";\n" + fs.readFileSync(path.join(ED, "mapa-json.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "editor.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => codigo + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "editor de mapas" });
+  // capas dos mapas do editor (ferramentas/tiro-mapas/editor/capas/*): vão para maps/ e o .json aponta com "capa": "maps/<arquivo>"
+  const CAPAS = path.join(PASTA, "capas");
+  if (fs.existsSync(CAPAS)) for (const f of fs.readdirSync(CAPAS)) fs.copyFileSync(path.join(CAPAS, f), path.join(OUT, "maps", f));
   h = troca(h, "F={x0:-144,z0:-128,ppm:2,w:256,h:512}", "F=(CURMAP.def&&CURMAP.def.mar?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512})", { nome: "espuma do mar dos mapas do editor" });
   // (2026-11-26) ponto de dominação em cima de um morro ou laje: o mapa do editor manda a altura do piso como 3º número
   // ([x, z, y]); sem ele, o jogo procurava o chão em y = 0 e o ponto afundava embaixo da terra

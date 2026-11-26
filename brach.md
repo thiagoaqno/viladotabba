@@ -1,7 +1,7 @@
-# Tiro da Galera: módulos de arquitetura para o navio
+# Tiro da Galera: peças de convés para o Navio
 
-O editor ganha módulos de salas, varandas, deques, escadas, cabines, corredor, garagem e fechamentos para construir um iate de vários níveis. As salas envidraçadas e a parede com janela usam painéis destrutíveis; as escadas de acesso registram rampas para o jogo, e as bordas abertas relevantes têm proteção invisível.
+O editor ganha peças independentes inspiradas nas referências de convés de iate: ponte panorâmica, cabana com bancos e ducha, hidromassagem, balcão, banco, claraboia, armário, posto de comando, arco superior, caixa, corrimão e escada. Os nomes usam o prefixo `kcN` e entram automaticamente no grupo Navio do catálogo.
 
-O convés do `kcNavio` original é maciço. Para permitir uma descida real sem alterar mapas existentes, `kcNavioComAbertura` fornece um vão central de 2,6 x 6 m e uma abertura inferior na popa. O patamar da escada interna avança além do vão para manter a inclinação e a passagem exigidas. A documentação explica o posicionamento e as dimensões.
+A ponte tem portas de 2,4 m e laje andável; seus vidros e os do corrimão são fixos. A escada é registrada para jogadores e bots. A documentação traz as medidas e o aviso de giro em múltiplos de 90 graus para a escada. Os mapas JSON não foram alterados.
 
-Validação: `node --check` nos arquivos de editor alterados e remontagem de `public/tiro/index.html` com `tiro-frontline.js`. Aparência, vidros, encaixes e navegação dos bots ainda precisam ser conferidos no jogo. Os arquivos de mapas JSON não foram modificados.
+Validação: `node --check` nos arquivos do editor e remontagem do jogo com `tiro-frontline.js`. A aparência e a navegação precisam ser conferidas jogando.

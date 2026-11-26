@@ -11274,6 +11274,113 @@ PF.kcNPlacaSaida = () => prefab('kcNPlacaSaida', (M) => {
   M.tube('paint', 0.025, [[0.02, 0.07, 0.045], [0.18, 0.15, 0.045], [0.02, 0.23, 0.045]], 4); M.cls = 0;
 });
 
+/* ---------- peças de convés de iate: volumes brancos, teca e estofados ---------- */
+const KC_IATE_BRANCO = [0.93, 0.94, 0.92], KC_IATE_TECA = [0.61, 0.42, 0.28], KC_IATE_INOX = [0.74, 0.77, 0.79], KC_IATE_VIDRO = [0.16, 0.25, 0.31], KC_IATE_AREIA = [0.84, 0.8, 0.66];
+function kcIateB(M, mat, cor, x0, x1, y0, y1, z0, z1, col = 'metal') {
+  M.color(cor); M.boxB(mat, x0, x1, y0, y1, z0, z1); M.col(x0, x1, y0, y1, z0, z1, col);
+}
+// Salão/ponte de 10 x 8 m, com passagens de 2,4 m na frente e atrás e laje a 3 m.
+PF.kcNPontePanoramica = () => prefab('kcNPontePanoramica', (M) => {
+  M.local(1); kcIateB(M, 'paint', KC_IATE_BRANCO, -5, 5, 2.85, 3, -4, 4);
+  for (const x of [-5, 4.8]) {
+    kcIateB(M, 'paint', KC_IATE_BRANCO, x, x + 0.2, 0, 0.65, -4, 4);
+    kcIateB(M, 'glass', KC_IATE_VIDRO, x, x + 0.2, 0.65, 2.45, -4, 4, 'glass');
+    kcIateB(M, 'paint', KC_IATE_BRANCO, x, x + 0.2, 2.45, 2.85, -4, 4);
+  }
+  for (const z of [-4, 3.8]) {
+    for (const [a, b] of [[-5, -1.2], [1.2, 5]]) {
+      kcIateB(M, 'paint', KC_IATE_BRANCO, a, b, 0, 0.65, z, z + 0.2);
+      kcIateB(M, 'glass', KC_IATE_VIDRO, a, b, 0.65, 2.45, z, z + 0.2, 'glass');
+      kcIateB(M, 'paint', KC_IATE_BRANCO, a, b, 2.45, 2.85, z, z + 0.2);
+    }
+    kcIateB(M, 'paint', KC_IATE_BRANCO, -1.2, 1.2, 2.3, 2.85, z, z + 0.2);
+  }
+  M.cls = 1; M.color(KC_IATE_INOX);
+  for (const x of [-4.8, -2.7, 2.7, 4.8]) for (const z of [-4.01, 4]) M.boxB('steel', x - 0.025, x + 0.025, 0.65, 2.45, z, z + 0.015);
+  M.color([0.15, 0.32, 0.43]); for (const z of [-4.01, 4]) M.boxB('paint', -5, 5, 2.68, 2.73, z, z + 0.015); M.cls = 0;
+});
+
+// Cabana aberta: cobertura, coluna com ripas, ducha e dois bancos; o vão central tem 3 m.
+PF.kcNCabanaConves = () => prefab('kcNCabanaConves', (M) => {
+  M.local(1);
+  for (const x of [-2.9, 2.7]) for (const z of [-1.9, 1.7]) kcIateB(M, 'wood', KC_IATE_TECA, x, x + 0.2, 0, 2.65, z, z + 0.2, 'wood');
+  kcIateB(M, 'paint', KC_IATE_BRANCO, -3, 3, 2.65, 2.8, -2, 2);
+  for (const [x0, x1] of [[-2.9, -1.5], [1.5, 2.9]]) {
+    kcIateB(M, 'paint', KC_IATE_BRANCO, x0, x1, 0, 0.42, -1.8, -0.3);
+    kcIateB(M, 'canvas', KC_IATE_AREIA, x0 + 0.04, x1 - 0.04, 0.42, 0.55, -1.75, -0.35, 'wood');
+    kcIateB(M, 'canvas', KC_IATE_AREIA, x0 + 0.04, x1 - 0.04, 0.55, 0.9, -1.8, -1.6, 'wood');
+  }
+  kcIateB(M, 'wood', KC_IATE_TECA, -0.45, 0.45, 0, 2.65, -1.9, -1.7, 'wood');
+  M.cls = 1; M.color([0.36, 0.23, 0.16]); for (let x = -0.4; x <= 0.4; x += 0.12) M.boxB('wood', x, x + 0.025, 0.08, 2.55, -1.69, -1.68);
+  M.color(KC_IATE_INOX); M.tube('steel', 0.025, [[0, 0.8, -1.67], [0, 2.35, -1.67], [0, 2.35, -1.35]], 6); M.boxB('steel', -0.17, 0.17, 2.3, 2.35, -1.5, -1.2); M.cls = 0;
+});
+
+// Banheira elevada: base e borda colidem, água e reflexos são visuais.
+PF.kcNHidroConves = () => prefab('kcNHidroConves', (M) => {
+  M.local(1); M.color(KC_IATE_BRANCO); M.cyl('paint', 2.5, 0.35, 24); M.col(-2.4, 2.4, 0, 0.35, -2.4, 2.4, 'metal');
+  M.save().move(0, 0.35, 0); M.lathe('paint', [[2.48, 0], [2.48, 0.6], [2.1, 0.6], [2.1, 0]], 24); M.restore();
+  for (const s of [-1, 1]) { kcIateB(M, 'paint', KC_IATE_BRANCO, s < 0 ? -2.5 : 2.1, s < 0 ? -2.1 : 2.5, 0.35, 0.95, -1.6, 1.6); kcIateB(M, 'paint', KC_IATE_BRANCO, -1.6, 1.6, 0.35, 0.95, s < 0 ? -2.5 : 2.1, s < 0 ? -2.1 : 2.5); }
+  M.cls = 1; M.color([0.23, 0.56, 0.65]); M.save().move(0, 0.63, 0); M.cyl('glass', 2.08, 0.02, 24); M.restore();
+  M.color([0.55, 0.79, 0.83]); M.save().move(0, 0.655, 0); M.lathe('paint', [[0.8, 0], [0.83, 0], [0.83, 0.005], [0.8, 0.005]], 24); M.restore(); M.cls = 0;
+});
+
+// Balcão de cobertura baixa, com frente arredondada sugerida por três trechos.
+PF.kcNBarConves = () => prefab('kcNBarConves', (M) => {
+  M.local(1);
+  for (const [x0, x1, z0, z1] of [[-1.2, 1.2, -0.35, 0.65], [-2.4, -1.2, -0.6, 0.45], [1.2, 2.4, -0.6, 0.45]]) {
+    kcIateB(M, 'paint', KC_IATE_BRANCO, x0, x1, 0, 0.95, z0, z1);
+    kcIateB(M, 'wood', KC_IATE_TECA, x0, x1, 0.95, 1.05, z0, z1, 'wood');
+  }
+  M.cls = 1; M.color(KC_IATE_INOX); for (const x of [-1.75, 0, 1.75]) { M.save().move(x, 0.36, 0.66).rotX(Math.PI / 2); M.cyl('steel', 0.085, 0.02, 10); M.restore(); } M.cls = 0;
+});
+PF.kcNBancoConves = () => prefab('kcNBancoConves', (M) => {
+  M.local(1); kcIateB(M, 'paint', KC_IATE_BRANCO, -1.3, 1.3, 0, 0.42, -0.48, 0.48);
+  kcIateB(M, 'canvas', KC_IATE_AREIA, -1.25, 1.25, 0.42, 0.58, -0.43, 0.43, 'wood');
+  kcIateB(M, 'canvas', KC_IATE_AREIA, -1.25, 1.25, 0.58, 0.94, -0.48, -0.3, 'wood');
+  M.cls = 1; M.color([0.78, 0.63, 0.22]); for (const x of [-0.75, 0, 0.75]) M.boxB('canvas', x - 0.1, x + 0.1, 0.58, 0.86, -0.29, -0.28); M.cls = 0;
+});
+PF.kcNClaraboiaConves = () => prefab('kcNClaraboiaConves', (M) => {
+  M.local(1); M.color(KC_IATE_BRANCO); M.lathe('paint', [[1.35, 0], [1.5, 0], [1.5, 0.12], [1.35, 0.12]], 24);
+  kcIateB(M, 'glass', KC_IATE_VIDRO, -1.05, 1.05, 0, 0.1, -1.05, 1.05, 'glass');
+  M.col(-1.5, 1.5, 0, 0.12, -1.5, 1.5, 'metal');
+  M.cls = 1; M.color(KC_IATE_INOX); M.boxB('steel', -1.35, 1.35, 0.12, 0.14, -0.025, 0.025); M.boxB('steel', -0.025, 0.025, 0.12, 0.14, -1.35, 1.35); M.cls = 0;
+});
+PF.kcNArmarioLateral = () => prefab('kcNArmarioLateral', (M) => {
+  M.local(1); kcIateB(M, 'paint', KC_IATE_BRANCO, -2.5, 2.5, 0, 1.1, -0.6, 0.6);
+  M.cls = 1; M.color(KC_IATE_INOX); for (const x of [-1.6, 0, 1.6]) { M.boxB('steel', x - 0.65, x + 0.65, 0.2, 0.22, 0.6, 0.61); M.boxB('steel', x - 0.65, x + 0.65, 0.9, 0.92, 0.6, 0.61); }
+  M.color(KC_IATE_TECA); M.boxB('wood', -2.48, 2.48, 1.1, 1.12, -0.58, 0.58); M.cls = 0;
+});
+PF.kcNPostoComando = () => prefab('kcNPostoComando', (M) => {
+  M.local(1); kcIateB(M, 'paint', KC_IATE_BRANCO, -1.7, 1.7, 0, 1, -0.55, 0.55);
+  kcIateB(M, 'paint', KC_IATE_BRANCO, -0.85, 0.85, 1, 1.55, -0.45, 0.35);
+  M.cls = 1; M.color(KC_IATE_VIDRO); M.boxB('glass', -0.7, 0.7, 1.12, 1.45, 0.35, 0.36);
+  M.color(KC_IATE_INOX); for (const x of [-1.3, 1.3]) M.boxB('steel', x - 0.1, x + 0.1, 1, 1.02, -0.1, 0.1); M.cls = 0;
+});
+
+// Escada larga de convés: sobe 1,2 m em 2,1 m e termina num patamar de 2,4 m; giro somente de 90 em 90 graus.
+PF.kcNEscadaConves = () => prefab('kcNEscadaConves', (M) => {
+  KC_ESCADAS.kcNEscadaConves = []; M.local(1);
+  kcEscadaF(M, 'kcNEscadaConves', -1.2, 1.2, -2.25, -0.15, 'z', 0, 1.2);
+  kcPatamar(M, -1.2, 1.2, -0.15, 2.25, 1.2);
+  kcIateB(M, 'steel', KC_IATE_INOX, -1.26, -1.2, 1.2, 2.25, -0.15, 2.25);
+});
+PF.kcNCorrimaoConves = () => prefab('kcNCorrimaoConves', (M) => {
+  M.local(1); for (const x of [-2, 0, 2]) kcIateB(M, 'steel', KC_IATE_INOX, x - 0.04, x + 0.04, 0, 1.05, -0.04, 0.04);
+  kcIateB(M, 'steel', KC_IATE_INOX, -2.04, 2.04, 1, 1.08, -0.04, 0.04);
+  kcIateB(M, 'glass', [0.46, 0.56, 0.59], -2, 2, 0.08, 0.98, -0.025, 0.025, 'glass');
+});
+// Arco superior independente: a abertura no centro permite passagem larga.
+PF.kcNArcoSuperior = () => prefab('kcNArcoSuperior', (M) => {
+  M.local(1); for (const x of [-4, 3.6]) kcIateB(M, 'paint', KC_IATE_BRANCO, x, x + 0.4, 0, 3.5, -0.3, 0.3);
+  kcIateB(M, 'paint', KC_IATE_BRANCO, -4, 4, 3.5, 3.9, -0.3, 0.3);
+  kcIateB(M, 'paint', KC_IATE_BRANCO, -0.07, 0.07, 3.9, 4.45, -0.07, 0.07);
+  M.cls = 1; M.color(KC_IATE_INOX); M.tube('steel', 0.025, [[-3.5, 3.48, 0.31], [3.5, 3.48, 0.31]], 6); M.cls = 0;
+});
+PF.kcNCaixaBordo = () => prefab('kcNCaixaBordo', (M) => {
+  M.local(1); kcIateB(M, 'paint', [0.77, 0.61, 0.16], -0.65, 0.65, 0, 0.55, -0.4, 0.4);
+  M.cls = 1; M.color(KC_IATE_INOX); for (const x of [-0.45, 0.45]) { M.boxB('steel', x - 0.025, x + 0.025, 0, 0.56, 0.4, 0.41); M.boxB('steel', x - 0.025, x + 0.025, 0.55, 0.56, -0.4, 0.4); } M.cls = 0;
+});
+
 /* ==========================================================================
    SUPERFÍCIES DO EDITOR DE MAPAS (Tiro da Galera). As caixas e escadas do editor escolhem a superfície numa galeria com miniaturas
    e ganham "Tamanho da textura" (campo tx do .json: 1 = normal, 2 = o dobro do tamanho).

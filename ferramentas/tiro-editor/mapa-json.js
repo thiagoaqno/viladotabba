@@ -28,10 +28,31 @@ function edEscada(P) {
     box(key, bx[0], bx[1], lo, top, bx[2], bx[3], { collide: false, tint, uv: edUv(P) });
   }
 }
-function edLimites(J) {
+// tamanho de um prefab (x0, x1, z0, z1 da peça), medido na malha dele; guardado por nome
+const ED_PF_TAM = new Map();
+function edPrefabTam(nome) {
+  if (!ED_PF_TAM.has(nome)) {
+    let t = null;
+    try {
+      const p = PF[nome](); let a = 1e9, b = -1e9, c = 1e9, d = -1e9;
+      for (const part of p.parts.values()) { const g = part.g; for (let i = 0; i < g.nv; i++) { const x = g.P[i * 3], z = g.P[i * 3 + 2]; if (x < a) a = x; if (x > b) b = x; if (z < c) c = z; if (z > d) d = z; } }
+      if (a < b) t = [a, b, c, d];
+    } catch (e) { t = null; }
+    ED_PF_TAM.set(nome, t);
+  }
+  return ED_PF_TAM.get(nome);
+}
+function edLimites(J, preciso) {
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, z0 = 1e9, z1 = -1e9;
   for (const P of J.pecas || []) {
-    const B = P.t === 'caixa' || P.t === 'escada' ? edCaixaBox(P) : { x0: P.p[0] - 1, x1: P.p[0] + 1, y0: P.p[1], z0: P.p[2] - 1, z1: P.p[2] + 1 };
+    let B = P.t === 'caixa' || P.t === 'escada' ? edCaixaBox(P) : { x0: P.p[0] - 1, x1: P.p[0] + 1, y0: P.p[1], z0: P.p[2] - 1, z1: P.p[2] + 1 };
+    const T = preciso && P.t === 'prefab' && PF[P.nome] && !(P.a && P.a.length) ? edPrefabTam(P.nome) : null;
+    if (T) { // a caixa do prefab girada e na escala dele (raio pelo canto mais longe: vale para qualquer giro)
+      const e = P.e || 1, r = Math.max(...T.map(Math.abs)) * e * Math.SQRT2;
+      const q = (((Math.round((P.r || 0) / 90) % 4) + 4) % 4), exato = Math.abs((P.r || 0) - Math.round((P.r || 0) / 90) * 90) < 0.5;
+      if (exato) { const c = [1, 0, -1, 0][q], s = [0, 1, 0, -1][q], xs = [], zs = []; for (const x of [T[0], T[1]]) for (const z of [T[2], T[3]]) { xs.push(P.p[0] + e * (x * c + z * s)); zs.push(P.p[2] + e * (-x * s + z * c)); } B = { x0: Math.min(...xs), x1: Math.max(...xs), y0: P.p[1], z0: Math.min(...zs), z1: Math.max(...zs) }; }
+      else B = { x0: P.p[0] - r, x1: P.p[0] + r, y0: P.p[1], z0: P.p[2] - r, z1: P.p[2] + r };
+    }
     x0 = Math.min(x0, B.x0); x1 = Math.max(x1, B.x1); y0 = Math.min(y0, B.y0); z0 = Math.min(z0, B.z0); z1 = Math.max(z1, B.z1);
   }
   for (const [x, z] of (J.nascer || [])) { x0 = Math.min(x0, x - 2); x1 = Math.max(x1, x + 2); z0 = Math.min(z0, -Math.abs(z) - 2); z1 = Math.max(z1, Math.abs(z) + 2); }
@@ -88,6 +109,14 @@ function edEscadasPrefab(P) {
     }
   }
 }
+// paredes invisíveis que vêm dentro de um prefab (KC_INVIS[nome]: [x0, x1, y0, y1, z0, z1] da peça): seguram gente, não bala
+function edInvPrefab(P) {
+  const E = typeof KC_INVIS !== 'undefined' && KC_INVIS[P.nome];
+  if (!E || !E.length) return;
+  const q = (((Math.round((P.r || 0) / 90) % 4) + 4) % 4), c = [1, 0, -1, 0][q], s = [0, 1, 0, -1][q], [px, py, pz] = P.p;
+  const tr = (x, z) => [px + x * c + z * s, pz - x * s + z * c];
+  for (const [x0, x1, y0, y1, z0, z1] of E) { const a = tr(x0, z0), b = tr(x1, z1); glassWall(a[0], b[0], py + y0, py + y1, a[1], b[1]); }
+}
 // monta as peças (também usado pelo botão "Jogar" do editor)
 function edConstruir(J) {
   for (const P of J.pecas || []) {
@@ -96,7 +125,7 @@ function edConstruir(J) {
       if (P.t === 'caixa' && P.inv) { const B = edCaixaBox(P); glassWall(B.x0, B.x1, B.y0, B.y1, B.z0, B.z1); } // parede invisível: só segura gente
       else if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
       else if (P.t === 'escada') edEscada(P);
-      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); }
+      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); }
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
       else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
     } catch (e) { console.warn('peça do mapa', P, e); }
@@ -109,7 +138,8 @@ function tiroMapaRegistrar(J) {
   MAP_DEFS[J.id] = {
     type: J.tipo || 'mid', mar: !!mar, editor: true,
     void: { kill: Math.min(L.y0, mar ? mar.y : L.y0) - 1.5 },
-    bounds: { x0: L.x0, x1: L.x1, z0: L.z0, z1: L.z1 },
+    // limites com o tamanho de verdade de cada prefab, medidos só quando o mapa começa (para não montar prefab ao abrir a página)
+    get bounds() { if (!this._lim) { const M = edLimites(J, true); this._lim = { x0: M.x0, x1: M.x1, z0: M.z0, z1: M.z1 }; } return this._lim; },
     textures: edTexturasDoMapa(J), surfaces: mar ? ['ripple', ...ED_TEX_NOSSAS] : ED_TEX_NOSSAS.slice(),
     sound: mar ? { pack: 'amb_embruns', bed: 0.5, water: () => 0, loops: [[L.x0, -4, 0], [L.x1, -4, 0]].map((p) => ({ id: 'a_waves', p, gain: 0.4, ref: 6, roll: 1.3, max: 120 })), spots: [] }
       : { pack: base.sound && base.sound.pack, bed: 0.5, loops: [], spots: [] },

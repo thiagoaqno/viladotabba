@@ -1,48 +1,34 @@
-# Tiro da Galera: acabamento do Iate Esmeralda (deck de teca, cenário e coisas que quebram)
+# Tiro da Galera: oito camuflagens novas de arma
 
-O Thiago testou o iate e pediu um deck mais bonito, mais elementos no cenário e mais coisas destrutíveis, para o mapa ficar no nível
-dos outros.
+O Thiago pediu skins novas para o Tiro e escolheu camuflagens de arma, com os motivos por nossa conta.
 
-## Deck
+## As camuflagens
 
-- **Textura própria de teca** (`iaTeca`, gerada no jogo como as outras superfícies): tábuas de 12,5 cm ao longo do navio, calafeto
-  preto entre elas, emendas desencontradas, veio comprido e o desbotado do sol. Ela vale para o convés, o Solário, o terraço da
-  ponte e os degraus das escadas.
+Elas saem pelo nível da arma, uma por nível entre o Diamante (20) e o Holo (30):
 
-## O que quebra
+| Nível | Nome | Como é |
+|---|---|---|
+| 21 | Carbono | Fibra de carbono trançada, meio brilhante |
+| 22 | Onça | Dourado com as rosetas e pintas da onça-pintada |
+| 23 | Selva | Folhas tropicais de vários verdes, com nervura clara |
+| 24 | Canarinho | Digital verde e amarelo, com um pouco de azul |
+| 25 | Maré | Ondas em azul-petróleo com espuma nas cristas (combina com o Iate Esmeralda) |
+| 26 | Grafite | Jatos de spray coloridos e escorridos sobre o cinza, com rabiscos pretos |
+| 27 | Galáxia | Nebulosas roxas e azuis, cheias de estrelas |
+| 28 | Rubi | Pedra lapidada em vermelhos, metálica e polida |
 
-- **Janelas de vidro** do salão, do cassino e da ponte (71 painéis): um tiro estilhaça o painel e abre a janela. Até lá o vidro
-  segura os soldados e para a bala. O vidro agora é transparente. Antes era um espelho opaco que a bala atravessava.
-- **Garrafas** (92): nos bares do salão, do cassino e da popa, nas mesinhas da piscina e das cabines. Quebram com um tiro.
-- **Vasos de cerâmica** (26) com planta: no salão, nas mesas do cassino, na popa e nas cabines. Viram cacos.
-- **Coisas que se mexem com tiro e explosão:** cadeiras, churrasqueiras, barris, caixotes, cilindros de mergulho e rolos de corda.
-- No online, o tiro que quebra um objeto é avisado aos outros jogadores, como nos outros mapas.
+## Como entrou
 
-## Cenário novo
-
-- **Proa:** espreguiçadeiras duplas na frente do salão, corrente da âncora, mastro com farol na ponta, boias salva-vidas e rolos de
-  corda.
-- **Salão:** piano de cauda, lustre, mesinhas com vaso e garrafas, vasos grandes nos cantos e garrafas no balcão. Em cima, o arco
-  do radar sobre o Solário.
-- **Piscina:** toalhas nas espreguiçadeiras, mesinhas com bebidas, escada de inox, boia de flamingo e palmeiras em floreiras nos
-  cantos do convés.
-- **Cassino:** mesa de roleta no meio, caça-níqueis acesos, fichas nas mesas e garrafas no bar.
-- **Ponte:** roda do leme, mesa de cartas, telas acesas e cúpulas no teto.
-- **Popa:** churrasqueiras, banquetas no bar, mesinhas, caixa térmica, varas de pesca e o guindaste das lanchas.
-- **Garagem:** dois jet skis, barris, caixotes, cilindros de mergulho e uma bancada.
-- **Cabines:** cadeira, vaso e garrafa em cada uma.
-- **No mar:** quatro veleiros ao longe, balançando nas ondas, e duas ilhas no horizonte.
-
-## Consertado
-
-- As espreguiçadeiras do Solário e do terraço da ponte estavam no chão do salão e do cassino (vinha da primeira versão). Agora estão
-  em cima.
+- O código fica em `ferramentas/tiro-camos/camuflagens.js`. O `tiro-frontline.js` coloca ele logo antes do boot, como o mapa do iate.
+- Cada camuflagem é desenhada numa tela que se emenda nas bordas, como as do jogo. Elas usam o mesmo shader, sem textura nova
+  para baixar.
+- A lista do menu ficou em ordem de nível, com as novas entre o Diamante e o Holo.
+- No online, a arma com camuflagem nova é aceita (os nomes só têm letras minúsculas, como a chave da arma pede).
 
 ## Conferido no navegador
 
-- O mapa carrega sem erro. Todos os pontos de interesse e as 28 aparições ficam na rota principal dos bots, e as 3 zonas do mecha
-  são válidas.
-- Partida solo de 30 s com 11 bots: todos andaram (de 8 a 69 m), houve 5 mortes, ninguém caiu no mar, 23 janelas e 2 garrafas
-  foram quebradas, e não apareceu nenhum erro.
+- As 18 camuflagens aparecem em ordem e as miniaturas são desenhadas sem erro.
+- O material da arma na mão e o da arma do soldado são montados com as camuflagens novas.
+- A chave online `m4~~galaxia` é reconhecida.
 
-Falta o Thiago olhar o visual jogando.
+Falta o Thiago ver as camuflagens nas armas jogando.

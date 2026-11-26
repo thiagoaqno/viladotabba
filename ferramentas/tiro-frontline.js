@@ -259,6 +259,13 @@ h = troca(h, "bounce:[0.25,0.08,0.04],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25]
   fs.copyFileSync(path.join(MAPAS, "iate.svg"), path.join(OUT, "maps", "iate.svg"));
 }
 
+// camuflagens novas de arma (ferramentas/tiro-camos/camuflagens.js, 2026-11-26): oito motivos nossos entre o Diamante e o Holo,
+// registrados em CAMOS, CAMO_DRAW e CAMO_BASE logo antes do boot, como o mapa do iate
+{
+  const camos = fs.readFileSync(path.join(__dirname, "tiro-camos", "camuflagens.js"), "utf8");
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => camos + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "camuflagens novas" });
+}
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

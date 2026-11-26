@@ -4,4 +4,4 @@ O editor ganha peças independentes inspiradas nas referências de convés de ia
 
 A ponte tem portas de 2,4 m e laje andável; seus vidros e os do corrimão são fixos. A escada é registrada para jogadores e bots. A documentação traz as medidas e o aviso de giro em múltiplos de 90 graus para a escada. Os mapas JSON não foram alterados.
 
-Validação: `node --check ferramentas/tiro-editor/pecas.js` e remontagem do jogo com `tiro-frontline.js`. A aparência e a navegação precisam ser conferidas jogando. Os PRs #1032 e #1034 também acrescentam peças ao Navio e podem precisar de reconciliação caso sejam mesclados antes deste.
+Validação: `node --check` nos arquivos do editor e remontagem do jogo com `tiro-frontline.js`. A aparência e a navegação precisam ser conferidas jogando.

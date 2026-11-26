@@ -1681,28 +1681,340 @@ const KC_CASCO = [ // [t (0 popa, 1 proa), meia-largura (fração), borda (m aci
 ];
 const KC_NAVIO = { L: 106, B: 20.4, WL: -4.3, z0: -53 };
 const kcNavioHW = (z) => hullAt(KC_CASCO, clamp((z - KC_NAVIO.z0) / KC_NAVIO.L, 0, 1), KC_NAVIO.B / 2).hw;
-PF.kcNavio = () => prefab('kcNavio', (M) => {
-  KC_INVIS.kcNavio = []; M.local(1);
+function kcNavioF(M, nome, abertura) {
+  KC_INVIS[nome] = []; M.local(1);
   const N = KC_NAVIO, branco = [0.95, 0.95, 0.94], azul = [0.08, 0.16, 0.36];
   M.save().move(0, N.WL, 0);
-  hullBody(M, KC_CASCO, { L: N.L, B: N.B, deck: -N.WL - 0.34, thick: 0.14, nv: 40, hull: branco, boot: azul, stripe: azul, inner: branco, rail: [0.62, 0.45, 0.3], deckTint: [0.5, 0.5, 0.5], noCol: true });
+  hullBody(M, KC_CASCO, { L: N.L, B: N.B, deck: -N.WL - (abertura ? 3.15 : 0.34), thick: 0.14, nv: 40, hull: branco, boot: azul, stripe: azul, inner: branco, rail: [0.62, 0.45, 0.3], deckTint: [0.5, 0.5, 0.5], gaps: abertura ? [[0, -5, 5]] : [], noCol: true });
   M.restore();
   // convés de madeira (faixas de 1 m), borda falsa sólida e parede invisível por cima
   for (let z = N.z0; z < N.z0 + N.L; z++) {
     const hw = Math.max(kcNavioHW(z), kcNavioHW(z + 1)) + 0.05, w = Math.min(kcNavioHW(z), kcNavioHW(z + 1)) - 0.14;
-    if (w > 0.25) { M.color([0.66, 0.47, 0.3]); M.boxB('wood', -w, w, -0.3, 0, z, z + 1); M.col(-w, w, -0.3, 0, z, z + 1, 'wood'); }
+    if (w > 0.25) { M.color([0.66, 0.47, 0.3]);
+      const faixas = abertura && z >= -3 && z < 3 ? [[-w, -1.3], [1.3, w]] : [[-w, w]];
+      for (const [x0, x1] of faixas) { M.boxB('wood', x0, x1, -0.3, 0, z, z + 1); M.col(x0, x1, -0.3, 0, z, z + 1, 'wood'); }
+    }
     const wi = Math.max(0, w);
     for (const sd of [-1, 1]) {
       const a = sd > 0 ? wi : -hw, b = sd > 0 ? hw : -wi;
       M.col(a, b, 0, 1.05, z, z + 1, 'metal');
-      KC_INVIS.kcNavio.push([a, b, 1.05, 4.5, z, z + 1]);
+      KC_INVIS[nome].push([a, b, 1.05, 4.5, z, z + 1]);
     }
   }
   // popa fechada (borda e parede invisível) e ponta da proa
   const hp = kcNavioHW(N.z0) + 0.05;
-  M.col(-hp, hp, 0, 1.05, N.z0 - 0.15, N.z0 + 0.02, 'metal'); KC_INVIS.kcNavio.push([-hp, hp, 0, 4.5, N.z0 - 0.2, N.z0 + 0.02]);
+  M.col(-hp, hp, 0, 1.05, N.z0 - 0.15, N.z0 + 0.02, 'metal'); KC_INVIS[nome].push([-hp, hp, 0, 4.5, N.z0 - 0.2, N.z0 + 0.02]);
   M.color(branco); M.boxB('paint', -hp, hp, -0.3, 1.05, N.z0 - 0.15, N.z0 + 0.02);
-  KC_INVIS.kcNavio.push([-1.5, 1.5, 0, 4.5, N.z0 + N.L - 0.5, N.z0 + N.L + 0.2]);
+  KC_INVIS[nome].push([-1.5, 1.5, 0, 4.5, N.z0 + N.L - 0.5, N.z0 + N.L + 0.2]);
+}
+PF.kcNavio = () => prefab('kcNavio', (M) => kcNavioF(M, 'kcNavio', false));
+// Casco com abertura central: parede invisível e escada exigem giro de 90 em 90 graus.
+PF.kcNavioComAbertura = () => prefab('kcNavioComAbertura', (M) => kcNavioF(M, 'kcNavioComAbertura', true));
+
+/* ---------- módulos de arquitetura do iate ---------- */
+const KC_NW = [0.95, 0.95, 0.94], KC_NT = [0.66, 0.46, 0.3], KC_NI = [0.86, 0.87, 0.89], KC_NA = [0.08, 0.16, 0.36];
+function kcNArqB(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo = 'metal') {
+  M.color(cor); M.boxB(mat, x0, x1, y0, y1, z0, z1); M.col(x0, x1, y0, y1, z0, z1, tipo);
+}
+function kcNPiso(M, x0, x1, z0, z1, y = 0) { kcNArqB(M, 'wood', KC_NT, x0, x1, y - 0.15, y, z0, z1, 'wood'); }
+function kcNGuardArq(M, x0, x1, z0, z1, y = 0) {
+  kcNArqB(M, 'steel', KC_NI, x0, x1, y, y + 1.05, z0, z1);
+}
+// Uma faixa de janelas com peitoril, montantes e painéis iaVidro destrutíveis.
+function kcNFaixa(M, nome, eixo, fixo, a0, a1) {
+  const B = (a, b, y0, y1) => eixo === 'x' ? kcNArqB(M, 'paint', KC_NW, a, b, y0, y1, fixo - 0.1, fixo + 0.1) : kcNArqB(M, 'paint', KC_NW, fixo - 0.1, fixo + 0.1, y0, y1, a, b);
+  B(a0, a1, 0, 0.7); B(a0, a1, 2.5, 2.85);
+  const n = Math.ceil((a1 - a0) / 1.8), w = (a1 - a0) / n;
+  for (let i = 0; i <= n; i++) { const a = a0 + i * w; B(Math.max(a0, a - 0.05), Math.min(a1, a + 0.05), 0.7, 2.5); }
+  for (let i = 0; i < n; i++) { const a = a0 + (i + 0.5) * w; KC_VIDROS[nome].push(eixo === 'x' ? [a, 0.7, fixo, w - 0.1, 1.8, 0] : [fixo, 0.7, a, w - 0.1, 1.8, Math.PI / 2]); }
+}
+function kcNModulo(M, nome, X, Z, vidro) {
+  kcNPiso(M, -X, X, -Z, Z); kcNArqB(M, 'paint', KC_NW, -X, X, 2.85, 3, -Z, Z);
+  for (const x of [-X + 0.1, X - 0.1]) {
+    if (vidro) kcNFaixa(M, nome, 'z', x, -Z, Z);
+    else kcNArqB(M, 'paint', KC_NW, x - 0.1, x + 0.1, 0, 2.85, -Z, Z);
+  }
+  for (const z of [-Z + 0.1, Z - 0.1]) {
+    if (vidro) { kcNFaixa(M, nome, 'x', z, -X, -1.2); kcNFaixa(M, nome, 'x', z, 1.2, X); }
+    else { kcNArqB(M, 'paint', KC_NW, -X, -1.2, 0, 2.85, z - 0.1, z + 0.1); kcNArqB(M, 'paint', KC_NW, 1.2, X, 0, 2.85, z - 0.1, z + 0.1); }
+    kcNArqB(M, 'paint', KC_NW, -1.2, 1.2, 2.3, 2.85, z - 0.1, z + 0.1);
+  }
+}
+PF.kcNModuloSala6x8 = () => prefab('kcNModuloSala6x8', (M) => { KC_VIDROS.kcNModuloSala6x8 = []; M.local(1); kcNModulo(M, 'kcNModuloSala6x8', 3, 4, true); });
+PF.kcNModuloSala8x12 = () => prefab('kcNModuloSala8x12', (M) => { KC_VIDROS.kcNModuloSala8x12 = []; M.local(1); kcNModulo(M, 'kcNModuloSala8x12', 4, 6, true); });
+PF.kcNModuloFechado6x6 = () => prefab('kcNModuloFechado6x6', (M) => { M.local(1); kcNModulo(M, '', 3, 3, false); });
+PF.kcNModuloCanto = () => prefab('kcNModuloCanto', (M) => {
+  KC_VIDROS.kcNModuloCanto = []; M.local(1);
+  // Semicírculo em +z, construído em faixas; a abertura de 2,4 m fica na face reta.
+  for (let i = 0; i < 16; i++) { const z0 = -2 + i * 0.25, z1 = z0 + 0.25, z = z1 + 2, w = Math.sqrt(Math.max(0, 16 - z * z));
+    if (w > 0.05) { kcNPiso(M, -w, w, z0, z1); kcNArqB(M, 'paint', KC_NW, -w, w, 2.85, 3, z0, z1); }
+  }
+  for (const x of [-1, 1]) for (let i = 0; i < 8; i++) { const a = i * Math.PI / 16, b = (i + 1) * Math.PI / 16, mid = (a + b) / 2;
+    const x0 = x * 3.9 * Math.cos(a), z0 = -2 + 3.9 * Math.sin(a), x1 = x * 3.9 * Math.cos(b), z1 = -2 + 3.9 * Math.sin(b);
+    const ax = Math.min(x0, x1), bx = Math.max(x0, x1), az = Math.min(z0, z1), bz = Math.max(z0, z1);
+    kcNArqB(M, 'paint', KC_NW, ax - 0.05, bx + 0.05, 0, 0.7, az - 0.05, bz + 0.05);
+    kcNArqB(M, 'paint', KC_NW, x0 - 0.06, x0 + 0.06, 0.7, 2.85, z0 - 0.06, z0 + 0.06);
+    KC_VIDROS.kcNModuloCanto.push([x * 3.9 * Math.cos(mid), 0.7, -2 + 3.9 * Math.sin(mid), 3.9 * (b - a) - 0.08, 1.8, -x * mid - Math.PI / 2]);
+  }
+  for (const [a, b] of [[-4, -1.2], [1.2, 4]]) kcNArqB(M, 'paint', KC_NW, a, b, 0, 2.85, -2, -1.8);
+  kcNArqB(M, 'paint', KC_NW, -1.2, 1.2, 2.3, 2.85, -2, -1.8);
+});
+function kcNVaranda(M, L) {
+  kcNPiso(M, -L / 2, L / 2, -1.25, 1.25); kcNGuardArq(M, -L / 2, L / 2, 1.19, 1.25);
+  for (const x of [-L / 2, L / 2 - 0.06]) kcNGuardArq(M, x, x + 0.06, -1.25, 1.25);
+}
+PF.kcNVaranda6 = () => prefab('kcNVaranda6', (M) => { M.local(1); kcNVaranda(M, 6); });
+PF.kcNVaranda10 = () => prefab('kcNVaranda10', (M) => { M.local(1); kcNVaranda(M, 10); });
+PF.kcNDequeSolario = () => prefab('kcNDequeSolario', (M) => {
+  M.local(1); kcNPiso(M, -5, 5, -6, 6); kcNGuardArq(M, -5, 5, -6, -5.94); kcNGuardArq(M, -5, 5, 5.94, 6);
+  for (const x of [-5, 4.94]) { kcNGuardArq(M, x, x + 0.06, -6, -1.2); kcNGuardArq(M, x, x + 0.06, 1.2, 6); }
+  for (const x of [-3.2, 3.2]) kcNArqB(M, 'canvas', KC_NW, x - 0.4, x + 0.4, 0, 0.45, -1, 1, 'wood');
+});
+// Com escada: giro apenas de 90 em 90 graus. Colocar em y=-1,2; patamar superior em y=0.
+PF.kcNDequePopa = () => prefab('kcNDequePopa', (M) => {
+  KC_ESCADAS.kcNDequePopa = []; KC_INVIS.kcNDequePopa = []; M.local(1);
+  kcNPiso(M, -5, 5, -3, -1.5); kcEscadaF(M, 'kcNDequePopa', -1.2, 1.2, -1.5, 0.6, 'z', 0, 1.2);
+  for (const [x0, x1] of [[-5, -1.2], [1.2, 5]]) { kcNArqB(M, 'paint', KC_NW, x0, x1, 0, 0.4, -1.5, -0.45); kcNArqB(M, 'paint', KC_NW, x0, x1, 0, 0.8, -0.45, 0.6); }
+  kcNArqB(M, 'paint', KC_NW, -5, 5, 0, 1.2, 0.6, 3); kcNGuardArq(M, -5, -4.94, -3, 3, 1.2); kcNGuardArq(M, 4.94, 5, -3, 3, 1.2);
+  KC_INVIS.kcNDequePopa.push([-5, 5, 0, 4.5, -3, -2.95], [-5, -4.94, 0, 1.2, -3, 3], [4.94, 5, 0, 1.2, -3, 3]);
+});
+
+// Escada de poço: y=-3, em x=0 e z=0 do casco com abertura; patamar avança para +z. Giro de 90 em 90 graus.
+PF.kcNEscadaInterna = () => prefab('kcNEscadaInterna', (M) => {
+  KC_ESCADAS.kcNEscadaInterna = []; M.local(1);
+  kcEscadaF(M, 'kcNEscadaInterna', -1.2, 1.2, -3, 2.1, 'z', 0, 3);
+  kcPatamar(M, -1.2, 1.2, 2.1, 4.5, 3);
+  for (const x of [-1.4, 1.2]) kcNArqB(M, 'paint', KC_NW, x, x + 0.2, 0, 3, -3, 2.1);
+});
+// Escada externa: colocar em y=0 ou y=3 e encostar o patamar na laje; giro de 90 em 90 graus.
+PF.kcNEscadaExterna = () => prefab('kcNEscadaExterna', (M) => {
+  KC_ESCADAS.kcNEscadaExterna = []; M.local(1);
+  kcEscadaF(M, 'kcNEscadaExterna', -1.2, 1.2, -3.75, 1.35, 'z', 0, 3);
+  kcPatamar(M, -1.2, 1.2, 1.35, 3.75, 3);
+  kcNArqB(M, 'steel', KC_NI, -1.26, -1.2, 3, 4.05, 1.35, 3.75);
+});
+PF.kcNEscadaCaracol = () => prefab('kcNEscadaCaracol', (M) => {
+  M.local(1); M.color(KC_NI); M.cyl('steel', 0.12, 3, 12);
+  M.cls = 1; for (let i = 0; i < 12; i++) { M.save().rotY(i * Math.PI / 6); M.color(i % 2 ? KC_NW : KC_NT); M.boxB('wood', 0.12, 1.05, i * 0.23, i * 0.23 + 0.08, -0.18, 0.18); M.restore(); } M.cls = 0;
+  // Bloqueio integral impede que a escada decorativa pareça uma rota utilizável.
+  M.col(-1.05, 1.05, 0, 3, -1.05, 1.05, 'metal');
+});
+PF.kcNCorredor = () => prefab('kcNCorredor', (M) => {
+  M.local(1); kcNPiso(M, -1.3, 1.3, -3, 3); kcNArqB(M, 'paint', KC_NW, -1.3, 1.3, 2.85, 3, -3, 3);
+  for (const x of [-1.5, 1.3]) kcNArqB(M, 'paint', KC_NW, x, x + 0.2, 0, 2.85, -3, 3);
+});
+PF.kcNCabine = () => prefab('kcNCabine', (M) => {
+  M.local(1); kcNPiso(M, -2, 2, -3, 3); kcNArqB(M, 'paint', KC_NW, -2, 2, 2.85, 3, -3, 3);
+  for (const x of [-2, 1.8]) kcNArqB(M, 'paint', KC_NW, x, x + 0.2, 0, 2.85, -3, 3);
+  kcNArqB(M, 'paint', KC_NW, -2, 2, 0, 2.85, -3, -2.8);
+  for (const [x0, x1] of [[-2, -1.2], [1.2, 2]]) kcNArqB(M, 'paint', KC_NW, x0, x1, 0, 2.85, 2.8, 3);
+  kcNArqB(M, 'paint', KC_NW, -1.2, 1.2, 2.3, 2.85, 2.8, 3);
+  kcNArqB(M, 'wood', KC_NT, -1.8, 0, 0, 0.5, -2.7, -0.7, 'wood');
+  kcNArqB(M, 'paint', KC_NW, 0.8, 1.8, 0, 2.2, -2.8, -2.15);
+});
+// A abertura da garagem tem parede invisível: girar de 90 em 90 graus.
+PF.kcNGaragemLanchas = () => prefab('kcNGaragemLanchas', (M) => {
+  KC_INVIS.kcNGaragemLanchas = []; M.local(1); kcNPiso(M, -5, 5, -6, 6); kcNArqB(M, 'paint', KC_NW, -5, 5, 2.85, 3, -6, 6);
+  for (const x of [-5, 4.8]) kcNArqB(M, 'paint', KC_NW, x, x + 0.2, 0, 2.85, -6, 6);
+  for (const [x0, x1] of [[-5, -1.2], [1.2, 5]]) kcNArqB(M, 'paint', KC_NW, x0, x1, 0, 2.85, 5.8, 6);
+  kcNArqB(M, 'paint', KC_NW, -1.2, 1.2, 2.3, 2.85, 5.8, 6);
+  for (const x of [-3.5, 3.5]) for (const z of [-3, 0, 3]) kcNArqB(M, 'steel', KC_NI, x - 0.9, x + 0.9, 0, 0.35, z - 0.15, z + 0.15);
+  KC_INVIS.kcNGaragemLanchas.push([-5, 5, 0, 4.5, -6, -5.95]);
+});
+PF.kcNSalaMaquinas = () => prefab('kcNSalaMaquinas', (M) => {
+  M.local(1); kcNModulo(M, '', 4, 4, false);
+  for (const x of [-2.4, 2.4]) { kcNArqB(M, 'steel', [0.45, 0.48, 0.5], x - 0.7, x + 0.7, 0, 1.3, -1.5, 1.5);
+    kcNArqB(M, 'paint', KC_NA, x - 0.55, x + 0.55, 1.3, 1.6, -1.1, 1.1); }
+});
+// Tampo recortado: colocá-lo sobre um casco que já possua abertura, pois não recorta outros prefabs.
+PF.kcNConvesBuraco = () => prefab('kcNConvesBuraco', (M) => {
+  M.local(1); kcNPiso(M, -3, -1.3, -3, 3); kcNPiso(M, 1.3, 3, -3, 3);
+});
+PF.kcNBordaVidro = () => prefab('kcNBordaVidro', (M) => {
+  M.local(1); kcNArqB(M, 'glass', [0.32, 0.42, 0.48], -2, 2, 0, 1, -0.05, 0.05, 'glass');
+  kcNArqB(M, 'steel', KC_NI, -2, 2, 1, 1.05, -0.07, 0.07);
+});
+PF.kcNPortaCorrer = () => prefab('kcNPortaCorrer', (M) => {
+  M.local(1); for (const x of [-2, 1.8]) kcNArqB(M, 'paint', KC_NW, x, x + 0.2, 0, 2.8, -0.1, 0.1);
+  kcNArqB(M, 'paint', KC_NW, -2, 2, 2.6, 2.8, -0.1, 0.1);
+  for (const [x0, x1] of [[-1.8, -1.2], [1.2, 1.8]]) kcNArqB(M, 'glass', [0.32, 0.42, 0.48], x0, x1, 0, 2.6, -0.05, 0.05, 'glass');
+});
+PF.kcNParedeJanela4 = () => prefab('kcNParedeJanela4', (M) => {
+  KC_VIDROS.kcNParedeJanela4 = []; M.local(1); kcNFaixa(M, 'kcNParedeJanela4', 'x', 0, -2, 2);
+});
+PF.kcNParedeLisa4 = () => prefab('kcNParedeLisa4', (M) => {
+  M.local(1); kcNArqB(M, 'paint', KC_NW, -2, 2, 0, 2.85, -0.1, 0.1);
+});
+
+/* ---------- kit de iate: peças independentes para o convés ---------- */
+const KC_VIDROS = {}; // [x, y, z, largura, altura, giro], painéis dinâmicos montados pelo mapa-json.js
+const KC_NBRANCO = [0.93, 0.94, 0.92], KC_NAZUL = [0.12, 0.23, 0.38], KC_NTECA = [0.65, 0.46, 0.29];
+function kcNB(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo = 'metal') {
+  M.color(cor); M.boxB(mat, x0, x1, y0, y1, z0, z1); M.col(x0, x1, y0, y1, z0, z1, tipo);
+}
+// Faixa envidraçada: cada painel é um iaVidro destrutível, entre montantes sólidos.
+function kcNJanela(M, nome, eixo, fixo, a0, a1) {
+  const B = (a, b, y0, y1) => eixo === 'x' ? kcNB(M, 'paint', KC_NBRANCO, a, b, y0, y1, fixo - 0.08, fixo + 0.08) : kcNB(M, 'paint', KC_NBRANCO, fixo - 0.08, fixo + 0.08, y0, y1, a, b);
+  B(a0, a1, 0, 0.75); B(a0, a1, 2.5, 2.8);
+  const n = Math.ceil((a1 - a0) / 1.8), w = (a1 - a0) / n;
+  for (let i = 0; i <= n; i++) { const a = a0 + i * w; B(Math.max(a0, a - 0.06), Math.min(a1, a + 0.06), 0.75, 2.5); }
+  for (let i = 0; i < n; i++) { const a = a0 + (i + 0.5) * w; KC_VIDROS[nome].push(eixo === 'x' ? [a, 0.75, fixo, w - 0.12, 1.75, 0] : [fixo, 0.75, a, w - 0.12, 1.75, Math.PI / 2]); }
+}
+function kcNPredio(M, nome, X, Z, vidro) {
+  kcNB(M, 'paint', KC_NBRANCO, -X, X, 2.8, 2.95, -Z, Z);
+  for (const x of [-X + 0.08, X - 0.08]) {
+    if (vidro) kcNJanela(M, nome, 'z', x, -Z, Z);
+    else kcNB(M, 'paint', KC_NBRANCO, x - 0.08, x + 0.08, 0, 2.8, -Z, Z);
+  }
+  for (const z of [-Z + 0.08, Z - 0.08]) {
+    if (vidro) { kcNJanela(M, nome, 'x', z, -X, -1.2); kcNJanela(M, nome, 'x', z, 1.2, X); }
+    else { kcNB(M, 'paint', KC_NBRANCO, -X, -1.2, 0, 2.8, z - 0.08, z + 0.08); kcNB(M, 'paint', KC_NBRANCO, 1.2, X, 0, 2.8, z - 0.08, z + 0.08); }
+    kcNB(M, 'paint', KC_NBRANCO, -1.2, 1.2, 2.2, 2.8, z - 0.08, z + 0.08);
+  }
+}
+PF.kcNSalao = () => prefab('kcNSalao', (M) => { KC_VIDROS.kcNSalao = []; M.local(1); kcNPredio(M, 'kcNSalao', 5.5, 7, true); });
+PF.kcNPonte = () => prefab('kcNPonte', (M) => {
+  KC_VIDROS.kcNPonte = []; M.local(1); kcNPredio(M, 'kcNPonte', 4, 3, true);
+  kcNB(M, 'paint', KC_NAZUL, -2.4, 2.4, 0, 1, 1.55, 2.15);
+  M.cls = 1; M.color([0.18, 0.55, 0.66]); for (const x of [-1.5, 0, 1.5]) M.boxB('glass', x - 0.45, x + 0.45, 1.01, 1.03, 1.62, 2.05);
+  M.color(KC_COR.ferro); M.tube('steel', 0.035, [[0, 1.05, 1.5], [0, 1.3, 1.25]], 8); M.save().move(0, 1.3, 1.25).rotX(Math.PI / 2); M.lathe('steel', [[0.28, 0], [0.32, 0], [0.32, 0.04], [0.28, 0.04]], 16); M.restore(); M.cls = 0;
+});
+PF.kcNCassino = () => prefab('kcNCassino', (M) => {
+  M.local(1); kcNPredio(M, 'kcNCassino', 5.5, 8, false);
+  for (const z of [-3.5, 3.5]) {
+    kcNB(M, 'wood', KC_NTECA, -1.2, 1.2, 0.7, 0.82, z - 0.7, z + 0.7, 'wood');
+    for (const x of [-0.9, 0.9]) kcNB(M, 'wood', KC_NTECA, x - 0.08, x + 0.08, 0, 0.7, z - 0.08, z + 0.08, 'wood');
+    M.cls = 1; M.color([0.12, 0.42, 0.25]); M.boxB('canvas', -1.1, 1.1, 0.82, 0.84, z - 0.6, z + 0.6); M.cls = 0;
+  }
+});
+// Escada externa até y=2,95; gire somente de 90 em 90 graus. O patamar deve encostar na laje do prédio.
+PF.kcNEscada = () => prefab('kcNEscada', (M) => {
+  KC_ESCADAS.kcNEscada = []; M.local(1);
+  kcEscadaF(M, 'kcNEscada', -1.2, 1.2, -3.75, 1.35, 'z', 0, 2.95);
+  kcPatamar(M, -1.2, 1.2, 1.35, 3.75, 2.95);
+  kcNB(M, 'steel', KC_COR.ferro, -1.26, -1.2, 2.95, 3.95, 1.35, 3.75);
+});
+
+PF.kcNPiscina = () => prefab('kcNPiscina', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -3, 3, 0, 0.2, -2, 2);
+  for (const x of [-2.85, 2.85]) kcNB(M, 'paint', KC_NBRANCO, x - 0.15, x + 0.15, 0.2, 0.85, -2, 2);
+  for (const z of [-1.85, 1.85]) kcNB(M, 'paint', KC_NBRANCO, -2.7, 2.7, 0.2, 0.85, z - 0.15, z + 0.15);
+  M.cls = 1; M.color([0.17, 0.59, 0.7]); M.boxB('glass', -2.7, 2.7, 0.55, 0.57, -1.7, 1.7); M.cls = 0;
+});
+PF.kcNEspreguicadeira = () => prefab('kcNEspreguicadeira', (M) => {
+  M.local(1); kcNB(M, 'wood', KC_NTECA, -0.4, 0.4, 0.25, 0.38, -1, 1, 'wood');
+  kcNB(M, 'canvas', KC_NBRANCO, -0.36, 0.36, 0.38, 0.48, -0.95, 0.9, 'wood');
+  kcNB(M, 'canvas', KC_NBRANCO, -0.36, 0.36, 0.48, 0.85, -1, -0.72, 'wood');
+});
+PF.kcNGuardaSol = () => prefab('kcNGuardaSol', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.05, 0.05, 0, 2.35, -0.05, 0.05);
+  M.color(KC_NBRANCO); M.lathe('canvas', [[0, 2.5], [1.3, 2.1], [1.3, 2.02]], 16); M.col(-1.3, 1.3, 2.02, 2.5, -1.3, 1.3, 'wood');
+});
+PF.kcNBar = () => prefab('kcNBar', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1.8, 1.8, 0, 1.05, -0.5, 0.5);
+  kcNB(M, 'wood', KC_NTECA, -1.9, 1.9, 1.05, 1.14, -0.6, 0.6, 'wood');
+  M.cls = 1; M.color(KC_NAZUL); for (const x of [-1, -0.5, 0, 0.5, 1]) M.boxB('glass', x - 0.06, x + 0.06, 1.14, 1.42, -0.1, 0.1); M.cls = 0;
+});
+PF.kcNSofa = () => prefab('kcNSofa', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1.3, 1.3, 0, 0.45, -0.45, 0.45);
+  kcNB(M, 'canvas', [0.83, 0.85, 0.82], -1.25, 1.25, 0.45, 0.58, -0.42, 0.42, 'wood');
+  kcNB(M, 'canvas', KC_NBRANCO, -1.3, 1.3, 0.58, 0.95, -0.45, -0.25, 'wood');
+});
+PF.kcNMesaCadeiras = () => prefab('kcNMesaCadeiras', (M) => {
+  M.local(1); kcNB(M, 'wood', KC_NTECA, -0.65, 0.65, 0.72, 0.8, -0.65, 0.65, 'wood');
+  kcNB(M, 'steel', KC_COR.ferro, -0.08, 0.08, 0, 0.72, -0.08, 0.08);
+  for (const x of [-1.3, 1.3]) { kcNB(M, 'paint', KC_NBRANCO, x - 0.3, x + 0.3, 0.4, 0.5, -0.3, 0.3); kcNB(M, 'paint', KC_NBRANCO, x - 0.28, x + 0.28, 0, 0.4, -0.25, 0.25); }
+});
+PF.kcNBoia = () => prefab('kcNBoia', (M) => {
+  M.local(1); M.color(KC_NBRANCO); M.save().move(0, 0.5, 0).rotX(Math.PI / 2); M.lathe('plastic', [[0.3, 0], [0.48, 0], [0.5, 0.1], [0.3, 0.1]], 20); M.restore(); M.col(-0.5, 0.5, 0, 1, -0.1, 0.1, 'wood');
+  M.cls = 1; M.color(KC_COR.vermelho); for (const x of [-0.38, 0.38]) M.boxB('paint', x - 0.07, x + 0.07, 0.4, 0.6, 0.01, 0.07); M.cls = 0;
+});
+PF.kcNArmario = () => prefab('kcNArmario', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1, 1, 0, 1.1, -0.55, 0.55);
+  kcNB(M, 'wood', KC_NTECA, -1.04, 1.04, 1.1, 1.18, -0.59, 0.59, 'wood');
+  M.cls = 1; M.color(KC_COR.ferro); M.boxB('steel', -0.03, 0.03, 0.1, 0.95, 0.55, 0.56); M.cls = 0;
+});
+PF.kcNHeliponto = () => prefab('kcNHeliponto', (M) => {
+  M.local(1); M.color([0.25, 0.32, 0.33]); M.boxB('paint', -6, 6, 0, 0.015, -6, 6); M.cls = 1; M.color(KC_NBRANCO);
+  M.save().move(0, 0.017, 0); M.lathe('paint', [[4.8, 0], [4.95, 0], [4.95, 0.005], [4.8, 0.005]], 48); M.restore();
+  for (const x of [-1.2, 1.2]) M.boxB('paint', x - 0.15, x + 0.15, 0.017, 0.025, -1.5, 1.5);
+  M.boxB('paint', -1.2, 1.2, 0.017, 0.025, -0.15, 0.15); M.cls = 0;
+});
+
+function kcNBarco(M, pequeno) {
+  const L = pequeno ? 2.2 : 3, W = pequeno ? 0.85 : 1.05;
+  for (const x of [-L + 0.35, L - 0.35]) kcNB(M, 'steel', KC_COR.ferro, x - 0.12, x + 0.12, 0, 0.55, -W - 0.1, W + 0.1);
+  kcNB(M, 'paint', KC_NBRANCO, -L, L, 0.55, 1.25, -W, W);
+  kcNB(M, 'paint', pequeno ? [0.95, 0.48, 0.13] : KC_NAZUL, -L + 0.08, L - 0.08, 1.25, 1.48, -W + 0.05, W - 0.05);
+  kcNB(M, 'paint', KC_NBRANCO, -L + 0.5, L - 0.5, 1.48, 1.65, -W + 0.18, W - 0.18);
+  if (!pequeno) kcNB(M, 'glass', [0.45, 0.67, 0.75], -0.4, 0.5, 1.65, 2.15, -0.7, 0.7, 'glass');
+}
+PF.kcNLancha = () => prefab('kcNLancha', (M) => { M.local(1); kcNBarco(M, false); });
+PF.kcNBoteSalvaVidas = () => prefab('kcNBoteSalvaVidas', (M) => { M.local(1); kcNBarco(M, true); });
+PF.kcNGuindaste = () => prefab('kcNGuindaste', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.35, 0.35, 0, 0.3, -0.35, 0.35);
+  kcNB(M, 'paint', KC_NBRANCO, -0.18, 0.18, 0.3, 3.8, -0.18, 0.18);
+  kcNB(M, 'paint', KC_NBRANCO, -0.18, 3, 3.55, 3.8, -0.18, 0.18);
+  M.cls = 1; M.color(KC_COR.ferro); M.tube('steel', 0.025, [[2.7, 3.55, 0], [2.7, 1.2, 0]], 6); M.cls = 0;
+});
+PF.kcNCaixaEquipamento = () => prefab('kcNCaixaEquipamento', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1, 1, 0, 1.15, -0.6, 0.6);
+  M.cls = 1; M.color(KC_COR.ferro); M.boxB('steel', -0.95, 0.95, 1.02, 1.04, 0.6, 0.61); M.cls = 0;
+});
+PF.kcNRoloCabo = () => prefab('kcNRoloCabo', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.6, 0.6, 0, 0.25, -0.5, 0.5);
+  M.color(KC_NTECA); M.save().move(-0.5, 0.75, 0).rotZ(-Math.PI / 2); M.cyl('wood', 0.5, 1, 16); M.restore();
+  M.col(-0.5, 0.5, 0.25, 1.25, -0.5, 0.5, 'wood');
+  M.cls = 1; M.color([0.25, 0.22, 0.18]); for (let x = -0.35; x <= 0.35; x += 0.14) { M.save().move(x, 0.75, 0).rotZ(-Math.PI / 2); M.lathe('rubber', [[0.49, 0], [0.52, 0], [0.52, 0.03], [0.49, 0.03]], 16); M.restore(); } M.cls = 0;
+});
+PF.kcNCabeco = () => prefab('kcNCabeco', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.45, 0.45, 0, 0.15, -0.3, 0.3);
+  for (const x of [-0.25, 0.25]) kcNB(M, 'steel', KC_COR.ferro, x - 0.09, x + 0.09, 0.15, 0.65, -0.1, 0.1);
+  kcNB(M, 'steel', KC_COR.ferro, -0.45, 0.45, 0.58, 0.72, -0.12, 0.12);
+});
+PF.kcNMangueira = () => prefab('kcNMangueira', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_COR.vermelho, -0.55, 0.55, 0, 1.05, -0.25, 0.25);
+  M.cls = 1; M.color([0.87, 0.83, 0.7]); M.save().move(0, 0.52, 0.26).rotX(Math.PI / 2); M.lathe('canvas', [[0.18, 0], [0.42, 0], [0.42, 0.03], [0.18, 0.03]], 16); M.restore(); M.cls = 0;
+});
+PF.kcNConteiner = () => prefab('kcNConteiner', (M) => {
+  M.local(1); kcNB(M, 'corrugated', [0.72, 0.76, 0.76], -2, 2, 0, 2, -1, 1);
+  M.cls = 1; M.color(KC_NAZUL); for (const x of [-1.3, 0, 1.3]) M.boxB('steel', x - 0.03, x + 0.03, 0.15, 1.85, 1, 1.02); M.cls = 0;
+});
+PF.kcNMastroRadar = () => prefab('kcNMastroRadar', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -0.2, 0.2, 0, 4.5, -0.2, 0.2);
+  kcNB(M, 'paint', KC_NBRANCO, -1.1, 1.1, 4.35, 4.55, -0.18, 0.18);
+  kcNB(M, 'paint', KC_NBRANCO, -0.9, 0.9, 4.8, 5.05, -0.12, 0.12);
+  kcNB(M, 'steel', KC_COR.ferro, -0.05, 0.05, 4.55, 4.8, -0.05, 0.05);
+});
+PF.kcNSatelite = () => prefab('kcNSatelite', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -0.35, 0.35, 0, 0.3, -0.35, 0.35);
+  M.color(KC_NBRANCO); M.save().move(0, 0.3, 0); M.lathe('plastic', [[0.55, 0], [0.6, 0.2], [0.55, 0.65], [0.35, 0.95], [0, 1.05]], 18); M.restore(); M.col(-0.6, 0.6, 0.3, 1.35, -0.6, 0.6, 'metal');
+});
+PF.kcNFarol = () => prefab('kcNFarol', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.08, 0.08, 0, 1.6, -0.08, 0.08);
+  kcNB(M, 'paint', KC_NBRANCO, -0.22, 0.22, 1.6, 1.95, -0.16, 0.16);
+  M.cls = 1; M.color(KC_COR.vermelho); M.boxB('lamp', -0.18, 0, 1.66, 1.88, 0.16, 0.17); M.color([0.15, 0.9, 0.3]); M.boxB('lamp', 0, 0.18, 1.66, 1.88, 0.16, 0.17); M.cls = 0;
+});
+PF.kcNEscotilha = () => prefab('kcNEscotilha', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -0.8, 0.8, 0, 0.18, -0.8, 0.8);
+  M.cls = 1; M.color(KC_COR.ferro); M.boxB('steel', -0.6, 0.6, 0.18, 0.2, -0.6, 0.6); M.color(KC_NAZUL); M.boxB('glass', -0.46, 0.46, 0.2, 0.21, -0.46, 0.46); M.cls = 0;
+});
+// Corrimão com parede invisível: girar somente de 90 em 90 graus.
+PF.kcNCorrimao = () => prefab('kcNCorrimao', (M) => {
+  KC_INVIS.kcNCorrimao = []; M.local(1); M.color(KC_COR.ferro);
+  for (const x of [-2, 0, 2]) kcNB(M, 'steel', KC_COR.ferro, x - 0.035, x + 0.035, 0, 1.05, -0.035, 0.035);
+  kcNB(M, 'steel', KC_COR.ferro, -2.04, 2.04, 1, 1.08, -0.04, 0.04);
+  KC_INVIS.kcNCorrimao.push([-2, 2, 0, 1, -0.04, 0.04]);
+});
+PF.kcNExtintor = () => prefab('kcNExtintor', (M) => {
+  M.local(1); M.color(KC_COR.vermelho); M.cyl('paint', 0.13, 0.55, 12); M.col(-0.13, 0.13, 0, 0.55, -0.13, 0.13, 'metal');
+  kcNB(M, 'steel', KC_COR.ferro, -0.04, 0.04, 0.55, 0.7, -0.04, 0.04);
+  M.cls = 1; M.color([0.15, 0.15, 0.15]); M.tube('rubber', 0.015, [[0.06, 0.65, 0], [0.2, 0.55, 0], [0.16, 0.28, 0]], 5); M.cls = 0;
+});
+PF.kcNPlacaSaida = () => prefab('kcNPlacaSaida', (M) => {
+  M.local(1); kcNB(M, 'plastic', [0.12, 0.52, 0.27], -0.5, 0.5, 0, 0.3, -0.04, 0.04);
+  M.cls = 1; M.color(KC_NBRANCO); M.boxB('paint', -0.3, 0.18, 0.13, 0.17, 0.041, 0.045);
+  M.tube('paint', 0.025, [[0.02, 0.07, 0.045], [0.18, 0.15, 0.045], [0.02, 0.23, 0.045]], 4); M.cls = 0;
 });
 
 /* ---------- peças de convés de iate: volumes brancos, teca e estofados ---------- */

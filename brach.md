@@ -1,39 +1,27 @@
-# Tiro da Galera: skins da faca
+# Tiro da Galera: camuflagem Cromado
 
-O Thiago pediu skins para a faca.
+O Thiago viu a comparação da M4 com o cromado da Corrida e pediu uma camuflagem cromada que fique bonita nas armas.
 
-## As skins
+## Por que não o cromado da Corrida direto
 
-A faca não tem nível como as armas. Por isso as skins se liberam por **abates com a faca** (o golpe e a faca de arremesso contam):
+O cromado da Corrida é um espelho quase puro (metal 0,92, aspereza 0,12, verniz). Na M4 ele deu dois problemas:
 
-| Abates | Skin | Como é |
-|---|---|---|
-| 0 | Padrão | A faca de sempre |
-| 1 | Tática | Lâmina preta fosca e cabo verde-oliva |
-| 5 | Damasco | Aço de Damasco ondulado, guarda de latão e cabo de madeira |
-| 10 | Onça | Lâmina com a pintura da onça-pintada |
-| 15 | Carbono | Lâmina e cabo de fibra de carbono |
-| 25 | Ouro | Lâmina dourada e guarda de ouro |
-| 40 | Rubi | Lâmina de rubi lapidado e cabo vinho |
-| 60 | Galáxia | Lâmina de nebulosa estrelada e guarda prateada |
-| 100 | Holo | A película holográfica do Holo na lâmina e cabo branco |
+- **Cor do mapa:** ele copia o céu e o chão de cada mapa. No Deserto a arma ficou rosada e marrom, e não prateada.
+- **Cor lisa:** as armas são feitas de faces retas, e cada face reflete um ponto só. A arma parecia pintada de uma cor lisa.
 
-- **Onde escolher:** em **Opções > Jogo**, no grupo Interface, no botão **"Skins da faca"**. A tela mostra quantos abates com a
-  faca você tem, e as skins ainda presas dizem quantos faltam.
-- **Aviso de skin nova:** quando um abate libera uma skin, aparece um aviso na partida.
-- **Na partida:** a skin aparece na faca em primeira pessoa e troca na hora, até com o jogo pausado.
+## A Cromado
 
-## Como entrou
-
-- O código fica em `ferramentas/tiro-camos/faca.js`. O `tiro-frontline.js` coloca ele depois das camuflagens novas, porque ele
-  usa os desenhos delas.
-- Cada skin troca as matérias da lâmina, da guarda e do cabo da faca. Os desenhos vêm das camuflagens, projetados na faca.
-- A contagem fica no aparelho (`localStorage` `tiro_faca`). Ela ainda não vai para o perfil da Vila no servidor.
+- **Prata própria:** a base é um aço escovado, então a arma fica prateada em qualquer mapa.
+- **Faixas de luz de estúdio:** elas correm pela arma conforme ela se mexe, mais o céu claro em cima e um brilho nas bordas. É o
+  mesmo truque do Holo, só que em prata.
+- **Shader próprio:** o código fica em `ferramentas/tiro-camos/camuflagens.js`. A Cromado tem um shader só dela, e as outras
+  camuflagens não mudam.
+- **Nível 29** da arma, entre o Rubi (28) e o Holo (30). A miniatura do menu é um degradê de cromo.
+- **Faca:** a skin Holo da faca segue igual.
 
 ## Conferido no navegador
 
-- As 9 skins montam as matérias e os shaders compilam sem erro.
-- O botão aparece nas opções, e a tela de escolha prende e solta as skins pelo número de abates.
-- Um abate com a faca soma 1 na contagem e fica guardado.
+A M4 foi desenhada pela vitrine do jogo no mapa Deserto: hoje, com o espelho puro e com a Cromado. A Cromado fica prateada e com
+faixas de brilho. O shader compila sem erro.
 
-Falta o Thiago ver as skins na mão jogando.
+Falta o Thiago ver jogando: o brilho na arma em movimento e nos mapas escuros.

@@ -93,6 +93,12 @@
       }
       for (let i = 0; i < 70; i++) { g.fillStyle = 'rgba(255,230,235,0.8)'; g.fillRect(rnd() * N, rnd() * N, 1.5, 1.5); }
     } },
+    // cromado (pedido do Thiago, 2026-11-26, depois da comparação com o cromado da Corrida): o espelho puro copiava a cor do mapa e,
+    // nas faces retas das armas, virava uma cor lisa. Este tem prata própria (aço escovado na tela) e faixas de luz de estúdio que
+    // correm pela arma conforme ela se mexe (shader abaixo, no lugar da cor do motivo, como o Holo)
+    cromo: { name: 'Cromado', lvl: 29, seed: 163, metal: 0.85, rough: 0.16, scale: 0.3, base: '#b4b8bd', draw: (g, rnd) => {
+      for (let i = 0; i < 900; i++) { const y = rnd() * N, a = 0.05 + rnd() * 0.12; g.fillStyle = rnd() < 0.5 ? `rgba(255,255,255,${a})` : `rgba(60,64,70,${a})`; g.fillRect(0, y, N, 0.6 + rnd() * 1.2); }
+    } },
   };
   for (const id in NOVAS) {
     const { base, draw, ...c } = NOVAS[id];
@@ -102,4 +108,32 @@
   const ord = Object.values(CAMOS).sort((a, b) => a.lvl - b.lvl);
   for (const c of ord) delete CAMOS[c.id];
   for (const c of ord) CAMOS[c.id] = c;
+
+  /* Shader do Cromado: troca a cor do motivo por prata escovada e soma faixas de luz no reflexo (no espaço da vista: deslizam quando a
+     arma se mexe), o céu mais claro em cima e um liseré nas bordas. Programa próprio (chave '-cromo'), as outras camuflagens não mudam */
+  const ALVO = 'else diffuseColor.rgb = pow(cc, vec3(2.2)) * 0.74;';
+  const CROMO = `else {
+    vec3 cN = normalize(vNormal), cV = normalize(vViewPosition), cR = reflect(-cV, cN);
+    float cRim = 1.0 - clamp(dot(cN, cV), 0.0, 1.0);
+    diffuseColor.rgb = pow(vec3(0.58, 0.6, 0.63) * (0.8 + 0.4 * cc.r), vec3(2.2));
+    float cB1 = pow(0.5 + 0.5 * sin((cR.y * 2.7 + cR.x * 0.9 + dot(vCamoP, vec3(0.2, 1.4, 0.8))) * 6.2832), 16.0);
+    float cB2 = pow(0.5 + 0.5 * sin((cR.y * 1.1 - cR.x * 2.3 + cR.z * 0.7) * 6.2832 + 1.7), 28.0);
+    float cSky = smoothstep(-0.3, 0.9, cR.y);
+    camoGlow = vec3(0.88, 0.92, 0.97) * (0.015 + 0.05 * cSky + cRim * cRim * 0.25 + cB1 * 0.6 + cB2 * 0.4);
+  }`;
+  const orig = camoPatch;
+  camoPatch = function (m, id) {
+    const r = orig(m, id);
+    if (id !== 'cromo') return r;
+    const ob = m.onBeforeCompile, key = m.customProgramCacheKey();
+    m.onBeforeCompile = (sh, rd) => { ob(sh, rd); sh.fragmentShader = sh.fragmentShader.replace(ALVO, CROMO); };
+    m.customProgramCacheKey = () => key + '-cromo';
+    return m;
+  };
+  // miniatura do menu: um degradê de cromo (a tela do motivo é só o aço escovado)
+  {
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 64, 64);
+    [['#f4f6f8', 0], ['#7d848d', 0.38], ['#f8fafc', 0.52], ['#4a5059', 0.78], ['#d9dde2', 1]].forEach(([col, t]) => gr.addColorStop(t, col));
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64); CAMO_SWATCH.cromo = c.toDataURL('image/png');
+  }
 }

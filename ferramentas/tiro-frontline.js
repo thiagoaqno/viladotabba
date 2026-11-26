@@ -330,6 +330,16 @@ if (IATE_ATIVO) {
     "function spawnField(){return POI.filter((p)=>p[1]<gy0(p[0],p[2])+1&&!p[4]&&!(MATCH.mode==='dom'&&DOM.pts.some((q)=>hyp(q.x-p[0],q.z-p[2])<DOM.rad+2.5))).map((p)=>[p[0],p[2]]);}", { nome: "nascer fora das áreas de domínio (pontos de campo)" });
   h = troca(h, "if(MATCH.mode==='dom'){let dOwn=1e9,dFront=1e9;for(const p of DOM.pts){const d=hyp(p.x-x,p.z-z);",
     "if(MATCH.mode==='dom'){let dOwn=1e9,dFront=1e9;for(const p of DOM.pts){const d=hyp(p.x-x,p.z-z);if(d<DOM.rad+2.5){safe=false;s-=100;}", { nome: "nascer fora das áreas de domínio (nota)" });
+  // (2026-11-26, mapa Aeroporto) nascer num piso alto (terminal a 4,5 m, maciço por baixo): o jogo procurava o ponto de caminho
+  // perto da altura 0, não achava e punha o soldado no chão, dentro do bloco (e a colisão empurrava para fora do mapa). Agora
+  // procura (só quando não há ponto de caminho no chão) de cima para baixo o primeiro piso com 1,8 m livres em cima, abaixo de
+  // 8 m (para não nascer no teto). Mapas com chão em y = 0 continuam iguais
+  h = troca(h, "function spawnOpening(e){",
+    "function spawnChao(x,z){let top=8;for(let i=0;i<10;i++){const y=groundHeight(x,z,top,0.1);let livre=true;for(const c of queryBoxes(x-0.3,z-0.3,x+0.3,z+0.3)){if(c.ray||c.noRay||c.x1<x-0.3||c.x0>x+0.3||c.z1<z-0.3||c.z0>z+0.3)continue;if(c.y0<y+1.8&&c.y1>y+0.05){livre=false;break;}}if(livre)return y;top=y-0.05;if(top<-5)break;}return gy0(x,z);}\nfunction spawnOpening(e){", { nome: "nascer no piso alto (busca do chão)" });
+  h = troca(h, "const[x,z]=S[k],id=navNode(x,gy0(x,z),z),p=id>=0?new V3(NAV.nx[id],NAV.ny[id],NAV.nz[id]):new V3(x,gy0(x,z),z);",
+    "const[x,z]=S[k];let id=navNode(x,gy0(x,z),z),y0=gy0(x,z);if(id<0){y0=spawnChao(x,z);id=navNode(x,y0,z);}const p=id>=0?new V3(NAV.nx[id],NAV.ny[id],NAV.nz[id]):new V3(x,y0,z);", { nome: "nascer no piso alto (largada)" });
+  h = troca(h, "function spawnSpot(e,x,z,C){const id0=navNode(x,gy0(x,z),z);if(id0<0)return new V3(x,gy0(x,z),z);",
+    "function spawnSpot(e,x,z,C){let id0=navNode(x,gy0(x,z),z);if(id0<0){const yc=spawnChao(x,z);id0=navNode(x,yc,z);if(id0<0)return new V3(x,yc,z);}", { nome: "nascer no piso alto (renascer)" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

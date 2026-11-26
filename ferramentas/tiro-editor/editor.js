@@ -262,8 +262,9 @@ function edMsgJogo() { const b = edEl('button', 'position:fixed;right:12px;top:1
 /* ---------- grupos dos prefabs no catálogo ----------
    Os prefabs se dividem em grupos (Favela, Navio, Cobertura...). Peça nova entra no grupo pelo nome: kcN... vai para o Navio,
    o resto das kc para a Favela, a não ser que esteja numa das listas abaixo; as do jogo original ficam em "Jogo original". */
-const ED_GRUPOS = ['Favela', 'Navio', 'Praça e esporte', 'Veículos', 'Cobertura', 'Jogo original'];
+const ED_GRUPOS = ['Favela', 'Aeroporto', 'Navio', 'Praça e esporte', 'Veículos', 'Cobertura', 'Jogo original'];
 const ED_GRUPO_LISTA = {
+  'Aeroporto': /^kcA[A-Z]/,
   'Praça e esporte': /^kc(Praca|Quadra|CampoFutebol|Arquibancada|BancoPraca|ArvoreCanteiro|GuardaSol|VasoPlanta|Arbusto|Bananeira)/,
   'Veículos': /^(kc(CarroVelho|Van|Moto$|CarroQueimado)|car$|truck$|busWreck$|boxcar$|snowplow$)/,
   'Cobertura': /^kc(Jersey|Sacos|Gabiao|MuroQuebrado|Pilar$|Carretel|Guarita|Tanque|Tapume|Paletes|BarreiraAgua|ConteinerAberto|Cavalete|Entulho|Manilhas|Prateleira|Tambores|Vigas|Alambrado|ArmarioEletrico|Blocos|PaleteEmPe|IBC|Pneus|Cone)/,

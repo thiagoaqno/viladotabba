@@ -2123,3 +2123,161 @@ PF.kcNCaixaBordo = () => prefab('kcNCaixaBordo', (M) => {
   M.local(1); kcIateB(M, 'paint', [0.77, 0.61, 0.16], -0.65, 0.65, 0, 0.55, -0.4, 0.4);
   M.cls = 1; M.color(KC_IATE_INOX); for (const x of [-0.45, 0.45]) { M.boxB('steel', x - 0.025, x + 0.025, 0, 0.56, 0.4, 0.41); M.boxB('steel', x - 0.025, x + 0.025, 0.55, 0.56, -0.4, 0.4); } M.cls = 0;
 });
+
+/* ---------- pacote 8: aeroporto (prefixo kcA, grupo "Aeroporto" no editor) ----------
+   kcAAviao: avião de passageiros com a cabine andável. O piso da cabine fica no y da peça (no mapa Aeroporto, y = 4,5: o trem
+   de pouso desce 4,5 m até o chão). Comprido em z, nariz em +z. Duas portas de 3 m: a da direita (+x) perto do nariz
+   (z 12 a 15 da peça, para a ponte de embarque) e a da esquerda (-x) atrás da asa (z -13 a -10, para a escada do avião).
+   Corredor de 2,6 m entre as poltronas. O resto: balcão de check-in, cadeiras de espera, raio-x, pórtico, carrinho de bagagem,
+   painel de voos e esteira de bagagem. */
+const KC_AV = { R: 2.6, cy: 1.6, z0: -18, z1: 18, portaD: [12, 15], portaE: [-13, -10] };
+PF.kcAAviao = () => prefab('kcAAviao', (M) => {
+  M.local(1);
+  const { R, cy, z0, z1, portaD, portaE } = KC_AV, branco = [0.95, 0.95, 0.96], azul = [0.12, 0.28, 0.62];
+  // ângulos (em volta do eixo do avião) de cada porta: do piso (0) até 2,2 m
+  const sMin = (cy - 2.2) / R, sMax = cy / R, aD = [Math.asin(sMin), Math.asin(Math.min(1, sMax))], aE = [Math.PI - aD[1], Math.PI - aD[0]];
+  const casca = (za, zb, a0, a1) => {
+    M.save().move(0, cy, 0).rotX(Math.PI / 2);
+    M.color(branco); M.lathe('carpaint', [[R, za], [R, zb]], 20, { a0, a1 });
+    M.color([0.9, 0.9, 0.88]); M.lathe('plastic', [[R - 0.06, zb], [R - 0.06, za]], 20, { a0, a1 });
+    M.restore();
+  };
+  const cortes = [z0, portaE[0], portaE[1], portaD[0], portaD[1], z1];
+  for (let i = 0; i < cortes.length - 1; i++) {
+    const za = cortes[i], zb = cortes[i + 1], meio = (za + zb) / 2;
+    const temD = meio > portaD[0] && meio < portaD[1], temE = meio > portaE[0] && meio < portaE[1];
+    if (temD) casca(za, zb, aD[1], aD[0] + Math.PI * 2);
+    else if (temE) casca(za, zb, aE[1], aE[0] + Math.PI * 2);
+    else casca(za, zb, 0, Math.PI * 2);
+  }
+  // nariz e cauda (cones)
+  M.color(branco); M.save().move(0, cy, z1).rotX(Math.PI / 2); M.lathe('carpaint', [[R, 0], [R * 0.85, 1.6], [R * 0.5, 3.0], [0, 3.8]], 20); M.restore();
+  M.save().move(0, cy + 0.4, z0).rotX(-Math.PI / 2); M.lathe('carpaint', [[R, 0], [R * 0.75, 2.2], [R * 0.35, 4.2], [0, 5.0]], 20); M.restore();
+  M.color([0.08, 0.1, 0.14]); M.cls = 1;
+  M.save().move(0, cy + 0.9, z1 + 1.9).rotX(-0.5); M.boxB('glass', -1.1, 1.1, -0.25, 0.25, -0.02, 0.02); M.restore(); // para-brisa
+  // janelas e faixa azul
+  for (const s of [-1, 1]) for (let z = -16; z <= 16.5; z += 0.95) {
+    if ((z > portaD[0] - 0.4 && z < portaD[1] + 0.4) || (z > portaE[0] - 0.4 && z < portaE[1] + 0.4)) continue;
+    M.color([0.08, 0.1, 0.14]); M.boxB('glass', s > 0 ? R - 0.03 : -R, s > 0 ? R : -R + 0.03, cy + 0.25, cy + 0.6, z - 0.16, z + 0.16);
+  }
+  M.color(azul); for (const s of [-1, 1]) M.boxB('paint', s > 0 ? R - 0.1 : -R - 0.005, s > 0 ? R + 0.005 : -R + 0.1, cy - 0.5, cy - 0.3, z0 + 0.5, z1 - 0.2);
+  // batentes das portas
+  M.color([0.55, 0.57, 0.6]);
+  for (const [s, [za, zb]] of [[1, portaD], [-1, portaE]]) { const x = s * (R - 0.02); for (const z of [za, zb]) M.boxB('steel', x - 0.05, x + 0.05, 0, 2.25, z - 0.05, z + 0.05); M.boxB('steel', x - 0.05, x + 0.05, 2.2, 2.3, za, zb); }
+  M.cls = 0;
+  // piso, teto e paredes de dentro (colisão), com as portas abertas
+  const hw = Math.sqrt(R * R - cy * cy);
+  M.color([0.32, 0.34, 0.4]); M.boxB('rug', -hw, hw, -0.15, 0, z0, z1); M.col(-hw, hw, -0.3, 0, z0, z1, 'metal');
+  M.col(-hw, hw, 2.6, 2.9, z0, z1, 'metal');
+  for (const s of [-1, 1]) {
+    const [pa, pb] = s > 0 ? portaD : portaE, x0 = s > 0 ? hw - 0.05 : -hw - 0.25, x1 = s > 0 ? hw + 0.25 : -hw + 0.05;
+    M.col(x0, x1, 0, 2.6, z0, pa, 'metal'); M.col(x0, x1, 0, 2.6, pb, z1, 'metal'); M.col(x0, x1, 2.2, 2.6, pa, pb, 'metal');
+  }
+  M.col(-hw, hw, 0, 2.6, z0 - 0.3, z0, 'metal'); M.col(-hw, hw, 0, 2.6, z1, z1 + 0.3, 'metal');
+  // poltronas (uma de cada lado por fileira; corredor de 2,6 m)
+  for (let z = -16.5; z <= 10.5; z += 1.1) {
+    if ((z > portaE[0] - 0.8 && z < portaE[1] + 0.3) || (z > portaD[0] - 0.8)) continue;
+    for (const s of [-1, 1]) {
+      const a = s > 0 ? 1.3 : -hw + 0.05, b = s > 0 ? hw - 0.05 : -1.3;
+      M.color([0.15, 0.25, 0.55]); M.boxB('canvas', a, b, 0.35, 0.55, z - 0.35, z + 0.25, { bevel: 0.04 }); M.boxB('canvas', a, b, 0.55, 1.15, z - 0.38, z - 0.25, { bevel: 0.03 });
+      M.color([0.25, 0.25, 0.27]); M.cls = 1; M.boxB('steel', a + 0.1, b - 0.1, 0, 0.35, z - 0.2, z + 0.1); M.cls = 0;
+      M.col(a, b, 0, 1.15, z - 0.38, z + 0.25, 'wood');
+    }
+  }
+  // asas, motores, estabilizadores e deriva
+  M.color(branco);
+  for (const s of [-1, 1]) {
+    M.save().move(0, cy - 2.1, 0).rotX(-Math.PI / 2);
+    M.extrude('carpaint', s > 0 ? [[1.5, -5], [1.5, 5], [17, 10.5], [17, 8]] : [[-1.5, 5], [-1.5, -5], [-17, 8], [-17, 10.5]], 0.35);
+    M.restore();
+    M.color([0.85, 0.86, 0.88]); M.save().move(s * 7, cy - 3.1, -1.5).rotX(Math.PI / 2); M.lathe('steel', [[0.95, 0], [1.0, 0.6], [0.9, 3.4], [0.6, 4.0]], 18); M.restore();
+    M.color([0.1, 0.1, 0.12]); M.cls = 1; M.save().move(s * 7, cy - 3.1, -1.48).rotX(Math.PI / 2); M.cyl('dark', 0.85, 0.02, 16); M.restore(); M.cls = 0;
+    M.color(branco); M.boxB('carpaint', s * 7 - 0.12, s * 7 + 0.12, cy - 2.2, cy - 1.9, -1.0, 1.5);
+    M.save().move(0, cy + 0.6, z0 - 1.5).rotX(-Math.PI / 2); M.extrude('carpaint', s > 0 ? [[0.5, 0], [0.5, 3], [6.5, 5.5], [6.5, 4]] : [[-0.5, 3], [-0.5, 0], [-6.5, 4], [-6.5, 5.5]], 0.25); M.restore();
+  }
+  M.color(azul); M.save().move(-0.15, 0, 0).rotY(Math.PI / 2); M.extrude('carpaint', [[-z0, cy + 1.5], [-z0 + 4.5, cy + 1.5], [-z0 + 6.5, cy + 7.5], [-z0 + 4.2, cy + 7.5]], 0.3); M.restore();
+  // trem de pouso (o chão fica 4,5 m abaixo do piso da cabine)
+  M.color([0.3, 0.31, 0.33]);
+  for (const [x, z] of [[0, 15.5], [-2.6, -2.5], [2.6, -2.5]]) {
+    M.boxB('steel', x - 0.12, x + 0.12, -4.0, cy - R + 0.1, z - 0.12, z + 0.12); M.col(x - 0.15, x + 0.15, -4.5, cy - R, z - 0.15, z + 0.15, 'metal');
+    M.color([0.08, 0.08, 0.09]); for (const dx of [-0.35, 0.35]) { M.save().move(x + dx - 0.15, -4.0, z).rotZ(-Math.PI / 2); M.cyl('rubber', 0.5, 0.3, 14); M.restore(); }
+    M.color([0.3, 0.31, 0.33]);
+  }
+});
+
+// balcão de check-in: balcão com balança e painel da companhia atrás, 2,6 x 2,4 x 1,5 m (o atendente fica em -z)
+PF.kcABalcao = () => prefab('kcABalcao', (M) => {
+  M.local(1);
+  M.color([0.92, 0.92, 0.9]); M.boxB('paint', -1.3, 1.3, 0, 1.05, -0.4, 0.4, { bevel: 0.03 }); M.col(-1.3, 1.3, 0, 1.1, -0.4, 0.4, 'wood');
+  M.color([0.15, 0.3, 0.6]); M.boxB('paint', -1.32, 1.32, 1.05, 1.1, -0.42, 0.42);
+  M.color([0.2, 0.2, 0.22]); M.boxB('steel', 0.4, 1.2, 0, 0.25, 0.42, 1.1); M.col(0.4, 1.2, 0, 0.25, 0.42, 1.1, 'metal'); // balança/esteira
+  M.color([0.15, 0.3, 0.6]); M.boxB('paint', -1.3, 1.3, 1.3, 2.4, -0.62, -0.55); M.col(-1.3, 1.3, 0, 2.4, -0.65, -0.52, 'wood');
+  M.cls = 1; M.color([0.97, 0.97, 0.95]); for (let i = 0; i < 5; i++) M.boxB('paint', -0.9 + i * 0.4, -0.65 + i * 0.4, 1.95, 2.15, -0.55, -0.54);
+  M.color([0.08, 0.1, 0.12]); M.boxB('glass', -0.9, -0.3, 1.1, 1.5, -0.2, -0.17); M.cls = 0;
+});
+// fileira de cinco cadeiras de espera (assento preto, estrutura de aço), 3 x 0,9 x 0,7 m: cobre agachado
+PF.kcACadeiras = () => prefab('kcACadeiras', (M) => {
+  M.local(1);
+  M.color([0.55, 0.57, 0.6]); M.boxB('steel', -1.5, 1.5, 0.36, 0.42, -0.05, 0.05); for (const x of [-1.3, 1.3]) M.boxB('steel', x - 0.05, x + 0.05, 0, 0.4, -0.3, 0.3);
+  M.color([0.1, 0.1, 0.12]);
+  for (let i = 0; i < 5; i++) { const x = -1.2 + i * 0.6; M.boxB('rubber', x - 0.27, x + 0.27, 0.42, 0.5, -0.28, 0.25, { bevel: 0.03 }); M.save().move(x, 0.5, -0.28).rotX(-0.2); M.boxB('rubber', -0.27, 0.27, 0, 0.45, -0.04, 0.03, { bevel: 0.03 }); M.restore(); }
+  M.col(-1.5, 1.5, 0, 0.9, -0.35, 0.3, 'metal');
+});
+// raio-x de bagagem: túnel com esteiras de entrada e saída, 4,4 x 1,5 x 1,1 m (comprido em x)
+PF.kcARaioX = () => prefab('kcARaioX', (M) => {
+  M.local(1);
+  M.color([0.85, 0.86, 0.88]); M.boxB('paint', -1.2, 1.2, 0, 1.5, -0.55, 0.55, { bevel: 0.05 }); M.col(-1.2, 1.2, 0, 1.5, -0.55, 0.55, 'metal');
+  M.cls = 1; M.color([0.05, 0.05, 0.06]); for (const s of [-1, 1]) M.boxB('dark', s * 1.2 - 0.01, s * 1.2 + 0.01, 0.75, 1.3, -0.4, 0.4);
+  M.color([0.2, 0.6, 0.3]); M.boxB('lamp', -0.3, 0.3, 1.5, 1.53, -0.1, 0.1); M.cls = 0;
+  M.color([0.25, 0.25, 0.27]); for (const s of [-1, 1]) { M.boxB('rubber', s > 0 ? 1.2 : -2.2, s > 0 ? 2.2 : -1.2, 0.72, 0.8, -0.4, 0.4); M.boxB('steel', s > 0 ? 1.25 : -2.15, s > 0 ? 2.15 : -1.25, 0, 0.72, -0.35, 0.35); M.col(s > 0 ? 1.2 : -2.2, s > 0 ? 2.2 : -1.2, 0, 0.8, -0.4, 0.4, 'metal'); }
+  M.color([0.25, 0.3, 0.45]); M.cls = 1; M.boxB('plastic', 1.5, 1.9, 0.8, 0.95, -0.25, 0.2, { bevel: 0.03 }); M.cls = 0;
+});
+// pórtico detector de metal (só os postes colidem), 1,3 x 2,3 x 0,6 m
+PF.kcAPortico = () => prefab('kcAPortico', (M) => {
+  M.local(1); M.color([0.8, 0.81, 0.83]);
+  for (const s of [-1, 1]) { M.boxB('plastic', s * 0.65 - 0.12, s * 0.65 + 0.12, 0, 2.2, -0.3, 0.3, { bevel: 0.04 }); M.col(s * 0.65 - 0.12, s * 0.65 + 0.12, 0, 2.2, -0.3, 0.3, 'metal'); }
+  M.boxB('plastic', -0.77, 0.77, 2.1, 2.3, -0.3, 0.3, { bevel: 0.04 });
+  M.cls = 1; M.color([0.9, 0.2, 0.15]); M.boxB('lamp', -0.1, 0.1, 2.3, 2.34, -0.05, 0.05); M.cls = 0;
+});
+// carrinho de bagagem: trator e duas carretas com malas, 9 x 1,6 x 1,6 m (comprido em x)
+PF.kcACarrinhoBagagem = () => prefab('kcACarrinhoBagagem', (M) => {
+  M.local(1); const R = rngOf(81);
+  const roda = (x, z) => { M.color([0.08, 0.08, 0.09]); M.save().move(x - 0.1, 0.25, z).rotZ(-Math.PI / 2); M.cyl('rubber', 0.25, 0.2, 10); M.restore(); };
+  // trator
+  M.color([0.95, 0.75, 0.1]); M.boxB('carpaint', 3.0, 4.5, 0.3, 1.1, -0.75, 0.75, { bevel: 0.08 }); M.color([0.1, 0.1, 0.12]); M.boxB('rubber', 3.1, 3.7, 1.1, 1.3, -0.4, 0.4, { bevel: 0.05 });
+  M.color([0.3, 0.3, 0.32]); M.boxB('steel', 3.2, 3.25, 1.1, 1.9, -0.7, 0.7); M.boxB('steel', 3.2, 3.9, 1.85, 1.95, -0.75, 0.75);
+  for (const x of [3.3, 4.2]) for (const z of [-0.8, 0.8]) roda(x, z);
+  M.col(3.0, 4.5, 0, 1.95, -0.8, 0.8, 'metal');
+  // duas carretas
+  const cores = [[0.2, 0.2, 0.22], [0.5, 0.15, 0.15], [0.15, 0.3, 0.55], [0.55, 0.45, 0.3], [0.3, 0.45, 0.3]];
+  for (const xc of [-3.2, 0.3]) {
+    M.color([0.55, 0.57, 0.6]); M.boxB('steel', xc - 1.4, xc + 1.4, 0.45, 0.55, -0.8, 0.8); M.boxB('steel', xc + 1.4, xc + 2.4, 0.45, 0.5, -0.05, 0.05);
+    for (const x of [xc - 1.1, xc + 1.1]) for (const z of [-0.75, 0.75]) roda(x, z);
+    for (let i = 0; i < 6; i++) { const x = xc - 1.0 + (i % 3) * 0.7, z = i < 3 ? -0.35 : 0.35, h = R.range(0.4, 0.7); M.color(R.pick(cores)); M.boxB('canvas', x - 0.3, x + 0.3, 0.55, 0.55 + h, z - 0.3, z + 0.25, { bevel: 0.05 }); }
+    M.col(xc - 1.4, xc + 1.4, 0, 1.3, -0.8, 0.8, 'metal');
+  }
+});
+// painel de voos num pé: tela escura com linhas coloridas, 3 x 3,4 x 0,5 m (a tela olha +z; só os pés colidem)
+PF.kcAPainelVoos = () => prefab('kcAPainelVoos', (M) => {
+  M.local(1); const R = rngOf(13);
+  M.color([0.3, 0.31, 0.33]); for (const x of [-1.2, 1.2]) { M.boxB('steel', x - 0.06, x + 0.06, 0, 2.2, -0.06, 0.06); M.col(x - 0.08, x + 0.08, 0, 2.2, -0.08, 0.08, 'metal'); }
+  M.color([0.1, 0.1, 0.12]); M.boxB('steel', -1.5, 1.5, 2.2, 3.4, -0.12, 0.12, { bevel: 0.03 });
+  M.cls = 1; M.color([0.02, 0.03, 0.06]); M.boxB('glass', -1.42, 1.42, 2.28, 3.32, 0.12, 0.13);
+  for (let r = 0; r < 7; r++) {
+    const y = 3.2 - r * 0.14;
+    M.color([0.98, 0.82, 0.2]); M.boxB('lamp', -1.35, -0.6, y - 0.05, y + 0.02, 0.13, 0.135);
+    M.color([0.9, 0.9, 0.9]); M.boxB('lamp', -0.5, 0.5, y - 0.05, y + 0.02, 0.13, 0.135);
+    M.color(R() < 0.3 ? [0.9, 0.2, 0.15] : [0.3, 0.85, 0.35]); M.boxB('lamp', 0.65, 1.35, y - 0.05, y + 0.02, 0.13, 0.135);
+  }
+  M.cls = 0;
+});
+// esteira de bagagem oval com malas, 7 x 0,9 x 3,2 m (cobre agachado)
+PF.kcAEsteira = () => prefab('kcAEsteira', (M) => {
+  M.local(1); const R = rngOf(57);
+  M.color([0.6, 0.62, 0.65]); M.boxB('steel', -2.5, 2.5, 0, 0.55, -1.6, 1.6); for (const s of [-1, 1]) { M.save().move(s * 2.5, 0, 0); M.cyl('steel', 1.6, 0.55, 20); M.restore(); }
+  M.color([0.12, 0.12, 0.13]); M.boxB('rubber', -2.5, 2.5, 0.55, 0.62, -1.6, 1.6); for (const s of [-1, 1]) { M.save().move(s * 2.5, 0.55, 0); M.cyl('rubber', 1.6, 0.07, 20); M.restore(); }
+  M.color([0.7, 0.72, 0.75]); M.boxB('steel', -2.5, 2.5, 0.55, 0.9, -0.7, 0.7); for (const s of [-1, 1]) { M.save().move(s * 2.5, 0.55, 0); M.cyl('steel', 0.7, 0.35, 16); M.restore(); }
+  const cores = [[0.2, 0.2, 0.22], [0.5, 0.15, 0.15], [0.15, 0.3, 0.55], [0.55, 0.45, 0.3], [0.85, 0.75, 0.2]];
+  M.cls = 1; for (let i = 0; i < 7; i++) { const a = (i / 7) * TAU, x = Math.cos(a) * 3.4, z = Math.sin(a) * 1.15; M.color(R.pick(cores)); M.save().move(Math.max(-3.6, Math.min(3.6, x)), 0.62, z).rotY(a); M.boxB('canvas', -0.3, 0.3, 0, 0.25, -0.2, 0.2, { bevel: 0.05 }); M.restore(); } M.cls = 0;
+  M.col(-2.5, 2.5, 0, 0.9, -1.6, 1.6, 'metal'); for (const s of [-1, 1]) M.col(s > 0 ? 2.5 : -4.1, s > 0 ? 4.1 : -2.5, 0, 0.9, -1.2, 1.2, 'metal');
+});

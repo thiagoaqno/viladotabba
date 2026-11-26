@@ -1,16 +1,14 @@
-# Tiro da Galera: janela na frente do avião e janelão de vidro no corredor do terminal
+# Tiro: 120 fps andando nos tablets de tela rápida
 
-- **Avião (`kcAAviao`):**
-  - a cabine de passageiros continua até o nariz, com a cabine dos pilotos (dois bancos e painel);
-  - em volta do nariz, uma faixa de janela aberta de 1,1 a 2,0 m do piso: de fora se vê (e se acerta) a cabeça e a parte de cima do tronco de quem está lá dentro;
-  - na faixa, parede invisível (`KC_INVIS`): a bala passa e ninguém pula do nariz.
-- **Vidro que quebra (objeto `kcVidro`):** um tiro estilhaça o painel. O tamanho vai em `a: [largura, altura]`. É o mesmo jeito das janelas do Iate, que não entram mais no jogo.
-- **Aeroporto:** o corredor da frente do terminal ganhou um janelão de 20 painéis `kcVidro` (15 + 5, dos dois lados da ponte de embarque), do guarda-corpo até 9,4 m, com montantes, viga e o teto fechando a faixa da frente.
+No Mi Pad (tela de 120 Hz), parado dava 120 fps e andando cravava em 60.
 
-Conferido no navegador:
-- o avião monta, e pela janela do nariz se vê a cabine dos pilotos;
-- as 3 paredes invisíveis da faixa estão no lugar;
-- os 20 vidros estão no mapa, com 1 de vida cada;
-- a cabine de passageiros e a frente do terminal continuam na rede dos bots.
+**Por quê:** andando, as três camadas da sombra do sol se redesenham todo quadro (parado, só a de perto). O quadro passa de 8,3 ms e a tela cai para a metade, 60. A qualidade automática mirava 60 fps, então achava 60 ótimo e não mexia em nada.
+
+**O que mudou** (em `ferramentas/tiro-frontline.js`, aplicado em `public/tiro/index.html`):
+- Nos aparelhos de toque com tela rápida (90 Hz ou mais), a qualidade automática mira a taxa da tela. Ela baixa a resolução até 70% do degrau atual para segurar os 120; se nem assim chegar, desiste e volta a mirar 60 (sem baixar o degrau de qualidade por isso). Quem escolheu um limite de fps em Opções continua com o limite.
+- Em tela rápida, as duas camadas de sombra de longe se revezam quando a câmera mexe: no máximo duas sombras por quadro em vez de três (em 120 Hz, a de longe atualiza a 60 por segundo, como antes nas telas de 60).
+- PC e telas de 60 Hz ficam iguais.
+
+Conferido só com `node --check`; falta jogar no tablet.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

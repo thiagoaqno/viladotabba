@@ -768,7 +768,7 @@ function csmMaterial(m){if(csm&&m.isMeshStandardMaterial)csmSetup(m);return m;}
 function csmSetup(m){if(m.userData.csmOn)return;m.userData.csmOn=true;csm.setupMaterial(m);if(CSM_HW.on)m.defines.CSM_HW='';const h=m.onBeforeCompile,p=m.userData.patch;const base=p?(s,r)=>{h(s,r);p(s,r);}:h;const key=base.toString()+(ENVC.on?'|cube':'')+(CSM_HW.on?'|hw':'');m.customProgramCacheKey=()=>key;m.onBeforeCompile=function(shader,r){base(shader,r);envCubeHook(shader);if(CSM_HW.on)shader.uniforms.uCsmShadowMap=CSM_HW.uniform;};}
 function tuneShadowLights(){if(!csm)return;csm.lights.forEach((l,i)=>{const cam=l.shadow.camera,texel=(cam.right-cam.left)/csm.shadowMapSize;l.shadow.normalBias=texel*1.6;l.shadow.bias=-0.00006*(i+1);l.shadow.radius=i===0?2.2:i===1?1.6:1.0;});}
 const SHADOW_STAGGER={frame:0,q:[],p:[],maxTurn:Math.cos(0.026/2),maxMove:0.3,maxTurnFar:Math.cos(0.2/2),maxMoveFar:2};function updateShadows(){if(!csm)return;camera.updateMatrixWorld();csm.update();const S=SHADOW_STAGGER;S.frame++;csm.lights.forEach((l,i)=>{if(!S.q[i]){S.q[i]=new THREE.Quaternion();S.p[i]=new V3();S.p[i].set(1e9,0,0);}
-const mt=i===0?S.maxTurn:S.maxTurnFar,mm=i===0?S.maxMove:S.maxMoveFar;const moved=Math.abs(S.q[i].dot(camera.quaternion))<mt||S.p[i].distanceToSquared(camera.position)>mm*mm;const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||moved;if(due){l.shadow.needsUpdate=true;S.q[i].copy(camera.quaternion);S.p[i].copy(camera.position);}});}
+const mt=i===0?S.maxTurn:S.maxTurnFar,mm=i===0?S.maxMove:S.maxMoveFar;const moved=Math.abs(S.q[i].dot(camera.quaternion))<mt||S.p[i].distanceToSquared(camera.position)>mm*mm;const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||(moved&&(i===0||!(VSYNC.ms>0&&VSYNC.ms<12)||(S.frame+i)%2===0));if(due){l.shadow.needsUpdate=true;S.q[i].copy(camera.quaternion);S.p[i].copy(camera.position);}});}
 const flashLights=[];for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffb060,0,10,2);l.visible=false;scene.add(l);flashLights.push({light:l,t:0,dur:0.05,peak:0});}
 function flashLight(pos,intensity,dist,dur,color){const n=RQ.q.lights;let best=flashLights[0];for(let i=0;i<n;i++)if(flashLights[i].t<=0){best=flashLights[i];break;}
 best.light.position.copy(pos);best.light.distance=dist;best.light.color.setHex(color||0xffb060);best.peak=intensity;best.dur=dur;best.t=dur;best.light.intensity=intensity;}
@@ -981,7 +981,8 @@ return T.ms;};return T;})();const FRAME_BUDGET=1000/60;const CAP={t:0};function 
 const VSYNC={ms:0,last:0,min:Infinity,n:0};function vsyncTrack(now){const d=now-VSYNC.last;VSYNC.last=now;if(d<=1||d>50)return;if(!VSYNC.ms)VSYNC.ms=d;if(d<VSYNC.min)VSYNC.min=d;if(++VSYNC.n<60)return;const m=VSYNC.min;VSYNC.min=Infinity;VSYNC.n=0;VSYNC.ms=Math.abs(m-VSYNC.ms)>VSYNC.ms*0.2?m:VSYNC.ms+(m-VSYNC.ms)*0.25;}
 function capWait(now){const ms=capMs(),d=now-CAP.t;return ms>0&&d>=0&&d<ms-1;}
 function capTake(now){const ms=capMs(),d=now-CAP.t;CAP.t=ms>0&&d>=0&&d<ms*2?CAP.t+ms:now;}
-function frameBudget(){return Math.max(FRAME_BUDGET,capMs());}
+const HR={off:false,ms:Infinity};function hrAlvo(){if(VSYNC.ms>=6&&VSYNC.ms<HR.ms)HR.ms=VSYNC.ms;return COARSE&&!HR.off&&!Settings.eco&&HR.ms<12?HR.ms:0;}
+function frameBudget(){const a=hrAlvo();return Math.max(a||FRAME_BUDGET,capMs());}
 const LAG={on:false,q:[],skips:0,n:0,ban:false,bad:0};function lagDrop(){const gl=renderer.getContext();for(const f of LAG.q){try{gl.deleteSync(f);}catch(e){}}
 LAG.q.length=0;}
 function lagSkip(){if(LAG.q.length<2)return false;const gl=renderer.getContext();let r=0;try{r=gl.clientWaitSync(LAG.q[0],0,0);}catch(e){lagDrop();return false;}
@@ -991,7 +992,7 @@ LAG.n++;return true;}
 function lagMark(){if(!LAG.on){if(LAG.q.length)lagDrop();return;}
 const gl=renderer.getContext();try{LAG.q.push(gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0));gl.flush();}catch(e){lagDrop();LAG.on=false;return;}
 while(LAG.q.length>2){try{gl.deleteSync(LAG.q.shift());}catch(e){}}}
-function stepQuality(dir,step=0.05){if(QUALITY[gfxSet('quality')]){const sc=clamp(Math.round((RQ.scale+dir*step)*100)/100,RQ.q.scaleMin,1);if(sc===RQ.scale)return false;RQ.scale=sc;applyScale();return true;}
+function stepQuality(dir,step=0.05){if(dir<0&&hrAlvo()&&!capMs()){const fix=!!QUALITY[gfxSet('quality')],lo=Math.max(0.7,fix?RQ.q.scaleMin:GFX_SAFE?1:AUTO_LADDER[RQ.rung][1]);if(RQ.scale<=lo+1e-6){HR.off=true;gpuLog(`tela de ${Math.round(1000/HR.ms)} Hz: nem com a resolução em ${Math.round(RQ.scale*100)}% chegou, volta a mirar 60 fps`);return'wait';}}if(QUALITY[gfxSet('quality')]){const sc=clamp(Math.round((RQ.scale+dir*step)*100)/100,RQ.q.scaleMin,1);if(sc===RQ.scale)return false;RQ.scale=sc;applyScale();return true;}
 if(GFX_SAFE)return false;const[,lo,hi]=AUTO_LADDER[RQ.rung],room=DYN.gpu>0&&DYN.gpu<FRAME_BUDGET*0.5;const top=RQ.rung===RQ.rungMin?(room&&!Settings.eco?Math.max(1,maxBoost()):1):hi;const sc=Math.round((dir>0?Math.min(RQ.scale+step,top):Math.max(RQ.scale-step,lo))*100)/100;if(dir>0?sc>RQ.scale:sc<RQ.scale){RQ.scale=sc;applyScale();return true;}
 const r=RQ.rung-dir;if(r<RQ.rungMin||r>=AUTO_LADDER.length||(dir>0&&RQ.scale<hi))return false;if(dir<0?DYN.slow<2:DYN.good<DYN.need*2)return'wait';RQ.rung=r;RQ.scale=AUTO_LADDER[r][dir<0?2:1];resolveQuality();applyQuality();return true;}
 function dynDown(med){const b=frameBudget();if(DYN.gpu>b*0.85)return clamp(RQ.scale*(1-Math.sqrt((b*0.75)/DYN.gpu)),0.05,0.2);return med>b*1.4?0.1:0.05;}

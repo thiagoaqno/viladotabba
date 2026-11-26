@@ -1,11 +1,12 @@
-# Tiro da Galera: som ambiente separado do céu (sem som de água na Favela)
+# Tiro da Galera: Favela versão 7 (dominação nova, nascer e pontos dos bots refeitos)
 
-- **O problema:** o mapa do editor pegava o som ambiente do mapa do céu. Com o céu `meltem` (vilarejo de beira-mar), a Favela ficava com o som das ondas o tempo todo.
-- **Agora:**
-  - campo novo `ambiente` no `.json` (o editor guarda ao salvar);
-  - sem esse campo, um mapa sem mar nunca usa os sons de beira-mar (`amb_meltem`, `amb_embruns`): eles viram o de bairro (`amb_floreal`).
-- **Favela:** continua com o céu `meltem`, com `"ambiente": "amb_floreal"` (o som que ela tinha com o céu `lotissement`).
+- **Mapa:** a versão do Thiago, com grafites, guarita e os pontos de dominação em lugares novos.
+- **Dominação em ordem:** A perto da base do Alpha (morro sul), B no meio leste, C perto do Bravo (morro norte). O jogo usa essa ordem para saber o lado de cada time. Os lugares são os que o Thiago escolheu.
+- **Nascer refeito:** 10 pontos na base do Alpha (o Bravo é o espelho), todos abertos, com o espelho livre e a pelo menos 15 m de qualquer dominação. O mais perto ficou a 25 m.
+- **Pontos dos bots:** 175, refeitos pela rede de caminhos.
 
-Conferido no navegador: a Favela registra o céu do meltem e o som `amb_floreal`.
+Conferido no navegador:
+- os 3 de dominação e os 3 do mecha estão na rede dos bots;
+- foram 1.650 renascimentos no modo dominação, com 5 combinações de donos; nenhum caiu dentro de uma área, e o mais perto ficou a 26 m.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

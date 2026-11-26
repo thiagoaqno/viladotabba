@@ -1,36 +1,27 @@
-# Tiro da Galera: sombras mais baratas
+# Corrida: a sombra do sol refeita a cada 2 quadros
 
-O Thiago mediu no PC dele (RTX 2060, Edge): na qualidade Alta, com as sombras ligadas, eram 402 chamadas de desenho e 13,4 ms
-de processador por quadro. Numa tela de 144 Hz, isso trava o jogo em 72 fps. Com as sombras desligadas eram ~180 chamadas e
-7,7 ms. O gargalo é o processador montando o desenho, não a placa (7,5 ms de GPU).
+Ideia trazida do Tiro da Galera (o Riposte só refaz as sombras de longe quando precisa). O Thiago preferiu fazer direto.
 
-## O que mudou (no `updateShadows` do jogo, pelo `ferramentas/tiro-frontline.js`)
+## Como era
 
-As sombras são feitas em 3 faixas de distância (CSM). A de perto continua sendo redesenhada todo quadro. As duas de longe
-(além de ~15 m):
-- **passam a ser redesenhadas a cada 4 quadros em vez de 2**, ainda alternadas (nunca as duas no mesmo quadro);
-- **só são forçadas por movimento da câmera num giro de 11° ou num deslocamento de 2 m** desde o último redesenho. Antes era
-  1,5° ou 0,3 m, ou seja, quase todo quadro de quem está mirando.
+A sombra do sol é um mapa único de 1024 × 1024 que cobre ±260 u em volta do carro (`cena.js`) e era refeita a cada quadro da
+corrida, com todos os muros, prédios e carros. Os retrovisores e o recorte já não refaziam a sombra. A medição anotada em `cena.js`
+(Mônaco, RTX 2060) dá ~0,6 ms por quadro para ela.
 
-## Quanto ganha
+## O que mudou (`jogo.js`, `sombraDesteQuadro`)
 
-Simulei a regra antiga e a nova com a câmera girando:
+- No quadro da corrida, a sombra do sol é refeita **em quadros alternados**. O mapa guarda a matriz com que foi feito, então a
+  sombra continua certa e só a área dela atrasa um quadro (a 300 km/h o carro anda uns 6 u por quadro, contra os ±260 da área).
+- **É refeita na hora** quando o mapa acabou de nascer (qualidade das sombras trocada) ou quando a área pulou mais de 40 u
+  (câmera de TV, assistir outro carro).
+- **Fora do quadro da corrida,** como no aquecimento antes da largada (que precisa desenhar a sombra para preparar os shaders do
+  safety car), a sombra continua sendo refeita a cada desenho: o redesenho automático volta a valer logo depois do desenho
+  principal.
 
-| | parada | 90°/s | 180°/s | 360°/s |
-| --- | --- | --- | --- | --- |
-| antes (144 fps) | 2,0 | 2,0 | 2,0 | 3,0 |
-| depois (144 fps) | 1,5 | 1,5 | 1,5 | 1,5 |
-| antes (72 fps) | 2,0 | 2,0 | 3,0 | 3,0 |
-| depois (72 fps) | 1,5 | 1,5 | 1,5 | 2,0 |
+## Conferido no navegador
 
-São passadas de sombra por quadro: de 25 a 50% menos trabalho de sombra.
+Numa corrida rápida em Mônaco com 21 robôs, contei as passadas da sombra do sol: 116 quadros, 58 com uma passada e 58 sem nenhuma,
+ou seja, 0,5 por quadro (antes, 1). Não apareceu erro de script. O ganho em milissegundos não deu para medir aqui, porque o navegador
+do app roda na placa integrada (Intel); pela medição antiga, fica perto de 0,3 ms por quadro.
 
-## O custo visual
-
-A sombra de um objeto que se mexe lá longe (um bot correndo a mais de 15 m) atualiza 36 vezes por segundo em vez de 72. Num giro
-muito rápido, a borda da tela pode ficar um quadro sem a sombra de longe. Precisa ser conferido jogando.
-
-## Conferido
-
-A página continua sem erro de sintaxe, e o patch carregou no navegador (limites novos lidos, 3 faixas ativas). A partida não roda
-com o painel do navegador escondido, então o teste jogando fica com o Thiago.
+Também entrou uma linha em `public/corrida/novidades.json`, conferida com `JSON.parse`.

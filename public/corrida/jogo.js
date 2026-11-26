@@ -366,6 +366,18 @@ function loop(t) {
 // (2026-11-16) no programa de PC, cada quadro de mais de 70 ms vai para o servidor.log com o que aconteceu nele: shaders novos (renderer.info),
 // batida, safety car, câmera, quantos carros na tela. Medida para achar a travadinha da batida antes de mexer no carro.
 let progAntes = 0, geoAntes = 0, texAntes = 0, travadaEnviada = 0;
+// A sombra do sol (1024 × 1024 nos ±260 em volta do carro, cena.js) é refeita a cada 2 quadros da corrida, como as faixas de longe
+// do Tiro da Galera: a carta guarda a matriz com que foi feita, então a sombra fica certa e só a área dela atrasa um quadro (a 300
+// km/h o carro anda uns 6 u por quadro, contra os ±260 da área). Medido em Mônaco na RTX 2060: a sombra custava ~0,6 ms por quadro
+// (cena.js). Refeita na hora quando a carta acabou de nascer (qualidade trocada) ou quando a área pulou (câmera de TV, outro carro).
+let quadrosSombra = 0;
+const ultimaSombra = { x: 1e9, z: 1e9 };
+function sombraDesteQuadro() {
+  const alvo = sun.target.position, pulou = (alvo.x - ultimaSombra.x) ** 2 + (alvo.z - ultimaSombra.z) ** 2 > 40 * 40;
+  const fazer = (quadrosSombra++ & 1) === 0 || !sun.shadow.map || pulou;
+  if (fazer) { ultimaSombra.x = alvo.x; ultimaSombra.z = alvo.z; }
+  return fazer;
+}
 // (2026-11-21, o Thiago: "na contagem do qualify o game sempre trava") o tempo de um quadro (`real`) é medido no COMEÇO do quadro seguinte: o que
 // travou foi o trabalho do quadro ANTERIOR (ou o que rodou fora dele, entre os dois). Antes o log contava os shaders, as geometrias e as texturas
 // do quadro errado (o seguinte, quase sempre sem nada novo): agora vai o que o quadro anterior criou e quanto cada parte dele levou (física, os
@@ -504,8 +516,11 @@ function draw(dt) {
   const turbo = src === c && (race.boostUntil > now || race.sling > 0 || (me() && me().boostUntil > now));
   const vref = (src === c ? carOf(me()) : CARROS.equilibrado).vmax;
   // (de cima não tem desfoque: o chão inteiro borrado só atrapalha a ver a pista)
-  if (!compilandoGraficos) { desenhar(mode === "cima" || mode === "tv" ? 0 : Math.min(1, Math.max(0, (Math.abs(src.v || 0) / vref - 0.4) / 0.5)) + (turbo ? 0.4 : 0));
-  quadroRetrovisor(race.kart, mode); } // o retrovisor virtual, por cima da tela já desenhada (retrovisor.js; Configurações > Gráficos)
+  if (!compilandoGraficos) {
+    const sm = renderer.shadowMap; sm.autoUpdate = sombraDesteQuadro();
+    try { desenhar(mode === "cima" || mode === "tv" ? 0 : Math.min(1, Math.max(0, (Math.abs(src.v || 0) / vref - 0.4) / 0.5)) + (turbo ? 0.4 : 0)); }
+    finally { sm.autoUpdate = true; } // (fora do quadro da corrida, como no aquecimento, a sombra continua sendo feita a cada desenho)
+    quadroRetrovisor(race.kart, mode); } // o retrovisor virtual, por cima da tela já desenhada (retrovisor.js; Configurações > Gráficos)
   } finally { scene.matrixWorldAutoUpdate = true; }
   // a câmera de dentro do carro troca o mostrador grande pelo painel compacto do canto (hud-painel.js, #hDentro; Configurações > Geral)
   // (só no estilo Novo, no cockpit e no bico, e se a opção estiver ligada: na T-cam fica o mostrador grande, pedido do Thiago; o estilo

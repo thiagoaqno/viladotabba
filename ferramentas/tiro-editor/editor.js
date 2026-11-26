@@ -37,7 +37,7 @@ const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa'];
 function edDoJson(J) {
   const pecas = (J.pecas || []).map(edClone);
   for (const [x, z] of J.nascer || []) pecas.push({ t: 'nascer', p: [x, 0, z] });
-  for (const [x, z] of J.dom || []) pecas.push({ t: 'dom', p: [x, 0, z] });
+  for (const [x, z, y] of J.dom || []) pecas.push({ t: 'dom', p: [x, y || 0, z] }); // 3º número: a altura do piso (morro, laje)
   for (const [x, z] of J.mecha || []) pecas.push({ t: 'mecha', p: [x, 0, z] });
   // campos que o editor não mexe (pontos dos bots, zonas, sniper, som, tipo, capa) passam direto de volta para o .json
   const extra = {}; for (const k of ED_EXTRA) if (J[k] !== undefined) extra[k] = edClone(J[k]);
@@ -47,7 +47,7 @@ function edParaJson() {
   const m = ED.J.meta, pecas = [], nascer = [], dom = [], mecha = [];
   for (const P of ED.J.pecas) {
     const xz = [+P.p[0].toFixed(2), +P.p[2].toFixed(2)];
-    if (P.t === 'nascer') nascer.push(xz); else if (P.t === 'dom') dom.push(xz); else if (P.t === 'mecha') mecha.push(xz);
+    if (P.t === 'nascer') nascer.push(xz); else if (P.t === 'dom') dom.push(P.p[1] > 0.05 ? [...xz, +P.p[1].toFixed(2)] : xz); else if (P.t === 'mecha') mecha.push(xz);
     else { const Q = edClone(P); Q.p = Q.p.map((v) => +v.toFixed(3)); if (Q.s) Q.s = Q.s.map((v) => +v.toFixed(3)); pecas.push(Q); }
   }
   return Object.assign({ id: m.id, nome: m.nome, tag: m.tag || undefined, desc: m.desc || undefined, ceu: m.ceu, mar: m.mar, pecas, nascer, dom: dom.slice(0, 3), mecha: mecha.slice(0, 3) }, edClone(m.extra || {}));

@@ -1,10 +1,8 @@
-# Tiro da Galera: base do mapa Navio no editor
+# Tiro da Galera: Favela do Thiago (versão 3) e dominação em cima de morro ou laje
 
-- **Peça kcNavio:** casco de iate de 106 x 20,4 m (o mesmo desenho do Iate), com convés andável em y = 0, borda falsa sólida de 1,05 m e parede invisível em cima até 4,5 m, seguindo a curva do casco. A linha d'água fica em -4,3.
-- **Mapa navio.json:** a base para montar no editor, com o mar, o navio, 11 pontos de nascer na proa (o Bravo na popa) e dominação e mecha no eixo do navio.
-- **Paredes invisíveis de prefab (KC_INVIS[nome]):** viram glassWall no mapa, giradas com a peça.
-- **Limite dos mapas do editor:** agora usa o tamanho de verdade de cada prefab, medido só quando o mapa começa. Antes, cada prefab contava ±1 m, e as pontas do navio ficavam fora da área dos bots.
+- **Mapa:** o `favela.json` passa a ser a versão que o Thiago editou (posições ajustadas e dominação nova). Conferido: os 107 pontos dos bots e os nascer dos dois times estão na rede de caminhos dos bots. Um ponto que ficou fora foi tirado.
+- **Dominação na altura certa:** o ponto de dominação agora pode ter um 3º número, a altura do piso (`[x, z, y]`). O editor grava essa altura quando o ponto é colocado em cima de um morro ou de uma laje, e o jogo usa ela (troca em `tiro-frontline.js`). Antes, o jogo procurava o chão em y = 0 e o ponto afundava embaixo da terra. Na Favela, o ponto A está em cima do morro (y 3,05).
 
-Conferido no navegador: o mapa abre no Jogar com bots, e há caminho da proa (z 44) até a popa (z -50).
+Conferido no navegador, no modo dominação: A fica em y 3,05, e B e C ficam no chão.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

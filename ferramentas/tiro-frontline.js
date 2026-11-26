@@ -312,6 +312,9 @@ if (IATE_ATIVO) {
   const codigo = fs.readFileSync(path.join(ED, "pecas.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "texturas.js"), "utf8") + "\nconst TIRO_MAPAS_JSON = " + JSON.stringify(mapas) + ";\n" + fs.readFileSync(path.join(ED, "mapa-json.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "editor.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => codigo + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "editor de mapas" });
   h = troca(h, "F={x0:-144,z0:-128,ppm:2,w:256,h:512}", "F=(CURMAP.def&&CURMAP.def.mar?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512})", { nome: "espuma do mar dos mapas do editor" });
+  // (2026-11-26) ponto de dominação em cima de um morro ou laje: o mapa do editor manda a altura do piso como 3º número
+  // ([x, z, y]); sem ele, o jogo procurava o chão em y = 0 e o ponto afundava embaixo da terra
+  h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador

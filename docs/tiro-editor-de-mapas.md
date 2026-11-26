@@ -279,6 +279,36 @@ prédio com escada **só gira de 90 em 90 graus**; girado de outro jeito, a esca
 | `kcNExtintor` | 0,35 x 0,7 x 0,26 | extintor com mangueira visual |
 | `kcNPlacaSaida` | 1 x 0,3 x 0,09 | placa verde de saída com seta |
 
+#### Módulos de arquitetura do navio
+
+O y da peça é o nível do piso: 0 no convés, 3 ou 6 nos andares superiores e -3 no subsolo. Os pisos têm 0,15 m abaixo desse nível; as lajes das salas terminam exatamente 3 m acima dele. Vidros das salas, do canto e da parede com janela quebram com tiros. As peças com escada ou parede invisível devem ser giradas apenas de 90 em 90 graus e usadas na escala 1.
+
+| Nome | Tamanho (larg x alt x prof, m) | Y de colocação | O que é |
+|---|---|---|---|
+| `kcNavioComAbertura` | 20,4 x 10,6 x 106 | 0 | casco alternativo com vão central no convés e abertura inferior na popa |
+| `kcNModuloSala6x8` | 6 x 3,15 x 8 | 0, 3 ou 6 | sala com portas de 2,4 m, vidros quebráveis, piso e laje |
+| `kcNModuloSala8x12` | 8 x 3,15 x 12 | 0, 3 ou 6 | sala envidraçada maior, com portas de 2,4 m e laje |
+| `kcNModuloFechado6x6` | 6 x 3,15 x 6 | 0, 3 ou 6 | sala fechada com portas e laje |
+| `kcNModuloCanto` | 8 x 3,15 x 4 | 0, 3 ou 6 | extremidade semicircular envidraçada, com porta na face reta |
+| `kcNVaranda6` | 6 x 1,2 x 2,5 | 3 ou 6 | varanda de teca com guarda-corpo, aberta para a parede do prédio |
+| `kcNVaranda10` | 10 x 1,2 x 2,5 | 3 ou 6 | varanda maior com guarda-corpo |
+| `kcNDequeSolario` | 10 x 1,2 x 12 | 3 ou 6 | deque aberto com espreguiçadeiras e acessos laterais de 2,4 m |
+| `kcNDequePopa` | 10 x 2,4 x 6 | -1,2 | **com escada**: plataforma de banho, degraus laterais e patamar no convés |
+| `kcNEscadaInterna` | 2,8 x 3 x 7,5 | -3 | **com escada**: poço de 6 m com lance e patamar que avança sobre o convés |
+| `kcNEscadaExterna` | 2,46 x 4,05 x 7,5 | 0 ou 3 | **com escada**: lance externo e patamar para subir 3 m |
+| `kcNEscadaCaracol` | 2,1 x 3 x 2,1 | 0 ou 3 | escada de cenário, fechada para passagem, sem rota para subir |
+| `kcNCorredor` | 3 x 3,15 x 6 | -3 | corredor com 2,6 m livres e paredes de 0,2 m |
+| `kcNCabine` | 4 x 3,15 x 6 | -3 | camarote com porta de 2,4 m, cama e armário |
+| `kcNGaragemLanchas` | 10 x 3,15 x 12 | -3 | garagem aberta na popa, com berços e parede invisível na abertura |
+| `kcNSalaMaquinas` | 8 x 3,15 x 8 | -3 | sala fechada com motores e duas portas |
+| `kcNConvesBuraco` | 6 x 0,15 x 6 | 0 | tampo de teca com vão central de 2,6 x 6 m |
+| `kcNBordaVidro` | 4 x 1,05 x 0,14 | 0, 3 ou 6 | borda de vidro fixo com corrimão de inox |
+| `kcNPortaCorrer` | 4 x 2,8 x 0,2 | 0, 3 ou 6 | porta aberta com passagem de 2,4 m |
+| `kcNParedeJanela4` | 4 x 2,85 x 0,2 | 0, 3 ou 6 | parede com janelas quebráveis |
+| `kcNParedeLisa4` | 4 x 2,85 x 0,2 | 0, 3 ou 6 | parede lisa |
+
+Para descer ao subsolo, no editor substitua o `kcNavio` do mapa por `kcNavioComAbertura`, na mesma posição e giro. Ele tem um vão em x = -1,3 a 1,3 e z = -3 a 3. Encaixe `kcNEscadaInterna` em x = 0, y = -3, z = 0, sem giro; o patamar de 2,4 m avança em +z além do vão. O `kcNConvesBuraco` é opcional e pode ser colocado no mesmo centro: sozinho, não corta o convés maciço do casco original. As paredes do poço avançam 0,1 m além de cada lado do vão para conservar 2,4 m livres com paredes de 0,2 m. O teto desenhado pelo casco alternativo fica abaixo do convés, para não tapar visualmente a abertura.
+
 O mapa `navio.json` é a base pronta: o mar, o `kcNavio` no centro, os pontos de nascer na proa (o Bravo nasce na popa) e a
 dominação no eixo do navio. Os prefabs podem trazer paredes invisíveis próprias (`KC_INVIS[nome]`, como o `KC_ESCADAS`), e o
 limite do mapa agora usa o tamanho de verdade de cada prefab.

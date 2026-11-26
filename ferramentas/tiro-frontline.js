@@ -309,7 +309,7 @@ if (IATE_ATIVO) {
 {
   const ED = path.join(__dirname, "tiro-editor"), PASTA = path.join(__dirname, "tiro-mapas", "editor");
   const mapas = fs.existsSync(PASTA) ? fs.readdirSync(PASTA).filter((f) => f.endsWith(".json")).sort().map((f) => JSON.parse(fs.readFileSync(path.join(PASTA, f), "utf8"))) : [];
-  const codigo = fs.readFileSync(path.join(ED, "pecas.js"), "utf8") + "\nconst TIRO_MAPAS_JSON = " + JSON.stringify(mapas) + ";\n" + fs.readFileSync(path.join(ED, "mapa-json.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "editor.js"), "utf8");
+  const codigo = fs.readFileSync(path.join(ED, "pecas.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "texturas.js"), "utf8") + "\nconst TIRO_MAPAS_JSON = " + JSON.stringify(mapas) + ";\n" + fs.readFileSync(path.join(ED, "mapa-json.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "editor.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => codigo + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "editor de mapas" });
   h = troca(h, "F={x0:-144,z0:-128,ppm:2,w:256,h:512}", "F=(CURMAP.def&&CURMAP.def.mar?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512})", { nome: "espuma do mar dos mapas do editor" });
 }

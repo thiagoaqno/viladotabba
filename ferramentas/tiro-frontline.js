@@ -59,7 +59,9 @@ const VOZ_GRUPOS = [];
 let NOME_VOZ_PADRAO = "Narrador 1";
 // a voz de começo do narrador (Opções > Áudio). 2026-11-25: a Narradora (shotgun), a única voz de mulher. O ajuste se chama
 // "narrador" (antes "vozNarr", com o padrão no Narrador 1): o nome novo faz o padrão novo valer também para quem já tinha jogado.
-const NARRADOR_PADRAO = "shotgun";
+// 2026-11-26: o padrão passou a ser "aleatorio" (um narrador sorteado a cada partida, sem repetir o da anterior), e o ajuste ganhou
+// outro nome (narradorVoz) pelo mesmo motivo: o jogo grava os ajustes a cada partida, e só um nome novo faz o padrão novo valer para todos.
+const NARRADOR_PADRAO = "aleatorio", CHAVE_NARRADOR = "narradorVoz";
 {
   const VOZES = path.join(__dirname, "tiro-vozes");
   const ler = (f) => { const j = JSON.parse(fs.readFileSync(path.join(VOZES, f), "utf8")); delete j._; return j; };
@@ -138,17 +140,20 @@ if (VOZ_GRUPOS.length) {
   h = troca(h, /("voix_en":"sfx\/voix_en\.[0-9a-f]+\.js")/, (_, a) => a + VOZ_GRUPOS.map((v) => `,${JSON.stringify(v.chave)}:${JSON.stringify("sfx/" + v.arq)}`).join(""), { nome: "pacotes de voz por classe" });
   const pref = Object.fromEntries(VOZ_GRUPOS.map((v) => [v.g, [v.chave, PREFIXO[v.g]]]));
   h = troca(h, "const ANN={q:[],until:0,last:new Map()};", `const VOZ_CLASSE=${JSON.stringify(pref)};
-function vozPacote(){try{const s=Settings.narrador||'${NARRADOR_PADRAO}';if(s==='padrao')return null;if(s!=='classe')return VOZ_CLASSE[s]||null;const c=CLASSES[PL.classIdx],w=c&&WEAPONS[c.primary];return VOZ_CLASSE[w&&w.cat]||null}catch(e){return null}}
+const VOZ_SORTEIO={g:''};
+function vozSortear(){const l=['padrao',...Object.keys(VOZ_CLASSE)].filter((g)=>g!==VOZ_SORTEIO.g);VOZ_SORTEIO.g=l[Math.random()*l.length|0];}
+function vozPacote(){try{let s=Settings.${CHAVE_NARRADOR}||'${NARRADOR_PADRAO}';if(s==='aleatorio'){if(!VOZ_SORTEIO.g)vozSortear();s=VOZ_SORTEIO.g;}if(s==='padrao')return null;if(s!=='classe')return VOZ_CLASSE[s]||null;const c=CLASSES[PL.classIdx],w=c&&WEAPONS[c.primary];return VOZ_CLASSE[w&&w.cat]||null}catch(e){return null}}
 function vozPreparar(){const v=vozPacote();if(v&&AU.ctx&&!sfxReady(v[0]))sfxLoad(v[0]);}
 function vozDaClasse(l){const v=vozPacote();if(v){if(sfxReady(v[0])&&sfxHas(v[1]+l))return v[1]+l;vozPreparar();}return'v_'+l;}
 const ANN={q:[],until:0,last:new Map()};`, { nome: "voz da classe" });
   h = troca(h, "sfxPlay('v_'+a.line,o,t+0.12,{gain:1.15})", "sfxPlay(vozDaClasse(a.line),o,t+0.12,{gain:1.15})", { nome: "anúncio na voz da classe" });
   h = troca(h, "function giveLoadout(){classFix();", "function giveLoadout(){classFix();setTimeout(vozPreparar,0);", { nome: "baixa a voz ao nascer" });
+  h = troca(h, "function startMatch(opt={}){", "function startMatch(opt={}){try{vozSortear();}catch(e){}", { nome: "narrador sorteado a cada partida" });
 }
 // o volume só da voz do rádio (o "narrador": as falas e o chiado de abrir e fechar), separado do resto dos sons:
 // Opções > Áudio, logo abaixo de "Anúncios de voz", de 0 a 150% (por cima do volume geral)
-h = troca(h, "volume:0.8,music:0.5", `volume:0.8,music:0.5,vozVol:1,narrador:'${NARRADOR_PADRAO}'`, { todas: false, nome: "volume da voz (padrão)" });
-const OPCAO_NARRADOR = VOZ_GRUPOS.length ? `['select','narrador','Voz do narrador',${JSON.stringify([["padrao", NOME_VOZ_PADRAO], ...VOZ_GRUPOS.map((v) => [v.g, v.nome]), ["classe", "Pela classe da arma"]]).replace(/"/g, "'")},()=>{try{vozPreparar()}catch(e){}}],` : "";
+h = troca(h, "volume:0.8,music:0.5", `volume:0.8,music:0.5,vozVol:1,${CHAVE_NARRADOR}:'${NARRADOR_PADRAO}'`, { todas: false, nome: "volume da voz (padrão)" });
+const OPCAO_NARRADOR = VOZ_GRUPOS.length ? `['select','${CHAVE_NARRADOR}','Voz do narrador',${JSON.stringify([["aleatorio", "Aleatória a cada partida"], ["padrao", NOME_VOZ_PADRAO], ...VOZ_GRUPOS.map((v) => [v.g, v.nome]), ["classe", "Pela classe da arma"]]).replace(/"/g, "'")},()=>{try{vozPreparar()}catch(e){}}],` : "";
 h = troca(h, "['check','voice',_t('Annonces vocales (séries, objectifs)')]", `['check','voice',_t('Annonces vocales (séries, objectifs)')],${OPCAO_NARRADOR}['range','vozVol','Volume da voz do rádio',0,1.5,0.05,(v)=>Math.round(v*100)+PCT]`, { nome: "voz e volume do narrador (opções)" });
 const VV = "(Settings.vozVol==null?1:Settings.vozVol)";
 h = troca(h, /sfxPlay\((vozDaClasse\(a\.line\)|'v_'\+a\.line),o,t\+0\.12,\{gain:1\.15\}\)/, (_, v) => `sfxPlay(${v},o,t+0.12,{gain:1.15*${VV}})`, { nome: "volume da voz (fala)" });

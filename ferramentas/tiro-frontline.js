@@ -264,6 +264,9 @@ h = troca(h, "bounce:[0.25,0.08,0.04],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25]
 {
   const camos = fs.readFileSync(path.join(__dirname, "tiro-camos", "camuflagens.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => camos + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "camuflagens novas" });
+  // skins da faca (faca.js): usam as telas das camuflagens, entram depois delas
+  const faca = fs.readFileSync(path.join(__dirname, "tiro-camos", "faca.js"), "utf8");
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => faca + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "skins da faca" });
 }
 
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador

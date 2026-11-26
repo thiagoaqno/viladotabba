@@ -1,8 +1,5 @@
-# Tiro da Galera: Favela do Thiago (versão 3) e dominação em cima de morro ou laje
+# Tiro da Galera: prévia temporária das skins
 
-- **Mapa:** o `favela.json` passa a ser a versão que o Thiago editou (posições ajustadas e dominação nova). Conferido: os 107 pontos dos bots e os nascer dos dois times estão na rede de caminhos dos bots. Um ponto que ficou fora foi tirado.
-- **Dominação na altura certa:** o ponto de dominação agora pode ter um 3º número, a altura do piso (`[x, z, y]`). O editor grava essa altura quando o ponto é colocado em cima de um morro ou de uma laje, e o jogo usa ela (troca em `tiro-frontline.js`). Antes, o jogo procurava o chão em y = 0 e o ponto afundava embaixo da terra. Na Favela, o ponto A está em cima do morro (y 3,05).
+O modo `?camos=todas` ficava gravado no navegador e continuava liberando todas as camuflagens e skins da faca nas aberturas seguintes. Agora a prévia vale apenas para aquela abertura do jogo, remove a antiga preferência persistente e retira o parâmetro do endereço para que uma atualização volte ao modo normal.
 
-Conferido no navegador, no modo dominação: A fica em y 3,05, e B e C ficam no chão.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+As travas voltam a seguir o nível da arma e os abates com a faca, sem alterar XP ou progresso. Validação: `node --check` e remontagem do jogo com `tiro-frontline.js`.

@@ -25,7 +25,7 @@ function edEscada(P) {
     const s0 = sobe ? lerp(a0, a1, t0) : lerp(a1, a0, t1), s1 = sobe ? lerp(a0, a1, t1) : lerp(a1, a0, t0);
     const bx = axis === 'z' ? [B.x0, B.x1, Math.min(s0, s1), Math.max(s0, s1)] : [Math.min(s0, s1), Math.max(s0, s1), B.z0, B.z1];
     DECOR.col(bx[0], bx[1], lo, top, bx[2], bx[3], 'wood', true);
-    box(key, bx[0], bx[1], lo, top, bx[2], bx[3], { collide: false, tint });
+    box(key, bx[0], bx[1], lo, top, bx[2], bx[3], { collide: false, tint, uv: edUv(P) });
   }
 }
 function edLimites(J) {
@@ -68,7 +68,7 @@ function edConstruir(J) {
   for (const P of J.pecas || []) {
     try {
       const [x, y, z] = P.p, ry = ((P.r || 0) * Math.PI) / 180;
-      if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false }); }
+      if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
       else if (P.t === 'escada') edEscada(P);
       else if (P.t === 'prefab' && PF[P.nome]) DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined);
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
@@ -84,7 +84,7 @@ function tiroMapaRegistrar(J) {
     type: J.tipo || 'mid', mar: !!mar, editor: true,
     void: { kill: Math.min(L.y0, mar ? mar.y : L.y0) - 1.5 },
     bounds: { x0: L.x0, x1: L.x1, z0: L.z0, z1: L.z1 },
-    textures: TIRO_TEX, surfaces: mar ? ['ripple'] : [],
+    textures: edTexturasDoMapa(J), surfaces: mar ? ['ripple', ...ED_TEX_NOSSAS] : ED_TEX_NOSSAS.slice(),
     sound: mar ? { pack: 'amb_embruns', bed: 0.5, water: () => 0, loops: [[L.x0, -4, 0], [L.x1, -4, 0]].map((p) => ({ id: 'a_waves', p, gain: 0.4, ref: 6, roll: 1.3, max: 120 })), spots: [] }
       : { pack: base.sound && base.sound.pack, bed: 0.5, loops: [], spots: [] },
     materials: () => {},

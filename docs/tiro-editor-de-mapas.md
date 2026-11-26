@@ -79,9 +79,21 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
 - **`mar`:** a altura da água, ou `null` para não ter mar.
 - **`p`, `s` e `r`:** `p` é o **centro de baixo** da peça (x, y, z), em metros. `s` é a largura (x), a altura (y) e a
   profundidade (z). `r` é o giro em graus. A escada sobe para +z com `r` 0 (90: +x, 180: -z, 270: -x).
-- **Matérias de caixa e escada:** `paint`, `wood`, `steel`, `concrete`, `plaster`, `stone`, `timber`, `paintwood`, `pavers`,
-  `tiles`, `canvas`, `carpaint`, `glass`, `rug`, `plastic`, `rubber` e `dark`. A cor multiplica a matéria. `"col": false`
-  faz a caixa não colidir.
+- **Superfície de caixa e escada (`m`):** escolhida na galeria do painel, com miniaturas. A cor (`cor`) multiplica a textura:
+  muitas fotos são acinzentadas e ganham a cor por ela (tijolo, por exemplo, pede uma cor de barro). `"col": false` faz a caixa
+  não colidir. `tx` é o tamanho da textura (1 = normal, 2 = o dobro, 0,5 = a metade). Valem:
+  - **Parede:** `plaster` (reboco), `plaster2` (reboco gasto), `brick` (tijolo), `ashlar` (pedra talhada), `stone`, `drystone`
+    (pedra seca), `adobe`, `pise` (taipa), `concrete`, `slate` (ardósia), `rock`, `strata` (rocha em camadas).
+  - **Chão:** `asphalt`, `pavers` (lajota), `cobble` (paralelepípedo), `flagstone` (laje de pedra), `tiles` (ladrilho),
+    `edAzulejo`, `edXadrez` (piso xadrez), `boards` (tábuas), `rug` (tapete), `galets` (seixos), `pathgravel` (cascalho), `sand`,
+    `dirt`, `humus` (terra escura), `lawn` (grama), `snow`, `snowpack` (neve batida), `ash` (cinza).
+  - **Madeira:** `wood`, `timber` (viga), `paintwood` (madeira pintada), `crate` (caixote), `shutter` (veneziana), `bark`
+    (casca de árvore).
+  - **Metal:** `steel`, `rust` (ferrugem), `edChapa` (chapa xadrez), `edListras` (faixa de perigo amarela e preta),
+    `rollshutter` (porta de enrolar), `corrugated` (chapa ondulada), `paint` (pintura), `carpaint` (pintura brilhante).
+  - **Outros:** `rooftiles` (telhas), `canvas` (lona), `burlap` (juta), `cardboard` (papelão), `plastic`, `rubber`, `glass`,
+    `dark`.
+  - Cada mapa carrega só as fotos que usa. As que começam com `ed` são desenhadas pelo jogo (as nossas).
 - **`prop` e `prefab`:** `prop` é objeto solto, que voa com tiro e explosão (barril, cadeira, garrafa...). `prefab` é cenário
   fixo, com colisão.
 - **`e`:** a escala do prefab ou do objeto.
@@ -97,7 +109,7 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
   solto. Ela entra como prefab novo em código, como os do Iate em `ferramentas/tiro-mapas/iate.js`, e aparece no catálogo do
   editor.
 
-## Peças de cobertura (prefixo `kc`)
+## Peças de cobertura, cidade e fábrica (prefixo `kc`)
 
 Feitas para mapas de tiro, em `ferramentas/tiro-editor/pecas.js`. Todas colidem (seguram gente e bala), o comprimento fica em x
 e a origem é o centro de baixo.
@@ -117,6 +129,17 @@ e a origem é o centro de baixo.
 | `kcPaletes` | 1,2 x 1,6 x 1 | dois paletes de carga embrulhada |
 | `kcBarreiraAgua` | 2 x 0,8 x 0,5 | barreira plástica vermelha e branca |
 | `kcConteinerAberto` | 6,1 x 2,6 x 2,4 | contêiner sem as portas: dá para entrar e atirar de dentro |
+| `kcPontoOnibus` | 3,5 x 2,6 x 1,55 | ponto de ônibus com vidro atrás e nas laterais; dá para entrar pela frente |
+| `kcBanca` | 2,9 x 2,5 x 2,1 | banca de jornal fechada |
+| `kcCarroQueimado` | 1,9 x 1,25 x 4,4 | carcaça de carro queimado (comprido em z) |
+| `kcCavalete` | 2 x 1,1 x 0,2 | cavalete de obra listrado (cobre agachado) |
+| `kcEntulho` | 3 x 1,3 x 2,4 | monte de entulho com ferros |
+| `kcManilhas` | 2,4 x 2,2 x 2,2 | três manilhas de concreto empilhadas |
+| `kcPrateleira` | 3 x 3 x 1,2 | prateleira de galpão com caixas |
+| `kcTambores` | 1,2 x 1,05 x 1,2 | quatro tambores num palete |
+| `kcVigas` | 4 x 0,9 x 1,2 | pilha de vigas de aço |
+| `kcAlambrado` | 3 x 2,2 x 0,1 | cerca de tela de arame (vê através, mas segura bala) |
+| `kcArmarioEletrico` | 1,6 x 1,6 x 0,8 | armário elétrico de rua |
 
 ## Catálogo: prefabs (cenário fixo)
 

@@ -1,12 +1,20 @@
-# Tiro da Galera: peças de cobertura para o editor de mapas
+# Tiro da Galera: editor de superfícies e mais peças no editor de mapas
 
-O Thiago pediu assets novos para montar mapas no editor. Entram 13 prefabs de cobertura (prefixo `kc`), em
-`ferramentas/tiro-editor/pecas.js`, montados junto do editor por `ferramentas/tiro-frontline.js`. Aparecem sozinhos na aba
-Prefabs do editor.
+O Thiago pediu mais assets e um editor de textura de superfície.
 
-- Barreira New Jersey, sacos de areia (alto e baixo), gabião, muro quebrado, pilar quebrado, carretel de cabo, guarita, tanque de
-  combustível, tapume, pilha de paletes, barreira de água e contêiner aberto (dá para entrar).
-- Todos colidem e têm a origem no centro de baixo, com o comprimento em x.
-- O guia `docs/tiro-editor-de-mapas.md` ganhou a tabela das peças, com tamanho e descrição.
+**Superfícies.** As caixas e escadas do editor escolhem a superfície numa galeria com miniaturas (52 opções, em grupos: Parede,
+Chão, Madeira, Metal, Outros), e a cena do editor já mostra a textura, no tamanho certo em metros. O campo novo "Tamanho da
+textura" (`tx` no `.json`) aumenta ou diminui o desenho.
+- 17 fotos que o jogo tinha e os mapas do editor não usavam viram superfícies: ferrugem, grama, ardósia, rocha, laje de pedra,
+  tábuas, seixos, cascalho, adobe, taipa, neve e outras.
+- 4 texturas novas, desenhadas por shader: chapa xadrez, faixa de perigo, azulejo e piso xadrez.
+- Cada mapa do editor carrega só as fotos que usa. Nos mapas do jogo nada muda.
+- Código em `ferramentas/tiro-editor/texturas.js`.
 
-Conferido no navegador: os 13 montam no catálogo do editor (nenhum apagado) e aparecem certos na cena.
+**Peças.** Mais 11 prefabs (cidade e fábrica): ponto de ônibus, banca, carro queimado, cavalete de obra, entulho, manilhas,
+prateleira de galpão, tambores, vigas de aço, alambrado e armário elétrico. Agora são 24 peças `kc`.
+
+O guia `docs/tiro-editor-de-mapas.md` ganhou a lista das superfícies e a tabela das peças novas.
+
+Conferido no navegador: as 24 peças montam, as 52 miniaturas carregam e um mapa com tijolo, ferrugem, grama, chapa, faixa,
+azulejo e xadrez montou no Jogar com as texturas certas e sem erro no console.

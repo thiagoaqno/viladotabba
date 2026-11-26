@@ -12,7 +12,6 @@
    - Jogar monta o mapa de verdade (mapa-json.js) e começa uma partida solo com bots. O rascunho fica guardado neste navegador.
    ========================================================================== */
 const ED = { on: false, J: null, items: [], sel: null, tpl: null, ghost: null, hist: [], cam: { x: 0, y: 14, z: 30, yaw: 0, pitch: -0.45, v: 10 }, keys: new Set(), pf: new Map(), drag: null, snap: 0.25 };
-const ED_MATS = ['paint', 'wood', 'steel', 'concrete', 'plaster', 'stone', 'timber', 'paintwood', 'pavers', 'tiles', 'canvas', 'carpaint', 'glass', 'rug', 'plastic', 'rubber', 'dark'];
 const ED_BASICO = [
   { rot: 'Chão 4 x 4 (madeira)', P: { t: 'caixa', s: [4, 0.3, 4], m: 'wood', cor: [0.66, 0.46, 0.3] }, oy: -0.3 },
   { rot: 'Chão 8 x 8 (concreto)', P: { t: 'caixa', s: [8, 0.3, 8], m: 'concrete', cor: [0.75, 0.74, 0.72] }, oy: -0.3 },
@@ -85,21 +84,56 @@ function edPrefabGrupo(key, fazer) {
   const g = ED.pf.get(key); return g ? g.clone() : null;
 }
 const edCorHex = (c) => new THREE.Color().setRGB(c[0], c[1], c[2]);
+/* ---------- superfícies: miniaturas da galeria e textura na cena do editor ----------
+   As fotos do jogo vêm de tex/*.js (fetchTexPack); as nossas e as que o jogo desenha por shader ganham um desenho parecido. */
+const ED_TEXP = new Map();
+function edTexDesenho(k) {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  const fundo = { paint: '#d8d8d4', carpaint: '#c9ccd2', glass: '#7fa6b8', dark: '#232427', plastic: '#e8e8e6', rubber: '#3a3b3d', rug: '#8a2b26', tiles: '#cfc8b8',
+    wood: '#9a7048', timber: '#8a6240', corrugated: '#9a9ea2', edChapa: '#7d8084', edListras: '#f0b81a', edAzulejo: '#eef2f4', edXadrez: '#dcdad4' }[k] || '#999';
+  g.fillStyle = fundo; g.fillRect(0, 0, 128, 128);
+  if (k === 'edListras') { g.fillStyle = '#111'; for (let i = -4; i < 8; i++) { g.beginPath(); g.moveTo(i * 26, 128); g.lineTo(i * 26 + 13, 128); g.lineTo(i * 26 + 141, 0); g.lineTo(i * 26 + 128, 0); g.fill(); } }
+  else if (k === 'edAzulejo' || k === 'tiles') { g.strokeStyle = k === 'tiles' ? '#8d8676' : '#9a9a96'; g.lineWidth = 2; for (let i = 0; i <= 8; i++) { g.beginPath(); g.moveTo(i * 16, 0); g.lineTo(i * 16, 128); g.moveTo(0, i * 16); g.lineTo(128, i * 16); g.stroke(); } }
+  else if (k === 'edXadrez') { g.fillStyle = '#1b1b1d'; for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) g.fillRect(i * 32, j * 32, 32, 32); }
+  else if (k === 'edChapa') { g.fillStyle = '#a3a6aa'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.save(); g.translate(i * 16 + 8, j * 16 + 8); g.rotate((i + j) % 2 ? 0.785 : -0.785); g.fillRect(-6, -1.5, 12, 3); g.restore(); } }
+  else if (k === 'wood' || k === 'timber') { g.strokeStyle = '#5e4128'; for (let i = 0; i < 8; i++) { g.beginPath(); g.moveTo(0, i * 16); g.lineTo(128, i * 16); g.stroke(); } }
+  else if (k === 'corrugated') { for (let i = 0; i < 16; i++) { g.fillStyle = i % 2 ? '#b4b8bc' : '#7e8286'; g.fillRect(i * 8, 0, 8, 128); } }
+  else if (k === 'rug') { g.strokeStyle = '#d9b46a'; g.lineWidth = 6; g.strokeRect(14, 14, 100, 100); }
+  else if (k === 'carpaint' || k === 'glass') { const gr = g.createLinearGradient(0, 0, 128, 128); gr.addColorStop(0, '#fff8'); gr.addColorStop(0.5, '#fff0'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); }
+  return c.toDataURL();
+}
+function edTexUrl(k) {
+  if (!ED_TEXP.has(k)) ED_TEXP.set(k, (TEX_PACKS[k] ? fetchTexPack(k).then((d) => (d && d.map) || null).catch(() => null) : Promise.resolve(null)).then((u) => u || edTexDesenho(k)));
+  return ED_TEXP.get(k);
+}
+const ED_TEX3 = new Map();
+function edTex3(k) {
+  if (!ED_TEX3.has(k)) { const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; ED_TEX3.set(k, t);
+    edTexUrl(k).then((u) => { const im = new Image(); im.onload = () => { t.image = im; t.needsUpdate = true; }; im.src = u; }); }
+  return ED_TEX3.get(k);
+}
+// caixa com o uv em metros (cada face do tamanho dela), como no jogo
+function edCaixaGeo(w, h, d, S) {
+  const g = new THREE.BoxGeometry(w, h, d), uv = g.attributes.uv, dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  for (let i = 0; i < uv.count; i++) { const f = dims[Math.floor(i / 4)]; uv.setXY(i, (uv.getX(i) * f[0]) / S, (uv.getY(i) * f[1]) / S); }
+  return g;
+}
+const edEscalaTex = (P) => (TEXSCALE[P.m] || 2) * (P.tx || 1);
 function edMalha(P) {
   let o;
   if (P.t === 'caixa') {
-    const B = edCaixaBox(P), m = new THREE.MeshStandardMaterial({ color: edCorHex(P.cor || [0.9, 0.9, 0.9]), roughness: 0.8, transparent: P.inv || P.col === false, opacity: P.inv ? 0.25 : P.col === false ? 0.6 : 1 });
-    o = new THREE.Mesh(new THREE.BoxGeometry(B.x1 - B.x0, B.y1 - B.y0, B.z1 - B.z0), m); o.position.set((B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2, (B.z0 + B.z1) / 2);
+    const B = edCaixaBox(P), m = new THREE.MeshStandardMaterial({ color: edCorHex(P.cor || [0.9, 0.9, 0.9]), map: edTex3(P.m || 'paint'), roughness: 0.8, transparent: P.inv || P.col === false, opacity: P.inv ? 0.25 : P.col === false ? 0.6 : 1 });
+    o = new THREE.Mesh(edCaixaGeo(B.x1 - B.x0, B.y1 - B.y0, B.z1 - B.z0, edEscalaTex(P)), m); o.position.set((B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2, (B.z0 + B.z1) / 2);
     return o;
   }
   if (P.t === 'escada') {
     const B = edCaixaBox(P), q = B.q, axis = q % 2 ? 'x' : 'z', sobe = q < 2, h = B.y1 - B.y0, n = Math.max(2, Math.round(h / 0.2)), dh = h / n;
-    o = new THREE.Group(); const mat = new THREE.MeshStandardMaterial({ color: edCorHex(P.cor || [0.66, 0.46, 0.3]), roughness: 0.8 });
+    o = new THREE.Group(); const mat = new THREE.MeshStandardMaterial({ color: edCorHex(P.cor || [0.66, 0.46, 0.3]), map: edTex3(P.m || 'wood'), roughness: 0.8 });
     const a0 = axis === 'z' ? B.z0 : B.x0, a1 = axis === 'z' ? B.z1 : B.x1;
     for (let i = 0; i < n; i++) {
       const t0 = i / n, t1 = (i + 1) / n, top = dh * (i + 1), s0 = sobe ? lerp(a0, a1, t0) : lerp(a1, a0, t1), s1 = sobe ? lerp(a0, a1, t1) : lerp(a1, a0, t0);
       const w = axis === 'z' ? B.x1 - B.x0 : Math.abs(s1 - s0), d = axis === 'z' ? Math.abs(s1 - s0) : B.z1 - B.z0;
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, top, d), mat);
+      const m = new THREE.Mesh(edCaixaGeo(w, top, d, edEscalaTex(P)), mat);
       m.position.set(axis === 'z' ? (B.x0 + B.x1) / 2 : (s0 + s1) / 2, B.y0 + top / 2, axis === 'z' ? (s0 + s1) / 2 : (B.z0 + B.z1) / 2); o.add(m);
     }
     return o;
@@ -258,8 +292,19 @@ function edPainel() {
   if (!['nascer', 'dom', 'mecha'].includes(P.t)) vec('Giro (graus)' + (P.t === 'caixa' || P.t === 'escada' ? ' — de 90 em 90' : ''), [P.r || 0], P.t === 'caixa' || P.t === 'escada' ? 90 : 15, (i, v) => { P.r = v; });
   if (P.t === 'prefab' || P.t === 'prop') vec('Escala', [P.e || 1], 0.1, (i, v) => { P.e = v === 1 ? undefined : Math.max(0.1, v); });
   if (P.t === 'caixa' || P.t === 'escada') {
-    d.appendChild(edEl('label', '', 'Matéria'));
-    const s = edEl('select', 'width:100%'); for (const m of ED_MATS) s.appendChild(new Option(m, m)); s.value = P.m || 'paint'; s.onchange = () => { edAntes(); P.m = s.value; edMudou(true); }; d.appendChild(s);
+    const atual = P.m || (P.t === 'escada' ? 'wood' : 'paint'), item = ED_SUPERF.find((x) => x[0] === atual);
+    d.appendChild(edEl('label', '', 'Superfície: <b style="color:#eee">' + (item ? item[1] : atual) + '</b>'));
+    const gal = edEl('div', 'display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;max-height:300px;overflow-y:auto;overflow-x:hidden;padding-right:2px');
+    let grupo = '';
+    for (const [k, nome, gr] of ED_SUPERF) {
+      if (gr !== grupo) { grupo = gr; gal.appendChild(edEl('div', 'grid-column:1/-1;color:#888;font-size:11px;margin-top:4px', gr)); }
+      const t = edEl('div', 'min-width:0;cursor:pointer;border:2px solid ' + (k === atual ? '#f5b82e' : 'transparent') + ';border-radius:4px;overflow:hidden;background:#222');
+      t.title = nome; const im = edEl('img', 'display:block;width:100%;aspect-ratio:1;object-fit:cover'); edTexUrl(k).then((u) => { im.src = u; });
+      t.append(im, edEl('div', 'font-size:9px;color:#ccc;padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', nome));
+      t.onclick = () => { edAntes(); P.m = k; edMudou(true); }; gal.appendChild(t);
+    }
+    d.appendChild(gal);
+    vec('Tamanho da textura (1 = normal)', [P.tx || 1], 0.25, (i, v) => { P.tx = v === 1 ? undefined : Math.max(0.1, v); });
   }
   if (P.t === 'caixa' || P.t === 'escada' || P.t === 'luz') {
     d.appendChild(edEl('label', '', 'Cor'));

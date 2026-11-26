@@ -1,9 +1,10 @@
-# Tiro da Galera: ônibus, caminhão e carros do jogo com colisão nos mapas do editor
+# Tiro da Galera: prefabs do editor separados em grupos
 
-Os prefabs de veículo do jogo original (`busWreck`, `truck`, `car`, `boxcar` e `snowplow`) não trazem colisão na peça: nos mapas deles, ela é posta à parte. Nos mapas do editor, dava para atravessar o ônibus.
+A aba Prefabs do editor de mapas agora separa as peças em grupos, com título na lista e botões para ver um grupo só: Todos, Favela (63), Navio, Praça e esporte (13), Veículos (9), Cobertura (27) e Jogo original (216).
 
-Agora o `mapa-json.js` dá a cada um deles uma caixa de colisão do tamanho da malha, girada e na escala da peça. A caixa segura gente e bala (`ED_COL_AUTO`; para pôr outro prefab sem colisão, é só acrescentar o nome).
+- **Peça nova:** entra no grupo pelo nome. `kcN...` vai para o Navio; as outras kc vão para a Favela, a não ser que estejam nas listas de Praça e esporte, Veículos ou Cobertura (`ED_GRUPO_LISTA` no `editor.js`).
+- **Busca:** continua procurando em todos os grupos (ou no grupo escolhido).
 
-Conferido no navegador, na Favela: o ônibus do planalto, o carro e o caminhão ganharam colisão.
+Conferido no navegador: os grupos e o filtro funcionam.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

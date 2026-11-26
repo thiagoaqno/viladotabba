@@ -252,20 +252,42 @@ function edJogar() {
 }
 function edMsgJogo() { const b = edEl('button', 'position:fixed;right:12px;top:12px;z-index:2147483000;padding:8px 12px;background:#f5b82e;color:#111;border:0;border-radius:6px;font:600 13px system-ui;cursor:pointer', '✎ Voltar ao editor'); b.onclick = () => { location.href = location.pathname + '?editor=1'; }; document.body.appendChild(b); }
 
+/* ---------- grupos dos prefabs no catálogo ----------
+   Os prefabs se dividem em grupos (Favela, Navio, Cobertura...). Peça nova entra no grupo pelo nome: kcN... vai para o Navio,
+   o resto das kc para a Favela, a não ser que esteja numa das listas abaixo; as do jogo original ficam em "Jogo original". */
+const ED_GRUPOS = ['Favela', 'Navio', 'Praça e esporte', 'Veículos', 'Cobertura', 'Jogo original'];
+const ED_GRUPO_LISTA = {
+  'Praça e esporte': /^kc(Praca|Quadra|CampoFutebol|Arquibancada|BancoPraca|ArvoreCanteiro|GuardaSol|VasoPlanta|Arbusto|Bananeira)/,
+  'Veículos': /^(kc(CarroVelho|Van|Moto$|CarroQueimado)|car$|truck$|busWreck$|boxcar$|snowplow$)/,
+  'Cobertura': /^kc(Jersey|Sacos|Gabiao|MuroQuebrado|Pilar$|Carretel|Guarita|Tanque|Tapume|Paletes|BarreiraAgua|ConteinerAberto|Cavalete|Entulho|Manilhas|Prateleira|Tambores|Vigas|Alambrado|ArmarioEletrico|Blocos|PaleteEmPe|IBC|Pneus|Cone)/,
+};
+function edGrupoDe(n) {
+  for (const [g, re] of Object.entries(ED_GRUPO_LISTA)) if (re.test(n)) return g;
+  if (/^kcN([A-Z]|avio)/.test(n) || /^ia[A-Z]/.test(n)) return 'Navio';
+  return /^kc/.test(n) ? 'Favela' : 'Jogo original';
+}
 /* ---------- catálogo ---------- */
 function edCatalogo(aba) {
   const e = ED.esq; e.innerHTML = ''; ED.aba = aba;
   const tabs = edEl('div'); tabs.className = 'edt';
   for (const [k, rot] of [['basico', 'Básico'], ['prefab', 'Prefabs'], ['prop', 'Objetos']]) { const b = edEl('button', '', rot); if (k === aba) b.className = 'on'; b.onclick = () => edCatalogo(k); tabs.appendChild(b); }
   const busca = edEl('input', 'margin:0 6px 4px'); busca.placeholder = 'Buscar…'; e.append(tabs, busca);
+  if (aba === 'prefab') { // os grupos: Todos ou um só
+    const gr = edEl('div', 'display:flex;flex-wrap:wrap;gap:3px;padding:0 6px 4px');
+    for (const g of ['Todos', ...ED_GRUPOS]) { const b = edEl('button', 'padding:2px 6px;font-size:11px', g); if ((ED.grupo || 'Todos') === g) b.className = 'on'; b.onclick = () => { ED.grupo = g; edCatalogo('prefab'); }; gr.appendChild(b); }
+    e.appendChild(gr);
+  }
   const lista = edEl('div'); lista.className = 'edl'; e.appendChild(lista);
   const itens = aba === 'basico' ? ED_BASICO.map((b) => ({ rot: b.rot, tpl: b }))
-    : (aba === 'prefab' ? Object.keys(PF) : Object.keys(PROPT)).sort().map((n) => ({ rot: n, tpl: { rot: n, P: { t: aba, nome: n } } }));
+    : (aba === 'prefab' ? Object.keys(PF) : Object.keys(PROPT)).sort().map((n) => ({ rot: n, tpl: { rot: n, P: { t: aba, nome: n } }, g: aba === 'prefab' ? edGrupoDe(n) : '' }));
+  if (aba === 'prefab') itens.sort((a, b) => ED_GRUPOS.indexOf(a.g) - ED_GRUPOS.indexOf(b.g) || a.rot.localeCompare(b.rot));
   const pinta = () => {
-    const q = busca.value.trim().toLowerCase(); lista.innerHTML = '';
+    const q = busca.value.trim().toLowerCase(); lista.innerHTML = ''; let gAtual = null;
     for (const it of itens) {
       const nome = aba === 'basico' ? it.rot : edNomeBonito(it.rot);
       if (q && !it.rot.toLowerCase().includes(q) && !nome.toLowerCase().includes(q)) continue;
+      if (aba === 'prefab' && ED.grupo && ED.grupo !== 'Todos' && it.g !== ED.grupo) continue;
+      if (aba === 'prefab' && it.g !== gAtual) { gAtual = it.g; lista.appendChild(edEl('div', 'grid-column:1/-1;margin:6px 0 1px;padding:2px 4px;font:600 12px system-ui;color:#f5b82e;border-bottom:1px solid #44484f', gAtual)); }
       const b = edEl('button'); b.title = it.rot; if (ED.tpl === it.tpl) b.className = 'on';
       // prefab que precisa de parâmetros (não se desenha sozinho): apagado no catálogo, sem prévia
       if (aba !== 'basico' && !edPrefabGrupo(aba + ':' + it.rot + '[]', () => (aba === 'prefab' ? PF[it.rot]() : propDef(it.rot, []).pf()))) {

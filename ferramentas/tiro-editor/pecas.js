@@ -1323,14 +1323,15 @@ function kcEscadaF(M, nome, x0, x1, z0, z1, axis, h0, h1, corrimao) {
 }
 // patamar maciço (do chão até h), com piso de cimento
 function kcPatamar(M, x0, x1, z0, z1, h) { kcBloco(M, 'concrete', KC_COR.laje, x0, x1, 0, h, z0, z1); }
-// guarda-corpo de cano (colide) entre dois pontos, na altura y
+// guarda-corpo de cano entre dois pontos, na altura y. Não colide (26/nov, pedido do Thiago: corrimão nenhum segura, e os bots
+// não enroscam nele)
 function kcGuarda(M, x0, z0, x1, z1, y) {
   M.color(KC_COR.ferro); const c = M.cls; M.cls = 1;
   const a = Math.min(x0, x1), b = Math.max(x0, x1), p = Math.min(z0, z1), q = Math.max(z0, z1);
   M.boxB('steel', a - 0.025, b + 0.025, y + 0.95, y + 1.0, p - 0.025, q + 0.025);
   const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 1.0));
   for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(x0, x1, t), z = lerp(z0, z1, t); M.boxB('steel', x - 0.025, x + 0.025, y, y + 0.95, z - 0.025, z + 0.025); }
-  M.cls = c; M.col(a - 0.03, b + 0.03, y, y + 1.0, p - 0.03, q + 0.03, 'steel');
+  M.cls = c;
 }
 
 // torre de cinco andares, estreita (4,5 x 15,3 x 4,7 m): cada andar de uma cor, o terceiro e o quarto avançam, sacadinhas
@@ -1717,8 +1718,8 @@ function kcNArqB(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo = 'metal') {
   M.color(cor); M.boxB(mat, x0, x1, y0, y1, z0, z1); M.col(x0, x1, y0, y1, z0, z1, tipo);
 }
 function kcNPiso(M, x0, x1, z0, z1, y = 0) { kcNArqB(M, 'wood', KC_NT, x0, x1, y - 0.15, y, z0, z1, 'wood'); }
-function kcNGuardArq(M, x0, x1, z0, z1, y = 0) {
-  kcNArqB(M, 'steel', KC_NI, x0, x1, y, y + 1.05, z0, z1);
+function kcNGuardArq(M, x0, x1, z0, z1, y = 0) { // guarda-corpo do navio: sem colisão, como todos os corrimãos
+  M.color(KC_NI); M.boxB('steel', x0, x1, y, y + 1.05, z0, z1);
 }
 // Uma faixa de janelas com peitoril, montantes e painéis iaVidro destrutíveis.
 function kcNFaixa(M, nome, eixo, fixo, a0, a1) {
@@ -1999,12 +2000,11 @@ PF.kcNEscotilha = () => prefab('kcNEscotilha', (M) => {
   M.local(1); kcNB(M, 'paint', KC_NBRANCO, -0.8, 0.8, 0, 0.18, -0.8, 0.8);
   M.cls = 1; M.color(KC_COR.ferro); M.boxB('steel', -0.6, 0.6, 0.18, 0.2, -0.6, 0.6); M.color(KC_NAZUL); M.boxB('glass', -0.46, 0.46, 0.2, 0.21, -0.46, 0.46); M.cls = 0;
 });
-// Corrimão com parede invisível: girar somente de 90 em 90 graus.
+// Corrimão (não colide, como todos desde 26/nov): girar somente de 90 em 90 graus.
 PF.kcNCorrimao = () => prefab('kcNCorrimao', (M) => {
   KC_INVIS.kcNCorrimao = []; M.local(1); M.color(KC_COR.ferro);
-  for (const x of [-2, 0, 2]) kcNB(M, 'steel', KC_COR.ferro, x - 0.035, x + 0.035, 0, 1.05, -0.035, 0.035);
-  kcNB(M, 'steel', KC_COR.ferro, -2.04, 2.04, 1, 1.08, -0.04, 0.04);
-  KC_INVIS.kcNCorrimao.push([-2, 2, 0, 1, -0.04, 0.04]);
+  for (const x of [-2, 0, 2]) M.boxB('steel', x - 0.035, x + 0.035, 0, 1.05, -0.035, 0.035);
+  M.boxB('steel', -2.04, 2.04, 1, 1.08, -0.04, 0.04);
 });
 PF.kcNExtintor = () => prefab('kcNExtintor', (M) => {
   M.local(1); M.color(KC_COR.vermelho); M.cyl('paint', 0.13, 0.55, 12); M.col(-0.13, 0.13, 0, 0.55, -0.13, 0.13, 'metal');
@@ -2108,9 +2108,10 @@ PF.kcNEscadaConves = () => prefab('kcNEscadaConves', (M) => {
   kcIateB(M, 'steel', KC_IATE_INOX, -1.26, -1.2, 1.2, 2.25, -0.15, 2.25);
 });
 PF.kcNCorrimaoConves = () => prefab('kcNCorrimaoConves', (M) => {
-  M.local(1); for (const x of [-2, 0, 2]) kcIateB(M, 'steel', KC_IATE_INOX, x - 0.04, x + 0.04, 0, 1.05, -0.04, 0.04);
-  kcIateB(M, 'steel', KC_IATE_INOX, -2.04, 2.04, 1, 1.08, -0.04, 0.04);
-  kcIateB(M, 'glass', [0.46, 0.56, 0.59], -2, 2, 0.08, 0.98, -0.025, 0.025, 'glass');
+  // sem colisão, como todos os corrimãos
+  M.local(1); M.color(KC_IATE_INOX); for (const x of [-2, 0, 2]) M.boxB('steel', x - 0.04, x + 0.04, 0, 1.05, -0.04, 0.04);
+  M.boxB('steel', -2.04, 2.04, 1, 1.08, -0.04, 0.04);
+  M.color([0.46, 0.56, 0.59]); M.boxB('glass', -2, 2, 0.08, 0.98, -0.025, 0.025);
 });
 // Arco superior independente: a abertura no centro permite passagem larga.
 PF.kcNArcoSuperior = () => prefab('kcNArcoSuperior', (M) => {

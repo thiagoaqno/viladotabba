@@ -97,6 +97,27 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
   solto. Ela entra como prefab novo em código, como os do Iate em `ferramentas/tiro-mapas/iate.js`, e aparece no catálogo do
   editor.
 
+## Peças de cobertura (prefixo `kc`)
+
+Feitas para mapas de tiro, em `ferramentas/tiro-editor/pecas.js`. Todas colidem (seguram gente e bala), o comprimento fica em x
+e a origem é o centro de baixo.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcJersey` | 3 x 0,85 x 0,6 | barreira New Jersey de concreto (cobre agachado) |
+| `kcSacos` | 2,4 x 1,2 x 0,6 | muro de sacos de areia (cobre de pé) |
+| `kcSacosBaixo` | 2,4 x 0,6 x 0,6 | sacos de areia baixos (cobre agachado) |
+| `kcGabiao` | 2,1 x 1,4 x 1,05 | dois cestos de tela cheios de terra |
+| `kcMuroQuebrado` | 4 x 1,3 a 2,6 x 0,3 | muro de concreto com o topo quebrado e ferros para fora |
+| `kcPilar` | 0,8 x 3,1 x 0,8 | pilar de concreto quebrado no alto |
+| `kcCarretel` | 1,3 x 1,9 x 1,6 | carretel de cabo grande, deitado |
+| `kcGuarita` | 2,4 x 2,7 x 2,4 | guarita fechada com janelas escuras |
+| `kcTanque` | 5,5 x 2,55 x 2,2 | tanque de combustível deitado em berços |
+| `kcTapume` | 3 x 2,2 x 0,1 | chapa de aço ondulado entre postes |
+| `kcPaletes` | 1,2 x 1,6 x 1 | dois paletes de carga embrulhada |
+| `kcBarreiraAgua` | 2 x 0,8 x 0,5 | barreira plástica vermelha e branca |
+| `kcConteinerAberto` | 6,1 x 2,6 x 2,4 | contêiner sem as portas: dá para entrar e atirar de dentro |
+
 ## Catálogo: prefabs (cenário fixo)
 
 Estes prefabs precisam de parâmetros e ainda não entram pelo editor: `cyClimber`, `fdTri`, `fishBinStackDyn`, `fruitCrate`, `jersey`, `lobsterPots`, `rack`, `stTent`, `stall`, `trawler`, `tree`, `truss`.

@@ -234,6 +234,18 @@ addEventListener('load',()=>{miraAplicar();brilhoAplicar();});
 `;
 h = troca(h, "</body>", CSS_MIRA + "</body>", { todas: false, nome: "mira (CSS e funções)" });
 
+// ---------- mapas nossos (ferramentas/tiro-mapas/) ----------
+// Iate Esmeralda (2026-11-26): o código do mapa entra no fim do script do jogo, logo antes do boot, e se registra sozinho
+// (MAP_DEFS, MAPS, MAP_ART). A água do porto só tinha mar a oeste do cais: o iate traz a própria grade de água (iate.js) e aqui
+// o campo de espuma passa a ficar centrado no navio quando o mapa é o iate.
+{
+  const MAPAS = path.join(__dirname, "tiro-mapas");
+  h = troca(h, "F={x0:-144,z0:-128,ppm:2,w:256,h:512}", "F=(CURMAP.id==='iate'?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512})", { nome: "campo da água centrado no iate" });
+  const iate = fs.readFileSync(path.join(MAPAS, "iate.js"), "utf8");
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => iate + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "mapa Iate Esmeralda" });
+  fs.copyFileSync(path.join(MAPAS, "iate.svg"), path.join(OUT, "maps", "iate.svg"));
+}
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

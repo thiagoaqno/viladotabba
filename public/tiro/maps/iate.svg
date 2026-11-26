@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+<defs>
+<linearGradient id="mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d3a5c"/><stop offset="1" stop-color="#06233b"/></linearGradient>
+<pattern id="onda" width="60" height="22" patternUnits="userSpaceOnUse"><path d="M0 11q15-8 30 0t30 0" fill="none" stroke="#ffffff14" stroke-width="2"/></pattern>
+<pattern id="teca" width="8" height="40" patternUnits="userSpaceOnUse"><rect width="8" height="40" fill="#a8744a"/><path d="M8 0V40" stroke="#7a5233" stroke-width="1"/></pattern>
+</defs>
+<rect width="640" height="360" fill="url(#mar)"/><rect width="640" height="360" fill="url(#onda)"/>
+<path d="M40 130 L40 230 L460 236 Q560 230 610 180 Q560 130 460 124 Z" fill="#11213d" opacity=".35" transform="translate(6 10)"/>
+<path d="M40 128 L40 232 L460 238 Q565 232 612 180 Q565 128 460 122 Z" fill="#f2f2f0"/>
+<path d="M50 136 L50 224 L458 230 Q550 224 590 180 Q550 136 458 130 Z" fill="url(#teca)"/>
+<g fill="#f7f7f5" stroke="#1a2f5a" stroke-width="2">
+<rect x="250" y="146" width="80" height="68" rx="6"/>
+<rect x="420" y="146" width="70" height="68" rx="6"/>
+<rect x="268" y="156" width="40" height="48" rx="4" fill="#e8e8e4"/>
+</g>
+<rect x="350" y="158" width="46" height="40" rx="4" fill="#3fb7d0" stroke="#fff" stroke-width="4"/>
+<circle cx="540" cy="180" r="30" fill="#1f6150" stroke="#fff" stroke-width="3"/>
+<text x="540" y="190" font-family="Arial Black,Impact,sans-serif" font-size="28" fill="#fff" text-anchor="middle">H</text>
+<g fill="#fff" stroke="#1a2f5a" stroke-width="1.5"><rect x="510" y="140" width="40" height="12" rx="6"/><rect x="510" y="208" width="40" height="12" rx="6"/>
+<rect x="70" y="148" width="40" height="14" rx="7"/><rect x="70" y="198" width="40" height="14" rx="7"/></g>
+<path d="M40 128 L460 122 Q565 128 612 180 Q565 232 460 238 L40 232" fill="none" stroke="#1a2f5a" stroke-width="5"/>
+</svg>

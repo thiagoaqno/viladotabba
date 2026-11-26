@@ -1,19 +1,33 @@
-# Tiro da Galera: a Narradora é a voz padrão
+# Tiro da Galera: opção de brilho e editor de mira
 
-O Thiago pediu para a voz de começo do narrador ser a 4, que é a única voz de mulher (as outras três são de homem).
+## Brilho (Opções > Vídeo > Imagem)
 
-## O que mudou
+- **De 60% a 180%,** com padrão de 100% (a imagem de antes).
+- **Multiplica a exposição no shader final do jogo (`FinalShader`), antes da curva de cor (ACES).** Isso clareia as partes escuras
+  sem estourar o céu, como o brilho de um jogo, e não custa nada a mais. Esse shader roda em todas as qualidades.
+- **O valor é reaplicado a cada quadro da partida,** porque o jogo recria os passes quando a qualidade muda.
 
-- **A voz de começo** agora é a da Narradora (o pacote `shotgun`). Ela fica em `NARRADOR_PADRAO`, no `ferramentas/tiro-frontline.js`.
-- **Nas Opções > Áudio > Voz do narrador,** ela aparece como "Narradora". Os outros nomes continuam Narrador 1, 2 e 3.
-- **O ajuste mudou de nome,** de `vozNarr` para `narrador`. O jogo salva todos os ajustes a cada partida, então quem já tinha
-  jogado estava com a voz antiga gravada e nunca veria o padrão novo. Com o nome novo, o padrão vale para todo mundo. Quem tinha
-  escolhido outra voz (a opção existe há uma hora) escolhe de novo.
-- **A explicação do `vozes.json`** agora diz que a voz de começo é a `NARRADOR_PADRAO`, e que a "padrao" é a que toca enquanto o
-  pacote da escolhida não chega.
+## Desenho da mira (Opções > Jogo, seção nova depois de Interface)
+
+O nome "Mira" já é a seção da pontaria (sensibilidade, campo de visão), então a nova se chama "Desenho da mira":
+- **Estilo:** cruz, cruz com ponto, só o ponto ou círculo;
+- **Cor:** branca, verde, ciano, amarela, rosa ou vermelha;
+- **Tamanho das linhas** (3 a 24 px), **espessura** (1 a 5 px), **espaço no meio** (0 a 20 px) e **opacidade**;
+- **"Mira que abre com o movimento e o tiro":** desligada, a mira fica fixa;
+- **Contorno escuro.**
+
+Os padrões são exatamente a mira de antes: cruz branca a 92%, linhas de 11 px, 2 px de espessura, abrindo com o movimento.
+
+**Como:** a mira do jogo é feita de 5 pedaços de HTML (`#xhair`). Um CSS novo troca os números fixos por variáveis, que
+`miraAplicar()` preenche a partir dos ajustes. O jogo continua mandando o quanto a mira abre (`--gap`); com a mira fixa, esse
+valor é multiplicado por 0. Os ajustes ficam em `dc_settings`, então vão junto com o perfil da Vila. Tudo é feito pelo
+`ferramentas/tiro-frontline.js`.
 
 ## Conferido no navegador
 
-Num navegador que já tinha ajustes salvos com a voz antiga (`vozNarr: "padrao"`):
-- o jogo começou na Narradora, e o pacote que vai ser baixado é o dela (`voix_shotgun`);
-- o seletor mostrou Narrador 1, 2, 3, **Narradora** (marcada) e "Pela classe da arma".
+- O brilho aparece na aba Vídeo em 100%, e o valor chega ao shader (testado com 1,4).
+- A seção da mira aparece depois de "Tela cheia na partida", com todas as opções e os valores de antes.
+- Círculo verde de 4 px: sem as linhas, com borda verde e redondo. Cruz com ponto e linhas de 18 px: linhas 18 × 4 px, ponto de
+  5 px.
+- Deslocamento do pedaço da direita, com a HUD visível: 20 px no padrão (como antes), 10 px com a mira fixa e 10 px de espaço,
+  30 px com a mira que abre e 10 px de espaço.

@@ -336,6 +336,26 @@ passagens pelos dois lados. As escadas levam do convés em y = 0 aos salões e v
 Os times nascem nas extremidades; as bases Bravo são espelhadas pelo jogo. Os três pontos de dominação ficam na proa, junto à
 piscina e na popa. O arquivo pode ser aberto e alterado no editor como qualquer mapa do projeto.
 
+### Aeroporto (prefixo `kcA`)
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcAAviao` | 34 x 13 x 46 | avião com a cabine andável: o piso da cabine fica no `y` da peça (no mapa, 4,5; o trem de pouso desce 4,5 m). Comprido em z, nariz em +z. Portas de 3 m: direita (+x) em z 12 a 15, esquerda (-x) em z -13 a -10. Corredor de 2,6 m |
+| `kcABalcao` | 2,6 x 2,4 x 1,5 | balcão de check-in com balança e painel da companhia |
+| `kcACadeiras` | 3 x 0,9 x 0,7 | fileira de cinco cadeiras de espera (cobre agachado) |
+| `kcARaioX` | 4,4 x 1,5 x 1,1 | raio-x de bagagem com esteiras (comprido em x) |
+| `kcAPortico` | 1,5 x 2,3 x 0,6 | pórtico detector de metal (só os postes colidem) |
+| `kcACarrinhoBagagem` | 9 x 1,95 x 1,6 | trator com duas carretas de malas (comprido em x) |
+| `kcAPainelVoos` | 3 x 3,4 x 0,25 | painel de voos num pé (só os pés colidem) |
+| `kcAEsteira` | 8,2 x 0,9 x 3,2 | esteira de bagagem oval com malas |
+
+O mapa `aeroporto.json` é gerado por `node ferramentas/tiro-mapas/aeroporto-gerar.js`, a partir do desenho do Thiago:
+- o terminal no alto (y 4,5), com o salão da segurança, a loja e o café;
+- a plataforma e a rampa a oeste;
+- o pátio embaixo, com o avião, a escada dele e a ponte de embarque.
+
+Os pontos de nascer e dos bots vieram da rede de caminhos. Depois de mexer no editor, não rode o gerador: ele sobrescreve.
+
 ### Passarelas
 
 O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas

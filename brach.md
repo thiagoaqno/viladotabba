@@ -1,8 +1,9 @@
-# Tiro da Galera: Favela do Thiago (versão 3) e dominação em cima de morro ou laje
+# Tiro da Galera: módulos de arquitetura para o navio
 
-- **Mapa:** o `favela.json` passa a ser a versão que o Thiago editou (posições ajustadas e dominação nova). Conferido: os 107 pontos dos bots e os nascer dos dois times estão na rede de caminhos dos bots. Um ponto que ficou fora foi tirado.
-- **Dominação na altura certa:** o ponto de dominação agora pode ter um 3º número, a altura do piso (`[x, z, y]`). O editor grava essa altura quando o ponto é colocado em cima de um morro ou de uma laje, e o jogo usa ela (troca em `tiro-frontline.js`). Antes, o jogo procurava o chão em y = 0 e o ponto afundava embaixo da terra. Na Favela, o ponto A está em cima do morro (y 3,05).
+O editor ganha módulos de salas, varandas, deques, escadas, cabines, corredor, garagem e fechamentos para construir um iate de vários níveis. As salas envidraçadas e a parede com janela usam painéis destrutíveis; as escadas de acesso registram rampas para o jogo, e as bordas abertas relevantes têm proteção invisível.
 
-Conferido no navegador, no modo dominação: A fica em y 3,05, e B e C ficam no chão.
+O convés do `kcNavio` original é maciço. Para permitir uma descida real sem alterar mapas existentes, `kcNavioComAbertura` fornece um vão central de 2,6 x 6 m e uma abertura inferior na popa. O patamar da escada interna avança além do vão para manter a inclinação e a passagem exigidas. A documentação explica o posicionamento e as dimensões.
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Validação: `node --check` nos arquivos de editor alterados e remontagem de `public/tiro/index.html` com `tiro-frontline.js`. Aparência, vidros, encaixes e navegação dos bots ainda precisam ser conferidos no jogo. Os arquivos de mapas JSON não foram modificados.
+
+O PR #1032 também adiciona painéis de vidro ao editor; se for mesclado antes deste, reconciliar as duas integrações ao atualizar esta branch.

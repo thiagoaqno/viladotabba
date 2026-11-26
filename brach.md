@@ -1,10 +1,7 @@
-# Tiro da Galera: prefabs do editor separados em grupos
+# Tiro da Galera: peças de convés para o Navio
 
-A aba Prefabs do editor de mapas agora separa as peças em grupos, com título na lista e botões para ver um grupo só: Todos, Favela (63), Navio, Praça e esporte (13), Veículos (9), Cobertura (27) e Jogo original (216).
+O editor ganha peças independentes inspiradas nas referências de convés de iate: ponte panorâmica, cabana com bancos e ducha, hidromassagem, balcão, banco, claraboia, armário, posto de comando, arco superior, caixa, corrimão e escada. Os nomes usam o prefixo `kcN` e entram automaticamente no grupo Navio do catálogo.
 
-- **Peça nova:** entra no grupo pelo nome. `kcN...` vai para o Navio; as outras kc vão para a Favela, a não ser que estejam nas listas de Praça e esporte, Veículos ou Cobertura (`ED_GRUPO_LISTA` no `editor.js`).
-- **Busca:** continua procurando em todos os grupos (ou no grupo escolhido).
+A ponte tem portas de 2,4 m e laje andável; seus vidros e os do corrimão são fixos. A escada é registrada para jogadores e bots. A documentação traz as medidas e o aviso de giro em múltiplos de 90 graus para a escada. Os mapas JSON não foram alterados.
 
-Conferido no navegador: os grupos e o filtro funcionam.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Validação: `node --check ferramentas/tiro-editor/pecas.js` e remontagem do jogo com `tiro-frontline.js`. A aparência e a navegação precisam ser conferidas jogando. Os PRs #1032 e #1034 também acrescentam peças ao Navio e podem precisar de reconciliação caso sejam mesclados antes deste.

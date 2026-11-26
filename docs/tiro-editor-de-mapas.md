@@ -245,6 +245,18 @@ prédio com escada **só gira de 90 em 90 graus**; girado de outro jeito, a esca
 | Nome | Tamanho (larg x alt x prof, m) | O que é |
 |---|---|---|
 | `kcNavio` | 20,4 x 10,6 x 106 | casco de iate (proa em +z, popa em -z) com o convés principal andável em y = 0, borda falsa sólida de 1,05 m e parede invisível em cima até 4,5 m. A linha d'água fica em y = -4,3: use o mar em -4,3. A meia-largura do convés acompanha o casco (10 m no meio, afinando para a proa a partir de z = 25) |
+| `kcNPontePanoramica` | 10 x 3 x 8 | salão ou ponte com vidros fixos, portas de 2,4 m e laje em y = 3 |
+| `kcNCabanaConves` | 6 x 2,8 x 4 | cabana aberta com ripas de madeira, ducha e bancos estofados |
+| `kcNHidroConves` | 5 x 0,95 x 5 | hidromassagem elevada, borda sólida e água visual |
+| `kcNBarConves` | 4,8 x 1,05 x 1,28 | balcão baixo com tampo de teca e frente segmentada |
+| `kcNBancoConves` | 2,6 x 0,94 x 0,96 | banco de convés com almofadas claras |
+| `kcNClaraboiaConves` | 3 x 0,14 x 3 | claraboia circular baixa com vidro fixo e aro de inox |
+| `kcNArmarioLateral` | 5 x 1,12 x 1,21 | armário de convés baixo, com tampo de teca |
+| `kcNPostoComando` | 3,4 x 1,55 x 1,1 | console branco com tela escura para a ponte |
+| `kcNEscadaConves` | 2,46 x 2,25 x 4,5 | **com escada**: lance de 1,2 m até patamar de 2,4 m; girar de 90 em 90 graus |
+| `kcNCorrimaoConves` | 4,08 x 1,08 x 0,08 | corrimão de inox com vidro fixo |
+| `kcNArcoSuperior` | 8 x 4,45 x 0,62 | arco estrutural branco para o alto da ponte |
+| `kcNCaixaBordo` | 1,3 x 0,56 x 0,81 | caixa de bordo amarela, baixa e com tiras metálicas |
 
 O mapa `navio.json` é a base pronta: o mar, o `kcNavio` no centro, os pontos de nascer na proa (o Bravo nasce na popa) e a
 dominação no eixo do navio. Os prefabs podem trazer paredes invisíveis próprias (`KC_INVIS[nome]`, como o `KC_ESCADAS`), e o

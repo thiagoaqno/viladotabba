@@ -348,6 +348,22 @@ piscina e na popa. O arquivo pode ser aberto e alterado no editor como qualquer 
 | `kcACarrinhoBagagem` | 9 x 1,95 x 1,6 | trator com duas carretas de malas (comprido em x) |
 | `kcAPainelVoos` | 3 x 3,4 x 0,25 | painel de voos num pé (só os pés colidem) |
 | `kcAEsteira` | 8,2 x 0,9 x 3,2 | esteira de bagagem oval com malas |
+| `kcAParedeJanela` | 4 x 5,5 x 0,25 | parede do terminal com janela de vidro (do piso de cima ao teto: ponha em y 4,5) |
+| `kcAParedePorta` | 4 x 5,5 x 0,25 | parede com porta de 2,4 m (dá para passar) |
+| `kcAParedeVidro` | 4 x 5,5 x 0,15 | pano de vidro com montantes (vê através, segura gente e bala) |
+| `kcAParedeLisa` | 4 x 5,5 x 0,2 | parede lisa |
+| `kcALojaCafe` | 6 x 4,2 x 5 | café: balcão com máquina e prateleira (dá para entrar pela porta de 2,4 m, +z) |
+| `kcALojaFarmacia` | 6 x 4,2 x 5 | farmácia: cruz verde, prateleiras e balcão |
+| `kcALojaLivraria` | 6 x 4,2 x 5 | livraria: estante de livros e mesa no meio |
+| `kcALojaRoupas` | 6 x 4,2 x 5 | loja de roupas: araras e caixa |
+| `kcALojaEletronicos` | 6 x 4,2 x 5 | eletrônicos: balcão com notebooks e telas na parede |
+| `kcAEsteiraReta` | 6 x 0,95 x 1,2 | esteira reta com malas (cobre agachado) |
+| `kcAPalmeiraVaso` | 2,5 x 3,2 x 2,5 | palmeira num vaso grande (só o vaso colide) |
+| `kcAFloreira` | 3 x 1,1 x 0,7 | floreira comprida com arbustos (cobre agachado) |
+| `kcABalcaoInfo` | 3,2 x 2,8 x 2 | balcão de informações em U com o "i" |
+| `kcAFila` | 6 x 1 x 3 | fila de check-in: postes de inox e fita em zigue-zague (os postes colidem) |
+| `kcAEscadaExterna` | 2,5 x 5,5 x 10,1 | **com escada**: de 0 a 4,5 m; sobe para +z (z -4 a 3,7) e tem patamar no alto (z 3,7 a 6,1): encoste a ponta do patamar na beira do piso de cima |
+| `kcAEscadaRolante` | 2,6 x 5,5 x 10,9 | **com escada**: escada rolante (parada, dá para subir), mesmo tamanho e jeito de encostar da externa |
 
 O mapa `aeroporto.json` é gerado por `node ferramentas/tiro-mapas/aeroporto-gerar.js`, a partir do desenho do Thiago:
 - o terminal no alto (y 4,5), com o salão da segurança, a loja e o café;

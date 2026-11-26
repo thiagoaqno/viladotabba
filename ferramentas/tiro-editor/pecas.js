@@ -2281,3 +2281,155 @@ PF.kcAEsteira = () => prefab('kcAEsteira', (M) => {
   M.cls = 1; for (let i = 0; i < 7; i++) { const a = (i / 7) * TAU, x = Math.cos(a) * 3.4, z = Math.sin(a) * 1.15; M.color(R.pick(cores)); M.save().move(Math.max(-3.6, Math.min(3.6, x)), 0.62, z).rotY(a); M.boxB('canvas', -0.3, 0.3, 0, 0.25, -0.2, 0.2, { bevel: 0.05 }); M.restore(); } M.cls = 0;
   M.col(-2.5, 2.5, 0, 0.9, -1.6, 1.6, 'metal'); for (const s of [-1, 1]) M.col(s > 0 ? 2.5 : -4.1, s > 0 ? 4.1 : -2.5, 0, 0.9, -1.2, 1.2, 'metal');
 });
+
+/* ---------- pacote 9: mais peças do aeroporto (paredes, lojas, esteira, plantas, balcões, escadas) ----------
+   Paredes de 4 m de largura e 5,5 m de altura (do piso de cima, 4,5, até o teto, 10), 0,2 m de espessura, comprimento em x.
+   Lojas de 6 x 5 m que dá para entrar (porta de 2,4 m na frente, +z), com vitrine, placa e o que cada uma vende.
+   Escadas de 0 a 4,5 m com subida de verdade (KC_ESCADAS): 2,4 m de largura, 7,7 m de comprimento, patamar de 2,4 m no alto.
+   As escadas só giram de 90 em 90 graus. */
+const KC_AE = { branco: [0.93, 0.93, 0.92], cinza: [0.62, 0.63, 0.65], vidro: [0.55, 0.7, 0.78], inox: [0.8, 0.81, 0.83] };
+// parede do terminal com uma abertura [a0, a1, b0, b1] (porta ou janela)
+function kcAParede(M, H, abertura, vidroNaAbertura) {
+  M.local(1); M.color(KC_AE.branco);
+  kcParede(M, 'paint', 'x', -0.1, 0.1, -2, 2, 0, H, abertura ? [abertura] : [], 'concrete');
+  M.color([0.85, 0.86, 0.88]); M.cls = 1; M.boxB('paint', -2, 2, 0, 0.15, -0.11, 0.11); M.cls = 0; // rodapé
+  if (abertura && vidroNaAbertura) {
+    const [a0, a1, b0, b1] = abertura;
+    M.color(KC_AE.vidro); M.boxB('glass', a0, a1, b0, b1, -0.02, 0.02); M.col(a0, a1, b0, b1, -0.05, 0.05, 'glass');
+    M.color(KC_AE.inox); M.cls = 1;
+    for (const [p, q, r, t] of [[a0 - 0.06, a0, b0, b1], [a1, a1 + 0.06, b0, b1], [a0 - 0.06, a1 + 0.06, b0 - 0.06, b0], [a0 - 0.06, a1 + 0.06, b1, b1 + 0.06], [(a0 + a1) / 2 - 0.03, (a0 + a1) / 2 + 0.03, b0, b1]])
+      M.boxB('steel', p, q, r, t, -0.12, 0.12);
+    M.cls = 0;
+  }
+}
+PF.kcAParedeJanela = () => prefab('kcAParedeJanela', (M) => kcAParede(M, 5.5, [-1.5, 1.5, 1.0, 3.2], true));
+PF.kcAParedePorta = () => prefab('kcAParedePorta', (M) => { kcAParede(M, 5.5, [-1.2, 1.2, 0, 2.6], false); M.color(KC_AE.inox); M.cls = 1; M.boxB('steel', -1.3, 1.3, 2.6, 2.7, -0.13, 0.13); M.cls = 0; });
+PF.kcAParedeLisa = () => prefab('kcAParedeLisa', (M) => kcAParede(M, 5.5, null, false));
+// parede de vidro (pano de vidro com montantes), 4 x 5,5 m: vê através, segura gente e bala
+PF.kcAParedeVidro = () => prefab('kcAParedeVidro', (M) => {
+  M.local(1); M.color(KC_AE.vidro); M.boxB('glass', -2, 2, 0, 5.5, -0.03, 0.03); M.col(-2, 2, 0, 5.5, -0.06, 0.06, 'glass');
+  M.color([0.35, 0.37, 0.4]);
+  for (const x of [-2, 0, 2]) M.boxB('steel', x - 0.05, x + 0.05, 0, 5.5, -0.08, 0.08);
+  for (const y of [0, 2.6, 5.45]) M.boxB('steel', -2, 2, y, y + 0.05, -0.08, 0.08);
+});
+
+// loja de 6 x 5 m: paredes, vitrine de vidro na frente com porta de 2,4 m, placa colorida com um símbolo e o que vende
+function kcALoja(M, cor, simbolo, recheio) {
+  M.local(1); const X = 3, Z = 2.5, H = 3.2;
+  M.color([0.9, 0.9, 0.88]);
+  kcParede(M, 'paint', 'x', -Z, -Z + 0.15, -X, X, 0, H); kcParede(M, 'paint', 'z', -X, -X + 0.15, -Z + 0.15, Z, 0, H); kcParede(M, 'paint', 'z', X - 0.15, X, -Z + 0.15, Z, 0, H);
+  M.color(KC_COR.laje); M.boxB('concrete', -X, X, H, H + 0.2, -Z, Z); M.col(-X, X, H, H + 0.2, -Z, Z, 'concrete');
+  M.color([0.82, 0.8, 0.76]); M.boxB('tiles', -X + 0.15, X - 0.15, 0, 0.02, -Z + 0.15, Z);
+  // vitrine: vidro dos lados da porta (a porta, de 2,4 m, fica no meio)
+  M.color(KC_AE.vidro); for (const [a, b] of [[-X + 0.15, -1.2], [1.2, X - 0.15]]) { M.boxB('glass', a, b, 0.4, 2.5, Z - 0.05, Z - 0.02); M.col(a, b, 0, 2.5, Z - 0.08, Z, 'glass'); }
+  M.color(cor); M.boxB('paint', -X + 0.15, -1.2, 0, 0.4, Z - 0.1, Z); M.boxB('paint', 1.2, X - 0.15, 0, 0.4, Z - 0.1, Z);
+  M.boxB('paint', -X, X, 2.5, H, Z - 0.1, Z + 0.05); M.col(-X, X, 2.5, H, Z - 0.1, Z + 0.05, 'concrete');
+  // placa
+  M.color(cor); M.boxB('paint', -2.2, 2.2, H + 0.2, H + 1.0, Z - 0.1, Z + 0.05);
+  M.cls = 1; M.color([0.98, 0.98, 0.96]); simbolo(M, 0, H + 0.6, Z + 0.06); M.cls = 0;
+  recheio(M, X, Z);
+  M.color([1, 0.97, 0.9]); M.cls = 1; for (const x of [-1.5, 1.5]) M.boxB('lamp', x - 0.4, x + 0.4, H - 0.03, H, -0.5, 0.5); M.cls = 0;
+}
+// prateleira de parede com produtos coloridos
+function kcAPrateleira(M, x0, x1, z, cores, seed) {
+  const R = rngOf(seed);
+  M.color([0.55, 0.42, 0.3]); M.boxB('wood', x0, x1, 0, 2.2, z, z + 0.45); M.col(x0, x1, 0, 2.2, z, z + 0.45, 'wood');
+  M.cls = 1; for (let n = 0; n < 4; n++) { const y = 0.35 + n * 0.5; for (let x = x0 + 0.15; x < x1 - 0.15; x += 0.28) { M.color(R.pick(cores)); M.boxB('plastic', x - 0.1, x + 0.1, y, y + R.range(0.18, 0.35), z + 0.47, z + 0.55); } } M.cls = 0;
+}
+function kcABalcaoLoja(M, x0, x1, z0, z1, cor) { M.color(cor); M.boxB('paint', x0, x1, 0, 1.0, z0, z1, { bevel: 0.03 }); M.col(x0, x1, 0, 1.05, z0, z1, 'wood'); M.color([0.2, 0.2, 0.22]); M.boxB('steel', x0, x1, 1.0, 1.05, z0, z1); }
+PF.kcALojaCafe = () => prefab('kcALojaCafe', (M) => kcALoja(M, [0.42, 0.26, 0.16],
+  (M, x, y, z) => { M.save().move(x, y - 0.2, z); M.boxB('paint', -0.18, 0.18, 0, 0.4, 0, 0.02); M.boxB('paint', 0.18, 0.3, 0.12, 0.3, 0, 0.02); M.restore(); },
+  (M, X, Z) => { kcABalcaoLoja(M, -2.85, -0.4, -0.2, 0.5, [0.42, 0.26, 0.16]); M.color([0.15, 0.15, 0.16]); M.cls = 1; M.boxB('steel', -2.3, -1.7, 1.05, 1.55, 0, 0.35); M.cls = 0; kcAPrateleira(M, -2.6, 2.6, -2.35, [[0.4, 0.25, 0.15], [0.9, 0.85, 0.75], [0.2, 0.2, 0.2]], 3); }));
+PF.kcALojaFarmacia = () => prefab('kcALojaFarmacia', (M) => kcALoja(M, [0.1, 0.55, 0.3],
+  (M, x, y, z) => { M.boxB('paint', x - 0.08, x + 0.08, y - 0.27, y + 0.27, z, z + 0.02); M.boxB('paint', x - 0.27, x + 0.27, y - 0.08, y + 0.08, z, z + 0.02); },
+  (M, X, Z) => { kcABalcaoLoja(M, 1.2, 2.7, -1.5, 1.0, [0.95, 0.95, 0.93]); kcAPrateleira(M, -2.7, 0.8, -2.35, [[0.95, 0.95, 0.95], [0.2, 0.5, 0.8], [0.9, 0.3, 0.3], [0.3, 0.7, 0.4]], 5); }));
+PF.kcALojaLivraria = () => prefab('kcALojaLivraria', (M) => kcALoja(M, [0.2, 0.25, 0.5],
+  (M, x, y, z) => { M.boxB('paint', x - 0.3, x - 0.02, y - 0.2, y + 0.2, z, z + 0.02); M.boxB('paint', x + 0.02, x + 0.3, y - 0.2, y + 0.2, z, z + 0.02); },
+  (M, X, Z) => { kcAPrateleira(M, -2.7, 2.7, -2.35, [[0.7, 0.15, 0.1], [0.1, 0.3, 0.6], [0.9, 0.8, 0.3], [0.2, 0.5, 0.3], [0.9, 0.9, 0.85]], 7); M.color([0.55, 0.42, 0.3]); M.boxB('wood', -1.0, 1.0, 0, 0.8, -0.3, 0.6); M.col(-1.0, 1.0, 0, 0.85, -0.3, 0.6, 'wood'); }));
+PF.kcALojaRoupas = () => prefab('kcALojaRoupas', (M) => kcALoja(M, [0.75, 0.2, 0.45],
+  (M, x, y, z) => { M.boxB('paint', x - 0.15, x + 0.15, y - 0.25, y + 0.15, z, z + 0.02); M.boxB('paint', x - 0.32, x + 0.32, y + 0.05, y + 0.2, z, z + 0.02); },
+  (M, X, Z) => {
+    const R = rngOf(11); M.color(KC_AE.inox);
+    for (const z of [-1.4, 0.3]) { M.boxB('steel', -2.2, 1.2, 1.6, 1.64, z - 0.02, z + 0.02); for (const x of [-2.2, 1.2]) M.boxB('steel', x - 0.02, x + 0.02, 0, 1.64, z - 0.02, z + 0.02);
+      M.cls = 1; for (let x = -2.0; x < 1.1; x += 0.22) { M.color(R.pick([[0.8, 0.2, 0.3], [0.2, 0.3, 0.6], [0.9, 0.9, 0.85], [0.15, 0.15, 0.15], [0.9, 0.7, 0.2]])); M.boxB('canvas', x - 0.08, x + 0.08, 0.7, 1.58, z - 0.2, z + 0.2); } M.cls = 0; M.color(KC_AE.inox);
+      M.col(-2.2, 1.2, 0.7, 1.64, z - 0.2, z + 0.2, 'wood'); }
+    kcABalcaoLoja(M, 1.7, 2.7, -1.8, -0.2, [0.95, 0.95, 0.93]);
+  }));
+PF.kcALojaEletronicos = () => prefab('kcALojaEletronicos', (M) => kcALoja(M, [0.12, 0.12, 0.14],
+  (M, x, y, z) => { M.color([0.3, 0.75, 0.95]); M.boxB('lamp', x - 0.35, x + 0.35, y - 0.18, y + 0.22, z, z + 0.02); M.color([0.98, 0.98, 0.96]); M.boxB('paint', x - 0.1, x + 0.1, y - 0.3, y - 0.2, z, z + 0.02); },
+  (M, X, Z) => {
+    kcABalcaoLoja(M, -2.85, -0.2, -0.6, 0.4, [0.92, 0.92, 0.94]);
+    M.cls = 1; for (let x = -2.4; x <= -0.6; x += 0.9) { M.color([0.08, 0.08, 0.1]); M.boxB('dark', x - 0.3, x + 0.3, 1.05, 1.45, -0.2, -0.16); M.color([0.3, 0.6, 0.9]); M.boxB('lamp', x - 0.27, x + 0.27, 1.08, 1.42, -0.16, -0.155); }
+    M.color([0.08, 0.08, 0.1]); for (const x of [-1.8, 0, 1.8]) M.boxB('dark', x - 0.7, x + 0.7, 1.2, 2.0, -2.33, -2.3); M.cls = 0;
+  }));
+
+// esteira reta de bagagem (ou de raio-x longo), 6 x 0,9 x 1,2 m, com malas: cobre agachado
+PF.kcAEsteiraReta = () => prefab('kcAEsteiraReta', (M) => {
+  M.local(1); const R = rngOf(31);
+  M.color([0.6, 0.62, 0.65]); M.boxB('steel', -3, 3, 0, 0.6, -0.6, 0.6); M.col(-3, 3, 0, 0.9, -0.6, 0.6, 'metal');
+  M.color([0.12, 0.12, 0.13]); M.boxB('rubber', -3, 3, 0.6, 0.65, -0.5, 0.5);
+  M.color(KC_AE.inox); for (const s of [-1, 1]) M.boxB('steel', -3, 3, 0.6, 0.9, s * 0.6 - 0.04, s * 0.6 + 0.04);
+  M.cls = 1; for (let x = -2.4; x < 2.6; x += R.range(0.9, 1.4)) { M.color(R.pick([[0.2, 0.2, 0.22], [0.5, 0.15, 0.15], [0.15, 0.3, 0.55], [0.85, 0.75, 0.2]])); M.boxB('canvas', x - 0.35, x + 0.35, 0.65, 0.65 + R.range(0.25, 0.4), -0.25, 0.25, { bevel: 0.05 }); } M.cls = 0;
+});
+// palmeira num vaso grande, 2,5 x 3,2 x 2,5 m (só o vaso colide)
+PF.kcAPalmeiraVaso = () => prefab('kcAPalmeiraVaso', (M) => {
+  M.local(1); const R = rngOf(91);
+  M.color([0.85, 0.84, 0.82]); M.lathe('concrete', [[0, 0], [0.45, 0], [0.55, 0.7], [0.6, 0.75], [0, 0.75]], 16); M.col(-0.55, 0.55, 0, 0.75, -0.55, 0.55, 'concrete');
+  M.color([0.45, 0.34, 0.22]); M.tube('wood', 0.08, [[0, 0.7, 0], [0.1, 1.8, 0.05], [0.05, 2.6, 0]], 8);
+  M.cls = 1; for (let i = 0; i < 9; i++) { const a = (i / 9) * TAU + R.range(-0.2, 0.2); M.color(R() < 0.3 ? [0.2, 0.42, 0.18] : [0.28, 0.52, 0.22]); M.save().move(0.05, 2.6, 0).rotY(a).rotX(R.range(0.7, 1.2)); M.boxB('canvas', -0.12, 0.12, 0, 1.3, -0.006, 0.006); M.save().move(0, 1.3, 0).rotX(0.6); M.boxB('canvas', -0.1, 0.1, 0, 0.6, -0.006, 0.006); M.restore(); M.restore(); } M.cls = 0;
+});
+// floreira comprida com arbustos, 3 x 1,1 x 0,7 m (cobre agachado)
+PF.kcAFloreira = () => prefab('kcAFloreira', (M) => {
+  M.local(1); const R = rngOf(73);
+  M.color([0.35, 0.36, 0.38]); M.boxB('concrete', -1.5, 1.5, 0, 0.6, -0.35, 0.35, { bevel: 0.03 }); M.col(-1.5, 1.5, 0, 0.6, -0.35, 0.35, 'concrete');
+  M.color([0.3, 0.22, 0.15]); M.boxB('canvas', -1.42, 1.42, 0.56, 0.6, -0.28, 0.28);
+  M.cls = 1; for (let x = -1.2; x <= 1.2; x += 0.4) { M.color(R() < 0.5 ? [0.22, 0.45, 0.18] : [0.3, 0.55, 0.22]); const r = R.range(0.25, 0.35); M.save().move(x, 0.55, R.range(-0.08, 0.08)); M.lathe('canvas', [[0, 0], [r, r * 0.4], [r * 0.8, r * 1.2], [0, r * 1.5]], 8); M.restore(); } M.cls = 0;
+});
+// balcão de informações em U, com o "i" em cima, 3,2 x 2,8 x 2 m
+PF.kcABalcaoInfo = () => prefab('kcABalcaoInfo', (M) => {
+  M.local(1);
+  M.color([0.95, 0.95, 0.93]);
+  for (const [x0, x1, z0, z1] of [[-1.6, 1.6, 0.5, 1.0], [-1.6, -1.1, -1.0, 0.5], [1.1, 1.6, -1.0, 0.5]]) { M.boxB('paint', x0, x1, 0, 1.05, z0, z1, { bevel: 0.03 }); M.col(x0, x1, 0, 1.1, z0, z1, 'wood'); }
+  M.color([0.15, 0.35, 0.7]); M.boxB('paint', -1.62, 1.62, 1.05, 1.1, 0.48, 1.02);
+  M.color([0.3, 0.31, 0.33]); M.boxB('steel', -0.04, 0.04, 1.1, 2.4, 0.7, 0.78);
+  M.color([0.15, 0.35, 0.7]); M.save().move(0, 2.4, 0.74).rotX(Math.PI / 2); M.cyl('paint', 0.35, 0.08, 20); M.restore();
+  M.cls = 1; M.color([0.98, 0.98, 0.96]); M.boxB('paint', -0.05, 0.05, 2.3, 2.47, 0.79, 0.8); M.boxB('paint', -0.05, 0.05, 2.52, 2.58, 0.79, 0.8); M.cls = 0;
+});
+// fila de check-in: postes de inox com fita azul em zigue-zague, 6 x 1 x 3 m (os postes colidem, a fita não)
+PF.kcAFila = () => prefab('kcAFila', (M) => {
+  M.local(1);
+  const postes = []; for (const z of [-1.5, 0, 1.5]) for (const x of [-3, -1, 1, 3]) postes.push([x, z]);
+  for (const [x, z] of postes) { M.color(KC_AE.inox); M.save().move(x, 0, z); M.cyl('steel', 0.18, 0.04, 12); M.cyl('steel', 0.035, 1.0, 8); M.restore(); M.col(x - 0.1, x + 0.1, 0, 1.0, z - 0.1, z + 0.1, 'metal'); }
+  M.color([0.15, 0.3, 0.7]); M.cls = 1;
+  for (const z of [-1.5, 0, 1.5]) { const [a, b] = z === 0 ? [-1, 3] : [-3, 1]; M.boxB('canvas', a, b, 0.88, 0.95, z - 0.01, z + 0.01); }
+  M.cls = 0;
+});
+
+// escada externa de concreto, de 0 a 4,5 m: sobe para +z de z -4 a 3,7 (7,7 m) e tem patamar de 2,4 m (z 3,7 a 6,1) na altura 4,5;
+// encoste a ponta do patamar (z 6,1) na beira do piso de cima. 2,4 m de largura, guarda-corpo dos dois lados
+PF.kcAEscadaExterna = () => prefab('kcAEscadaExterna', (M) => {
+  KC_ESCADAS.kcAEscadaExterna = []; M.local(1);
+  kcEscadaF(M, 'kcAEscadaExterna', -1.2, 1.2, -4, 3.7, 'z', 0, 4.5, [[-1.25, -4], [-1.25, 3.7]]);
+  kcPatamar(M, -1.2, 1.2, 3.7, 6.1, 4.5);
+  M.color(KC_COR.ferro); M.cls = 1; M.tube('steel', 0.025, [[1.25, 0.95, -4], [1.25, 5.45, 3.7]], 6); for (let i = 0; i <= 4; i++) { const t = i / 4, z = -4 + t * 7.7, y = t * 4.5; M.boxB('steel', 1.23, 1.27, y, y + 0.95, z - 0.02, z + 0.02); } M.cls = 0;
+  for (const s of [-1, 1]) kcGuarda(M, s * 1.22, 3.7, s * 1.22, 6.1, 4.5);
+});
+// escada rolante (parada, dá para subir) de 0 a 4,5 m, igual à externa no tamanho: degraus de alumínio, laterais de vidro e
+// corrimão preto; sobe para +z, patamar no alto (z 3,7 a 6,1)
+PF.kcAEscadaRolante = () => prefab('kcAEscadaRolante', (M) => {
+  KC_ESCADAS.kcAEscadaRolante = []; M.local(1);
+  KC_ESCADAS.kcAEscadaRolante.push({ x0: -1.2, x1: 1.2, z0: -4, z1: 3.7, axis: 'z', h0: 0, h1: 4.5 });
+  // corpo maciço por baixo (lateral cinza) e degraus de alumínio
+  const n = 23, dh = 4.5 / n;
+  for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n, top = (t0 + t1) / 2 * 4.5 + dh / 2, za = -4 + t0 * 7.7, zb = -4 + t1 * 7.7; M.color([0.45, 0.47, 0.5]); M.boxB('steel', -1.3, 1.3, 0, top - 0.04, za, zb); M.color([0.75, 0.77, 0.8]); M.boxB('steel', -1.1, 1.1, top - 0.04, top, za, zb); }
+  M.color([0.95, 0.75, 0.1]); M.cls = 1; for (const s of [-1, 1]) M.tube('paint', 0.015, [[s * 1.08, 0.02, -4], [s * 1.08, 4.52, 3.7]], 4); M.cls = 0;
+  // laterais de vidro e corrimão
+  for (const s of [-1, 1]) {
+    const x = s * 1.25; M.color(KC_AE.vidro); M.cls = 1;
+    for (let i = 0; i < 8; i++) { const t = i / 8, t2 = (i + 1) / 8, z0 = -4 + t * 7.7, z1 = -4 + t2 * 7.7, y = ((t + t2) / 2) * 4.5; M.boxB('glass', x - 0.02, x + 0.02, y + 0.1, y + 1.0, z0, z1); }
+    M.color([0.08, 0.08, 0.09]); M.tube('rubber', 0.04, [[x, 1.0, -4.6], [x, 1.0, -4], [x, 5.5, 3.7], [x, 5.5, 4.3]], 6); M.cls = 0;
+  }
+  kcPatamar(M, -1.3, 1.3, 3.7, 6.1, 4.5);
+  for (const s of [-1, 1]) kcGuarda(M, s * 1.27, 3.7, s * 1.27, 6.1, 4.5);
+  M.color([0.45, 0.47, 0.5]); M.boxB('steel', -1.3, 1.3, 0, 0.05, -4.8, -4); // pente da entrada
+});

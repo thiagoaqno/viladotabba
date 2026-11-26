@@ -340,6 +340,18 @@ if (IATE_ATIVO) {
     "const[x,z]=S[k];let id=navNode(x,gy0(x,z),z),y0=gy0(x,z);if(id<0){y0=spawnChao(x,z);id=navNode(x,y0,z);}const p=id>=0?new V3(NAV.nx[id],NAV.ny[id],NAV.nz[id]):new V3(x,y0,z);", { nome: "nascer no piso alto (largada)" });
   h = troca(h, "function spawnSpot(e,x,z,C){const id0=navNode(x,gy0(x,z),z);if(id0<0)return new V3(x,gy0(x,z),z);",
     "function spawnSpot(e,x,z,C){let id0=navNode(x,gy0(x,z),z);if(id0<0){const yc=spawnChao(x,z);id0=navNode(x,yc,z);if(id0<0)return new V3(x,yc,z);}", { nome: "nascer no piso alto (renascer)" });
+  // (2026-11-26, tablet de 120 Hz) parado dava 120 fps e andando cravava em 60. Andando, as três camadas da sombra do sol se
+  // redesenham todo quadro (parado, só a de perto); o quadro passa de 8,3 ms e a tela cai para a metade, 60. E a qualidade
+  // automática mirava 60 fps (FRAME_BUDGET), então achava 60 ótimo e não baixava nada. Agora: nos aparelhos de toque com tela
+  // rápida, a meta é a taxa da tela (a menor medida, para não esquecer depois de cair a 60); ela baixa a resolução até 70% do
+  // degrau atual e, se nem assim chega, desiste e volta a mirar 60 (sem trocar o degrau de qualidade por isso). E, em tela rápida,
+  // as duas camadas de longe se revezam quando a câmera mexe: no máximo duas sombras por quadro em vez de três
+  h = troca(h, "function frameBudget(){return Math.max(FRAME_BUDGET,capMs());}",
+    "const HR={off:false,ms:Infinity};function hrAlvo(){if(VSYNC.ms>=6&&VSYNC.ms<HR.ms)HR.ms=VSYNC.ms;return COARSE&&!HR.off&&!Settings.eco&&HR.ms<12?HR.ms:0;}\nfunction frameBudget(){const a=hrAlvo();return Math.max(a||FRAME_BUDGET,capMs());}", { nome: "fps da tela rápida (meta)" });
+  h = troca(h, "function stepQuality(dir,step=0.05){",
+    "function stepQuality(dir,step=0.05){if(dir<0&&hrAlvo()&&!capMs()){const fix=!!QUALITY[gfxSet('quality')],lo=Math.max(0.7,fix?RQ.q.scaleMin:GFX_SAFE?1:AUTO_LADDER[RQ.rung][1]);if(RQ.scale<=lo+1e-6){HR.off=true;gpuLog(`tela de ${Math.round(1000/HR.ms)} Hz: nem com a resolução em ${Math.round(RQ.scale*100)}% chegou, volta a mirar 60 fps`);return'wait';}}", { nome: "fps da tela rápida (desistir)" });
+  h = troca(h, "const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||moved;",
+    "const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||(moved&&(i===0||!(VSYNC.ms>0&&VSYNC.ms<12)||(S.frame+i)%2===0));", { nome: "sombras se revezam em tela rápida" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

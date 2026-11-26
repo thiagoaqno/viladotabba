@@ -267,6 +267,9 @@ if (IATE_ATIVO) {
 {
   const camos = fs.readFileSync(path.join(__dirname, "tiro-camos", "camuflagens.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => camos + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "camuflagens novas" });
+  // (2026-11-26, o Thiago: o bloom do Holo ficou forte demais) o brilho próprio das camuflagens (Holo, Cromado, e a faca Holo)
+  // entra com 30% da força: as faixas, o liseré e as paillettes continuam, sem estourar o bloom
+  h = troca(h, "totalEmissiveRadiance += camoGlow;", "totalEmissiveRadiance += camoGlow * 0.3;", { nome: "brilho das camuflagens" });
   // skins da faca (faca.js): usam as telas das camuflagens, entram depois delas
   const faca = fs.readFileSync(path.join(__dirname, "tiro-camos", "faca.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => faca + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "skins da faca" });

@@ -6197,7 +6197,7 @@ ${HOLO_GLSL}`).replace('#include <map_fragment>',`#include <map_fragment>
       float spark = step(0.97, hs) * smoothstep(0.42, 0.1, length(cf)) * pow(max(0.0, sin(hs * 91.0 + dot(hR, vec3(23.0, 31.0, 17.0)) + uCamoT * 1.5)), 12.0) * uHoloFx;
       camoGlow = (hc + 0.12) * (0.06 + rim * rim * rim * 0.55 + band * 1.7) + vec3(spark * 3.5);
     } else diffuseColor.rgb = pow(cc, vec3(2.2)) * 0.74;
-  }`).replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n  totalEmissiveRadiance += camoGlow;');if(m.userData.gunU)gunSurfPatch(shader,m.userData.gunU);};const key=m.userData.gunU?'camo-usure':'camo';m.customProgramCacheKey=()=>key;m.userData.camo=id;return m;}
+  }`).replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n  totalEmissiveRadiance += camoGlow * 0.3;');if(m.userData.gunU)gunSurfPatch(shader,m.userData.gunU);};const key=m.userData.gunU?'camo-usure':'camo';m.customProgramCacheKey=()=>key;m.userData.camo=id;return m;}
 function camoMaterials(id){const M=gunMaterials();if(!id)return M;if(!CAMO_MATS[id]){const C=CAMOS[id],o={};for(const k of['metal','steel','poly','olive','tan','wood','woodR','woodB','taupe','gray','blued','polyM','fde','drab']){const m=M[k].clone();m.color.set(0xffffff);const met=k==='metal'||k==='steel';m.metalness=C.metal!=null?C.metal:met?0.4:0.08;m.roughness=C.rough!=null?C.rough:met?0.5:0.66;o[k]=camoPatch(gunWear(m,'camo'),id);}
 CAMO_MATS[id]=Object.assign(Object.create(M),o);}
 return CAMO_MATS[id];}

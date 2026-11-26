@@ -2696,7 +2696,7 @@ return null;}
 function waterCalm(x,z){const F=WATER.F;if(!F)return 1;const i=Math.floor((x-F.x0)*F.ppm),j=Math.floor((z-F.z0)*F.ppm);if(i<0||j<0||i>=F.w||j>=F.h)return 1;return lerp(0.35,1,smoothstep(0.5,8,WATER.dist[j*F.w+i]));}
 function waterHeight(x,z,t){const calm=waterCalm(x,z),open=1-smoothstep(WATER.open[0],WATER.open[1],x);let h=0;for(const w of WAVES_C){const a=w.A*(w.g?open:calm);if(a<1e-4)continue;h+=a*Math.sin(w.k*(w.dx*x+w.dz*z)-w.w*t+w.ph);}
 return h;}
-function waterField(){const W=WATER,F={x0:-144,z0:-128,ppm:2,w:256,h:512},N=F.w*F.h;const id=new Int16Array(N).fill(-1),sx=new Int16Array(N).fill(-1),sz=new Int16Array(N).fill(-1);W.obs.forEach((o,k)=>{const P=o.poly;let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const[x,z]of P){x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z);}
+function waterField(){const W=WATER,F=(CURMAP.def&&CURMAP.def.mar?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512}),N=F.w*F.h;const id=new Int16Array(N).fill(-1),sx=new Int16Array(N).fill(-1),sz=new Int16Array(N).fill(-1);W.obs.forEach((o,k)=>{const P=o.poly;let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const[x,z]of P){x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z);}
 const i0=Math.max(0,Math.floor((x0-F.x0)*F.ppm)),i1=Math.min(F.w-1,Math.ceil((x1-F.x0)*F.ppm));const j0=Math.max(0,Math.floor((z0-F.z0)*F.ppm)),j1=Math.min(F.h-1,Math.ceil((z1-F.z0)*F.ppm));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=F.x0+(i+0.5)/F.ppm,z=F.z0+(j+0.5)/F.ppm;let inside=false;for(let a=0,b=P.length-1;a<P.length;b=a++){if((P[a][1]>z)!==(P[b][1]>z)&&x<((P[b][0]-P[a][0])*(z-P[a][1]))/(P[b][1]-P[a][1])+P[a][0])inside=!inside;}
 if(inside){const c=j*F.w+i;id[c]=k;sx[c]=i;sz[c]=j;}}});const d2=(c,i,j)=>(sx[c]<0?1e9:(sx[c]-i)**2+(sz[c]-j)**2);const take=(c,n,i,j)=>{if(sx[n]>=0&&d2(n,i,j)<d2(c,i,j)){sx[c]=sx[n];sz[c]=sz[n];id[c]=id[n];}};for(let j=0;j<F.h;j++){for(let i=0;i<F.w;i++){const c=j*F.w+i;if(i>0)take(c,c-1,i,j);if(j>0){take(c,c-F.w,i,j);if(i>0)take(c,c-F.w-1,i,j);if(i<F.w-1)take(c,c-F.w+1,i,j);}}
 for(let i=F.w-2;i>=0;i--){const c=j*F.w+i;take(c,c+1,i,j);}}
@@ -9254,6 +9254,485 @@ function facaAbrir() {
   const rows = OPT_TABS[0][1], i = rows.findIndex((r) => r[0] === 'head' && r[1] === _t('Interface'));
   rows.splice(i < 0 ? rows.length : i + 1, 0, ['button', 'Skins da faca', () => facaAbrir()]);
 }
+
+const TIRO_MAPAS_JSON = [];
+/* ==========================================================================
+   MAPAS DO EDITOR (Tiro da Galera, 2026-11-26). Um mapa feito no editor (?editor=1) é um .json em ferramentas/tiro-mapas/editor/;
+   o tiro-frontline.js junta todos em TIRO_MAPAS_JSON e este arquivo transforma cada um num mapa do jogo (MAP_DEFS, MAPS).
+   Formato (guia completo em docs/tiro-editor-de-mapas.md):
+   { id, nome, tag, desc, ceu: id de um mapa do jogo (céu e luz dele), mar: { y } ou null,
+     pecas: [ { t: 'caixa'|'escada'|'prefab'|'prop'|'luz', p: [x, y, z] (centro embaixo), s: [larg, alt, prof], r: graus, ... } ],
+     nascer: [[x, z], ...] (time Alpha; o Bravo nasce espelhado em -z), dom: [[x, z] x 3], mecha: [[x, z] x 3], poi: [[x, y, z]] }
+   Mapa sem chão: só existe o que foi colocado (quem cai, morre). As apariçoes usam o chão em y = 0 perto delas.
+   ========================================================================== */
+const TIRO_TEX = ['wood', 'steel', 'canvas', 'concrete', 'plaster', 'stone', 'timber', 'paintwood', 'pavers'];
+// caixa girada só de 90 em 90 graus (as colisões do jogo são alinhadas aos eixos)
+function edCaixaBox(P) {
+  const [x, y, z] = P.p, q = (((Math.round((P.r || 0) / 90) % 4) + 4) % 4), [w0, h, d0] = P.s || [1, 1, 1];
+  const w = q % 2 ? d0 : w0, d = q % 2 ? w0 : d0;
+  return { x0: x - w / 2, x1: x + w / 2, y0: y, y1: y + h, z0: z - d / 2, z1: z + d / 2, q };
+}
+// escada: sobe para +z quando r = 0 (90: +x, 180: -z, 270: -x); rampa por onde se anda e degraus que se veem
+function edEscada(P) {
+  const B = edCaixaBox(P), q = B.q, axis = q % 2 ? 'x' : 'z', sobe = q === 0 || q === 1, h = (P.s || [1, 1, 1])[1];
+  const lo = B.y0, hi = B.y1, a0 = axis === 'z' ? B.z0 : B.x0, a1 = axis === 'z' ? B.z1 : B.x1;
+  RAMPS.push({ x0: B.x0, x1: B.x1, z0: B.z0, z1: B.z1, axis, h0: sobe ? lo : hi, h1: sobe ? hi : lo });
+  const n = Math.max(2, Math.round(h / 0.2)), dh = h / n, key = P.m || 'wood', tint = P.cor || [0.66, 0.46, 0.3];
+  for (let i = 0; i < n; i++) {
+    const t0 = i / n, t1 = (i + 1) / n, top = lo + dh * (i + 1);
+    const s0 = sobe ? lerp(a0, a1, t0) : lerp(a1, a0, t1), s1 = sobe ? lerp(a0, a1, t1) : lerp(a1, a0, t0);
+    const bx = axis === 'z' ? [B.x0, B.x1, Math.min(s0, s1), Math.max(s0, s1)] : [Math.min(s0, s1), Math.max(s0, s1), B.z0, B.z1];
+    DECOR.col(bx[0], bx[1], lo, top, bx[2], bx[3], 'wood', true);
+    box(key, bx[0], bx[1], lo, top, bx[2], bx[3], { collide: false, tint });
+  }
+}
+function edLimites(J) {
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, z0 = 1e9, z1 = -1e9;
+  for (const P of J.pecas || []) {
+    const B = P.t === 'caixa' || P.t === 'escada' ? edCaixaBox(P) : { x0: P.p[0] - 1, x1: P.p[0] + 1, y0: P.p[1], z0: P.p[2] - 1, z1: P.p[2] + 1 };
+    x0 = Math.min(x0, B.x0); x1 = Math.max(x1, B.x1); y0 = Math.min(y0, B.y0); z0 = Math.min(z0, B.z0); z1 = Math.max(z1, B.z1);
+  }
+  for (const [x, z] of (J.nascer || [])) { x0 = Math.min(x0, x - 2); x1 = Math.max(x1, x + 2); z0 = Math.min(z0, -Math.abs(z) - 2); z1 = Math.max(z1, Math.abs(z) + 2); }
+  if (x0 > x1) { x0 = -20; x1 = 20; z0 = -20; z1 = 20; y0 = 0; }
+  return { x0: Math.floor(x0 - 1), x1: Math.ceil(x1 + 1), y0, z0: Math.floor(z0 - 1), z1: Math.ceil(z1 + 1) };
+}
+// pontos de interesse dos bots: os do editor, ou o topo de cada chão grande, os pontos de dominação e o meio de cada time
+function edPois(J, L) {
+  if (J.poi && J.poi.length) return J.poi.map(([x, y, z]) => [x, y, z, x < L.x0 + (L.x1 - L.x0) / 3 ? 'L' : x > L.x1 - (L.x1 - L.x0) / 3 ? 'E' : 'M']);
+  const out = [], lane = (x) => (x < L.x0 + (L.x1 - L.x0) / 3 ? 'L' : x > L.x1 - (L.x1 - L.x0) / 3 ? 'E' : 'M');
+  for (const P of J.pecas || []) if (P.t === 'caixa' && P.col !== false) { const B = edCaixaBox(P); if (B.x1 - B.x0 >= 2.5 && B.z1 - B.z0 >= 2.5 && B.y1 < 9) out.push([(B.x0 + B.x1) / 2, B.y1, (B.z0 + B.z1) / 2, lane((B.x0 + B.x1) / 2)]); }
+  for (const [x, z] of (J.dom || [])) out.push([x, 0, z, lane(x)]);
+  for (const [x, z] of (J.nascer || []).slice(0, 2)) { out.push([x, 0, z, lane(x)]); out.push([x, 0, -z, lane(x)]); }
+  return out;
+}
+// mar em volta (como o do iate): grade de água fina perto, larga longe; o campo de espuma fica centrado (troca no tiro-frontline.js)
+function edMarGeometry() {
+  const W = WATER, side = (fine) => { const out = [0]; for (let v = 0, s = 0.8; v < 900;) { if (v > fine) s = Math.min(s * 1.07, 45); v = Math.min(900, v + s); out.push(v); } return out.slice(1).map((v) => -v).reverse().concat(out); };
+  const xs = side(30), zs = side(70), nx = xs.length, nz = zs.length;
+  const P = new Float32Array(nx * nz * 3), idx = new Uint32Array((nx - 1) * (nz - 1) * 6);
+  for (let j = 0, o = 0; j < nz; j++) for (let i = 0; i < nx; i++, o += 3) { P[o] = xs[i]; P[o + 1] = W.y; P[o + 2] = zs[j]; }
+  let k = 0;
+  for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx[k++] = a; idx[k++] = c; idx[k++] = b; idx[k++] = b; idx[k++] = c; idx[k++] = d; }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(P, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(nx * nz * 3).fill(0), 3));
+  g.setIndex(new THREE.BufferAttribute(idx, 1)); g.computeBoundingSphere();
+  return g;
+}
+{ const orig = waterGeometry; waterGeometry = function () { return CURMAP.def && CURMAP.def.mar ? edMarGeometry() : orig(); }; }
+
+// monta as peças (também usado pelo botão "Jogar" do editor)
+function edConstruir(J) {
+  for (const P of J.pecas || []) {
+    try {
+      const [x, y, z] = P.p, ry = ((P.r || 0) * Math.PI) / 180;
+      if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false }); }
+      else if (P.t === 'escada') edEscada(P);
+      else if (P.t === 'prefab' && PF[P.nome]) DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined);
+      else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
+      else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
+    } catch (e) { console.warn('peça do mapa', P, e); }
+  }
+}
+function tiroMapaRegistrar(J) {
+  const base = MAP_DEFS[J.ceu] || MAP_DEFS.meltem || Object.values(MAP_DEFS)[0], L = edLimites(J), mar = J.mar && typeof J.mar.y === 'number' ? J.mar : null;
+  const sx = L.x1 - L.x0, sz = L.z1 - L.z0, raio = Math.max(sx, sz) / 2;
+  const dom = J.dom && J.dom.length === 3 ? J.dom : null;
+  MAP_DEFS[J.id] = {
+    type: J.tipo || 'mid', mar: !!mar, editor: true,
+    void: { kill: Math.min(L.y0, mar ? mar.y : L.y0) - 1.5 },
+    bounds: { x0: L.x0, x1: L.x1, z0: L.z0, z1: L.z1 },
+    textures: TIRO_TEX, surfaces: mar ? ['ripple'] : [],
+    sound: mar ? { pack: 'amb_embruns', bed: 0.5, water: () => 0, loops: [[L.x0, -4, 0], [L.x1, -4, 0]].map((p) => ({ id: 'a_waves', p, gain: 0.4, ref: 6, roll: 1.3, max: 120 })), spots: [] }
+      : { pack: base.sound && base.sound.pack, bed: 0.5, loops: [], spots: [] },
+    materials: () => {},
+    art: { cam: [L.x0 - 8, 10, L.z1 + 8], look: [0, 1, 0], fov: 55 },
+    splat: { x0: -128, z0: -128, w: 256, d: 256, ppm: 2 }, far: 600,
+    build() { if (mar) waterSetup({ y: mar.y, box: [-2000, 2000, -2000, 2000], open: [-260, -120], east: 900 }); edConstruir(J); if (mar) waterLand(L.x0, L.x1, L.z0, L.z1); },
+    after: mar ? () => waterBuild({ deep: [0.0, 0.03, 0.1], shallow: [0.0, 0.08, 0.14], scatter: [0.01, 0.07, 0.11], foam: [0.85, 0.88, 0.88], refl: 1.0, caus: 0, foamK: 0.6 }) : undefined,
+    ready: mar ? () => waterReady({ from: [L.x0 - 30, mar.y + 2.5, 0] }) : undefined,
+    spawns: (J.nascer && J.nascer.length ? J.nascer : [[0, Math.max(4, L.z1 - 4)]]).map(([x, z]) => [x, z]),
+    poi: edPois(J, L),
+    dom, mecha: J.mecha && J.mecha.length === 3 ? J.mecha : dom,
+    lane: (x) => (x < L.x0 + sx / 3 ? 'L' : x > L.x1 - sx / 3 ? 'E' : 'M'),
+    sniper: J.sniper || [0, 3, 0], coverZ: Math.max(8, L.z1 - 4), heli: [Math.max(20, raio), 50], cam: Math.max(30, raio * 1.1),
+    surface: () => J.som || 'wood',
+    zones: J.zonas && J.zonas.length ? J.zonas : [[J.nome || J.id, L.x0, L.x1, L.z0, L.z1]],
+    atmo: base.atmo,
+  };
+  const ja = MAPS.find((m) => m.id === J.id), info = { id: J.id, name: J.nome || J.id, tag: J.tag || 'Mapa do editor', ok: true, desc: J.desc || '' };
+  if (ja) Object.assign(ja, info); else MAPS.push(info);
+  if (J.capa) MAP_ART[J.id] = J.capa;
+  return MAP_DEFS[J.id];
+}
+for (const J of (typeof TIRO_MAPAS_JSON !== 'undefined' ? TIRO_MAPAS_JSON : [])) { try { tiroMapaRegistrar(J); } catch (e) { console.error('mapa do editor', J && J.id, e); } }
+
+/* ==========================================================================
+   EDITOR DE MAPAS DO TIRO (2026-11-26, pedido do Thiago: "um desenvolvedor de mapas parecido com o TabbaTracks").
+   Abre com /tiro/?editor=1 por cima do jogo, com uma cena 3D própria (o mapa de verdade só se monta no "Jogar"):
+   - câmera livre: botão direito arrastado olha, WASD anda, Q/E desce e sobe, Shift corre, roda do mouse muda a velocidade;
+   - catálogo à esquerda: peças básicas (chão, parede, caixa, escada, luz), marcadores (nascer, pontos A/B/C, mecha) e todos
+     os prefabs e objetos do jogo, desenhados de verdade (a malha do prefab, com as cores dele);
+   - clique coloca a peça escolhida (Esc para de colocar); clique numa peça seleciona; arrastar move;
+     setas e PageUp/PageDown empurram 25 cm (Shift: 1 m); R gira 90° (Shift+R: 15°, só prefab e objeto);
+     Delete apaga; Ctrl+D duplica; Ctrl+Z desfaz; F centraliza a câmera na peça;
+   - painel à direita: posição, tamanho, giro, matéria, cor e colisão da peça selecionada;
+   - Salvar grava em ferramentas/tiro-mapas/editor/<id>.json pelo servidor do PC ("Editor de mapas do Tiro.bat"); no site, Baixar;
+   - Jogar monta o mapa de verdade (mapa-json.js) e começa uma partida solo com bots. O rascunho fica guardado neste navegador.
+   ========================================================================== */
+const ED = { on: false, J: null, items: [], sel: null, tpl: null, ghost: null, hist: [], cam: { x: 0, y: 14, z: 30, yaw: 0, pitch: -0.45, v: 10 }, keys: new Set(), pf: new Map(), drag: null, snap: 0.25 };
+const ED_MATS = ['paint', 'wood', 'steel', 'concrete', 'plaster', 'stone', 'timber', 'paintwood', 'pavers', 'tiles', 'canvas', 'carpaint', 'glass', 'rug', 'plastic', 'rubber', 'dark'];
+const ED_BASICO = [
+  { rot: 'Chão 4 x 4 (madeira)', P: { t: 'caixa', s: [4, 0.3, 4], m: 'wood', cor: [0.66, 0.46, 0.3] }, oy: -0.3 },
+  { rot: 'Chão 8 x 8 (concreto)', P: { t: 'caixa', s: [8, 0.3, 8], m: 'concrete', cor: [0.75, 0.74, 0.72] }, oy: -0.3 },
+  { rot: 'Parede 4 x 3', P: { t: 'caixa', s: [4, 3, 0.2], m: 'paint', cor: [0.95, 0.95, 0.94] } },
+  { rot: 'Mureta 2 x 1 (cover baixo)', P: { t: 'caixa', s: [2, 1.05, 0.3], m: 'paint', cor: [0.9, 0.9, 0.9] } },
+  { rot: 'Bloco 1 x 2 x 1 (cover alto)', P: { t: 'caixa', s: [1, 2, 1], m: 'steel', cor: [0.25, 0.27, 0.3] } },
+  { rot: 'Coluna', P: { t: 'caixa', s: [0.5, 3, 0.5], m: 'paint', cor: [0.95, 0.95, 0.94] } },
+  { rot: 'Teto / laje 4 x 4', P: { t: 'caixa', s: [4, 0.3, 4], m: 'paint', cor: [0.95, 0.95, 0.94] } },
+  { rot: 'Parede invisível 4 x 4', P: { t: 'caixa', s: [4, 4, 0.1], m: 'glass', cor: [0.6, 0.8, 1], col: true, inv: true } },
+  { rot: 'Escada (sobe 1,5 m)', P: { t: 'escada', s: [2, 1.5, 3], m: 'wood', cor: [0.66, 0.46, 0.3] } },
+  { rot: 'Escada (sobe 3 m)', P: { t: 'escada', s: [2, 3, 5.5], m: 'wood', cor: [0.66, 0.46, 0.3] } },
+  { rot: 'Luz', P: { t: 'luz', forca: 1.4, raio: 7, cor: [1, 0.85, 0.65] } },
+  { rot: '▲ Nascer (time Alpha)', P: { t: 'nascer' } },
+  { rot: '◆ Ponto de dominação', P: { t: 'dom' } },
+  { rot: '■ Queda do mecha', P: { t: 'mecha' } },
+];
+const edEl = (tag, css, html) => { const e = document.createElement(tag); if (css) e.style.cssText = css; if (html != null) e.innerHTML = html; return e; };
+const edSnap = (v, s = ED.snap) => Math.round(v / s) * s;
+const edClone = (o) => JSON.parse(JSON.stringify(o));
+
+/* ---------- modelo: o .json <-> as peças da cena ---------- */
+function edDoJson(J) {
+  const pecas = (J.pecas || []).map(edClone);
+  for (const [x, z] of J.nascer || []) pecas.push({ t: 'nascer', p: [x, 0, z] });
+  for (const [x, z] of J.dom || []) pecas.push({ t: 'dom', p: [x, 0, z] });
+  for (const [x, z] of J.mecha || []) pecas.push({ t: 'mecha', p: [x, 0, z] });
+  return { meta: { id: J.id, nome: J.nome || J.id, ceu: J.ceu || 'meltem', mar: J.mar || null, tag: J.tag || '', desc: J.desc || '' }, pecas };
+}
+function edParaJson() {
+  const m = ED.J.meta, pecas = [], nascer = [], dom = [], mecha = [];
+  for (const P of ED.J.pecas) {
+    const xz = [+P.p[0].toFixed(2), +P.p[2].toFixed(2)];
+    if (P.t === 'nascer') nascer.push(xz); else if (P.t === 'dom') dom.push(xz); else if (P.t === 'mecha') mecha.push(xz);
+    else { const Q = edClone(P); Q.p = Q.p.map((v) => +v.toFixed(3)); if (Q.s) Q.s = Q.s.map((v) => +v.toFixed(3)); pecas.push(Q); }
+  }
+  return { id: m.id, nome: m.nome, tag: m.tag || undefined, desc: m.desc || undefined, ceu: m.ceu, mar: m.mar, pecas, nascer, dom: dom.slice(0, 3), mecha: mecha.slice(0, 3) };
+}
+function edNovo(nome = 'Mapa novo') {
+  return { meta: { id: edIdDe(nome), nome, ceu: 'meltem', mar: null, tag: '', desc: '' },
+    pecas: [{ t: 'caixa', p: [0, -0.3, 0], s: [16, 0.3, 40], m: 'concrete', cor: [0.75, 0.74, 0.72] }, ...[[-3, 16], [0, 16], [3, 16], [-1.5, 18], [1.5, 18]].map(([x, z]) => ({ t: 'nascer', p: [x, 0, z] }))] };
+}
+function edIdDe(nome) {
+  let id = String(nome).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'mapa';
+  if (MAP_DEFS[id] && !MAP_DEFS[id].editor) id += '-ed';
+  return id;
+}
+const edGuardar = () => { try { localStorage.setItem('tiro_editor_rascunho', JSON.stringify(edParaJson())); } catch (e) { /* sem espaço */ } };
+function edMudou(semHist) { if (!semHist) { ED.hist.push(JSON.stringify(ED.J)); if (ED.hist.length > 80) ED.hist.shift(); } edGuardar(); edRedesenhar(); edPainel(); }
+function edAntes() { ED.hist.push(JSON.stringify(ED.J)); if (ED.hist.length > 80) ED.hist.shift(); }
+
+/* ---------- malhas da cena do editor ---------- */
+function edPrefabGrupo(key, fazer) {
+  if (!ED.pf.has(key)) {
+    let g = null;
+    try {
+      const p = fazer(); g = new THREE.Group();
+      for (const part of p.parts.values()) {
+        const b = part.g; if (!b.ni) continue;
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(b.P.slice(0, b.nv * 3), 3));
+        geo.setAttribute('normal', new THREE.BufferAttribute(b.N.slice(0, b.nv * 3), 3));
+        geo.setAttribute('color', new THREE.BufferAttribute(b.C.slice(0, b.nv * 3), 3));
+        geo.setIndex(new THREE.BufferAttribute(b.I.slice(0, b.ni), 1));
+        g.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0.05 })));
+      }
+      if (!g.children.length) g = null;
+    } catch (e) { g = null; }
+    ED.pf.set(key, g);
+  }
+  const g = ED.pf.get(key); return g ? g.clone() : null;
+}
+const edCorHex = (c) => new THREE.Color().setRGB(c[0], c[1], c[2]);
+function edMalha(P) {
+  let o;
+  if (P.t === 'caixa') {
+    const B = edCaixaBox(P), m = new THREE.MeshStandardMaterial({ color: edCorHex(P.cor || [0.9, 0.9, 0.9]), roughness: 0.8, transparent: P.inv || P.col === false, opacity: P.inv ? 0.25 : P.col === false ? 0.6 : 1 });
+    o = new THREE.Mesh(new THREE.BoxGeometry(B.x1 - B.x0, B.y1 - B.y0, B.z1 - B.z0), m); o.position.set((B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2, (B.z0 + B.z1) / 2);
+    return o;
+  }
+  if (P.t === 'escada') {
+    const B = edCaixaBox(P), q = B.q, axis = q % 2 ? 'x' : 'z', sobe = q < 2, h = B.y1 - B.y0, n = Math.max(2, Math.round(h / 0.2)), dh = h / n;
+    o = new THREE.Group(); const mat = new THREE.MeshStandardMaterial({ color: edCorHex(P.cor || [0.66, 0.46, 0.3]), roughness: 0.8 });
+    const a0 = axis === 'z' ? B.z0 : B.x0, a1 = axis === 'z' ? B.z1 : B.x1;
+    for (let i = 0; i < n; i++) {
+      const t0 = i / n, t1 = (i + 1) / n, top = dh * (i + 1), s0 = sobe ? lerp(a0, a1, t0) : lerp(a1, a0, t1), s1 = sobe ? lerp(a0, a1, t1) : lerp(a1, a0, t0);
+      const w = axis === 'z' ? B.x1 - B.x0 : Math.abs(s1 - s0), d = axis === 'z' ? Math.abs(s1 - s0) : B.z1 - B.z0;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, top, d), mat);
+      m.position.set(axis === 'z' ? (B.x0 + B.x1) / 2 : (s0 + s1) / 2, B.y0 + top / 2, axis === 'z' ? (s0 + s1) / 2 : (B.z0 + B.z1) / 2); o.add(m);
+    }
+    return o;
+  }
+  const marcador = (cor, r, h, forma) => { const g = new THREE.Group(); const m = new THREE.Mesh(forma === 'cone' ? new THREE.ConeGeometry(r, h, 12) : new THREE.CylinderGeometry(r, r, h, 16), new THREE.MeshBasicMaterial({ color: cor, transparent: true, opacity: 0.75 })); m.position.y = h / 2; g.add(m); return g; };
+  if (P.t === 'nascer') { o = marcador(0x3a8dde, 0.35, 1.8, 'cone'); const b = marcador(0xd84a3a, 0.35, 1.8, 'cone'); b.position.set(0, 0, -2 * P.p[2]); b.children[0].material.opacity = 0.35; o.add(b); }
+  else if (P.t === 'dom') o = marcador(0x3ad86a, 2.0, 0.12);
+  else if (P.t === 'mecha') o = marcador(0xf0a030, 1.4, 0.3);
+  else if (P.t === 'luz') { o = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffd880 })); o.add(new THREE.PointLight(0xffd8a0, 1.2, P.raio || 7)); }
+  else if (P.t === 'prefab') o = edPrefabGrupo('pf:' + P.nome + JSON.stringify(P.a || []), () => PF[P.nome](...(P.a || [])));
+  else if (P.t === 'prop') o = edPrefabGrupo('prop:' + P.nome + JSON.stringify(P.a || []), () => propDef(P.nome, P.a || []).pf());
+  if (!o) o = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xff00ff, wireframe: true }));
+  o.position.set(P.p[0], P.p[1], P.p[2]); if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') o.rotation.y = ((P.r || 0) * Math.PI) / 180;
+  if (P.e) o.scale.setScalar(P.e);
+  return o;
+}
+function edRedesenhar() {
+  for (const it of ED.items) ED.scene.remove(it.o);
+  ED.items = ED.J.pecas.map((P) => { const o = edMalha(P); o.traverse((c) => { c.userData.P = P; }); ED.scene.add(o); return { P, o }; });
+  if (ED.box) { ED.scene.remove(ED.box); ED.box = null; }
+  const it = ED.items.find((i) => i.P === ED.sel);
+  if (it) { ED.box = new THREE.BoxHelper(it.o, 0xffcc33); ED.scene.add(ED.box); }
+  if (ED.mar) ED.mar.visible = !!ED.J.meta.mar; if (ED.mar && ED.J.meta.mar) ED.mar.position.y = ED.J.meta.mar.y;
+}
+
+/* ---------- interface ---------- */
+function edAbrir() {
+  if (ED.on) return; ED.on = true;
+  const root = edEl('div', 'position:fixed;inset:0;z-index:2147483647;background:#111;font:13px system-ui,sans-serif;color:#e8e6e1;user-select:none'); root.id = 'edRoot';
+  const cv = edEl('canvas', 'position:absolute;inset:0;width:100%;height:100%;display:block'); root.appendChild(cv);
+  const bar = edEl('div', 'position:absolute;left:0;right:0;top:0;height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;background:#1b1d20ee;border-bottom:1px solid #333');
+  const esq = edEl('div', 'position:absolute;left:0;top:42px;bottom:26px;width:250px;background:#17191cee;border-right:1px solid #333;display:flex;flex-direction:column');
+  const dir = edEl('div', 'position:absolute;right:0;top:42px;width:260px;max-height:calc(100% - 68px);overflow:auto;background:#17191cee;border-left:1px solid #333;padding:10px;box-sizing:border-box');
+  const ajuda = edEl('div', 'position:absolute;left:0;right:0;bottom:0;height:26px;line-height:26px;padding:0 10px;background:#1b1d20ee;border-top:1px solid #333;font-size:12px;color:#aaa;white-space:nowrap;overflow:hidden',
+    'Botão direito: olhar · WASD: andar · Q/E: descer/subir · Shift: correr · Clique: colocar/selecionar · Arrastar: mover · Setas/PgUp/PgDn: ajustar · R: girar · Del: apagar · Ctrl+D: duplicar · Ctrl+Z: desfazer · F: focar · Esc: parar de colocar');
+  root.append(bar, esq, dir, ajuda); document.body.appendChild(root);
+  Object.assign(ED, { root, cv, bar, esq, dir, ajuda });
+  const css = edEl('style'); css.textContent = `#edRoot button,#edRoot select,#edRoot input{white-space:nowrap;font:inherit;color:#eee;background:#2a2d32;border:1px solid #44484f;border-radius:5px;padding:4px 8px}
+#edRoot button:hover{background:#353941;cursor:pointer}#edRoot button.on{background:#f5b82e;color:#111;border-color:#f5b82e}#edRoot label{display:block;margin:8px 0 3px;color:#aaa;font-size:12px}
+#edRoot .edl{flex:1;overflow:auto;padding:4px 6px}#edRoot .edl button{display:block;width:100%;text-align:left;margin:2px 0;padding:5px 7px}#edRoot .edl button.mau{opacity:.4}
+#edRoot .edt{display:flex;gap:4px;padding:6px}#edRoot .edt button{flex:1;padding:4px 2px}#edRoot .row3{display:flex;gap:4px}#edRoot .row3 input{width:100%;min-width:0;box-sizing:border-box}
+#edRoot .msg{position:absolute;top:52px;left:50%;transform:translateX(-50%);background:#000c;padding:6px 14px;border-radius:6px;display:none}`;
+  root.appendChild(css); ED.msgEl = edEl('div'); ED.msgEl.className = 'msg'; root.appendChild(ED.msgEl);
+  // cena própria
+  ED.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); ED.r.outputEncoding = THREE.sRGBEncoding;
+  ED.scene = new THREE.Scene(); ED.scene.background = new THREE.Color(0x8fb4d6); ED.scene.fog = new THREE.Fog(0x8fb4d6, 120, 400);
+  ED.scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x4a4030, 0.9)); const sol = new THREE.DirectionalLight(0xfff2dc, 1.6); sol.position.set(30, 60, 20); ED.scene.add(sol);
+  ED.grid = new THREE.GridHelper(200, 200, 0x555555, 0x3a3a3a); ED.grid.material.transparent = true; ED.grid.material.opacity = 0.5; ED.scene.add(ED.grid);
+  ED.mar = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshStandardMaterial({ color: 0x1d4a6a, roughness: 0.3, transparent: true, opacity: 0.85 })); ED.mar.rotation.x = -Math.PI / 2; ED.mar.visible = false; ED.scene.add(ED.mar);
+  ED.camera = new THREE.PerspectiveCamera(60, 1, 0.05, 1500);
+  // começa no rascunho, se houver
+  let J0 = null; try { J0 = JSON.parse(localStorage.getItem('tiro_editor_rascunho') || 'null'); } catch (e) { J0 = null; }
+  ED.J = J0 ? edDoJson(J0) : edNovo();
+  edBarra(); edCatalogo('basico'); edRedesenhar(); edPainel(); edEventos();
+  const loop = (t) => { if (!ED.on) return; requestAnimationFrame(loop); edTick(t); };
+  requestAnimationFrame(loop);
+  edListaServidor();
+}
+function edMsg(t, ms = 2500) { ED.msgEl.textContent = t; ED.msgEl.style.display = 'block'; clearTimeout(ED.msgT); ED.msgT = setTimeout(() => (ED.msgEl.style.display = 'none'), ms); }
+function edBarra() {
+  const b = ED.bar; b.innerHTML = '';
+  const t = edEl('b', 'margin-right:6px;color:#f5b82e', 'Editor de mapas'); b.appendChild(t);
+  ED.selMapa = edEl('select', 'max-width:170px'); ED.selMapa.title = 'Abrir um mapa'; b.appendChild(ED.selMapa); edOpcoesMapas();
+  ED.selMapa.onchange = () => { const v = ED.selMapa.value; ED.selMapa.value = ''; if (v === 'novo') { const n = prompt('Nome do mapa novo:', 'Mapa novo'); if (n) { ED.J = edNovo(n); ED.sel = null; ED.hist = []; edMudou(true); edBarra(); } } else if (v) edAbrirMapa(v); };
+  const nome = edEl('input', 'width:150px'); nome.value = ED.J.meta.nome; nome.title = 'Nome do mapa'; nome.onchange = () => { ED.J.meta.nome = nome.value.trim() || 'Mapa'; if (!ED.J.meta.salvo) ED.J.meta.id = edIdDe(ED.J.meta.nome); edGuardar(); }; b.appendChild(nome);
+  const ceu = edEl('select'); ceu.title = 'Céu e luz (de um mapa do jogo)'; for (const m of MAPS) if (m.ok && !(MAP_DEFS[m.id] || {}).editor) ceu.appendChild(new Option('Céu: ' + m.name, m.id)); ceu.value = ED.J.meta.ceu; ceu.onchange = () => { ED.J.meta.ceu = ceu.value; edGuardar(); }; b.appendChild(ceu);
+  const mar = edEl('label', 'display:flex;align-items:center;gap:4px;margin:0;color:#ddd'); const mk = edEl('input'); mk.type = 'checkbox'; mk.checked = !!ED.J.meta.mar; const my = edEl('input', 'width:52px'); my.type = 'number'; my.step = '0.1'; my.value = ED.J.meta.mar ? ED.J.meta.mar.y : -4; mar.append(mk, 'Mar em y', my);
+  const mm = () => { ED.J.meta.mar = mk.checked ? { y: +my.value || 0 } : null; edMudou(); }; mk.onchange = mm; my.onchange = mm; b.appendChild(mar);
+  const bt = (rot, f, tit) => { const x = edEl('button', '', rot); x.onclick = f; if (tit) x.title = tit; b.appendChild(x); return x; };
+  b.appendChild(edEl('span', 'flex:1'));
+  bt('Salvar', edSalvar, 'Grava no projeto (Editor de mapas do Tiro.bat)'); bt('Baixar .json', edBaixar); bt('Abrir .json', edAbrirArquivo);
+  bt('▶ Jogar', edJogar, 'Monta o mapa de verdade e começa uma partida solo com bots'); bt('Sair', () => { location.href = location.pathname; });
+}
+function edOpcoesMapas() {
+  const s = ED.selMapa; s.innerHTML = ''; s.appendChild(new Option('Abrir mapa…', '')); s.appendChild(new Option('+ Mapa novo', 'novo'));
+  const vistos = new Set();
+  for (const J of (typeof TIRO_MAPAS_JSON !== 'undefined' ? TIRO_MAPAS_JSON : [])) { vistos.add(J.id); s.appendChild(new Option(J.nome || J.id, 'jogo:' + J.id)); }
+  for (const m of ED.servidor || []) if (!vistos.has(m.id)) s.appendChild(new Option(m.nome + ' (no PC)', 'pc:' + m.id));
+}
+async function edListaServidor() { try { const r = await fetch('/api/tiro/editor/mapas'); if (!r.ok) return; ED.servidor = (await r.json()).mapas || []; ED.temServidor = true; edOpcoesMapas(); } catch (e) { /* no site não há servidor do editor */ } }
+async function edAbrirMapa(v) {
+  let J = null;
+  if (v.startsWith('jogo:')) J = TIRO_MAPAS_JSON.find((m) => m.id === v.slice(5));
+  else if (v.startsWith('pc:')) { try { J = await (await fetch('/api/tiro/editor/mapa/' + encodeURIComponent(v.slice(3)))).json(); } catch (e) { J = null; } }
+  if (!J) return edMsg('Não consegui abrir esse mapa.');
+  ED.J = edDoJson(J); ED.J.meta.salvo = true; ED.sel = null; ED.hist = []; edMudou(true); edBarra(); edMsg('Aberto: ' + (J.nome || J.id));
+}
+async function edSalvar() {
+  const J = edParaJson();
+  if (!ED.temServidor) { edBaixar(); return edMsg('No site não dá para gravar: baixei o .json. No PC, use o "Editor de mapas do Tiro.bat".', 5000); }
+  try {
+    const r = await fetch('/api/tiro/editor/mapa/' + encodeURIComponent(J.id), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(J) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.erro || r.status);
+    ED.J.meta.salvo = true; edMsg('Salvo em ferramentas/tiro-mapas/editor/' + J.id + '.json'); edListaServidor();
+  } catch (e) { edMsg('Não salvou: ' + e.message, 5000); }
+}
+function edBaixar() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(edParaJson(), null, 1)], { type: 'application/json' })); a.download = ED.J.meta.id + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+function edAbrirArquivo() {
+  const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json';
+  i.onchange = async () => { try { const J = JSON.parse(await i.files[0].text()); if (!J.id) throw new Error('sem id'); ED.J = edDoJson(J); ED.sel = null; ED.hist = []; edMudou(true); edBarra(); } catch (e) { edMsg('Arquivo inválido: ' + e.message); } };
+  i.click();
+}
+// monta o mapa de verdade e começa uma partida solo
+function edJogar() {
+  const J = edParaJson();
+  if (!J.nascer.length) return edMsg('Coloque pelo menos um "Nascer" (o time Bravo nasce espelhado em -z).');
+  edGuardar();
+  try { if (MAPL.id === J.id) mapUnload(); tiroMapaRegistrar(J); } catch (e) { return edMsg('Erro no mapa: ' + e.message, 5000); }
+  Settings.map = J.id; saveSettings();
+  ED.on = false; ED.root.remove(); ED.r.dispose();
+  edMsgJogo();
+  menuLaunch({ online: false, map: J.id, deploy: () => startMatch() });
+}
+function edMsgJogo() { const b = edEl('button', 'position:fixed;right:12px;top:12px;z-index:2147483000;padding:8px 12px;background:#f5b82e;color:#111;border:0;border-radius:6px;font:600 13px system-ui;cursor:pointer', '✎ Voltar ao editor'); b.onclick = () => { location.href = location.pathname + '?editor=1'; }; document.body.appendChild(b); }
+
+/* ---------- catálogo ---------- */
+function edCatalogo(aba) {
+  const e = ED.esq; e.innerHTML = ''; ED.aba = aba;
+  const tabs = edEl('div'); tabs.className = 'edt';
+  for (const [k, rot] of [['basico', 'Básico'], ['prefab', 'Prefabs'], ['prop', 'Objetos']]) { const b = edEl('button', '', rot); if (k === aba) b.className = 'on'; b.onclick = () => edCatalogo(k); tabs.appendChild(b); }
+  const busca = edEl('input', 'margin:0 6px 4px'); busca.placeholder = 'Buscar…'; e.append(tabs, busca);
+  const lista = edEl('div'); lista.className = 'edl'; e.appendChild(lista);
+  const itens = aba === 'basico' ? ED_BASICO.map((b) => ({ rot: b.rot, tpl: b }))
+    : (aba === 'prefab' ? Object.keys(PF) : Object.keys(PROPT)).sort().map((n) => ({ rot: n, tpl: { rot: n, P: { t: aba, nome: n } } }));
+  const pinta = () => {
+    const q = busca.value.trim().toLowerCase(); lista.innerHTML = '';
+    for (const it of itens) {
+      if (q && !it.rot.toLowerCase().includes(q)) continue;
+      const b = edEl('button', '', it.rot); if (ED.tpl === it.tpl) b.className = 'on';
+      // prefab que precisa de parâmetros (não se desenha sozinho): apagado no catálogo
+      if (aba !== 'basico' && !edPrefabGrupo(aba + ':' + it.rot + '[]', () => (aba === 'prefab' ? PF[it.rot]() : propDef(it.rot, []).pf()))) { b.className = 'mau'; b.title = 'Precisa de parâmetros: ainda não dá para colocar pelo editor'; lista.appendChild(b); continue; }
+      b.onclick = () => { ED.tpl = ED.tpl === it.tpl ? null : it.tpl; edFantasma(); pinta(); if (ED.tpl) edMsg('Clique na cena para colocar: ' + it.rot + ' (Esc para parar)'); };
+      lista.appendChild(b);
+    }
+  };
+  busca.oninput = pinta; pinta();
+}
+function edFantasma() {
+  if (ED.ghost) { ED.scene.remove(ED.ghost); ED.ghost = null; }
+  if (!ED.tpl) return;
+  const P = Object.assign({ p: [0, 0, 0], r: 0 }, edClone(ED.tpl.P)); ED.ghost = edMalha(P);
+  ED.ghost.traverse((c) => { if (c.material) { c.material = c.material.clone(); c.material.transparent = true; c.material.opacity = 0.45; c.material.depthWrite = false; } });
+  ED.ghost.userData.fant = true; ED.scene.add(ED.ghost); ED.ghostP = P;
+}
+
+/* ---------- painel da peça ---------- */
+function edPainel() {
+  const d = ED.dir, P = ED.sel; d.innerHTML = '';
+  const n = ED.J.pecas, cont = (t) => n.filter((p) => p.t === t).length;
+  d.appendChild(edEl('div', 'color:#aaa;font-size:12px;line-height:1.5', `<b style="color:#eee">${ED.J.meta.nome}</b> · id ${ED.J.meta.id}<br>${n.length} peças · ${cont('nascer')} nascer (+${cont('nascer')} Bravo espelhado) · ${cont('dom')}/3 pontos · ${cont('mecha')}/3 mecha`));
+  if (!P) { d.appendChild(edEl('p', 'color:#888;margin-top:14px', 'Escolha uma peça no catálogo e clique na cena, ou clique numa peça para mexer nela.<br><br>O chão das aparições tem de estar em y = 0. O time Bravo nasce espelhado (z vira -z).')); return; }
+  d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha' }[P.t]));
+  const vec = (rot, arr, step, f) => { d.appendChild(edEl('label', '', rot)); const r = edEl('div'); r.className = 'row3'; arr.forEach((v, i) => { const x = edEl('input'); x.type = 'number'; x.step = step; x.value = +(+v).toFixed(3); x.onchange = () => { edAntes(); f(i, +x.value); edMudou(true); }; r.appendChild(x); }); d.appendChild(r); };
+  vec('Posição x · y · z (m)', P.p, 0.25, (i, v) => { P.p[i] = v; });
+  if (P.s) vec('Tamanho larg · alt · prof (m)', P.s, 0.25, (i, v) => { P.s[i] = Math.max(0.05, v); });
+  if (!['nascer', 'dom', 'mecha'].includes(P.t)) vec('Giro (graus)' + (P.t === 'caixa' || P.t === 'escada' ? ' — de 90 em 90' : ''), [P.r || 0], P.t === 'caixa' || P.t === 'escada' ? 90 : 15, (i, v) => { P.r = v; });
+  if (P.t === 'prefab' || P.t === 'prop') vec('Escala', [P.e || 1], 0.1, (i, v) => { P.e = v === 1 ? undefined : Math.max(0.1, v); });
+  if (P.t === 'caixa' || P.t === 'escada') {
+    d.appendChild(edEl('label', '', 'Matéria'));
+    const s = edEl('select', 'width:100%'); for (const m of ED_MATS) s.appendChild(new Option(m, m)); s.value = P.m || 'paint'; s.onchange = () => { edAntes(); P.m = s.value; edMudou(true); }; d.appendChild(s);
+  }
+  if (P.t === 'caixa' || P.t === 'escada' || P.t === 'luz') {
+    d.appendChild(edEl('label', '', 'Cor'));
+    const c = edEl('input', 'width:100%;height:30px;padding:0'); c.type = 'color'; c.value = '#' + edCorHex(P.cor || [0.9, 0.9, 0.9]).getHexString(); c.onchange = () => { edAntes(); const k = new THREE.Color(c.value); P.cor = [+k.r.toFixed(3), +k.g.toFixed(3), +k.b.toFixed(3)]; edMudou(true); }; d.appendChild(c);
+  }
+  if (P.t === 'caixa') {
+    const l = edEl('label', 'display:flex;gap:6px;align-items:center;color:#ddd'); const k = edEl('input'); k.type = 'checkbox'; k.checked = P.col !== false; k.onchange = () => { edAntes(); P.col = k.checked ? undefined : false; edMudou(true); }; l.append(k, 'Colide (segura gente e bala)'); d.appendChild(l);
+  }
+  if (P.t === 'luz') { vec('Força · alcance (m)', [P.forca || 1.4, P.raio || 7], 0.1, (i, v) => { if (i) P.raio = v; else P.forca = v; }); }
+  const bts = edEl('div', 'display:flex;gap:6px;margin-top:14px'); const dup = edEl('button', '', 'Duplicar'); dup.onclick = edDuplicar; const del = edEl('button', 'color:#f88', 'Apagar'); del.onclick = edApagar; bts.append(dup, del); d.appendChild(bts);
+}
+
+/* ---------- ações ---------- */
+function edApagar() { if (!ED.sel) return; edAntes(); ED.J.pecas.splice(ED.J.pecas.indexOf(ED.sel), 1); ED.sel = null; edMudou(true); }
+function edDuplicar() { if (!ED.sel) return; edAntes(); const Q = edClone(ED.sel); Q.p[0] += 1; ED.J.pecas.push(Q); ED.sel = Q; edMudou(true); }
+function edDesfazer() { const s = ED.hist.pop(); if (!s) return; ED.J = JSON.parse(s); ED.sel = null; edGuardar(); edRedesenhar(); edPainel(); }
+function edRaio(ev) {
+  const r = ED.cv.getBoundingClientRect(), v = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  const rc = new THREE.Raycaster(); rc.setFromCamera(v, ED.camera); return rc;
+}
+function edAcerto(ev, ignorar) {
+  const rc = edRaio(ev), objs = ED.items.filter((i) => i.P !== ignorar).map((i) => i.o);
+  const h = rc.intersectObjects(objs, true)[0];
+  const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pt = new THREE.Vector3();
+  const hp = rc.ray.intersectPlane(plano, pt) ? pt : null;
+  if (h && (!hp || h.distance < rc.ray.origin.distanceTo(hp))) return { p: h.point, P: h.object.userData.P, n: h.face ? h.face.normal.clone().transformDirection(h.object.matrixWorld) : null };
+  return hp ? { p: hp, P: null } : null;
+}
+function edEventos() {
+  const cv = ED.cv;
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('mousedown', (e) => {
+    if (e.button === 2) { ED.olhar = { x: e.clientX, y: e.clientY }; return; }
+    if (e.button !== 0) return;
+    if (ED.tpl) {
+      const a = edAcerto(e); if (!a) return;
+      edAntes(); const P = Object.assign(edClone(ED.tpl.P), { p: [edSnap(a.p.x), +(a.p.y + (ED.tpl.oy || 0)).toFixed(3), edSnap(a.p.z)] });
+      if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') P.r = ED.ghostP ? ED.ghostP.r || 0 : 0;
+      ED.J.pecas.push(P); ED.sel = P; edMudou(true); return;
+    }
+    const a = edAcerto(e); ED.sel = a && a.P ? a.P : null; edRedesenhar(); edPainel();
+    if (ED.sel) ED.drag = { P: ED.sel, y: ED.sel.p[1], ini: false, x0: e.clientX, y0: e.clientY };
+  });
+  addEventListener('mousemove', (e) => {
+    if (!ED.on) return;
+    if (ED.olhar) { ED.cam.yaw -= (e.clientX - ED.olhar.x) * 0.004; ED.cam.pitch = clamp(ED.cam.pitch - (e.clientY - ED.olhar.y) * 0.004, -1.5, 1.5); ED.olhar = { x: e.clientX, y: e.clientY }; return; }
+    if (ED.drag) {
+      if (!ED.drag.ini && Math.hypot(e.clientX - ED.drag.x0, e.clientY - ED.drag.y0) < 4) return;
+      if (!ED.drag.ini) { edAntes(); ED.drag.ini = true; }
+      const rc = edRaio(e), pt = new THREE.Vector3(); if (!rc.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -ED.drag.y), pt)) return;
+      ED.drag.P.p[0] = edSnap(pt.x); ED.drag.P.p[2] = edSnap(pt.z); edRedesenhar(); return;
+    }
+    if (ED.ghost && e.target === cv) { const a = edAcerto(e); if (a) { ED.ghost.position.set(edSnap(a.p.x), a.p.y + (ED.tpl.oy || 0), edSnap(a.p.z)); ED.ghostP.p = [ED.ghost.position.x, ED.ghost.position.y, ED.ghost.position.z]; } }
+  });
+  addEventListener('mouseup', (e) => { if (!ED.on) return; if (e.button === 2) ED.olhar = null; if (e.button === 0 && ED.drag) { const ini = ED.drag.ini; ED.drag = null; if (ini) { edGuardar(); edPainel(); } } });
+  cv.addEventListener('wheel', (e) => { e.preventDefault(); ED.cam.v = clamp(ED.cam.v * (e.deltaY > 0 ? 0.85 : 1.18), 1, 80); edMsg('Velocidade da câmera: ' + ED.cam.v.toFixed(1) + ' m/s', 900); }, { passive: false });
+  const tecla = (e) => {
+    if (!ED.on) return;
+    const campo = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName);
+    e.stopPropagation(); // o jogo não vê as teclas enquanto o editor está aberto
+    if (campo) return;
+    const k = e.code, P = ED.sel, passo = e.shiftKey ? 1 : 0.25;
+    if (e.type === 'keyup') { ED.keys.delete(k); return; }
+    ED.keys.add(k);
+    if (k === 'Escape') { ED.tpl = null; edFantasma(); edCatalogo(ED.aba); }
+    else if ((e.ctrlKey || e.metaKey) && k === 'KeyZ') { e.preventDefault(); edDesfazer(); }
+    else if ((e.ctrlKey || e.metaKey) && k === 'KeyD') { e.preventDefault(); edDuplicar(); }
+    else if (k === 'KeyR') {
+      const alvo = P || ED.ghostP; if (!alvo || ['nascer', 'dom', 'mecha'].includes(alvo.t)) return;
+      const fino = e.shiftKey && (alvo.t === 'prefab' || alvo.t === 'prop'); if (P) edAntes(); alvo.r = (((alvo.r || 0) + (fino ? 15 : 90)) % 360);
+      if (P) edMudou(true); else { ED.ghost.rotation.y = (alvo.r * Math.PI) / 180; if (alvo.t === 'caixa' || alvo.t === 'escada') edFantasma(); }
+    }
+    else if (!P) return;
+    else if (k === 'Delete' || k === 'Backspace') edApagar();
+    else if (k === 'KeyF') { ED.cam.x = P.p[0]; ED.cam.z = P.p[2] + 8; ED.cam.y = P.p[1] + 5; ED.cam.yaw = 0; ED.cam.pitch = -0.5; }
+    else if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'].includes(k)) {
+      e.preventDefault(); edAntes();
+      // setas relativas à câmera (o "para cima" é para onde ela olha)
+      const fx = -Math.sin(ED.cam.yaw), fz = -Math.cos(ED.cam.yaw), ax = Math.abs(fx) > Math.abs(fz);
+      const fw = ax ? [Math.sign(fx), 0] : [0, Math.sign(fz)], rt = [-fw[1], fw[0]];
+      const d = k === 'ArrowUp' ? fw : k === 'ArrowDown' ? [-fw[0], -fw[1]] : k === 'ArrowRight' ? rt : k === 'ArrowLeft' ? [-rt[0], -rt[1]] : null;
+      if (d) { P.p[0] += d[0] * passo; P.p[2] += d[1] * passo; } else P.p[1] += (k === 'PageUp' ? 1 : -1) * passo;
+      P.p = P.p.map((v) => +v.toFixed(3)); edMudou(true);
+    }
+  };
+  addEventListener('keydown', tecla, true); addEventListener('keyup', tecla, true);
+  addEventListener('blur', () => ED.keys.clear());
+}
+function edTick(t) {
+  const dt = Math.min(0.05, (t - (ED.t || t)) / 1000); ED.t = t;
+  const w = ED.cv.clientWidth, h = ED.cv.clientHeight;
+  if (ED.cv.width !== Math.round(w * devicePixelRatio) || ED.cv.height !== Math.round(h * devicePixelRatio)) { ED.r.setPixelRatio(devicePixelRatio); ED.r.setSize(w, h, false); ED.camera.aspect = w / h; ED.camera.updateProjectionMatrix(); }
+  const c = ED.cam, K = ED.keys, v = c.v * (K.has('ShiftLeft') || K.has('ShiftRight') ? 3 : 1) * dt;
+  const fx = -Math.sin(c.yaw), fz = -Math.cos(c.yaw);
+  if (!ED.sel || !K.has('ArrowUp')) {
+    if (K.has('KeyW')) { c.x += fx * v; c.z += fz * v; } if (K.has('KeyS')) { c.x -= fx * v; c.z -= fz * v; }
+    if (K.has('KeyA')) { c.x += fz * v; c.z -= fx * v; } if (K.has('KeyD') && !K.has('ControlLeft')) { c.x -= fz * v; c.z += fx * v; }
+    if (K.has('KeyE')) c.y += v; if (K.has('KeyQ')) c.y -= v;
+  }
+  ED.camera.position.set(c.x, c.y, c.z); ED.camera.rotation.set(c.pitch, c.yaw, 0, 'YXZ');
+  if (ED.box) ED.box.update();
+  ED.r.render(ED.scene, ED.camera);
+}
+if (/[?&]editor=1\b/.test(location.search)) { const go = () => setTimeout(() => { try { edAbrir(); } catch (e) { console.error('editor', e); } }, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go); }
 
 if(!window.WebGLRenderingContext)$('loadMsg').textContent=_t('WebGL est indisponible sur ce navigateur.');else if(!pwaGate(boot))boot();
 </script>

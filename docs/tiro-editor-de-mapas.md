@@ -83,9 +83,9 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
   muitas fotos são acinzentadas e ganham a cor por ela (tijolo, por exemplo, pede uma cor de barro). `"col": false` faz a caixa
   não colidir. `tx` é o tamanho da textura (1 = normal, 2 = o dobro, 0,5 = a metade). Valem:
   - **Parede:** `plaster` (reboco), `plaster2` (reboco gasto), `brick` (tijolo), `ashlar` (pedra talhada), `stone`, `drystone`
-    (pedra seca), `adobe`, `pise` (taipa), `concrete`, `slate` (ardósia), `rock`, `strata` (rocha em camadas).
+    (pedra seca), `adobe`, `pise` (taipa), `concrete`, `edAluminio` (painel de alumínio), `edForro` (forro de placas de 0,6 m), `slate` (ardósia), `rock`, `strata` (rocha em camadas).
   - **Chão:** `asphalt`, `pavers` (lajota), `cobble` (paralelepípedo), `flagstone` (laje de pedra), `tiles` (ladrilho),
-    `edAzulejo`, `edXadrez` (piso xadrez), `boards` (tábuas), `rug` (tapete), `galets` (seixos), `pathgravel` (cascalho), `sand`,
+    `edAzulejo`, `edXadrez` (piso xadrez), `edPorcelanato` (porcelanato polido, placas de 1,2 m), `edPatio` (concreto do pátio, placas de 5 m), `edCarpete`, `boards` (tábuas), `rug` (tapete), `galets` (seixos), `pathgravel` (cascalho), `sand`,
     `dirt`, `humus` (terra escura), `lawn` (grama), `snow`, `snowpack` (neve batida), `ash` (cinza).
   - **Madeira:** `wood`, `timber` (viga), `paintwood` (madeira pintada), `crate` (caixote), `shutter` (veneziana), `bark`
     (casca de árvore).
@@ -371,7 +371,7 @@ O mapa `aeroporto.json` é gerado por `node ferramentas/tiro-mapas/aeroporto-ger
 - a plataforma e a rampa a oeste;
 - o pátio embaixo, com o avião, a escada dele e a ponte de embarque.
 
-Os pontos de nascer e dos bots vieram da rede de caminhos. Depois de mexer no editor, não rode o gerador: ele sobrescreve.
+Desde 26/nov o `aeroporto.json` é o mapa que o Thiago montou no editor. **Não rode mais o gerador**: ele apagaria tudo. Os pontos dos bots e de dominação foram refeitos pela rede de caminhos.
 
 ### Passarelas
 

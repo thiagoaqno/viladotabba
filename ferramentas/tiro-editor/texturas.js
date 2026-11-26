@@ -39,9 +39,58 @@ Object.assign(TEXLAB, {
     a = mix(a, a * 0.75, junta + smoothstep(0.6, 0.9, sujo) * 0.3);
     h = 1.0 - junta * 0.6; r = 0.3 + risco * 0.15 + junta * 0.4; x = h;`],
 });
+// (2026-11-26, Aeroporto) cinco superfícies de aeroporto, desenhadas por shader: porcelanato polido do terminal (placas de 1,2 m),
+// placas de concreto do pátio (5 m, com junta, óleo e marca de pneu), painel de alumínio da fachada, forro de placas (0,6 m) e carpete
+Object.assign(TEXLAB, {
+  edPorcelanato: [1024, 51, 0.5, `
+    vec4 t = tiles(uv, vec2(4.0), 0.0);
+    float junta = 1.0 - smoothstep(0.004, 0.008, t.w);
+    float veio = gfbm(uv, vec2(6.0), 5, 3.0), fino = vn(uv * 512.0, vec2(512.0), 2.0), nuvem = gfbm(uv, vec2(2.0), 4, 8.0);
+    vec3 c = mix(srgb(vec3(0.8, 0.79, 0.76)), srgb(vec3(0.9, 0.89, 0.86)), veio) * (0.95 + t.z * 0.07) * (0.97 + fino * 0.05);
+    c *= 0.94 + nuvem * 0.1;
+    a = mix(c, srgb(vec3(0.45, 0.44, 0.42)), junta);
+    h = 1.0 - junta * 0.7; r = 0.14 + junta * 0.6 + smoothstep(0.55, 0.85, nuvem) * 0.14; x = h;`],
+  edPatio: [1024, 53, 1.2, `
+    vec4 t = tiles(uv, vec2(2.0), 0.0);
+    float junta = 1.0 - smoothstep(0.003, 0.007, t.w);
+    float big = gfbm(uv, vec2(3.0), 5, 1.0), mid = gfbm(uv, vec2(16.0), 4, 2.0), gr = vn(uv * 512.0, vec2(512.0), 3.0);
+    float oleo = smoothstep(0.62, 0.8, gfbm(uv + 0.17, vec2(5.0), 4, 6.0));
+    float rodas = sin((uv.x * 3.0 + gfbm(uv, vec2(2.0), 3, 7.0) * 0.6) * 25.132741) * 0.5 + 0.5;
+    float pneu = smoothstep(0.75, 1.0, rodas) * smoothstep(0.4, 0.7, gfbm(uv, vec2(3.0, 1.0), 3, 9.0));
+    vec3 c = mix(srgb(vec3(0.62, 0.62, 0.6)), srgb(vec3(0.74, 0.74, 0.72)), big) * (0.9 + mid * 0.16 + gr * 0.1) * (0.94 + t.z * 0.1);
+    c = mix(c, c * 0.55, oleo * 0.55); c = mix(c, srgb(vec3(0.16, 0.16, 0.17)), pneu * 0.35);
+    a = mix(c, srgb(vec3(0.12, 0.12, 0.12)), junta * 0.85);
+    h = big * 0.25 + mid * 0.2 + gr * 0.15 - junta * 0.6; r = 0.88 - oleo * 0.35 - pneu * 0.1; x = h;`],
+  edAluminio: [512, 55, 0.8, `
+    vec4 t = tiles(uv, vec2(2.0, 4.0), 0.0);
+    float junta = 1.0 - smoothstep(0.012, 0.022, t.w);
+    float escovado = gfbm(uv, vec2(1.0, 24.0), 3, 4.0), fino = vn(uv * 512.0, vec2(512.0), 2.0), sujo = gfbm(uv, vec2(3.0), 4, 5.0);
+    vec3 c = srgb(vec3(0.82, 0.83, 0.84)) * (0.95 + t.z * 0.08 + escovado * 0.05 + fino * 0.03);
+    c = mix(c, c * 0.8, smoothstep(0.6, 0.9, sujo) * 0.4 * (1.0 - t.y));
+    a = mix(c, srgb(vec3(0.08, 0.08, 0.09)), junta);
+    h = 1.0 - junta; r = 0.35 + junta * 0.5 + sujo * 0.1; x = h;`],
+  edForro: [512, 57, 0.6, `
+    vec4 t = tiles(uv, vec2(4.0), 0.0);
+    float perfil = 1.0 - smoothstep(0.02, 0.035, t.w);
+    float furo = step(0.82, vn(uv * 256.0, vec2(256.0), 4.0)) * 0.5 + vn(uv * 128.0, vec2(128.0), 5.0) * 0.2;
+    vec3 c = srgb(vec3(0.9, 0.9, 0.88)) * (0.96 + t.z * 0.04) * (1.0 - furo * 0.25);
+    a = mix(c, srgb(vec3(0.75, 0.76, 0.78)), perfil);
+    h = (1.0 - perfil) * 0.6 - furo * 0.15; r = mix(0.95, 0.4, perfil); x = h;`],
+  edCarpete: [512, 59, 0.5, `
+    float fibra = vn(uv * 512.0, vec2(512.0), 1.0), fibra2 = vn(uv * 256.0, vec2(256.0), 2.0);
+    vec2 g = fract(uv * 8.0) - 0.5; float losango = 1.0 - smoothstep(0.18, 0.22, abs(g.x) + abs(g.y));
+    float faixa = step(0.94, fract(uv.y * 4.0)), gasto = gfbm(uv, vec2(3.0), 4, 6.0);
+    vec3 c = mix(srgb(vec3(0.22, 0.26, 0.36)), srgb(vec3(0.34, 0.4, 0.52)), losango * 0.6);
+    c = mix(c, srgb(vec3(0.62, 0.5, 0.28)), faixa * 0.7);
+    a = c * (0.82 + fibra * 0.25 + fibra2 * 0.1) * (0.92 + gasto * 0.12);
+    h = fibra * 0.5 + fibra2 * 0.3; r = 0.98; x = h;`],
+});
 const ED_TEX_NOSSAS = ['edChapa', 'edListras', 'edAzulejo', 'edXadrez'];
+// as de aeroporto só se desenham nos mapas que usam (edTexUsadas)
+const ED_TEX_AERO = ['edPorcelanato', 'edPatio', 'edAluminio', 'edForro', 'edCarpete'];
 Object.assign(TEXSCALE, { edChapa: 1.2, edListras: 1.5, edAzulejo: 1.6, edXadrez: 3.2 });
-for (const k of ED_TEX_NOSSAS) OPT_TEX.add(k);
+Object.assign(TEXSCALE, { edPorcelanato: 4.8, edPatio: 10, edAluminio: 3, edForro: 2.4, edCarpete: 2 });
+for (const k of [...ED_TEX_NOSSAS, ...ED_TEX_AERO]) OPT_TEX.add(k);
 // fotos do jogo que viram matéria nova nos mapas do editor: [chave, tamanho do ladrilho em m, opções da matéria]
 const ED_FOTOS_NOVAS = {
   adobe: [2.4, { grime: 0.6, dust: 0.5, macro: 0.3, pom: 0.03 }], ash: [3, { macro: 0.35 }], bark: [1.5, { macro: 0.2 }],
@@ -54,14 +103,16 @@ for (const [k, [esc]] of Object.entries(ED_FOTOS_NOVAS)) if (!TEXSCALE[k]) TEXSC
 const ED_MAT_NOSSAS = {
   edChapa: { metal: 0.65, ma: true, env: 0.8, macro: 0.12, dust: 0.2, rough: 1 }, edListras: { macro: 0.2, dust: 0.3, grime: 0.4 },
   edAzulejo: { env: 0.7, macro: 0.15, dust: 0.15 }, edXadrez: { env: 0.6, macro: 0.2, dust: 0.2 },
+  edPorcelanato: { env: 1, macro: 0.12, dust: 0.1 }, edPatio: { macro: 0.35, dust: 0.3, grime: 0.4 }, edAluminio: { metal: 0.55, ma: true, env: 0.9, macro: 0.1, rough: 1 },
+  edForro: { macro: 0.08, env: 0.3 }, edCarpete: { macro: 0.15, env: 0.1 },
 };
 // a galeria do editor: [chave da matéria, nome, grupo]
 const ED_SUPERF = [
   ['plaster', 'Reboco', 'Parede'], ['plaster2', 'Reboco gasto', 'Parede'], ['brick', 'Tijolo', 'Parede'], ['ashlar', 'Pedra talhada', 'Parede'],
   ['stone', 'Pedra', 'Parede'], ['drystone', 'Pedra seca', 'Parede'], ['adobe', 'Adobe', 'Parede'], ['pise', 'Taipa', 'Parede'],
-  ['concrete', 'Concreto', 'Parede'], ['slate', 'Ardósia', 'Parede'], ['rock', 'Rocha', 'Parede'], ['strata', 'Rocha em camadas', 'Parede'],
+  ['concrete', 'Concreto', 'Parede'], ['edAluminio', 'Painel de alumínio', 'Parede'], ['edForro', 'Forro de placas', 'Parede'], ['slate', 'Ardósia', 'Parede'], ['rock', 'Rocha', 'Parede'], ['strata', 'Rocha em camadas', 'Parede'],
   ['asphalt', 'Asfalto', 'Chão'], ['pavers', 'Lajota', 'Chão'], ['cobble', 'Paralelepípedo', 'Chão'], ['flagstone', 'Laje de pedra', 'Chão'],
-  ['tiles', 'Ladrilho', 'Chão'], ['edAzulejo', 'Azulejo', 'Chão'], ['edXadrez', 'Piso xadrez', 'Chão'], ['boards', 'Tábuas', 'Chão'], ['rug', 'Tapete', 'Chão'],
+  ['tiles', 'Ladrilho', 'Chão'], ['edPorcelanato', 'Porcelanato polido', 'Chão'], ['edPatio', 'Concreto do pátio', 'Chão'], ['edCarpete', 'Carpete', 'Chão'], ['edAzulejo', 'Azulejo', 'Chão'], ['edXadrez', 'Piso xadrez', 'Chão'], ['boards', 'Tábuas', 'Chão'], ['rug', 'Tapete', 'Chão'],
   ['galets', 'Seixos', 'Chão'], ['pathgravel', 'Cascalho', 'Chão'], ['sand', 'Areia', 'Chão'], ['dirt', 'Terra', 'Chão'], ['humus', 'Terra escura', 'Chão'],
   ['lawn', 'Grama', 'Chão'], ['snow', 'Neve', 'Chão'], ['snowpack', 'Neve batida', 'Chão'], ['ash', 'Cinza', 'Chão'],
   ['wood', 'Madeira', 'Madeira'], ['timber', 'Viga', 'Madeira'], ['paintwood', 'Madeira pintada', 'Madeira'], ['crate', 'Caixote', 'Madeira'],
@@ -72,6 +123,11 @@ const ED_SUPERF = [
   ['plastic', 'Plástico', 'Outros'], ['rubber', 'Borracha', 'Outros'], ['glass', 'Vidro', 'Outros'], ['dark', 'Escuro', 'Outros'],
 ];
 // as fotos que um mapa do editor precisa carregar (as de sempre + as que as caixas e escadas usam)
+function edTexUsadas(J) {
+  const s = new Set();
+  for (const P of J.pecas || []) if ((P.t === 'caixa' || P.t === 'escada') && ED_TEX_AERO.includes(P.m)) s.add(P.m);
+  return [...s];
+}
 function edTexturasDoMapa(J) {
   const s = new Set(TIRO_TEX);
   for (const P of J.pecas || []) {

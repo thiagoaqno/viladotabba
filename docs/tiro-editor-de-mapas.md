@@ -17,7 +17,7 @@ botão **Jogar** monta o mapa de verdade e começa uma partida solo com bots.
 | Olhar | botão direito arrastado |
 | Andar | W A S D (Shift corre), Q desce, E sobe |
 | Velocidade da câmera | roda do mouse |
-| Colocar peça | escolha no catálogo (esquerda) e clique na cena; Esc para de colocar |
+| Colocar peça | escolha no catálogo (esquerda, cada peça com uma prévia 3D vista de frente) e clique na cena; Esc para de colocar |
 | Selecionar | clique na peça |
 | Mover | arraste a peça; as setas empurram 25 cm (Shift: 1 m), relativas à câmera; PgUp/PgDn sobem e descem |
 | Girar | R (90°); Shift+R gira 15° (só prefab e objeto) |

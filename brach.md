@@ -1,19 +1,23 @@
-# Tiro da Galera: passarelas e prédios de favela verticais
+# Tiro da Galera: kit da favela (33 peças)
 
-8 peças novas no editor de mapas (aba Prefabs), para o mapa Favela e outros:
+As peças da folha de assets que o Thiago mandou ("Assets – Mapa Favela (TDM)"), feitas em código para o editor de mapas (aba Prefabs):
 
-- **Passarelas:**
-  - de tábuas e de chapa de aço, com 4 e 8 m, e uma em esteios com o piso a 3 m do chão;
-  - o topo do piso fica no `y` da peça: basta pôr a altura da laje (3,15 no mapa Favela);
-  - 1,9 m entre os corrimãos, para os bots passarem.
-- **Prédios de favela:**
-  - de três andares, com o primeiro avançando sobre a rua e um terraço em cima;
-  - estreito de quatro andares, cada andar de uma cor, com sacada e o último pela metade;
-  - de esquina em L, com loja, terraço e um canto coberto.
-- **Guia:** `docs/tiro-editor-de-mapas.md` traz as medidas de cada peça.
+- **Construções:**
+  - casa amarela com varanda em cima;
+  - casa azul com alpendre;
+  - casa verde de dois andares;
+  - cinco módulos de 3 x 3 m que empilham: porta, garagem, aberto, janela e porta de madeira.
+- **Kit de laje:** pilar de tijolo, pilha de tijolos, antena de TV, varal com roupa.
+- **Coberturas:** blocos de concreto, palete em pé, tambores azuis, contêiner de água de 1000 litros, pilha de pneus.
+- **Veículos (cenário):** carro velho, van, moto.
+- **Detalhes:** caçamba de lixo, cone, engradados, saco de lixo, quadro de luz, cartazes.
+- **Vegetação:** planta em vaso, arbusto.
+- **Ambiência:** bandeira do Brasil, bandeirinhas, lona azul, placa de bar, parede de cobogó.
 
-O mapa Favela (`favela.json`) não foi mexido: o Thiago está editando.
+O grafite e as texturas de mofo da folha ficaram de fora: o jogo não tem essas imagens. As outras texturas (tijolo, reboco azul ou amarelo, concreto, zinco, asfalto, lajota) já existem na galeria de superfícies, com o campo Cor.
 
-Conferido no navegador: as 8 peças montam, e um mapa de teste com os prédios e as passarelas ligando lajes abriu no Jogar, com bots, sem erro.
+O mapa Favela (`favela.json`) não foi mexido.
+
+Conferido no navegador: as 33 peças montam, e um mapa de teste com todas abriu no Jogar, com bots, sem erro.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

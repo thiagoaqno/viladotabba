@@ -261,6 +261,25 @@ não rode o gerador de novo: ele sobrescreve o `.json`.
   leste, que tem escada pelo beco.
 - **Pontos de dominação:** A no mercado, B na árvore e C no beco leste, todos em z = 0.
 
+## Campo de várzea e peças de rua
+
+As medidas incluem os elementos que avançam para fora do corpo principal. A arquibancada tem escada: gire essa peça somente de 90 em 90 graus.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcCampoFutebol` | 40,08 x 7 x 26,2 | Campo de terra 40 x 22 m, traves, alambrado com dois portões, refletores e bancos cobertos |
+| `kcArquibancadaConcreto` | 10,4 x 1,2 x 6 | Arquibancada de três degraus largos, com escada e patamar |
+| `kcQuiosqueAcai` | 3,2 x 2,35 x 1,7 | Quiosque de açaí com balcão e cobertura |
+| `kcChurrasquinho` | 3,2 x 2,35 x 1,7 | Barraca de churrasquinho com grelha e espetos |
+| `kcMototaxi` | 3,3 x 2,35 x 1,7 | Ponto de mototáxi com toldo e banco |
+| `kcOrelhao` | 0,9 x 2,15 x 0,57 | Telefone público com cobertura |
+| `kcLixeiraRua` | 0,7 x 1,25 x 0,6 | Lixeira de rua em poste |
+| `kcBancoPraca` | 2 x 0,9 x 0,53 | Banco de praça de madeira e ferro |
+| `kcPosteGato` | 1,8 x 7 x 0,6 | Poste com emaranhado de fios |
+| `kcMesaDomino` | 1,4 x 0,82 x 2,4 | Mesa de dominó com dois bancos |
+| `kcCarrinhoPipoca` | 1,54 x 1,9 x 1 | Carrinho de pipoca com rodas e vitrine |
+| `kcFliperamaBar` | 3,4 x 1,8 x 0,9 | Balcão de bar e máquina de fliperama |
+
 ## Catálogo: prefabs (cenário fixo)
 
 Estes prefabs precisam de parâmetros e ainda não entram pelo editor: `cyClimber`, `fdTri`, `fishBinStackDyn`, `fruitCrate`, `jersey`, `lobsterPots`, `rack`, `stTent`, `stall`, `trawler`, `tree`, `truss`.

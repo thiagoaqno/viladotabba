@@ -1440,3 +1440,135 @@ PF.kcFavelaEscadaFundos = () => prefab('kcFavelaEscadaFundos', (M) => {
   kcGuarda(M, -4.98, -5.0, -4.98, 0, 2.95); kcGuarda(M, -5.0, -4.98, -2.5, -4.98, 2.95); kcGuarda(M, -5.0, -0.02, -2.6, -0.02, 2.95);
   kcAr(M, -2.5, 4.2, 1.2, -Math.PI / 2);
 });
+
+/* ---------- Campo de várzea e mobiliário de rua ---------- */
+PF.kcCampoFutebol = () => prefab('kcCampoFutebol', (M) => {
+  M.local(1);
+  // O terreno termina no nível zero; as linhas e as redes são apenas visuais.
+  kcBloco(M, 'concrete', KC_COR.terra, -20, 20, -0.12, 0, -11, 11);
+  M.color(KC_COR.branco); M.cls = 1;
+  const linha = (x0, x1, z0, z1) => M.boxB('paint', x0, x1, 0.005, 0.012, z0, z1);
+  for (const z of [-8.5, 8.5]) linha(-17.5, 17.5, z - 0.04, z + 0.04);
+  for (const x of [-17.5, 0, 17.5]) linha(x - 0.04, x + 0.04, -8.5, 8.5);
+  for (const s of [-1, 1]) {
+    const a = Math.min(s * 17.5, s * 12.5), b = Math.max(s * 17.5, s * 12.5);
+    for (const z of [-5, 5]) linha(a, b, z - 0.04, z + 0.04);
+    linha(s * 12.5 - 0.04, s * 12.5 + 0.04, -5, 5);
+    M.save().move(s * 14.5, 0.013, 0); M.cyl('paint', 0.1, 0.01, 12); M.restore();
+  }
+  const circulo = []; for (let i = 0; i <= 48; i++) { const a = i * Math.PI * 2 / 48; circulo.push([3 * Math.cos(a), 0.025, 3 * Math.sin(a)]); }
+  M.tube('paint', 0.035, circulo, 4); M.cls = 0;
+  // Traves: postes e travessão colidem; as malhas e os suportes de rede não.
+  for (const s of [-1, 1]) {
+    const x = s * 17.5, fundo = s * 19;
+    M.color(KC_COR.branco);
+    for (const z of [-2.5, 2.5]) kcBloco(M, 'steel', KC_COR.branco, x - 0.06, x + 0.06, 0, 2.15, z - 0.06, z + 0.06, 'steel');
+    kcBloco(M, 'steel', KC_COR.branco, x - 0.06, x + 0.06, 2.03, 2.15, -2.56, 2.56, 'steel');
+    M.cls = 1; M.color([0.78, 0.78, 0.74]);
+    for (let z = -2.5; z <= 2.501; z += 0.25) M.tube('steel', 0.008, [[x, 2.08, z], [fundo, 1.8, z], [fundo, 0.05, z]], 4);
+    for (let y = 0.1; y <= 1.81; y += 0.25) M.tube('steel', 0.008, [[x, y, -2.5], [fundo, y, -2.5], [fundo, y, 2.5], [x, y, 2.5]], 4);
+    M.cls = 0;
+  }
+  // Alambrado com duas aberturas de 2,4 m, uma em cada lateral longa.
+  const cerca = (x0, x1, z0, z1) => {
+    M.color(KC_COR.ferro); M.boxB('steel', x0, x1, 2.44, 2.5, z0, z1);
+    M.col(x0, x1, 0, 2.5, z0, z1, 'steel');
+    M.cls = 1; M.color([0.58, 0.6, 0.59]);
+    const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 0.3);
+    for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; M.tube('steel', 0.008, [[x, 0.05, z], [x, 2.45, z]], 4); }
+    for (let y = 0.25; y < 2.5; y += 0.3) M.tube('steel', 0.008, [[x0, y, z0], [x1, y, z1]], 4);
+    M.cls = 0;
+  };
+  for (const z of [-11, 11]) { cerca(-20, -1.2, z - 0.04, z + 0.04); cerca(1.2, 20, z - 0.04, z + 0.04); }
+  for (const x of [-20, 20]) cerca(x - 0.04, x + 0.04, -11, 11);
+  for (const x of [-20, -1.24, 1.24, 20]) for (const z of [-11, 11]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.04, x + 0.04, 0, 2.5, z - 0.04, z + 0.04, 'steel');
+  // Refletores e bancos de reservas, fora da área de jogo e afastados dos portões.
+  for (const x of [-19, 19]) for (const z of [-10, 10]) {
+    kcBloco(M, 'steel', KC_COR.ferro, x - 0.09, x + 0.09, 0, 7, z - 0.09, z + 0.09, 'steel');
+    kcBloco(M, 'steel', KC_COR.ferro, x - 0.4, x + 0.4, 6.7, 7, z - 0.12, z + 0.12, 'steel');
+    M.cls = 1; M.color([1, 0.94, 0.75]); M.boxB('lamp', x - 0.34, x + 0.34, 6.72, 6.94, z - 0.13, z + 0.13); M.cls = 0;
+  }
+  for (const s of [-1, 1]) {
+    const z0 = s > 0 ? 11.3 : -13, z1 = s > 0 ? 13 : -11.3;
+    for (const x of [5.5, 9.5]) for (const z of [z0, z1]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.04, x + 0.04, 0, 2.2, z - 0.04, z + 0.04, 'steel');
+    kcBloco(M, 'corrugated', [0.52, 0.55, 0.57], 5.3, 9.7, 2.15, 2.25, z0 - 0.1, z1 + 0.1, 'steel');
+    kcBloco(M, 'wood', KC_COR.madeira, 5.6, 9.4, 0.4, 0.48, z0 + 0.55, z1 - 0.55, 'wood');
+    for (const x of [5.8, 9.2]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.04, x + 0.04, 0, 0.4, z0 + 0.65, z1 - 0.65, 'steel');
+  }
+});
+
+// Com escada: girar somente de 90 em 90 graus. A escada e o patamar têm 2,4 m de largura.
+PF.kcArquibancadaConcreto = () => prefab('kcArquibancadaConcreto', (M) => {
+  KC_ESCADAS.kcArquibancadaConcreto = []; M.local(1);
+  for (let i = 0; i < 3; i++) kcBloco(M, 'concrete', KC_COR.laje, -5.2, 2.8, 0, (i + 1) * 0.4, -3 + i * 1.2, -1.8 + i * 1.2);
+  kcEscadaF(M, 'kcArquibancadaConcreto', 2.8, 5.2, -3, 0.6, 'z', 0, 1.2);
+  kcPatamar(M, -5.2, 5.2, 0.6, 3, 1.2);
+});
+
+// Bancadas abertas: os balcões e postes são sólidos, deixando a frente acessível.
+function kcQuiosqueRua(M, cor, faixa) {
+  kcBloco(M, 'wood', cor, -1.5, 1.5, 0, 1.05, -0.45, 0.1, 'wood');
+  for (const x of [-1.4, 1.4]) for (const z of [-0.7, 0.7]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.04, x + 0.04, 0, 2.35, z - 0.04, z + 0.04, 'steel');
+  kcBloco(M, 'canvas', faixa, -1.6, 1.6, 2.25, 2.35, -0.85, 0.85, 'wood');
+  M.cls = 1; M.color(KC_COR.branco); M.boxB('paint', -1.25, 1.25, 1.88, 2.18, 0.7, 0.72); M.cls = 0;
+}
+PF.kcQuiosqueAcai = () => prefab('kcQuiosqueAcai', (M) => {
+  M.local(1); kcQuiosqueRua(M, [0.37, 0.12, 0.43], [0.48, 0.19, 0.55]);
+  M.cls = 1; M.color([0.64, 0.3, 0.7]); for (const x of [-0.9, -0.6, -0.3]) { M.save().move(x, 1.05, 0); M.cyl('plastic', 0.1, 0.18, 10); M.restore(); } M.cls = 0;
+});
+PF.kcChurrasquinho = () => prefab('kcChurrasquinho', (M) => {
+  M.local(1); kcQuiosqueRua(M, [0.56, 0.2, 0.12], [0.8, 0.22, 0.12]);
+  kcBloco(M, 'steel', KC_COR.ferro, -0.8, 0.8, 1.05, 1.18, -0.38, 0.02, 'steel');
+  M.cls = 1; M.color([0.85, 0.77, 0.56]); for (let x = -0.7; x <= 0.7; x += 0.2) M.tube('wood', 0.012, [[x, 1.2, -0.45], [x, 1.2, 0.12]], 4); M.cls = 0;
+});
+PF.kcMototaxi = () => prefab('kcMototaxi', (M) => {
+  M.local(1);
+  for (const x of [-1.5, 1.5]) for (const z of [-0.7, 0.7]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.04, x + 0.04, 0, 2.35, z - 0.04, z + 0.04, 'steel');
+  kcBloco(M, 'canvas', KC_COR.amarelo, -1.65, 1.65, 2.25, 2.35, -0.85, 0.85, 'wood');
+  kcBloco(M, 'wood', KC_COR.madeira, -1.2, 1.2, 0.42, 0.5, -0.65, -0.3, 'wood');
+  for (const x of [-1, 1]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.04, x + 0.04, 0, 0.42, -0.6, -0.35, 'steel');
+  M.cls = 1; M.color([0.12, 0.12, 0.12]); M.boxB('paint', -1, 1, 1.9, 2.16, 0.7, 0.72); M.cls = 0;
+});
+PF.kcOrelhao = () => prefab('kcOrelhao', (M) => {
+  M.local(1); kcBloco(M, 'steel', KC_COR.ferro, -0.09, 0.09, 0, 1.5, -0.09, 0.09, 'steel');
+  kcBloco(M, 'plastic', [0.12, 0.46, 0.65], -0.45, 0.45, 1.25, 2.15, -0.35, -0.18, 'steel');
+  kcBloco(M, 'plastic', [0.12, 0.46, 0.65], -0.45, -0.35, 1.25, 2.15, -0.35, 0.22, 'steel');
+  kcBloco(M, 'plastic', [0.12, 0.46, 0.65], 0.35, 0.45, 1.25, 2.15, -0.35, 0.22, 'steel');
+  kcBloco(M, 'plastic', [0.12, 0.46, 0.65], -0.45, 0.45, 2.05, 2.15, -0.35, 0.22, 'steel');
+  kcBloco(M, 'plastic', [0.15, 0.15, 0.17], -0.18, 0.18, 1.35, 1.78, -0.18, -0.04, 'steel');
+});
+PF.kcLixeiraRua = () => prefab('kcLixeiraRua', (M) => {
+  M.local(1); kcBloco(M, 'steel', KC_COR.ferro, -0.05, 0.05, 0, 1.25, -0.05, 0.05, 'steel');
+  kcBloco(M, 'plastic', [0.18, 0.46, 0.24], -0.35, 0.35, 0.55, 1.2, -0.3, 0.3, 'steel');
+  M.cls = 1; M.color(KC_COR.concretoEsc); M.boxB('dark', -0.28, 0.28, 1.2, 1.21, -0.23, 0.23); M.cls = 0;
+});
+PF.kcBancoPraca = () => prefab('kcBancoPraca', (M) => {
+  M.local(1); kcBloco(M, 'wood', KC_COR.madeira, -1, 1, 0.42, 0.5, -0.25, 0.25, 'wood');
+  kcBloco(M, 'wood', KC_COR.madeira, -1, 1, 0.5, 0.9, -0.28, -0.2, 'wood');
+  for (const x of [-0.8, 0.8]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.05, x + 0.05, 0, 0.42, -0.2, 0.2, 'steel');
+});
+PF.kcPosteGato = () => prefab('kcPosteGato', (M) => {
+  M.local(1); kcBloco(M, 'concrete', KC_COR.concreto, -0.16, 0.16, 0, 7, -0.16, 0.16);
+  kcBloco(M, 'wood', KC_COR.madeira, -0.9, 0.9, 6.5, 6.62, -0.07, 0.07, 'wood');
+  M.cls = 1; M.color([0.08, 0.08, 0.08]);
+  for (let i = 0; i < 9; i++) { const x = -0.8 + i * 0.2; M.tube('rubber', 0.015, [[x, 6.6, 0], [x * 0.5, 5.1 + (i % 3) * 0.2, 0.3], [-x * 0.3, 4.2, -0.18], [x, 3.6, 0.16]], 5); }
+  M.cls = 0;
+});
+PF.kcMesaDomino = () => prefab('kcMesaDomino', (M) => {
+  M.local(1); kcBloco(M, 'wood', KC_COR.madeira, -0.6, 0.6, 0.72, 0.8, -0.6, 0.6, 'wood');
+  for (const x of [-0.48, 0.48]) for (const z of [-0.48, 0.48]) kcBloco(M, 'wood', KC_COR.madeira, x - 0.04, x + 0.04, 0, 0.72, z - 0.04, z + 0.04, 'wood');
+  for (const z of [-1, 1]) { kcBloco(M, 'wood', KC_COR.madeira, -0.7, 0.7, 0.4, 0.48, z - 0.2, z + 0.2, 'wood'); for (const x of [-0.55, 0.55]) kcBloco(M, 'wood', KC_COR.madeira, x - 0.04, x + 0.04, 0, 0.4, z - 0.14, z + 0.14, 'wood'); }
+  M.cls = 1; M.color(KC_COR.branco); for (const [x, z] of [[-0.2, 0], [0, 0.1], [0.2, -0.1]]) M.boxB('plastic', x - 0.07, x + 0.07, 0.8, 0.82, z - 0.035, z + 0.035); M.cls = 0;
+});
+PF.kcCarrinhoPipoca = () => prefab('kcCarrinhoPipoca', (M) => {
+  M.local(1); kcBloco(M, 'paint', KC_COR.vermelho, -0.7, 0.7, 0.25, 1.1, -0.4, 0.4, 'steel');
+  kcBloco(M, 'glass', [0.6, 0.75, 0.8], -0.55, 0.55, 1.1, 1.8, -0.3, 0.3, 'steel');
+  kcBloco(M, 'paint', KC_COR.vermelho, -0.7, 0.7, 1.8, 1.9, -0.4, 0.4, 'steel');
+  for (const x of [-0.55, 0.55]) for (const z of [-0.42, 0.42]) { M.save().move(x, 0.22, z).rotX(Math.PI / 2); M.color(KC_COR.ferro); M.cyl('rubber', 0.22, 0.08, 12); M.restore(); M.col(x - 0.22, x + 0.22, 0, 0.44, z - 0.08, z + 0.08, 'steel'); }
+});
+PF.kcFliperamaBar = () => prefab('kcFliperamaBar', (M) => {
+  M.local(1); kcBloco(M, 'wood', [0.36, 0.23, 0.16], -1.8, 0.6, 0, 1.05, -0.45, 0.35, 'wood');
+  kcBloco(M, 'wood', [0.2, 0.18, 0.25], 0.8, 1.6, 0, 1.8, -0.5, 0.35, 'wood');
+  M.cls = 1; M.color([0.14, 0.48, 0.62]); M.boxB('glass', 0.9, 1.5, 1.05, 1.55, 0.35, 0.36);
+  M.color(KC_COR.amarelo); M.boxB('paint', 0.9, 1.5, 1.62, 1.75, 0.35, 0.36); M.color(KC_COR.vermelho); M.boxB('plastic', 1.05, 1.12, 0.98, 1.04, 0.35, 0.4); M.cls = 0;
+});

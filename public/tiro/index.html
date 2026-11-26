@@ -10962,6 +10962,177 @@ PF.kcNavio = () => prefab('kcNavio', (M) => {
   KC_INVIS.kcNavio.push([-1.5, 1.5, 0, 4.5, N.z0 + N.L - 0.5, N.z0 + N.L + 0.2]);
 });
 
+/* ---------- kit de iate: peças independentes para o convés ---------- */
+const KC_VIDROS = {}; // [x, y, z, largura, altura, giro], painéis dinâmicos montados pelo mapa-json.js
+const KC_NBRANCO = [0.93, 0.94, 0.92], KC_NAZUL = [0.12, 0.23, 0.38], KC_NTECA = [0.65, 0.46, 0.29];
+function kcNB(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo = 'metal') {
+  M.color(cor); M.boxB(mat, x0, x1, y0, y1, z0, z1); M.col(x0, x1, y0, y1, z0, z1, tipo);
+}
+// Faixa envidraçada: cada painel é um iaVidro destrutível, entre montantes sólidos.
+function kcNJanela(M, nome, eixo, fixo, a0, a1) {
+  const B = (a, b, y0, y1) => eixo === 'x' ? kcNB(M, 'paint', KC_NBRANCO, a, b, y0, y1, fixo - 0.08, fixo + 0.08) : kcNB(M, 'paint', KC_NBRANCO, fixo - 0.08, fixo + 0.08, y0, y1, a, b);
+  B(a0, a1, 0, 0.75); B(a0, a1, 2.5, 2.8);
+  const n = Math.ceil((a1 - a0) / 1.8), w = (a1 - a0) / n;
+  for (let i = 0; i <= n; i++) { const a = a0 + i * w; B(Math.max(a0, a - 0.06), Math.min(a1, a + 0.06), 0.75, 2.5); }
+  for (let i = 0; i < n; i++) { const a = a0 + (i + 0.5) * w; KC_VIDROS[nome].push(eixo === 'x' ? [a, 0.75, fixo, w - 0.12, 1.75, 0] : [fixo, 0.75, a, w - 0.12, 1.75, Math.PI / 2]); }
+}
+function kcNPredio(M, nome, X, Z, vidro) {
+  kcNB(M, 'paint', KC_NBRANCO, -X, X, 2.8, 2.95, -Z, Z);
+  for (const x of [-X + 0.08, X - 0.08]) {
+    if (vidro) kcNJanela(M, nome, 'z', x, -Z, Z);
+    else kcNB(M, 'paint', KC_NBRANCO, x - 0.08, x + 0.08, 0, 2.8, -Z, Z);
+  }
+  for (const z of [-Z + 0.08, Z - 0.08]) {
+    if (vidro) { kcNJanela(M, nome, 'x', z, -X, -1.2); kcNJanela(M, nome, 'x', z, 1.2, X); }
+    else { kcNB(M, 'paint', KC_NBRANCO, -X, -1.2, 0, 2.8, z - 0.08, z + 0.08); kcNB(M, 'paint', KC_NBRANCO, 1.2, X, 0, 2.8, z - 0.08, z + 0.08); }
+    kcNB(M, 'paint', KC_NBRANCO, -1.2, 1.2, 2.2, 2.8, z - 0.08, z + 0.08);
+  }
+}
+PF.kcNSalao = () => prefab('kcNSalao', (M) => { KC_VIDROS.kcNSalao = []; M.local(1); kcNPredio(M, 'kcNSalao', 5.5, 7, true); });
+PF.kcNPonte = () => prefab('kcNPonte', (M) => {
+  KC_VIDROS.kcNPonte = []; M.local(1); kcNPredio(M, 'kcNPonte', 4, 3, true);
+  kcNB(M, 'paint', KC_NAZUL, -2.4, 2.4, 0, 1, 1.55, 2.15);
+  M.cls = 1; M.color([0.18, 0.55, 0.66]); for (const x of [-1.5, 0, 1.5]) M.boxB('glass', x - 0.45, x + 0.45, 1.01, 1.03, 1.62, 2.05);
+  M.color(KC_COR.ferro); M.tube('steel', 0.035, [[0, 1.05, 1.5], [0, 1.3, 1.25]], 8); M.save().move(0, 1.3, 1.25).rotX(Math.PI / 2); M.lathe('steel', [[0.28, 0], [0.32, 0], [0.32, 0.04], [0.28, 0.04]], 16); M.restore(); M.cls = 0;
+});
+PF.kcNCassino = () => prefab('kcNCassino', (M) => {
+  M.local(1); kcNPredio(M, 'kcNCassino', 5.5, 8, false);
+  for (const z of [-3.5, 3.5]) {
+    kcNB(M, 'wood', KC_NTECA, -1.2, 1.2, 0.7, 0.82, z - 0.7, z + 0.7, 'wood');
+    for (const x of [-0.9, 0.9]) kcNB(M, 'wood', KC_NTECA, x - 0.08, x + 0.08, 0, 0.7, z - 0.08, z + 0.08, 'wood');
+    M.cls = 1; M.color([0.12, 0.42, 0.25]); M.boxB('canvas', -1.1, 1.1, 0.82, 0.84, z - 0.6, z + 0.6); M.cls = 0;
+  }
+});
+// Escada externa até y=2,95; gire somente de 90 em 90 graus. O patamar deve encostar na laje do prédio.
+PF.kcNEscada = () => prefab('kcNEscada', (M) => {
+  KC_ESCADAS.kcNEscada = []; M.local(1);
+  kcEscadaF(M, 'kcNEscada', -1.2, 1.2, -3.75, 1.35, 'z', 0, 2.95);
+  kcPatamar(M, -1.2, 1.2, 1.35, 3.75, 2.95);
+  kcNB(M, 'steel', KC_COR.ferro, -1.26, -1.2, 2.95, 3.95, 1.35, 3.75);
+});
+
+PF.kcNPiscina = () => prefab('kcNPiscina', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -3, 3, 0, 0.2, -2, 2);
+  for (const x of [-2.85, 2.85]) kcNB(M, 'paint', KC_NBRANCO, x - 0.15, x + 0.15, 0.2, 0.85, -2, 2);
+  for (const z of [-1.85, 1.85]) kcNB(M, 'paint', KC_NBRANCO, -2.7, 2.7, 0.2, 0.85, z - 0.15, z + 0.15);
+  M.cls = 1; M.color([0.17, 0.59, 0.7]); M.boxB('glass', -2.7, 2.7, 0.55, 0.57, -1.7, 1.7); M.cls = 0;
+});
+PF.kcNEspreguicadeira = () => prefab('kcNEspreguicadeira', (M) => {
+  M.local(1); kcNB(M, 'wood', KC_NTECA, -0.4, 0.4, 0.25, 0.38, -1, 1, 'wood');
+  kcNB(M, 'canvas', KC_NBRANCO, -0.36, 0.36, 0.38, 0.48, -0.95, 0.9, 'wood');
+  kcNB(M, 'canvas', KC_NBRANCO, -0.36, 0.36, 0.48, 0.85, -1, -0.72, 'wood');
+});
+PF.kcNGuardaSol = () => prefab('kcNGuardaSol', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.05, 0.05, 0, 2.35, -0.05, 0.05);
+  M.color(KC_NBRANCO); M.lathe('canvas', [[0, 2.5], [1.3, 2.1], [1.3, 2.02]], 16); M.col(-1.3, 1.3, 2.02, 2.5, -1.3, 1.3, 'wood');
+});
+PF.kcNBar = () => prefab('kcNBar', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1.8, 1.8, 0, 1.05, -0.5, 0.5);
+  kcNB(M, 'wood', KC_NTECA, -1.9, 1.9, 1.05, 1.14, -0.6, 0.6, 'wood');
+  M.cls = 1; M.color(KC_NAZUL); for (const x of [-1, -0.5, 0, 0.5, 1]) M.boxB('glass', x - 0.06, x + 0.06, 1.14, 1.42, -0.1, 0.1); M.cls = 0;
+});
+PF.kcNSofa = () => prefab('kcNSofa', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1.3, 1.3, 0, 0.45, -0.45, 0.45);
+  kcNB(M, 'canvas', [0.83, 0.85, 0.82], -1.25, 1.25, 0.45, 0.58, -0.42, 0.42, 'wood');
+  kcNB(M, 'canvas', KC_NBRANCO, -1.3, 1.3, 0.58, 0.95, -0.45, -0.25, 'wood');
+});
+PF.kcNMesaCadeiras = () => prefab('kcNMesaCadeiras', (M) => {
+  M.local(1); kcNB(M, 'wood', KC_NTECA, -0.65, 0.65, 0.72, 0.8, -0.65, 0.65, 'wood');
+  kcNB(M, 'steel', KC_COR.ferro, -0.08, 0.08, 0, 0.72, -0.08, 0.08);
+  for (const x of [-1.3, 1.3]) { kcNB(M, 'paint', KC_NBRANCO, x - 0.3, x + 0.3, 0.4, 0.5, -0.3, 0.3); kcNB(M, 'paint', KC_NBRANCO, x - 0.28, x + 0.28, 0, 0.4, -0.25, 0.25); }
+});
+PF.kcNBoia = () => prefab('kcNBoia', (M) => {
+  M.local(1); M.color(KC_NBRANCO); M.save().move(0, 0.5, 0).rotX(Math.PI / 2); M.lathe('plastic', [[0.3, 0], [0.48, 0], [0.5, 0.1], [0.3, 0.1]], 20); M.restore(); M.col(-0.5, 0.5, 0, 1, -0.1, 0.1, 'wood');
+  M.cls = 1; M.color(KC_COR.vermelho); for (const x of [-0.38, 0.38]) M.boxB('paint', x - 0.07, x + 0.07, 0.4, 0.6, 0.01, 0.07); M.cls = 0;
+});
+PF.kcNArmario = () => prefab('kcNArmario', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1, 1, 0, 1.1, -0.55, 0.55);
+  kcNB(M, 'wood', KC_NTECA, -1.04, 1.04, 1.1, 1.18, -0.59, 0.59, 'wood');
+  M.cls = 1; M.color(KC_COR.ferro); M.boxB('steel', -0.03, 0.03, 0.1, 0.95, 0.55, 0.56); M.cls = 0;
+});
+PF.kcNHeliponto = () => prefab('kcNHeliponto', (M) => {
+  M.local(1); M.color([0.25, 0.32, 0.33]); M.boxB('paint', -6, 6, 0, 0.015, -6, 6); M.cls = 1; M.color(KC_NBRANCO);
+  M.save().move(0, 0.017, 0); M.lathe('paint', [[4.8, 0], [4.95, 0], [4.95, 0.005], [4.8, 0.005]], 48); M.restore();
+  for (const x of [-1.2, 1.2]) M.boxB('paint', x - 0.15, x + 0.15, 0.017, 0.025, -1.5, 1.5);
+  M.boxB('paint', -1.2, 1.2, 0.017, 0.025, -0.15, 0.15); M.cls = 0;
+});
+
+function kcNBarco(M, pequeno) {
+  const L = pequeno ? 2.2 : 3, W = pequeno ? 0.85 : 1.05;
+  for (const x of [-L + 0.35, L - 0.35]) kcNB(M, 'steel', KC_COR.ferro, x - 0.12, x + 0.12, 0, 0.55, -W - 0.1, W + 0.1);
+  kcNB(M, 'paint', KC_NBRANCO, -L, L, 0.55, 1.25, -W, W);
+  kcNB(M, 'paint', pequeno ? [0.95, 0.48, 0.13] : KC_NAZUL, -L + 0.08, L - 0.08, 1.25, 1.48, -W + 0.05, W - 0.05);
+  kcNB(M, 'paint', KC_NBRANCO, -L + 0.5, L - 0.5, 1.48, 1.65, -W + 0.18, W - 0.18);
+  if (!pequeno) kcNB(M, 'glass', [0.45, 0.67, 0.75], -0.4, 0.5, 1.65, 2.15, -0.7, 0.7, 'glass');
+}
+PF.kcNLancha = () => prefab('kcNLancha', (M) => { M.local(1); kcNBarco(M, false); });
+PF.kcNBoteSalvaVidas = () => prefab('kcNBoteSalvaVidas', (M) => { M.local(1); kcNBarco(M, true); });
+PF.kcNGuindaste = () => prefab('kcNGuindaste', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.35, 0.35, 0, 0.3, -0.35, 0.35);
+  kcNB(M, 'paint', KC_NBRANCO, -0.18, 0.18, 0.3, 3.8, -0.18, 0.18);
+  kcNB(M, 'paint', KC_NBRANCO, -0.18, 3, 3.55, 3.8, -0.18, 0.18);
+  M.cls = 1; M.color(KC_COR.ferro); M.tube('steel', 0.025, [[2.7, 3.55, 0], [2.7, 1.2, 0]], 6); M.cls = 0;
+});
+PF.kcNCaixaEquipamento = () => prefab('kcNCaixaEquipamento', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -1, 1, 0, 1.15, -0.6, 0.6);
+  M.cls = 1; M.color(KC_COR.ferro); M.boxB('steel', -0.95, 0.95, 1.02, 1.04, 0.6, 0.61); M.cls = 0;
+});
+PF.kcNRoloCabo = () => prefab('kcNRoloCabo', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.6, 0.6, 0, 0.25, -0.5, 0.5);
+  M.color(KC_NTECA); M.save().move(-0.5, 0.75, 0).rotZ(-Math.PI / 2); M.cyl('wood', 0.5, 1, 16); M.restore();
+  M.col(-0.5, 0.5, 0.25, 1.25, -0.5, 0.5, 'wood');
+  M.cls = 1; M.color([0.25, 0.22, 0.18]); for (let x = -0.35; x <= 0.35; x += 0.14) { M.save().move(x, 0.75, 0).rotZ(-Math.PI / 2); M.lathe('rubber', [[0.49, 0], [0.52, 0], [0.52, 0.03], [0.49, 0.03]], 16); M.restore(); } M.cls = 0;
+});
+PF.kcNCabeco = () => prefab('kcNCabeco', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.45, 0.45, 0, 0.15, -0.3, 0.3);
+  for (const x of [-0.25, 0.25]) kcNB(M, 'steel', KC_COR.ferro, x - 0.09, x + 0.09, 0.15, 0.65, -0.1, 0.1);
+  kcNB(M, 'steel', KC_COR.ferro, -0.45, 0.45, 0.58, 0.72, -0.12, 0.12);
+});
+PF.kcNMangueira = () => prefab('kcNMangueira', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_COR.vermelho, -0.55, 0.55, 0, 1.05, -0.25, 0.25);
+  M.cls = 1; M.color([0.87, 0.83, 0.7]); M.save().move(0, 0.52, 0.26).rotX(Math.PI / 2); M.lathe('canvas', [[0.18, 0], [0.42, 0], [0.42, 0.03], [0.18, 0.03]], 16); M.restore(); M.cls = 0;
+});
+PF.kcNConteiner = () => prefab('kcNConteiner', (M) => {
+  M.local(1); kcNB(M, 'corrugated', [0.72, 0.76, 0.76], -2, 2, 0, 2, -1, 1);
+  M.cls = 1; M.color(KC_NAZUL); for (const x of [-1.3, 0, 1.3]) M.boxB('steel', x - 0.03, x + 0.03, 0.15, 1.85, 1, 1.02); M.cls = 0;
+});
+PF.kcNMastroRadar = () => prefab('kcNMastroRadar', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -0.2, 0.2, 0, 4.5, -0.2, 0.2);
+  kcNB(M, 'paint', KC_NBRANCO, -1.1, 1.1, 4.35, 4.55, -0.18, 0.18);
+  kcNB(M, 'paint', KC_NBRANCO, -0.9, 0.9, 4.8, 5.05, -0.12, 0.12);
+  kcNB(M, 'steel', KC_COR.ferro, -0.05, 0.05, 4.55, 4.8, -0.05, 0.05);
+});
+PF.kcNSatelite = () => prefab('kcNSatelite', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -0.35, 0.35, 0, 0.3, -0.35, 0.35);
+  M.color(KC_NBRANCO); M.save().move(0, 0.3, 0); M.lathe('plastic', [[0.55, 0], [0.6, 0.2], [0.55, 0.65], [0.35, 0.95], [0, 1.05]], 18); M.restore(); M.col(-0.6, 0.6, 0.3, 1.35, -0.6, 0.6, 'metal');
+});
+PF.kcNFarol = () => prefab('kcNFarol', (M) => {
+  M.local(1); kcNB(M, 'steel', KC_COR.ferro, -0.08, 0.08, 0, 1.6, -0.08, 0.08);
+  kcNB(M, 'paint', KC_NBRANCO, -0.22, 0.22, 1.6, 1.95, -0.16, 0.16);
+  M.cls = 1; M.color(KC_COR.vermelho); M.boxB('lamp', -0.18, 0, 1.66, 1.88, 0.16, 0.17); M.color([0.15, 0.9, 0.3]); M.boxB('lamp', 0, 0.18, 1.66, 1.88, 0.16, 0.17); M.cls = 0;
+});
+PF.kcNEscotilha = () => prefab('kcNEscotilha', (M) => {
+  M.local(1); kcNB(M, 'paint', KC_NBRANCO, -0.8, 0.8, 0, 0.18, -0.8, 0.8);
+  M.cls = 1; M.color(KC_COR.ferro); M.boxB('steel', -0.6, 0.6, 0.18, 0.2, -0.6, 0.6); M.color(KC_NAZUL); M.boxB('glass', -0.46, 0.46, 0.2, 0.21, -0.46, 0.46); M.cls = 0;
+});
+// Corrimão com parede invisível: girar somente de 90 em 90 graus.
+PF.kcNCorrimao = () => prefab('kcNCorrimao', (M) => {
+  KC_INVIS.kcNCorrimao = []; M.local(1); M.color(KC_COR.ferro);
+  for (const x of [-2, 0, 2]) kcNB(M, 'steel', KC_COR.ferro, x - 0.035, x + 0.035, 0, 1.05, -0.035, 0.035);
+  kcNB(M, 'steel', KC_COR.ferro, -2.04, 2.04, 1, 1.08, -0.04, 0.04);
+  KC_INVIS.kcNCorrimao.push([-2, 2, 0, 1, -0.04, 0.04]);
+});
+PF.kcNExtintor = () => prefab('kcNExtintor', (M) => {
+  M.local(1); M.color(KC_COR.vermelho); M.cyl('paint', 0.13, 0.55, 12); M.col(-0.13, 0.13, 0, 0.55, -0.13, 0.13, 'metal');
+  kcNB(M, 'steel', KC_COR.ferro, -0.04, 0.04, 0.55, 0.7, -0.04, 0.04);
+  M.cls = 1; M.color([0.15, 0.15, 0.15]); M.tube('rubber', 0.015, [[0.06, 0.65, 0], [0.2, 0.55, 0], [0.16, 0.28, 0]], 5); M.cls = 0;
+});
+PF.kcNPlacaSaida = () => prefab('kcNPlacaSaida', (M) => {
+  M.local(1); kcNB(M, 'plastic', [0.12, 0.52, 0.27], -0.5, 0.5, 0, 0.3, -0.04, 0.04);
+  M.cls = 1; M.color(KC_NBRANCO); M.boxB('paint', -0.3, 0.18, 0.13, 0.17, 0.041, 0.045);
+  M.tube('paint', 0.025, [[0.02, 0.07, 0.045], [0.18, 0.15, 0.045], [0.02, 0.23, 0.045]], 4); M.cls = 0;
+});
+
 /* ==========================================================================
    SUPERFÍCIES DO EDITOR DE MAPAS (Tiro da Galera). As caixas e escadas do editor escolhem a superfície numa galeria com miniaturas
    e ganham "Tamanho da textura" (campo tx do .json: 1 = normal, 2 = o dobro do tamanho).
@@ -11175,6 +11346,13 @@ function edInvPrefab(P) {
   const tr = (x, z) => [px + x * c + z * s, pz - x * s + z * c];
   for (const [x0, x1, y0, y1, z0, z1] of E) { const a = tr(x0, z0), b = tr(x1, z1); glassWall(a[0], b[0], py + y0, py + y1, a[1], b[1]); }
 }
+// Os vidros do prefab são props independentes: desaparecem e deixam de colidir ao quebrar.
+function edVidrosPrefab(P) {
+  const E = typeof KC_VIDROS !== 'undefined' && KC_VIDROS[P.nome];
+  if (!E) return;
+  const a = (P.r || 0) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), e = P.e || 1, [px, py, pz] = P.p;
+  for (const [x, y, z, w, h, r] of E) DECOR.dyn('iaVidro', px + e * (x * c + z * s), py + e * y, pz + e * (-x * s + z * c), a + r, { a: [w * e, h * e] });
+}
 // monta as peças (também usado pelo botão "Jogar" do editor)
 function edConstruir(J) {
   for (const P of J.pecas || []) {
@@ -11183,7 +11361,7 @@ function edConstruir(J) {
       if (P.t === 'caixa' && P.inv) { const B = edCaixaBox(P); glassWall(B.x0, B.x1, B.y0, B.y1, B.z0, B.z1); } // parede invisível: só segura gente
       else if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
       else if (P.t === 'escada') edEscada(P);
-      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); }
+      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); edVidrosPrefab(P); }
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
       else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
     } catch (e) { console.warn('peça do mapa', P, e); }
@@ -11373,6 +11551,11 @@ function edMalha(P) {
   else if (P.t === 'luz') { o = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffd880 })); o.add(new THREE.PointLight(0xffd8a0, 1.2, P.raio || 7)); }
   else if (P.t === 'prefab') o = edPrefabGrupo('pf:' + P.nome + JSON.stringify(P.a || []), () => PF[P.nome](...(P.a || [])));
   else if (P.t === 'prop') o = edPrefabGrupo('prop:' + P.nome + JSON.stringify(P.a || []), () => propDef(P.nome, P.a || []).pf());
+  // Vidros dinâmicos não fazem parte da malha fixa; desenhe-os também na cena e na miniatura do editor.
+  if (o && P.t === 'prefab' && typeof KC_VIDROS !== 'undefined' && KC_VIDROS[P.nome]) {
+    const mat = new THREE.MeshStandardMaterial({ color: 0x9cc3d0, transparent: true, opacity: 0.45, roughness: 0.2 });
+    for (const [x, y, z, w, h, r] of KC_VIDROS[P.nome]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.03), mat); m.position.set(x, y + h / 2, z); m.rotation.y = r; o.add(m); }
+  }
   if (!o) o = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xff00ff, wireframe: true }));
   o.position.set(P.p[0], P.p[1], P.p[2]); if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') o.rotation.y = ((P.r || 0) * Math.PI) / 180;
   if (P.e) o.scale.setScalar(P.e);

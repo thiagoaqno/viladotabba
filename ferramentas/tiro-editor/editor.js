@@ -148,6 +148,11 @@ function edMalha(P) {
   else if (P.t === 'luz') { o = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffd880 })); o.add(new THREE.PointLight(0xffd8a0, 1.2, P.raio || 7)); }
   else if (P.t === 'prefab') o = edPrefabGrupo('pf:' + P.nome + JSON.stringify(P.a || []), () => PF[P.nome](...(P.a || [])));
   else if (P.t === 'prop') o = edPrefabGrupo('prop:' + P.nome + JSON.stringify(P.a || []), () => propDef(P.nome, P.a || []).pf());
+  // Vidros dinâmicos não fazem parte da malha fixa; desenhe-os também na cena e na miniatura do editor.
+  if (o && P.t === 'prefab' && typeof KC_VIDROS !== 'undefined' && KC_VIDROS[P.nome]) {
+    const mat = new THREE.MeshStandardMaterial({ color: 0x9cc3d0, transparent: true, opacity: 0.45, roughness: 0.2 });
+    for (const [x, y, z, w, h, r] of KC_VIDROS[P.nome]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.03), mat); m.position.set(x, y + h / 2, z); m.rotation.y = r; o.add(m); }
+  }
   if (!o) o = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xff00ff, wireframe: true }));
   o.position.set(P.p[0], P.p[1], P.p[2]); if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') o.rotation.y = ((P.r || 0) * Math.PI) / 180;
   if (P.e) o.scale.setScalar(P.e);

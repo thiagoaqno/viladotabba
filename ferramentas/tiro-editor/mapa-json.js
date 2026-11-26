@@ -117,6 +117,13 @@ function edInvPrefab(P) {
   const tr = (x, z) => [px + x * c + z * s, pz - x * s + z * c];
   for (const [x0, x1, y0, y1, z0, z1] of E) { const a = tr(x0, z0), b = tr(x1, z1); glassWall(a[0], b[0], py + y0, py + y1, a[1], b[1]); }
 }
+// Os vidros do prefab são props independentes: desaparecem e deixam de colidir ao quebrar.
+function edVidrosPrefab(P) {
+  const E = typeof KC_VIDROS !== 'undefined' && KC_VIDROS[P.nome];
+  if (!E) return;
+  const a = (P.r || 0) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), e = P.e || 1, [px, py, pz] = P.p;
+  for (const [x, y, z, w, h, r] of E) DECOR.dyn('iaVidro', px + e * (x * c + z * s), py + e * y, pz + e * (-x * s + z * c), a + r, { a: [w * e, h * e] });
+}
 // monta as peças (também usado pelo botão "Jogar" do editor)
 function edConstruir(J) {
   for (const P of J.pecas || []) {
@@ -125,7 +132,7 @@ function edConstruir(J) {
       if (P.t === 'caixa' && P.inv) { const B = edCaixaBox(P); glassWall(B.x0, B.x1, B.y0, B.y1, B.z0, B.z1); } // parede invisível: só segura gente
       else if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
       else if (P.t === 'escada') edEscada(P);
-      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); }
+      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); edVidrosPrefab(P); }
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
       else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
     } catch (e) { console.warn('peça do mapa', P, e); }

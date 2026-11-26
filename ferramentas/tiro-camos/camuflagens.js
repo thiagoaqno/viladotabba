@@ -138,16 +138,16 @@
   }
 }
 
-/* Modo de teste das camuflagens (2026-11-26, pedido do Thiago: ver as skins sem ter nível nas armas). Abrir o jogo com
-   ?camos=todas libera todas as camuflagens de arma e as skins da faca NESTE aparelho (localStorage 'tiro_camos_todas');
-   ?camos=normal desliga. Não mexe no XP nem no nível de ninguém: só a trava (camoLock) deixa de valer aqui. */
+/* Prévia das camuflagens: ?camos=todas libera as skins somente nesta abertura do jogo. A chave antiga do modo permanente
+   é removida; ao recarregar ou abrir o endereço normal, voltam as travas pelo nível da arma e pelos abates de faca. */
 const CAMOS_TODAS = (() => {
-  try {
-    const q = new URLSearchParams(location.search).get('camos');
-    if (q === 'todas') localStorage.setItem('tiro_camos_todas', '1');
-    if (q === 'normal') localStorage.removeItem('tiro_camos_todas');
-    return localStorage.getItem('tiro_camos_todas') === '1';
-  } catch (e) { return false; }
+  try { localStorage.removeItem('tiro_camos_todas'); } catch (e) { /* armazenamento indisponível */ }
+  const url = new URL(location.href), previa = url.searchParams.get('camos') === 'todas';
+  if (url.searchParams.has('camos')) {
+    url.searchParams.delete('camos');
+    try { history.replaceState(history.state, '', url.pathname + url.search + url.hash); } catch (e) { /* mantém o endereço original */ }
+  }
+  return previa;
 })();
 // (a camuflagem só se põe numa classe personalizada, e a primeira abre no nível 3 do jogador: no teste, já no nível 1)
 if (CAMOS_TODAS) { camoLock = function () { return ''; }; CUSTOM_UNLOCK[0] = 1; }

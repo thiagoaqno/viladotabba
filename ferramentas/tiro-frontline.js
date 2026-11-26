@@ -247,6 +247,12 @@ h = troca(h, "sunI:0.5,vmSun:0xff4a20,fog:[0.12,0.05,0.04],fogD:0.0062,hemi:[0x2
 h = troca(h, "bounce:[0.25,0.08,0.04],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25],grade:{lo:[1.0,0.92,0.95],hi:[1.1,0.92,0.8],exp:1.2}",
   "bounce:[0.45,0.15,0.08],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25],grade:{lo:[1.0,0.92,0.95],hi:[1.1,0.92,0.8],exp:1.3,lift:0.08}", { todas: false, nome: "Tephra: exposição" });
 
+// ---------- equilíbrio das armas ----------
+// M1014 (2026-11-26, o Thiago: "cadência muito alta, chega a ser roubado"): era 240 tiros por minuto (0,25 s entre tiros), com
+// 8 chumbos de 22 de dano, o que derruba de perto num tiro só. Agora 150 (0,4 s), e a barra de cadência do menu acompanha.
+h = troca(h, "model:'m1014',sound:'shotgun',auto:false,rpm:240,", "model:'m1014',sound:'shotgun',auto:false,rpm:150,", { nome: "M1014: cadência" });
+h = troca(h, "stats:{dmg:0.95,acc:0.3,rng:0.22,rof:0.4,mob:0.74}", "stats:{dmg:0.95,acc:0.3,rng:0.22,rof:0.25,mob:0.74}", { nome: "M1014: barra de cadência" });
+
 // ---------- mapas nossos (ferramentas/tiro-mapas/) ----------
 // Iate Esmeralda (2026-11-26): o código do mapa entra no fim do script do jogo, logo antes do boot, e se registra sozinho
 // (MAP_DEFS, MAPS, MAP_ART). A água do porto só tinha mar a oeste do cais: o iate traz a própria grade de água (iate.js) e aqui

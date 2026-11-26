@@ -247,6 +247,28 @@ h = troca(h, "sunI:0.5,vmSun:0xff4a20,fog:[0.12,0.05,0.04],fogD:0.0062,hemi:[0x2
 h = troca(h, "bounce:[0.25,0.08,0.04],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25],grade:{lo:[1.0,0.92,0.95],hi:[1.1,0.92,0.8],exp:1.2}",
   "bounce:[0.45,0.15,0.08],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25],grade:{lo:[1.0,0.92,0.95],hi:[1.1,0.92,0.8],exp:1.3,lift:0.08}", { todas: false, nome: "Tephra: exposição" });
 
+// ---------- captura do mouse ----------
+// (2026-11-26: um amigo do Thiago ficava com o mouse comum no meio da partida) O jogo desistia da captura depois de 2 recusas do
+// navegador e passava ao mouse comum até o fim da partida. O Chrome recusa quando o pedido vem menos de ~1 s depois do mouse
+// escapar, e clicar logo para voltar já contava como recusa. Agora:
+// - o pedido feito cedo demais espera o navegador liberar (o clique continua valendo como gesto por alguns segundos);
+// - depois da primeira recusa, o jogo pede a captura sem o "movimento bruto" (unadjustedMovement), que falha em alguns
+//   mouses e drivers;
+// - só desiste depois de 5 recusas, e não de 2.
+h = troca(h, "if(++LOCK.fails<2){showLockPrompt(true);return;", "if(++LOCK.fails<5){showLockPrompt(true);return;", { nome: "captura do mouse: 5 recusas" });
+h = troca(h, "if(!window.WebGLRenderingContext)", () => `{
+  let solto = -1e9;
+  document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement) solto = performance.now(); });
+  const pedir = lockAsk;
+  lockAsk = function () {
+    if (LOCK.fails >= 1) LOCK.rawNo = true;
+    const falta = 1150 - (performance.now() - solto);
+    if (falta > 0) { setTimeout(() => { if (LOCK.pending && document.pointerLockElement !== canvas) pedir(); }, falta); return; }
+    pedir();
+  };
+}
+if(!window.WebGLRenderingContext)`, { todas: false, nome: "captura do mouse: espera o navegador" });
+
 // ---------- equilíbrio das armas ----------
 // M1014 (2026-11-26, o Thiago: "cadência muito alta, chega a ser roubado"): era 240 tiros por minuto (0,25 s entre tiros), com
 // 8 chumbos de 22 de dano, o que derruba de perto num tiro só. Agora 150 (0,4 s), e a barra de cadência do menu acompanha.

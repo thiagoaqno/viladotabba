@@ -1,13 +1,23 @@
-# Tiro da Galera: M1014 com cadência menor
+# Tiro da Galera: o mouse não fica mais solto no meio da partida
 
-O Thiago achou a M1014 roubada: "cadência muito alta".
+Um amigo do Thiago ficava com o mouse comum (cursor normal) no meio da partida, às vezes depois do botão direito ou de mexer.
 
-- **Antes:** 240 tiros por minuto, ou 0,25 s entre tiros. A arma é semiautomática, com 8 chumbos de 22 de dano por tiro, e
-  derruba de perto com um tiro só, então dava para apertar quatro vezes por segundo.
-- **Agora:** 150 tiros por minuto, ou 0,4 s entre tiros. Ela continua mais rápida que a Remington 870, de bomba (75), e mais
-  lenta que a AA-12, automática e com dano menor (300).
-- A barra de cadência no menu das armas foi de 0,4 para 0,25, para acompanhar.
-- A troca é feita pelo `ferramentas/tiro-frontline.js`, na seção nova "equilíbrio das armas". Os bots que usam a M1014
-  também ficam com a cadência nova.
+## O que acontecia
 
-Conferido no navegador: `WEAPONS.m1014.rpm` = 150 (0,40 s entre tiros) e a barra em 0,25. Falta o Thiago sentir na partida.
+O jogo prende o mouse na tela para mirar. Se o navegador soltava o mouse, o jogo pausava e pedia um clique. Mas, se o
+navegador recusasse a nova captura **duas vezes**, o jogo desistia e passava a usar o mouse comum até o fim da partida. O Chrome
+recusa quando o pedido vem menos de ~1 s depois do mouse escapar, então clicar logo para voltar já contava como recusa.
+
+## O que mudou (tudo pelo `ferramentas/tiro-frontline.js`, seção "captura do mouse")
+
+- **Espera o navegador:** um clique feito cedo demais não é recusado. O jogo guarda o pedido e prende o mouse assim que o
+  navegador libera (1,15 s depois do mouse escapar). O clique continua valendo como gesto do jogador nesse meio-tempo.
+- **Sem "movimento bruto" depois de uma recusa:** a captura com `unadjustedMovement` (sem aceleração do Windows) falha em
+  alguns mouses e drivers. Depois da primeira recusa, o jogo pede a captura comum.
+- **Só desiste depois de 5 recusas**, e não de 2.
+
+O que solta o mouse no PC do amigo (sobreposição do Discord, programa do mouse, extensão) continua fora do alcance do jogo. O
+que muda é que ele volta a prender com um clique, em vez de ficar solto até o fim da partida.
+
+Conferido no navegador: o jogo abre sem erro e o pedido de captura é o novo. A captura em si não dá para testar sem alguém
+jogando: falta o amigo testar.

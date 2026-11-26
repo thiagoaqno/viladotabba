@@ -298,6 +298,12 @@ if (IATE_ATIVO) {
   // (2026-11-26, o Thiago: o bloom do Holo ficou forte demais) o brilho próprio das camuflagens (Holo, Cromado, e a faca Holo)
   // entra com 30% da força: as faixas, o liseré e as paillettes continuam, sem estourar o bloom
   h = troca(h, "totalEmissiveRadiance += camoGlow;", "totalEmissiveRadiance += camoGlow * 0.3;", { nome: "brilho das camuflagens" });
+  // (2026-11-26, o Thiago: "nerfar a faca") a facada de frente tira 50 (metade da vida) e pelas costas continua matando (200);
+  // "costas" = o atacante está atrás do alvo (fora de um cone de ~110° na frente dele). E 0,35 s a mais entre uma facada e outra.
+  h = troca(h, "const KNIFE_DUR=0.42,", "const KNIFE_CD=0.35;function knifeDano(e,T){const ax=e.pos.x-T.pos.x,az=e.pos.z-T.pos.z,d=Math.hypot(ax,az)||1;return (-Math.sin(T.yaw)*ax-Math.cos(T.yaw)*az)/d<-0.35?200:50;}const KNIFE_DUR=0.42,", { nome: "faca: dano pelas costas" });
+  h = troca(h, "function knife(){if(PL.knifeT>0||", "function knife(){if(PL.knifeT>0||MATCH.time<(PL.knifeFim||-99)+KNIFE_CD||", { nome: "faca: tempo entre facadas" });
+  h = troca(h, "PL.knifeT=KNIFE_DUR;", "PL.knifeT=KNIFE_DUR;PL.knifeFim=MATCH.time+KNIFE_DUR;", { nome: "faca: fim da facada" });
+  h = troca(h, "applyDamage(T,200,e,_t('Couteau'),false,camFwd(new V3()));", "applyDamage(T,knifeDano(e,T),e,_t('Couteau'),false,camFwd(new V3()));", { nome: "faca: dano de frente" });
   // skins da faca (faca.js): usam as telas das camuflagens, entram depois delas
   const faca = fs.readFileSync(path.join(__dirname, "tiro-camos", "faca.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => faca + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "skins da faca" });

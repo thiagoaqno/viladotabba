@@ -1,13 +1,10 @@
-# Tiro da Galera: grafite nas paredes (peça Grafite no editor)
+# Tiro da Galera: Favela versão 4 do Thiago
 
-Peça nova no editor de mapas: **Grafite (texto na parede)**, na aba Básico. Ela pinta um texto com spray em qualquer parede.
+O `favela.json` passa a ser a versão nova que o Thiago montou no editor: céu `sable`, chão de pedra seca, mais barracas, bananeiras, carrinhos de pipoca, praças de convívio no beco leste, lonas nas lajes e dominação ajustada.
 
-- **Painel:** texto (até 40 letras), estilo, cor e cor do contorno, e o tamanho (largura x altura).
-- **Estilos:** Grafite gordo (letra gorda com contorno, sombra e brilho), Pixo reto, Escorrendo (com a tinta pingando) e Tag (assinatura rabiscada).
-- **Como desenha:** o grafite é desenhado num canvas na hora. O `.json` guarda só o texto, o estilo e as cores, então o mapa continua leve.
-- **No jogo:** o `mapa-json.js` põe o plano pintado no mapa. Ele não colide nem segura bala.
-- **Guia:** `docs/tiro-editor-de-mapas.md` explica o campo `grafite`.
-
-Conferido no navegador: os quatro estilos aparecem no editor e numa partida com bots.
+Conferido no navegador:
+- os nascer dos dois times e os 3 pontos de mecha estão na rede de caminhos dos bots;
+- dominação: A em cima do morro (y 3,05), B e C no chão;
+- 8 dos 107 pontos dos bots caíram dentro de peças que mudaram de lugar e foram tirados (ficam 99).
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -1,12 +1,30 @@
-# Tiro da Galera: Iate Esmeralda desativado
+# Tiro da Galera: modo de teste das camuflagens
 
-O Thiago pediu para desativar o mapa do iate.
+O Thiago queria ver as camuflagens novas e as skins da faca, mas ainda não tem nível nas armas para equipá-las.
 
-- **Fora da lista:** o `tiro-frontline.js` não coloca mais o mapa no jogo (`IATE_ATIVO = false`). Ele some da escolha de mapas
-  no solo e no online.
-- **Quem tinha o iate salvo:** cai no primeiro mapa da lista, o Deserto (`mapById` já faz isso).
-- **Os arquivos ficam:** `ferramentas/tiro-mapas/iate.js` e `iate.svg` continuam no projeto, e a rodada 3 (centro elevado,
-  camarotes, vidro espelhado), que não foi aprovada, ficou guardada no branch local `tiro-iate-rodada3`. Para religar o mapa,
-  basta `IATE_ATIVO = true`.
+## Como usa
 
-Conferido no navegador: a lista de mapas tem os 9 de antes, sem o iate, e `mapById('iate')` dá no Deserto.
+- Abrir o jogo com `?camos=todas` (por exemplo `https://viladotabba.com/tiro/?camos=todas`) liga o modo de teste **neste
+  aparelho**. Ele fica ligado nas próximas vezes, até desligar.
+- `?camos=normal` desliga.
+
+## O que o modo de teste faz
+
+- **Camuflagens de arma:** todas aparecem livres em todas as armas, do Deserto ao Holo, incluindo as 9 novas.
+- **Skins da faca:** todas livres.
+- **Classe personalizada:** a primeira abre já no nível 1 do jogador (normalmente no 3), porque a camuflagem só se põe numa
+  classe personalizada.
+
+## O que ele não faz
+
+- Não mexe no XP nem no nível de ninguém. Só as travas deixam de valer naquele aparelho.
+- Em outro aparelho sem o modo, uma camuflagem ainda presa volta ao Standard, como já acontecia.
+- Qualquer um que abrir o link também liga o modo, mas só no próprio aparelho.
+
+O código fica no fim de `ferramentas/tiro-camos/camuflagens.js`, e as skins da faca respeitam o modo pelo `faca.js`.
+
+## Conferido no navegador
+
+- Com `?camos=todas`, o Holo e o Cromado ficam livres.
+- A skin Holo da faca fica livre.
+- A primeira classe personalizada abre no nível 1.

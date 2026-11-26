@@ -234,6 +234,12 @@ prédio com escada **só gira de 90 em 90 graus**; girado de outro jeito, a esca
 | `kcFavelaEscadaTelhado` | 9,7 x 6,8 x 10,1 | **com escada**: dois lances (frente e lado +x) até a laje do telhado a 5,9 m, com mureta: vista do alto |
 | `kcFavelaEscadaFundos` | 7,6 x 6,4 x 7,6 | **com escada**: a escada sobe atrás até um terraço a 2,95 m no fundo (o quarto fica na frente) |
 
+### Quadra
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcQuadra` | 30 x 2 x 18 | quadra de futsal de cimento pintado (jogo de 28 x 16), linhas brancas e duas traves com rede (só os postes colidem) |
+
 ### Passarelas
 
 O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas
@@ -260,6 +266,25 @@ não rode o gerador de novo: ele sobrescreve o `.json`.
 - **Por cima:** a laje dos Telhados, a 3 m, com escada na base e passagem por baixo. Uma passarela liga essa laje à do bloco
   leste, que tem escada pelo beco.
 - **Pontos de dominação:** A no mercado, B na árvore e C no beco leste, todos em z = 0.
+
+## Campo de várzea e peças de rua
+
+As medidas incluem os elementos que avançam para fora do corpo principal. A arquibancada tem escada: gire essa peça somente de 90 em 90 graus.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcCampoFutebol` | 40,08 x 7 x 26,2 | Campo de terra 40 x 22 m, traves, alambrado com dois portões, refletores e bancos cobertos |
+| `kcArquibancadaConcreto` | 10,4 x 1,2 x 6 | Arquibancada de três degraus largos, com escada e patamar |
+| `kcQuiosqueAcai` | 3,2 x 2,35 x 1,7 | Quiosque de açaí com balcão e cobertura |
+| `kcChurrasquinho` | 3,2 x 2,35 x 1,7 | Barraca de churrasquinho com grelha e espetos |
+| `kcMototaxi` | 3,3 x 2,35 x 1,7 | Ponto de mototáxi com toldo e banco |
+| `kcOrelhao` | 0,9 x 2,15 x 0,57 | Telefone público com cobertura |
+| `kcLixeiraRua` | 0,7 x 1,25 x 0,6 | Lixeira de rua em poste |
+| `kcBancoPraca` | 2 x 0,9 x 0,53 | Banco de praça de madeira e ferro |
+| `kcPosteGato` | 1,8 x 7 x 0,6 | Poste com emaranhado de fios |
+| `kcMesaDomino` | 1,4 x 0,82 x 2,4 | Mesa de dominó com dois bancos |
+| `kcCarrinhoPipoca` | 1,54 x 1,9 x 1 | Carrinho de pipoca com rodas e vitrine |
+| `kcFliperamaBar` | 3,4 x 1,8 x 0,9 | Balcão de bar e máquina de fliperama |
 
 ## Catálogo: prefabs (cenário fixo)
 

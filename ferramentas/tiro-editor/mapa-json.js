@@ -217,7 +217,7 @@ function tiroMapaRegistrar(J) {
     void: { kill: Math.min(L.y0, mar ? mar.y : L.y0) - 1.5 },
     // limites com o tamanho de verdade de cada prefab, medidos só quando o mapa começa (para não montar prefab ao abrir a página)
     get bounds() { if (!this._lim) { const M = edLimites(J, true); this._lim = { x0: M.x0, x1: M.x1, z0: M.z0, z1: M.z1 }; } return this._lim; },
-    textures: edTexturasDoMapa(J), surfaces: mar ? ['ripple', ...ED_TEX_NOSSAS] : ED_TEX_NOSSAS.slice(),
+    textures: edTexturasDoMapa(J), surfaces: [...(mar ? ['ripple'] : []), ...ED_TEX_NOSSAS, ...edTexUsadas(J)],
     sound: mar ? { pack: 'amb_embruns', bed: 0.5, water: () => 0, loops: [[L.x0, -4, 0], [L.x1, -4, 0]].map((p) => ({ id: 'a_waves', p, gain: 0.4, ref: 6, roll: 1.3, max: 120 })), spots: [] }
       : { pack: edAmbiente(J, base), bed: 0.5, loops: [], spots: [] },
     materials: () => {},

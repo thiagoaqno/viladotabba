@@ -94,10 +94,15 @@ const ED_TEXP = new Map();
 function edTexDesenho(k) {
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
   const fundo = { paint: '#d8d8d4', carpaint: '#c9ccd2', glass: '#7fa6b8', dark: '#232427', plastic: '#e8e8e6', rubber: '#3a3b3d', rug: '#8a2b26', tiles: '#cfc8b8',
-    wood: '#9a7048', timber: '#8a6240', corrugated: '#9a9ea2', edChapa: '#7d8084', edListras: '#f0b81a', edAzulejo: '#eef2f4', edXadrez: '#dcdad4' }[k] || '#999';
+    wood: '#9a7048', timber: '#8a6240', corrugated: '#9a9ea2', edChapa: '#7d8084', edListras: '#f0b81a', edAzulejo: '#eef2f4', edXadrez: '#dcdad4',
+    edPorcelanato: '#d6d3cc', edPatio: '#a4a4a0', edAluminio: '#c4c7ca', edForro: '#e6e5e0', edCarpete: '#3c4660' }[k] || '#999';
   g.fillStyle = fundo; g.fillRect(0, 0, 128, 128);
   if (k === 'edListras') { g.fillStyle = '#111'; for (let i = -4; i < 8; i++) { g.beginPath(); g.moveTo(i * 26, 128); g.lineTo(i * 26 + 13, 128); g.lineTo(i * 26 + 141, 0); g.lineTo(i * 26 + 128, 0); g.fill(); } }
   else if (k === 'edAzulejo' || k === 'tiles') { g.strokeStyle = k === 'tiles' ? '#8d8676' : '#9a9a96'; g.lineWidth = 2; for (let i = 0; i <= 8; i++) { g.beginPath(); g.moveTo(i * 16, 0); g.lineTo(i * 16, 128); g.moveTo(0, i * 16); g.lineTo(128, i * 16); g.stroke(); } }
+  else if (k === 'edPorcelanato' || k === 'edForro') { g.strokeStyle = k === 'edForro' ? '#a9abae' : '#8f8c86'; g.lineWidth = k === 'edForro' ? 3 : 1; for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * 32, 0); g.lineTo(i * 32, 128); g.moveTo(0, i * 32); g.lineTo(128, i * 32); g.stroke(); } }
+  else if (k === 'edPatio') { g.fillStyle = '#6c6c6a'; g.fillRect(63, 0, 2, 128); g.fillRect(0, 63, 128, 2); g.fillStyle = '#5a5a5866'; g.beginPath(); g.ellipse(40, 90, 18, 10, 0.4, 0, 7); g.fill(); }
+  else if (k === 'edAluminio') { g.fillStyle = '#2a2b2e'; for (let i = 0; i <= 2; i++) g.fillRect(i * 64 - 1, 0, 3, 128); for (let j = 0; j <= 4; j++) g.fillRect(0, j * 32 - 1, 128, 3); }
+  else if (k === 'edCarpete') { g.fillStyle = '#56648066'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.beginPath(); g.moveTo(i * 16 + 8, j * 16 + 3); g.lineTo(i * 16 + 13, j * 16 + 8); g.lineTo(i * 16 + 8, j * 16 + 13); g.lineTo(i * 16 + 3, j * 16 + 8); g.fill(); } g.fillStyle = '#9e8048'; for (let j = 0; j < 4; j++) g.fillRect(0, j * 32 + 29, 128, 2); }
   else if (k === 'edXadrez') { g.fillStyle = '#1b1b1d'; for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) g.fillRect(i * 32, j * 32, 32, 32); }
   else if (k === 'edChapa') { g.fillStyle = '#a3a6aa'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.save(); g.translate(i * 16 + 8, j * 16 + 8); g.rotate((i + j) % 2 ? 0.785 : -0.785); g.fillRect(-6, -1.5, 12, 3); g.restore(); } }
   else if (k === 'wood' || k === 'timber') { g.strokeStyle = '#5e4128'; for (let i = 0; i < 8; i++) { g.beginPath(); g.moveTo(0, i * 16); g.lineTo(128, i * 16); g.stroke(); } }

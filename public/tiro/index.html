@@ -10175,6 +10175,386 @@ PF.kcPassarelaPostes = () => prefab('kcPassarelaPostes', (M) => {
   M.cls = 0;
 });
 
+/* ---------- pacote 5: kit da favela (folha de assets do Thiago) ----------
+   Casas pintadas (amarela com varanda, azul com alpendre, verde de dois andares), módulos de 3 x 3 m para empilhar,
+   kit de laje (pilar de tijolo, tijolos, antena de TV, varal), coberturas (blocos, palete, tambores, contêiner de água, pneus),
+   veículos de cenário (carro velho, van, moto), detalhes (caçamba, cone, engradados, saco de lixo, quadro de luz, cartazes),
+   plantas em vaso, samambaia, bandeira, bandeirinhas, lona azul, placa de bar e parede de cobogó. */
+kcTex(['kcCasaAmarela', 'kcCasaAzul', 'kcCasaVerde', 'kcModuloPorta', 'kcModuloGaragem', 'kcModuloAberto', 'kcModuloJanela', 'kcModuloPortaMadeira', 'kcPilarTijolo', 'kcTijolos'], ['brick', 'plaster2']);
+Object.assign(KC_COR, { amareloParede: [0.92, 0.76, 0.3], base: [0.6, 0.6, 0.58], cinzaReboco: [0.7, 0.69, 0.66], madeiraPorta: [0.45, 0.3, 0.2] });
+
+// porta fechada (enfeite numa fachada): folha, batente, maçaneta
+function kcPorta(M, eixo, d, s, a0, a1, cor, mat = 'paint') {
+  const c = M.cls; M.cls = 1;
+  M.color(KC_COR.laje); kcB(M, 'concrete', eixo, a0 - 0.06, a1 + 0.06, 0, 2.2, d, d + s * 0.02);
+  M.color(cor); kcB(M, mat, eixo, a0, a1, 0, 2.12, d, d + s * 0.04);
+  M.color(KC_COR.ferro); kcB(M, 'steel', eixo, a1 - 0.14, a1 - 0.08, 1.0, 1.1, d, d + s * 0.07);
+  M.cls = c;
+}
+// telhado de uma água (fibrocimento ou zinco) em cima de um retângulo, caindo para -z
+function kcTelhado(M, x0, x1, z0, z1, yAlto, yBaixo, cor, beiral = 0.3) {
+  const L = z1 - z0 + 2 * beiral, a = Math.atan2(yAlto - yBaixo, L);
+  M.color(cor); M.save().move((x0 + x1) / 2, (yAlto + yBaixo) / 2, (z0 + z1) / 2).rotX(-a);
+  M.boxB('corrugated', -(x1 - x0) / 2 - beiral, (x1 - x0) / 2 + beiral, 0, 0.03, -L / 2, L / 2); M.restore();
+  M.col(x0 - beiral, x1 + beiral, Math.min(yAlto, yBaixo) - 0.05, Math.max(yAlto, yBaixo) + 0.05, z0 - beiral, z1 + beiral, 'steel');
+}
+
+// casa amarela de dois andares: térreo fechado, em cima uma varanda aberta com mureta, coberta de telha em esteios, 6,2 x 6,1 x 5,7 m
+PF.kcCasaAmarela = () => prefab('kcCasaAmarela', (M) => {
+  M.local(1); const X = 3, Z = 2.75;
+  kcBloco(M, 'plaster2', KC_COR.amareloParede, -X, X, 0, 2.8, -Z, Z);
+  kcPintura(M, 'x', Z, 1, -X, X, 0, 0.6, KC_COR.base); kcPintura(M, 'z', X, 1, -Z, Z, 0, 0.6, KC_COR.base); kcPintura(M, 'z', -X, -1, -Z, Z, 0, 0.6, KC_COR.base);
+  kcPorta(M, 'x', Z, 1, -0.6, 0.4, [0.5, 0.42, 0.3], 'wood');
+  kcJanelaGrade(M, 'x', Z, 1, 1.0, 2.4, 1.0, 2.0); kcJanelaGrade(M, 'x', Z, 1, -2.5, -1.4, 1.1, 1.9); kcJanelaGrade(M, 'z', X, 1, -1.0, 0.4, 1.0, 2.0);
+  kcLajeB(M, -X, X, 2.8, -Z, Z);
+  // em cima: parede do fundo com porta e janela, varanda com mureta, esteios e telhado de fibrocimento
+  const y = 2.95;
+  kcBloco(M, 'plaster2', KC_COR.amareloParede, -X, X, y, y + 2.5, -Z, -Z + 1.6);
+  kcJanelaGrade(M, 'x', -Z + 1.6, 1, 0.6, 1.9, y + 0.9, y + 1.9);
+  M.cls = 1; M.color([0.22, 0.2, 0.18]); M.boxB('dark', -1.8, -0.8, y, y + 2.1, -Z + 1.6, -Z + 1.605); M.cls = 0;
+  kcMureta(M, -X - 0.1, X + 0.1, y + 0.15, -Z + 1.6, Z + 0.1, 0.9, 'sol');
+  M.color([0.5, 0.36, 0.24]); for (const x of [-X + 0.05, X - 0.05]) { M.boxB('wood', x - 0.07, x + 0.07, y + 1.05, y + 2.55, Z - 0.05, Z + 0.09); M.col(x - 0.07, x + 0.07, y + 1.05, y + 2.55, Z - 0.05, Z + 0.09, 'wood'); }
+  M.boxB('wood', -X - 0.1, X + 0.1, y + 2.45, y + 2.6, Z - 0.05, Z + 0.09);
+  kcTelhado(M, -X, X, -Z, Z, y + 2.8, y + 2.55, [0.66, 0.66, 0.64]);
+  kcCaixaAgua(M, -2.0, y + 2.85, -1.9);
+});
+
+// casa azul térrea com alpendre na frente (grade baixa, esteios, telhado de zinco enferrujado), 6,4 x 3,4 x 7 m
+PF.kcCasaAzul = () => prefab('kcCasaAzul', (M) => {
+  M.local(1); const X = 3, z0 = -3.2, z1 = 1.2;
+  kcBloco(M, 'plaster2', KC_COR.azulParede, -X, X, 0, 2.8, z0, z1);
+  kcPintura(M, 'x', z1, 1, -X, X, 0, 0.5, KC_COR.base);
+  kcPorta(M, 'x', z1, 1, -0.5, 0.5, [0.3, 0.34, 0.36]);
+  kcJanelaGrade(M, 'x', z1, 1, -2.5, -1.2, 1.0, 2.0); kcJanelaGrade(M, 'x', z1, 1, 1.2, 2.5, 1.0, 2.0); kcJanelaGrade(M, 'z', X, 1, -2.2, -0.8, 1.0, 2.0);
+  // alpendre: piso de cimento, grade baixa com entrada de 1,6 m no meio, esteios
+  M.color(KC_COR.laje); M.boxB('concrete', -X, X, 0, 0.05, z1, z1 + 2.2);
+  M.color([0.85, 0.85, 0.83]); M.cls = 1;
+  for (const [a, b] of [[-X, -0.85], [0.85, X]]) { M.boxB('steel', a, b, 0.9, 0.95, z1 + 2.1, z1 + 2.15); for (let x = a; x <= b + 0.01; x += 0.15) M.boxB('steel', x - 0.01, x + 0.01, 0.05, 0.9, z1 + 2.11, z1 + 2.14); M.col(a, b, 0, 0.95, z1 + 2.08, z1 + 2.17, 'steel'); }
+  M.cls = 0;
+  M.color([0.82, 0.82, 0.8]); for (const x of [-X + 0.08, -0.85, 0.85, X - 0.08]) { M.boxB('paint', x - 0.06, x + 0.06, 0, 2.55, z1 + 2.05, z1 + 2.17); M.col(x - 0.06, x + 0.06, 0, 2.55, z1 + 2.05, z1 + 2.17, 'concrete'); }
+  kcTelhado(M, -X, X, z0, z1 + 2.2, 3.3, 2.95, KC_COR.ferrugem, 0.25);
+  kcCaixaAgua(M, 2.0, 3.05, -2.2); kcAntenaF(M, -2.2, 3.0, -2.6, 0.3);
+});
+
+// casa verde de dois andares, base cinza, laje com caixa d'água, 6,2 x 6,9 x 5,2 m
+PF.kcCasaVerde = () => prefab('kcCasaVerde', (M) => {
+  M.local(1); const X = 3, Z = 2.5;
+  for (let i = 0; i < 2; i++) {
+    const y = i * 2.95; kcBloco(M, 'plaster2', KC_COR.verdeParede, -X, X, y, y + 2.8, -Z, Z); kcLajeB(M, -X, X, y + 2.8, -Z, Z);
+    kcJanelaGrade(M, 'x', Z, 1, -2.4, -1.0, y + 1.0, y + 2.0); kcJanelaGrade(M, 'x', Z, 1, 1.2, 2.4, y + 1.0, y + 2.0); kcJanelaGrade(M, 'z', X, 1, -0.7, 0.7, y + 1.0, y + 2.0);
+  }
+  kcPintura(M, 'x', Z, 1, -X, X, 0, 0.9, KC_COR.base); kcPintura(M, 'z', X, 1, -Z, Z, 0, 0.9, KC_COR.base); kcPintura(M, 'z', -X, -1, -Z, Z, 0, 0.9, KC_COR.base);
+  kcPorta(M, 'x', Z, 1, -0.5, 0.5, [0.32, 0.3, 0.28]);
+  kcMureta(M, -X - 0.1, X + 0.1, 5.9, -Z - 0.1, Z + 0.1, 0.4);
+  kcCaixaAgua(M, -1.6, 5.9, -1.2);
+  kcAr(M, X, 4.1, 1.3, Math.PI / 2);
+});
+
+// módulos de 3 x 3 x 2,95 m: a laje de cima colide, então dá para empilhar (y = 2,95 no de cima)
+function kcModulo(M, mat, cor, frente) {
+  M.local(1); const H = 2.8;
+  if (frente === 'aberto') {
+    // sala aberta na frente (dá para entrar): três paredes, piso e laje
+    M.color(cor);
+    for (const [x0, x1, z0, z1] of [[-1.5, 1.5, -1.5, -1.35], [-1.5, -1.35, -1.35, 1.5], [1.35, 1.5, -1.35, 1.5]]) { M.boxB(mat, x0, x1, 0, H, z0, z1); M.col(x0, x1, 0, H, z0, z1, 'concrete'); }
+    M.boxB(mat, -1.35, 1.35, H - 0.3, H, 1.35, 1.5); M.col(-1.35, 1.35, H - 0.3, H, 1.35, 1.5, 'concrete');
+    M.color(KC_COR.laje); M.boxB('concrete', -1.35, 1.35, 0, 0.02, -1.35, 1.35);
+  } else {
+    kcBloco(M, mat, cor, -1.5, 1.5, 0, H, -1.5, 1.5);
+    if (frente === 'porta') kcPorta(M, 'x', 1.5, 1, -0.45, 0.45, [0.42, 0.44, 0.46]);
+    if (frente === 'madeira') { kcPorta(M, 'x', 1.5, 1, -0.6, 0.3, KC_COR.madeiraPorta, 'wood'); M.cls = 1; M.color([0.55, 0.56, 0.58]); M.boxB('steel', 0.7, 1.1, 1.3, 1.75, 1.5, 1.6); M.cls = 0; }
+    if (frente === 'janela') kcJanelaGrade(M, 'x', 1.5, 1, -0.7, 0.7, 1.0, 2.0);
+    if (frente === 'garagem') { M.cls = 1; M.color([0.5, 0.52, 0.54]); M.boxB('rollshutter', -1.25, 1.25, 0, 2.35, 1.5, 1.54); M.color([0.36, 0.36, 0.38]); M.boxB('steel', -1.3, 1.3, 2.35, 2.58, 1.5, 1.64); M.cls = 0; }
+  }
+  kcLajeB(M, -1.5, 1.5, H, -1.5, 1.5);
+}
+PF.kcModuloPorta = () => prefab('kcModuloPorta', (M) => kcModulo(M, 'brick', KC_COR.tijolo, 'porta'));
+PF.kcModuloGaragem = () => prefab('kcModuloGaragem', (M) => kcModulo(M, 'plaster2', KC_COR.cinzaReboco, 'garagem'));
+PF.kcModuloAberto = () => prefab('kcModuloAberto', (M) => kcModulo(M, 'plaster2', KC_COR.cinzaReboco, 'aberto'));
+PF.kcModuloJanela = () => prefab('kcModuloJanela', (M) => kcModulo(M, 'plaster2', KC_COR.cinzaReboco, 'janela'));
+PF.kcModuloPortaMadeira = () => prefab('kcModuloPortaMadeira', (M) => kcModulo(M, 'plaster2', [0.74, 0.72, 0.68], 'madeira'));
+
+// ---------- kit de laje ----------
+// pilar de tijolo com vão (caixa de passagem na laje), 0,8 x 1,2 x 0,6 m
+PF.kcPilarTijolo = () => prefab('kcPilarTijolo', (M) => {
+  M.local(1); M.color(KC_COR.tijolo);
+  kcParede(M, 'brick', 'x', 0.15, 0.3, -0.4, 0.4, 0, 1.2, [[-0.18, 0.18, 0.45, 0.85]]);
+  kcBloco(M, 'brick', KC_COR.tijolo, -0.4, 0.4, 0, 1.2, -0.3, 0.15);
+  M.color(KC_COR.laje); M.boxB('concrete', -0.45, 0.45, 1.2, 1.26, -0.35, 0.35);
+});
+// pilha de tijolos de oito furos, 1,1 x 0,6 x 0,8 m
+PF.kcTijolos = () => prefab('kcTijolos', (M) => {
+  M.local(1); const R = rngOf(23);
+  for (let f = 0; f < 3; f++) for (let i = 0; i < 4 - (f > 1 ? 1 : 0); i++) for (let j = 0; j < 2; j++) {
+    const x = -0.42 + i * 0.28 + (f % 2) * 0.1, y = f * 0.19, z = -0.2 + j * 0.4;
+    M.color(R() < 0.5 ? KC_COR.tijolo : [0.8, 0.45, 0.32]); M.boxB('brick', x - 0.13, x + 0.13, y, y + 0.185, z - 0.19, z + 0.19);
+    M.cls = 1; M.color([0.3, 0.18, 0.12]); for (const dz of [-0.1, 0.1]) M.boxB('dark', x - 0.05, x + 0.05, y + 0.06, y + 0.13, z + dz - 0.04, z + dz + 0.04); M.cls = 0;
+  }
+  M.col(-0.55, 0.55, 0, 0.57, -0.4, 0.4, 'concrete');
+});
+// antena de TV (espinha de peixe) num mastro de 2,2 m
+PF.kcAntenaTV = () => prefab('kcAntenaTV', (M) => {
+  M.local(1); M.color(KC_COR.ferro); M.cls = 1;
+  M.cyl('steel', 0.025, 2.2, 6);
+  M.boxB('steel', -0.01, 0.01, 2.0, 2.02, -0.9, 0.9);
+  for (let i = 0; i < 7; i++) { const z = -0.8 + i * 0.27, w = 0.55 - i * 0.05; M.boxB('steel', -w, w, 2.0, 2.015, z - 0.008, z + 0.008); }
+  for (const s of [-1, 1]) M.tube('steel', 0.006, [[0, 2.0, 0], [s * 0.6, 1.0, s * 0.3], [s * 0.9, 0, s * 0.4]], 3);
+  M.cls = 0;
+  M.col(-0.04, 0.04, 0, 2.2, -0.04, 0.04, 'steel');
+});
+// varal de 3 m entre dois postes com roupa pendurada
+PF.kcVaral = () => prefab('kcVaral', (M) => {
+  const R = rngOf(41); M.local(1);
+  M.color([0.45, 0.34, 0.24]); for (const x of [-1.5, 1.5]) { M.boxB('wood', x - 0.04, x + 0.04, 0, 1.9, -0.04, 0.04); M.col(x - 0.04, x + 0.04, 0, 1.9, -0.04, 0.04, 'wood'); }
+  M.cls = 1; M.color([0.85, 0.85, 0.83]);
+  M.tube('plastic', 0.006, [[-1.5, 1.85, 0], [-0.5, 1.75, 0], [0.5, 1.75, 0], [1.5, 1.85, 0]], 3);
+  const cores = [[0.2, 0.5, 0.25], [0.35, 0.45, 0.6], [0.9, 0.9, 0.88], [0.8, 0.2, 0.18], [0.85, 0.7, 0.2], [0.3, 0.3, 0.35]];
+  for (let x = -1.25; x < 1.3; x += R.range(0.42, 0.56)) {
+    M.color(R.pick(cores)); const w = R.range(0.25, 0.4), h = R.range(0.35, 0.65), y = 1.76;
+    M.save().move(x, y, 0).rotZ(R.range(-0.05, 0.05)); M.boxB('canvas', -w / 2, w / 2, -h, 0, -0.008, 0.008);
+    if (R() < 0.5) { M.boxB('canvas', -w / 2 - 0.12, -w / 2, -0.25, 0, -0.008, 0.008); M.boxB('canvas', w / 2, w / 2 + 0.12, -0.25, 0, -0.008, 0.008); }
+    M.restore();
+  }
+  M.cls = 0;
+});
+
+// ---------- coberturas ----------
+// blocos de concreto empilhados, 1,2 x 1 x 0,8 m (cobre agachado)
+PF.kcBlocos = () => prefab('kcBlocos', (M) => {
+  M.local(1); const R = rngOf(31);
+  for (let f = 0; f < 5; f++) for (let i = 0; i < 3 - (f > 3 ? 1 : 0); i++) for (let j = 0; j < 2; j++) {
+    const x = -0.4 + i * 0.4 + (f > 3 ? 0.2 : 0), y = f * 0.19, z = -0.2 + j * 0.4;
+    M.color(R() < 0.5 ? [0.62, 0.62, 0.6] : [0.56, 0.56, 0.55]); M.boxB('concrete', x - 0.195, x + 0.195, y, y + 0.188, z - 0.19, z + 0.19);
+    if (f === 4 || (f === 3 && i === 2)) { M.cls = 1; M.color([0.22, 0.22, 0.22]); for (const dx of [-0.09, 0.09]) M.boxB('dark', x + dx - 0.06, x + dx + 0.06, y + 0.188, y + 0.19, z - 0.11, z + 0.11); M.cls = 0; }
+  }
+  M.col(-0.6, 0.6, 0, 0.75, -0.4, 0.4, 'concrete'); M.col(-0.4, 0.4, 0.75, 0.95, -0.4, 0.4, 'concrete');
+});
+// palete de madeira em pé, encostado (a frente olha +z)
+PF.kcPaleteEmPe = () => prefab('kcPaleteEmPe', (M) => {
+  M.local(1); M.color([0.66, 0.52, 0.36]);
+  M.save().rotX(-0.2);
+  for (let i = 0; i < 5; i++) { const y = 0.05 + i * 0.25; M.boxB('wood', -0.6, 0.6, y, y + 0.1, 0, 0.022); }
+  for (const x of [-0.55, 0, 0.55]) M.boxB('wood', x - 0.05, x + 0.05, 0, 1.2, -0.1, 0);
+  M.restore();
+  M.col(-0.6, 0.6, 0, 1.15, -0.25, 0.05, 'wood');
+});
+// dois tambores azuis de plástico, 1,25 x 0,95 x 0,6 m
+PF.kcTamboresAzuis = () => prefab('kcTamboresAzuis', (M) => {
+  M.local(1);
+  for (const x of [-0.32, 0.33]) {
+    M.save().move(x, 0, 0); M.color([0.12, 0.3, 0.62]);
+    M.lathe('plastic', [[0, 0], [0.27, 0], [0.29, 0.03], [0.29, 0.3], [0.3, 0.32], [0.29, 0.34], [0.29, 0.6], [0.3, 0.62], [0.29, 0.64], [0.29, 0.92], [0.26, 0.95], [0, 0.95]], 16);
+    M.restore();
+  }
+  M.col(-0.62, 0.63, 0, 0.95, -0.3, 0.3, 'steel');
+});
+// contêiner de água de 1000 litros (tanque branco na gaiola de ferro sobre um palete), 1,2 x 1,15 x 1 m
+PF.kcIBC = () => prefab('kcIBC', (M) => {
+  M.local(1);
+  M.color([0.35, 0.35, 0.37]); M.boxB('steel', -0.6, 0.6, 0, 0.14, -0.5, 0.5);
+  M.color([0.92, 0.92, 0.9]); M.boxB('plastic', -0.55, 0.55, 0.15, 1.1, -0.45, 0.45, { bevel: 0.06 });
+  M.color([0.72, 0.73, 0.74]); M.cls = 1;
+  for (let i = 0; i <= 6; i++) { const x = -0.58 + i * (1.16 / 6); for (const z of [-0.48, 0.48]) M.boxB('steel', x - 0.012, x + 0.012, 0.14, 1.15, z - 0.012, z + 0.012); }
+  for (let i = 0; i <= 5; i++) { const z = -0.48 + i * (0.96 / 5); for (const x of [-0.58, 0.58]) M.boxB('steel', x - 0.012, x + 0.012, 0.14, 1.15, z - 0.012, z + 0.012); }
+  for (const y of [0.5, 0.85, 1.14]) { M.boxB('steel', -0.6, 0.6, y - 0.012, y + 0.012, -0.49, -0.47); M.boxB('steel', -0.6, 0.6, y - 0.012, y + 0.012, 0.47, 0.49); M.boxB('steel', -0.59, -0.57, y - 0.012, y + 0.012, -0.48, 0.48); M.boxB('steel', 0.57, 0.59, y - 0.012, y + 0.012, -0.48, 0.48); }
+  M.color([0.25, 0.25, 0.26]); M.save().move(0, 1.1, 0); M.cyl('plastic', 0.15, 0.06, 12); M.restore();
+  M.cls = 0;
+  M.col(-0.6, 0.6, 0, 1.15, -0.5, 0.5, 'steel');
+});
+// pilha de pneus velhos, 0,7 x 1 x 0,7 m
+PF.kcPneus = () => prefab('kcPneus', (M) => {
+  M.local(1); const R = rngOf(9);
+  for (let i = 0; i < 4; i++) {
+    M.save().move(R.range(-0.04, 0.04), i * 0.24, R.range(-0.04, 0.04)); M.color([0.09, 0.09, 0.1]);
+    M.lathe('rubber', [[0.2, 0], [0.31, 0.01], [0.34, 0.06], [0.34, 0.18], [0.31, 0.23], [0.2, 0.24], [0.21, 0.12], [0.2, 0]], 16);
+    M.restore();
+  }
+  M.col(-0.35, 0.35, 0, 0.96, -0.35, 0.35, 'rubber');
+});
+
+// ---------- veículos (cenário, colidem e seguram bala) ----------
+function kcRoda(M, x, y, z, r, w, lado) {
+  M.save().move(x - (lado < 0 ? w : 0), y, z).rotZ(-Math.PI / 2); M.color([0.08, 0.08, 0.09]); M.cyl('rubber', r, w, 14);
+  M.color([0.55, 0.55, 0.56]); M.save().move(0, lado < 0 ? -0.005 : w - 0.005, 0); M.cyl('steel', r * 0.55, 0.01, 10); M.restore(); M.restore();
+}
+// carro velho (hatch de quatro portas), 1,7 x 1,45 x 3,9 m, comprido em z
+PF.kcCarroVelho = () => prefab('kcCarroVelho', (M) => {
+  M.local(1); const C = [0.78, 0.78, 0.76];
+  M.color(C); M.boxB('carpaint', -0.82, 0.82, 0.3, 0.85, -1.95, 1.95, { bevel: 0.1 });
+  M.save().move(0, 0, -0.15); M.boxB('carpaint', -0.75, 0.75, 0.85, 1.42, -1.2, 1.05, { bevel: 0.12 }); M.restore();
+  M.color([0.1, 0.12, 0.14]); M.cls = 1;
+  M.boxB('glass', -0.7, 0.7, 0.92, 1.36, 0.88, 0.92); M.boxB('glass', -0.7, 0.7, 0.92, 1.36, -1.37, -1.33);
+  for (const s of [-1, 1]) M.boxB('glass', s * 0.755 - 0.02, s * 0.755 + 0.02, 0.92, 1.34, -1.2, 0.82);
+  M.color([0.2, 0.2, 0.21]); M.boxB('plastic', -0.84, 0.84, 0.28, 0.42, 1.88, 2.0); M.boxB('plastic', -0.84, 0.84, 0.28, 0.42, -2.0, -1.88);
+  M.color([0.95, 0.92, 0.8]); for (const s of [-1, 1]) M.boxB('lamp', s * 0.6 - 0.15, s * 0.6 + 0.15, 0.6, 0.72, 1.94, 1.96);
+  M.color([0.7, 0.1, 0.08]); for (const s of [-1, 1]) M.boxB('plastic', s * 0.62 - 0.12, s * 0.62 + 0.12, 0.62, 0.78, -1.96, -1.94);
+  M.color([0.5, 0.36, 0.26]); M.boxB('charred', 0.3, 0.75, 0.86, 0.87, 0.1, 0.8); // ferrugem no teto
+  M.cls = 0;
+  for (const s of [-1, 1]) for (const z of [-1.25, 1.25]) kcRoda(M, s * 0.82, 0.3, z, 0.3, 0.2, s);
+  M.col(-0.85, 0.85, 0, 0.9, -1.98, 1.98, 'steel'); M.col(-0.75, 0.75, 0.9, 1.42, -1.35, 0.9, 'steel');
+});
+// van velha de passageiros, 1,9 x 1,95 x 4,5 m, comprido em z
+PF.kcVan = () => prefab('kcVan', (M) => {
+  M.local(1); const C = [0.42, 0.47, 0.47];
+  M.color(C); M.boxB('carpaint', -0.92, 0.92, 0.32, 1.95, -2.25, 2.1, { bevel: 0.16 });
+  M.color([0.8, 0.8, 0.78]); M.boxB('carpaint', -0.92, 0.92, 0.32, 0.95, 2.05, 2.25, { bevel: 0.1 });
+  M.color([0.1, 0.12, 0.14]); M.cls = 1;
+  M.boxB('glass', -0.8, 0.8, 1.15, 1.8, 2.1, 2.14);
+  for (const s of [-1, 1]) for (let i = 0; i < 4; i++) { const z = 1.4 - i * 0.95; M.boxB('glass', s * 0.925 - 0.015, s * 0.925 + 0.015, 1.2, 1.75, z - 0.38, z + 0.38); }
+  M.boxB('glass', -0.75, 0.75, 1.2, 1.75, -2.27, -2.23);
+  M.color([0.95, 0.92, 0.8]); for (const s of [-1, 1]) { M.save().move(s * 0.62, 0.8, 2.26).rotX(Math.PI / 2); M.cyl('lamp', 0.11, 0.02, 12); M.restore(); }
+  M.color([0.2, 0.2, 0.21]); M.boxB('plastic', -0.94, 0.94, 0.3, 0.45, 2.2, 2.32); M.boxB('plastic', -0.94, 0.94, 0.3, 0.45, -2.32, -2.2);
+  M.color([0.48, 0.32, 0.22]); M.boxB('charred', -0.9, -0.4, 1.95, 1.96, -1.6, -0.6);
+  M.cls = 0;
+  for (const s of [-1, 1]) for (const z of [-1.5, 1.45]) kcRoda(M, s * 0.9, 0.32, z, 0.32, 0.2, s);
+  M.col(-0.95, 0.95, 0, 1.95, -2.3, 2.3, 'steel');
+});
+// moto de rua, 0,7 x 1,1 x 2 m, comprida em z
+PF.kcMoto = () => prefab('kcMoto', (M) => {
+  M.local(1);
+  for (const z of [-0.68, 0.7]) { M.save().move(-0.06, 0.32, z).rotZ(-Math.PI / 2); M.color([0.08, 0.08, 0.09]); M.lathe('rubber', [[0.2, 0], [0.31, 0.01], [0.32, 0.06], [0.31, 0.11], [0.2, 0.12]], 16); M.restore(); }
+  M.color([0.12, 0.12, 0.13]); M.tube('steel', 0.03, [[0, 0.32, -0.68], [0, 0.55, -0.2], [0, 0.6, 0.35], [0, 0.95, 0.55], [0, 0.32, 0.7]], 6);
+  M.color([0.55, 0.08, 0.08]); M.boxB('carpaint', -0.14, 0.14, 0.7, 0.92, 0.0, 0.45, { bevel: 0.08 });
+  M.color([0.08, 0.08, 0.08]); M.boxB('rubber', -0.13, 0.13, 0.72, 0.82, -0.6, 0.02, { bevel: 0.04 });
+  M.color([0.5, 0.5, 0.52]); M.boxB('steel', -0.13, 0.13, 0.3, 0.6, -0.1, 0.25, { bevel: 0.04 });
+  M.tube('steel', 0.04, [[0.1, 0.4, -0.05], [0.14, 0.38, -0.5], [0.14, 0.45, -0.75]], 6);
+  M.color([0.12, 0.12, 0.13]); M.tube('steel', 0.015, [[-0.38, 1.05, 0.5], [0, 1.0, 0.55], [0.38, 1.05, 0.5]], 4);
+  M.color([0.95, 0.92, 0.8]); M.save().move(0, 0.92, 0.66).rotX(Math.PI / 2); M.cyl('lamp', 0.07, 0.05, 10); M.restore();
+  M.col(-0.3, 0.3, 0, 1.0, -1.0, 1.0, 'steel');
+});
+
+// ---------- detalhes urbanos ----------
+// caçamba de lixo verde de quatro rodas, 1,4 x 1,35 x 1,1 m
+PF.kcCacamba = () => prefab('kcCacamba', (M) => {
+  M.local(1); M.color([0.18, 0.38, 0.22]);
+  M.save().move(0, 0.15, -0.55); M.extrude('plastic', [[-0.55, 0], [0.55, 0], [0.62, 1.05], [-0.62, 1.05]], 1.1, { sharp: 1 }); M.restore();
+  M.color([0.14, 0.3, 0.17]); M.save().move(0, 1.2, -0.62).rotX(-0.08); M.boxB('plastic', -0.66, 0.66, 0, 0.06, 0, 1.25); M.restore();
+  M.color([0.85, 0.85, 0.82]); M.cls = 1; M.boxB('paint', -0.35, 0.1, 0.7, 0.85, 0.555, 0.565); M.boxB('paint', 0.15, 0.4, 0.55, 0.9, 0.555, 0.565); M.cls = 0;
+  M.color([0.1, 0.1, 0.1]); for (const x of [-0.45, 0.45]) for (const z of [-0.4, 0.4]) { M.save().move(x - 0.03, 0.08, z).rotZ(-Math.PI / 2); M.cyl('rubber', 0.08, 0.06, 10); M.restore(); }
+  M.col(-0.62, 0.62, 0, 1.3, -0.55, 0.55, 'steel');
+});
+// cone de trânsito
+PF.kcCone = () => prefab('kcCone', (M) => {
+  M.local(1); M.color([0.9, 0.35, 0.08]); M.boxB('plastic', -0.2, 0.2, 0, 0.04, -0.2, 0.2);
+  M.lathe('plastic', [[0.15, 0.04], [0.03, 0.72], [0, 0.73]], 14);
+  M.color([0.95, 0.95, 0.93]); M.cls = 1; for (const [y0, y1] of [[0.3, 0.4], [0.5, 0.58]]) { const r0 = 0.15 - (y0 - 0.04) * 0.176 + 0.004, r1 = 0.15 - (y1 - 0.04) * 0.176 + 0.004; M.lathe('plastic', [[r0, y0], [r1, y1]], 14); } M.cls = 0;
+  M.col(-0.15, 0.15, 0, 0.72, -0.15, 0.15, 'rubber');
+});
+// engradados de plástico (vermelho e amarelo), 0,9 x 0,6 x 0,7 m
+PF.kcEngradados = () => prefab('kcEngradados', (M) => {
+  M.local(1);
+  const eng = (x, y, z, cor) => {
+    M.color(cor); M.boxB('plastic', x - 0.21, x + 0.21, y, y + 0.03, z - 0.17, z + 0.17);
+    for (const s of [-1, 1]) { M.boxB('plastic', x - 0.21, x + 0.21, y, y + 0.28, z + s * 0.17 - 0.015, z + s * 0.17 + 0.015); M.boxB('plastic', x + s * 0.21 - 0.015, x + s * 0.21 + 0.015, y, y + 0.28, z - 0.17, z + 0.17); }
+    M.cls = 1; M.color(cor.map((c) => c * 0.6)); for (const s of [-1, 1]) M.boxB('dark', x - 0.08, x + 0.08, y + 0.2, y + 0.25, z + s * 0.186, z + s * 0.19); M.cls = 0;
+  };
+  eng(-0.22, 0, 0, [0.82, 0.15, 0.12]); eng(0.22, 0, 0.05, [0.95, 0.78, 0.12]); eng(-0.2, 0.28, 0.02, [0.95, 0.78, 0.12]);
+  M.col(-0.45, 0.45, 0, 0.56, -0.2, 0.25, 'wood');
+});
+// saco de lixo preto amarrado
+PF.kcSacoLixo = () => prefab('kcSacoLixo', (M) => {
+  M.local(1); M.color([0.06, 0.06, 0.07]);
+  M.lathe('plastic', [[0, 0], [0.28, 0.02], [0.32, 0.2], [0.24, 0.42], [0.08, 0.5], [0.05, 0.58], [0.09, 0.64], [0, 0.65]], 12);
+});
+// quadro de luz na parede: três relógios e os fios descendo (as costas em z = 0, suba com PgUp)
+PF.kcQuadroLuz = () => prefab('kcQuadroLuz', (M) => {
+  M.local(1); M.cls = 1;
+  M.color([0.62, 0.64, 0.64]); M.boxB('steel', -0.5, 0.5, 0, 0.65, 0, 0.18);
+  M.color([0.86, 0.86, 0.84]); for (const x of [-0.3, 0, 0.3]) { M.boxB('plastic', x - 0.11, x + 0.11, 0.18, 0.52, 0.18, 0.2); M.color([0.1, 0.12, 0.14]); M.boxB('glass', x - 0.07, x + 0.07, 0.32, 0.46, 0.2, 0.205); M.color([0.86, 0.86, 0.84]); }
+  M.color([0.08, 0.08, 0.08]); for (const x of [-0.35, -0.05, 0.25]) M.tube('rubber', 0.012, [[x, 0.65, 0.1], [x + 0.05, 1.3, 0.12], [x - 0.1, 2.0, 0.15]], 4);
+  M.cls = 0;
+});
+// cartazes colados num muro (a frente olha +z), 1,4 x 1 m
+PF.kcCartazes = () => prefab('kcCartazes', (M) => {
+  M.local(1); M.cls = 1; const R = rngOf(57);
+  const c = [[0.85, 0.2, 0.15], [0.95, 0.8, 0.2], [0.2, 0.45, 0.75], [0.92, 0.9, 0.85], [0.15, 0.55, 0.3]];
+  for (const [x, y, w, h] of [[-0.45, 1.3, 0.42, 0.6], [0.05, 1.45, 0.38, 0.55], [0.5, 1.2, 0.4, 0.58], [-0.1, 0.95, 0.34, 0.45]]) {
+    M.save().move(x, y, 0).rotZ(R.range(-0.08, 0.08)); M.color(R.pick(c)); M.boxB('paint', -w / 2, w / 2, -h / 2, h / 2, 0, 0.004);
+    M.color(R.pick(c)); M.boxB('paint', -w / 2 + 0.04, w / 2 - 0.04, h / 2 - 0.18, h / 2 - 0.05, 0.004, 0.006);
+    M.color([0.1, 0.1, 0.1]); M.boxB('paint', -w / 2 + 0.05, w / 2 - 0.08, -h / 2 + 0.08, -h / 2 + 0.12, 0.004, 0.006);
+    M.restore();
+  }
+  M.cls = 0;
+});
+
+// ---------- vegetação ----------
+function kcFolhas(M, n, alt, comp, larg, seed, cor) {
+  const R = rngOf(seed);
+  for (let i = 0; i < n; i++) {
+    M.color(R() < 0.3 ? cor.map((v) => v * 0.8) : cor);
+    M.save().move(0, alt, 0).rotY((i / n) * TAU + R.range(-0.3, 0.3)).rotX(R.range(0.4, 1.1));
+    M.boxB('canvas', -larg / 2, larg / 2, 0, comp * 0.6, -0.006, 0.006);
+    M.save().move(0, comp * 0.6, 0).rotX(0.6); M.boxB('canvas', -larg * 0.4, larg * 0.4, 0, comp * 0.4, -0.006, 0.006); M.restore();
+    M.restore();
+  }
+}
+// planta num vaso de barro, 0,6 x 0,9 x 0,6 m
+PF.kcVasoPlanta = () => prefab('kcVasoPlanta', (M) => {
+  M.local(1); M.color([0.7, 0.4, 0.26]);
+  M.lathe('concrete', [[0, 0], [0.16, 0], [0.22, 0.32], [0.24, 0.35], [0.24, 0.38], [0.2, 0.38], [0.2, 0.34]], 14);
+  M.color([0.28, 0.2, 0.14]); M.save().move(0, 0.33, 0); M.cyl('canvas', 0.2, 0.02, 12); M.restore();
+  M.cls = 1; kcFolhas(M, 9, 0.34, 0.55, 0.1, 61, [0.26, 0.5, 0.2]); M.cls = 0;
+  M.col(-0.22, 0.22, 0, 0.38, -0.22, 0.22, 'wood');
+});
+// samambaia/arbusto no chão, 1,4 x 0,8 x 1,4 m (não colide)
+PF.kcArbusto = () => prefab('kcArbusto', (M) => {
+  M.local(1); M.cls = 1; kcFolhas(M, 16, 0.05, 0.9, 0.16, 71, [0.22, 0.46, 0.18]); kcFolhas(M, 8, 0.15, 0.6, 0.14, 72, [0.3, 0.55, 0.22]); M.cls = 0;
+});
+
+// ---------- ambiência ----------
+// bandeira do Brasil pendurada num muro (a frente olha +z), 1,5 x 1,05 m
+PF.kcBandeira = () => prefab('kcBandeira', (M) => {
+  M.local(1); M.cls = 1;
+  M.color([0.0, 0.55, 0.25]); M.boxB('canvas', -0.75, 0.75, 1.0, 2.05, 0, 0.01);
+  M.color([0.98, 0.84, 0.05]); M.save().move(0, 1.525, 0.012).scl(1.3, 0.92, 1).rotZ(Math.PI / 4); M.boxB('canvas', -0.38, 0.38, -0.38, 0.38, 0, 0.005); M.restore();
+  M.color([0.06, 0.15, 0.5]); M.save().move(0, 1.525, 0.02).rotX(Math.PI / 2); M.cyl('canvas', 0.24, 0.006, 20); M.restore();
+  M.color([0.95, 0.95, 0.93]); M.save().move(0, 1.525, 0.03).rotZ(-0.2); M.boxB('canvas', -0.23, 0.23, -0.02, 0.02, 0, 0.003); M.restore();
+  M.color(KC_COR.ferro); for (const x of [-0.7, 0.7]) M.boxB('steel', x - 0.02, x + 0.02, 2.03, 2.07, -0.02, 0.03);
+  M.cls = 0;
+});
+// bandeirinhas de festa junina num cordão de 6 m, preso a 3,4 m de altura nas pontas
+PF.kcBandeirinhas = () => prefab('kcBandeirinhas', (M) => {
+  M.local(1); M.cls = 1;
+  const yAt = (x) => 3.4 - 0.5 * (1 - (x / 3) * (x / 3));
+  M.color([0.85, 0.85, 0.8]); const P = []; for (let i = 0; i <= 12; i++) { const x = -3 + i * 0.5; P.push([x, yAt(x), 0]); } M.tube('plastic', 0.006, P, 3);
+  const cores = [[0.9, 0.2, 0.15], [0.95, 0.8, 0.15], [0.2, 0.55, 0.3], [0.2, 0.45, 0.85], [0.95, 0.5, 0.15], [0.7, 0.3, 0.7]];
+  let k = 0;
+  for (let x = -2.8; x <= 2.81; x += 0.35, k++) { M.color(cores[k % cores.length]); M.save().move(x, yAt(x), 0); M.extrude('canvas', [[-0.11, 0], [0.11, 0], [0, -0.26]], 0.004); M.restore(); }
+  M.cls = 0;
+});
+// lona azul esticada em quatro esteios, 3,4 x 2,4 x 2,6 m (sombra; passa gente por baixo)
+PF.kcLonaAzul = () => prefab('kcLonaAzul', (M) => {
+  M.local(1); M.color([0.36, 0.36, 0.38]);
+  for (const x of [-1.6, 1.6]) for (const z of [-1.2, 1.2]) { M.save().move(x, 0, z); M.cyl('steel', 0.03, 2.3, 6); M.restore(); M.col(x - 0.04, x + 0.04, 0, 2.3, z - 0.04, z + 0.04, 'steel'); }
+  M.color([0.18, 0.4, 0.75]); M.cls = 1;
+  for (const s of [-1, 1]) { M.save().move(0, 2.3, s * 1.25).rotX(s * 0.12); M.boxB('canvas', -1.7, 1.7, -0.01, 0.01, s > 0 ? -1.27 : 0, s > 0 ? 0 : 1.27); M.restore(); }
+  M.cls = 0;
+});
+// placa vertical de bar (vermelha, letras brancas), presa na parede por um braço (as costas em z = 0, suba com PgUp)
+PF.kcPlacaBar = () => prefab('kcPlacaBar', (M) => {
+  M.local(1); M.cls = 1;
+  M.color(KC_COR.ferro); M.boxB('steel', -0.03, 0.03, 1.55, 1.6, 0, 0.75); M.boxB('steel', -0.03, 0.03, 0.15, 0.2, 0, 0.75);
+  M.color([0.95, 0.95, 0.93]); M.boxB('paint', -0.05, 0.05, 0, 1.75, 0.75, 1.35);
+  M.color([0.78, 0.12, 0.1]); M.boxB('paint', -0.06, 0.06, 0.05, 1.7, 0.8, 1.3);
+  const L = { B: ['110', '101', '110', '101', '110'], A: ['010', '101', '111', '101', '101'], R: ['110', '101', '110', '101', '101'] }, c = 0.085;
+  M.color([0.97, 0.97, 0.95]); // as letras dos dois lados (de um lado, espelhadas, para ler certo)
+  ['B', 'A', 'R'].forEach((ch, k) => {
+    const y0 = 1.55 - k * 0.52;
+    L[ch].forEach((row, r) => { for (let col = 0; col < 3; col++) if (row[col] === '1') for (const s of [-1, 1]) { const z = 0.92 + (s > 0 ? 2 - col : col) * c, y = y0 - r * c; M.boxB('paint', Math.min(s * 0.06, s * 0.07), Math.max(s * 0.06, s * 0.07), y - c, y, z, z + c); } });
+  });
+  M.cls = 0;
+});
+// parede de cobogó (bloco vazado de concreto), 2 x 2 m: vê através, segura gente e bala
+PF.kcCobogo = () => prefab('kcCobogo', (M) => {
+  M.local(1); M.color([0.85, 0.82, 0.76]);
+  const n = 5, t = 0.4;
+  for (let i = 0; i <= n; i++) { const p = -1 + i * t; M.boxB('concrete', p - 0.03, p + 0.03, 0, 2, -0.07, 0.07); M.boxB('concrete', -1, 1, i * t - 0.03 + (i === 0 ? 0.03 : 0), i * t + 0.03, -0.07, 0.07); }
+  M.cls = 1;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const x = -1 + (i + 0.5) * t, y = (j + 0.5) * t; M.save().move(x, y, 0).rotZ(Math.PI / 4); M.boxB('concrete', -0.12, 0.12, -0.02, 0.02, -0.07, 0.07); M.boxB('concrete', -0.02, 0.02, -0.12, 0.12, -0.07, 0.07); M.restore(); }
+  M.cls = 0;
+  M.col(-1, 1, 0, 2, -0.07, 0.07, 'concrete');
+});
+
 /* ==========================================================================
    SUPERFÍCIES DO EDITOR DE MAPAS (Tiro da Galera). As caixas e escadas do editor escolhem a superfície numa galeria com miniaturas
    e ganham "Tamanho da textura" (campo tx do .json: 1 = normal, 2 = o dobro do tamanho).

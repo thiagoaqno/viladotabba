@@ -178,6 +178,48 @@ A laje e o telhado não têm escada: para fazer rota de telhado, encoste uma **E
 | `kcPredioFavela4` | 4,7 x 12,3 x 5,9 | prédio estreito de quatro andares, fechado: cada andar de uma cor, sacada no terceiro, o último pela metade (laje aberta a 8,85 m) |
 | `kcPredioFavelaEsquina` | 6,2 x 9,3 x 6,2 | prédio de esquina em L, fechado: loja verde, terraço a 5,9 m e um canto aberto coberto pela laje (a 2,95 m) |
 
+### Kit da favela
+
+A frente olha +z com `r` 0. As peças "de parede" (quadro de luz, cartazes, bandeira, placa de bar, ar-condicionado) têm as
+costas em z = 0: encoste na parede e suba com PgUp. Os módulos têm 3 x 3 m e a laje deles colide, então dá para empilhar: o de
+cima vai em y = 2,95. A cor de cada parede vem pronta; para outra cor, use uma caixa com a superfície e o campo **Cor**.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcCasaAmarela` | 6,4 x 5,9 x 6,1 | casa amarela de dois andares: térreo fechado, varanda em cima (laje a 2,95 m) com mureta, esteios e telhado |
+| `kcCasaAzul` | 6,5 x 3,4 x 7 | casa azul térrea, fechada, com alpendre de grade na frente (entrada de 1,6 m) e telhado de zinco |
+| `kcCasaVerde` | 6,2 x 6,3 x 5,2 | casa verde de dois andares, fechada, base cinza, laje a 5,9 m com mureta e caixa d'água |
+| `kcModuloPorta` | 3,2 x 2,95 x 3,2 | módulo de tijolo com porta de ferro |
+| `kcModuloGaragem` | 3,2 x 2,95 x 3,2 | módulo de reboco com porta de enrolar |
+| `kcModuloAberto` | 3,2 x 2,95 x 3,2 | módulo de reboco aberto na frente (dá para entrar) |
+| `kcModuloJanela` | 3,2 x 2,95 x 3,2 | módulo de reboco com janela de grade |
+| `kcModuloPortaMadeira` | 3,2 x 2,95 x 3,2 | módulo de reboco com porta de madeira e relógio de luz |
+| `kcPilarTijolo` | 0,9 x 1,26 x 0,7 | pilar de tijolo com vão (caixa de passagem na laje) |
+| `kcTijolos` | 1,1 x 0,6 x 0,8 | pilha de tijolos de oito furos |
+| `kcAntenaTV` | 1,1 x 2,2 x 1,8 | antena de TV espinha de peixe num mastro |
+| `kcVaral` | 3,1 x 1,9 x 0,1 | varal entre dois postes, com roupa pendurada |
+| `kcBlocos` | 1,2 x 0,95 x 0,8 | blocos de concreto empilhados (cobre agachado) |
+| `kcPaleteEmPe` | 1,2 x 1,2 x 0,3 | palete de madeira em pé, encostado |
+| `kcTamboresAzuis` | 1,25 x 0,95 x 0,6 | dois tambores azuis de plástico |
+| `kcIBC` | 1,2 x 1,15 x 1 | contêiner de água de 1000 litros na gaiola de ferro |
+| `kcPneus` | 0,7 x 0,96 x 0,7 | pilha de pneus velhos |
+| `kcCarroVelho` | 1,7 x 1,42 x 4 | carro velho de quatro portas (comprido em z) |
+| `kcVan` | 1,9 x 1,95 x 4,6 | van velha de passageiros (comprida em z) |
+| `kcMoto` | 0,8 x 1,05 x 2 | moto de rua (comprida em z) |
+| `kcCacamba` | 1,3 x 1,3 x 1,3 | caçamba de lixo verde de rodinhas |
+| `kcCone` | 0,4 x 0,73 x 0,4 | cone de trânsito |
+| `kcEngradados` | 0,9 x 0,56 x 0,45 | engradados de plástico vermelho e amarelo |
+| `kcSacoLixo` | 0,65 x 0,65 x 0,65 | saco de lixo preto (não colide) |
+| `kcQuadroLuz` | 1 x 2 x 0,2 | quadro de luz com três relógios e fios subindo (de parede) |
+| `kcCartazes` | 1,4 x 1 x 0 | cartazes colados (de parede) |
+| `kcVasoPlanta` | 0,6 x 0,9 x 0,6 | planta num vaso de barro |
+| `kcArbusto` | 1,6 x 0,8 x 1,6 | arbusto/samambaia no chão (não colide) |
+| `kcBandeira` | 1,5 x 2,07 x 0,05 | bandeira do Brasil pendurada (de parede; a bandeira vai de 1 a 2,05 m) |
+| `kcBandeirinhas` | 6 x 3,4 x 0 | bandeirinhas num cordão de 6 m, presas a 3,4 m nas pontas |
+| `kcLonaAzul` | 3,4 x 2,4 x 2,6 | lona azul em quatro esteios (passa gente por baixo) |
+| `kcPlacaBar` | 0,15 x 1,75 x 1,35 | placa vertical "BAR" num braço (de parede) |
+| `kcCobogo` | 2 x 2 x 0,15 | parede de cobogó: vê através, segura gente e bala |
+
 ### Passarelas
 
 O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas

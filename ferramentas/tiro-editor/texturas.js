@@ -74,7 +74,10 @@ const ED_SUPERF = [
 // as fotos que um mapa do editor precisa carregar (as de sempre + as que as caixas e escadas usam)
 function edTexturasDoMapa(J) {
   const s = new Set(TIRO_TEX);
-  for (const P of J.pecas || []) if ((P.t === 'caixa' || P.t === 'escada') && P.m && TEX_PACKS[P.m]) s.add(P.m);
+  for (const P of J.pecas || []) {
+    if ((P.t === 'caixa' || P.t === 'escada') && P.m && TEX_PACKS[P.m]) s.add(P.m);
+    if (P.t === 'prefab' && KC_TEX_PECAS[P.nome]) for (const k of KC_TEX_PECAS[P.nome]) if (TEX_PACKS[k]) s.add(k);
+  }
   return [...s];
 }
 // matérias novas: só nos mapas do editor (nos outros mapas nada muda)

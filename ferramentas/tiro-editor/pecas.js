@@ -712,3 +712,46 @@ PF.kcBananeira = () => prefab('kcBananeira', (M) => {
   M.cls = 0;
   M.col(-0.15, 0.15, 0, 1.8, -0.15, 0.15, 'wood');
 });
+
+// barraca de feira: mesa de madeira com caixotes de fruta e lona em quatro varas, 2,6 x 2,4 x 1,6 m
+function kcBarracaF(M, lona) {
+  const R = rngOf(lona[0] * 100 | 0); M.local(1);
+  M.color([0.6, 0.45, 0.3]);
+  for (const x of [-1.25, 1.25]) for (const z of [-0.75, 0.75]) M.boxB('wood', x - 0.04, x + 0.04, 0, z < 0 ? 2.4 : 2.15, z - 0.04, z + 0.04);
+  M.boxB('wood', -1.2, 1.2, 0.8, 0.86, -0.65, 0.65); M.boxB('wood', -1.15, 1.15, 0, 0.8, -0.6, -0.55);
+  M.col(-1.2, 1.2, 0, 0.86, -0.65, 0.65, 'wood');
+  M.cls = 1;
+  const frutas = [[0.95, 0.55, 0.1], [0.85, 0.12, 0.1], [0.95, 0.85, 0.2], [0.35, 0.6, 0.2], [0.5, 0.2, 0.45]];
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) {
+    const x = -0.9 + i * 0.6, z = -0.28 + j * 0.56;
+    M.color([0.72, 0.6, 0.42]); M.boxB('crate', x - 0.27, x + 0.27, 0.86, 1.04, z - 0.25, z + 0.25);
+    M.color(R.pick(frutas)); M.boxB('plastic', x - 0.24, x + 0.24, 1.0, 1.08, z - 0.22, z + 0.22, { bevel: 0.04 });
+  }
+  M.color(lona); const a = Math.atan2(0.25, 1.6);
+  M.save().move(0, 2.3, 0).rotX(-a); M.boxB('canvas', -1.45, 1.45, 0, 0.02, -0.95, 0.95); M.restore();
+  M.color([0.72, 0.6, 0.42]); for (const [x, z] of [[1.6, 0.3], [1.6, -0.3], [1.65, 0]]) M.boxB('crate', x - 0.25, x + 0.25, z === 0 ? 0.36 : 0, z === 0 ? 0.72 : 0.36, z - 0.27, z + 0.27);
+  M.cls = 0;
+  M.col(1.35, 1.9, 0, 0.72, -0.6, 0.6, 'wood');
+}
+PF.kcBarraca = () => prefab('kcBarraca', (M) => kcBarracaF(M, [0.95, 0.78, 0.25]));
+PF.kcBarracaAzul = () => prefab('kcBarracaAzul', (M) => kcBarracaF(M, [0.22, 0.42, 0.72]));
+
+// árvore num canteiro octogonal de concreto (o canteiro cobre agachado), 4,8 x 6 x 4,8 m
+PF.kcArvoreCanteiro = () => prefab('kcArvoreCanteiro', (M) => {
+  const R = rngOf(19); M.local(1);
+  M.color(KC_COR.laje); M.save().rotY(Math.PI / 8); M.lathe('concrete', [[2.4, 0], [2.4, 0.6], [2.1, 0.6], [2.1, 0.45]], 8, { sharp: 1 }); M.restore();
+  M.color([0.32, 0.24, 0.17]); M.save().rotY(Math.PI / 8); M.cyl('concrete', 2.12, 0.46, 8); M.restore();
+  M.color([0.36, 0.28, 0.2]);
+  M.tube('wood', 0.22, [[0, 0.4, 0], [0.1, 1.6, 0.05], [0.05, 2.8, -0.1]], 10);
+  const pontas = [];
+  for (let i = 0; i < 4; i++) { const a = (i / 4) * TAU + R.range(-0.3, 0.3), r = R.range(1.0, 1.6), p = [Math.cos(a) * r, R.range(3.6, 4.4), Math.sin(a) * r];
+    M.tube('wood', 0.09, [[0.05, 2.6, -0.1], [p[0] * 0.5, 3.3, p[2] * 0.5], p], 6); pontas.push(p); }
+  M.cls = 1;
+  for (const p of pontas.concat([[0, 4.8, 0]])) for (let k = 0; k < 2; k++) {
+    M.color(R() < 0.5 ? [0.22, 0.42, 0.16] : [0.28, 0.5, 0.2]); const r = R.range(0.9, 1.4);
+    M.save().move(p[0] + R.range(-0.4, 0.4), p[1] - r * 0.5 + k * 0.4, p[2] + R.range(-0.4, 0.4));
+    M.lathe('canvas', [[0, 0], [r * 0.7, r * 0.15], [r, r * 0.5], [r * 0.8, r * 0.85], [0, r]], 9); M.restore();
+  }
+  M.cls = 0;
+  M.col(-2.4, 2.4, 0, 0.6, -2.4, 2.4, 'concrete'); M.col(-0.25, 0.25, 0.6, 3, -0.25, 0.25, 'wood');
+});

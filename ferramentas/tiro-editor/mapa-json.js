@@ -40,7 +40,7 @@ function edLimites(J) {
 }
 // pontos de interesse dos bots: os do editor, ou o topo de cada chão grande, os pontos de dominação e o meio de cada time
 function edPois(J, L) {
-  if (J.poi && J.poi.length) return J.poi.map(([x, y, z]) => [x, y, z, x < L.x0 + (L.x1 - L.x0) / 3 ? 'L' : x > L.x1 - (L.x1 - L.x0) / 3 ? 'E' : 'M']);
+  if (J.poi && J.poi.length) return J.poi.map(([x, y, z, h]) => [x, y, z, x < L.x0 + (L.x1 - L.x0) / 3 ? 'L' : x > L.x1 - (L.x1 - L.x0) / 3 ? 'E' : 'M', h ? 1 : 0]); // 4º número 1: o bot segura a posição
   const out = [], lane = (x) => (x < L.x0 + (L.x1 - L.x0) / 3 ? 'L' : x > L.x1 - (L.x1 - L.x0) / 3 ? 'E' : 'M');
   for (const P of J.pecas || []) if (P.t === 'caixa' && P.col !== false) { const B = edCaixaBox(P); if (B.x1 - B.x0 >= 2.5 && B.z1 - B.z0 >= 2.5 && B.y1 < 9) out.push([(B.x0 + B.x1) / 2, B.y1, (B.z0 + B.z1) / 2, lane((B.x0 + B.x1) / 2)]); }
   for (const [x, z] of (J.dom || [])) out.push([x, 0, z, lane(x)]);
@@ -68,7 +68,8 @@ function edConstruir(J) {
   for (const P of J.pecas || []) {
     try {
       const [x, y, z] = P.p, ry = ((P.r || 0) * Math.PI) / 180;
-      if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
+      if (P.t === 'caixa' && P.inv) { const B = edCaixaBox(P); glassWall(B.x0, B.x1, B.y0, B.y1, B.z0, B.z1); } // parede invisível: só segura gente
+      else if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
       else if (P.t === 'escada') edEscada(P);
       else if (P.t === 'prefab' && PF[P.nome]) DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined);
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});

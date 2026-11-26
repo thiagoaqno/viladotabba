@@ -27,6 +27,52 @@ const iaT = (z) => (z - IA.zT) / IA.L;
 const iaHW = (z) => hullAt(HULL_IATE, clamp(iaT(z), 0, 1), IA.B / 2).hw;
 const iaIn = (z) => iaHW(z) - 0.14; // face de dentro da borda falsa
 
+/* ---------- deck de teca (textura própria) ----------
+   Tábuas de 12,5 cm ao longo do navio (z), calafeto preto entre elas, emendas de topo desencontradas, veio comprido e o desbotado
+   prateado do sol. No topo de uma caixa, u = x e v = -z (projUV): as juntas correm em z. Um ladrilho = 3 m. */
+Object.assign(TEXLAB, {
+  iaTeca: [512, 131, 1.3, `
+    float n = 24.0, pu = uv.x * n, pi = floor(pu), fu = fract(pu);
+    float id = hs(vec2(pi, 5.0), 3.0), id2 = hs(vec2(pi, 9.0), 4.0);
+    float fv = fract(uv.y + id);
+    float seam = 1.0 - smoothstep(0.035, 0.075, min(fu, 1.0 - fu));
+    float butt = 1.0 - smoothstep(0.0015, 0.0035, min(fv, 1.0 - fv));
+    float caulk = max(seam, butt);
+    float grain = gfbm(vec2(uv.x, uv.y + id * 3.0), vec2(96.0, 3.0), 5, 2.0 + id);
+    float fine = gfbm(vec2(uv.x, uv.y + id2), vec2(192.0, 12.0), 3, 7.0);
+    float sun = gfbm(uv, vec2(3.0), 4, 6.0);
+    vec3 teak = mix(srgb(vec3(0.5, 0.31, 0.17)), srgb(vec3(0.7, 0.47, 0.27)), id * 0.55 + grain * 0.45);
+    teak *= 0.9 + fine * 0.2;
+    teak = mix(teak, srgb(vec3(0.68, 0.6, 0.5)), smoothstep(0.55, 0.9, sun) * 0.3);
+    a = mix(teak, srgb(vec3(0.045, 0.04, 0.035)), caulk);
+    h = (1.0 - caulk) * (0.7 + grain * 0.12 + fine * 0.05); r = 0.55 + caulk * 0.35 + grain * 0.12; x = h;`],
+});
+TEXSCALE.iaTeca = 3; OPT_TEX.add('iaTeca');
+const IA_TECA = [1, 1, 1]; // a cor já vem da textura
+
+/* ---------- coisas que quebram ----------
+   Vidro das janelas (salão, cassino, ponte): um tiro estilhaça o painel e abre a janela (o tiro é avisado aos outros jogadores, como
+   nos outros props). Até lá ele segura os soldados e para a bala. Vaso de cerâmica: alguns tiros e vira cacos. Garrafas: um tiro. */
+PF.iaVidro = (w, h) => prefab('iaVidro' + w + 'x' + h, (M) => {
+  M.local(1); M.color([0.78, 0.88, 0.92]); M.boxB('carglass', -w / 2, w / 2, 0, h, -0.015, 0.015);
+  M.col(-w / 2, w / 2, 0, h, -0.05, 0.05, 'glass');
+});
+propType('iaVidro', (a) => { const w = a[0] || 1.4, h = a[1] || 1.3;
+  return { pf: () => PF.iaVidro(w, h), shapes: [BOX(0, h / 2, 0, w / 2, h / 2, 0.02)], mass: 14, mu: 0.5, e: 0.1, resp: 0.6, blast: 2, hp: 1, mat: 'glass', snd: 'plastic', brk: 'glass' }; });
+const IA_VASOS = [[0.32, 0.12, [0.95, 0.95, 0.93]], [0.55, 0.16, [0.1, 0.18, 0.38]], [0.9, 0.22, [0.93, 0.92, 0.88]]]; // [altura, raio, cor]
+PF.iaVaso = (k) => prefab('iaVaso' + k, (M) => {
+  const [h, r, c] = IA_VASOS[k]; M.local(1); M.color(c);
+  M.lathe('plastic', [[0, 0], [r * 0.7, 0], [r, h * 0.35], [r * 0.85, h * 0.75], [r * 0.5, h * 0.92], [r * 0.6, h], [r * 0.5, h]], 16);
+  M.color([0.2, 0.42, 0.18]); M.cls = 1; M.save().move(0, h * 0.95, 0); M.lathe('foliage', [[0, 0], [r * 1.3, h * 0.25], [r * 0.9, h * 0.55], [0, h * 0.65]], 8); M.restore();
+});
+propType('iaVaso', (a) => { const k = a[0] || 0, [h, r] = IA_VASOS[k];
+  return { pf: () => PF.iaVaso(k), shapes: [CYL(0, h / 2, 0, r, h / 2)], mass: 2 + 8 * h, mu: 0.7, e: 0.2, resp: 2.6, blast: 7, hp: Math.round(6 + 14 * h), mat: 'dirt', snd: 'clay', brk: 'clay', debris: [['shard', 6]] }; });
+const IA_BEB = [[0.1, 0.32, 0.14], [0.35, 0.12, 0.08], [0.85, 0.78, 0.55], [0.12, 0.2, 0.35], [0.9, 0.9, 0.88]];
+// garrafas (quebram com um tiro) em fila sobre um tampo
+function iaGarrafas(x, y, z, n, dx = 0.16, dz = 0, seed = 1) {
+  const R = rngOf(seed);
+  for (let i = 0; i < n; i++) DECOR.dyn('bottle', x + i * dx, y, z + i * dz, R() * TAU, { a: [R.pick([0.26, 0.3, 0.34])], tint: R.pick(IA_BEB) });
+}
 /* ---------- peças ---------- */
 // laje entre z0 e z1 recortada pelos buracos [x0, x1, z0, z1] (as escadas), largura da borda de dentro do casco
 function iaSlab(z0, z1, holes, y0, y1, key, tint, top, collide = true) {
@@ -45,13 +91,13 @@ function iaSlab(z0, z1, holes, y0, y1, key, tint, top, collide = true) {
   }
 }
 // escada (rampa praticável + degraus visíveis), ao longo de z; h0 em z0, h1 em z1; por baixo, maciça
-function iaStairs(x0, x1, z0, z1, h0, h1, tint = IA_C.teak) {
+function iaStairs(x0, x1, z0, z1, h0, h1) {
   RAMPS.push({ x0, x1, z0, z1, axis: 'z', h0, h1 });
   const n = Math.max(2, Math.round(Math.abs(h1 - h0) / 0.2)), lo = Math.min(h0, h1), dh = Math.abs(h1 - h0) / n;
   for (let i = 0; i < n; i++) {
     const t0 = i / n, t1 = (i + 1) / n, za = lerp(z0, z1, t0), zb = lerp(z0, z1, t1), top = lerp(h0, h1, (t0 + t1) / 2) + dh / 2;
     DECOR.col(x0, x1, lo, top, za, zb, 'wood', true);
-    box('wood', x0, x1, top - 0.05, top, za, zb, { collide: false, tint });
+    box('iaTeca', x0, x1, top - 0.05, top, za, zb, { collide: false, tint: IA_TECA });
     box('paint', x0, x1, lo, top - 0.05, za, zb, { collide: false, tint: IA_C.white });
   }
 }
@@ -61,14 +107,16 @@ const iaRail = (fix, y, a0, a1, axis, ys) => railing(fix, null, y, Math.min(a0, 
 // doors: [[a0, a1], ...] (até 2,2 m de altura); win: [y0, y1] da faixa de vidro (null: parede cheia)
 function iaWall(axis, f0, f1, a0, a1, y0, y1, doors = [], win = null, tint = IA_C.white) {
   const put = (key, p0, p1, b0, b1, o) => (axis === 'x' ? box(key, p0, p1, b0, b1, f0, f1, o) : box(key, f0, f1, b0, b1, p0, p1, o));
-  const gw = (p0, p1, b0, b1) => (axis === 'x' ? glassWall(p0, p1, b0, b1, f0, f1) : glassWall(f0, f1, b0, b1, p0, p1));
   const ds = doors.slice().sort((a, b) => a[0] - b[0]);
   let a = a0;
   const run = (p0, p1) => {
     if (p1 - p0 < 0.02) return;
     if (!win) { put('paint', p0, p1, y0, y1, { tint }); return; }
     put('paint', p0, p1, y0, win[0], { tint });
-    put('glass', p0, p1, win[0], win[1], { collide: false, tint: IA_C.glass }); gw(p0, p1, win[0], win[1]);
+    // vidros que quebram, entre montantes brancos (um painel a cada 1,5 m, mais ou menos)
+    const n = Math.max(1, Math.round((p1 - p0) / 1.5)), w = (p1 - p0) / n, fm = (f0 + f1) / 2, wh = +(win[1] - win[0]).toFixed(2), pw = +(w - 0.08).toFixed(2);
+    for (let i = 0; i <= n; i++) { const b = p0 + i * w; put('paint', Math.max(p0, b - 0.04), Math.min(p1, b + 0.04), win[0], win[1], { tint }); }
+    for (let i = 0; i < n; i++) { const c = p0 + (i + 0.5) * w; DECOR.dyn('iaVidro', axis === 'x' ? c : fm, win[0], axis === 'x' ? fm : c, axis === 'x' ? 0 : Math.PI / 2, { a: [pw, wh] }); }
     put('paint', p0, p1, win[1], y1, { tint });
   };
   for (const [d0, d1] of ds) { run(a, d0); put('paint', d0, d1, y0 + 2.2, y1, { tint }); a = d1; }
@@ -93,8 +141,8 @@ function iaTenderAt(x, y, z) {
   DECOR.col(x - 1.05, x + 1.05, y, y + 1.5, z - 2.8, z + 2.8, 'metal');
 }
 // espreguiçadeira (madeira e almofada), colisão baixa
-function iaLounger(x, z, rot = 0) {
-  const M = DECOR; M.save().move(x, 0, z).rotY(rot).local(1);
+function iaLounger(x, z, rot = 0, y = 0) {
+  const M = DECOR; M.save().move(x, y, z).rotY(rot).local(1);
   M.color(IA_C.teak); M.boxB('wood', -0.35, 0.35, 0.18, 0.3, -0.95, 0.95, { bevel: 0.02 });
   M.color(IA_C.white); M.boxB('canvas', -0.32, 0.32, 0.3, 0.38, -0.9, 0.45, { bevel: 0.03 });
   M.save().move(0, 0.3, 0.45).rotX(-0.6); M.boxB('canvas', -0.32, 0.32, 0, 0.08, 0, 0.6, { bevel: 0.03 }); M.restore();
@@ -130,7 +178,7 @@ function iateLevel() {
 
   // ----- convés principal (y 0): teca por cima, forro branco por baixo (teto das cabines) -----
   const HOLES = [[-0.9, 0.9, 17, 22.5], [-0.9, 0.9, -9.5, -4], [6.5, 8.3, -41, -35.5], [-8.3, -6.5, -41, -35.5]];
-  iaSlab(IA.zT, IA.zBow, HOLES, MD - 0.3, MD, 'wood', IA_C.teak); // (uma laje só: a rota dos bots fica no topo dela)
+  iaSlab(IA.zT, IA.zBow, HOLES, MD - 0.3, MD, 'iaTeca', IA_TECA); // (uma laje só: a rota dos bots fica no topo dela)
   iaSlab(IA.zT, IA.zBow, HOLES, MD - 0.32, MD - 0.3, 'paint', IA_C.white, null, false);
   // borda falsa (sólida, para tiros também) e parede invisível por cima, até 4,5 m: ninguém pula no mar
   for (let z = IA.zT; z < 52; z++) {
@@ -169,7 +217,7 @@ function iateLevel() {
   iaWall('x', 11, 11.2, -SX, SX, MD, MD + 2.7, [[-1.1, 1.1]], WIN);
   for (const sd of [-1, 1]) iaWall('z', sd > 0 ? SX - 0.2 : -SX, sd > 0 ? SX : -SX + 0.2, 11.2, 24.8, MD, MD + 2.7, [[21.5, 22.9]], WIN);
   box('paint', -SX, SX, MD + 2.7, UD, 11, 25, { tint: IA_C.white }); // teto = piso do Solário
-  box('wood', -SX, SX, UD - 0.04, UD, 11, 25, { tint: IA_C.teak, collide: false });
+  box('iaTeca', -SX, SX, UD - 0.04, UD, 11, 25, { tint: IA_TECA, collide: false });
   box('paint', -SX - 0.15, SX + 0.15, MD + 2.55, MD + 2.7, 24.9, 25.2, { tint: IA_C.navy, collide: false }); // friso azul
   // escada interna: desce às cabines (x -0,9 a 0,9, de z 22,5 a 17)
   iaStairs(-0.9, 0.9, 17, 22.5, LD, MD);
@@ -183,11 +231,11 @@ function iateLevel() {
   // Solário: grades, patamar das escadas externas, espreguiçadeiras
   for (const sd of [-1, 1]) {
     box('paint', sd > 0 ? SX : -7, sd > 0 ? 7 : -SX, MD + 2.7, UD, 11, 14.5, { tint: IA_C.white });
-    box('wood', sd > 0 ? SX : -7, sd > 0 ? 7 : -SX, UD - 0.04, UD, 11, 14.5, { tint: IA_C.teak, collide: false });
+    box('iaTeca', sd > 0 ? SX : -7, sd > 0 ? 7 : -SX, UD - 0.04, UD, 11, 14.5, { tint: IA_TECA, collide: false });
     iaStairs(sd > 0 ? 5.6 : -7, sd > 0 ? 7 : -5.6, 14.5, 20, UD, MD);
     iaRail(sd * 7, MD, 14.5, 20, 'z', [UD, MD]);
     iaRail(sd * 7, UD, 11, 14.5, 'z'); iaRail(sd * SX, UD, 14.5, 25, 'z');
-    for (const z of [20.5, 23]) iaLounger(sd * 3.2, z, sd > 0 ? Math.PI : Math.PI);
+    for (const z of [20.5, 23]) iaLounger(sd * 3.2, z, Math.PI, UD);
   }
   iaRail(25, UD, -SX, SX, 'x'); iaRail(11, UD, -7, 7, 'x');
 
@@ -217,7 +265,7 @@ function iateLevel() {
   iaWall('x', -27, -26.8, -SX, SX, MD, MD + 2.7, [[-1.1, 1.1]], WIN);
   for (const sd of [-1, 1]) iaWall('z', sd > 0 ? SX - 0.2 : -SX, sd > 0 ? SX : -SX + 0.2, -26.8, -11.2, MD, MD + 2.7, [[-15.5, -14.1]], WIN);
   box('paint', -SX, SX, MD + 2.7, UD, -27, -11, { tint: IA_C.white });
-  box('wood', -SX, SX, UD - 0.04, UD, -27, -11, { tint: IA_C.teak, collide: false });
+  box('iaTeca', -SX, SX, UD - 0.04, UD, -27, -11, { tint: IA_TECA, collide: false });
   box('paint', -SX - 0.15, SX + 0.15, MD + 2.55, MD + 2.7, -11.2, -10.9, { tint: IA_C.navy, collide: false });
   // mesas de jogo (feltro verde), bar no fundo
   for (const [x, z] of [[-2.8, -15], [2.8, -15], [-2.8, -21.5], [2.8, -21.5]]) {
@@ -248,11 +296,11 @@ function iateLevel() {
   // terraço e escadas externas
   for (const sd of [-1, 1]) {
     box('paint', sd > 0 ? SX : -7, sd > 0 ? 7 : -SX, MD + 2.7, UD, -27, -22.5, { tint: IA_C.white });
-    box('wood', sd > 0 ? SX : -7, sd > 0 ? 7 : -SX, UD - 0.04, UD, -27, -22.5, { tint: IA_C.teak, collide: false });
+    box('iaTeca', sd > 0 ? SX : -7, sd > 0 ? 7 : -SX, UD - 0.04, UD, -27, -22.5, { tint: IA_TECA, collide: false });
     iaStairs(sd > 0 ? 5.6 : -7, sd > 0 ? 7 : -5.6, -22.5, -17, UD, MD);
     iaRail(sd * 7, MD, -22.5, -17, 'z', [UD, MD]);
     iaRail(sd * 7, UD, -27, -22.5, 'z'); iaRail(sd * SX, UD, -22.5, -11, 'z');
-    iaLounger(sd * 3.0, -13.5, Math.PI); iaLounger(sd * 3.0, -16.5, Math.PI);
+    iaLounger(sd * 3.0, -13.5, Math.PI, UD); iaLounger(sd * 3.0, -16.5, Math.PI, UD);
   }
   iaRail(-11, UD, -SX, SX, 'x'); iaRail(-27, UD, -7, 7, 'x');
 
@@ -302,12 +350,146 @@ function iateLevel() {
   box('rug', -1.0, 1.0, LD, LD + 0.01, -34, 16.5, { tint: IA_C.navy, collide: false });
   for (let z = -32; z <= 21; z += 6) iaLamp((z > -10 && z < -3) || z > 15 ? 1.7 : 0, MD - 0.3, z, 1, 5);
 
+  iaDecor();
+
   // mar: espuma em volta do casco (obstáculo), terra firme dentro dele (o mecha não pensa que o convés é água)
   const P = [];
   for (let i = 0; i <= 24; i++) { const z = lerp(IA.zT, 53, i / 24); P.push([iaHW(z) * 0.97, z]); }
   waterObstacle(P.concat(P.slice().reverse().map(([x, z]) => [-x, z])), 5.5, [0.95, 0.95, 0.94], 1);
   waterLand(-10.5, 10.5, IA.zT - 0.5, 53.5);
 }
+/* ---------- o cenário de cada área (o que dá vida e o que quebra) ---------- */
+function iaDecor() {
+  const M = DECOR, { LD, MD, UD } = IA;
+  const vaso = (x, y, z, k, r = 0) => M.dyn('iaVaso', x, y, z, r, { a: [k] });
+  const mesinha = (x, y, z, h = 0.5) => { M.save().move(x, y, z).color(IA_C.white).local(1); M.cyl('paint', 0.26, h, 16); M.restore(); DECOR.col(x - 0.26, x + 0.26, y, y + h, z - 0.26, z + 0.26, 'wood'); };
+  // ----- proa -----
+  for (const sd of [-1, 1]) {
+    // espreguiçadeira dupla (solário de proa) encostada no salão
+    const x0 = sd > 0 ? 2.0 : -3.8, x1 = x0 + 1.8;
+    box('paint', x0, x1, MD, MD + 0.35, 25.3, 26.9, { tint: IA_C.white });
+    box('canvas', x0 + 0.05, x1 - 0.05, MD + 0.35, MD + 0.5, 25.35, 26.85, { tint: IA_C.cream, collide: false });
+    for (const xx of [x0 + 0.45, x1 - 0.45]) box('canvas', xx - 0.35, xx + 0.35, MD + 0.5, MD + 0.68, 25.4, 25.7, { tint: IA_C.navy, collide: false });
+    M.dyn('ropeCoil', sd * 6.3, MD, 37.3, sd);
+    M.place(PF.lifeRingStand(), sd * 8.9, MD, 26.2, sd > 0 ? -Math.PI / 2 : Math.PI / 2, { nocol: true });
+    // corrente da âncora, do guincho até o escovém
+    M.save().color([0.12, 0.12, 0.13]); M.cls = 1; M.tube('steel', 0.05, [[sd * 2.2, MD + 1.35, 45], [sd * 2.6, MD + 1.02, 47.5], [sd * 3.0, MD + 1.02, 49.5]], 6); M.restore();
+  }
+  // mastro da bandeira e farol de navegação na ponta
+  M.save().color(IA_C.white).move(0, MD + 1.0, 50.5).local(1); M.cyl('paint', 0.06, 3.2, 8, { r1: 0.04 }); M.color([1, 1, 1]); M.save().move(0, 3.2, 0); M.cyl('lamp', 0.08, 0.12, 8); M.restore(); M.restore();
+
+  // ----- salão -----
+  // piano de cauda (preto brilhante), mesinhas de centro, vasos, garrafas no balcão, lustre
+  box('carpaint', -3.6, -1.6, MD + 0.65, MD + 1.0, 23.0, 24.6, { tint: [0.03, 0.03, 0.035], collide: false });
+  for (const [x, z] of [[-3.45, 23.15], [-1.75, 23.15], [-2.6, 24.45]]) box('carpaint', x - 0.07, x + 0.07, MD, MD + 0.65, z - 0.07, z + 0.07, { tint: [0.03, 0.03, 0.035], collide: false });
+  DECOR.col(-3.6, -1.6, MD, MD + 1.0, 23.0, 24.6, 'wood');
+  M.save().color([0.03, 0.03, 0.035]).move(-2.6, MD + 1.0, 24.55).rotX(-0.75).local(1); M.cls = 1; M.boxB('carpaint', -1.0, 1.0, 0, 0.03, -1.5, 0); M.restore();
+  for (const sd of [-1, 1]) {
+    mesinha(sd * 4.9, MD, 18, 0.55); vaso(sd * 4.9, MD + 0.55, 17.9, 0); iaGarrafas(sd * 4.9 - 0.08, MD + 0.55, 18.2, 2, 0.16, 0, 7 + sd);
+    vaso(sd * 5.0, MD, 24.3, 2); vaso(sd * 5.0, MD, 13.3, 2, 1);
+    iaGarrafas(sd > 0 ? 3.4 : -5.1, MD + 1.16, 11.9, 9, 0.18, 0, sd > 0 ? 11 : 12);
+  }
+  M.save().move(0, MD + 2.7, 18).local(1); M.color([0.9, 0.92, 0.95]); M.cls = 1;
+  M.lathe('glass', [[0.05, 0], [0.7, -0.35], [0.55, -0.7], [0.1, -0.85]], 16); M.color([1, 1, 1]); M.save().move(0, -0.75, 0); M.cyl('lamp', 0.3, 0.12, 12); M.restore();
+  M.restore(); M.lamp(0, MD + 1.9, 18, [1.0, 0.85, 0.6], 2.2, 8, 0);
+  // arco do radar por cima do Solário (só a vista; as pernas param os soldados)
+  M.save().color(IA_C.white); M.cls = 0;
+  M.tube('paint', 0.16, [[-5.15, UD, 12.2], [-4.5, UD + 2.3, 12.5], [-2.4, UD + 3.3, 12.7], [0, UD + 3.5, 12.75], [2.4, UD + 3.3, 12.7], [4.5, UD + 2.3, 12.5], [5.15, UD, 12.2]], 10);
+  for (const x of [-1.2, 1.2]) { M.save().move(x, UD + 3.45, 12.7); M.lathe('paint', [[0.38, 0], [0.4, 0.3], [0.25, 0.55], [0, 0.6]], 14); M.restore(); }
+  M.restore();
+  for (const sd of [-1, 1]) DECOR.col(sd * 5.15 - 0.2, sd * 5.15 + 0.2, UD, UD + 2, 12.0, 12.4, 'metal');
+
+  // ----- piscina -----
+  for (const sd of [-1, 1]) {
+    for (const [i, z] of [[0, 2.2], [1, 4.7], [2, 7.2]]) box('canvas', sd * 4.4 - 0.28, sd * 4.4 + 0.28, MD + 0.39, MD + 0.41, z - 0.75, z + 0.2, { tint: [[0.1, 0.18, 0.38], [0.95, 0.95, 0.93], [0.15, 0.45, 0.42]][i], collide: false });
+    for (const z of [3.45, 5.95]) { mesinha(sd * 4.4, MD, z, 0.45); iaGarrafas(sd * 4.4 - 0.08, MD + 0.45, z, 2, 0.16, 0, z * 13 + sd); }
+    // floreira com palmeira nos cantos do convés
+    for (const z of [9.7, -9.7]) {
+      const x0 = sd > 0 ? 7.0 : -8.2;
+      box('paint', x0, x0 + 1.2, MD, MD + 0.6, z - 0.6, z + 0.6, { tint: IA_C.white });
+      box('paint', x0 + 0.05, x0 + 1.15, MD + 0.58, MD + 0.6, z - 0.55, z + 0.55, { tint: [0.25, 0.18, 0.12], collide: false });
+      M.place(PF.palm(4.2, z > 0 ? 3 + sd : 7 + sd), x0 + 0.6, MD + 0.6, z, sd * 0.7, { nocol: true });
+    }
+  }
+  // escada da piscina, boia de flamingo, garrafas nos armários do ponto B
+  M.save().color([0.85, 0.86, 0.88]); M.cls = 1;
+  for (const x of [1.9, 2.5]) M.tube('steel', 0.025, [[x, MD + 0.1, 7.5], [x, MD + 1.2, 7.55], [x, MD + 1.25, 7.85], [x, MD + 0.8, 8.05]], 6);
+  M.restore();
+  M.save().move(-0.8, MD + 0.66, 4.0).color([0.98, 0.45, 0.6]).local(1); M.cls = 1;
+  M.lathe('plastic', [[0.35, 0], [0.55, 0.05], [0.62, 0.15], [0.55, 0.25], [0.35, 0.28], [0.28, 0.15], [0.35, 0]], 18);
+  M.tube('plastic', 0.07, [[0.45, 0.2, 0], [0.55, 0.6, 0.05], [0.5, 0.85, 0.15], [0.4, 0.88, 0.3]], 6);
+  M.restore();
+  iaGarrafas(4.3, MD + 1.1, -2.2, 4, 0.0, 0.5, 21); iaGarrafas(-4.3, MD + 1.1, -2.2, 3, 0.0, 0.6, 22);
+
+  // ----- cassino -----
+  // mesa de roleta no meio (com a roda), caça-níqueis nos cantos, fichas nas mesas, garrafas no bar
+  box('wood', -0.7, 0.7, MD, MD + 0.85, -19.4, -17.0, { tint: IA_C.teakDark });
+  box('canvas', -0.62, 0.62, MD + 0.85, MD + 0.87, -19.3, -17.1, { tint: IA_C.green, collide: false });
+  M.save().move(0, MD + 0.87, -18.8).local(1); M.color([0.35, 0.2, 0.1]); M.lathe('wood', [[0.45, 0], [0.45, 0.06], [0.38, 0.08], [0.1, 0.1], [0, 0.18]], 24);
+  M.color([0.8, 0.65, 0.3]); M.save().move(0, 0.1, 0); M.cyl('steel', 0.03, 0.12, 6); M.restore(); M.restore();
+  for (const sd of [-1, 1]) for (const z of [-11.9, -13.0]) {
+    const x0 = sd > 0 ? 4.5 : -5.3;
+    box('paint', x0, x0 + 0.8, MD, MD + 1.7, z - 0.4, z + 0.4, { tint: [0.55, 0.08, 0.1] });
+    M.save().color([1, 1, 1]); M.cls = 1; M.boxB('lampCool', sd > 0 ? x0 - 0.01 : x0 + 0.8, sd > 0 ? x0 : x0 + 0.81, MD + 1.0, MD + 1.45, z - 0.3, z + 0.3); M.restore();
+  }
+  for (const [x, z] of [[-2.8, -15], [2.8, -15], [-2.8, -21.5], [2.8, -21.5]]) {
+    M.save().local(1); M.cls = 1;
+    for (const [dx, dz, c] of [[-0.4, 0.2, [0.8, 0.1, 0.1]], [-0.3, 0.25, [0.1, 0.2, 0.7]], [0.35, -0.2, [0.95, 0.95, 0.9]], [0.45, -0.25, [0.1, 0.1, 0.1]]]) { M.color(c); M.save().move(x + dx, MD + 0.8, z + dz); M.cyl('plastic', 0.02, 0.06 + Math.abs(dx) * 0.1, 10); M.restore(); }
+    M.restore();
+    vaso(x, MD + 0.8, z, 0);
+  }
+  iaGarrafas(-5.1, MD + 1.1, -26.0, 10, 0.34, 0, 31); iaGarrafas(1.8, MD + 1.1, -26.0, 10, 0.34, 0, 32);
+  // ponte: roda do leme, mesa de cartas, telas, cúpulas no teto
+  M.save().move(0, UD + 1.05, -20.7).rotX(Math.PI / 2).color([0.35, 0.22, 0.12]).local(1); M.cls = 1;
+  M.lathe('wood', [[0.3, -0.03], [0.34, 0], [0.3, 0.03], [0.26, 0]], 18); M.restore();
+  box('wood', -3.6, -1.8, UD, UD + 1.0, -25.7, -24.8, { tint: IA_C.teakDark });
+  M.save().color([1, 1, 1]); M.cls = 1; for (const x of [-2.2, 2.2]) M.boxB('lampCool', x - 0.45, x + 0.45, UD + 1.0, UD + 1.35, -20.6, -20.56); M.restore();
+  M.save().color(IA_C.white); for (const x of [-2.8, 2.8]) { M.save().move(x, UD + 2.95, -21.2); M.lathe('paint', [[0.4, 0], [0.42, 0.25], [0.28, 0.5], [0, 0.56]], 14); M.restore(); } M.restore();
+
+  // ----- popa -----
+  for (const sd of [-1, 1]) {
+    M.dyn('fdBbq', sd * 6.4, MD, -27.9, sd);
+    for (const z of [-29.8, -31.3]) M.dyn('chair', sd * 4.9, MD, z, sd > 0 ? -Math.PI / 2 : Math.PI / 2);
+    iaGarrafas(sd > 0 ? 5.7 : -7.3, MD + 1.16, -30.6, 8, 0.2, 0, sd > 0 ? 41 : 42);
+    mesinha(sd * 2.0, MD, -47.5, 0.45); vaso(sd * 2.0, MD + 0.45, -47.5, 0);
+    // varas de pesca nos cantos da popa
+    M.save().color([0.12, 0.12, 0.14]); M.cls = 1; for (const k of [0, 1]) M.tube('steel', 0.012, [[sd * (8.8 - k * 0.5), MD + 1.05, -52.6], [sd * (9.6 - k * 0.5), MD + 3.6, -54.6]], 4); M.restore();
+  }
+  // guindaste das lanchas e caixa térmica
+  M.save().move(8.4, MD, -49.5).color(IA_C.white).local(1); M.cyl('paint', 0.18, 3.0, 10); M.save().move(0, 3.0, 0); M.tube('paint', 0.12, [[0, 0, 0], [-1.2, 0.6, -1.4], [-2.6, 0.5, -2.6]], 8); M.restore(); M.restore();
+  DECOR.col(8.2, 8.6, MD, MD + 3, -49.7, -49.3, 'metal');
+  box('paint', -7.6, -6.2, MD, MD + 0.6, -51.8, -50.6, { tint: [0.15, 0.4, 0.62] });
+
+  // ----- garagem -----
+  for (const sd of [-1, 1]) {
+    // jet ski
+    const x = sd * 7.6, z = -46.1;
+    M.save().move(x, LD, z).local(1); M.cls = 0;
+    M.color(sd > 0 ? [0.92, 0.92, 0.94] : [0.1, 0.2, 0.42]); M.boxB('carpaint', -0.45, 0.45, 0.15, 0.6, -1.4, 1.4, { bevel: 0.15 });
+    M.color([0.1, 0.1, 0.11]); M.boxB('rubber', -0.28, 0.28, 0.6, 0.78, -0.9, 0.3, { bevel: 0.06 });
+    M.color([0.3, 0.3, 0.32]); M.tube('steel', 0.025, [[-0.4, 0.95, 0.75], [0, 0.88, 0.65], [0.4, 0.95, 0.75]], 6);
+    M.color([0.25, 0.25, 0.27]); M.boxB('steel', -0.5, 0.5, 0, 0.15, -1.2, 1.2);
+    M.restore(); DECOR.col(x - 0.5, x + 0.5, LD, LD + 1.0, z - 1.45, z + 1.45, 'metal');
+    for (let k = 0; k < 2; k++) M.dyn('barrel', sd * (8.85 - k * 0.65), LD, -52.3, k);
+    for (let k = 0; k < 3; k++) M.dyn('gasBottle', sd * 9.0, LD, -38.2 - k * 0.4, k, { tint: [0.95, 0.75, 0.1] });
+    for (const [dx, dz, y] of [[0, 0, 0], [0.62, 0.1, 0], [0.3, 0.05, 0.6]]) M.dyn('crate', sd * (8.4 - dx), LD + y, -43.0 + dz, 0.1 * dx, { a: [0.6] });
+  }
+  box('wood', -9.35, -8.5, LD, LD + 0.9, -50.4, -48.0, { tint: IA_C.teakDark }); iaGarrafas(-9.0, LD + 0.9, -49.8, 3, 0, 0.3, 51);
+  M.dyn('ropeCoil', 1.2, LD, -38.5, 0.3); M.dyn('ropeCoil', -1.4, LD, -51.5, 1.3);
+
+  // ----- cabines -----
+  for (const sd of [-1, 1]) for (const b of [16, 7.5, -1, -9.5, -18, -26.5]) {
+    vaso(sd * 3.35, LD + 0.8, b - 0.65, 0); M.dyn('bottle', sd * 3.95, LD + 0.8, b - 0.55, 0, { a: [0.3], tint: IA_BEB[Math.abs(Math.round(b)) % 5] });
+    M.dyn('chair', sd * 3.6, LD, b - 1.55, sd > 0 ? Math.PI : 0);
+  }
+
+  // ----- no mar: veleiros ao longe e ilhas no horizonte -----
+  for (const [x, z, r, sd] of [[-130, 70, 0.6, 2], [170, -110, 2.2, 3], [-220, -190, 1.2, 4], [90, 240, 2.8, 5]]) floatAdd(PF.sailboat(sd), x, z, r, { draft: 0.2, L: 9, B: 3 });
+  M.save().color([0.3, 0.36, 0.24]); M.cls = 0;
+  for (const [x, z, r, h] of [[-520, 380, 230, 70], [-300, 520, 120, 38]]) { M.save().move(x, IA.WL - 2, z).local(1); M.lathe('concrete', [[r, 0], [r * 0.75, h * 0.35], [r * 0.45, h * 0.8], [r * 0.15, h], [0, h * 1.02]], 28); M.restore(); }
+  M.restore();
+}
+
 /* grade de água em volta do navio (a do porto só tem mar a oeste do cais) e campo de espuma centrado nele */
 function iateWaterGeometry() {
   const W = WATER, side = (fine, n) => { const out = [0]; for (let v = 0, s = 0.8; v < 900;) { if (v > fine) s = Math.min(s * 1.07, 45); v = Math.min(900, v + s); out.push(v); } return out.slice(1).map((v) => -v).reverse().concat(out); };
@@ -335,7 +517,7 @@ const IA_POI = [
   // piscina (ponto B)
   [0, 0, -1, 'M'], [-6.5, 0, -1, 'L', 1], [6.5, 0, -1, 'E', 1], [-4.4, 0, 9.5, 'M', 1], [4.4, 0, 9.5, 'M', 1], [-8, 0, 3, 'L'], [8, 0, 3, 'E'],
   // cassino, ponte e terraço
-  [0, 0, -18.5, 'M', 1], [-4.2, 0, -24, 'M', 1], [4.2, 0, -12.5, 'M', 1], [0, 3, -21.5, 'M', 1], [0, 3, -14, 'M', 1], [-6.3, 3, -25, 'L', 1], [6.3, 3, -25, 'E', 1],
+  [0, 0, -16.3, 'M', 1], [-4.2, 0, -24, 'M', 1], [3.4, 0, -12.2, 'M', 1], [0, 3, -21.5, 'M', 1], [0, 3, -14, 'M', 1], [-6.3, 3, -25, 'L', 1], [6.3, 3, -25, 'E', 1],
   // popa e garagem
   [0, 0, -44, 'M'], [-4, 0, -34, 'M', 1], [4, 0, -34, 'M', 1], [-6.5, -3, -45, 'L'], [6.5, -3, -45, 'E'], [0, -3, -40, 'M', 1],
   // cabines
@@ -346,8 +528,8 @@ MAP_DEFS.iate = {
   type: 'mid', // corredores apertados e conveses compridos
   void: { kill: -5.5 }, // sem chão fora do navio: quem cai no mar morre
   bounds: { x0: -11, x1: 11, z0: -54, z1: 54 },
-  textures: ['wood', 'steel', 'canvas', 'concrete', 'plaster'],
-  surfaces: ['ripple'],
+  textures: ['wood', 'steel', 'canvas', 'concrete', 'plaster', 'palmbark'],
+  surfaces: ['ripple', 'iaTeca'],
   sound: { pack: 'amb_embruns', bed: 0.5, water: () => 0,
     loops: [[-11, -4, 30], [11, -4, 30], [-11, -4, -25], [11, -4, -25]].map((p) => ({ id: 'a_waves', p, gain: 0.4, ref: 6, roll: 1.3, max: 120 })),
     spots: [
@@ -357,6 +539,7 @@ MAP_DEFS.iate = {
     ] },
   materials: (M) => {
     M('hull', { tex: 'carpaint', metal: 0.35, ma: true, env: 1.3, dust: 0.08, macro: 0.08 });
+    M('iaTeca', { tex: 'iaTeca', grime: 0.25, dust: 0.12, macro: 0.18, env: 0.5 });
   },
   art: { cam: [-24, 9, 46], look: [0, 1, 6], fov: 55 },
   splat: { x0: -64, z0: -64, w: 128, d: 128, ppm: 2 },

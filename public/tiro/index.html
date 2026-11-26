@@ -10699,6 +10699,75 @@ PF.kcFavelaEscadaFundos = () => prefab('kcFavelaEscadaFundos', (M) => {
 });
 
 /* ---------- Campo de várzea e mobiliário de rua ---------- */
+// Praças pequenas: cada prefab inclui piso e mobiliário. Frente para +z; caminhos abertos nas bordas.
+function kcPracaPiso(M, cor) {
+  kcBloco(M, 'concrete', cor, -5, 5, 0, 0.08, -4, 4);
+  M.cls = 1; M.color([0.6, 0.58, 0.54]);
+  for (let x = -4; x <= 4; x += 2) M.boxB('paint', x - 0.015, x + 0.015, 0.081, 0.085, -4, 4);
+  for (let z = -3; z <= 3; z += 2) M.boxB('paint', -5, 5, 0.081, 0.085, z - 0.015, z + 0.015);
+  M.cls = 0;
+}
+function kcPracaBanco(M, x, z) {
+  kcBloco(M, 'wood', KC_COR.madeira, x - 0.9, x + 0.9, 0.48, 0.56, z - 0.22, z + 0.22, 'wood');
+  kcBloco(M, 'wood', KC_COR.madeira, x - 0.9, x + 0.9, 0.56, 0.95, z - 0.27, z - 0.19, 'wood');
+  for (const dx of [-0.7, 0.7]) kcBloco(M, 'steel', KC_COR.ferro, x + dx - 0.05, x + dx + 0.05, 0.08, 0.48, z - 0.18, z + 0.18, 'steel');
+}
+function kcPracaArvore(M, x, z) {
+  kcBloco(M, 'concrete', KC_COR.laje, x - 0.9, x + 0.9, 0.08, 0.35, z - 0.9, z + 0.9);
+  M.cls = 1; M.color(KC_COR.terra); M.boxB('paint', x - 0.8, x + 0.8, 0.35, 0.36, z - 0.8, z + 0.8); M.cls = 0;
+  M.color([0.34, 0.25, 0.17]); M.tube('wood', 0.18, [[x, 0.35, z], [x + 0.05, 2.7, z]], 10);
+  M.col(x - 0.2, x + 0.2, 0.35, 2.7, z - 0.2, z + 0.2, 'wood');
+  M.cls = 1;
+  for (const [dx, dz] of [[-0.7, 0], [0.7, 0], [0, -0.6], [0, 0.6], [0, 0]]) {
+    M.color(dx ? [0.24, 0.43, 0.19] : [0.3, 0.5, 0.23]); M.save().move(x + dx, 2.6, z + dz);
+    M.lathe('canvas', [[0, 0], [0.8, 0.2], [1, 0.8], [0.8, 1.35], [0, 1.6]], 9); M.restore();
+  }
+  M.cls = 0;
+}
+function kcPracaLuz(M, x, z) {
+  kcBloco(M, 'steel', KC_COR.ferro, x - 0.06, x + 0.06, 0.08, 3.3, z - 0.06, z + 0.06, 'steel');
+  kcBloco(M, 'steel', KC_COR.ferro, x - 0.2, x + 0.2, 3.2, 3.35, z - 0.2, z + 0.2, 'steel');
+  M.cls = 1; M.color([1, 0.93, 0.72]); M.boxB('lamp', x - 0.16, x + 0.16, 3.18, 3.2, z - 0.16, z + 0.16); M.cls = 0;
+}
+function kcPracaBordas(M) {
+  kcPracaBanco(M, -3.6, -3); kcPracaBanco(M, 3.6, -3);
+  kcPracaLuz(M, -4.6, 3.5); kcPracaLuz(M, 4.6, 3.5);
+}
+PF.kcPracaArvore = () => prefab('kcPracaArvore', (M) => {
+  M.local(1); kcPracaPiso(M, [0.7, 0.68, 0.63]); kcPracaBordas(M); kcPracaArvore(M, 0, 0);
+  for (const x of [-3.6, 3.6]) kcBloco(M, 'concrete', KC_COR.laje, x - 0.8, x + 0.8, 0.08, 0.4, 1.8, 3.2);
+  M.cls = 1; M.color([0.25, 0.46, 0.2]); for (const x of [-3.6, 3.6]) M.boxB('canvas', x - 0.7, x + 0.7, 0.4, 0.48, 1.9, 3.1); M.cls = 0;
+});
+PF.kcPracaFonte = () => prefab('kcPracaFonte', (M) => {
+  M.local(1); kcPracaPiso(M, [0.73, 0.71, 0.67]); kcPracaBordas(M);
+  kcBloco(M, 'concrete', KC_COR.laje, -1.2, 1.2, 0.08, 0.65, -1.2, 1.2);
+  M.cls = 1; M.color([0.28, 0.54, 0.64]); M.boxB('glass', -1.08, 1.08, 0.65, 0.67, -1.08, 1.08); M.cls = 0;
+  kcBloco(M, 'concrete', KC_COR.concreto, -0.25, 0.25, 0.65, 1.25, -0.25, 0.25);
+  M.cls = 1; M.color([0.66, 0.82, 0.88]); M.tube('glass', 0.04, [[0, 1.25, 0], [0, 1.7, 0], [0.3, 1.15, 0]], 6); M.cls = 0;
+  kcPracaArvore(M, -3.5, 2.4); kcPracaArvore(M, 3.5, 2.4);
+});
+PF.kcPracaConvivio = () => prefab('kcPracaConvivio', (M) => {
+  M.local(1); kcPracaPiso(M, [0.66, 0.65, 0.61]); kcPracaBordas(M);
+  kcPracaArvore(M, -3.5, 2.4); kcPracaArvore(M, 3.5, 2.4);
+  kcBloco(M, 'concrete', KC_COR.laje, -0.65, 0.65, 0.77, 0.85, -0.65, 0.65);
+  kcBloco(M, 'concrete', KC_COR.concreto, -0.15, 0.15, 0.08, 0.77, -0.15, 0.15);
+  for (const z of [-1.35, 1.35]) {
+    kcBloco(M, 'wood', KC_COR.madeira, -0.7, 0.7, 0.48, 0.56, z - 0.2, z + 0.2, 'wood');
+    for (const x of [-0.5, 0.5]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.05, x + 0.05, 0.08, 0.48, z - 0.15, z + 0.15, 'steel');
+  }
+  M.cls = 1; M.color(KC_COR.branco); for (const x of [-0.25, 0, 0.25]) M.boxB('plastic', x - 0.07, x + 0.07, 0.85, 0.87, -0.035, 0.035); M.cls = 0;
+});
+PF.kcPracaParquinho = () => prefab('kcPracaParquinho', (M) => {
+  M.local(1); kcPracaPiso(M, [0.69, 0.67, 0.62]); kcPracaBordas(M);
+  kcPracaArvore(M, -3.5, 2.4); kcPracaArvore(M, 3.5, 2.4);
+  // Estrutura aberta de balanço; correntes são visuais, assento e postes colidem.
+  for (const x of [-1.6, 1.6]) kcBloco(M, 'steel', [0.2, 0.4, 0.7], x - 0.06, x + 0.06, 0.08, 2.3, -0.06, 0.06, 'steel');
+  kcBloco(M, 'steel', KC_COR.vermelho, -1.66, 1.66, 2.2, 2.32, -0.07, 0.07, 'steel');
+  M.cls = 1; M.color(KC_COR.ferro); for (const x of [-0.4, 0.4]) M.tube('steel', 0.015, [[x, 2.2, 0], [x, 0.65, 0]], 5);
+  M.color(KC_COR.amarelo); M.boxB('plastic', -0.45, 0.45, 0.6, 0.67, -0.18, 0.18); M.cls = 0;
+  M.col(-0.45, 0.45, 0.6, 0.67, -0.18, 0.18, 'wood');
+});
+
 PF.kcCampoFutebol = () => prefab('kcCampoFutebol', (M) => {
   M.local(1);
   // O terreno termina no nível zero; as linhas e as redes são apenas visuais.

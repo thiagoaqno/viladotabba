@@ -267,6 +267,17 @@ não rode o gerador de novo: ele sobrescreve o `.json`.
   leste, que tem escada pelo beco.
 - **Pontos de dominação:** A no mercado, B na árvore e C no beco leste, todos em z = 0.
 
+## Praças pequenas
+
+Cada praça é um prefab completo, com piso de 10 x 8 m e frente para +z. Posicione a peça sobre o terreno do mapa; bancos, canteiros e demais estruturas colidem, enquanto a folhagem é visual.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcPracaArvore` | 10 x 4,2 x 8 | Praça com árvore central, canteiros, bancos e luminárias |
+| `kcPracaFonte` | 10,4 x 4,2 x 8 | Praça com fonte, duas árvores, bancos e luminárias |
+| `kcPracaConvivio` | 10,4 x 4,2 x 8 | Praça com mesa de dominó, bancos, árvores e luminárias |
+| `kcPracaParquinho` | 10,4 x 4,2 x 8 | Praça com balanço, bancos, árvores e luminárias |
+
 ## Campo de várzea e peças de rua
 
 As medidas incluem os elementos que avançam para fora do corpo principal. A arquibancada tem escada: gire essa peça somente de 90 em 90 graus.

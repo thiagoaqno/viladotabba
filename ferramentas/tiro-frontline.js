@@ -303,6 +303,17 @@ if (IATE_ATIVO) {
   h = troca(h, "if(!window.WebGLRenderingContext)", () => faca + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "skins da faca" });
 }
 
+// editor de mapas (2026-11-26): os mapas feitos no editor (ferramentas/tiro-mapas/editor/*.json) entram no jogo por
+// ferramentas/tiro-editor/mapa-json.js, e o editor (/tiro/?editor=1) por ferramentas/tiro-editor/editor.js. Guia:
+// docs/tiro-editor-de-mapas.md. O campo de espuma do mar fica centrado no mapa quando ele tem mar (o do porto só olha o oeste).
+{
+  const ED = path.join(__dirname, "tiro-editor"), PASTA = path.join(__dirname, "tiro-mapas", "editor");
+  const mapas = fs.existsSync(PASTA) ? fs.readdirSync(PASTA).filter((f) => f.endsWith(".json")).sort().map((f) => JSON.parse(fs.readFileSync(path.join(PASTA, f), "utf8"))) : [];
+  const codigo = "const TIRO_MAPAS_JSON = " + JSON.stringify(mapas) + ";\n" + fs.readFileSync(path.join(ED, "mapa-json.js"), "utf8") + "\n" + fs.readFileSync(path.join(ED, "editor.js"), "utf8");
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => codigo + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "editor de mapas" });
+  h = troca(h, "F={x0:-144,z0:-128,ppm:2,w:256,h:512}", "F=(CURMAP.def&&CURMAP.def.mar?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512})", { nome: "espuma do mar dos mapas do editor" });
+}
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

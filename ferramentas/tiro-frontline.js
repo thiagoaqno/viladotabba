@@ -314,6 +314,13 @@ if (IATE_ATIVO) {
   h = troca(h, "F={x0:-144,z0:-128,ppm:2,w:256,h:512}", "F=(CURMAP.def&&CURMAP.def.mar?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512})", { nome: "espuma do mar dos mapas do editor" });
   // (2026-11-26) ponto de dominação em cima de um morro ou laje: o mapa do editor manda a altura do piso como 3º número
   // ([x, z, y]); sem ele, o jogo procurava o chão em y = 0 e o ponto afundava embaixo da terra
+  // (2026-11-26, o Thiago: "ninguém nasce já dentro de uma área de domínio") no modo dominação, ninguém nasce a menos de 8 m do
+  // centro de um ponto (a área tem 5,5 m de raio), nem dos pontos neutros: os pontos de campo perto deles saem da lista e o
+  // lugar ganha nota muito baixa (só se usa se não houver outro)
+  h = troca(h, "function spawnField(){return POI.filter((p)=>p[1]<gy0(p[0],p[2])+1&&!p[4]).map((p)=>[p[0],p[2]]);}",
+    "function spawnField(){return POI.filter((p)=>p[1]<gy0(p[0],p[2])+1&&!p[4]&&!(MATCH.mode==='dom'&&DOM.pts.some((q)=>hyp(q.x-p[0],q.z-p[2])<DOM.rad+2.5))).map((p)=>[p[0],p[2]]);}", { nome: "nascer fora das áreas de domínio (pontos de campo)" });
+  h = troca(h, "if(MATCH.mode==='dom'){let dOwn=1e9,dFront=1e9;for(const p of DOM.pts){const d=hyp(p.x-x,p.z-z);",
+    "if(MATCH.mode==='dom'){let dOwn=1e9,dFront=1e9;for(const p of DOM.pts){const d=hyp(p.x-x,p.z-z);if(d<DOM.rad+2.5){safe=false;s-=100;}", { nome: "nascer fora das áreas de domínio (nota)" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

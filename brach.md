@@ -1,7 +1,14 @@
-# Tiro da Galera: mapa Maré Alta
+# Tiro da Galera: ninguém nasce dentro de área de dominação; pontos dos bots da Favela redistribuídos
 
-Maré Alta é um mapa de iate de luxo em alto-mar, inspirado no ritmo de combate entre corredores, áreas abertas e posições elevadas. O convés tem piscina, heliponto, cabanas e duas rotas laterais; dois salões levam por escadas a um andar com varandas e a terraços no terceiro nível. As equipes nascem em extremidades opostas, com três pontos de dominação, quedas do mecha e pontos de interesse dos bots.
+- **Nascer fora das áreas de domínio (todos os mapas, modo dominação):**
+  - ao renascer, o jogo usava também os pontos de campo (os pontos dos bots), e só evitava as áreas em disputa ou do inimigo; um ponto neutro ou do próprio time podia ter gente nascendo dentro;
+  - agora os pontos de campo a menos de 8 m do centro de qualquer ponto de dominação saem da lista, e qualquer lugar nessa distância ganha nota muito baixa (só se usa se não houver outro). A área tem 5,5 m de raio;
+  - são duas trocas em `tiro-frontline.js`.
+- **Pontos dos bots da Favela redistribuídos:** 171 pontos tirados da rede de caminhos da versão 4 do mapa, um a cada 7 m no chão e a cada 9 m no alto. Ficaram 51 no oeste, 54 no meio e 66 no leste; 74 ficam no alto, 26 deles de segurar posição.
 
-O mapa é um JSON próprio do editor; o Navio-base e a Favela não foram alterados. A descrição e o jogo foram remontados para incluir o mapa na lista.
+Conferido no navegador:
+- foram 1.650 renascimentos no modo dominação, com 5 combinações de donos dos pontos (todos neutros, todos de um time, todos do outro e misturados);
+- nenhum caiu dentro de uma área; o mais perto ficou a 6,4 m do centro;
+- os nascer de base da Favela ficam a pelo menos 20 m de qualquer ponto de dominação.
 
-Validação: JSON lido com sucesso, nomes dos prefabs conferidos e jogo remontado com `tiro-frontline.js`. A aparência, o fluxo das rotas, a subida dos bots e o balanceamento ainda precisam ser conferidos jogando.
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -97,7 +97,12 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
 - **`prop` e `prefab`:** `prop` é objeto solto, que voa com tiro e explosão (barril, cadeira, garrafa...). `prefab` é cenário
   fixo, com colisão.
 - **`e`:** a escala do prefab ou do objeto.
-- **`poi`:** os pontos que os bots visitam. É opcional.
+- **`poi`:** os pontos que os bots visitam, `[x, y, z]` ou `[x, y, z, 1]` (com o 1, o bot para e segura a posição: laje,
+  janela, canto). É opcional.
+- **Outros campos opcionais:** `zonas` (`[nome, x0, x1, z0, z1]`, o nome da área no mapinho), `sniper` (`[x, y, z]`, onde o
+  sniper segura) e `som` (o som dos passos: `concrete`, `wood`, `metal`, `dirt`, `grass`). O editor não mexe neles, mas
+  guarda os que vierem no `.json`.
+- **Parede invisível:** uma caixa com `"inv": true` segura gente e não aparece no jogo (no editor, fica meio transparente).
 
 ## Para o Codex (ou quem montar o mapa direto no `.json`)
 
@@ -166,6 +171,21 @@ A laje e o telhado não têm escada: para fazer rota de telhado, encoste uma **E
 | `kcAntena` | 0,6 x 0,8 x 0,6 | antena parabólica (sem colisão) |
 | `kcGuardaSol` | 2,4 x 2,45 x 2,4 | guarda-sol amarelo e branco com mesa de plástico e duas cadeiras vermelhas |
 | `kcBananeira` | 3 x 2,6 x 3 | bananeira (só o tronco colide) |
+| `kcBarraca` | 3,2 x 2,4 x 1,9 | barraca de feira com lona amarela, mesa e caixotes de fruta |
+| `kcBarracaAzul` | 3,2 x 2,4 x 1,9 | a mesma barraca com lona azul |
+| `kcArvoreCanteiro` | 4,8 x 6 x 4,8 | árvore num canteiro octogonal de concreto (o canteiro cobre agachado) |
+
+## Mapa Favela (exemplo pronto)
+
+O `favela.json`, em `ferramentas/tiro-mapas/editor/`, é um mapa inteiro feito com estas peças e serve de exemplo. É gerado por
+`node ferramentas/tiro-mapas/favela-gerar.js`, que monta a metade sul e espelha o norte. Depois de mexer no mapa pelo editor,
+não rode o gerador de novo: ele sobrescreve o `.json`.
+
+- **Tamanho:** 60 x 88 m jogáveis, com parede invisível em volta e casas de cenário do lado de fora.
+- **Três rotas:** o beco oeste com o mercado, a praça central com a árvore e o beco leste com a casa em obra.
+- **Por cima:** a laje dos Telhados, a 3 m, com escada na base e passagem por baixo. Uma passarela liga essa laje à do bloco
+  leste, que tem escada pelo beco.
+- **Pontos de dominação:** A no mercado, B na árvore e C no beco leste, todos em z = 0.
 
 ## Catálogo: prefabs (cenário fixo)
 

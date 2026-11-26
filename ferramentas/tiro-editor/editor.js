@@ -33,12 +33,15 @@ const edSnap = (v, s = ED.snap) => Math.round(v / s) * s;
 const edClone = (o) => JSON.parse(JSON.stringify(o));
 
 /* ---------- modelo: o .json <-> as peças da cena ---------- */
+const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa'];
 function edDoJson(J) {
   const pecas = (J.pecas || []).map(edClone);
   for (const [x, z] of J.nascer || []) pecas.push({ t: 'nascer', p: [x, 0, z] });
   for (const [x, z] of J.dom || []) pecas.push({ t: 'dom', p: [x, 0, z] });
   for (const [x, z] of J.mecha || []) pecas.push({ t: 'mecha', p: [x, 0, z] });
-  return { meta: { id: J.id, nome: J.nome || J.id, ceu: J.ceu || 'meltem', mar: J.mar || null, tag: J.tag || '', desc: J.desc || '' }, pecas };
+  // campos que o editor não mexe (pontos dos bots, zonas, sniper, som, tipo, capa) passam direto de volta para o .json
+  const extra = {}; for (const k of ED_EXTRA) if (J[k] !== undefined) extra[k] = edClone(J[k]);
+  return { meta: { id: J.id, nome: J.nome || J.id, ceu: J.ceu || 'meltem', mar: J.mar || null, tag: J.tag || '', desc: J.desc || '', extra }, pecas };
 }
 function edParaJson() {
   const m = ED.J.meta, pecas = [], nascer = [], dom = [], mecha = [];
@@ -47,7 +50,7 @@ function edParaJson() {
     if (P.t === 'nascer') nascer.push(xz); else if (P.t === 'dom') dom.push(xz); else if (P.t === 'mecha') mecha.push(xz);
     else { const Q = edClone(P); Q.p = Q.p.map((v) => +v.toFixed(3)); if (Q.s) Q.s = Q.s.map((v) => +v.toFixed(3)); pecas.push(Q); }
   }
-  return { id: m.id, nome: m.nome, tag: m.tag || undefined, desc: m.desc || undefined, ceu: m.ceu, mar: m.mar, pecas, nascer, dom: dom.slice(0, 3), mecha: mecha.slice(0, 3) };
+  return Object.assign({ id: m.id, nome: m.nome, tag: m.tag || undefined, desc: m.desc || undefined, ceu: m.ceu, mar: m.mar, pecas, nascer, dom: dom.slice(0, 3), mecha: mecha.slice(0, 3) }, edClone(m.extra || {}));
 }
 function edNovo(nome = 'Mapa novo') {
   return { meta: { id: edIdDe(nome), nome, ceu: 'meltem', mar: null, tag: '', desc: '' },

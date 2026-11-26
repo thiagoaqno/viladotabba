@@ -1,13 +1,18 @@
-# Tiro da Galera: peças de favela e casas no editor de mapas
+# Tiro da Galera: mapa Favela
 
-17 peças novas no editor de mapas (prefixo `kc`, aba Prefabs), feitas em código e inspiradas em modelos CC BY que o Thiago achou (casa em obra, casas de concreto, prédios velhos) e numa favela de referência:
+Mapa novo, **Favela**, montado a partir do conceito que o Thiago mandou (imagem gerada por IA), com as peças de favela do editor. Ele entra na lista de mapas do jogo e abre no editor de mapas para ajustar.
 
-- **Casas:** casa de tijolo com laje, caixa d'água e antena; a mesma com telhado de fibrocimento; sobrado com dois portões de enrolar e laje com mureta; casa em obra (pilares, ferros, paredes de cima pela metade); casa de concreto cor de areia (térrea e com segundo volume); prédio velho de três andares; lanchonete com placa e toldo.
-- **Rua:** portão de garagem, muro chapiscado com portão de grade, puxadinho de zinco, poste com transformador, caixa d'água, ar-condicionado, antena, guarda-sol com mesa e cadeiras, bananeira.
-- As casas térreas e a lanchonete dão para entrar (porta de 1,5 a 1,6 m, os bots passam).
-- Um mapa do editor que usa essas peças carrega sozinho as fotos de tijolo, reboco e telha (`KC_TEX_PECAS`).
-- O guia `docs/tiro-editor-de-mapas.md` lista as peças com o tamanho.
+- **Rotas e lados:** três rotas (o beco oeste com o mercado, a praça central com a árvore e o beco leste com a casa em obra). O Alpha nasce no sul e o Bravo no norte, que é o espelho do sul.
+- **Por cima:** a laje dos Telhados, a 3 m, com escadas na base e passagem por baixo, e uma passarela até a laje do bloco leste, que tem escada pelo beco.
+- **Limite e cenário:** parede invisível em volta e casas de cenário do lado de fora (sobrado, prédio velho, casas de tijolo e de concreto, bananeiras, postes).
+- **Pontos dos bots:** 53 pontos, 20 deles de "segurar" (lajes, janelas, cantos); zonas no mapinho; dominação em A (mercado), B (árvore) e C (beco leste).
+- **Peças novas:** barraca de feira (amarela e azul) e árvore no canteiro.
+- **Gerador:** `ferramentas/tiro-mapas/favela-gerar.js` refaz o `.json` (não rode depois de mexer no editor: sobrescreve).
+- **Editor (consertos):**
+  - Abrir e salvar não perde mais `poi`, `zonas`, `sniper`, `som`, `tipo` e `capa`. Antes, o Jogar do editor usava os pontos automáticos.
+  - A "Parede invisível" (`inv: true`) agora fica invisível no jogo. Antes, era uma caixa de vidro.
+  - Ponto de bot com 4º número `1` faz o bot segurar a posição.
 
-Conferido no navegador: as 17 peças montam e um mapa com todas abriu no Jogar, com bots e texturas, sem erro.
+Conferido no navegador: o mapa abre no Jogar com bots. Há caminho para os bots até as lajes, a passarela, os dois becos, o mercado e dentro das casas, e o console não deu erro.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

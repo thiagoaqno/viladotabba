@@ -178,6 +178,57 @@ h = troca(h, "due=(i===0?S.frame%k===0:(S.frame+i*k)%(2*k)===0)||moved", "due=(i
 h = troca(h, "const moved=Math.abs(S.q[i].dot(camera.quaternion))<S.maxTurn||S.p[i].distanceToSquared(camera.position)>S.maxMove*S.maxMove;",
   "const mt=i===0?S.maxTurn:S.maxTurnFar,mm=i===0?S.maxMove:S.maxMoveFar;const moved=Math.abs(S.q[i].dot(camera.quaternion))<mt||S.p[i].distanceToSquared(camera.position)>mm*mm;", { nome: "sombras de longe (regra)" });
 
+// ---------- brilho e mira (pedido do Thiago, 2026-11-25) ----------
+// Brilho: Opções > Vídeo > Imagem. Multiplica a exposição no shader final (FinalShader, que roda em toda qualidade), ANTES da curva
+// de cor (ACES): clareia as sombras sem estourar o céu, como o brilho de um jogo, e não custa nada a mais.
+h = troca(h, "uExposure:{value:1.0}", "uExposure:{value:1.0},uBrilho:{value:1.0}", { nome: "brilho (uniforme)" });
+h = troca(h, "uFlash,uExposure,uAberr", "uFlash,uExposure,uBrilho,uAberr", { nome: "brilho (shader)" });
+h = troca(h, "col *= uExposure;", "col *= uExposure * uBrilho;", { nome: "brilho (conta)" });
+h = troca(h, "FinalShader.uniforms.uAberr.value=Math.max(", "brilhoAplicar();FinalShader.uniforms.uAberr.value=Math.max(", { nome: "brilho a cada quadro" });
+h = troca(h, "['head',_t('Image')],", "['head',_t('Image')],['range','brilho','Brilho',0.6,1.8,0.05,(v)=>Math.round(v*100)+PCT,()=>brilhoAplicar()],", { nome: "brilho (opção)" });
+// Mira: Opções > Jogo, seção "Desenho da mira", depois de Interface ("Mira" já é a seção da pontaria). A mira do jogo é feita de 5 pedaços de HTML (#xhair: cima, baixo, esquerda,
+// direita e o ponto); o CSS abaixo troca os números fixos por variáveis, que miraAplicar() põe a partir dos ajustes. Os padrões
+// (cruz branca, linhas de 11 px, 2 px de espessura, abrindo com o movimento) são a mira de antes.
+const MIRA_PADRAO = "brilho:1,miraEstilo:'cruz',miraCor:'#ffffff',miraTam:11,miraEsp:2,miraVao:0,miraDin:true,miraCont:true,miraOpac:0.92,";
+h = troca(h, "volume:0.8,music:0.5,", "volume:0.8,music:0.5," + MIRA_PADRAO, { todas: false, nome: "brilho e mira (padrões)" });
+h = troca(h, /(\['check','fsGame',_t\('[^']*'\)\],)/, (_, fs0) => fs0
+  + "['head','Desenho da mira'],"
+  + "['select','miraEstilo','Estilo da mira',[['cruz','Cruz'],['cruzponto','Cruz com ponto'],['ponto','Só o ponto'],['circulo','Círculo']],()=>miraAplicar()],"
+  + "['select','miraCor','Cor da mira',[['#ffffff','Branca'],['#3cff5a','Verde'],['#00e5ff','Ciano'],['#ffe23c','Amarela'],['#ff3cf0','Rosa'],['#ff3b3b','Vermelha']],()=>miraAplicar()],"
+  + "['range','miraTam','Tamanho das linhas',3,24,1,(v)=>Math.round(v)+' px',()=>miraAplicar()],"
+  + "['range','miraEsp','Espessura',1,5,1,(v)=>Math.round(v)+' px',()=>miraAplicar()],"
+  + "['range','miraVao','Espaço no meio',0,20,1,(v)=>Math.round(v)+' px',()=>miraAplicar()],"
+  + "['range','miraOpac','Opacidade',0.3,1,0.05,(v)=>Math.round(v*100)+PCT,()=>miraAplicar()],"
+  + "['check','miraDin','Mira que abre com o movimento e o tiro',()=>miraAplicar()],"
+  + "['check','miraCont','Contorno escuro',()=>miraAplicar()],", { todas: false, nome: "mira (opções)" });
+const CSS_MIRA = `<style id="miraGalera">
+#xhair i{background:var(--xc,rgba(255,255,255,.92));opacity:var(--xop,1);box-shadow:var(--xsh,0 0 2px rgba(0,0,0,.9))}
+#xhair .t,#xhair .b{width:var(--xt,2px);height:var(--xl,11px);left:calc(var(--xt,2px) / -2)}
+#xhair .l,#xhair .r{height:var(--xt,2px);width:var(--xl,11px);top:calc(var(--xt,2px) / -2)}
+#xhair .t{top:calc(-1 * var(--xl,11px));transform:translateY(calc(-1 * (var(--gap) * var(--xdin,1) + var(--xg,0px))))}
+#xhair .b{transform:translateY(calc(var(--gap) * var(--xdin,1) + var(--xg,0px)))}
+#xhair .l{left:calc(-1 * var(--xl,11px));transform:translateX(calc(-1 * (var(--gap) * var(--xdin,1) + var(--xg,0px))))}
+#xhair .r{transform:translateX(calc(var(--gap) * var(--xdin,1) + var(--xg,0px)))}
+#xhair .c{width:var(--xp,2px);height:var(--xp,2px);left:calc(var(--xp,2px) / -2);top:calc(var(--xp,2px) / -2);opacity:var(--xpo,.7)}
+#xhair.so-ponto .t,#xhair.so-ponto .b,#xhair.so-ponto .l,#xhair.so-ponto .r,#xhair.circulo .t,#xhair.circulo .b,#xhair.circulo .l,#xhair.circulo .r{display:none}
+#xhair.circulo .c{--r:calc(var(--gap) * var(--xdin,1) + var(--xg,0px) + var(--xl,11px) / 2);background:none;border:var(--xt,2px) solid var(--xc,#fff);border-radius:50%;
+  width:calc(var(--r) * 2);height:calc(var(--r) * 2);left:calc(-1 * var(--r) - var(--xt,2px));top:calc(-1 * var(--r) - var(--xt,2px));opacity:var(--xop,1)}
+</style>
+<script>
+function miraAplicar(){const x=document.getElementById('xhair');if(!x||typeof Settings==='undefined')return;const S=Settings,v=(k,d)=>S[k]==null?d:S[k];
+const est=v('miraEstilo','cruz'),esp=+v('miraEsp',2),cont=v('miraCont',true);
+x.classList.toggle('so-ponto',est==='ponto');x.classList.toggle('circulo',est==='circulo');
+x.style.setProperty('--xc',v('miraCor','#ffffff'));x.style.setProperty('--xop',String(v('miraOpac',0.92)));
+x.style.setProperty('--xl',v('miraTam',11)+'px');x.style.setProperty('--xt',esp+'px');x.style.setProperty('--xg',v('miraVao',0)+'px');
+x.style.setProperty('--xdin',v('miraDin',true)?'1':'0');
+x.style.setProperty('--xp',(est==='ponto'||est==='cruzponto'?Math.max(2,esp+1):esp)+'px');x.style.setProperty('--xpo',est==='cruz'?'.7':'1');
+x.style.setProperty('--xsh',cont?'0 0 0 1px rgba(0,0,0,.75),0 0 2px rgba(0,0,0,.9)':'none');}
+function brilhoAplicar(){try{const u=FinalShader.uniforms.uBrilho;if(u)u.value=Settings.brilho==null?1:Settings.brilho;}catch(e){}}
+addEventListener('load',()=>{miraAplicar();brilhoAplicar();});
+</script>
+`;
+h = troca(h, "</body>", CSS_MIRA + "</body>", { todas: false, nome: "mira (CSS e funções)" });
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

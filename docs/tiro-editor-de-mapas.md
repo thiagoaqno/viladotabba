@@ -174,6 +174,24 @@ A laje e o telhado não têm escada: para fazer rota de telhado, encoste uma **E
 | `kcBarraca` | 3,2 x 2,4 x 1,9 | barraca de feira com lona amarela, mesa e caixotes de fruta |
 | `kcBarracaAzul` | 3,2 x 2,4 x 1,9 | a mesma barraca com lona azul |
 | `kcArvoreCanteiro` | 4,8 x 6 x 4,8 | árvore num canteiro octogonal de concreto (o canteiro cobre agachado) |
+| `kcPredioFavela3` | 6,8 x 9,3 x 5,7 | prédio de favela de três andares, fechado: o primeiro andar avança sobre a rua (fachada azul), o segundo recua e deixa um terraço a 5,9 m |
+| `kcPredioFavela4` | 4,7 x 12,3 x 5,9 | prédio estreito de quatro andares, fechado: cada andar de uma cor, sacada no terceiro, o último pela metade (laje aberta a 8,85 m) |
+| `kcPredioFavelaEsquina` | 6,2 x 9,3 x 6,2 | prédio de esquina em L, fechado: loja verde, terraço a 5,9 m e um canto aberto coberto pela laje (a 2,95 m) |
+
+### Passarelas
+
+O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas
+casas. O comprimento fica em x e a largura é de 2 m, com 1,9 m entre os corrimãos (os bots passam). Entra-se pelas pontas. Para
+subir de verdade até a laje, use a **Escada** do editor: os terraços dos prédios fechados só se alcançam assim, ou por uma
+passarela.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcPassarela4` | 4 x 1,06 x 2 | passarela de tábuas com corrimão de madeira |
+| `kcPassarela8` | 8 x 1,06 x 2 | a mesma, com 8 m |
+| `kcPassarelaFerro4` | 4 x 1,06 x 2 | passarela de chapa de aço com corrimão amarelo |
+| `kcPassarelaFerro8` | 8 x 1,06 x 2 | a mesma, com 8 m |
+| `kcPassarelaPostes` | 4 x 4,06 x 2 | passarela de madeira em quatro esteios, com o piso a 3 m do chão (fica de pé sozinha; passa gente por baixo) |
 
 ## Mapa Favela (exemplo pronto)
 

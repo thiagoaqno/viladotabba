@@ -24,6 +24,7 @@ const ED_BASICO = [
   { rot: 'Escada (sobe 1,5 m)', P: { t: 'escada', s: [2, 1.5, 3], m: 'wood', cor: [0.66, 0.46, 0.3] } },
   { rot: 'Escada (sobe 3 m)', P: { t: 'escada', s: [2, 3, 5.5], m: 'wood', cor: [0.66, 0.46, 0.3] } },
   { rot: 'Luz', P: { t: 'luz', forca: 1.4, raio: 7, cor: [1, 0.85, 0.65] } },
+  { rot: 'Grafite (texto na parede)', P: { t: 'grafite', s: [3, 1.2], texto: 'VILA DO TABBA', estilo: 'bomb', cor: [0.98, 0.8, 0.1], borda: [0.08, 0.08, 0.1] } },
   { rot: '▲ Nascer (time Alpha)', P: { t: 'nascer' } },
   { rot: '◆ Ponto de dominação', P: { t: 'dom' } },
   { rot: '■ Queda do mecha', P: { t: 'mecha' } },
@@ -141,6 +142,7 @@ function edMalha(P) {
     }
     return o;
   }
+  if (P.t === 'grafite') return edGrafiteMalha(P);
   const marcador = (cor, r, h, forma) => { const g = new THREE.Group(); const m = new THREE.Mesh(forma === 'cone' ? new THREE.ConeGeometry(r, h, 12) : new THREE.CylinderGeometry(r, r, h, 16), new THREE.MeshBasicMaterial({ color: cor, transparent: true, opacity: 0.75 })); m.position.y = h / 2; g.add(m); return g; };
   if (P.t === 'nascer') { o = marcador(0x3a8dde, 0.35, 1.8, 'cone'); const b = marcador(0xd84a3a, 0.35, 1.8, 'cone'); b.position.set(0, 0, -2 * P.p[2]); b.children[0].material.opacity = 0.35; o.add(b); }
   else if (P.t === 'dom') o = marcador(0x3ad86a, 2.0, 0.12);
@@ -148,9 +150,10 @@ function edMalha(P) {
   else if (P.t === 'luz') { o = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffd880 })); o.add(new THREE.PointLight(0xffd8a0, 1.2, P.raio || 7)); }
   else if (P.t === 'prefab') o = edPrefabGrupo('pf:' + P.nome + JSON.stringify(P.a || []), () => PF[P.nome](...(P.a || [])));
   else if (P.t === 'prop') o = edPrefabGrupo('prop:' + P.nome + JSON.stringify(P.a || []), () => propDef(P.nome, P.a || []).pf());
-  if (o && P.t === 'prefab' && typeof KC_NPAINEIS !== 'undefined' && KC_NPAINEIS[P.nome]) {
-    const mat = new THREE.MeshStandardMaterial({ color: 0x83a8b7, transparent: true, opacity: 0.45, roughness: 0.2 });
-    for (const [x, y, z, w, h, r] of KC_NPAINEIS[P.nome]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.03), mat); m.position.set(x, y + h / 2, z); m.rotation.y = r; o.add(m); }
+  // Vidros dinâmicos não fazem parte da malha fixa; desenhe-os também na cena e na miniatura do editor.
+  if (o && P.t === 'prefab' && typeof KC_VIDROS !== 'undefined' && KC_VIDROS[P.nome]) {
+    const mat = new THREE.MeshStandardMaterial({ color: 0x9cc3d0, transparent: true, opacity: 0.45, roughness: 0.2 });
+    for (const [x, y, z, w, h, r] of KC_VIDROS[P.nome]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.03), mat); m.position.set(x, y + h / 2, z); m.rotation.y = r; o.add(m); }
   }
   if (!o) o = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xff00ff, wireframe: true }));
   o.position.set(P.p[0], P.p[1], P.p[2]); if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') o.rotation.y = ((P.r || 0) * Math.PI) / 180;
@@ -256,20 +259,42 @@ function edJogar() {
 }
 function edMsgJogo() { const b = edEl('button', 'position:fixed;right:12px;top:12px;z-index:2147483000;padding:8px 12px;background:#f5b82e;color:#111;border:0;border-radius:6px;font:600 13px system-ui;cursor:pointer', '✎ Voltar ao editor'); b.onclick = () => { location.href = location.pathname + '?editor=1'; }; document.body.appendChild(b); }
 
+/* ---------- grupos dos prefabs no catálogo ----------
+   Os prefabs se dividem em grupos (Favela, Navio, Cobertura...). Peça nova entra no grupo pelo nome: kcN... vai para o Navio,
+   o resto das kc para a Favela, a não ser que esteja numa das listas abaixo; as do jogo original ficam em "Jogo original". */
+const ED_GRUPOS = ['Favela', 'Navio', 'Praça e esporte', 'Veículos', 'Cobertura', 'Jogo original'];
+const ED_GRUPO_LISTA = {
+  'Praça e esporte': /^kc(Praca|Quadra|CampoFutebol|Arquibancada|BancoPraca|ArvoreCanteiro|GuardaSol|VasoPlanta|Arbusto|Bananeira)/,
+  'Veículos': /^(kc(CarroVelho|Van|Moto$|CarroQueimado)|car$|truck$|busWreck$|boxcar$|snowplow$)/,
+  'Cobertura': /^kc(Jersey|Sacos|Gabiao|MuroQuebrado|Pilar$|Carretel|Guarita|Tanque|Tapume|Paletes|BarreiraAgua|ConteinerAberto|Cavalete|Entulho|Manilhas|Prateleira|Tambores|Vigas|Alambrado|ArmarioEletrico|Blocos|PaleteEmPe|IBC|Pneus|Cone)/,
+};
+function edGrupoDe(n) {
+  for (const [g, re] of Object.entries(ED_GRUPO_LISTA)) if (re.test(n)) return g;
+  if (/^kcN([A-Z]|avio)/.test(n) || /^ia[A-Z]/.test(n)) return 'Navio';
+  return /^kc/.test(n) ? 'Favela' : 'Jogo original';
+}
 /* ---------- catálogo ---------- */
 function edCatalogo(aba) {
   const e = ED.esq; e.innerHTML = ''; ED.aba = aba;
   const tabs = edEl('div'); tabs.className = 'edt';
   for (const [k, rot] of [['basico', 'Básico'], ['prefab', 'Prefabs'], ['prop', 'Objetos']]) { const b = edEl('button', '', rot); if (k === aba) b.className = 'on'; b.onclick = () => edCatalogo(k); tabs.appendChild(b); }
   const busca = edEl('input', 'margin:0 6px 4px'); busca.placeholder = 'Buscar…'; e.append(tabs, busca);
+  if (aba === 'prefab') { // os grupos: Todos ou um só
+    const gr = edEl('div', 'display:flex;flex-wrap:wrap;gap:3px;padding:0 6px 4px');
+    for (const g of ['Todos', ...ED_GRUPOS]) { const b = edEl('button', 'padding:2px 6px;font-size:11px', g); if ((ED.grupo || 'Todos') === g) b.className = 'on'; b.onclick = () => { ED.grupo = g; edCatalogo('prefab'); }; gr.appendChild(b); }
+    e.appendChild(gr);
+  }
   const lista = edEl('div'); lista.className = 'edl'; e.appendChild(lista);
   const itens = aba === 'basico' ? ED_BASICO.map((b) => ({ rot: b.rot, tpl: b }))
-    : (aba === 'prefab' ? Object.keys(PF) : Object.keys(PROPT)).sort().map((n) => ({ rot: n, tpl: { rot: n, P: { t: aba, nome: n } } }));
+    : (aba === 'prefab' ? Object.keys(PF) : Object.keys(PROPT)).sort().map((n) => ({ rot: n, tpl: { rot: n, P: { t: aba, nome: n } }, g: aba === 'prefab' ? edGrupoDe(n) : '' }));
+  if (aba === 'prefab') itens.sort((a, b) => ED_GRUPOS.indexOf(a.g) - ED_GRUPOS.indexOf(b.g) || a.rot.localeCompare(b.rot));
   const pinta = () => {
-    const q = busca.value.trim().toLowerCase(); lista.innerHTML = '';
+    const q = busca.value.trim().toLowerCase(); lista.innerHTML = ''; let gAtual = null;
     for (const it of itens) {
       const nome = aba === 'basico' ? it.rot : edNomeBonito(it.rot);
       if (q && !it.rot.toLowerCase().includes(q) && !nome.toLowerCase().includes(q)) continue;
+      if (aba === 'prefab' && ED.grupo && ED.grupo !== 'Todos' && it.g !== ED.grupo) continue;
+      if (aba === 'prefab' && it.g !== gAtual) { gAtual = it.g; lista.appendChild(edEl('div', 'grid-column:1/-1;margin:6px 0 1px;padding:2px 4px;font:600 12px system-ui;color:#f5b82e;border-bottom:1px solid #44484f', gAtual)); }
       const b = edEl('button'); b.title = it.rot; if (ED.tpl === it.tpl) b.className = 'on';
       // prefab que precisa de parâmetros (não se desenha sozinho): apagado no catálogo, sem prévia
       if (aba !== 'basico' && !edPrefabGrupo(aba + ':' + it.rot + '[]', () => (aba === 'prefab' ? PF[it.rot]() : propDef(it.rot, []).pf()))) {
@@ -338,10 +363,10 @@ function edPainel() {
   const n = ED.J.pecas, cont = (t) => n.filter((p) => p.t === t).length;
   d.appendChild(edEl('div', 'color:#aaa;font-size:12px;line-height:1.5', `<b style="color:#eee">${ED.J.meta.nome}</b> · id ${ED.J.meta.id}<br>${n.length} peças · ${cont('nascer')} nascer (+${cont('nascer')} Bravo espelhado) · ${cont('dom')}/3 pontos · ${cont('mecha')}/3 mecha`));
   if (!P) { d.appendChild(edEl('p', 'color:#888;margin-top:14px', 'Escolha uma peça no catálogo e clique na cena, ou clique numa peça para mexer nela.<br><br>O chão das aparições tem de estar em y = 0. O time Bravo nasce espelhado (z vira -z).')); return; }
-  d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha' }[P.t]));
+  d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', grafite: 'Grafite', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha' }[P.t]));
   const vec = (rot, arr, step, f) => { d.appendChild(edEl('label', '', rot)); const r = edEl('div'); r.className = 'row3'; arr.forEach((v, i) => { const x = edEl('input'); x.type = 'number'; x.step = step; x.value = +(+v).toFixed(3); x.onchange = () => { edAntes(); f(i, +x.value); edMudou(true); }; r.appendChild(x); }); d.appendChild(r); };
   vec('Posição x · y · z (m)', P.p, 0.25, (i, v) => { P.p[i] = v; });
-  if (P.s) vec('Tamanho larg · alt · prof (m)', P.s, 0.25, (i, v) => { P.s[i] = Math.max(0.05, v); });
+  if (P.s) vec(P.t === 'grafite' ? 'Tamanho larg · alt (m)' : 'Tamanho larg · alt · prof (m)', P.s, 0.25, (i, v) => { P.s[i] = Math.max(0.05, v); });
   if (!['nascer', 'dom', 'mecha'].includes(P.t)) vec('Giro (graus)' + (P.t === 'caixa' || P.t === 'escada' ? ' — de 90 em 90' : ''), [P.r || 0], P.t === 'caixa' || P.t === 'escada' ? 90 : 15, (i, v) => { P.r = v; });
   if (P.t === 'prefab' || P.t === 'prop') vec('Escala', [P.e || 1], 0.1, (i, v) => { P.e = v === 1 ? undefined : Math.max(0.1, v); });
   if (P.t === 'caixa' || P.t === 'escada') {
@@ -365,6 +390,20 @@ function edPainel() {
   }
   if (P.t === 'caixa') {
     const l = edEl('label', 'display:flex;gap:6px;align-items:center;color:#ddd'); const k = edEl('input'); k.type = 'checkbox'; k.checked = P.col !== false; k.onchange = () => { edAntes(); P.col = k.checked ? undefined : false; edMudou(true); }; l.append(k, 'Colide (segura gente e bala)'); d.appendChild(l);
+  }
+  if (P.t === 'grafite') {
+    d.appendChild(edEl('label', '', 'Texto (até 40 letras)'));
+    const t = edEl('input', 'width:100%;box-sizing:border-box'); t.value = P.texto || ''; t.maxLength = 40;
+    t.onchange = () => { edAntes(); P.texto = t.value; edMudou(true); }; d.appendChild(t);
+    d.appendChild(edEl('label', '', 'Estilo'));
+    const es = edEl('select', 'width:100%'); for (const [k, nome] of ED_GRAF_ESTILOS) es.appendChild(new Option(nome, k)); es.value = P.estilo || 'bomb';
+    es.onchange = () => { edAntes(); P.estilo = es.value; edMudou(true); }; d.appendChild(es);
+    for (const [rot, campo, pad] of [['Cor', 'cor', [0.98, 0.8, 0.1]], ['Contorno e sombra', 'borda', [0.08, 0.08, 0.1]]]) {
+      d.appendChild(edEl('label', '', rot));
+      const c = edEl('input', 'width:100%;height:30px;padding:0'); c.type = 'color'; c.value = '#' + edCorHex(P[campo] || pad).getHexString();
+      c.onchange = () => { edAntes(); const k = new THREE.Color(c.value); P[campo] = [+k.r.toFixed(3), +k.g.toFixed(3), +k.b.toFixed(3)]; edMudou(true); }; d.appendChild(c);
+    }
+    d.appendChild(edEl('p', 'color:#888;font-size:11px;margin:6px 0 0', 'Encoste na parede: a pintura fica na frente da peça (+z). Não colide nem segura bala.'));
   }
   if (P.t === 'luz') { vec('Força · alcance (m)', [P.forca || 1.4, P.raio || 7], 0.1, (i, v) => { if (i) P.raio = v; else P.forca = v; }); }
   const bts = edEl('div', 'display:flex;gap:6px;margin-top:14px'); const dup = edEl('button', '', 'Duplicar'); dup.onclick = edDuplicar; const del = edEl('button', 'color:#f88', 'Apagar'); del.onclick = edApagar; bts.append(dup, del); d.appendChild(bts);

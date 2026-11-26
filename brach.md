@@ -5,5 +5,3 @@ O editor ganha módulos de salas, varandas, deques, escadas, cabines, corredor, 
 O convés do `kcNavio` original é maciço. Para permitir uma descida real sem alterar mapas existentes, `kcNavioComAbertura` fornece um vão central de 2,6 x 6 m e uma abertura inferior na popa. O patamar da escada interna avança além do vão para manter a inclinação e a passagem exigidas. A documentação explica o posicionamento e as dimensões.
 
 Validação: `node --check` nos arquivos de editor alterados e remontagem de `public/tiro/index.html` com `tiro-frontline.js`. Aparência, vidros, encaixes e navegação dos bots ainda precisam ser conferidos no jogo. Os arquivos de mapas JSON não foram modificados.
-
-O PR #1032 também adiciona painéis de vidro ao editor; se for mesclado antes deste, reconciliar as duas integrações ao atualizar esta branch.

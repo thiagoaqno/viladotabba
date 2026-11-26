@@ -97,6 +97,11 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
 - **`prop` e `prefab`:** `prop` é objeto solto, que voa com tiro e explosão (barril, cadeira, garrafa...). `prefab` é cenário
   fixo, com colisão.
 - **`e`:** a escala do prefab ou do objeto.
+- **`grafite`:** texto pintado com spray numa parede, em `{ "t": "grafite", "p": [x, y, z], "r": graus, "s": [largura, altura], "texto": "...", "estilo": "bomb", "cor": [r, g, b], "borda": [r, g, b] }`.
+  - O texto tem até 40 letras.
+  - O estilo pode ser `bomb` (letra gorda com contorno), `pixo` (pichação reta), `escorre` (com tinta escorrendo) ou `tag` (assinatura).
+  - A pintura fica na frente da peça (+z), a 2 cm de `p`. Ela não colide nem segura bala.
+  - No editor, fica no fim da aba Básico ("Grafite").
 - **`poi`:** os pontos que os bots visitam, `[x, y, z]` ou `[x, y, z, 1]` (com o 1, o bot para e segura a posição: laje,
   janela, canto). É opcional.
 - **Outros campos opcionais:** `zonas` (`[nome, x0, x1, z0, z1]`, o nome da área no mapinho), `sniper` (`[x, y, z]`, onde o
@@ -245,6 +250,34 @@ prédio com escada **só gira de 90 em 90 graus**; girado de outro jeito, a esca
 | Nome | Tamanho (larg x alt x prof, m) | O que é |
 |---|---|---|
 | `kcNavio` | 20,4 x 10,6 x 106 | casco de iate (proa em +z, popa em -z) com o convés principal andável em y = 0, borda falsa sólida de 1,05 m e parede invisível em cima até 4,5 m. A linha d'água fica em y = -4,3: use o mar em -4,3. A meia-largura do convés acompanha o casco (10 m no meio, afinando para a proa a partir de z = 25) |
+| `kcNSalao` | 11 x 2,95 x 14 | salão com portas de 2,4 m, vidros quebráveis e laje andável |
+| `kcNPonte` | 8 x 2,95 x 6 | ponte de comando envidraçada com painel, leme e laje; pode ficar sobre o salão |
+| `kcNCassino` | 11 x 2,95 x 16 | cassino com portas, mesas de jogo e laje andável |
+| `kcNEscada` | 2,46 x 3,95 x 7,5 | **com escada**: lance externo e patamar até a laje em y = 2,95 |
+| `kcNPiscina` | 6 x 0,85 x 4 | piscina elevada com borda sólida e água visual |
+| `kcNEspreguicadeira` | 0,8 x 0,85 x 2 | espreguiçadeira de madeira e lona |
+| `kcNGuardaSol` | 2,6 x 2,5 x 2,6 | guarda-sol branco |
+| `kcNBar` | 3,8 x 1,42 x 1,2 | bar de convés com balcão de madeira |
+| `kcNSofa` | 2,6 x 0,95 x 0,9 | sofá de convés branco |
+| `kcNMesaCadeiras` | 3,2 x 0,8 x 1,3 | mesa com duas cadeiras |
+| `kcNBoia` | 1 x 1 x 0,2 | boia salva-vidas |
+| `kcNArmario` | 2,08 x 1,18 x 1,18 | armário de convés baixo |
+| `kcNHeliponto` | 12 x 0,025 x 12 | marcação visual de heliponto, para colocar sobre o convés |
+| `kcNLancha` | 6 x 2,15 x 2,3 | lancha de apoio sobre berços |
+| `kcNGuindaste` | 3,35 x 3,8 x 0,7 | guindaste para lancha, com cabo visual |
+| `kcNCaixaEquipamento` | 2 x 1,15 x 1,2 | caixa de equipamento para cobertura |
+| `kcNRoloCabo` | 1,2 x 1,27 x 1 | rolo de cabo em suporte |
+| `kcNCabeco` | 0,9 x 0,72 x 0,6 | cabeço de amarração |
+| `kcNBoteSalvaVidas` | 4,4 x 1,65 x 1,9 | bote salva-vidas sobre suportes |
+| `kcNMangueira` | 1,1 x 1,05 x 0,53 | cesto de mangueira de incêndio |
+| `kcNConteiner` | 4 x 2 x 2,02 | contêiner de bordo |
+| `kcNMastroRadar` | 2,2 x 5,05 x 0,4 | mastro com radar |
+| `kcNSatelite` | 1,2 x 1,35 x 1,2 | domo de antena de satélite |
+| `kcNFarol` | 0,44 x 1,95 x 0,34 | farol de navegação vermelho e verde |
+| `kcNEscotilha` | 1,6 x 0,21 x 1,6 | escotilha fechada no convés |
+| `kcNCorrimao` | 4,08 x 1,08 x 0,08 | corrimão de inox com parede invisível para pessoas |
+| `kcNExtintor` | 0,35 x 0,7 x 0,26 | extintor com mangueira visual |
+| `kcNPlacaSaida` | 1 x 0,3 x 0,09 | placa verde de saída com seta |
 
 #### Módulos de arquitetura do navio
 
@@ -279,6 +312,9 @@ Para descer ao subsolo, no editor substitua o `kcNavio` do mapa por `kcNavioComA
 O mapa `navio.json` é a base pronta: o mar, o `kcNavio` no centro, os pontos de nascer na proa (o Bravo nasce na popa) e a
 dominação no eixo do navio. Os prefabs podem trazer paredes invisíveis próprias (`KC_INVIS[nome]`, como o `KC_ESCADAS`), e o
 limite do mapa agora usa o tamanho de verdade de cada prefab.
+
+O salão e a ponte têm painéis de vidro que quebram com tiro. Para alcançar uma laje, encoste o topo do patamar de `kcNEscada`
+na borda dela; a escada e o corrimão com parede invisível devem ser girados somente de 90 em 90 graus e usados na escala 1.
 
 ### Passarelas
 

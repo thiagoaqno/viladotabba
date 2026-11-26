@@ -1,7 +1,7 @@
 {
-  "_": "As vozes do narrador (o rádio). Quem joga escolhe em Opções > Áudio > Voz do narrador (o 'nome' é o que aparece lá; dá para trocar aqui e rodar ferramentas/tiro-frontline.js de novo), ou 'Pela classe da arma': aí vale o tipo da arma principal da classe (WEAPONS[classe.primary].cat), que é a chave de cada voz. A 'padrao' fica na pasta tiro-vozes/ e é a de começo; as outras ficam em tiro-vozes/<chave>/ e viram um pacote separado (sfx/voix_<chave>.js), baixado só quando alguém escolhe aquela voz.",
+  "_": "As vozes do narrador (o rádio). Quem joga escolhe em Opções > Áudio > Voz do narrador (o 'nome' é o que aparece lá; dá para trocar aqui e rodar ferramentas/tiro-frontline.js de novo), ou 'Pela classe da arma': aí vale o tipo da arma principal da classe (WEAPONS[classe.primary].cat), que é a chave de cada voz. A voz de começo é a NARRADOR_PADRAO de ferramentas/tiro-frontline.js (hoje a Narradora, 'shotgun'). A 'padrao' fica na pasta tiro-vozes/ e é a que toca enquanto o pacote da escolhida não chega; as outras ficam em tiro-vozes/<chave>/ e viram um pacote separado (sfx/voix_<chave>.js), baixado só quando alguém escolhe aquela voz.",
   "padrao": { "voz": "oCWW6YTSEVFt26dBO8vU", "nome": "Narrador 1", "armas": "fuzis de assalto (classe Assalto)" },
   "smg": { "voz": "cPoqAvGWCPfCfyPMwe4z", "nome": "Narrador 2", "armas": "submetralhadoras (classe Faxineiro)" },
   "sniper": { "voz": "Bj9UqZbhQsanLzgalpEG", "nome": "Narrador 3", "armas": "fuzis de precisão (classe Atirador)" },
-  "shotgun": { "voz": "jqcCZkN6Knx8BJ5TBdYR", "nome": "Narrador 4", "armas": "escopetas (classe Arrombador)" }
+  "shotgun": { "voz": "jqcCZkN6Knx8BJ5TBdYR", "nome": "Narradora", "armas": "escopetas (classe Arrombador)" }
 }

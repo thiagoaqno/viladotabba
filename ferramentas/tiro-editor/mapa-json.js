@@ -34,9 +34,9 @@ function edPrefabTam(nome) {
   if (!ED_PF_TAM.has(nome)) {
     let t = null;
     try {
-      const p = PF[nome](); let a = 1e9, b = -1e9, c = 1e9, d = -1e9;
-      for (const part of p.parts.values()) { const g = part.g; for (let i = 0; i < g.nv; i++) { const x = g.P[i * 3], z = g.P[i * 3 + 2]; if (x < a) a = x; if (x > b) b = x; if (z < c) c = z; if (z > d) d = z; } }
-      if (a < b) t = [a, b, c, d];
+      const p = PF[nome](); let a = 1e9, b = -1e9, c = 1e9, d = -1e9, e = 1e9, f = -1e9;
+      for (const part of p.parts.values()) { const g = part.g; for (let i = 0; i < g.nv; i++) { const x = g.P[i * 3], y = g.P[i * 3 + 1], z = g.P[i * 3 + 2]; if (x < a) a = x; if (x > b) b = x; if (z < c) c = z; if (z > d) d = z; if (y < e) e = y; if (y > f) f = y; } }
+      if (a < b) t = [a, b, c, d, e, f]; // x0, x1, z0, z1, y0, y1
     } catch (e) { t = null; }
     ED_PF_TAM.set(nome, t);
   }
@@ -48,7 +48,7 @@ function edLimites(J, preciso) {
     let B = P.t === 'caixa' || P.t === 'escada' ? edCaixaBox(P) : { x0: P.p[0] - 1, x1: P.p[0] + 1, y0: P.p[1], z0: P.p[2] - 1, z1: P.p[2] + 1 };
     const T = preciso && P.t === 'prefab' && PF[P.nome] && !(P.a && P.a.length) ? edPrefabTam(P.nome) : null;
     if (T) { // a caixa do prefab girada e na escala dele (raio pelo canto mais longe: vale para qualquer giro)
-      const e = P.e || 1, r = Math.max(...T.map(Math.abs)) * e * Math.SQRT2;
+      const e = P.e || 1, r = Math.max(...T.slice(0, 4).map(Math.abs)) * e * Math.SQRT2;
       const q = (((Math.round((P.r || 0) / 90) % 4) + 4) % 4), exato = Math.abs((P.r || 0) - Math.round((P.r || 0) / 90) * 90) < 0.5;
       if (exato) { const c = [1, 0, -1, 0][q], s = [0, 1, 0, -1][q], xs = [], zs = []; for (const x of [T[0], T[1]]) for (const z of [T[2], T[3]]) { xs.push(P.p[0] + e * (x * c + z * s)); zs.push(P.p[2] + e * (-x * s + z * c)); } B = { x0: Math.min(...xs), x1: Math.max(...xs), y0: P.p[1], z0: Math.min(...zs), z1: Math.max(...zs) }; }
       else B = { x0: P.p[0] - r, x1: P.p[0] + r, y0: P.p[1], z0: P.p[2] - r, z1: P.p[2] + r };
@@ -109,6 +109,15 @@ function edEscadasPrefab(P) {
     }
   }
 }
+// prefabs do jogo que não trazem colisão (nos mapas deles ela é posta à parte): no editor ganham uma caixa do tamanho da malha
+const ED_COL_AUTO = new Set(['busWreck', 'truck', 'car', 'boxcar', 'snowplow']);
+function edColAuto(P, x, y, z, ry) {
+  if (!ED_COL_AUTO.has(P.nome) || (P.a && P.a.length)) return;
+  const T = edPrefabTam(P.nome); if (!T) return;
+  DECOR.save().move(x, y, z).rotY(ry); if (P.e && P.e !== 1) DECOR.scl(P.e);
+  DECOR.col(T[0] + 0.05, T[1] - 0.05, Math.max(0, T[4]), T[5], T[2] + 0.05, T[3] - 0.05, 'metal');
+  DECOR.restore();
+}
 // paredes invisíveis que vêm dentro de um prefab (KC_INVIS[nome]: [x0, x1, y0, y1, z0, z1] da peça): seguram gente, não bala
 function edInvPrefab(P) {
   const E = typeof KC_INVIS !== 'undefined' && KC_INVIS[P.nome];
@@ -125,7 +134,7 @@ function edConstruir(J) {
       if (P.t === 'caixa' && P.inv) { const B = edCaixaBox(P); glassWall(B.x0, B.x1, B.y0, B.y1, B.z0, B.z1); } // parede invisível: só segura gente
       else if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
       else if (P.t === 'escada') edEscada(P);
-      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); }
+      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); edInvPrefab(P); edColAuto(P, x, y, z, ry); }
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
       else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
     } catch (e) { console.warn('peça do mapa', P, e); }

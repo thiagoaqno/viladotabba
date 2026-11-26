@@ -1,8 +1,9 @@
-# Tiro da Galera: Favela do Thiago (versão 3) e dominação em cima de morro ou laje
+# Tiro da Galera: ônibus, caminhão e carros do jogo com colisão nos mapas do editor
 
-- **Mapa:** o `favela.json` passa a ser a versão que o Thiago editou (posições ajustadas e dominação nova). Conferido: os 107 pontos dos bots e os nascer dos dois times estão na rede de caminhos dos bots. Um ponto que ficou fora foi tirado.
-- **Dominação na altura certa:** o ponto de dominação agora pode ter um 3º número, a altura do piso (`[x, z, y]`). O editor grava essa altura quando o ponto é colocado em cima de um morro ou de uma laje, e o jogo usa ela (troca em `tiro-frontline.js`). Antes, o jogo procurava o chão em y = 0 e o ponto afundava embaixo da terra. Na Favela, o ponto A está em cima do morro (y 3,05).
+Os prefabs de veículo do jogo original (`busWreck`, `truck`, `car`, `boxcar` e `snowplow`) não trazem colisão na peça: nos mapas deles, ela é posta à parte. Nos mapas do editor, dava para atravessar o ônibus.
 
-Conferido no navegador, no modo dominação: A fica em y 3,05, e B e C ficam no chão.
+Agora o `mapa-json.js` dá a cada um deles uma caixa de colisão do tamanho da malha, girada e na escala da peça. A caixa segura gente e bala (`ED_COL_AUTO`; para pôr outro prefab sem colisão, é só acrescentar o nome).
+
+Conferido no navegador, na Favela: o ônibus do planalto, o carro e o caminhão ganharam colisão.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

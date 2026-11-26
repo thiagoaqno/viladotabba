@@ -34,7 +34,7 @@ const edSnap = (v, s = ED.snap) => Math.round(v / s) * s;
 const edClone = (o) => JSON.parse(JSON.stringify(o));
 
 /* ---------- modelo: o .json <-> as peças da cena ---------- */
-const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa', 'ativo'];
+const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa', 'ativo', 'ambiente'];
 function edDoJson(J) {
   const pecas = (J.pecas || []).map(edClone);
   for (const [x, z] of J.nascer || []) pecas.push({ t: 'nascer', p: [x, 0, z] });

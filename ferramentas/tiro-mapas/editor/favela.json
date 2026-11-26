@@ -3715,5 +3715,6 @@
   24
  ],
  "som": "concrete",
- "capa": "maps/favela-2.webp"
+ "capa": "maps/favela-2.webp",
+ "ambiente": "amb_floreal"
 }

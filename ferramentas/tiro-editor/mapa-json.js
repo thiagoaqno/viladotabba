@@ -200,6 +200,14 @@ function edConstruir(J) {
     } catch (e) { console.warn('peça do mapa', P, e); }
   }
 }
+// som ambiente de um mapa sem mar: o do campo "ambiente" (amb_floreal, amb_sable, amb_givre, amb_tephra, amb_stratus...) ou o do
+// mapa do céu; os de beira-mar (ondas) viram o de bairro, para não tocar água num mapa sem mar
+const ED_AMB_MAR = new Set(['amb_embruns', 'amb_meltem']);
+function edAmbiente(J, base) {
+  if (J.ambiente) return J.ambiente;
+  const p = base.sound && base.sound.pack;
+  return !p || ED_AMB_MAR.has(p) ? 'amb_floreal' : p;
+}
 function tiroMapaRegistrar(J) {
   const base = MAP_DEFS[J.ceu] || MAP_DEFS.meltem || Object.values(MAP_DEFS)[0], L = edLimites(J), mar = J.mar && typeof J.mar.y === 'number' ? J.mar : null;
   const sx = L.x1 - L.x0, sz = L.z1 - L.z0, raio = Math.max(sx, sz) / 2;
@@ -211,7 +219,7 @@ function tiroMapaRegistrar(J) {
     get bounds() { if (!this._lim) { const M = edLimites(J, true); this._lim = { x0: M.x0, x1: M.x1, z0: M.z0, z1: M.z1 }; } return this._lim; },
     textures: edTexturasDoMapa(J), surfaces: mar ? ['ripple', ...ED_TEX_NOSSAS] : ED_TEX_NOSSAS.slice(),
     sound: mar ? { pack: 'amb_embruns', bed: 0.5, water: () => 0, loops: [[L.x0, -4, 0], [L.x1, -4, 0]].map((p) => ({ id: 'a_waves', p, gain: 0.4, ref: 6, roll: 1.3, max: 120 })), spots: [] }
-      : { pack: base.sound && base.sound.pack, bed: 0.5, loops: [], spots: [] },
+      : { pack: edAmbiente(J, base), bed: 0.5, loops: [], spots: [] },
     materials: () => {},
     art: { cam: [L.x0 - 8, 10, L.z1 + 8], look: [0, 1, 0], fov: 55 },
     splat: { x0: -128, z0: -128, w: 256, d: 256, ppm: 2 }, far: 600,

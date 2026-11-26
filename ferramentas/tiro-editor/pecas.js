@@ -2132,7 +2132,7 @@ PF.kcNCaixaBordo = () => prefab('kcNCaixaBordo', (M) => {
    painel de voos e esteira de bagagem. */
 const KC_AV = { R: 2.6, cy: 1.6, z0: -18, z1: 18, portaD: [12, 15], portaE: [-13, -10] };
 PF.kcAAviao = () => prefab('kcAAviao', (M) => {
-  M.local(1);
+  KC_INVIS.kcAAviao = []; M.local(1);
   const { R, cy, z0, z1, portaD, portaE } = KC_AV, branco = [0.95, 0.95, 0.96], azul = [0.12, 0.28, 0.62];
   // ângulos (em volta do eixo do avião) de cada porta: do piso (0) até 2,2 m
   const sMin = (cy - 2.2) / R, sMax = cy / R, aD = [Math.asin(sMin), Math.asin(Math.min(1, sMax))], aE = [Math.PI - aD[1], Math.PI - aD[0]];
@@ -2151,10 +2151,24 @@ PF.kcAAviao = () => prefab('kcAAviao', (M) => {
     else casca(za, zb, 0, Math.PI * 2);
   }
   // nariz e cauda (cones)
-  M.color(branco); M.save().move(0, cy, z1).rotX(Math.PI / 2); M.lathe('carpaint', [[R, 0], [R * 0.85, 1.6], [R * 0.5, 3.0], [0, 3.8]], 20); M.restore();
+  // nariz com a janela da cabine dos pilotos: uma faixa aberta em volta, de 1,1 m a 2,0 m acima do piso (cabeça e parte de cima
+  // do tronco de quem está lá dentro); o nariz é feito em fatias, cada uma sem a faixa
+  const nR = (t) => (t <= 1.6 ? R * (1 - 0.15 * t / 1.6) : t <= 3.0 ? R * (0.85 - 0.35 * (t - 1.6) / 1.4) : R * 0.5 * (1 - (t - 3.0) / 0.8));
+  const jB = 1.1 - cy, jC = 2.0 - cy; // a faixa, em altura relativa ao eixo
+  for (let t = 0; t < 3.8 - 1e-6; t += 0.2) {
+    const ra = nR(t), rb = nR(Math.min(3.8, t + 0.2)), r = (ra + rb) / 2, pecas = [];
+    if (r > -jB) pecas.push([Math.asin(-jB / r), Math.PI - Math.asin(-jB / r)]); else pecas.push([0, Math.PI * 2]);
+    if (r > jC) pecas.push([Math.PI + Math.asin(jC / r), Math.PI * 2 - Math.asin(jC / r)]);
+    if (r <= -jB) pecas.length = 1;
+    for (const [a0, a1] of pecas) {
+      M.save().move(0, cy, z1).rotX(Math.PI / 2);
+      M.color(branco); M.lathe('carpaint', [[ra, t], [rb, t + 0.2]], 20, { a0, a1 }); M.color([0.85, 0.85, 0.84]); M.lathe('plastic', [[rb * 0.98, t + 0.2], [ra * 0.98, t]], 20, { a0, a1 });
+      M.restore();
+    }
+  }
   M.save().move(0, cy + 0.4, z0).rotX(-Math.PI / 2); M.lathe('carpaint', [[R, 0], [R * 0.75, 2.2], [R * 0.35, 4.2], [0, 5.0]], 20); M.restore();
   M.color([0.08, 0.1, 0.14]); M.cls = 1;
-  M.save().move(0, cy + 0.9, z1 + 1.9).rotX(-0.5); M.boxB('glass', -1.1, 1.1, -0.25, 0.25, -0.02, 0.02); M.restore(); // para-brisa
+  for (const x of [-0.9, 0, 0.9]) M.boxB('steel', x - 0.04, x + 0.04, 1.1, 2.0, z1 + 1.45 - Math.abs(x) * 0.3, z1 + 1.55 - Math.abs(x) * 0.3); // montantes da janela
   // janelas e faixa azul
   for (const s of [-1, 1]) for (let z = -16; z <= 16.5; z += 0.95) {
     if ((z > portaD[0] - 0.4 && z < portaD[1] + 0.4) || (z > portaE[0] - 0.4 && z < portaE[1] + 0.4)) continue;
@@ -2173,7 +2187,17 @@ PF.kcAAviao = () => prefab('kcAAviao', (M) => {
     const [pa, pb] = s > 0 ? portaD : portaE, x0 = s > 0 ? hw - 0.05 : -hw - 0.25, x1 = s > 0 ? hw + 0.25 : -hw + 0.05;
     M.col(x0, x1, 0, 2.6, z0, pa, 'metal'); M.col(x0, x1, 0, 2.6, pb, z1, 'metal'); M.col(x0, x1, 2.2, 2.6, pa, pb, 'metal');
   }
-  M.col(-hw, hw, 0, 2.6, z0 - 0.3, z0, 'metal'); M.col(-hw, hw, 0, 2.6, z1, z1 + 0.3, 'metal');
+  M.col(-hw, hw, 0, 2.6, z0 - 0.3, z0, 'metal');
+  // cabine dos pilotos (z1 a z1 + 1,6): piso, teto, paredes até 1,1 m e acima de 2,0 m; na faixa da janela, parede invisível
+  // (a bala passa, ninguém pula do nariz)
+  const zc = z1 + 1.6;
+  M.color([0.32, 0.34, 0.4]); M.boxB('rug', -1.25, 1.25, -0.15, 0, z1, zc); M.col(-1.25, 1.25, -0.3, 0, z1, zc, 'metal'); M.col(-1.6, 1.6, 2.6, 2.9, z1, zc, 'metal');
+  for (const [x0, x1, za, zb] of [[-1.6, -1.25, z1, zc], [1.25, 1.6, z1, zc], [-1.6, 1.6, zc - 0.2, zc]]) {
+    M.col(x0, x1, 0, 1.1, za, zb, 'metal'); M.col(x0, x1, 2.0, 2.6, za, zb, 'metal'); KC_INVIS.kcAAviao.push([x0, x1, 1.1, 2.0, za, zb]);
+  }
+  M.color([0.12, 0.13, 0.15]); M.boxB('steel', -1.2, 1.2, 0, 1.05, zc - 0.55, zc - 0.2); M.col(-1.2, 1.2, 0, 1.05, zc - 0.55, zc - 0.2, 'metal'); // painel
+  M.cls = 1; M.color([0.2, 0.6, 0.4]); for (const x of [-0.6, 0.6]) M.boxB('lamp', x - 0.3, x + 0.3, 0.8, 1.0, zc - 0.56, zc - 0.55); M.cls = 0;
+  M.color([0.25, 0.27, 0.32]); for (const x of [-0.6, 0.6]) { M.boxB('canvas', x - 0.28, x + 0.28, 0.35, 0.55, z1 + 0.15, z1 + 0.7, { bevel: 0.04 }); M.boxB('canvas', x - 0.28, x + 0.28, 0.55, 1.25, z1 + 0.1, z1 + 0.22, { bevel: 0.04 }); M.col(x - 0.28, x + 0.28, 0, 1.25, z1 + 0.1, z1 + 0.7, 'wood'); }
   // poltronas (uma de cada lado por fileira; corredor de 2,6 m)
   for (let z = -16.5; z <= 10.5; z += 1.1) {
     if ((z > portaE[0] - 0.8 && z < portaE[1] + 0.3) || (z > portaD[0] - 0.8)) continue;
@@ -2433,3 +2457,12 @@ PF.kcAEscadaRolante = () => prefab('kcAEscadaRolante', (M) => {
   for (const s of [-1, 1]) kcGuarda(M, s * 1.27, 3.7, s * 1.27, 6.1, 4.5);
   M.color([0.45, 0.47, 0.5]); M.boxB('steel', -1.3, 1.3, 0, 0.05, -4.8, -4); // pente da entrada
 });
+
+/* ---------- vidro que quebra (objeto "kcVidro" da aba Objetos; o mapa usa com o tamanho em "a": [largura, altura]) ----------
+   Um tiro estilhaça o painel e abre o vão. Até lá ele segura gente e bala. */
+PF.kcVidroPainel = (w = 2, h = 2) => prefab('kcVidroPainel' + w + 'x' + h, (M) => {
+  M.local(1); M.color([0.72, 0.84, 0.9]); M.boxB('carglass', -w / 2, w / 2, 0, h, -0.015, 0.015);
+  M.col(-w / 2, w / 2, 0, h, -0.05, 0.05, 'glass');
+});
+propType('kcVidro', (a) => { const w = a[0] || 2, h = a[1] || 2;
+  return { pf: () => PF.kcVidroPainel(w, h), shapes: [BOX(0, h / 2, 0, w / 2, h / 2, 0.02)], mass: 14, mu: 0.5, e: 0.1, resp: 0.6, blast: 2, hp: 1, mat: 'glass', snd: 'plastic', brk: 'glass' }; });

@@ -1,7 +1,7 @@
-# Tiro da Galera: peças de convés para o Navio
+# Tiro da Galera: mapa Maré Alta
 
-O editor ganha peças independentes inspiradas nas referências de convés de iate: ponte panorâmica, cabana com bancos e ducha, hidromassagem, balcão, banco, claraboia, armário, posto de comando, arco superior, caixa, corrimão e escada. Os nomes usam o prefixo `kcN` e entram automaticamente no grupo Navio do catálogo.
+Maré Alta é um mapa de iate de luxo em alto-mar, inspirado no ritmo de combate entre corredores, áreas abertas e posições elevadas. O convés tem piscina, heliponto, cabanas e duas rotas laterais; dois salões levam por escadas a um andar com varandas e a terraços no terceiro nível. As equipes nascem em extremidades opostas, com três pontos de dominação, quedas do mecha e pontos de interesse dos bots.
 
-A ponte tem portas de 2,4 m e laje andável; seus vidros e os do corrimão são fixos. A escada é registrada para jogadores e bots. A documentação traz as medidas e o aviso de giro em múltiplos de 90 graus para a escada. Os mapas JSON não foram alterados.
+O mapa é um JSON próprio do editor; o Navio-base e a Favela não foram alterados. A descrição e o jogo foram remontados para incluir o mapa na lista.
 
-Validação: `node --check` nos arquivos do editor e remontagem do jogo com `tiro-frontline.js`. A aparência e a navegação precisam ser conferidas jogando.
+Validação: JSON lido com sucesso, nomes dos prefabs conferidos e jogo remontado com `tiro-frontline.js`. A aparência, o fluxo das rotas, a subida dos bots e o balanceamento ainda precisam ser conferidos jogando.

@@ -328,6 +328,13 @@ limite do mapa agora usa o tamanho de verdade de cada prefab.
 O salão e a ponte têm painéis de vidro que quebram com tiro. Para alcançar uma laje, encoste o topo do patamar de `kcNEscada`
 na borda dela; a escada e o corrimão com parede invisível devem ser girados somente de 90 em 90 graus e usados na escala 1.
 
+### Mapa Maré Alta
+
+`mare-alta.json` é um mapa independente do Navio-base: um iate de luxo com dois salões, piscina central, heliponto na popa e
+passagens pelos dois lados. As escadas levam do convés em y = 0 aos salões e varandas em y = 3, e daí aos terraços em y = 6.
+Os times nascem nas extremidades; as bases Bravo são espelhadas pelo jogo. Os três pontos de dominação ficam na proa, junto à
+piscina e na popa. O arquivo pode ser aberto e alterado no editor como qualquer mapa do projeto.
+
 ### Passarelas
 
 O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas

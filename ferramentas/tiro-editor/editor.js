@@ -176,7 +176,7 @@ function edAbrir() {
   Object.assign(ED, { root, cv, bar, esq, dir, ajuda });
   const css = edEl('style'); css.textContent = `#edRoot button,#edRoot select,#edRoot input{white-space:nowrap;font:inherit;color:#eee;background:#2a2d32;border:1px solid #44484f;border-radius:5px;padding:4px 8px}
 #edRoot button:hover{background:#353941;cursor:pointer}#edRoot button.on{background:#f5b82e;color:#111;border-color:#f5b82e}#edRoot label{display:block;margin:8px 0 3px;color:#aaa;font-size:12px}
-#edRoot .edl{flex:1;overflow:auto;padding:4px 6px}#edRoot .edl button{display:block;width:100%;text-align:left;margin:2px 0;padding:5px 7px}#edRoot .edl button.mau{opacity:.4}
+#edRoot .edl{flex:1;overflow:auto;padding:4px 6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;align-content:start}#edRoot .edl button{display:flex;flex-direction:column;min-width:0;margin:0;padding:3px;text-align:center;white-space:normal}#edRoot .edl img,#edRoot .edl i{display:block;width:100%;aspect-ratio:4/3;border-radius:3px;background:#30353c}#edRoot .edl i{font:normal 10px system-ui;color:#888;display:flex;align-items:center;justify-content:center;padding:4px;box-sizing:border-box}#edRoot .edl span{display:block;font-size:11px;line-height:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#edRoot .edl button.mau{opacity:.45}#edRoot .edl button.on{color:#111}
 #edRoot .edt{display:flex;gap:4px;padding:6px}#edRoot .edt button{flex:1;padding:4px 2px}#edRoot .row3{display:flex;gap:4px}#edRoot .row3 input{width:100%;min-width:0;box-sizing:border-box}
 #edRoot .msg{position:absolute;top:52px;left:50%;transform:translateX(-50%);background:#000c;padding:6px 14px;border-radius:6px;display:none}`;
   root.appendChild(css); ED.msgEl = edEl('div'); ED.msgEl.className = 'msg'; root.appendChild(ED.msgEl);
@@ -264,15 +264,61 @@ function edCatalogo(aba) {
   const pinta = () => {
     const q = busca.value.trim().toLowerCase(); lista.innerHTML = '';
     for (const it of itens) {
-      if (q && !it.rot.toLowerCase().includes(q)) continue;
-      const b = edEl('button', '', it.rot); if (ED.tpl === it.tpl) b.className = 'on';
-      // prefab que precisa de parâmetros (não se desenha sozinho): apagado no catálogo
-      if (aba !== 'basico' && !edPrefabGrupo(aba + ':' + it.rot + '[]', () => (aba === 'prefab' ? PF[it.rot]() : propDef(it.rot, []).pf()))) { b.className = 'mau'; b.title = 'Precisa de parâmetros: ainda não dá para colocar pelo editor'; lista.appendChild(b); continue; }
+      const nome = aba === 'basico' ? it.rot : edNomeBonito(it.rot);
+      if (q && !it.rot.toLowerCase().includes(q) && !nome.toLowerCase().includes(q)) continue;
+      const b = edEl('button'); b.title = it.rot; if (ED.tpl === it.tpl) b.className = 'on';
+      // prefab que precisa de parâmetros (não se desenha sozinho): apagado no catálogo, sem prévia
+      if (aba !== 'basico' && !edPrefabGrupo(aba + ':' + it.rot + '[]', () => (aba === 'prefab' ? PF[it.rot]() : propDef(it.rot, []).pf()))) {
+        b.className = 'mau'; b.title = it.rot + ': precisa de parâmetros, ainda não dá para colocar pelo editor';
+        b.append(edEl('i', '', 'precisa de parâmetros'), edEl('span', '', nome)); lista.appendChild(b); continue;
+      }
+      const img = edEl('img'); img.alt = ''; b.append(img, edEl('span', '', nome)); edMiniPedir(it.tpl, img);
       b.onclick = () => { ED.tpl = ED.tpl === it.tpl ? null : it.tpl; edFantasma(); pinta(); if (ED.tpl) edMsg('Clique na cena para colocar: ' + it.rot + ' (Esc para parar)'); };
       lista.appendChild(b);
     }
   };
   busca.oninput = pinta; pinta();
+}
+/* ---------- prévias do catálogo ----------
+   Cada peça do catálogo ganha uma miniatura 3D, desenhada por um renderizador pequeno só delas (vista de 3/4 pela frente, +z),
+   aos poucos (algumas por quadro) e guardada enquanto o editor estiver aberto. */
+const ED_MINI = { cache: new Map(), fila: [], r: null, cena: null, cam: null, W: 160, H: 120 };
+const edNomeBonito = (n) => n.replace(/^kc/, '').replace(/([a-z])([A-Z0-9])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+function edMiniPedir(tpl, img) {
+  const k = JSON.stringify(tpl.P), u = ED_MINI.cache.get(k);
+  if (u) { img.src = u; return; }
+  ED_MINI.fila.push({ tpl, img, k, t: 0 });
+}
+function edMiniDesenhar(tpl) {
+  if (!ED_MINI.r) {
+    const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(ED_MINI.W, ED_MINI.H, false); r.outputEncoding = THREE.sRGBEncoding;
+    const cena = new THREE.Scene(); cena.background = new THREE.Color(0x30353c);
+    cena.add(new THREE.HemisphereLight(0xe8eeff, 0x50483c, 1.0)); const sol = new THREE.DirectionalLight(0xfff2dc, 1.5); sol.position.set(4, 8, 6); cena.add(sol);
+    Object.assign(ED_MINI, { r, cena, cam: new THREE.PerspectiveCamera(30, ED_MINI.W / ED_MINI.H, 0.01, 500) });
+  }
+  const P = Object.assign({ p: [0, 0, 0], r: 0 }, edClone(tpl.P)), o = edMalha(P), proprio = P.t !== 'prefab' && P.t !== 'prop';
+  let falta = false; o.traverse((c) => { const m = c.material; if (m && m.map && m.map.image && m.map.image.complete === false) falta = true; });
+  const solta = () => { if (proprio) o.traverse((c) => { if (c.geometry) c.geometry.dispose(); }); };
+  if (falta) { solta(); return null; } // a textura ainda está carregando: tenta de novo depois
+  const s = new THREE.Box3().setFromObject(o).getBoundingSphere(new THREE.Sphere()), cam = ED_MINI.cam;
+  const d = (Math.max(s.radius, 0.2) / Math.sin((cam.fov * Math.PI) / 360)) * 1.02;
+  cam.position.copy(s.center).addScaledVector(new THREE.Vector3(0.75, 0.55, 1).normalize(), d); cam.near = d / 50; cam.far = d * 4; cam.updateProjectionMatrix(); cam.lookAt(s.center);
+  ED_MINI.cena.add(o); ED_MINI.r.render(ED_MINI.cena, cam); ED_MINI.cena.remove(o); solta();
+  return ED_MINI.r.domElement.toDataURL('image/jpeg', 0.85);
+}
+function edMiniPasso() {
+  const F = ED_MINI.fila, agora = performance.now(); let n = 0;
+  for (let i = 0; i < F.length && n < 4;) {
+    const f = F[i];
+    if (!f.img.isConnected) { F.splice(i, 1); continue; }
+    if (f.t > agora) { i++; continue; }
+    const pronto = ED_MINI.cache.get(f.k); if (pronto) { f.img.src = pronto; F.splice(i, 1); continue; }
+    let u = null; try { u = edMiniDesenhar(f.tpl); } catch (e) { u = ''; }
+    n++;
+    if (u === null) { f.t = agora + 500; i++; continue; }
+    if (u) { ED_MINI.cache.set(f.k, u); f.img.src = u; }
+    F.splice(i, 1);
+  }
 }
 function edFantasma() {
   if (ED.ghost) { ED.scene.remove(ED.ghost); ED.ghost = null; }
@@ -410,5 +456,6 @@ function edTick(t) {
   ED.camera.position.set(c.x, c.y, c.z); ED.camera.rotation.set(c.pitch, c.yaw, 0, 'YXZ');
   if (ED.box) ED.box.update();
   ED.r.render(ED.scene, ED.camera);
+  if (ED_MINI.fila.length) edMiniPasso();
 }
 if (/[?&]editor=1\b/.test(location.search)) { const go = () => setTimeout(() => { try { edAbrir(); } catch (e) { console.error('editor', e); } }, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go); }

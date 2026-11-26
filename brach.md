@@ -1,10 +1,19 @@
-# Tiro da Galera: prévia 3D de cada peça no catálogo do editor
+# Tiro da Galera: mais cinco prédios de favela, três com escada de verdade
 
-- **Catálogo em grade:** o catálogo do editor de mapas (Básico, Prefabs e Objetos) agora é uma grade de quadrinhos, cada um com uma prévia 3D da peça vista de frente (+z, em 3/4) e o nome.
-- **Nomes:** os nomes ficam mais legíveis (`kcCasaTijolo` vira "Casa Tijolo"). A busca acha pelos dois nomes, e o nome do código aparece ao passar o mouse.
-- **Como desenha:** as prévias são feitas por um renderizador pequeno só delas, algumas por quadro, e ficam guardadas enquanto o editor estiver aberto.
-- **Peças com parâmetros:** os prefabs que precisam de parâmetros continuam apagados, sem prévia.
+Peças novas no editor de mapas (aba Prefabs), de tamanhos diferentes:
 
-Conferido no navegador: as 14 peças do Básico, os 47 objetos e todos os prefabs que dá para colocar ganharam prévia, sem erro.
+- **Sem escada:**
+  - **Torre** de cinco andares (15 m de altura), estreita, cada andar de uma cor;
+  - **Comércio** largo de dois andares, com três portas de enrolar coloridas.
+- **Com escada:**
+  - **Escada pelo lado:** sobe a um terraço grande a 2,95 m;
+  - **Escada até o telhado:** dois lances até a laje a 5,9 m, com mureta;
+  - **Escada nos fundos:** sobe a um terraço a 2,95 m atrás do quarto.
+
+**Escada de prefab (novo):** um prefab pode trazer escadas (`KC_ESCADAS[nome]`, em coordenadas da peça). No mapa, o `mapa-json.js` transforma cada uma em rampa do jogo e em degraus que colidem, girados junto com a peça (de 90 em 90 graus). Assim o jogador e os bots sobem.
+
+As escadas têm 2,4 m de largura: com 1,8 m, a grade de 1 m dos bots às vezes não tinha onde pôr um ponto, dependendo da posição do prédio no mapa.
+
+Conferido no navegador: as 5 peças montam. Fiz um teste com as três peças com escada nas quatro direções e em quatro posições diferentes da grade: em todos os 32 pontos de terraço e de laje, os bots acham caminho até lá em cima.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

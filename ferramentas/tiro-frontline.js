@@ -251,7 +251,10 @@ h = troca(h, "bounce:[0.25,0.08,0.04],dust:[0.3,0.29,0.28],motes:[2.2,0.75,0.25]
 // Iate Esmeralda (2026-11-26): o código do mapa entra no fim do script do jogo, logo antes do boot, e se registra sozinho
 // (MAP_DEFS, MAPS, MAP_ART). A água do porto só tinha mar a oeste do cais: o iate traz a própria grade de água (iate.js) e aqui
 // o campo de espuma passa a ficar centrado no navio quando o mapa é o iate.
-{
+// (2026-11-26: desativado a pedido do Thiago, que não gostou da rodada 3; os arquivos ficam em tiro-mapas/ e a rodada 3 no branch
+// tiro-iate-rodada3. Para religar, IATE_ATIVO = true. Quem tinha o iate salvo como mapa cai no primeiro da lista: mapById)
+const IATE_ATIVO = false;
+if (IATE_ATIVO) {
   const MAPAS = path.join(__dirname, "tiro-mapas");
   h = troca(h, "F={x0:-144,z0:-128,ppm:2,w:256,h:512}", "F=(CURMAP.id==='iate'?{x0:-64,z0:-96,ppm:2,w:256,h:384}:{x0:-144,z0:-128,ppm:2,w:256,h:512})", { nome: "campo da água centrado no iate" });
   const iate = fs.readFileSync(path.join(MAPAS, "iate.js"), "utf8");

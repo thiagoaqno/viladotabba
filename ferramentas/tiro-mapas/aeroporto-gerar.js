@@ -34,6 +34,18 @@ caixa(-40, -10.5, Y, Y + 0.02, -5, 6.5, 'tiles', C.piso, { col: false });
 pecas.push({ t: 'escada', p: [-34.85, 0, -15.6], s: [9.7, Y, 21.2], r: 0, m: 'concrete', cor: C.concreto });
 // guarda-corpo de vidro na beira (1,1 m), com o vão da ponte de embarque (x 25,4 a 28,4)
 caixa(-10.5, 25.4, Y, Y + 1.1, 6.5, 6.75, 'glass', C.vidro); caixa(28.4, 40, Y, Y + 1.1, 6.5, 6.75, 'glass', C.vidro);
+// janelão do corredor da frente: 20 painéis de vidro que quebram com tiro (objeto kcVidro), do guarda-corpo (5,6) a 9,4 m, com
+// montantes de aço, viga em cima e o teto fechando a faixa da frente
+{
+  const faixas = [[-10.5, 25.4, 15], [28.4, 39.7, 5]];
+  for (const [x0, x1, n] of faixas) {
+    const w = (x1 - x0) / n;
+    for (let i = 0; i < n; i++) pecas.push({ t: 'prop', nome: 'kcVidro', p: [+(x0 + (i + 0.5) * w).toFixed(3), Y + 1.1, 6.62], r: 0, a: [+(w - 0.1).toFixed(2), 3.8] });
+    for (let i = 0; i <= n; i++) { const x = x0 + i * w; caixa(x - 0.05, x + 0.05, Y + 1.1, Y + 4.9, 6.55, 6.7, 'steel', C.escuro); }
+  }
+  caixa(-10.5, 40, Y + 4.9, 10, 6.5, 6.8, 'paint', C.branco);
+  caixa(-10.5, 40, 10, 10.3, 6.5, 9, 'paint', C.branco);
+}
 caixa(-29.8, -10.5, Y, Y + 1.1, -5, -4.75, 'glass', C.vidro); caixa(-10.75, -10.5, Y, Y + 1.1, -4.75, 6.5, 'glass', C.vidro);
 // paredes, colunas e teto do terminal (o teto começa 2,5 m para dentro: a beira fica aberta para o pátio)
 caixa(-40, 40, Y, 10, 43.7, 44, 'paint', C.branco); caixa(-40, -39.7, Y, 10, 6.5, 44, 'paint', C.branco); caixa(39.7, 40, Y, 10, 6.5, 44, 'paint', C.branco);

@@ -340,7 +340,7 @@ piscina e na popa. O arquivo pode ser aberto e alterado no editor como qualquer 
 
 | Nome | Tamanho (larg x alt x prof, m) | O que é |
 |---|---|---|
-| `kcAAviao` | 34 x 13 x 46 | avião com a cabine andável: o piso da cabine fica no `y` da peça (no mapa, 4,5; o trem de pouso desce 4,5 m). Comprido em z, nariz em +z. Portas de 3 m: direita (+x) em z 12 a 15, esquerda (-x) em z -13 a -10. Corredor de 2,6 m |
+| `kcAAviao` | 34 x 13 x 46 | avião com a cabine andável: o piso da cabine fica no `y` da peça (no mapa, 4,5; o trem de pouso desce 4,5 m). Comprido em z, nariz em +z. Portas de 3 m: direita (+x) em z 12 a 15, esquerda (-x) em z -13 a -10. Corredor de 2,6 m. Na frente, a cabine dos pilotos com uma janela em volta do nariz, de 1,1 a 2,0 m do piso (vê a cabeça e o tronco de quem está lá; a bala passa, ninguém pula) |
 | `kcABalcao` | 2,6 x 2,4 x 1,5 | balcão de check-in com balança e painel da companhia |
 | `kcACadeiras` | 3 x 0,9 x 0,7 | fileira de cinco cadeiras de espera (cobre agachado) |
 | `kcARaioX` | 4,4 x 1,5 x 1,1 | raio-x de bagagem com esteiras (comprido em x) |
@@ -364,6 +364,7 @@ piscina e na popa. O arquivo pode ser aberto e alterado no editor como qualquer 
 | `kcAFila` | 6 x 1 x 3 | fila de check-in: postes de inox e fita em zigue-zague (os postes colidem) |
 | `kcAEscadaExterna` | 2,5 x 5,5 x 10,1 | **com escada**: de 0 a 4,5 m; sobe para +z (z -4 a 3,7) e tem patamar no alto (z 3,7 a 6,1): encoste a ponta do patamar na beira do piso de cima |
 | `kcAEscadaRolante` | 2,6 x 5,5 x 10,9 | **com escada**: escada rolante (parada, dá para subir), mesmo tamanho e jeito de encostar da externa |
+| objeto `kcVidro` | largura x altura x 0,05 | vidro que quebra com um tiro (aba Objetos). No `.json`, o tamanho vai em `"a": [largura, altura]`; sem ele, 2 x 2 m |
 
 O mapa `aeroporto.json` é gerado por `node ferramentas/tiro-mapas/aeroporto-gerar.js`, a partir do desenho do Thiago:
 - o terminal no alto (y 4,5), com o salão da segurança, a loja e o café;

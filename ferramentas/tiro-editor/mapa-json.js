@@ -63,6 +63,31 @@ function edMarGeometry() {
 }
 { const orig = waterGeometry; waterGeometry = function () { return CURMAP.def && CURMAP.def.mar ? edMarGeometry() : orig(); }; }
 
+// escadas que vêm dentro de um prefab (KC_ESCADAS[nome], em coordenadas da peça, registradas pelo pecas.js): viram rampas do jogo
+// (por onde o jogador e os bots sobem) e degraus que colidem, girados junto com a peça. Só giro de 90 em 90 graus.
+function edEscadasPrefab(P) {
+  const E = typeof KC_ESCADAS !== 'undefined' && KC_ESCADAS[P.nome];
+  if (!E || !E.length) return;
+  const r = P.r || 0, q = (((Math.round(r / 90) % 4) + 4) % 4);
+  if (Math.abs(r - Math.round(r / 90) * 90) > 0.5) console.warn('escada do prefab', P.nome, 'só funciona girada de 90 em 90 graus');
+  const c = [1, 0, -1, 0][q], s = [0, 1, 0, -1][q], [px, py, pz] = P.p;
+  const tr = (x, z) => [px + x * c + z * s, pz - x * s + z * c]; // o mesmo giro do rotation.y do three
+  for (const e of E) {
+    const a = tr(e.x0, e.z0), b = tr(e.x1, e.z1);
+    const x0 = Math.min(a[0], b[0]), x1 = Math.max(a[0], b[0]), z0 = Math.min(a[1], b[1]), z1 = Math.max(a[1], b[1]);
+    const axis = q % 2 ? (e.axis === 'z' ? 'x' : 'z') : e.axis;
+    const ponta0 = e.axis === 'z' ? tr((e.x0 + e.x1) / 2, e.z0) : tr(e.x0, (e.z0 + e.z1) / 2); // onde fica o h0 da peça
+    const noComeco = axis === 'x' ? ponta0[0] < (x0 + x1) / 2 : ponta0[1] < (z0 + z1) / 2;
+    const h0 = py + (noComeco ? e.h0 : e.h1), h1 = py + (noComeco ? e.h1 : e.h0);
+    RAMPS.push({ x0, x1, z0, z1, axis, h0, h1 });
+    const n = Math.max(2, Math.round(Math.abs(h1 - h0) / 0.2)), dh = Math.abs(h1 - h0) / n;
+    for (let i = 0; i < n; i++) {
+      const t0 = i / n, t1 = (i + 1) / n, top = lerp(h0, h1, (t0 + t1) / 2) + dh / 2;
+      if (axis === 'x') DECOR.col(lerp(x0, x1, t0), lerp(x0, x1, t1), py, top, z0, z1, 'concrete', true);
+      else DECOR.col(x0, x1, py, top, lerp(z0, z1, t0), lerp(z0, z1, t1), 'concrete', true);
+    }
+  }
+}
 // monta as peças (também usado pelo botão "Jogar" do editor)
 function edConstruir(J) {
   for (const P of J.pecas || []) {
@@ -71,7 +96,7 @@ function edConstruir(J) {
       if (P.t === 'caixa' && P.inv) { const B = edCaixaBox(P); glassWall(B.x0, B.x1, B.y0, B.y1, B.z0, B.z1); } // parede invisível: só segura gente
       else if (P.t === 'caixa') { const B = edCaixaBox(P); box(P.m || 'paint', B.x0, B.x1, B.y0, B.y1, B.z0, B.z1, { tint: P.cor || [0.9, 0.9, 0.9], collide: P.col !== false, uv: edUv(P) }); }
       else if (P.t === 'escada') edEscada(P);
-      else if (P.t === 'prefab' && PF[P.nome]) DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined);
+      else if (P.t === 'prefab' && PF[P.nome]) { DECOR.place(PF[P.nome](...(P.a || [])), x, y, z, ry, P.e ? { s: P.e } : undefined); edEscadasPrefab(P); }
       else if (P.t === 'prop' && PROPT[P.nome]) DECOR.dyn(P.nome, x, y, z, ry, P.a ? { a: P.a } : {});
       else if (P.t === 'luz') { DECOR.lamp(x, y, z, P.cor || [1, 0.85, 0.65], P.forca || 1.4, P.raio || 7, 0.6); }
     } catch (e) { console.warn('peça do mapa', P, e); }

@@ -1297,3 +1297,146 @@ PF.kcCobogo = () => prefab('kcCobogo', (M) => {
   M.cls = 0;
   M.col(-1, 1, 0, 2, -0.07, 0.07, 'concrete');
 });
+
+/* ---------- pacote 6: mais cinco prédios de favela (três com escada de verdade) ----------
+   As escadas destes prédios ficam em KC_ESCADAS[nome] (coordenadas da peça) e o mapa-json.js transforma em rampa do jogo:
+   o jogador e os bots sobem. Elas sobem no máximo 0,59 m por metro, têm 1,8 m de largura e são maciças por baixo.
+   Prédio com escada só gira de 90 em 90 graus. */
+const KC_ESCADAS = {};
+kcTex(['kcFavelaTorre', 'kcFavelaComercio', 'kcFavelaEscadaLado', 'kcFavelaEscadaTelhado', 'kcFavelaEscadaFundos'], ['brick', 'plaster2']);
+// escada maciça de concreto (degraus até o chão) e a rampa dela; axis 'z' ou 'x'; h0 na ponta x0/z0, h1 na ponta x1/z1
+function kcEscadaF(M, nome, x0, x1, z0, z1, axis, h0, h1, corrimao) {
+  KC_ESCADAS[nome].push({ x0, x1, z0, z1, axis, h0, h1 });
+  const n = Math.max(2, Math.round(Math.abs(h1 - h0) / 0.2)), dh = Math.abs(h1 - h0) / n;
+  M.color(KC_COR.laje);
+  for (let i = 0; i < n; i++) {
+    const t0 = i / n, t1 = (i + 1) / n, top = lerp(h0, h1, (t0 + t1) / 2) + dh / 2;
+    if (axis === 'z') M.boxB('concrete', x0, x1, 0, top, lerp(z0, z1, t0), lerp(z0, z1, t1));
+    else M.boxB('concrete', lerp(x0, x1, t0), lerp(x0, x1, t1), 0, top, z0, z1);
+  }
+  if (corrimao) { // corrimão de cano no lado de fora: [x, z] de cada ponta (na altura de cada ponta + 0,95)
+    const [[ax, az], [bx, bz]] = corrimao; M.color(KC_COR.ferro); const c = M.cls; M.cls = 1;
+    M.tube('steel', 0.025, [[ax, h0 + 0.95, az], [bx, h1 + 0.95, bz]], 6);
+    for (let i = 0; i <= 4; i++) { const t = i / 4, x = lerp(ax, bx, t), z = lerp(az, bz, t), y = lerp(h0, h1, t); M.boxB('steel', x - 0.02, x + 0.02, y, y + 0.95, z - 0.02, z + 0.02); }
+    M.cls = c;
+  }
+}
+// patamar maciço (do chão até h), com piso de cimento
+function kcPatamar(M, x0, x1, z0, z1, h) { kcBloco(M, 'concrete', KC_COR.laje, x0, x1, 0, h, z0, z1); }
+// guarda-corpo de cano (colide) entre dois pontos, na altura y
+function kcGuarda(M, x0, z0, x1, z1, y) {
+  M.color(KC_COR.ferro); const c = M.cls; M.cls = 1;
+  const a = Math.min(x0, x1), b = Math.max(x0, x1), p = Math.min(z0, z1), q = Math.max(z0, z1);
+  M.boxB('steel', a - 0.025, b + 0.025, y + 0.95, y + 1.0, p - 0.025, q + 0.025);
+  const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 1.0));
+  for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(x0, x1, t), z = lerp(z0, z1, t); M.boxB('steel', x - 0.025, x + 0.025, y, y + 0.95, z - 0.025, z + 0.025); }
+  M.cls = c; M.col(a - 0.03, b + 0.03, y, y + 1.0, p - 0.03, q + 0.03, 'steel');
+}
+
+// torre de cinco andares, estreita (4,5 x 15,3 x 4,7 m): cada andar de uma cor, o terceiro e o quarto avançam, sacadinhas
+PF.kcFavelaTorre = () => prefab('kcFavelaTorre', (M) => {
+  M.local(1); const Z = 2.25, P = 2.95;
+  const andares = [[-2, 2, KC_COR.chapisco], [-2, 2, null], [-2, 2.5, KC_COR.azulParede], [-2, 2.5, null], [-2, 2, KC_COR.amareloParede]];
+  andares.forEach(([x0, x1, cor], i) => {
+    const y = i * P; kcBloco(M, 'brick', KC_COR.tijolo, x0, x1, y, y + 2.8, -Z, Z);
+    if (cor) { kcPintura(M, 'x', Z, 1, x0, x1, y, y + 2.8, cor); kcPintura(M, 'z', x1, 1, -Z, Z, y, y + 2.8, cor); }
+    kcLajeB(M, x0, x1, y + 2.8, -Z, Z);
+    if (i > 0) { kcJanelaGrade(M, 'x', Z, 1, x0 + 0.5, x0 + 1.6, y + 0.95, y + 2.0); kcJanelaGrade(M, 'z', x1, 1, -0.7, 0.5, y + 0.95, y + 2.0); kcJanelaGrade(M, 'x', -Z, -1, -0.6, 0.6, y + 0.95, y + 2.0); kcJanelaGrade(M, 'z', x0, -1, -0.4, 0.8, y + 0.95, y + 2.0); }
+    if (i === 2 || i === 4) { // sacadinha na frente
+      const yb = y; M.color(KC_COR.laje); M.boxB('concrete', 0.3, 1.8, yb - 0.15, yb, Z, Z + 0.7); M.col(0.3, 1.8, yb - 0.15, yb, Z, Z + 0.7, 'concrete');
+      M.cls = 1; M.color([0.85, 0.85, 0.83]); M.boxB('steel', 0.3, 1.8, yb + 0.95, yb + 1.0, Z + 0.66, Z + 0.7); for (let k = 0; k <= 10; k++) { const x = 0.3 + k * 0.15; M.boxB('steel', x - 0.01, x + 0.01, yb, yb + 0.95, Z + 0.67, Z + 0.69); }
+      M.color([0.22, 0.2, 0.18]); M.boxB('dark', 0.55, 1.55, yb, yb + 2.1, Z, Z + 0.006); M.cls = 0;
+    }
+  });
+  kcPorta(M, 'x', Z, 1, 0.4, 1.4, [0.35, 0.36, 0.38]); kcJanelaGrade(M, 'x', Z, 1, -1.6, -0.5, 1.0, 2.0);
+  const yt = 5 * P;
+  kcMureta(M, -2.1, 2.1, yt, -Z - 0.1, Z + 0.1, 0.4);
+  kcCaixaAgua(M, -0.9, yt, -1.0); kcCaixaAgua(M, 0.9, yt, 0.9); kcAntenaF(M, 1.4, yt, -1.6, 0.4); kcFerros(M, -2.0, yt + 0.4, Z, 0.6);
+  kcAr(M, 2.5, 6.9, 1.2, Math.PI / 2); kcAr(M, -2, 10.0, -1.0, -Math.PI / 2); kcAr(M, 2.0, 12.8, 0.6, Math.PI / 2);
+  M.color([0.85, 0.85, 0.83]); M.cls = 1; M.tube('plastic', 0.05, [[-2.08, yt, -Z + 0.3], [-2.08, 0.1, -Z + 0.3], [-2.25, 0.05, -Z + 0.3]], 8); M.cls = 0;
+});
+
+// comércio largo de dois andares (9,2 x 6,5 x 5,2 m): três portas de enrolar de cores diferentes embaixo, fachada rosa em cima
+PF.kcFavelaComercio = () => prefab('kcFavelaComercio', (M) => {
+  M.local(1); const X = 4.5, Z = 2.5;
+  kcBloco(M, 'brick', KC_COR.tijolo, -X, X, 0, 2.8, -Z, Z); kcLajeB(M, -X, X, 2.8, -Z, Z);
+  M.cls = 1;
+  M.color(KC_COR.pilar); for (const x of [-X, -1.55, 1.55, X]) M.boxB('paint', Math.max(-X - 0.01, x - 0.16), Math.min(X + 0.01, x + 0.16), 0, 2.8, Z, Z + 0.03);
+  const portas = [[-4.3, -1.75, [0.2, 0.5, 0.3]], [-1.35, 1.35, [0.74, 0.17, 0.13]], [1.75, 4.3, [0.55, 0.57, 0.6]]];
+  for (const [a, b, cor] of portas) { M.color(cor); M.boxB('rollshutter', a, b, 0, 2.4, Z, Z + 0.04); M.color([0.36, 0.36, 0.38]); M.boxB('steel', a - 0.04, b + 0.04, 2.4, 2.62, Z, Z + 0.15); }
+  M.cls = 0;
+  kcBloco(M, 'brick', KC_COR.tijolo, -X, X, 2.95, 5.75, -Z, Z); kcLajeB(M, -X, X, 5.75, -Z, Z);
+  kcPintura(M, 'x', Z, 1, -X, X, 2.95, 5.75, KC_COR.rosaParede);
+  for (const a of [-3.6, -1.4, 0.8, 3.0]) kcJanelaGrade(M, 'x', Z, 1, a - 0.15, a + 0.95, 3.9, 4.95);
+  for (const a of [-3.0, 0.4]) kcJanelaGrade(M, 'x', -Z, -1, a, a + 1.2, 3.9, 4.95);
+  for (const s of [-1, 1]) kcJanelaGrade(M, 'z', s * X, s, -0.6, 0.6, 3.9, 4.95);
+  kcAr(M, -2.5, 3.5, Z, 0); kcAr(M, 2.0, 3.5, Z, 0); kcAr(M, X, 4.0, -1.2, Math.PI / 2);
+  kcMureta(M, -X - 0.1, X + 0.1, 5.9, -Z - 0.1, Z + 0.1, 0.5);
+  kcCaixaAgua(M, -3.2, 5.9, -1.3); kcCaixaAgua(M, 3.2, 5.9, -1.3); kcAntenaF(M, 0, 5.9, -1.8, 0.2);
+  for (const x of [-X + 0.06, 0, X - 0.06]) kcFerros(M, x, 6.4, Z, 0.6);
+});
+
+// prédio com escada pelo lado (8,6 x 6,9 x 7,7 m): térreo fechado, em cima um quarto no fundo e um terraço grande a 2,95 m;
+// a escada (2,4 m de largura) sobe pelo lado +x, da frente para o fundo, até um patamar que dá no terraço
+PF.kcFavelaEscadaLado = () => prefab('kcFavelaEscadaLado', (M) => {
+  KC_ESCADAS.kcFavelaEscadaLado = []; M.local(1);
+  kcBloco(M, 'brick', KC_COR.tijolo, -3, 3, 0, 2.8, -5, 2.5); kcLajeB(M, -3, 3, 2.8, -5, 2.5);
+  kcPintura(M, 'x', 2.5, 1, -3, 3, 0, 1.2, KC_COR.verdeParede);
+  kcPorta(M, 'x', 2.5, 1, -1.8, -0.8, [0.3, 0.34, 0.36]); kcJanelaGrade(M, 'x', 2.5, 1, 0.4, 1.8, 1.0, 2.0);
+  kcJanelaGrade(M, 'z', -3, -1, -2.0, -0.6, 1.0, 2.0); kcJanelaGrade(M, 'x', -5, -1, -1.0, 0.4, 1.0, 2.0);
+  // quarto de cima, no fundo
+  kcBloco(M, 'brick', KC_COR.tijolo, -3, 0.5, 2.95, 5.75, -5, -2); kcLajeB(M, -3, 0.5, 5.75, -5, -2);
+  kcJanelaGrade(M, 'x', -2, 1, -2.4, -1.2, 3.9, 4.9); M.cls = 1; M.color([0.22, 0.2, 0.18]); M.boxB('dark', 0.5, 0.505, 2.95, 5.05, -4.2, -3.2); M.cls = 0;
+  kcCaixaAgua(M, -1.3, 5.9, -3.5);
+  // terraço: mureta na frente, no lado -x, no lado +x até o patamar e no fundo ao lado do quarto
+  kcMureta(M, -3.1, 3.1, 2.95, -2, 2.6, 1.0, 'so'); kcMureta(M, 2.98, 3.1, 2.95, -2.5, 2.6, 1.0, 'l'); kcMureta(M, 0.5, 3.1, 2.95, -5.1, -2, 1.0, 'n');
+  // escada (x 3,1 a 5,5) sobe da frente (z 2,5, chão) para o fundo (z -2,5, 2,95 m) e patamar no fundo (z -5 a -2,5)
+  kcEscadaF(M, 'kcFavelaEscadaLado', 3.1, 5.5, -2.5, 2.5, 'z', 2.95, 0, [[5.45, -2.5], [5.45, 2.5]]);
+  kcPatamar(M, 3.1, 5.5, -5, -2.5, 2.95);
+  kcGuarda(M, 5.48, -5, 5.48, -2.5, 2.95); kcGuarda(M, 3.1, -4.98, 5.5, -4.98, 2.95);
+  kcAr(M, -3, 4.2, -3.5, -Math.PI / 2);
+});
+
+// prédio com escada até a laje do telhado (9,5 x 6,4 x 10 m): dois andares fechados; um lance sobe pela frente até um
+// patamar a 2,95 m e o outro sobe pelo lado +x até a laje do telhado (5,9 m), com mureta e vista do alto
+PF.kcFavelaEscadaTelhado = () => prefab('kcFavelaEscadaTelhado', (M) => {
+  KC_ESCADAS.kcFavelaEscadaTelhado = []; M.local(1);
+  for (let i = 0; i < 2; i++) { const y = i * 2.95; kcBloco(M, 'brick', KC_COR.tijolo, -3.5, 3.5, y, y + 2.8, -5, 2.5); kcLajeB(M, -3.5, 3.5, y + 2.8, -5, 2.5); }
+  kcPintura(M, 'z', -3.5, -1, -5, 2.5, 0, 2.8, KC_COR.amareloParede); kcPintura(M, 'x', -5, -1, -3.5, 3.5, 0, 2.8, KC_COR.amareloParede);
+  kcPorta(M, 'z', -3.5, -1, -1.0, 0.0, [0.42, 0.3, 0.2], 'wood'); kcJanelaGrade(M, 'z', -3.5, -1, 0.6, 1.8, 1.0, 2.0); kcJanelaGrade(M, 'x', -5, -1, -2.0, -0.6, 1.0, 2.0);
+  for (const a of [-2.6, 0.2]) kcJanelaGrade(M, 'x', 2.5, 1, a, a + 1.2, 3.9, 4.9);
+  kcJanelaGrade(M, 'z', -3.5, -1, -3.0, -1.7, 3.9, 4.9); kcJanelaGrade(M, 'x', -5, -1, 0.5, 1.8, 3.9, 4.9);
+  // laje do telhado: mureta em volta, aberta no lado +x onde chega a escada (z -5 a -2,5)
+  kcMureta(M, -3.6, 3.6, 5.9, -5.1, 2.6, 0.9, 'sno'); kcMureta(M, 3.48, 3.6, 5.9, -2.5, 2.6, 0.9, 'l');
+  // primeiro lance: na frente (z 2,6 a 5), sobe de x -3,5 (chão) a x 1,5 (2,95 m); patamar de x 1,5 a 6
+  kcEscadaF(M, 'kcFavelaEscadaTelhado', -3.5, 1.5, 2.6, 5.0, 'x', 0, 2.95, [[-3.5, 4.95], [1.5, 4.95]]);
+  kcPatamar(M, 1.5, 6.0, 2.6, 5.0, 2.95);
+  kcGuarda(M, 1.5, 4.98, 6.0, 4.98, 2.95); kcGuarda(M, 5.98, 2.6, 5.98, 5.0, 2.95);
+  // segundo lance: no lado +x (x 3,6 a 6), sobe de z 2,6 (2,95 m) a z -2,5 (5,9 m); patamar no fundo até a laje
+  kcEscadaF(M, 'kcFavelaEscadaTelhado', 3.6, 6.0, -2.5, 2.6, 'z', 5.9, 2.95, [[5.95, -2.5], [5.95, 2.6]]);
+  kcPatamar(M, 3.6, 6.0, -5, -2.5, 5.9);
+  kcGuarda(M, 5.98, -5, 5.98, -2.5, 5.9); kcGuarda(M, 3.6, -4.98, 6.0, -4.98, 5.9);
+  kcCaixaAgua(M, -2.4, 5.9, -3.6); kcAntenaF(M, -2.9, 5.9, 1.9, 0.5); kcFerros(M, -3.5, 6.8, 2.5, 0.6);
+  kcAr(M, -3.5, 4.0, 1.4, -Math.PI / 2);
+});
+
+// sobrado pequeno com escada nos fundos (7,5 x 6,4 x 7,6 m): em cima, o quarto fica na frente e o terraço no fundo;
+// a escada (2,4 m) sobe atrás, de +x para -x, até um patamar no lado -x que dá no terraço
+PF.kcFavelaEscadaFundos = () => prefab('kcFavelaEscadaFundos', (M) => {
+  KC_ESCADAS.kcFavelaEscadaFundos = []; M.local(1);
+  kcBloco(M, 'brick', KC_COR.tijolo, -2.5, 2.5, 0, 2.8, -2.5, 2.5); kcLajeB(M, -2.5, 2.5, 2.8, -2.5, 2.5);
+  kcPintura(M, 'x', 2.5, 1, -2.5, 2.5, 0, 2.8, KC_COR.azulParede); kcPintura(M, 'z', 2.5, 1, -2.5, 2.5, 0, 2.8, KC_COR.azulParede);
+  kcPorta(M, 'x', 2.5, 1, -0.5, 0.5, [0.32, 0.3, 0.28]); kcJanelaGrade(M, 'x', 2.5, 1, 1.0, 2.1, 1.0, 2.0); kcJanelaGrade(M, 'z', 2.5, 1, -1.5, -0.3, 1.0, 2.0);
+  // quarto de cima, na frente
+  kcBloco(M, 'brick', KC_COR.tijolo, -2.5, 2.5, 2.95, 5.75, 0, 2.5); kcLajeB(M, -2.5, 2.5, 5.75, 0, 2.5);
+  kcJanelaGrade(M, 'x', 2.5, 1, -1.9, -0.7, 3.9, 4.9); kcJanelaGrade(M, 'z', 2.5, 1, 0.6, 1.8, 3.9, 4.9);
+  M.cls = 1; M.color([0.22, 0.2, 0.18]); M.boxB('dark', -0.5, 0.5, 2.95, 5.05, -0.005, 0); M.cls = 0;
+  kcCaixaAgua(M, 1.2, 5.9, 1.2); kcAntenaF(M, -1.8, 5.9, 1.6, 0.4);
+  // terraço do fundo: mureta atrás e no lado +x (o lado -x fica aberto para o patamar)
+  kcMureta(M, -2.6, 2.6, 2.95, -2.6, 0, 1.0, 'nl');
+  // escada atrás do prédio (z -5 a -2,6), sobe de x 2,5 (chão) para x -2,5 (2,95 m); patamar no lado -x
+  kcEscadaF(M, 'kcFavelaEscadaFundos', -2.5, 2.5, -5.0, -2.6, 'x', 2.95, 0, [[-2.5, -4.95], [2.5, -4.95]]);
+  kcPatamar(M, -5.0, -2.5, -5.0, 0, 2.95);
+  kcGuarda(M, -4.98, -5.0, -4.98, 0, 2.95); kcGuarda(M, -5.0, -4.98, -2.5, -4.98, 2.95); kcGuarda(M, -5.0, -0.02, -2.6, -0.02, 2.95);
+  kcAr(M, -2.5, 4.2, 1.2, -Math.PI / 2);
+});

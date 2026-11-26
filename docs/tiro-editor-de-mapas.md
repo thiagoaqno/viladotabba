@@ -220,6 +220,20 @@ cima vai em y = 2,95. A cor de cada parede vem pronta; para outra cor, use uma c
 | `kcPlacaBar` | 0,15 x 1,75 x 1,35 | placa vertical "BAR" num braço (de parede) |
 | `kcCobogo` | 2 x 2 x 0,15 | parede de cobogó: vê através, segura gente e bala |
 
+### Prédios de favela com escada
+
+Três destes prédios trazem escada de verdade: o jogo transforma a escada da peça em rampa, e o jogador e os bots sobem. As
+escadas têm 2,4 m de largura (os bots passam em qualquer posição do mapa), sobem 0,59 m por metro e são maciças por baixo. Um
+prédio com escada **só gira de 90 em 90 graus**; girado de outro jeito, a escada some.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcFavelaTorre` | 4,7 x 15,3 x 4,7 | torre de cinco andares, fechada: cada andar de uma cor, o terceiro e o quarto avançam, duas sacadinhas |
+| `kcFavelaComercio` | 9,2 x 6,4 x 5,2 | comércio largo de dois andares, fechado: três portas de enrolar coloridas, fachada rosa em cima, laje com mureta |
+| `kcFavelaEscadaLado` | 8,6 x 6,9 x 7,7 | **com escada**: a escada sobe pelo lado +x até um terraço grande a 2,95 m (um quarto fechado no fundo) |
+| `kcFavelaEscadaTelhado` | 9,7 x 6,8 x 10,1 | **com escada**: dois lances (frente e lado +x) até a laje do telhado a 5,9 m, com mureta: vista do alto |
+| `kcFavelaEscadaFundos` | 7,6 x 6,4 x 7,6 | **com escada**: a escada sobe atrás até um terraço a 2,95 m no fundo (o quarto fica na frente) |
+
 ### Passarelas
 
 O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas

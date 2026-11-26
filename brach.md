@@ -1,20 +1,13 @@
-# Tiro da Galera: editor de superfícies e mais peças no editor de mapas
+# Tiro da Galera: peças de favela e casas no editor de mapas
 
-O Thiago pediu mais assets e um editor de textura de superfície.
+17 peças novas no editor de mapas (prefixo `kc`, aba Prefabs), feitas em código e inspiradas em modelos CC BY que o Thiago achou (casa em obra, casas de concreto, prédios velhos) e numa favela de referência:
 
-**Superfícies.** As caixas e escadas do editor escolhem a superfície numa galeria com miniaturas (52 opções, em grupos: Parede,
-Chão, Madeira, Metal, Outros), e a cena do editor já mostra a textura, no tamanho certo em metros. O campo novo "Tamanho da
-textura" (`tx` no `.json`) aumenta ou diminui o desenho.
-- 17 fotos que o jogo tinha e os mapas do editor não usavam viram superfícies: ferrugem, grama, ardósia, rocha, laje de pedra,
-  tábuas, seixos, cascalho, adobe, taipa, neve e outras.
-- 4 texturas novas, desenhadas por shader: chapa xadrez, faixa de perigo, azulejo e piso xadrez.
-- Cada mapa do editor carrega só as fotos que usa. Nos mapas do jogo nada muda.
-- Código em `ferramentas/tiro-editor/texturas.js`.
+- **Casas:** casa de tijolo com laje, caixa d'água e antena; a mesma com telhado de fibrocimento; sobrado com dois portões de enrolar e laje com mureta; casa em obra (pilares, ferros, paredes de cima pela metade); casa de concreto cor de areia (térrea e com segundo volume); prédio velho de três andares; lanchonete com placa e toldo.
+- **Rua:** portão de garagem, muro chapiscado com portão de grade, puxadinho de zinco, poste com transformador, caixa d'água, ar-condicionado, antena, guarda-sol com mesa e cadeiras, bananeira.
+- As casas térreas e a lanchonete dão para entrar (porta de 1,5 a 1,6 m, os bots passam).
+- Um mapa do editor que usa essas peças carrega sozinho as fotos de tijolo, reboco e telha (`KC_TEX_PECAS`).
+- O guia `docs/tiro-editor-de-mapas.md` lista as peças com o tamanho.
 
-**Peças.** Mais 11 prefabs (cidade e fábrica): ponto de ônibus, banca, carro queimado, cavalete de obra, entulho, manilhas,
-prateleira de galpão, tambores, vigas de aço, alambrado e armário elétrico. Agora são 24 peças `kc`.
+Conferido no navegador: as 17 peças montam e um mapa com todas abriu no Jogar, com bots e texturas, sem erro.
 
-O guia `docs/tiro-editor-de-mapas.md` ganhou a lista das superfícies e a tabela das peças novas.
-
-Conferido no navegador: as 24 peças montam, as 52 miniaturas carregam e um mapa com tijolo, ferrugem, grama, chapa, faixa,
-azulejo e xadrez montou no Jogar com as texturas certas e sem erro no console.
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -141,6 +141,32 @@ e a origem é o centro de baixo.
 | `kcAlambrado` | 3 x 2,2 x 0,1 | cerca de tela de arame (vê através, mas segura bala) |
 | `kcArmarioEletrico` | 1,6 x 1,6 x 0,8 | armário elétrico de rua |
 
+### Favela e casas
+
+A frente (porta, portão, placa) olha +z com `r` 0. As casas térreas dão para entrar: a porta tem 1,5 a 1,6 m, e os bots passam.
+A laje e o telhado não têm escada: para fazer rota de telhado, encoste uma **Escada** do editor e ligue as lajes com caixas
+(passarelas), seguindo as regras de inclinação e largura acima.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcCasaTijolo` | 5,2 x 3,7 x 5,2 | casa de tijolo térrea, dá para entrar; janelas com grade; laje a 2,95 m com ferros, caixa d'água e antena |
+| `kcCasaTelhado` | 5,5 x 3,2 x 5,6 | a mesma casa com telhado de fibrocimento caindo para trás |
+| `kcSobrado` | 6,2 x 6,4 x 5,2 | sobrado fechado: dois portões de enrolar vermelhos, janelas em cima, laje a 5,75 m com mureta de 0,5 m |
+| `kcCasaObra` | 6,3 x 5,5 x 5,9 | casa em obra: térreo de tijolo com vãos (dá para entrar), laje a 2,94 m, pilares e paredes de cima pela metade |
+| `kcCasaConcreto` | 5,5 x 3,7 x 5 | casa de reboco cor de areia, dá para entrar; laje a 3,2 m com platibanda de 0,5 m |
+| `kcCasaConcreto2` | 5,5 x 6,3 x 5 | a mesma com um segundo volume fechado no fundo e terraço na frente |
+| `kcPredioVelho` | 8,6 x 11,4 x 7,6 | prédio velho de três andares, fechado: loja com porta de enrolar, janelas com veneziana, sacada, telhado escuro |
+| `kcLanchonete` | 4,6 x 3,9 x 4,7 | lanchonete com balcão aberto na frente, placa amarela, toldo listrado, porta do lado (-x); laje a 2,95 m |
+| `kcPortaoGaragem` | 3,4 x 2,9 x 0,35 | parede de tijolo com portão de enrolar vermelho e pilares amarelos (a frente em z = 0, a parede atrás) |
+| `kcMuroPortao` | 6 x 2,35 x 0,3 | muro chapiscado com vão de 1,6 m e portão de grade aberto para -z |
+| `kcPuxadinho` | 3,7 x 2,8 x 2,8 | telhado de zinco enferrujado em quatro esteios (sombra no beco) |
+| `kcCaixaDagua` | 1,5 x 1 x 1,5 | caixa d'água azul de 1000 litros |
+| `kcPoste` | 2 x 9 x 2 | poste de concreto com cruzeta, transformador, luminária e fios |
+| `kcArCondicionado` | 0,8 x 0,5 x 0,35 | ar-condicionado: as costas em z = 0 (encoste na parede) e suba com PgUp |
+| `kcAntena` | 0,6 x 0,8 x 0,6 | antena parabólica (sem colisão) |
+| `kcGuardaSol` | 2,4 x 2,45 x 2,4 | guarda-sol amarelo e branco com mesa de plástico e duas cadeiras vermelhas |
+| `kcBananeira` | 3 x 2,6 x 3 | bananeira (só o tronco colide) |
+
 ## Catálogo: prefabs (cenário fixo)
 
 Estes prefabs precisam de parâmetros e ainda não entram pelo editor: `cyClimber`, `fdTri`, `fishBinStackDyn`, `fruitCrate`, `jersey`, `lobsterPots`, `rack`, `stTent`, `stall`, `trawler`, `tree`, `truss`.

@@ -1,80 +1,740 @@
 {
-  "id": "mare-alta",
-  "nome": "Maré Alta",
-  "tag": "Iate em alto-mar",
-  "desc": "Um iate de luxo em alto-mar, com três níveis, salões envidraçados, varandas, piscina central e passadiços laterais.",
-  "ceu": "embruns",
-  "mar": { "y": -4.3 },
-  "som": "wood",
-  "pecas": [
-    { "t": "prefab", "nome": "kcNavio", "p": [0, 0, 0], "r": 0 },
-
-    { "t": "caixa", "p": [0, 0, -42], "s": [20, 4.5, 0.2], "r": 0, "inv": true },
-    { "t": "caixa", "p": [0, 0, 42], "s": [20, 4.5, 0.2], "r": 0, "inv": true },
-
-    { "t": "prefab", "nome": "kcNModuloSala8x12", "p": [0, 0, 16], "r": 0 },
-    { "t": "prefab", "nome": "kcNModuloSala8x12", "p": [0, 0, -16], "r": 180 },
-    { "t": "prefab", "nome": "kcNEscadaExterna", "p": [5.2, 0, 16], "r": 180 },
-    { "t": "prefab", "nome": "kcNEscadaExterna", "p": [-5.2, 0, -16], "r": 0 },
-    { "t": "prefab", "nome": "kcNModuloSala6x8", "p": [1, 3, 16], "r": 0 },
-    { "t": "prefab", "nome": "kcNModuloSala6x8", "p": [-1, 3, -16], "r": 180 },
-    { "t": "prefab", "nome": "kcNVaranda6", "p": [1, 3, 21.25], "r": 0 },
-    { "t": "prefab", "nome": "kcNVaranda6", "p": [-1, 3, -21.25], "r": 180 },
-    { "t": "caixa", "p": [-4.25, 2.85, 16], "s": [0.5, 0.15, 8], "r": 0, "m": "wood", "cor": [0.66, 0.46, 0.3] },
-    { "t": "caixa", "p": [4.25, 2.85, -16], "s": [0.5, 0.15, 8], "r": 0, "m": "wood", "cor": [0.66, 0.46, 0.3] },
-    { "t": "prefab", "nome": "kcNEscadaExterna", "p": [-3.2, 3, 16], "r": 0 },
-    { "t": "prefab", "nome": "kcNEscadaExterna", "p": [3.2, 3, -16], "r": 180 },
-    { "t": "prefab", "nome": "kcNSatelite", "p": [3.2, 6, 18], "r": 0 },
-    { "t": "prefab", "nome": "kcNSatelite", "p": [-3.2, 6, -18], "r": 180 },
-
-    { "t": "prefab", "nome": "kcNPiscina", "p": [0, 0, 0], "r": 0 },
-    { "t": "prefab", "nome": "kcNClaraboiaConves", "p": [0, 0, 6], "r": 0 },
-    { "t": "prefab", "nome": "kcNClaraboiaConves", "p": [0, 0, -6], "r": 0 },
-    { "t": "prefab", "nome": "kcNArmario", "p": [-6.8, 0, 7.5], "r": 0 },
-    { "t": "prefab", "nome": "kcNArmario", "p": [6.8, 0, -7.5], "r": 180 },
-    { "t": "prefab", "nome": "kcNCaixaEquipamento", "p": [6.8, 0, 7.5], "r": 0 },
-    { "t": "prefab", "nome": "kcNCaixaEquipamento", "p": [-6.8, 0, -7.5], "r": 180 },
-
-    { "t": "prefab", "nome": "kcNCabanaConves", "p": [-3.5, 0, 26], "r": 0 },
-    { "t": "prefab", "nome": "kcNCabanaConves", "p": [3.5, 0, -26], "r": 180 },
-    { "t": "prefab", "nome": "kcNBarConves", "p": [5, 0, 28], "r": 0 },
-    { "t": "prefab", "nome": "kcNBarConves", "p": [-5, 0, -28], "r": 180 },
-    { "t": "prefab", "nome": "kcNHeliponto", "p": [0, 0.01, -36], "r": 0 },
-    { "t": "prefab", "nome": "kcNCabeco", "p": [-3.8, 0, 39.5], "r": 0 },
-    { "t": "prefab", "nome": "kcNCabeco", "p": [3.8, 0, 39.5], "r": 0 },
-    { "t": "prefab", "nome": "kcNCabeco", "p": [-6.8, 0, -40], "r": 0 },
-    { "t": "prefab", "nome": "kcNCabeco", "p": [6.8, 0, -40], "r": 0 },
-
-    { "t": "prefab", "nome": "kcNBancoConves", "p": [-7.3, 0, 30.5], "r": 90 },
-    { "t": "prefab", "nome": "kcNBancoConves", "p": [7.3, 0, -30.5], "r": 270 },
-    { "t": "prefab", "nome": "kcNCaixaBordo", "p": [7, 0, 23], "r": 0 },
-    { "t": "prefab", "nome": "kcNCaixaBordo", "p": [-7, 0, -23], "r": 180 },
-    { "t": "prefab", "nome": "kcNEspreguicadeira", "p": [-7.4, 0, 2.5], "r": 0 },
-    { "t": "prefab", "nome": "kcNEspreguicadeira", "p": [7.4, 0, -2.5], "r": 180 },
-    { "t": "prefab", "nome": "kcNBoia", "p": [-8.9, 0.6, -4], "r": 90 },
-    { "t": "prefab", "nome": "kcNBoia", "p": [8.9, 0.6, 4], "r": 270 },
-
-    { "t": "luz", "p": [-7.5, 3.4, 5], "cor": [1, 0.88, 0.7], "forca": 1.1, "raio": 7 },
-    { "t": "luz", "p": [7.5, 3.4, -5], "cor": [1, 0.88, 0.7], "forca": 1.1, "raio": 7 },
-    { "t": "luz", "p": [0, 2.5, 16], "cor": [0.9, 0.95, 1], "forca": 0.9, "raio": 7 },
-    { "t": "luz", "p": [0, 2.5, -16], "cor": [0.9, 0.95, 1], "forca": 0.9, "raio": 7 }
+ "id": "mare-alta",
+ "nome": "Maré Alta",
+ "tag": "Iate em alto-mar",
+ "desc": "Um iate de luxo em alto-mar, com três níveis, salões envidraçados, varandas, piscina central e passadiços laterais.",
+ "ceu": "embruns",
+ "mar": {
+  "y": -4.3
+ },
+ "som": "wood",
+ "pecas": [
+  {
+   "t": "prefab",
+   "nome": "kcNavio",
+   "p": [
+    0,
+    0,
+    0
+   ],
+   "r": 0
+  },
+  {
+   "t": "caixa",
+   "p": [
+    0,
+    0,
+    -42
+   ],
+   "s": [
+    20,
+    4.5,
+    0.2
+   ],
+   "r": 0,
+   "inv": true
+  },
+  {
+   "t": "caixa",
+   "p": [
+    0,
+    0,
+    42
+   ],
+   "s": [
+    20,
+    4.5,
+    0.2
+   ],
+   "r": 0,
+   "inv": true
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNModuloSala8x12",
+   "p": [
+    0,
+    0,
+    16
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNModuloSala8x12",
+   "p": [
+    0,
+    0,
+    -16
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNEscadaExterna",
+   "p": [
+    5.2,
+    0,
+    16
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNEscadaExterna",
+   "p": [
+    -5.2,
+    0,
+    -16
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNModuloSala6x8",
+   "p": [
+    1,
+    3,
+    16
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNModuloSala6x8",
+   "p": [
+    -1,
+    3,
+    -16
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNVaranda6",
+   "p": [
+    1,
+    3,
+    21.25
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNVaranda6",
+   "p": [
+    -1,
+    3,
+    -21.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "caixa",
+   "p": [
+    -4.25,
+    2.85,
+    16
+   ],
+   "s": [
+    0.5,
+    0.15,
+    8
+   ],
+   "r": 0,
+   "m": "wood",
+   "cor": [
+    0.66,
+    0.46,
+    0.3
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    4.25,
+    2.85,
+    -16
+   ],
+   "s": [
+    0.5,
+    0.15,
+    8
+   ],
+   "r": 0,
+   "m": "wood",
+   "cor": [
+    0.66,
+    0.46,
+    0.3
+   ]
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNEscadaExterna",
+   "p": [
+    -3.2,
+    3,
+    16
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNEscadaExterna",
+   "p": [
+    3.2,
+    3,
+    -16
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNSatelite",
+   "p": [
+    3.2,
+    6,
+    18
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNSatelite",
+   "p": [
+    -3.2,
+    6,
+    -18
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNPiscina",
+   "p": [
+    0,
+    0,
+    0
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNClaraboiaConves",
+   "p": [
+    0,
+    0,
+    6
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNClaraboiaConves",
+   "p": [
+    0,
+    0,
+    -6
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNArmario",
+   "p": [
+    -6.8,
+    0,
+    7.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNArmario",
+   "p": [
+    6.8,
+    0,
+    -7.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCaixaEquipamento",
+   "p": [
+    6.8,
+    0,
+    7.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCaixaEquipamento",
+   "p": [
+    -6.8,
+    0,
+    -7.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCabanaConves",
+   "p": [
+    -3.5,
+    0,
+    26
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCabanaConves",
+   "p": [
+    3.5,
+    0,
+    -26
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNBarConves",
+   "p": [
+    5,
+    0,
+    28
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNBarConves",
+   "p": [
+    -5,
+    0,
+    -28
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNHeliponto",
+   "p": [
+    0,
+    0.01,
+    -36
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCabeco",
+   "p": [
+    -3.8,
+    0,
+    39.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCabeco",
+   "p": [
+    3.8,
+    0,
+    39.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCabeco",
+   "p": [
+    -6.8,
+    0,
+    -40
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCabeco",
+   "p": [
+    6.8,
+    0,
+    -40
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNBancoConves",
+   "p": [
+    -7.3,
+    0,
+    30.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNBancoConves",
+   "p": [
+    7.3,
+    0,
+    -30.5
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCaixaBordo",
+   "p": [
+    7,
+    0,
+    23
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNCaixaBordo",
+   "p": [
+    -7,
+    0,
+    -23
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNEspreguicadeira",
+   "p": [
+    -7.4,
+    0,
+    2.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNEspreguicadeira",
+   "p": [
+    7.4,
+    0,
+    -2.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNBoia",
+   "p": [
+    -8.9,
+    0.6,
+    -4
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcNBoia",
+   "p": [
+    8.9,
+    0.6,
+    4
+   ],
+   "r": 270
+  },
+  {
+   "t": "luz",
+   "p": [
+    -7.5,
+    3.4,
+    5
+   ],
+   "cor": [
+    1,
+    0.88,
+    0.7
+   ],
+   "forca": 1.1,
+   "raio": 7
+  },
+  {
+   "t": "luz",
+   "p": [
+    7.5,
+    3.4,
+    -5
+   ],
+   "cor": [
+    1,
+    0.88,
+    0.7
+   ],
+   "forca": 1.1,
+   "raio": 7
+  },
+  {
+   "t": "luz",
+   "p": [
+    0,
+    2.5,
+    16
+   ],
+   "cor": [
+    0.9,
+    0.95,
+    1
+   ],
+   "forca": 0.9,
+   "raio": 7
+  },
+  {
+   "t": "luz",
+   "p": [
+    0,
+    2.5,
+    -16
+   ],
+   "cor": [
+    0.9,
+    0.95,
+    1
+   ],
+   "forca": 0.9,
+   "raio": 7
+  }
+ ],
+ "nascer": [
+  [
+   -2,
+   33
   ],
-  "nascer": [[-2, 33], [0, 33], [2, 33], [-3, 35], [-1, 35], [1, 35], [3, 35], [-2, 37], [0, 37], [2, 37]],
-  "dom": [[3, 24], [5, 0], [-3, -24]],
-  "mecha": [[0, 32], [-5, 0], [0, -32]],
-  "poi": [
-    [0, 0, 31], [3, 0, 24], [0, 0, 20], [0, 0, 13],
-    [-7, 0, 18], [-7, 0, 10], [-5, 0, 0], [-7, 0, -10], [-7, 0, -18],
-    [7, 0, 18], [7, 0, 10], [5, 0, 0], [7, 0, -10], [7, 0, -18],
-    [0, 0, -13], [0, 0, -20], [-3, 0, -24], [0, 0, -31],
-    [-1, 3, -16], [1, 3, 16], [-1, 6, -16, 1], [1, 6, 16, 1]
+  [
+   0,
+   33
   ],
-  "sniper": [1, 6, 16],
-  "zonas": [
-    ["Proa", -10, 10, 29, 42],
-    ["Salão da proa", -10, 10, 10, 29],
-    ["Piscina", -10, 10, -10, 10],
-    ["Salão da popa", -10, 10, -29, -10],
-    ["Heliponto", -10, 10, -42, -29]
+  [
+   2,
+   33
+  ],
+  [
+   -3,
+   35
+  ],
+  [
+   -1,
+   35
+  ],
+  [
+   1,
+   35
+  ],
+  [
+   3,
+   35
+  ],
+  [
+   -2,
+   37
+  ],
+  [
+   0,
+   37
+  ],
+  [
+   2,
+   37
   ]
+ ],
+ "dom": [
+  [
+   3,
+   24
+  ],
+  [
+   5,
+   0
+  ],
+  [
+   -3,
+   -24
+  ]
+ ],
+ "mecha": [
+  [
+   0,
+   32
+  ],
+  [
+   -5,
+   0
+  ],
+  [
+   0,
+   -32
+  ]
+ ],
+ "poi": [
+  [
+   0,
+   0,
+   31
+  ],
+  [
+   3,
+   0,
+   24
+  ],
+  [
+   0,
+   0,
+   20
+  ],
+  [
+   0,
+   0,
+   13
+  ],
+  [
+   -7,
+   0,
+   18
+  ],
+  [
+   -7,
+   0,
+   10
+  ],
+  [
+   -5,
+   0,
+   0
+  ],
+  [
+   -7,
+   0,
+   -10
+  ],
+  [
+   -7,
+   0,
+   -18
+  ],
+  [
+   7,
+   0,
+   18
+  ],
+  [
+   7,
+   0,
+   10
+  ],
+  [
+   5,
+   0,
+   0
+  ],
+  [
+   7,
+   0,
+   -10
+  ],
+  [
+   7,
+   0,
+   -18
+  ],
+  [
+   0,
+   0,
+   -13
+  ],
+  [
+   0,
+   0,
+   -20
+  ],
+  [
+   -3,
+   0,
+   -24
+  ],
+  [
+   0,
+   0,
+   -31
+  ],
+  [
+   -1,
+   3,
+   -16
+  ],
+  [
+   1,
+   3,
+   16
+  ],
+  [
+   -1,
+   6,
+   -16,
+   1
+  ],
+  [
+   1,
+   6,
+   16,
+   1
+  ]
+ ],
+ "sniper": [
+  1,
+  6,
+  16
+ ],
+ "zonas": [
+  [
+   "Proa",
+   -10,
+   10,
+   29,
+   42
+  ],
+  [
+   "Salão da proa",
+   -10,
+   10,
+   10,
+   29
+  ],
+  [
+   "Piscina",
+   -10,
+   10,
+   -10,
+   10
+  ],
+  [
+   "Salão da popa",
+   -10,
+   10,
+   -29,
+   -10
+  ],
+  [
+   "Heliponto",
+   -10,
+   10,
+   -42,
+   -29
+  ]
+ ],
+ "ativo": false
 }

@@ -233,4 +233,5 @@ function tiroMapaRegistrar(J) {
   if (J.capa) MAP_ART[J.id] = J.capa;
   return MAP_DEFS[J.id];
 }
-for (const J of (typeof TIRO_MAPAS_JSON !== 'undefined' ? TIRO_MAPAS_JSON : [])) { try { tiroMapaRegistrar(J); } catch (e) { console.error('mapa do editor', J && J.id, e); } }
+// "ativo": false tira o mapa da lista do jogo (continua no editor, que abre e joga pelo Jogar)
+for (const J of (typeof TIRO_MAPAS_JSON !== 'undefined' ? TIRO_MAPAS_JSON : [])) { if (J.ativo === false) continue; try { tiroMapaRegistrar(J); } catch (e) { console.error('mapa do editor', J && J.id, e); } }

@@ -137,3 +137,17 @@
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64); CAMO_SWATCH.cromo = c.toDataURL('image/png');
   }
 }
+
+/* Modo de teste das camuflagens (2026-11-26, pedido do Thiago: ver as skins sem ter nível nas armas). Abrir o jogo com
+   ?camos=todas libera todas as camuflagens de arma e as skins da faca NESTE aparelho (localStorage 'tiro_camos_todas');
+   ?camos=normal desliga. Não mexe no XP nem no nível de ninguém: só a trava (camoLock) deixa de valer aqui. */
+const CAMOS_TODAS = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get('camos');
+    if (q === 'todas') localStorage.setItem('tiro_camos_todas', '1');
+    if (q === 'normal') localStorage.removeItem('tiro_camos_todas');
+    return localStorage.getItem('tiro_camos_todas') === '1';
+  } catch (e) { return false; }
+})();
+// (a camuflagem só se põe numa classe personalizada, e a primeira abre no nível 3 do jogador: no teste, já no nível 1)
+if (CAMOS_TODAS) { camoLock = function () { return ''; }; CUSTOM_UNLOCK[0] = 1; }

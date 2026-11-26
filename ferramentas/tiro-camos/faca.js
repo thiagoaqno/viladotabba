@@ -20,7 +20,8 @@ const FACA_SKINS = {
   holo: { name: 'Holo', kills: 100, lamina: { tex: 'holo', r: 0.1, m: 1, k: 0.06 }, guarda: { c: 0xe8ecf2, r: 0.12, m: 1 }, cabo: { c: 0xf2f2f4, r: 0.4, m: 0.1 } },
 };
 for (const id in FACA_SKINS) FACA_SKINS[id].id = id;
-if (!FACA_SKINS[FACA.s] || FACA_SKINS[FACA.s].kills > FACA.k) FACA.s = 'padrao';
+const facaPresa = (S) => S.kills > FACA.k && !CAMOS_TODAS; // (modo de teste: camuflagens.js)
+if (!FACA_SKINS[FACA.s] || facaPresa(FACA_SKINS[FACA.s])) FACA.s = 'padrao';
 
 /* Aço de Damasco: camadas onduladas claras e escuras (ondas de frequência inteira: emenda nas bordas) */
 let FACA_DAMASCO = null;
@@ -126,7 +127,7 @@ function facaAbrir() {
       if (e.target === box || e.target.closest('[data-fechar]')) { box.remove(); sfxUi('click'); return; }
       const b = e.target.closest('[data-faca]'); if (!b) return;
       const S = FACA_SKINS[b.dataset.faca];
-      if (S.kills > FACA.k) { sfxUi('locked'); return; }
+      if (facaPresa(S)) { sfxUi('locked'); return; }
       FACA.s = S.id; facaSalvar(); facaAplicar(); sfxUi('camo'); facaAbrir();
     });
     box.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); box.remove(); } }, true);
@@ -134,7 +135,7 @@ function facaAbrir() {
   box.innerHTML = `<div class="fs-p" role="dialog" aria-label="Skins da faca"><h3>Skins da faca<button type="button" data-fechar="1" aria-label="Fechar">×</button></h3>
 <p class="fs-k">Abates com a faca: <b>${FACA.k}</b>. Cada skin se libera com mais abates (o golpe e a faca de arremesso contam).</p>
 <div class="fs-g">${Object.values(FACA_SKINS).map((S) => {
-    const lock = S.kills > FACA.k;
+    const lock = facaPresa(S);
     return `<button type="button" class="fs-i${FACA.s === S.id ? ' on' : ''}${lock ? ' lock' : ''}" data-faca="${S.id}" style="background:${facaAmostra(S)}"><span>${S.name}${lock ? `<small>${S.kills} abates com a faca</small>` : ''}</span></button>`;
   }).join('')}</div></div>`;
   const on = box.querySelector('.fs-i.on'); if (on) on.focus({ preventScroll: true });

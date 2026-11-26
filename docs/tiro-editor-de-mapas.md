@@ -107,6 +107,7 @@ Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo
 - **Outros campos opcionais:** `zonas` (`[nome, x0, x1, z0, z1]`, o nome da área no mapinho), `sniper` (`[x, y, z]`, onde o
   sniper segura) e `som` (o som dos passos: `concrete`, `wood`, `metal`, `dirt`, `grass`). O editor não mexe neles, mas
   guarda os que vierem no `.json`.
+- **`ambiente`:** o som ambiente, separado do céu. Os valores são `amb_floreal` (bairro), `amb_sable`, `amb_givre`, `amb_tephra`, `amb_stratus`, `amb_meltem` e `amb_embruns`; os dois últimos têm ondas. Sem esse campo, o mapa usa o som do mapa do céu, e num mapa sem mar o som de beira-mar vira o de bairro.
 - **Parede invisível:** uma caixa com `"inv": true` segura gente e não aparece no jogo (no editor, fica meio transparente).
 
 ## Para o Codex (ou quem montar o mapa direto no `.json`)

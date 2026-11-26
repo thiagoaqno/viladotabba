@@ -240,6 +240,16 @@ prédio com escada **só gira de 90 em 90 graus**; girado de outro jeito, a esca
 |---|---|---|
 | `kcQuadra` | 30 x 2 x 18 | quadra de futsal de cimento pintado (jogo de 28 x 16), linhas brancas e duas traves com rede (só os postes colidem) |
 
+### Navio
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcNavio` | 20,4 x 10,6 x 106 | casco de iate (proa em +z, popa em -z) com o convés principal andável em y = 0, borda falsa sólida de 1,05 m e parede invisível em cima até 4,5 m. A linha d'água fica em y = -4,3: use o mar em -4,3. A meia-largura do convés acompanha o casco (10 m no meio, afinando para a proa a partir de z = 25) |
+
+O mapa `navio.json` é a base pronta: o mar, o `kcNavio` no centro, os pontos de nascer na proa (o Bravo nasce na popa) e a
+dominação no eixo do navio. Os prefabs podem trazer paredes invisíveis próprias (`KC_INVIS[nome]`, como o `KC_ESCADAS`), e o
+limite do mapa agora usa o tamanho de verdade de cada prefab.
+
 ### Passarelas
 
 O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas

@@ -1669,3 +1669,38 @@ PF.kcQuadra = () => prefab('kcQuadra', (M) => {
     M.cls = 0;
   }
 });
+
+/* ---------- pacote 7: o navio (base do mapa Navio) ----------
+   kcNavio: casco de iate de 106 x 20,4 m (proa em +z, popa em -z), convés principal andável em y = 0, borda falsa sólida de
+   1,05 m e parede invisível por cima até 4,5 m (ninguém pula no mar). A linha d'água fica em y = -4,3 (o "mar" do mapa).
+   Paredes invisíveis de prefab: KC_INVIS[nome] (coordenadas da peça), montadas pelo mapa-json.js como as escadas. */
+const KC_INVIS = {};
+const KC_CASCO = [ // [t (0 popa, 1 proa), meia-largura (fração), borda (m acima da linha d'água), fim do costado reto, quilha, arredondamento]
+  [0.0, 0.93, 5.35, 0.9, -0.6, 6], [0.05, 0.98, 5.35, 0.5, -1.8, 4.6], [0.2, 1.0, 5.35, 0.3, -2.7, 3.6], [0.6, 1.0, 5.4, 0.3, -2.9, 3.3],
+  [0.75, 0.95, 5.5, 0.4, -2.8, 2.9], [0.86, 0.78, 5.7, 0.7, -2.5, 2.4], [0.94, 0.47, 6.0, 1.3, -1.7, 1.9], [1.0, 0.03, 6.3, 2.4, 0.1, 1.4],
+];
+const KC_NAVIO = { L: 106, B: 20.4, WL: -4.3, z0: -53 };
+const kcNavioHW = (z) => hullAt(KC_CASCO, clamp((z - KC_NAVIO.z0) / KC_NAVIO.L, 0, 1), KC_NAVIO.B / 2).hw;
+PF.kcNavio = () => prefab('kcNavio', (M) => {
+  KC_INVIS.kcNavio = []; M.local(1);
+  const N = KC_NAVIO, branco = [0.95, 0.95, 0.94], azul = [0.08, 0.16, 0.36];
+  M.save().move(0, N.WL, 0);
+  hullBody(M, KC_CASCO, { L: N.L, B: N.B, deck: -N.WL - 0.34, thick: 0.14, nv: 40, hull: branco, boot: azul, stripe: azul, inner: branco, rail: [0.62, 0.45, 0.3], deckTint: [0.5, 0.5, 0.5], noCol: true });
+  M.restore();
+  // convés de madeira (faixas de 1 m), borda falsa sólida e parede invisível por cima
+  for (let z = N.z0; z < N.z0 + N.L; z++) {
+    const hw = Math.max(kcNavioHW(z), kcNavioHW(z + 1)) + 0.05, w = Math.min(kcNavioHW(z), kcNavioHW(z + 1)) - 0.14;
+    if (w > 0.25) { M.color([0.66, 0.47, 0.3]); M.boxB('wood', -w, w, -0.3, 0, z, z + 1); M.col(-w, w, -0.3, 0, z, z + 1, 'wood'); }
+    const wi = Math.max(0, w);
+    for (const sd of [-1, 1]) {
+      const a = sd > 0 ? wi : -hw, b = sd > 0 ? hw : -wi;
+      M.col(a, b, 0, 1.05, z, z + 1, 'metal');
+      KC_INVIS.kcNavio.push([a, b, 1.05, 4.5, z, z + 1]);
+    }
+  }
+  // popa fechada (borda e parede invisível) e ponta da proa
+  const hp = kcNavioHW(N.z0) + 0.05;
+  M.col(-hp, hp, 0, 1.05, N.z0 - 0.15, N.z0 + 0.02, 'metal'); KC_INVIS.kcNavio.push([-hp, hp, 0, 4.5, N.z0 - 0.2, N.z0 + 0.02]);
+  M.color(branco); M.boxB('paint', -hp, hp, -0.3, 1.05, N.z0 - 0.15, N.z0 + 0.02);
+  KC_INVIS.kcNavio.push([-1.5, 1.5, 0, 4.5, N.z0 + N.L - 0.5, N.z0 + N.L + 0.2]);
+});

@@ -234,6 +234,12 @@ prédio com escada **só gira de 90 em 90 graus**; girado de outro jeito, a esca
 | `kcFavelaEscadaTelhado` | 9,7 x 6,8 x 10,1 | **com escada**: dois lances (frente e lado +x) até a laje do telhado a 5,9 m, com mureta: vista do alto |
 | `kcFavelaEscadaFundos` | 7,6 x 6,4 x 7,6 | **com escada**: a escada sobe atrás até um terraço a 2,95 m no fundo (o quarto fica na frente) |
 
+### Quadra
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcQuadra` | 30 x 2 x 18 | quadra de futsal de cimento pintado (jogo de 28 x 16), linhas brancas e duas traves com rede (só os postes colidem) |
+
 ### Passarelas
 
 O topo do piso fica no `y` da peça. Ponha o `y` igual à altura da laje que ela liga: 3,15 nas lajes do mapa Favela, 2,95 nas

@@ -10830,6 +10830,34 @@ PF.kcFliperamaBar = () => prefab('kcFliperamaBar', (M) => {
   M.color(KC_COR.amarelo); M.boxB('paint', 0.9, 1.5, 1.62, 1.75, 0.35, 0.36); M.color(KC_COR.vermelho); M.boxB('plastic', 1.05, 1.12, 0.98, 1.04, 0.35, 0.4); M.cls = 0;
 });
 
+// quadra de futsal de cimento pintado, 30 x 18 m (jogo de 28 x 16): linhas brancas, duas traves com rede (os postes colidem)
+PF.kcQuadra = () => prefab('kcQuadra', (M) => {
+  M.local(1); const X = 14, Z = 8, l = 0.08;
+  M.color([0.3, 0.42, 0.5]); M.boxB('concrete', -X - 1, X + 1, 0, 0.02, -Z - 1, Z + 1);
+  M.color([0.32, 0.52, 0.4]); M.boxB('concrete', -X, X, 0.02, 0.025, -Z, Z);
+  M.cls = 1; M.color([0.95, 0.95, 0.93]);
+  const linha = (x0, x1, z0, z1) => M.boxB('paint', x0, x1, 0.025, 0.03, z0, z1);
+  linha(-X, X, -Z, -Z + l); linha(-X, X, Z - l, Z); linha(-X, -X + l, -Z, Z); linha(X - l, X, -Z, Z); linha(-l / 2, l / 2, -Z, Z);
+  M.save().move(0, 0.025, 0); M.lathe('paint', [[2.9, 0], [3.0, 0], [3.0, 0.005], [2.9, 0.005]], 32); M.restore();
+  for (const s of [-1, 1]) {
+    const xg = s * X;
+    linha(Math.min(xg, xg - s * 6), Math.max(xg, xg - s * 6), -3, -3 + l); linha(Math.min(xg, xg - s * 6), Math.max(xg, xg - s * 6), 3 - l, 3); linha(xg - s * 6 - l / 2, xg - s * 6 + l / 2, -3, 3);
+    M.boxB('paint', xg - s * 6 - 0.1, xg - s * 6 + 0.1, 0.025, 0.031, -0.1, 0.1);
+  }
+  M.cls = 0;
+  // traves (3 x 2 m) com rede
+  for (const s of [-1, 1]) {
+    const xg = s * X, fundo = xg + s * 1.0;
+    M.color([0.95, 0.95, 0.93]);
+    for (const z of [-1.5, 1.5]) { M.boxB('steel', xg - 0.04, xg + 0.04, 0, 2.0, z - 0.04, z + 0.04); M.col(xg - 0.05, xg + 0.05, 0, 2.0, z - 0.05, z + 0.05, 'steel'); }
+    M.boxB('steel', xg - 0.04, xg + 0.04, 1.96, 2.04, -1.54, 1.54); M.col(xg - 0.05, xg + 0.05, 1.95, 2.05, -1.55, 1.55, 'steel');
+    M.cls = 1; M.color([0.85, 0.85, 0.85]);
+    for (let i = 0; i <= 15; i++) { const z = -1.5 + i * 0.2; M.tube('steel', 0.006, [[xg, 2.0, z], [fundo, 1.2, z], [fundo, 0, z]], 3); }
+    for (let k = 0; k <= 5; k++) { const y = k * 0.4; M.boxB('steel', Math.min(xg, fundo), Math.max(xg, fundo), y - 0.005, y + 0.005, -1.5, -1.49); M.boxB('steel', Math.min(xg, fundo), Math.max(xg, fundo), y - 0.005, y + 0.005, 1.49, 1.5); }
+    M.cls = 0;
+  }
+});
+
 /* ==========================================================================
    SUPERFÍCIES DO EDITOR DE MAPAS (Tiro da Galera). As caixas e escadas do editor escolhem a superfície numa galeria com miniaturas
    e ganham "Tamanho da textura" (campo tx do .json: 1 = normal, 2 = o dobro do tamanho).

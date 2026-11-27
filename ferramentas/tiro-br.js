@@ -10,8 +10,10 @@
    Por dentro a partida é um "cada um por si" (MATCH.mode = 'ffa'); BR.on diz que é battle royale. Em rede, a zona e as armas do
    chão saem da mesma semente em todo mundo (código do salão + mapa) e o relógio é o da partida (MATCH.timeLeft, que vem do host). */
 const BR = { on: false, ordem: 0, armado: false, T0: 0, z: null, plano: null, malha: null, estado: '', botT: 0, ver: null, cam: null, hudFora: null, roTxt: null, aviso: null, lugar: 0 };
-function brSolo(m) { return m === 'ffa' || m === 'br'; }
-function netMax() { return NET.cfg && NET.cfg.mode === 'br' ? 12 : NET_MAX; }
+// os dois battle royale: o de cada um por si ('br') e o em dupla ('brduo', ferramentas/tiro-br-dupla.js)
+function brModo(m) { return m === 'br' || m === 'brduo'; }
+function brSolo(m) { return m === 'ffa' || brModo(m); }
+function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? 12 : NET_MAX; }
 
 MODES.br = {
   name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 12 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
@@ -374,7 +376,7 @@ function brEspectar(dt) {
 /* ---------- as funções do jogo que mudam ---------- */
 {
   const modeStart0 = modeStart;
-  modeStart = function (mode) { brLimpa(); BR.on = mode === 'br'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? MODES.br : D; };
+  modeStart = function (mode) { brLimpa(); BR.on = brModo(mode); BR.duo = mode === 'brduo'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? modeDef() : D; };
   const openSlots0 = openSlots;
   openSlots = function (e) { return BR.on && BR.slots && BR.slots.length ? BR.slots : openSlots0(e); };
   const modeDef0 = modeDef;

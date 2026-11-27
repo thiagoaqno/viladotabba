@@ -1,14 +1,11 @@
-# Tiro: sombras de longe mais leves no tablet
+# Tiro: modo tablet liga mesmo com a resolução dinâmica desligada
 
-No iPad, o relatório de desempenho mostrou a placa de vídeo presa. Cada quadro levava 20 ms com o processador em 5 ms, igual na qualidade mínima e com a resolução baixa. Eram 1,3 milhão de triângulos por quadro, e boa parte vinha das 3 camadas de sombra se redesenhando enquanto o jogador anda.
+O relatório do Mi Pad mostrou `hf 1` na partida inteira: o modo tablet (#1060) não ligou. Ele dependia da taxa da tela (`HR.ms`), que só era medida no `hrAlvo`, e o `hrAlvo` só roda com a "Resolução dinâmica" ligada. O amigo jogava com ela desligada.
 
-**O que mudou** (em `ferramentas/tiro-frontline.js`, só em aparelho de toque):
-- As duas camadas de sombra de longe se redesenham cada uma a cada 6 quadros, revezando. Antes era a cada passo do jogador.
-- Se a câmera pular mais de 8 m (ao renascer), elas se redesenham na hora.
-- A camada de perto continua igual.
+Agora o `tabLeve` mede a taxa sozinho, então o modo tablet liga em qualquer configuração.
 
-Andando, eram até 3 sombras por quadro; agora é a de perto e, em média, um terço de uma de longe.
+O mesmo relatório confirma o diagnóstico: o processador gasta uns 7 ms por quadro (render 4,3 e bots 1,2), quase no limite de 8,3 ms dos 120 fps. Metade dos quadros sai a 120 e a outra metade a 60 (54% em 8,4 ms e 42% em 16,6 ms). Com o modo tablet ligado, os bots pensam a cada dois quadros e menos coisa é desenhada ao longe.
 
-PC fica igual. Conferido só com `node --check`; falta jogar no iPad.
+Conferido no navegador: a taxa da tela é medida com a resolução dinâmica desligada. Falta jogar no Mi Pad.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

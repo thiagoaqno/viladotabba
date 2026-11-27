@@ -439,6 +439,8 @@ if (IATE_ATIVO) {
   h = troca(h, "ffaList().some((e)=>e.kills>=MATCH.limit)", "ffaAcabou()", { min: 3, nome: "BR: último vivo vence" });
   h = troca(h, "const ffaCmp=(a,b)=>", "const ffaCmp=(a,b)=>(BR.on?brCmp(a,b):0)||", { nome: "BR: classificação" });
   h = troca(h, "if(MATCH.mode==='ffa'&&(HUD.rkT-=dt)<=0){HUD.rkT=0.25;hudText($('scLim'),", "if(MATCH.mode==='ffa'&&(HUD.rkT-=dt)<=0){HUD.rkT=0.25;hudText($('scLim'),BR.on?brLinha():", { nome: "BR: vivos e zona no placar" });
+  // a barra de vida também aparece com a vida cheia quando há colete (a barra azul do colete fica dentro dela)
+  h = troca(h, "hudStyle(hp,'opacity',e.alive&&hpv<100?'1':'0')", "hudStyle(hp,'opacity',e.alive&&(hpv<100||(BR.on&&e.brColete>0))?'1':'0')", { nome: "BR: barra do colete" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
 }

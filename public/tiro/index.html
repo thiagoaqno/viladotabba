@@ -7172,7 +7172,7 @@ if((HUD.tagT-=dt)<=0){HUD.tagT=0.1;let tag=null;if(!Settings.allyMarks&&e.alive&
 const nt=$('nameTag');if(tag){hudText(nt,tag.name);nt.className='nametag show ally';}
 else if(nt.className!=='nametag')nt.className='nametag';}
 if(HUD.msgT>0){HUD.msgT-=dt;if(HUD.msgT<=0)$('msg').classList.remove('show');}
-if(HUD.board&&(HUD.boardT-=dt)<=0)fillScoreboard();const hp=$('hp');const hpv=Math.max(0,Math.ceil(e.health));hudStyle(hp,'opacity',e.alive&&hpv<100?'1':'0');hudStyle($('hpFill'),'transform',`scaleX(${clamp(e.health/100,0,1)})`);hudText($('hpN'),hpv);hudCls(hp,'crit',hpv<=35);}
+if(HUD.board&&(HUD.boardT-=dt)<=0)fillScoreboard();const hp=$('hp');const hpv=Math.max(0,Math.ceil(e.health));hudStyle(hp,'opacity',e.alive&&(hpv<100||(BR.on&&e.brColete>0))?'1':'0');hudStyle($('hpFill'),'transform',`scaleX(${clamp(e.health/100,0,1)})`);hudText($('hpN'),hpv);hudCls(hp,'crit',hpv<=35);}
 function showScoreboard(on){HUD.board=on&&MATCH.state!=='ended';$('board').classList.toggle('show',!!HUD.board);if(on)fillScoreboard();}
 const boardName=(x)=>(x.isPlayer&&MATCH.online?NET.nick:x.name)+(MATCH.online&&(x.netBot||x.remoteBot)?' '+_t('(bot)'):'');const eloSelo=(x)=>{if(!MATCH.online||x.netBot||x.remoteBot||!window.tiroElo||!window.tiroElo.selo)return'';try{return window.tiroElo.selo(netClean(x.isPlayer?NET.nick:x.name),!!x.isPlayer);}catch(e){return'';}};const boardCmp=(a,b)=>b.score-a.score||b.kills-a.kills||a.deaths-b.deaths;function boardList(t){return entities.filter((x)=>x.team===t&&(!MATCH.online||x.isPlayer||x.isRemote||x.netBot)).sort(boardCmp);}
 function fillScoreboard(){HUD.boardT=0.25;const ffa=MATCH.mode==='ffa';hudCls($('board'),'one',ffa);const head=`<thead><tr><th>${_t('Nom')}</th><th>${_t('Score')}</th><th>${_t('Élim.')}</th><th>${_t('Morts')}</th><th>${_t('Aides')}</th></tr></thead>`;const row=(x)=>`<tr class="${x.isPlayer?'me':''}${x.alive?'':' dead'}"><td>${esc(boardName(x))}${eloSelo(x)}</td><td>${x.score}</td><td>${x.kills}</td><td>${x.deaths}</td><td>${x.assists}</td></tr>`;if(ffa){hudHtml($('board0'),`<caption class="ally"><span>${_t('Classement, premier à {0}',MATCH.limit)}</span></caption>${head}<tbody>${ffaList().sort(ffaCmp).map(row).join('')}</tbody>`);return;}
@@ -12713,6 +12713,70 @@ function brLoot(rnd) {
   }
 }
 
+/* ---------- caixas de colete e de cura (2026-11-27) ----------
+   Espalhadas pelos pontos de passagem como as armas, com a mesma semente. Pega-se passando por cima, só quando precisa:
+   colete (azul): +50 de colete, até 100; o colete segura 60% de cada dano de tiro, grenada ou faca até acabar (a zona passa por ele);
+   cura (branca, cruz vermelha): +50 de vida, até 100. Os robôs também pegam, e vão atrás de cura quando estão machucados.
+   Como as armas do chão, nada disso vai pela rede: a caixa que outro jogador pisou some aqui também, mas o efeito é só na máquina dele. */
+const BR_CAIXAS = { colete: { cor: '#2f6fd6', ganho: 50, max: 100 }, cura: { cor: '#f3f1ea', ganho: 50, max: 100 } };
+const BR_COLETE_SEGURA = 0.6;
+function brCaixaMat(tipo) {
+  BR.mats = BR.mats || {};
+  if (BR.mats[tipo]) return BR.mats[tipo];
+  const c = document.createElement('canvas'); c.width = c.height = 64; const q = c.getContext('2d');
+  q.fillStyle = BR_CAIXAS[tipo].cor; q.fillRect(0, 0, 64, 64);
+  q.strokeStyle = 'rgba(0,0,0,.35)'; q.lineWidth = 4; q.strokeRect(2, 2, 60, 60);
+  if (tipo === 'cura') { q.fillStyle = '#d8262b'; q.fillRect(26, 12, 12, 40); q.fillRect(12, 26, 40, 12); }
+  else { q.fillStyle = '#fff'; q.beginPath(); q.moveTo(32, 10); q.lineTo(52, 18); q.lineTo(48, 42); q.lineTo(32, 54); q.lineTo(16, 42); q.lineTo(12, 18); q.closePath(); q.fill(); }
+  const t = new THREE.CanvasTexture(c); if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+  return (BR.mats[tipo] = new THREE.MeshStandardMaterial({ map: t, roughness: 0.7, metalness: 0, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.25 }));
+}
+function brCaixasPoe(rnd) {
+  BR.caixas = [];
+  const pts = POI.map((p) => [p[0], p[1], p[2]]);
+  for (let i = pts.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
+  const area = (MAP.x1 - MAP.x0) * (MAP.z1 - MAP.z0), n = Math.round(clamp(area / 350, 14, 30));
+  const nc = Math.round(n * 0.35), nk = Math.round(n * 0.45), geo = BR.geo || (BR.geo = new THREE.BoxGeometry(0.55, 0.32, 0.4));
+  for (let i = 0; i < nc + nk && pts.length; i++) {
+    const tipo = i < nc ? 'colete' : 'cura', [px, py, pz] = pts[i % pts.length];
+    // longe do ponto exato (onde a arma pode ter caído) e um pouco mais solta nas voltas
+    const a = rnd() * TAU, r = (i >= pts.length ? 2.5 : 1.3) + rnd() * 1.2, x = px + Math.cos(a) * r, z = pz + Math.sin(a) * r;
+    const y = groundHeight(x, z, py + 1, 0.25);
+    if (!(y > py - 3)) continue; // caiu num buraco ou fora do chão: sem caixa
+    const m = new THREE.Mesh(geo, brCaixaMat(tipo)); m.position.set(x, y + 0.16, z); m.rotation.y = rnd() * TAU; m.castShadow = true;
+    scene.add(m); BR.caixas.push({ tipo, m, x, y, z });
+  }
+}
+function brCaixasTira() { for (const c of BR.caixas || []) scene.remove(c.m); BR.caixas = []; }
+function brPrecisa(e, tipo) { return tipo === 'cura' ? e.health < BR_CAIXAS.cura.max : (e.brColete || 0) < BR_CAIXAS.colete.max; }
+function brCaixasUpdate() {
+  const L = BR.caixas; if (!L || !L.length) return;
+  for (let i = L.length - 1; i >= 0; i--) {
+    const c = L[i];
+    for (const e of entities) {
+      if (!e.alive || e.off || Math.abs(e.pos.y - c.y) > 1.3 || hyp(e.pos.x - c.x, e.pos.z - c.z) > (e.isPlayer ? 1.1 : 1.3)) continue;
+      const local = e.isPlayer || (!e.isRemote && (!MATCH.online || e.netBot));
+      if (local && !brPrecisa(e, c.tipo)) continue;
+      if (local) {
+        const B = BR_CAIXAS[c.tipo];
+        if (c.tipo === 'cura') e.health = Math.min(B.max, e.health + B.ganho); else e.brColete = Math.min(B.max, (e.brColete || 0) + B.ganho);
+        if (e.isPlayer) { hudMsg(c.tipo === 'cura' ? '+50 de vida' : `Colete ${Math.round(e.brColete)}`, 'xp', 1.6); sfxMech('pickup'); }
+      }
+      scene.remove(c.m); L.splice(i, 1); break;
+    }
+  }
+}
+function brColeteHud() {
+  const hp = $('hp'); if (!hp) return;
+  if (!BR.cvBar) {
+    const b = document.createElement('div'); b.className = 'hpbar'; b.style.marginTop = '3px';
+    const f = document.createElement('div'); f.style.cssText = 'height:100%;background:#4aa3ff;transform-origin:left;transform:scaleX(0)';
+    b.appendChild(f); hp.appendChild(b); BR.cvBar = b; BR.cvFill = f; BR.cvV = -1;
+  }
+  const v = BR.on && PL.ent.alive ? Math.round(PL.ent.brColete || 0) : 0;
+  if (v !== BR.cvV) { BR.cvV = v; BR.cvBar.style.display = v > 0 ? '' : 'none'; BR.cvFill.style.transform = `scaleX(${v / 100})`; }
+}
+
 /* ---------- começo e fim ---------- */
 function brLimpa() {
   if (BR.malha) { scene.remove(BR.malha); BR.malha.geometry.dispose(); BR.malha.material.dispose(); BR.malha = null; }
@@ -12721,7 +12785,8 @@ function brLimpa() {
   BR.roTxt = null; BR.hudFora = null;
   if (BR.aviso) BR.aviso.style.display = 'none';
   DROP.life = 90; DROP.max = 14;
-  for (const e of entities) if (e.brArma) { e.weapon = e.brArma; e.brArma = null; }
+  for (const e of entities) { if (e.brArma) { e.weapon = e.brArma; e.brArma = null; } e.brColete = 0; }
+  brCaixasTira(); if (BR.cvBar) brColeteHud();
 }
 function brInicio() {
   BR.ordem = 0; BR.armado = false; BR.T0 = MATCH.timeLeft; BR.estado = ''; BR.botT = 0; BR.ver = null; BR.cam = null; BR.lugar = 0;
@@ -12730,6 +12795,7 @@ function brInicio() {
   const seed = MATCH.online ? brHash(String(netCodeNow() || '') + '|' + CURMAP.id) : (Math.random() * 4294967296) >>> 0;
   BR.plano = brPlano(brRng(seed));
   brLoot(brRng(seed ^ 0x9e3779b9));
+  brCaixasPoe(brRng(seed ^ 0x51ed270b));
   const g = new THREE.CylinderGeometry(1, 1, 1, 128, 1, true);
   const m = new THREE.MeshBasicMaterial({ color: 0x3d9bff, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
   BR.malha = new THREE.Mesh(g, m); BR.malha.renderOrder = 5; BR.malha.frustumCulled = false; scene.add(BR.malha);
@@ -12759,6 +12825,7 @@ function brUpdate(dt) {
   brMalha();
   const est = z.estado + z.fase;
   if (est !== BR.estado) { if (BR.estado && z.estado === 'fechando') hudMsg('A zona está fechando!', 'xp', 3); BR.estado = est; }
+  brCaixasUpdate(); brColeteHud();
   // robôs desta máquina (fora do jogo online, ou os do host): pegam arma do chão e fogem da zona
   BR.botT -= dt; const pensa = BR.botT <= 0; if (pensa) BR.botT = 0.25;
   for (const b of entities) {
@@ -12828,8 +12895,20 @@ function brEspectar(dt) {
   modeUpdate = function (dt) { modeUpdate0(dt); brUpdate(dt); };
   const modeEnd0 = modeEnd;
   modeEnd = function () { modeEnd0(); if (BR.on) brLimpa(); }; // BR.on fica até a próxima partida: a tela do fim usa a classificação
+  // o colete segura parte do dano de quem é desta máquina (em rede, cada um aplica o dano que leva: netApply 'hit')
+  const applyDamage0 = applyDamage;
+  applyDamage = function (victim, dmg, attacker, weapon, head, dir, srcPos, life) {
+    if (BR.on && victim && victim.alive && !victim.isRemote && victim.brColete > 0 && dmg > 0 && !(victim.protT > 0) && (MATCH.state === 'playing' || MATCH.state === 'paused')) {
+      const s = Math.min(victim.brColete, dmg * BR_COLETE_SEGURA); victim.brColete -= s; dmg -= s;
+    }
+    return applyDamage0(victim, dmg, attacker, weapon, head, dir, srcPos, life);
+  };
+  // quem atira não sabe o colete do outro: no battle royale a morte não é prevista, vem do aviso de quem morreu
+  const netPredHealth0 = netPredHealth;
+  netPredHealth = function (v) { return netPredHealth0(v) + (BR.on ? 100 : 0); };
   const killEnt0 = killEnt;
   killEnt = function (v, a, weapon, head, dir, life) {
+    if (BR.on) v.brColete = 0;
     if (BR.on && !v.brOut && (MATCH.state === 'playing' || MATCH.state === 'paused') && !MATCH.fin) { v.brOut = ++BR.ordem; if (v.isPlayer) BR.lugar = brVivos().length + 1; }
     return killEnt0(v, a, weapon, head, dir, life);
   };
@@ -12879,6 +12958,13 @@ function brEspectar(dt) {
         const o = d.obj.position, dd = hyp(o.x - b.pos.x, o.z - b.pos.z);
         if (dd < bd && brDentroZ(A, o.x, o.z, 0.9)) { bd = dd; best = o; }
       }
+      if (best) return new V3(best.x, best.y, best.z);
+    }
+    // machucado, vai atrás de uma cura perto; sem colete, às vezes atrás de um
+    for (const [tipo, quer] of [['cura', b.health < 60 ? 0.8 : 0], ['colete', !(b.brColete > 0) ? 0.35 : 0]]) {
+      if (!quer || Math.random() > quer) continue;
+      let best = null, bd = 35;
+      for (const c of BR.caixas || []) { if (c.tipo !== tipo) continue; const dd = hyp(c.x - b.pos.x, c.z - b.pos.z); if (dd < bd && brDentroZ(A, c.x, c.z, 0.9)) { bd = dd; best = c; } }
       if (best) return new V3(best.x, best.y, best.z);
     }
     const g = pickGoal0(b, now);

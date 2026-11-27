@@ -371,6 +371,18 @@ if (IATE_ATIVO) {
   h = troca(h, "<td>${esc(boardName(x))}</td>", "<td>${esc(boardName(x))}${eloSelo(x)}</td>", { nome: "elo: selo no placar" });
   h = troca(h, "<td><span>${esc(boardName(x))}</span>", "<td><span>${esc(boardName(x))}</span>${eloSelo(x)}", { nome: "elo: selo no placar do fim" });
   h = troca(h, "const boardCmp=(a,b)=>", "const eloSelo=(x)=>{if(!MATCH.online||x.netBot||x.remoteBot||!window.tiroElo||!window.tiroElo.selo)return'';try{return window.tiroElo.selo(netClean(x.isPlayer?NET.nick:x.name),!!x.isPlayer);}catch(e){return'';}};const boardCmp=(a,b)=>", { nome: "elo: selo (função)" });
+  // (2026-11-27, Mi Pad no Chrome) "fica 60 e depois 120": a meta de 120 fps já baixava a resolução até chegar, mas (1) cada
+  // abertura do jogo começava da resolução cheia, a 60, até descer de novo, e (2) com 120 estável por 2 s ela tentava subir a
+  // resolução, caía para 60 e descia outra vez. Agora a resolução que segurou os 120 fica guardada no aparelho (tiro_hr_escala)
+  // e é usada na próxima abertura, e para tentar subir a resolução com a meta da tela rápida precisa de 24 janelas boas
+  // seguidas (6 s a 120 fps; cada tentativa que falha dobra a espera, como antes, até 96)
+  h = troca(h, "function hrAlvo(){if(VSYNC.ms>=6&&VSYNC.ms<HR.ms)HR.ms=VSYNC.ms;return COARSE&&!HR.off&&!Settings.eco&&HR.ms<12?HR.ms:0;}",
+    "function hrAlvo(){if(VSYNC.ms>=6&&VSYNC.ms<HR.ms)HR.ms=VSYNC.ms;const a=COARSE&&!HR.off&&!Settings.eco&&HR.ms<12?HR.ms:0;if(a&&gfxSet('dynres')!==false){if(!HR.lido){HR.lido=true;let v=0;try{v=+localStorage.getItem('tiro_hr_escala')||0;}catch(e){}if(v>=0.7&&v<RQ.scale){RQ.scale=Math.round(v*100)/100;applyScale();}}else if(HR.salvo!==RQ.scale){HR.salvo=RQ.scale;try{localStorage.setItem('tiro_hr_escala',String(RQ.scale));}catch(e){}}}return a;}",
+    { nome: "fps da tela rápida (lembrar a resolução)" });
+  // se nem com a resolução no mínimo chegou nos 120, não guarda: na próxima abertura começa normal
+  h = troca(h, "HR.off=true;gpuLog(", "HR.off=true;try{localStorage.removeItem('tiro_hr_escala');}catch(e){}gpuLog(", { nome: "fps da tela rápida (esquecer ao desistir)" });
+  h = troca(h, "if(++DYN.good>=DYN.need){const r=stepQuality(1);",
+    "if(++DYN.good>=(hrAlvo()?Math.max(DYN.need,24):DYN.need)){const r=stepQuality(1);", { nome: "fps da tela rápida (subir a resolução com calma)" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

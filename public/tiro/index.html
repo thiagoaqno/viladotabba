@@ -12783,7 +12783,28 @@ function brColeteHud() {
    olhando o mapa; depois cai rápido e, a BR_QUEDA.abre m do chão, abre o paraquedas e desce devagar. No ar, as teclas de andar
    fazem planar, para escolher onde pousar. Os robôs caem em linha reta no lugar deles. O paraquedas aparece em todo mundo que
    está descendo (os de fora da máquina pela altura que chega pela rede). */
-const BR_QUEDA = { alto: 60, abre: 18, livre: -16, para: -5.5, planaLivre: 10, planaPara: 7 };
+// (2026-11-27, o Thiago: "o paraquedas abrir mais alto") abre a 35 m (era 18) e o começo subiu para 75 m (era 60), para sobrar queda livre
+const BR_QUEDA = { alto: 75, abre: 35, livre: -16, para: -5.5, planaLivre: 10, planaPara: 7 };
+/* Lugares de largada do Battle royale (2026-11-27, o Thiago: "os nascimentos serem mais distribuídos"). Os do cada um por si
+   (ffaSlots) começam sempre na base do Alpha e só se afastam até 60 m: num mapa grande ficavam todos de um lado. Aqui: todos os
+   pontos de chão com céu aberto em cima (para cair de cima), o primeiro sorteado e cada um dos seguintes o mais longe possível
+   dos já escolhidos, sem limite de distância. A semente é a mesma do salão, então todo mundo calcula os mesmos lugares. */
+function brSlots(rnd) {
+  const abertos = (L) => L.filter(([x, z]) => { const y = gy0(x, z); return Math.abs(groundHeight(x, z, y + BR_QUEDA.alto, 0.35) - y) < 0.6; });
+  let left = abertos(SPAWNS[0].concat(SPAWNS[1], spawnField()));
+  if (left.length < 12) left = SPAWNS[0].concat(SPAWNS[1], spawnField());
+  left = left.filter((c, i, a) => a.findIndex((d) => hyp(d[0] - c[0], d[1] - c[1]) < 1.5) === i); // pontos repetidos
+  const out = []; if (!left.length) return out;
+  out.push(left.splice(Math.floor(rnd() * left.length), 1)[0]);
+  while (out.length < 12 && left.length) {
+    let bi = 0, bd = -1;
+    left.forEach((c, i) => { const d = Math.min(...out.map((o) => hyp(o[0] - c[0], o[1] - c[1]))); if (d > bd + 1e-6) { bd = d; bi = i; } });
+    out.push(left.splice(bi, 1)[0]);
+  }
+  // a ordem de quem pega cada lugar (o jogador é o primeiro no solo): embaralhada, para ninguém cair sempre no mesmo canto
+  for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+  return out;
+}
 function brChao(e) { return groundHeight(e.pos.x, e.pos.z, e.pos.y + 0.1, 0.3); }
 function brPoeNoAlto(e) {
   const y0 = e.pos.y, topo = groundHeight(e.pos.x, e.pos.z, y0 + BR_QUEDA.alto, 0.35);
@@ -12847,6 +12868,7 @@ function brInicio() {
   BR.plano = brPlano(brRng(seed));
   brLoot(brRng(seed ^ 0x9e3779b9));
   brCaixasPoe(brRng(seed ^ 0x51ed270b));
+  BR.slots = brSlots(brRng(seed ^ 0x2545f491));
   const g = new THREE.CylinderGeometry(1, 1, 1, 128, 1, true);
   const m = new THREE.MeshBasicMaterial({ color: 0x3d9bff, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
   BR.malha = new THREE.Mesh(g, m); BR.malha.renderOrder = 5; BR.malha.frustumCulled = false; scene.add(BR.malha);
@@ -12941,6 +12963,8 @@ function brEspectar(dt) {
 {
   const modeStart0 = modeStart;
   modeStart = function (mode) { brLimpa(); BR.on = mode === 'br'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? MODES.br : D; };
+  const openSlots0 = openSlots;
+  openSlots = function (e) { return BR.on && BR.slots && BR.slots.length ? BR.slots : openSlots0(e); };
   const modeDef0 = modeDef;
   modeDef = function () { return BR.on && MATCH.mode === 'ffa' ? MODES.br : modeDef0(); };
   const modeUpdate0 = modeUpdate;

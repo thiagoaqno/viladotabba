@@ -1,12 +1,11 @@
-# Tiro: modo tablet fica ligado depois que a resolução desiste
+# Tiro: modo tablet também no render (barcos longe somem)
 
-Relatório novo do Mi Pad (resolução dinâmica ligada):
+No Mi Pad, o "render" (o Chrome entregando os desenhos para a placa) leva uns 4 ms por quadro, mais da metade do tempo. Os 120 fps pedem no máximo 8,3 ms por quadro.
 
-- **Com o modo tablet (`hf` 2):** nos primeiros 11 s, os bots caíram para 0,4 ms e o jogo ficou entre 102 e 106 fps. Na partida toda, 72,6% dos quadros saíram a 120 (antes, 54%), e a média subiu de 79 para 92 fps.
-- **O que desligava o modo:** aos 12 s a resolução dinâmica já tinha descido a 70%. Isso não ajuda quando o gargalo é o processador. Ela desistiu dos 120 (`HR.off`), e o `tabLeve` desligava junto: o `hf` voltava a 1 e os bots, a 1,3 a 2,8 ms.
+**Medido no navegador, no Embruns** (o mapa que ele joga), por passada de desenho: uns 44 desenhos do mapa, 29 dos soldados (já no modelo simples), 22 dos barcos que boiam em volta (cada um em 4 a 5 partes), 19 dos objetos repetidos e 16 da arma na mão.
 
-Agora o modo tablet só depende de a tela ser rápida. A desistência da resolução não mexe mais nele.
+**O que mudou:** no modo tablet, os barcos e o que boia (`floatAdd`) a mais de 60 m da câmera somem; a névoa já quase os apagava. A conta é feita junto com a dos detalhes do mapa, a cada 4 quadros. Fora do modo tablet, nada muda.
 
-Conferido com `node --check`; falta jogar no tablet.
+**Conferido no navegador:** no Embruns, os desenhos por quadro caíram de 231 para 174 (-25%), com 2 dos 14 barcos visíveis de perto.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

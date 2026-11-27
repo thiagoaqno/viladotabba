@@ -409,6 +409,15 @@ if (IATE_ATIVO) {
   h = troca(h, "function updateSoldierLods(){const k=1.8*VIEW.h/(2*Math.tan(camera.fov*Math.PI/360)),th=RQ.q.lodPx;",
     "function updateSoldierLods(){const k=1.8*VIEW.h/(2*Math.tan(camera.fov*Math.PI/360)),th=RQ.q.lodPx*(tabLeve()?1.4:1);",
     { nome: "modo tablet (soldados longe simples)" });
+  // (2026-11-27, Mi Pad) modo tablet também no render: no Embruns, por passada de desenho, eram uns 44 desenhos do mapa, 29 dos
+  // soldados (já no modelo simples), 22 dos barcos que boiam em volta (cada um em 4 a 5 partes), 19 dos objetos repetidos e 16
+  // da arma na mão (medido no navegador). No tablet, os barcos e o que boia (floatAdd, "flotteur:") a mais de 60 m da câmera
+  // somem (a névoa já quase os apagava), conferido junto com os detalhes do mapa, a cada 4 quadros
+  h = troca(h, "g.name='flotteur:'+pf.name;", "g.name='flotteur:'+pf.name;FLOAT_GS.push(g);", { nome: "modo tablet (lista do que boia)" });
+  h = troca(h, "function floatAdd(pf,x,z,ry,o={}){", "const FLOAT_GS=[];function floatAdd(pf,x,z,ry,o={}){", { nome: "modo tablet (lista do que boia, declaração)" });
+  h = troca(h, "function updateMapDetail(){const tl=tabLeve();if(tl&&frameN%4!==0)return;const p=camera.position;",
+    "function updateMapDetail(){const tl=tabLeve();if(tl&&frameN%4!==0)return;const p=camera.position;if(tl)for(let i=FLOAT_GS.length-1;i>=0;i--){const g=FLOAT_GS[i];if(!g.parent){FLOAT_GS.splice(i,1);continue;}const e=g.matrixWorld.elements,dx=e[12]-p.x,dz=e[14]-p.z;g.visible=dx*dx+dz*dz<3600;}",
+    { nome: "modo tablet (barcos longe somem)" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

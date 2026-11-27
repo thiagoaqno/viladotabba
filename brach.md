@@ -1,15 +1,14 @@
-# Tiro: corrimão nenhum colide
+# Tiro: bots sobem e descem escada atrás do inimigo
 
-A pedido do Thiago, para os bots não enroscarem. Em `ferramentas/tiro-editor/pecas.js`, ficaram só com o desenho (sem colisão):
-- **Guarda-corpos de cano** (`kcGuarda`): lajes e casas da favela e patamares das escadas externa e rolante do Aeroporto.
-- **Corrimão do navio** (`kcNCorrimao`): perdeu a parede invisível e a colisão dos postes.
-- **Corrimão de convés** (`kcNCorrimaoConves`): postes, cano e vidro.
-- **Guarda-corpos dos salões e pontes do navio** (`kcNGuardArq`).
+"Os bots não sobem muito as escadas."
 
-Os corrimãos das passarelas e das escadas já não colidiam.
+**Por quê:** quando o bot ia atrás de um inimigo, ele mirava o x/z do inimigo, mas na altura dele mesmo. Isso valia para a vingança de quem o matou, o aviso de um colega ("tem um ali") e o radar. Quem estava no chão e caçava alguém numa laje ganhava um destino no chão, embaixo da laje, e nunca pegava a escada. Quem estava no alto nunca descia.
 
-Por causa disso, agora dá para cair da laje pela beira, onde antes o corrimão segurava.
+**O que mudou** (em `ferramentas/tiro-frontline.js`): a vingança, o aviso e o radar guardam a altura do inimigo, e o destino do bot usa essa altura.
 
-Conferido no navegador: as peças montam sem erro e a Favela carrega.
+**Medido no Aeroporto** (12 bots, mata-mata):
+- **Antes:** o Alfa passava 100% do tempo no terminal e o Bravo só 4% no alto. Nenhum dos dois trocava de andar.
+- **Agora:** o Alfa desce (57% do tempo no alto), e o Bravo vai pela rampa atrás deles; a briga acontece no meio.
+- **Favela:** os bots já passavam 41% do tempo nas lajes, e chegaram a 21 dos 23 destinos no alto.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -352,6 +352,16 @@ if (IATE_ATIVO) {
     "function stepQuality(dir,step=0.05){if(dir<0&&hrAlvo()&&!capMs()){const fix=!!QUALITY[gfxSet('quality')],lo=Math.max(0.7,fix?RQ.q.scaleMin:GFX_SAFE?1:AUTO_LADDER[RQ.rung][1]);if(RQ.scale<=lo+1e-6){HR.off=true;gpuLog(`tela de ${Math.round(1000/HR.ms)} Hz: nem com a resolução em ${Math.round(RQ.scale*100)}% chegou, volta a mirar 60 fps`);return'wait';}}", { nome: "fps da tela rápida (desistir)" });
   h = troca(h, "const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||moved;",
     "const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||(moved&&(i===0||!(VSYNC.ms>0&&VSYNC.ms<12)||(S.frame+i)%2===0));", { nome: "sombras se revezam em tela rápida" });
+  // (2026-11-26) "os bots não sobem muito as escadas": ao ir atrás de um inimigo (vingança de quem o matou, aviso de um colega,
+  // radar), o bot mirava o x/z do inimigo mas na altura DELE mesmo. Quem estava no chão e caçava alguém numa laje ganhava um
+  // destino no chão, embaixo da laje, e nunca pegava a escada (e quem estava no alto nunca descia). Agora guarda e usa a altura
+  // do inimigo
+  h = troca(h, "v.grudge={x:a.pos.x,z:a.pos.z,t:now};", "v.grudge={x:a.pos.x,y:a.pos.y,z:a.pos.z,t:now};", { nome: "bots: altura do inimigo (vingança)" });
+  h = troca(h, "SQ.intel[b.team]={x:foe.pos.x,z:foe.pos.z,t:now};", "SQ.intel[b.team]={x:foe.pos.x,y:foe.pos.y,z:foe.pos.z,t:now};", { nome: "bots: altura do inimigo (aviso)" });
+  h = troca(h, "pts.push({o,x:o.pos.x,z:o.pos.z});", "pts.push({o,x:o.pos.x,y:o.pos.y,z:o.pos.z});", { nome: "bots: altura do inimigo (radar)" });
+  h = troca(h, "_gpick.set(r.x,b.pos.y,r.z)", "_gpick.set(r.x,r.y!==undefined?r.y:b.pos.y,r.z)", { nome: "bots: destino na altura do inimigo (vingança)" });
+  h = troca(h, "_gpick.set(I.x,b.pos.y,I.z)", "_gpick.set(I.x,I.y!==undefined?I.y:b.pos.y,I.z)", { nome: "bots: destino na altura do inimigo (aviso)" });
+  h = troca(h, "_gpick.set(q.x,b.pos.y,q.z)", "_gpick.set(q.x,q.y!==undefined?q.y:b.pos.y,q.z)", { nome: "bots: destino na altura do inimigo (radar)" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

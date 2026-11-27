@@ -1,17 +1,16 @@
-# Tiro: selo do ranque no placar e bônus +1/+2 pelo desempenho
+# Tiro: 120 fps estável no tablet (sem ficar trocando com 60)
 
-**Selo do ranque no placar:**
-- Ao lado do nome de cada jogador, no placar da partida (Tab) e no do fim, aparece o hexágono na cor do ranque com o número da divisão. Passando o mouse, mostra o ranque inteiro ("Ouro 2").
-- Só no online e só para gente; bot não tem selo.
-- O selo dos outros vem do servidor pelo nome do jogo (`GET /tiro/perfil/elo/nomes`), numa pergunta só para todo o placar.
-- Quem ainda não jogou valendo elo fica sem selo.
+No Mi Pad, pelo Chrome: "fica 60 e depois fica 120".
 
-**Bônus pelo desempenho individual:**
-- **+2** para o melhor da partida inteira (o MVP).
-- **+1** para o melhor do próprio time.
-- O bônus soma na vitória (+26 vira +28) e tira da perda (-12 vira -10). Empate não mexe nos pontos.
-- Na animação do fim aparece "+2 de bônus: MVP da partida" ou "+1 de bônus: melhor do time".
+**Por quê:** a meta de 120 fps (#1051) baixava a resolução até chegar lá, mas:
+1. cada abertura do jogo começava da resolução cheia, a 60 fps, até ela descer de novo;
+2. depois de 2 s estáveis a 120 ela tentava subir a resolução, caía para 60 e descia outra vez.
 
-**Conferido:** no servidor em memória, o MVP vencedor levou +28 (26 + 2). No navegador, o selo aparece para quem tem elo e não aparece para quem não tem.
+**O que mudou** (em `ferramentas/tiro-frontline.js`, só nos aparelhos de toque com tela rápida):
+- A resolução que segurou os 120 fica guardada no aparelho (`tiro_hr_escala`) e já vale na próxima abertura.
+- Para tentar subir a resolução, agora precisa de 6 s seguidos a 120. Cada tentativa que falha dobra a espera, como antes.
+- Se o aparelho não chega nos 120 nem com a resolução no mínimo, nada fica guardado e ele volta a mirar 60, como antes.
+
+Conferido só com `node --check`; falta o amigo jogar no tablet.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

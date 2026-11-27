@@ -141,6 +141,54 @@ function brColeteHud() {
   if (v !== BR.cvV) { BR.cvV = v; BR.cvBar.style.display = v > 0 ? '' : 'none'; BR.cvFill.style.transform = `scaleX(${v / 100})`; }
 }
 
+/* ---------- entrada caindo de cima (2026-11-27) ----------
+   No começo (a abertura, OPEN.on, até o "Vai!"), cada soldado desta máquina nasce BR_QUEDA.alto m acima do seu lugar, se o céu
+   em cima dele estiver aberto (quem nasce embaixo de um teto nasce no chão, como antes). Durante a contagem fica parado no ar,
+   olhando o mapa; depois cai rápido e, a BR_QUEDA.abre m do chão, abre o paraquedas e desce devagar. No ar, as teclas de andar
+   fazem planar, para escolher onde pousar. Os robôs caem em linha reta no lugar deles. O paraquedas aparece em todo mundo que
+   está descendo (os de fora da máquina pela altura que chega pela rede). */
+const BR_QUEDA = { alto: 60, abre: 18, livre: -16, para: -5.5, planaLivre: 10, planaPara: 7 };
+function brChao(e) { return groundHeight(e.pos.x, e.pos.z, e.pos.y + 0.1, 0.3); }
+function brPoeNoAlto(e) {
+  const y0 = e.pos.y, topo = groundHeight(e.pos.x, e.pos.z, y0 + BR_QUEDA.alto, 0.35);
+  if (Math.abs(topo - y0) > 0.6) return; // tem teto, sacada ou árvore em cima: nasce no chão
+  e.brQueda = true; e.brAlto = y0 + BR_QUEDA.alto; e.pos.y = e.brAlto; e.vy = 0; e.onGround = false; e.airVy = 0;
+}
+// depois do passo de cada soldado desta máquina (o mesmo lugar do ringCheck): parado no ar na contagem, depois queda e paraquedas
+function brQuedaPasso(e, dt) {
+  if (!e.brQueda) return;
+  if (!e.alive) { e.brQueda = false; return; }
+  if (playHold()) { e.pos.y = e.brAlto; e.vy = 0; e.onGround = false; e.vel.x = e.vel.z = 0; return; }
+  if (e.onGround) { e.brQueda = false; return; }
+  const alt = e.pos.y - brChao(e), aberto = alt < BR_QUEDA.abre;
+  e.vy = Math.max(e.vy, aberto ? BR_QUEDA.para : BR_QUEDA.livre); e.airVy = Math.max(e.airVy || 0, -5.9); // pousa sem o tranco de queda
+  if (e.isPlayer) {
+    const I = e.input, fx = -Math.sin(e.yaw), fz = -Math.cos(e.yaw), rx = Math.cos(e.yaw), rz = -Math.sin(e.yaw);
+    let wx = fx * I.mz + rx * I.mx, wz = fz * I.mz + rz * I.mx; const wl = hyp(wx, wz); if (wl > 1) { wx /= wl; wz /= wl; }
+    const v = aberto ? BR_QUEDA.planaPara : BR_QUEDA.planaLivre;
+    e.vel.x = damp(e.vel.x, wx * v, 3, dt); e.vel.z = damp(e.vel.z, wz * v, 3, dt);
+  }
+}
+function brParaquedas() {
+  const P = BR.paras || (BR.paras = []);
+  let n = 0;
+  if (MATCH.time - (MATCH.startAt || 0) < 90) for (const e of entities) {
+    if (!e.alive || e.off) continue;
+    const alt = e.pos.y - brChao(e);
+    if (e.isRemote) { if (alt > 8) e.brAr = true; else if (alt < 0.3) e.brAr = false; }
+    const desce = (e.brQueda || e.brAr) && !playHold() && alt > 0.6 && alt < BR_QUEDA.abre + 1;
+    if (!desce) continue;
+    let m = P[n];
+    if (!m) {
+      const geo = BR.paraGeo || (BR.paraGeo = new THREE.SphereGeometry(1.7, 16, 6, 0, TAU, 0, Math.PI / 2));
+      const mat = BR.paraMat || (BR.paraMat = new THREE.MeshStandardMaterial({ color: 0xf08a24, roughness: 0.8, side: THREE.DoubleSide }));
+      m = P[n] = new THREE.Mesh(geo, mat); m.scale.y = 0.55; scene.add(m);
+    }
+    m.visible = true; m.position.set(e.pos.x, e.pos.y + 3.3, e.pos.z); n++;
+  }
+  for (let i = n; i < P.length; i++) P[i].visible = false;
+}
+
 /* ---------- começo e fim ---------- */
 function brLimpa() {
   if (BR.malha) { scene.remove(BR.malha); BR.malha.geometry.dispose(); BR.malha.material.dispose(); BR.malha = null; }
@@ -151,9 +199,12 @@ function brLimpa() {
   DROP.life = 90; DROP.max = 14;
   for (const e of entities) { if (e.brArma) { e.weapon = e.brArma; e.brArma = null; } e.brColete = 0; }
   brCaixasTira(); if (BR.cvBar) brColeteHud();
+  for (const m of BR.paras || []) scene.remove(m);
+  BR.paras = [];
+  for (const e of entities) { e.brQueda = false; e.brAr = false; }
 }
 function brInicio() {
-  BR.ordem = 0; BR.armado = false; BR.T0 = MATCH.timeLeft; BR.estado = ''; BR.botT = 0; BR.ver = null; BR.cam = null; BR.lugar = 0;
+  BR.ordem = 0; BR.armado = false; BR.avisouQueda = false; BR.T0 = MATCH.timeLeft; BR.estado = ''; BR.botT = 0; BR.ver = null; BR.cam = null; BR.lugar = 0;
   for (const e of entities) { e.brOut = 0; e.brT = 0; }
   DROP.life = 1e9; DROP.max = 80;
   const seed = MATCH.online ? brHash(String(netCodeNow() || '') + '|' + CURMAP.id) : (Math.random() * 4294967296) >>> 0;
@@ -189,7 +240,8 @@ function brUpdate(dt) {
   brMalha();
   const est = z.estado + z.fase;
   if (est !== BR.estado) { if (BR.estado && z.estado === 'fechando') hudMsg('A zona está fechando!', 'xp', 3); BR.estado = est; }
-  brCaixasUpdate(); brColeteHud();
+  brCaixasUpdate(); brColeteHud(); brParaquedas();
+  if (PL.ent.brQueda && !playHold() && !BR.avisouQueda) { BR.avisouQueda = true; hudMsg('Ande para planar e escolher onde cair', 'xp', 4); }
   // robôs desta máquina (fora do jogo online, ou os do host): pegam arma do chão e fogem da zona
   BR.botT -= dt; const pensa = BR.botT <= 0; if (pensa) BR.botT = 0.25;
   for (const b of entities) {
@@ -281,6 +333,7 @@ function brEspectar(dt) {
   const spawnEntity0 = spawnEntity;
   spawnEntity = function (e) {
     spawnEntity0(e);
+    if (BR.on && OPEN.on && !e.isRemote) brPoeNoAlto(e);
     if (!BR.on || e.isPlayer || e.isRemote || !WEAPONS.m9) return;
     const p = WEAPONS.m9; if (!e.brArma) e.brArma = e.weapon;
     e.weapon = p; e.arms = makeArms([p.id], 60);
@@ -336,6 +389,7 @@ function brEspectar(dt) {
   };
   const ringCheck0 = ringCheck;
   ringCheck = function (e, dt) {
+    if (BR.on) brQuedaPasso(e, dt);
     if (BR.on && BR.z && e.alive && (MATCH.state === 'playing' || MATCH.state === 'paused') && !brDentroZ(BR.z, e.pos.x, e.pos.z)) {
       e.health -= BR.z.dps * dt;
       if (e.isPlayer) PL.lastDmgT = MATCH.time; else e.lastHitT = MATCH.time; // fora da zona a vida não volta

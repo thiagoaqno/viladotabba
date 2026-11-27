@@ -55,6 +55,7 @@ function edLimites(J, preciso) {
     }
     x0 = Math.min(x0, B.x0); x1 = Math.max(x1, B.x1); y0 = Math.min(y0, B.y0); z0 = Math.min(z0, B.z0); z1 = Math.max(z1, B.z1);
   }
+  if (J.relevo) { const R = J.relevo, xb = R.x0 + (R.nx - 1) * R.passo, zb = R.z0 + (R.nz - 1) * R.passo; x0 = Math.min(x0, R.x0); x1 = Math.max(x1, xb); z0 = Math.min(z0, R.z0); z1 = Math.max(z1, zb); y0 = Math.min(y0, R.h.reduce((m, v) => Math.min(m, v), 0)); }
   for (const [x, z] of (J.nascer || [])) { x0 = Math.min(x0, x - 2); x1 = Math.max(x1, x + 2); z0 = Math.min(z0, -Math.abs(z) - 2); z1 = Math.max(z1, Math.abs(z) + 2); }
   if (x0 > x1) { x0 = -20; x1 = 20; z0 = -20; z1 = 20; y0 = 0; }
   return { x0: Math.floor(x0 - 1), x1: Math.ceil(x1 + 1), y0, z0: Math.floor(z0 - 1), z1: Math.ceil(z1 + 1) };
@@ -185,6 +186,33 @@ function edGrafiteMalha(G) {
   const ry = ((G.r || 0) * Math.PI) / 180; m.position.set(G.p[0] + Math.sin(ry) * 0.02, G.p[1] + h / 2, G.p[2] + Math.cos(ry) * 0.02); m.rotation.y = ry;
   return m;
 }
+/* ---------- terreno deformado (2026-11-27): relevo = { x0, z0, passo, nx, nz, h: [alturas, linha a linha em z], m, cor, tx } ----------
+   A grade do editor (um ponto a cada "passo" m) vira o relevo do jogo (MAP_DEFS.relief: 02-relief.js), que o jogo amostra de 1 em 1 m:
+   pisar, balas, granadas, robôs e o éclairage usam ele sozinhos. Fora da grade o chão fica em 0. Sem mar: com mar, o mapa é "sem chão"
+   (vazio) e o relevo não vale. A malha que se vê é a da grade de 1 m do próprio jogo (a mesma em que se pisa), na superfície m. */
+function edRelevoFn(R) {
+  const { x0, z0, passo: s, nx, nz, h } = R;
+  return (x, z) => {
+    const fx = (x - x0) / s, fz = (z - z0) / s;
+    if (!(fx >= 0 && fz >= 0 && fx <= nx - 1 && fz <= nz - 1)) return 0;
+    const i = Math.min(nx - 2, Math.floor(fx)), j = Math.min(nz - 2, Math.floor(fz)), u = fx - i, v = fz - j;
+    const a = h[j * nx + i] || 0, b = h[j * nx + i + 1] || 0, c = h[(j + 1) * nx + i] || 0, d = h[(j + 1) * nx + i + 1] || 0;
+    return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+  };
+}
+function edRelevoMalha(Rv) {
+  const R = RELIEF; if (!R.on || !R.h) return;
+  const key = Rv.m || 'dirt', M = DECOR, n = R.W + 1, T = 8, nn = [0, 1, 0];
+  const i0 = Math.max(0, Math.floor(Rv.x0 - R.x0)), i1 = Math.min(R.W, Math.ceil(Rv.x0 + (Rv.nx - 1) * Rv.passo - R.x0));
+  const j0 = Math.max(0, Math.floor(Rv.z0 - R.z0)), j1 = Math.min(R.H, Math.ceil(Rv.z0 + (Rv.nz - 1) * Rv.passo - R.z0));
+  M.save().color(Rv.cor || [1, 1, 1]).world(Rv.tx || 1); M.aoFn = null;
+  for (let tj = j0; tj < j1; tj += T) for (let ti = i0; ti < i1; ti += T) {
+    const ie = Math.min(i1, ti + T), je = Math.min(j1, tj + T), B = M.buf(key, R.x0 + (ti + ie) / 2, 0, R.z0 + (tj + je) / 2), ids = new Map();
+    const vid = (i, j) => { const k = j * n + i; let v = ids.get(k); if (v === undefined) { const x = R.x0 + i, z = R.z0 + j; reliefNormal(x, z, nn); v = M.v(B, x, R.h[k], z, nn[0], nn[1], nn[2], 0, 0); ids.set(k, v); } return v; };
+    for (let j = tj; j < je; j++) for (let i = ti; i < ie; i++) { const a = vid(i, j), b = vid(i + 1, j), c = vid(i + 1, j + 1), d = vid(i, j + 1); M.tri(B, a, c, b); M.tri(B, a, d, c); }
+  }
+  M.restore();
+}
 // monta as peças (também usado pelo botão "Jogar" do editor)
 function edConstruir(J) {
   for (const P of J.pecas || []) {
@@ -214,17 +242,18 @@ function tiroMapaRegistrar(J) {
   const dom = J.dom && J.dom.length === 3 ? J.dom : null;
   MAP_DEFS[J.id] = {
     type: J.tipo || 'mid', mar: !!mar, editor: true,
-    void: { kill: Math.min(L.y0, mar ? mar.y : L.y0) - 1.5 },
+    void: J.relevo && !mar ? undefined : { kill: Math.min(L.y0, mar ? mar.y : L.y0) - 1.5 },
+    relief: J.relevo && !mar ? { fn: edRelevoFn(J.relevo), pad: 2 } : undefined, // terreno do editor (o relevo do jogo, 02-relief.js)
     // limites com o tamanho de verdade de cada prefab, medidos só quando o mapa começa (para não montar prefab ao abrir a página)
     get bounds() { if (!this._lim) { const M = edLimites(J, true); this._lim = { x0: M.x0, x1: M.x1, z0: M.z0, z1: M.z1 }; } return this._lim; },
-    textures: edTexturasDoMapa(J), surfaces: [...(mar ? ['ripple'] : []), ...ED_TEX_NOSSAS, ...edTexUsadas(J)],
+    textures: edTexturasDoMapa(J), surfaces: [...(mar ? ['ripple'] : []), ...ED_TEX_NOSSAS, ...edTexUsadas(J), ...(J.relevo && ED_TEX_AERO.includes(J.relevo.m) ? [J.relevo.m] : [])],
     sound: mar ? { pack: 'amb_embruns', bed: 0.5, water: () => 0, loops: [[L.x0, -4, 0], [L.x1, -4, 0]].map((p) => ({ id: 'a_waves', p, gain: 0.4, ref: 6, roll: 1.3, max: 120 })), spots: [] }
       : { pack: edAmbiente(J, base), bed: 0.5, loops: [], spots: [] },
     materials: () => {},
     art: { cam: [L.x0 - 8, 10, L.z1 + 8], look: [0, 1, 0], fov: 55 },
     splat: { x0: -128, z0: -128, w: 256, d: 256, ppm: 2 }, far: 600,
     build() {
-      if (mar) waterSetup({ y: mar.y, box: [-2000, 2000, -2000, 2000], open: [-260, -120], east: 900 }); edConstruir(J); if (mar) waterLand(L.x0, L.x1, L.z0, L.z1); },
+      if (mar) waterSetup({ y: mar.y, box: [-2000, 2000, -2000, 2000], open: [-260, -120], east: 900 }); edConstruir(J); if (J.relevo && !mar) edRelevoMalha(J.relevo); if (mar) waterLand(L.x0, L.x1, L.z0, L.z1); },
     after: mar ? () => waterBuild({ deep: [0.0, 0.03, 0.1], shallow: [0.0, 0.08, 0.14], scatter: [0.01, 0.07, 0.11], foam: [0.85, 0.88, 0.88], refl: 1.0, caus: 0, foamK: 0.6 }) : undefined,
     ready: mar ? () => waterReady({ from: [L.x0 - 30, mar.y + 2.5, 0] }) : undefined,
     spawns: (J.nascer && J.nascer.length ? J.nascer : [[0, Math.max(4, L.z1 - 4)]]).map(([x, z]) => [x, z]),

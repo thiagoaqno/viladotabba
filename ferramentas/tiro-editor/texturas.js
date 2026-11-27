@@ -134,6 +134,7 @@ function edTexturasDoMapa(J) {
     if ((P.t === 'caixa' || P.t === 'escada') && P.m && TEX_PACKS[P.m]) s.add(P.m);
     if (P.t === 'prefab' && KC_TEX_PECAS[P.nome]) for (const k of KC_TEX_PECAS[P.nome]) if (TEX_PACKS[k]) s.add(k);
   }
+  if (J.relevo && J.relevo.m && TEX_PACKS[J.relevo.m]) s.add(J.relevo.m); // o chão do terreno
   return [...s];
 }
 // matérias novas: só nos mapas do editor (nos outros mapas nada muda)

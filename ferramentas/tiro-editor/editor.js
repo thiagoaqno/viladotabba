@@ -7,11 +7,14 @@
    - clique coloca a peça escolhida (Esc para de colocar); clique numa peça seleciona; arrastar move;
      setas e PageUp/PageDown empurram 25 cm (Shift: 1 m); R gira 90° (Shift+R: 15°, só prefab e objeto);
      Delete apaga; Ctrl+D duplica; Ctrl+Z desfaz; F centraliza a câmera na peça;
+   - várias peças (2026-11-27): Shift+clique (ou Ctrl+clique) põe e tira peças da seleção; Shift+arrastar no vazio seleciona
+     tudo o que cai no retângulo; com várias, arrastar, setas, R (gira o grupo 90° em volta do meio), Delete e Ctrl+D valem
+     para todas; Ctrl+C copia e Ctrl+V cola onde o mouse aponta (a cópia fica no navegador: dá para colar em outro mapa);
    - painel à direita: posição, tamanho, giro, matéria, cor e colisão da peça selecionada;
    - Salvar grava em ferramentas/tiro-mapas/editor/<id>.json pelo servidor do PC ("Editor de mapas do Tiro.bat"); no site, Baixar;
    - Jogar monta o mapa de verdade (mapa-json.js) e começa uma partida solo com bots. O rascunho fica guardado neste navegador.
    ========================================================================== */
-const ED = { on: false, J: null, items: [], sel: null, tpl: null, ghost: null, hist: [], cam: { x: 0, y: 14, z: 30, yaw: 0, pitch: -0.45, v: 10 }, keys: new Set(), pf: new Map(), drag: null, snap: 0.25 };
+const ED = { on: false, J: null, items: [], sel: null, mais: new Set(), tpl: null, ghost: null, hist: [], cam: { x: 0, y: 14, z: 30, yaw: 0, pitch: -0.45, v: 10 }, keys: new Set(), pf: new Map(), drag: null, snap: 0.25 };
 const ED_BASICO = [
   { rot: 'Chão 4 x 4 (madeira)', P: { t: 'caixa', s: [4, 0.3, 4], m: 'wood', cor: [0.66, 0.46, 0.3] }, oy: -0.3 },
   { rot: 'Chão 8 x 8 (concreto)', P: { t: 'caixa', s: [8, 0.3, 8], m: 'concrete', cor: [0.75, 0.74, 0.72] }, oy: -0.3 },
@@ -34,7 +37,7 @@ const edSnap = (v, s = ED.snap) => Math.round(v / s) * s;
 const edClone = (o) => JSON.parse(JSON.stringify(o));
 
 /* ---------- modelo: o .json <-> as peças da cena ---------- */
-const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa', 'ativo', 'ambiente'];
+const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa', 'ativo', 'ambiente', 'relevo'];
 function edDoJson(J) {
   const pecas = (J.pecas || []).map(edClone);
   for (const [x, z] of J.nascer || []) pecas.push({ t: 'nascer', p: [x, 0, z] });
@@ -168,10 +171,12 @@ function edMalha(P) {
 function edRedesenhar() {
   for (const it of ED.items) ED.scene.remove(it.o);
   ED.items = ED.J.pecas.map((P) => { const o = edMalha(P); o.traverse((c) => { c.userData.P = P; }); ED.scene.add(o); return { P, o }; });
-  if (ED.box) { ED.scene.remove(ED.box); ED.box = null; }
-  const it = ED.items.find((i) => i.P === ED.sel);
-  if (it) { ED.box = new THREE.BoxHelper(it.o, 0xffcc33); ED.scene.add(ED.box); }
+  for (const b of ED.boxes || []) ED.scene.remove(b);
+  ED.boxes = []; ED.box = null;
+  const L = edSelLista();
+  for (const it of ED.items) if (L.includes(it.P)) { const b = new THREE.BoxHelper(it.o, it.P === ED.sel ? 0xffcc33 : 0x33ccff); ED.scene.add(b); ED.boxes.push(b); }
   if (ED.mar) ED.mar.visible = !!ED.J.meta.mar; if (ED.mar && ED.J.meta.mar) ED.mar.position.y = ED.J.meta.mar.y;
+  edTerrenoMalha();
 }
 
 /* ---------- interface ---------- */
@@ -183,7 +188,7 @@ function edAbrir() {
   const esq = edEl('div', 'position:absolute;left:0;top:42px;bottom:26px;width:250px;background:#17191cee;border-right:1px solid #333;display:flex;flex-direction:column');
   const dir = edEl('div', 'position:absolute;right:0;top:42px;width:260px;max-height:calc(100% - 68px);overflow:auto;background:#17191cee;border-left:1px solid #333;padding:10px;box-sizing:border-box');
   const ajuda = edEl('div', 'position:absolute;left:0;right:0;bottom:0;height:26px;line-height:26px;padding:0 10px;background:#1b1d20ee;border-top:1px solid #333;font-size:12px;color:#aaa;white-space:nowrap;overflow:hidden',
-    'Botão direito: olhar · WASD: andar · Q/E: descer/subir · Shift: correr · Clique: colocar/selecionar · Arrastar: mover · Setas/PgUp/PgDn: ajustar · R: girar · Del: apagar · Ctrl+D: duplicar · Ctrl+Z: desfazer · F: focar · Esc: parar de colocar');
+    'Botão direito: olhar · WASD: andar · Q/E: descer/subir · Shift: correr · Clique: colocar/selecionar · Arrastar: mover · Setas/PgUp/PgDn: ajustar · R: girar · Del: apagar · Shift+clique/Shift+arrastar: várias · Ctrl+C/Ctrl+V: copiar/colar · Ctrl+D: duplicar · Ctrl+Z: desfazer · F: focar · Esc: parar de colocar');
   root.append(bar, esq, dir, ajuda); document.body.appendChild(root);
   Object.assign(ED, { root, cv, bar, esq, dir, ajuda });
   const css = edEl('style'); css.textContent = `#edRoot button,#edRoot select,#edRoot input{white-space:nowrap;font:inherit;color:#eee;background:#2a2d32;border:1px solid #44484f;border-radius:5px;padding:4px 8px}
@@ -219,6 +224,8 @@ function edBarra() {
   const mm = () => { ED.J.meta.mar = mk.checked ? { y: +my.value || 0 } : null; edMudou(); }; mk.onchange = mm; my.onchange = mm; b.appendChild(mar);
   const bt = (rot, f, tit) => { const x = edEl('button', '', rot); x.onclick = f; if (tit) x.title = tit; b.appendChild(x); return x; };
   b.appendChild(edEl('span', 'flex:1'));
+  ED.btTerreno = bt('⛰ Terreno', () => { ED.modo = ED.modo === 'terreno' ? null : 'terreno'; ED.tpl = null; edFantasma(); edBarra(); edPainel(); }, 'Deformar o chão com um pincel (subir, descer, aplanar, suavizar)');
+  if (ED.modo === 'terreno') ED.btTerreno.className = 'on';
   bt('Salvar', edSalvar, 'Grava no projeto (Editor de mapas do Tiro.bat)'); bt('Baixar .json', edBaixar); bt('Abrir .json', edAbrirArquivo);
   bt('▶ Jogar', edJogar, 'Monta o mapa de verdade e começa uma partida solo com bots'); bt('Sair', () => { location.href = location.pathname; });
 }
@@ -365,9 +372,21 @@ function edFantasma() {
 
 /* ---------- painel da peça ---------- */
 function edPainel() {
+  if (ED.modo === 'terreno') return edPainelTerreno();
   const d = ED.dir, P = ED.sel; d.innerHTML = '';
   const n = ED.J.pecas, cont = (t) => n.filter((p) => p.t === t).length;
   d.appendChild(edEl('div', 'color:#aaa;font-size:12px;line-height:1.5', `<b style="color:#eee">${ED.J.meta.nome}</b> · id ${ED.J.meta.id}<br>${n.length} peças · ${cont('nascer')} nascer (+${cont('nascer')} Bravo espelhado) · ${cont('dom')}/3 pontos · ${cont('mecha')}/3 mecha`));
+  const L = edSelLista();
+  if (L.length > 1) { // várias peças: só o que vale para o grupo
+    d.appendChild(edEl('h4', 'margin:14px 0 4px', L.length + ' peças selecionadas'));
+    d.appendChild(edEl('p', 'color:#888;font-size:12px;margin:0 0 8px', 'Arraste uma delas para mover todas. Setas e PgUp/PgDn empurram, R gira o grupo 90°. Shift+clique tira uma peça da seleção.'));
+    const bts = edEl('div', 'display:grid;grid-template-columns:1fr 1fr;gap:6px');
+    for (const [rot, f, cor] of [['Copiar (Ctrl+C)', edCopiar], ['Colar (Ctrl+V)', () => edColar()], ['Duplicar (Ctrl+D)', edDuplicar], ['Girar 90° (R)', () => edGirarGrupo(90)], ['Soltar seleção', () => { edSelLimpa(); edRedesenhar(); edPainel(); }], ['Apagar todas', edApagar, '#f88']]) {
+      const b = edEl('button', cor ? 'color:' + cor : '', rot); b.onclick = f; bts.appendChild(b);
+    }
+    d.appendChild(bts); return;
+  }
+  if (!P && edCopia()) { const b = edEl('button', 'margin-top:10px', 'Colar ' + edCopia().pecas.length + ' peça(s) (Ctrl+V)'); b.onclick = () => edColar(); d.appendChild(b); }
   if (!P) { d.appendChild(edEl('p', 'color:#888;margin-top:14px', 'Escolha uma peça no catálogo e clique na cena, ou clique numa peça para mexer nela.<br><br>O chão das aparições tem de estar em y = 0. O time Bravo nasce espelhado (z vira -z).')); return; }
   d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', grafite: 'Grafite', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha' }[P.t]));
   const vec = (rot, arr, step, f) => { d.appendChild(edEl('label', '', rot)); const r = edEl('div'); r.className = 'row3'; arr.forEach((v, i) => { const x = edEl('input'); x.type = 'number'; x.step = step; x.value = +(+v).toFixed(3); x.onchange = () => { edAntes(); f(i, +x.value); edMudou(true); }; r.appendChild(x); }); d.appendChild(r); };
@@ -412,19 +431,61 @@ function edPainel() {
     d.appendChild(edEl('p', 'color:#888;font-size:11px;margin:6px 0 0', 'Encoste na parede: a pintura fica na frente da peça (+z). Não colide nem segura bala.'));
   }
   if (P.t === 'luz') { vec('Força · alcance (m)', [P.forca || 1.4, P.raio || 7], 0.1, (i, v) => { if (i) P.raio = v; else P.forca = v; }); }
-  const bts = edEl('div', 'display:flex;gap:6px;margin-top:14px'); const dup = edEl('button', '', 'Duplicar'); dup.onclick = edDuplicar; const del = edEl('button', 'color:#f88', 'Apagar'); del.onclick = edApagar; bts.append(dup, del); d.appendChild(bts);
+  const bts = edEl('div', 'display:flex;gap:6px;margin-top:14px'); const dup = edEl('button', '', 'Duplicar'); dup.onclick = edDuplicar; const cop = edEl('button', '', 'Copiar'); cop.onclick = edCopiar; const del = edEl('button', 'color:#f88', 'Apagar'); del.onclick = edApagar; bts.append(dup, cop, del); d.appendChild(bts);
+}
+
+/* ---------- seleção de várias peças ---------- */
+// a principal (ED.sel, a do painel e da caixa amarela) e as outras (ED.mais, caixa azul); só as que ainda estão no mapa
+function edSelLista() { const L = ED.sel ? [ED.sel] : []; for (const P of ED.mais) if (P !== ED.sel && ED.J.pecas.includes(P)) L.push(P); return L; }
+function edSelLimpa() { ED.sel = null; ED.mais.clear(); }
+function edSelPoe(L) { ED.mais = new Set(L); ED.sel = L[L.length - 1] || null; }
+function edSelTroca(P) { // Shift+clique: põe ou tira
+  const L = edSelLista();
+  if (L.includes(P)) { ED.mais.delete(P); if (ED.sel === P) { ED.sel = null; const r = edSelLista(); ED.sel = r.length ? r[r.length - 1] : [...ED.mais].pop() || null; } }
+  else { if (ED.sel) ED.mais.add(ED.sel); ED.mais.add(P); ED.sel = P; }
+}
+const edMeio = (L) => { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, y0 = 1e9; for (const P of L) { x0 = Math.min(x0, P.p[0]); x1 = Math.max(x1, P.p[0]); z0 = Math.min(z0, P.p[2]); z1 = Math.max(z1, P.p[2]); y0 = Math.min(y0, P.p[1]); } return { x: (x0 + x1) / 2, z: (z0 + z1) / 2, y: y0 }; };
+// copiar: as peças relativas ao meio do grupo (e ao pé da mais baixa), guardadas no navegador para colar aqui ou em outro mapa
+function edCopiar() {
+  const L = edSelLista(); if (!L.length) return;
+  const c = edMeio(L), pecas = L.map((P) => { const Q = edClone(P); Q.p = [Q.p[0] - c.x, Q.p[1] - c.y, Q.p[2] - c.z]; return Q; });
+  try { localStorage.setItem('tiro_editor_copia', JSON.stringify({ pecas })); } catch (e) { /* sem espaço */ }
+  ED.copia = { pecas }; edMsg(L.length + (L.length > 1 ? ' peças copiadas' : ' peça copiada') + ': Ctrl+V cola onde o mouse aponta'); edPainel();
+}
+function edCopia() { if (!ED.copia) { try { ED.copia = JSON.parse(localStorage.getItem('tiro_editor_copia') || 'null'); } catch (e) { ED.copia = null; } } return ED.copia && ED.copia.pecas && ED.copia.pecas.length ? ED.copia : null; }
+// colar: o meio do grupo vai para onde o mouse aponta (o pé da peça mais baixa no chão que o mouse acerta); as coladas ficam selecionadas
+function edColar(ev) {
+  const C = edCopia(); if (!C) return edMsg('Nada copiado ainda: selecione peças e use Ctrl+C.');
+  const a = (ev || ED.ultMouse) && edAcerto(ev || ED.ultMouse);
+  const x = a ? edSnap(a.p.x) : edSnap(ED.cam.x - Math.sin(ED.cam.yaw) * 10), z = a ? edSnap(a.p.z) : edSnap(ED.cam.z - Math.cos(ED.cam.yaw) * 10), y = a ? +a.p.y.toFixed(3) : 0;
+  edAntes();
+  const novas = C.pecas.map((P) => { const Q = edClone(P); Q.p = [+(Q.p[0] + x).toFixed(3), +(Q.p[1] + y).toFixed(3), +(Q.p[2] + z).toFixed(3)]; return Q; });
+  ED.J.pecas.push(...novas); edSelPoe(novas); edMudou(true);
+  edMsg(novas.length + (novas.length > 1 ? ' peças coladas' : ' peça colada'));
+}
+// girar o grupo: cada peça anda em volta do meio e gira junto (o mesmo sentido do R de uma peça só)
+function edGirarGrupo(g) {
+  const L = edSelLista(); if (!L.length) return;
+  edAntes(); const c = edMeio(L), a = (g * Math.PI) / 180, co = Math.cos(a), si = Math.sin(a);
+  for (const P of L) {
+    const dx = P.p[0] - c.x, dz = P.p[2] - c.z;
+    P.p[0] = +(c.x + dx * co + dz * si).toFixed(3); P.p[2] = +(c.z - dx * si + dz * co).toFixed(3);
+    if (!['nascer', 'dom', 'mecha'].includes(P.t)) P.r = ((((P.r || 0) + g) % 360) + 360) % 360;
+  }
+  edMudou(true);
 }
 
 /* ---------- ações ---------- */
-function edApagar() { if (!ED.sel) return; edAntes(); ED.J.pecas.splice(ED.J.pecas.indexOf(ED.sel), 1); ED.sel = null; edMudou(true); }
-function edDuplicar() { if (!ED.sel) return; edAntes(); const Q = edClone(ED.sel); Q.p[0] += 1; ED.J.pecas.push(Q); ED.sel = Q; edMudou(true); }
-function edDesfazer() { const s = ED.hist.pop(); if (!s) return; ED.J = JSON.parse(s); ED.sel = null; edGuardar(); edRedesenhar(); edPainel(); }
+function edApagar() { const L = edSelLista(); if (!L.length) return; edAntes(); ED.J.pecas = ED.J.pecas.filter((P) => !L.includes(P)); edSelLimpa(); edMudou(true); }
+function edDuplicar() { const L = edSelLista(); if (!L.length) return; edAntes(); const novas = L.map((P) => { const Q = edClone(P); Q.p[0] += 1; return Q; }); ED.J.pecas.push(...novas); edSelPoe(novas); edMudou(true); }
+function edDesfazer() { const s = ED.hist.pop(); if (!s) return; ED.J = JSON.parse(s); edSelLimpa(); edGuardar(); edRedesenhar(); edPainel(); }
 function edRaio(ev) {
   const r = ED.cv.getBoundingClientRect(), v = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
   const rc = new THREE.Raycaster(); rc.setFromCamera(v, ED.camera); return rc;
 }
 function edAcerto(ev, ignorar) {
   const rc = edRaio(ev), objs = ED.items.filter((i) => i.P !== ignorar).map((i) => i.o);
+  if (ED.terreno) objs.push(ED.terreno); // o terreno conta como chão: as peças se colocam em cima dele
   const h = rc.intersectObjects(objs, true)[0];
   const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pt = new THREE.Vector3();
   const hp = rc.ray.intersectPlane(plano, pt) ? pt : null;
@@ -437,27 +498,50 @@ function edEventos() {
   cv.addEventListener('mousedown', (e) => {
     if (e.button === 2) { ED.olhar = { x: e.clientX, y: e.clientY }; return; }
     if (e.button !== 0) return;
+    if (ED.modo === 'terreno') { edPincelIni(e); return; } // modo terreno: o botão esquerdo pinta
     if (ED.tpl) {
       const a = edAcerto(e); if (!a) return;
       edAntes(); const P = Object.assign(edClone(ED.tpl.P), { p: [edSnap(a.p.x), +(a.p.y + (ED.tpl.oy || 0)).toFixed(3), edSnap(a.p.z)] });
       if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') P.r = ED.ghostP ? ED.ghostP.r || 0 : 0;
-      ED.J.pecas.push(P); ED.sel = P; edMudou(true); return;
+      ED.J.pecas.push(P); edSelLimpa(); ED.sel = P; edMudou(true); return;
     }
-    const a = edAcerto(e); ED.sel = a && a.P ? a.P : null; edRedesenhar(); edPainel();
-    if (ED.sel) ED.drag = { P: ED.sel, y: ED.sel.p[1], ini: false, x0: e.clientX, y0: e.clientY };
+    const a = edAcerto(e), soma = e.shiftKey || e.ctrlKey || e.metaKey;
+    if (soma && !(a && a.P)) { // Shift+arrastar no vazio: retângulo de seleção
+      const q = edEl('div', 'position:absolute;border:1px solid #33ccff;background:#33ccff22;pointer-events:none'); ED.root.appendChild(q);
+      ED.ret = { x0: e.clientX, y0: e.clientY, q }; edRet(e); return;
+    }
+    if (soma) { edSelTroca(a.P); edRedesenhar(); edPainel(); return; }
+    if (!(a && a.P)) { edSelLimpa(); edRedesenhar(); edPainel(); return; }
+    if (!edSelLista().includes(a.P)) { edSelLimpa(); ED.sel = a.P; } else ED.sel = a.P; // clicar numa das selecionadas mantém o grupo
+    edRedesenhar(); edPainel();
+    // arrastar: todas as selecionadas andam juntas, pelo quanto o mouse andou no plano da peça clicada
+    const pt0 = new THREE.Vector3(), ok = edRaio(e).ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -a.P.p[1]), pt0);
+    ED.drag = { P: a.P, y: a.P.p[1], ini: false, x0: e.clientX, y0: e.clientY, pt0: ok ? pt0.clone() : null, base: edSelLista().map((P) => [P, P.p[0], P.p[2]]) };
   });
   addEventListener('mousemove', (e) => {
     if (!ED.on) return;
+    if (e.target === cv) ED.ultMouse = { clientX: e.clientX, clientY: e.clientY };
     if (ED.olhar) { ED.cam.yaw -= (e.clientX - ED.olhar.x) * 0.004; ED.cam.pitch = clamp(ED.cam.pitch - (e.clientY - ED.olhar.y) * 0.004, -1.5, 1.5); ED.olhar = { x: e.clientX, y: e.clientY }; return; }
+    if (ED.ret) { edRet(e); return; }
     if (ED.drag) {
       if (!ED.drag.ini && Math.hypot(e.clientX - ED.drag.x0, e.clientY - ED.drag.y0) < 4) return;
       if (!ED.drag.ini) { edAntes(); ED.drag.ini = true; }
       const rc = edRaio(e), pt = new THREE.Vector3(); if (!rc.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -ED.drag.y), pt)) return;
-      ED.drag.P.p[0] = edSnap(pt.x); ED.drag.P.p[2] = edSnap(pt.z); edRedesenhar(); return;
+      const D = ED.drag, b = D.base.find((x) => x[0] === D.P);
+      // a clicada encaixa na grade; as outras andam o mesmo tanto (o grupo não se desmancha)
+      const dx = D.pt0 ? edSnap(b[1] + pt.x - D.pt0.x) - b[1] : edSnap(pt.x) - b[1], dz = D.pt0 ? edSnap(b[2] + pt.z - D.pt0.z) - b[2] : edSnap(pt.z) - b[2];
+      for (const [P, x, z] of D.base) { P.p[0] = +(x + dx).toFixed(3); P.p[2] = +(z + dz).toFixed(3); }
+      edRedesenhar(); return;
     }
     if (ED.ghost && e.target === cv) { const a = edAcerto(e); if (a) { ED.ghost.position.set(edSnap(a.p.x), a.p.y + (ED.tpl.oy || 0), edSnap(a.p.z)); ED.ghostP.p = [ED.ghost.position.x, ED.ghost.position.y, ED.ghost.position.z]; } }
   });
-  addEventListener('mouseup', (e) => { if (!ED.on) return; if (e.button === 2) ED.olhar = null; if (e.button === 0 && ED.drag) { const ini = ED.drag.ini; ED.drag = null; if (ini) { edGuardar(); edPainel(); } } });
+  addEventListener('mousemove', (e) => { if (ED.on && e.target === cv) ED.mouseT = { clientX: e.clientX, clientY: e.clientY }; });
+  addEventListener('mouseup', (e) => { if (ED.on && e.button === 0 && ED.pincel) edPincelFim(); });
+  addEventListener('mouseup', (e) => {
+    if (!ED.on) return; if (e.button === 2) ED.olhar = null;
+    if (e.button === 0 && ED.ret) { edRetFim(e); return; }
+    if (e.button === 0 && ED.drag) { const ini = ED.drag.ini; ED.drag = null; if (ini) { edGuardar(); edPainel(); } }
+  });
   cv.addEventListener('wheel', (e) => { e.preventDefault(); ED.cam.v = clamp(ED.cam.v * (e.deltaY > 0 ? 0.85 : 1.18), 1, 80); edMsg('Velocidade da câmera: ' + ED.cam.v.toFixed(1) + ' m/s', 900); }, { passive: false });
   const tecla = (e) => {
     if (!ED.on) return;
@@ -467,9 +551,22 @@ function edEventos() {
     const k = e.code, P = ED.sel, passo = e.shiftKey ? 1 : 0.25;
     if (e.type === 'keyup') { ED.keys.delete(k); return; }
     ED.keys.add(k);
-    if (k === 'Escape') { ED.tpl = null; edFantasma(); edCatalogo(ED.aba); }
-    else if ((e.ctrlKey || e.metaKey) && k === 'KeyZ') { e.preventDefault(); edDesfazer(); }
-    else if ((e.ctrlKey || e.metaKey) && k === 'KeyD') { e.preventDefault(); edDuplicar(); }
+    const ctrl = e.ctrlKey || e.metaKey, varias = edSelLista().length > 1;
+    if (k === 'Escape') { if (!ED.tpl && edSelLista().length) { edSelLimpa(); edRedesenhar(); edPainel(); } ED.tpl = null; edFantasma(); edCatalogo(ED.aba); }
+    else if (ctrl && k === 'KeyZ') { e.preventDefault(); edDesfazer(); }
+    else if (ctrl && k === 'KeyD') { e.preventDefault(); edDuplicar(); }
+    else if (ctrl && k === 'KeyC') { e.preventDefault(); edCopiar(); }
+    else if (ctrl && k === 'KeyV') { e.preventDefault(); edColar(); }
+    else if (varias && k === 'KeyR') edGirarGrupo(90);
+    else if (varias && (k === 'Delete' || k === 'Backspace')) edApagar();
+    else if (varias && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'].includes(k)) {
+      e.preventDefault(); edAntes();
+      const fx = -Math.sin(ED.cam.yaw), fz = -Math.cos(ED.cam.yaw), ax = Math.abs(fx) > Math.abs(fz);
+      const fw = ax ? [Math.sign(fx), 0] : [0, Math.sign(fz)], rt = [-fw[1], fw[0]];
+      const d = k === 'ArrowUp' ? fw : k === 'ArrowDown' ? [-fw[0], -fw[1]] : k === 'ArrowRight' ? rt : k === 'ArrowLeft' ? [-rt[0], -rt[1]] : null;
+      for (const Q of edSelLista()) { if (d) { Q.p[0] += d[0] * passo; Q.p[2] += d[1] * passo; } else Q.p[1] += (k === 'PageUp' ? 1 : -1) * passo; Q.p = Q.p.map((v) => +v.toFixed(3)); }
+      edMudou(true);
+    }
     else if (k === 'KeyR') {
       const alvo = P || ED.ghostP; if (!alvo || ['nascer', 'dom', 'mecha'].includes(alvo.t)) return;
       const fino = e.shiftKey && (alvo.t === 'prefab' || alvo.t === 'prop'); if (P) edAntes(); alvo.r = (((alvo.r || 0) + (fino ? 15 : 90)) % 360);
@@ -491,6 +588,138 @@ function edEventos() {
   addEventListener('keydown', tecla, true); addEventListener('keyup', tecla, true);
   addEventListener('blur', () => ED.keys.clear());
 }
+/* ---------- terreno deformado (2026-11-27) ----------
+   O botão "⛰ Terreno" da barra liga o modo terreno: o painel da direita cria a grade (um ponto a cada 2 m, cobrindo as peças com
+   10 m de folga) e escolhe o pincel; o botão esquerdo arrastado pinta (o direito continua olhando, WASD andando). Pincéis: Subir,
+   Descer, Aplanar (até a altura de onde o arrasto começou), Suavizar e Zerar (volta a y = 0). Raio em m, força em m por segundo
+   no meio do pincel (cai até zero na borda). A grade vai no .json como "relevo" (mapa-json.js: edRelevoFn, edRelevoMalha). */
+const ED_PINCEIS = [['subir', 'Subir'], ['descer', 'Descer'], ['aplanar', 'Aplanar'], ['suavizar', 'Suavizar'], ['zerar', 'Zerar (y = 0)']];
+const ED_TERR = { pincel: 'subir', raio: 6, forca: 3, passo: 2, maxPontos: 161, hMin: -20, hMax: 40 };
+function edRelevo() { return (ED.J.meta.extra && ED.J.meta.extra.relevo) || null; }
+function edCriarTerreno() {
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  for (const P of ED.J.pecas) { const w = P.s ? Math.max(P.s[0], P.s[2] || 0) / 2 : 1; x0 = Math.min(x0, P.p[0] - w); x1 = Math.max(x1, P.p[0] + w); z0 = Math.min(z0, P.p[2] - w); z1 = Math.max(z1, P.p[2] + w); }
+  if (x0 > x1) { x0 = -40; x1 = 40; z0 = -40; z1 = 40; }
+  const s = ED_TERR.passo, M = ED_TERR.maxPontos;
+  x0 = Math.floor((x0 - 10) / s) * s; z0 = Math.floor((z0 - 10) / s) * s;
+  const nx = Math.min(M, Math.ceil((x1 + 10 - x0) / s) + 1), nz = Math.min(M, Math.ceil((z1 + 10 - z0) / s) + 1);
+  if (!ED.J.meta.extra) ED.J.meta.extra = {};
+  edAntes(); ED.J.meta.extra.relevo = { x0, z0, passo: s, nx, nz, m: 'dirt', h: new Array(nx * nz).fill(0) }; edMudou(true);
+  edMsg(`Terreno de ${(nx - 1) * s} x ${(nz - 1) * s} m criado: arraste com o botão esquerdo para pintar`, 4000);
+}
+function edTerrenoMalha() {
+  const R = edRelevo();
+  if (!R) { if (ED.terreno) { ED.scene.remove(ED.terreno); ED.terreno.geometry.dispose(); ED.terreno = null; ED.terrenoK = null; } return; }
+  const k = [R.x0, R.z0, R.passo, R.nx, R.nz, R.m, JSON.stringify(R.cor || null), R.tx || 1].join('|');
+  if (!ED.terreno || ED.terrenoK !== k) {
+    if (ED.terreno) { ED.scene.remove(ED.terreno); ED.terreno.geometry.dispose(); }
+    const W = (R.nx - 1) * R.passo, D = (R.nz - 1) * R.passo, g = new THREE.PlaneGeometry(W, D, R.nx - 1, R.nz - 1); g.rotateX(-Math.PI / 2);
+    const S = (TEXSCALE[R.m || 'dirt'] || 2) * (R.tx || 1), pos = g.attributes.position, uv = g.attributes.uv; // uv em metros, como no jogo
+    for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + R.x0 + W / 2) / S, -(pos.getZ(i) + R.z0 + D / 2) / S);
+    const m = new THREE.MeshStandardMaterial({ color: edCorHex(R.cor || [1, 1, 1]), map: edTex3(R.m || 'dirt'), roughness: 0.9 });
+    ED.terreno = new THREE.Mesh(g, m); ED.terreno.position.set(R.x0 + W / 2, 0, R.z0 + D / 2); ED.terreno.userData.terreno = true;
+    ED.scene.add(ED.terreno); ED.terrenoK = k;
+  }
+  edTerrenoAltura();
+}
+function edTerrenoAltura() {
+  const R = edRelevo(), T = ED.terreno; if (!R || !T) return;
+  const pos = T.geometry.attributes.position; for (let i = 0; i < pos.count; i++) pos.setY(i, R.h[i] || 0);
+  pos.needsUpdate = true; T.geometry.computeVertexNormals(); T.geometry.computeBoundingBox(); T.geometry.computeBoundingSphere();
+}
+// onde o pincel está: no terreno, ou no chão y = 0 fora dele
+function edPincelPonto() {
+  const ev = ED.mouseT; if (!ev) return null;
+  const rc = edRaio(ev);
+  if (ED.terreno) { const h = rc.intersectObject(ED.terreno, false)[0]; if (h) return h.point; }
+  const pt = new THREE.Vector3(); return rc.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pt) ? pt : null;
+}
+function edPincelIni(e) {
+  if (!edRelevo()) return edMsg('Crie o terreno primeiro (botão no painel da direita).');
+  ED.mouseT = { clientX: e.clientX, clientY: e.clientY };
+  edAntes(); const p = edPincelPonto(); ED.pincel = { alvo: p ? p.y : 0 };
+}
+function edPincelFim() { ED.pincel = null; const R = edRelevo(); if (R) R.h = R.h.map((v) => Math.round(v * 100) / 100); edGuardar(); }
+function edPincelPasso(dt) {
+  const p = edPincelPonto(), R = edRelevo();
+  edPincelAnel(R ? p : null);
+  if (!ED.pincel || !p || !R) return;
+  const r = ED_TERR.raio, f = ED_TERR.forca * dt, s = R.passo, h = R.h, tipo = ED_TERR.pincel, velho = tipo === 'suavizar' ? h.slice() : null;
+  const i0 = Math.max(0, Math.floor((p.x - r - R.x0) / s)), i1 = Math.min(R.nx - 1, Math.ceil((p.x + r - R.x0) / s));
+  const j0 = Math.max(0, Math.floor((p.z - r - R.z0) / s)), j1 = Math.min(R.nz - 1, Math.ceil((p.z + r - R.z0) / s));
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const d = Math.hypot(R.x0 + i * s - p.x, R.z0 + j * s - p.z); if (d > r) continue;
+    const w = (1 - (d / r) ** 2) ** 2, k = j * R.nx + i, puxa = Math.min(1, f * w * 0.8);
+    if (tipo === 'subir') h[k] += f * w;
+    else if (tipo === 'descer') h[k] -= f * w;
+    else if (tipo === 'aplanar') h[k] += (ED.pincel.alvo - h[k]) * puxa;
+    else if (tipo === 'zerar') h[k] += (0 - h[k]) * puxa;
+    else { // suavizar: puxa para a média dos vizinhos
+      let soma = 0, n = 0;
+      for (const [a, b] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= R.nx || jj >= R.nz) continue; soma += velho[jj * R.nx + ii]; n++; }
+      h[k] += (soma / n - h[k]) * puxa;
+    }
+    h[k] = clamp(h[k], ED_TERR.hMin, ED_TERR.hMax);
+  }
+  edTerrenoAltura();
+}
+// o círculo do pincel, deitado no terreno
+function edPincelAnel(p) {
+  if (!p || ED.modo !== 'terreno') { if (ED.anel) ED.anel.visible = false; return; }
+  const N = 48, R = edRelevo(), fn = R ? edRelevoFn(R) : () => 0;
+  if (!ED.anel) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array((N + 1) * 3), 3)); ED.anel = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffcc33, depthTest: false })); ED.anel.renderOrder = 10; ED.scene.add(ED.anel); }
+  const pos = ED.anel.geometry.attributes.position, r = ED_TERR.raio;
+  for (let i = 0; i <= N; i++) { const a = (i / N) * Math.PI * 2, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; pos.setXYZ(i, x, fn(x, z) + 0.08, z); }
+  pos.needsUpdate = true; ED.anel.geometry.computeBoundingSphere(); ED.anel.visible = true;
+}
+function edPainelTerreno() {
+  const d = ED.dir, R = edRelevo(); d.innerHTML = '';
+  d.appendChild(edEl('h4', 'margin:4px 0 6px', '⛰ Terreno'));
+  if (!R) {
+    d.appendChild(edEl('p', 'color:#aaa;font-size:12px', 'O mapa ainda não tem terreno. Ele cobre as peças com 10 m de folga, um ponto a cada 2 m (até 320 x 320 m).'));
+    const b = edEl('button', 'width:100%', 'Criar terreno'); b.onclick = edCriarTerreno; d.appendChild(b);
+  } else {
+    d.appendChild(edEl('div', 'color:#aaa;font-size:12px', `${(R.nx - 1) * R.passo} x ${(R.nz - 1) * R.passo} m · um ponto a cada ${R.passo} m · de x ${R.x0} e z ${R.z0}`));
+    d.appendChild(edEl('label', '', 'Pincel'));
+    const g = edEl('div', 'display:grid;grid-template-columns:1fr 1fr;gap:4px');
+    for (const [k, rot] of ED_PINCEIS) { const b = edEl('button', '', rot); if (ED_TERR.pincel === k) b.className = 'on'; b.onclick = () => { ED_TERR.pincel = k; edPainel(); }; g.appendChild(b); }
+    d.appendChild(g);
+    for (const [rot, campo, a, b, passo, un] of [['Raio', 'raio', 1, 25, 0.5, 'm'], ['Força', 'forca', 0.5, 12, 0.5, 'm/s']]) {
+      const l = edEl('label', '', `${rot}: <b style="color:#eee">${ED_TERR[campo]} ${un}</b>`); d.appendChild(l);
+      const i = edEl('input', 'width:100%'); i.type = 'range'; i.min = a; i.max = b; i.step = passo; i.value = ED_TERR[campo];
+      i.oninput = () => { ED_TERR[campo] = +i.value; l.innerHTML = `${rot}: <b style="color:#eee">${ED_TERR[campo]} ${un}</b>`; }; d.appendChild(i);
+    }
+    d.appendChild(edEl('label', '', 'Superfície'));
+    const sf = edEl('select', 'width:100%'); for (const [k, nome, gr] of ED_SUPERF) if (gr === 'Chão' || gr === 'Parede' && /rock|stone|strata/.test(k)) sf.appendChild(new Option(nome, k));
+    sf.value = R.m || 'dirt'; sf.onchange = () => { edAntes(); R.m = sf.value; edMudou(true); }; d.appendChild(sf);
+    d.appendChild(edEl('label', '', 'Cor'));
+    const c = edEl('input', 'width:100%;height:30px;padding:0'); c.type = 'color'; c.value = '#' + edCorHex(R.cor || [1, 1, 1]).getHexString();
+    c.onchange = () => { edAntes(); const k = new THREE.Color(c.value); R.cor = [+k.r.toFixed(3), +k.g.toFixed(3), +k.b.toFixed(3)]; edMudou(true); }; d.appendChild(c);
+    const bts = edEl('div', 'display:flex;gap:6px;margin-top:12px');
+    const z = edEl('button', '', 'Zerar tudo'); z.onclick = () => { edAntes(); R.h.fill(0); edMudou(true); };
+    const x = edEl('button', 'color:#f88', 'Apagar terreno'); x.onclick = () => { if (!confirm('Apagar o terreno deste mapa? (Ctrl+Z desfaz)')) return; edAntes(); delete ED.J.meta.extra.relevo; edMudou(true); };
+    bts.append(z, x); d.appendChild(bts);
+  }
+  d.appendChild(edEl('p', 'color:#888;font-size:11px;margin-top:12px;line-height:1.45', 'Arraste com o botão esquerdo para pintar; o direito continua olhando e WASD andando. "Aplanar" leva até a altura de onde o arrasto começou (bom para assentar casas). Com terreno o mapa ganha chão de verdade: fora dele o chão fica em y = 0. Onde o terreno descer abaixo de 0, apague ou suba o chão de caixa. Ainda não funciona em mapa com mar. Clique em "⛰ Terreno" de novo para voltar às peças.'));
+}
+// retângulo de seleção (Shift+arrastar no vazio): ao soltar, entra tudo cujo ponto de apoio cai dentro dele, na tela
+function edRet(e) {
+  const R = ED.ret, b = ED.root.getBoundingClientRect();
+  Object.assign(R.q.style, { left: Math.min(R.x0, e.clientX) - b.left + 'px', top: Math.min(R.y0, e.clientY) - b.top + 'px', width: Math.abs(e.clientX - R.x0) + 'px', height: Math.abs(e.clientY - R.y0) + 'px' });
+}
+function edRetFim(e) {
+  const R = ED.ret; ED.ret = null; R.q.remove();
+  const x0 = Math.min(R.x0, e.clientX), x1 = Math.max(R.x0, e.clientX), y0 = Math.min(R.y0, e.clientY), y1 = Math.max(R.y0, e.clientY);
+  if (x1 - x0 < 4 && y1 - y0 < 4) return;
+  const r = ED.cv.getBoundingClientRect(), v = new THREE.Vector3(), achou = [];
+  for (const P of ED.J.pecas) {
+    v.set(P.p[0], P.p[1], P.p[2]).project(ED.camera); if (v.z > 1) continue; // atrás da câmera
+    const sx = r.left + ((v.x + 1) / 2) * r.width, sy = r.top + ((1 - v.y) / 2) * r.height;
+    if (sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1) achou.push(P);
+  }
+  for (const P of achou) if (!edSelLista().includes(P)) { if (ED.sel) ED.mais.add(ED.sel); ED.mais.add(P); ED.sel = P; }
+  edRedesenhar(); edPainel(); if (achou.length) edMsg(edSelLista().length + ' peças selecionadas');
+}
 function edTick(t) {
   const dt = Math.min(0.05, (t - (ED.t || t)) / 1000); ED.t = t;
   const w = ED.cv.clientWidth, h = ED.cv.clientHeight;
@@ -503,8 +732,9 @@ function edTick(t) {
     if (K.has('KeyE')) c.y += v; if (K.has('KeyQ')) c.y -= v;
   }
   ED.camera.position.set(c.x, c.y, c.z); ED.camera.rotation.set(c.pitch, c.yaw, 0, 'YXZ');
-  if (ED.box) ED.box.update();
+  for (const b of ED.boxes || []) b.update();
   ED.r.render(ED.scene, ED.camera);
   if (ED_MINI.fila.length) edMiniPasso();
+  if (ED.modo === 'terreno') edPincelPasso(dt);
 }
 if (/[?&]editor=1\b/.test(location.search)) { const go = () => setTimeout(() => { try { edAbrir(); } catch (e) { console.error('editor', e); } }, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go); }

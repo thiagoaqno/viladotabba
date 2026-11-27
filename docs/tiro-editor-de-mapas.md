@@ -471,6 +471,41 @@ As peças têm a frente para +z. Gire celeiro e torre apenas de 90 em 90 graus, 
 | `kcRurEstrada` | 6 x 0,02 x 12 | Chão de terra sem colisão |
 | `kcRurPomar` | 3 x 3,2 x 3 | Árvore baixa, com tronco sólido |
 
+## Centro comercial
+
+As medidas são aproximadas e incluem escadas e placas. As vitrines usam painéis quebráveis; as portas do banco e do supermercado também precisam ser quebradas para a entrada. Gire as peças com escadas somente de 90 em 90 graus. A galeria tem escada interna para o segundo piso e escada lateral para o terraço; no prédio de quatro andares, os andares superiores são cenário e a escada externa leva à cobertura. Os pontos `KC_BR` são sugestões locais para quem montar o mapa, não colocam armas automaticamente.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcComGaleria` | 26,4 x 6,8 x 14 | Galeria com lojas nos dois pisos e terraço |
+| `kcComSupermercado` | 20 x 3,4 x 16 | Supermercado com prateleiras, caixas e depósito |
+| `kcComPosto` | 20 x 4,5 x 16 | Posto com bombas, cobertura e loja |
+| `kcComEstacionamento` | 18 x 3 x 12 | Vagas pintadas, cancela e cabine |
+| `kcComCarro` | 4,4 x 1,7 x 2 | Carro estacionado |
+| `kcComBanco` | 10 x 3,4 x 8 | Agência com balcão e caixas eletrônicos |
+| `kcComFarmacia` | 8 x 3,4 x 8 | Farmácia com prateleiras |
+| `kcComLanchonete` | 8 x 3,4 x 8 | Lanchonete com mesas e balcão |
+| `kcComRoupas` | 8 x 3,4 x 8 | Loja de roupas com expositores |
+| `kcComPredio4` | 40 x 12,7 x 14,4 | Prédio de quatro andares, com escada externa até a laje |
+| `kcComPassarela` | 31,2 x 5,8 x 2,4 | Passarela com vão de 10 m e escada dos dois lados |
+| `kcComPlaca` | 3 x 0,7 x 0,11 | Letreiro de loja para encostar na parede |
+| `kcComPlacaServico` | 3 x 0,7 x 0,11 | Letreiro de serviço para encostar na parede |
+
+## Bairros
+
+A rampa é uma peça separada: encoste a ponta alta na extremidade do tabuleiro do viaduto. Gire as peças com escadas de 90 em 90 graus. Pontos `KC_BR` em viaduto e rampa pressupõem que os módulos estejam ligados.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcBaiEscola` | 28 x 4,8 x 20 | Escola com salas, pátio e quadra coberta |
+| `kcBaiIgreja` | 14,4 x 5,8 x 16 | Igreja com nave e plataforma na torre |
+| `kcBaiSaude` | 14 x 3,4 x 8 | Posto de saúde com recepção e consultórios |
+| `kcBaiEstacao` | 24 x 5,5 x 29,4 | Plataforma, bilheteria, trilhos e passarela |
+| `kcBaiViaduto` | 12 x 7 x 8 | Trecho de viaduto com vão embaixo |
+| `kcBaiRampaViaduto` | 12,6 x 7 x 8 | Rampa para o tabuleiro a 6 m |
+| `kcBaiCondominio` | 24 x 5,9 x 16 | Condomínio com guarita e casa com varanda superior |
+| `kcBaiLavaRapido` | 12 x 3,8 x 10 | Galpão aberto com pneus |
+
 ## Campo de várzea e peças de rua
 
 As medidas incluem os elementos que avançam para fora do corpo principal. A arquibancada tem escada: gire essa peça somente de 90 em 90 graus.

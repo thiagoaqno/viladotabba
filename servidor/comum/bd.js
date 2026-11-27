@@ -682,4 +682,12 @@ const historicoEloTiro = (perfil, limite = 10) => bd().prepare("SELECT modo, map
   .all(perfil, limite).map((l) => ({ modo: l.modo, mapa: l.mapa, resultado: l.resultado, delta: Number(l.delta), pontos: Number(l.pontos), em: Number(l.criado_em) }));
 const placarEloTiro = (limite = 50) => bd().prepare("SELECT p.nome, e.pontos, e.partidas, e.vitorias FROM tiro_elo e JOIN tiro_perfis p ON p.id = e.perfil WHERE e.partidas > 0 ORDER BY e.pontos DESC, e.partidas ASC LIMIT ?")
   .all(limite).map((l) => ({ nome: l.nome, pontos: Number(l.pontos), partidas: Number(l.partidas), vitorias: Number(l.vitorias) }));
-Object.assign(module.exports, { eloTiro, registrarEloTiro, historicoEloTiro, placarEloTiro });
+// os pontos de quem está no placar de uma partida, pelo nome do jogo (o apelido do online tem até 16 letras; com dois perfis
+// do mesmo nome, vale o que jogou por último)
+function eloPorNomesTiro(nomes) {
+  const ns = [...new Set(nomes.map((n) => String(n).toLowerCase().slice(0, 16)))].slice(0, 24); if (!ns.length) return {};
+  const linhas = bd().prepare(`SELECT p.nome, e.pontos FROM tiro_elo e JOIN tiro_perfis p ON p.id = e.perfil WHERE e.partidas > 0 AND lower(substr(p.nome, 1, 16)) IN (${ns.map(() => "?").join(",")}) ORDER BY e.atualizado_em ASC`).all(...ns);
+  const out = {}; for (const l of linhas) out[String(l.nome).toLowerCase().slice(0, 16)] = Number(l.pontos);
+  return out;
+}
+Object.assign(module.exports, { eloTiro, registrarEloTiro, historicoEloTiro, placarEloTiro, eloPorNomesTiro });

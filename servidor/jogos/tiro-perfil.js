@@ -11,6 +11,7 @@
 //   GET  /tiro/perfil/elo                     → { pontos, pico, partidas, vitorias, derrotas, ranque, historico }
 //   POST /tiro/perfil/elo/resultado { sala, modo, mapa, placar, humanos, eu } → { estado: contou | esperando | nao_conta }
 //   GET  /tiro/perfil/elo/placar              → { placar: [{ nome, pontos, ranque }] }
+//   GET  /tiro/perfil/elo/nomes?n=a,b         → { ranques: { a: { nome, rotulo } } } (o selo no placar da partida)
 const express = require("express");
 
 const CHAVES = /^(cod_arsenal|dc_settings|cod_nick|dc_grenade|dc_couteau)$/; // o que o perfil.js copia
@@ -100,6 +101,14 @@ module.exports = function ligarPerfilTiro(app) {
     const p = dono(req); if (!p) return erro(res, 401, "Perfil não encontrado neste aparelho.");
     try { res.json(ELO.relatar(bd(), p, req.body)); }
     catch (e) { console.warn("tiro-elo resultado:", e.message); erro(res, 500, "O resultado não foi guardado."); }
+  });
+  // o selo do ranque no placar da partida: ?n=nome1,nome2 → { ranques: { "nome em minúsculas": { nome, rotulo } } }
+  r.get("/elo/nomes", (req, res) => {
+    try {
+      const pts = bd().eloPorNomesTiro(String(req.query.n || "").split(",").map((s) => s.trim()).filter(Boolean)), out = {};
+      for (const [k, p] of Object.entries(pts)) { const q = ELO.ranque(p); out[k] = { nome: q.nome, rotulo: q.rotulo }; }
+      res.json({ ranques: out });
+    } catch { res.json({ ranques: {} }); }
   });
   r.get("/elo/placar", (req, res) => {
     try { res.json({ placar: bd().placarEloTiro(50).map((l) => ({ ...l, ranque: ELO.ranque(l.pontos).rotulo })) }); } catch { res.json({ placar: [] }); }

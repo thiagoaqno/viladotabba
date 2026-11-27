@@ -6402,7 +6402,7 @@ if(b.tactic==='flank'&&b.flankPt&&b.flankPt.distanceTo(b.pos)>2)return;b.tactic=
 function updateBot(b,dt,now){if(b.isRemote)return;if(b.off)return;if(MATCH.online&&!b.netBot){b.alive=false;b.model.root.visible=false;return;}
 if(!b.alive){releaseCover(b);animSoldier(b,dt);if(MATCH.state==='playing'){b.respawnT-=dt;if(b.respawnT<=0){spawnEntity(b);initTactics(b);}}
 return;}
-if(b.aggr===undefined)initTactics(b);if(playHold()){const I=b.input;I.mx=0;I.mz=0;I.sprint=false;I.jump=false;I.fire=false;I.firePressed=false;I.ads=false;ctlMove(b,dt);animSoldier(b,dt);return;}
+if(b.aggr===undefined)initTactics(b);if(playHold()){const I=b.input;I.mx=0;I.mz=0;I.sprint=false;I.jump=false;I.fire=false;I.firePressed=false;I.ads=false;ctlMove(b,dt);if(BR.on)brQuedaPasso(b,dt);animSoldier(b,dt);return;}
 const D=botDiff(),def=b.weapon;b.senseT-=dt;if(b.senseT<=0){b.senseT=rand(0.12,0.22);botSense(b,now);}
 if(now-b.lastHitT>5&&b.health<100)b.health=Math.min(100,b.health+30*dt);b.suppr=Math.max(0,b.suppr-dt*0.45);b.fear=Math.max(0,b.fear-dt*0.3);if(MATCH.mode==='dom')squadMaybe(b.team,now);if(b.sq&&b.sqSeen!==b.sq.rev){b.sqSeen=b.sq.rev;if(b.tactic==='roam'){b.goal=null;b.path=null;b.holdT=0;}}
 b.lookYaw=b.yaw;b.dmgMul=D.dmg;b.decideT-=dt;if(b.decideT<=0||b.forceDecide){b.forceDecide=false;b.decideT=rand(0.6,1.2);decideTactic(b,now);}

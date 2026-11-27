@@ -210,7 +210,22 @@
   var cssElo = ".tgRq{display:inline-flex;align-items:center;gap:6px;font-weight:800}.tgRq i{display:inline-block;width:18px;height:18px;clip-path:polygon(50% 0,100% 28%,100% 72%,50% 100%,0 72%,0 28%);background:var(--c);box-shadow:0 0 8px var(--c)}"
     + "#tgEloFim{margin:14px auto 0;max-width:520px;padding:12px 16px;border-radius:10px;background:#0f1114d9;border:1px solid #2d323b;font:600 15px/1.35 Figtree,system-ui,sans-serif;color:#f1f2f4;text-align:center}"
     + "#tgEloFim .d{font-size:24px;font-weight:900;margin-left:8px}#tgEloFim .d.up{color:#5ee08f}#tgEloFim .d.dn{color:#ff6b6b}#tgEloFim small{display:block;color:#99a0ab;margin-top:4px;font-weight:500}"
-    + ".tgBar{height:8px;border-radius:4px;background:#2a2f37;overflow:hidden;margin:8px 0 2px}.tgBar b{display:block;height:100%;background:var(--c)}";
+    + ".tgBar{height:8px;border-radius:4px;background:#2a2f37;overflow:hidden;margin:8px 0 2px}.tgBar b{display:block;height:100%;background:var(--c)}"
+    // a animação do fim: o número conta, a barra anda, o ranque pula quando muda (sobe brilhando, cai tremendo)
+    + "#tgEloFim.ea{animation:eaIn .45s ease-out both}#tgEloFim .ea-top{display:flex;align-items:center;justify-content:center;gap:4px}"
+    + "#tgEloFim .ea-rq i{width:26px;height:26px;transition:background .3s,box-shadow .3s}#tgEloFim .ea-rq b{font-size:19px}"
+    + "#tgEloFim .tgBar{height:12px;border-radius:6px;margin:10px 0 4px;position:relative}#tgEloFim .tgBar b{transition:background .3s;border-radius:6px}"
+    + "#tgEloFim .tgBar.dn b{background:linear-gradient(90deg,var(--c),#ff6b6b)}#tgEloFim .tgBar.up b{box-shadow:0 0 12px var(--c)}"
+    + "#tgEloFim .ea-aviso{display:block;font:900 20px/1.2 Figtree,system-ui,sans-serif;letter-spacing:1px;margin-top:6px;min-height:0;opacity:0}"
+    + "#tgEloFim .ea-aviso.on{animation:eaAviso .7s cubic-bezier(.2,1.6,.4,1) both}#tgEloFim .ea-aviso.up{color:#ffe58a;text-shadow:0 0 14px #ffb020}#tgEloFim .ea-aviso.dn{color:#ff6b6b}"
+    + "#tgEloFim .ea-pop{animation:eaPop .7s ease-out}#tgEloFim .ea-treme{animation:eaTreme .5s ease-in-out}#tgEloFim.ea-brilha{animation:eaBrilha 1.4s ease-out}"
+    + "#tgEloFim .d.ea-num{display:inline-block;animation:eaNum .5s cubic-bezier(.2,1.6,.4,1) both}"
+    + "@keyframes eaIn{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}"
+    + "@keyframes eaNum{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}"
+    + "@keyframes eaPop{0%{transform:scale(1)}35%{transform:scale(1.45);filter:brightness(1.9)}100%{transform:scale(1)}}"
+    + "@keyframes eaTreme{0%,100%{transform:none}20%{transform:translateX(-6px) rotate(-3deg)}40%{transform:translateX(6px) rotate(3deg)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}"
+    + "@keyframes eaBrilha{0%{box-shadow:0 0 0 #ffb02000}30%{box-shadow:0 0 34px #ffb020cc;border-color:#ffb020}100%{box-shadow:0 0 0 #ffb02000}}"
+    + "@keyframes eaAviso{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}";
   function rqHtml(r) { return '<span class="tgRq" style="--c:' + (CORES[r.nome] || "#ccc") + '"><i></i>' + esc(r.rotulo) + "</span>"; }
   function carregarElo() {
     if (!P) { ELO = null; return Promise.resolve(null); }
@@ -220,6 +235,47 @@
     var c = document.getElementById("tgEloFim"); if (c) return c;
     var st = document.getElementById("endStats"); if (!st || !st.parentNode) return null;
     c = document.createElement("div"); c.id = "tgEloFim"; st.parentNode.insertBefore(c, st.nextSibling); return c;
+  }
+  // o ranque de um total de pontos (o mesmo cálculo do servidor, servidor/jogos/tiro-elo.js)
+  var NOMES_RQ = ["Prata", "Ouro", "Diamante", "Ascendente", "Imortal"];
+  function rqDe(p) {
+    p = Math.max(0, Math.floor(p));
+    if (p >= 1500) return { nome: "Radiante", rotulo: "Radiante", naDivisao: 100, proximo: null };
+    var d = Math.floor(p / 100); return { nome: NOMES_RQ[Math.floor(d / 3)], rotulo: NOMES_RQ[Math.floor(d / 3)] + " " + (d % 3 + 1), naDivisao: p % 100, proximo: 100 };
+  }
+  var som = function (k) { try { if (typeof sfxUi === "function") sfxUi(k); } catch (e) { /* sem som */ } };
+  // a animação do fim: conta de 0 até o ganho (ou a perda), a barra anda ponto a ponto entre o antes e o depois e, quando o
+  // ranque muda no caminho, o ícone pula com o aviso "SUBIU PARA OURO 1!" (ou treme, ao cair)
+  function animar(c, r) {
+    var up = r.delta > 0, dn = r.delta < 0, r0 = rqDe(r.antes), cor = function (q) { return CORES[q.nome] || "#ccc"; };
+    c.className = "ea";
+    c.innerHTML = '<div class="ea-top"><span class="tgRq ea-rq" style="--c:' + cor(r0) + '"><i></i><b>' + esc(r0.rotulo) + '</b></span>'
+      + '<span class="d ea-num ' + (up ? "up" : dn ? "dn" : "") + '">' + (up ? "+" : dn ? "-" : "") + "0</span></div>"
+      + '<div class="tgBar ' + (up ? "up" : dn ? "dn" : "") + '" style="--c:' + cor(r0) + '"><b style="width:' + (r0.proximo ? r0.naDivisao : 100) + '%"></b></div>'
+      + '<small class="ea-txt">' + r.antes + " pontos</small><span class=\"ea-aviso\"></span>";
+    var rq = c.querySelector(".ea-rq"), nome = rq.querySelector("b"), num = c.querySelector(".ea-num"), bar = c.querySelector(".tgBar"), fill = bar.firstChild,
+      txt = c.querySelector(".ea-txt"), aviso = c.querySelector(".ea-aviso"), atual = r0.rotulo, ultimoTic = 0;
+    var DUR = Math.min(2600, 700 + Math.abs(r.delta) * 55), t0 = 0;
+    function passo(now) {
+      if (!c.isConnected) return;
+      if (!t0) t0 = now;
+      var k = Math.min(1, (now - t0) / DUR), e = 1 - Math.pow(1 - k, 3), v = Math.round(r.antes + (r.depois - r.antes) * e), q = rqDe(v);
+      num.textContent = (up ? "+" : dn ? "-" : "") + Math.abs(v - r.antes);
+      fill.style.width = (q.proximo ? q.naDivisao : 100) + "%";
+      txt.textContent = v + " pontos" + (q.proximo ? " · " + q.naDivisao + "/100 na divisão" : "");
+      if (v !== ultimoTic && Math.abs(v - r.antes) % 4 === 0) { ultimoTic = v; som("tick"); }
+      if (q.rotulo !== atual) {
+        var subiu = v > r.antes; atual = q.rotulo;
+        nome.textContent = q.rotulo; rq.style.setProperty("--c", cor(q)); bar.style.setProperty("--c", cor(q));
+        rq.classList.remove("ea-pop", "ea-treme"); void rq.offsetWidth; rq.classList.add(subiu ? "ea-pop" : "ea-treme");
+        aviso.className = "ea-aviso " + (subiu ? "up" : "dn"); void aviso.offsetWidth; aviso.classList.add("on");
+        aviso.textContent = subiu ? "SUBIU PARA " + q.rotulo.toUpperCase() + "!" : "CAIU PARA " + q.rotulo.toUpperCase();
+        if (subiu) { c.classList.remove("ea-brilha"); void c.offsetWidth; c.classList.add("ea-brilha"); som("unlock"); } else som("error");
+      }
+      if (k < 1) requestAnimationFrame(passo);
+      else { num.textContent = (up ? "+" : "") + r.delta; som(up ? "confirm" : dn ? "back" : "tick"); }
+    }
+    setTimeout(function () { requestAnimationFrame(passo); }, 450);
   }
   var fimId = 0;
   function fim(d) {
@@ -231,10 +287,7 @@
       pedir("POST", "/elo/resultado", d, 10000).then(function (r) {
         if (id !== fimId) return;
         if (r.estado === "contou") {
-          var up = r.delta > 0, sobe = r.ranque.rotulo !== r.ranqueAntes.rotulo;
-          c.innerHTML = rqHtml(r.ranque) + '<span class="d ' + (up ? "up" : r.delta < 0 ? "dn" : "") + '">' + (up ? "+" : "") + r.delta + "</span>"
-            + "<small>" + (sobe ? (r.depois > r.antes ? "Subiu de " : "Caiu de ") + esc(r.ranqueAntes.rotulo) + " para " + esc(r.ranque.rotulo) + " · " : "")
-            + r.depois + " pontos" + (r.ranque.proximo ? " · " + r.ranque.naDivisao + "/100 na divisão" : "") + "</small>";
+          animar(c, r);
           carregarElo();
         } else if (r.estado === "esperando" && tentativas++ < 18) {
           c.innerHTML = "Elo: esperando outro jogador com perfil confirmar o placar...<small>A partida conta quando dois perfis mandam o mesmo resultado.</small>";

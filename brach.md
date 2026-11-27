@@ -1,20 +1,15 @@
-# Tiro: mapa Favela Grande (para o Battle royale)
+# Tiro: Battle royale com largada espalhada e paraquedas mais alto
 
-Mapa novo do editor, feito juntando a **Favela** com dois bairros novos dos lados, com as peças do mesmo kit. O Aeroporto e a Maré Alta ficaram de fora, como pedido. Os mapas originais do jogo (Sable, Simoun etc.) não dá para emendar, porque cada um é montado por código, com céu, luz e caminhos dos robôs próprios. O Battle royale continua funcionando em todos eles.
+Dois pedidos do Thiago:
 
-**O mapa** (180 x 88 m jogáveis, uns 3 vezes a Favela):
-- **no meio, a Favela de hoje inteira** (o que estiver no `favela.json`, inclusive o que foi mexido pelo editor), sem as paredes invisíveis dos lados;
-- **uma rua de divisa de cada lado**, que liga a Favela aos bairros em todo o comprimento;
-- **a oeste, o Campinho**: campo de futebol de terra no meio, arquibancadas, parquinho, uma rua com carro e moto, e duas fileiras de casas e prédios de favela de cada lado, com vielas entre elas e quintais nos fundos;
-- **a leste, o Comércio**: fonte, quiosque de açaí, churrasquinho, pipoca e mesa de dominó perto da divisa, a quadra de futsal no meio, fliperama e mototáxi no fim, uma rua com van e carros, lojas e prédios, e casas atrás;
-- casas fora do limite fechando a vista, como na Favela.
+**Largadas mais espalhadas.** Os lugares de largada do cada um por si (`ffaSlots`) começam sempre na base do Alpha e só se afastam até 60 m, então num mapa grande ficava todo mundo de um lado. No Battle royale agora são outros:
+- entram todos os pontos de chão do mapa com céu aberto em cima (para cair de cima);
+- o primeiro é sorteado e cada um dos seguintes é o mais longe possível dos já escolhidos, sem limite de distância;
+- a ordem de quem pega cada lugar também é embaralhada, para ninguém cair sempre no mesmo canto;
+- a semente é a mesma do salão, então todo mundo calcula os mesmos lugares.
 
-Mais 129 pontos de passagem nos bairros (ruas, vielas, fundos, campo e quadra), que servem para os robôs andarem e para espalhar as armas e as caixas do Battle royale.
+**Paraquedas mais alto.** Abre a 35 m do chão (era 18), e o começo subiu para 75 m (era 60), para sobrar queda livre. Com o paraquedas aberto dá uns 6 s de planeio (uns 45 m para o lado).
 
-**Como foi feito:** `ferramentas/tiro-mapas/favela-grande-gerar.js` lê o `favela.json` e grava o `favela-grande.json`, que entra no jogo como os outros mapas do editor. Conferi por script que nenhuma casa nova encosta em outra (pelo tamanho de cada prefab escrito no kit). Depois de mexer na Favela Grande pelo editor, não rode o gerador de novo, porque ele sobrescreve.
-
-Montado de novo em cima da main depois do #1069 (robôs esperando no ar).
-
-Conferido só com `node --check` (o gerador e o script do jogo montado); não joguei nem vi o mapa.
+Feito em `ferramentas/tiro-br.js`. Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

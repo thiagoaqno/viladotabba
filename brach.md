@@ -14,7 +14,7 @@ Pedido do Thiago: "seria legal eu conseguir criar um terreno meio deformado no e
 
 **Arquivos:** `ferramentas/tiro-editor/editor.js` (o modo terreno), `mapa-json.js` (`edRelevoFn`, `edRelevoMalha`, limites e vazio), `texturas.js` (a foto do chão do terreno), e o guia em `docs/tiro-editor-de-mapas.md`. No `.json` fica em `relevo: { x0, z0, passo, nx, nz, m, cor, h }`.
 
-**Atenção:** este PR e o #1072 (copiar e colar) mexem no `editor.js` e montam o mesmo `public/tiro/index.html`. O que entrar por último precisa ser juntado e montado de novo em cima da main.
+Montado de novo em cima da main depois do #1071 e do #1072 (o conflito no `editor.js` foi resolvido juntando as duas partes).
 
 Conferido só com `node --check` (os arquivos e o script do jogo montado); não abri o editor nem joguei um mapa com terreno.
 

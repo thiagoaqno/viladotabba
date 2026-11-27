@@ -22,6 +22,9 @@ botão **Jogar** monta o mapa de verdade e começa uma partida solo com bots.
 | Mover | arraste a peça; as setas empurram 25 cm (Shift: 1 m), relativas à câmera; PgUp/PgDn sobem e descem |
 | Girar | R (90°); Shift+R gira 15° (só prefab e objeto) |
 | Duplicar / apagar / desfazer | Ctrl+D / Delete / Ctrl+Z |
+| Selecionar várias | Shift+clique (ou Ctrl+clique) põe e tira uma peça; Shift+arrastar num lugar vazio seleciona tudo no retângulo; Esc solta |
+| Mexer em várias | arraste uma delas (todas andam juntas), setas e PgUp/PgDn, R gira o grupo 90° em volta do meio, Delete apaga todas, Ctrl+D duplica todas |
+| Copiar e colar | Ctrl+C copia a seleção; Ctrl+V cola onde o mouse aponta (o pé da peça mais baixa vai no chão que o mouse acerta). A cópia fica guardada no navegador: dá para copiar de um mapa e colar em outro |
 | Focar na peça | F |
 
 O painel da direita mostra a posição, o tamanho, o giro, a matéria, a cor e a colisão da peça selecionada.

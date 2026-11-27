@@ -421,6 +421,28 @@ if (IATE_ATIVO) {
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 
+// ---------- battle royale (ferramentas/tiro-br.js, 2026-11-27) ----------
+// O modo entra como mais um de MODES ('br'); dentro da partida ele é um "cada um por si" com BR.on (o tiro-br.js troca as
+// funções da partida). Aqui ficam só os pontos que o jogo testa por 'ffa' antes da partida (menu, salão, robôs do host), o
+// tamanho do salão (12 no battle royale, NET_MAX segue 8 nos outros), os 11 robôs do solo, o fim e a classificação.
+{
+  const br = fs.readFileSync(path.join(__dirname, "tiro-br.js"), "utf8");
+  h = troca(h, "NET.cfg.mode==='ffa'", "brSolo(NET.cfg.mode)", { min: 3, nome: "BR: salão como cada um por si" });
+  h = troca(h, "NET.cfg.mode!=='ffa'", "!brSolo(NET.cfg.mode)", { min: 0, nome: "BR: sem trocar de equipe" });
+  h = troca(h, "Settings.mode==='ffa'", "brSolo(Settings.mode)", { nome: "BR: solo como cada um por si" });
+  h = troca(h, "o.mode==='ffa'", "brSolo(o.mode)", { min: 2, nome: "BR: menu como cada um por si" });
+  h = troca(h, "st.o!=='ffa'", "!brSolo(st.o)", { min: 3, nome: "BR: lista de salões" });
+  h = troca(h, /NET_MAX(?!=8)/g, "netMax()", { min: 6, nome: "BR: salão de 12" });
+  h = troca(h, "bots.length-FFA_BOTS", "bots.length-(BR.on?11:FFA_BOTS)", { nome: "BR: 11 robôs no solo" });
+  h = troca(h, "all.length-FFA_BOTS", "all.length-(Settings.mode==='br'?11:FFA_BOTS)", { nome: "BR: 11 robôs na tela do solo" });
+  h = troca(h, "const teams=!o.online?MD.teams:", "const teams=o.mode==='br'||!o.online?MD.teams:", { nome: "BR: texto de jogadores" });
+  h = troca(h, "ffaList().some((e)=>e.kills>=MATCH.limit)", "ffaAcabou()", { min: 3, nome: "BR: último vivo vence" });
+  h = troca(h, "const ffaCmp=(a,b)=>", "const ffaCmp=(a,b)=>(BR.on?brCmp(a,b):0)||", { nome: "BR: classificação" });
+  h = troca(h, "if(MATCH.mode==='ffa'&&(HUD.rkT-=dt)<=0){HUD.rkT=0.25;hudText($('scLim'),", "if(MATCH.mode==='ffa'&&(HUD.rkT-=dt)<=0){HUD.rkT=0.25;hudText($('scLim'),BR.on?brLinha():", { nome: "BR: vivos e zona no placar" });
+  // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
+}
+
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador
 fs.copyFileSync(path.join(__dirname, "tiro-perfil-cliente.js"), path.join(OUT, "perfil-galera.js"));
 h = troca(h, /<meta charset="utf-8">/i, (a) => a + '\n<script src="perfil-galera.js"></script>', { todas: false, nome: "perfil da Vila" });

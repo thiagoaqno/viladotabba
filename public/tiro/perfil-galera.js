@@ -245,7 +245,7 @@
   }
   var som = function (k) { try { if (typeof sfxUi === "function") sfxUi(k); } catch (e) { /* sem som */ } };
   // a animação do fim: conta de 0 até o ganho (ou a perda), a barra anda ponto a ponto entre o antes e o depois e, quando o
-  // ranque muda no caminho, o ícone pula com o aviso "SUBIU PARA OURO 1!" (ou treme, ao cair)
+  // ranque muda no caminho, o ícone pula com o aviso "SUBIU PARA OURO 1!" (ao cair, só treme)
   function animar(c, r) {
     var up = r.delta > 0, dn = r.delta < 0, r0 = rqDe(r.antes), cor = function (q) { return CORES[q.nome] || "#ccc"; };
     c.className = "ea";
@@ -268,8 +268,8 @@
         var subiu = v > r.antes; atual = q.rotulo;
         nome.textContent = q.rotulo; rq.style.setProperty("--c", cor(q)); bar.style.setProperty("--c", cor(q));
         rq.classList.remove("ea-pop", "ea-treme"); void rq.offsetWidth; rq.classList.add(subiu ? "ea-pop" : "ea-treme");
-        aviso.className = "ea-aviso " + (subiu ? "up" : "dn"); void aviso.offsetWidth; aviso.classList.add("on");
-        aviso.textContent = subiu ? "SUBIU PARA " + q.rotulo.toUpperCase() + "!" : "CAIU PARA " + q.rotulo.toUpperCase();
+        // na queda, só o ícone treme (o aviso escrito seria repetir o que o ícone já mostra)
+        if (subiu) { aviso.className = "ea-aviso up"; void aviso.offsetWidth; aviso.classList.add("on"); aviso.textContent = "SUBIU PARA " + q.rotulo.toUpperCase() + "!"; }
         if (subiu) { c.classList.remove("ea-brilha"); void c.offsetWidth; c.classList.add("ea-brilha"); som("unlock"); } else som("error");
       }
       if (k < 1) requestAnimationFrame(passo);

@@ -13,7 +13,7 @@ Mais 129 pontos de passagem nos bairros (ruas, vielas, fundos, campo e quadra), 
 
 **Como foi feito:** `ferramentas/tiro-mapas/favela-grande-gerar.js` lê o `favela.json` e grava o `favela-grande.json`, que entra no jogo como os outros mapas do editor. Conferi por script que nenhuma casa nova encosta em outra (pelo tamanho de cada prefab escrito no kit). Depois de mexer na Favela Grande pelo editor, não rode o gerador de novo, porque ele sobrescreve.
 
-**Atenção:** este PR e o #1069 montam o mesmo `public/tiro/index.html`. O que entrar por último precisa ser montado de novo em cima da main.
+Montado de novo em cima da main depois do #1069 (robôs esperando no ar).
 
 Conferido só com `node --check` (o gerador e o script do jogo montado); não joguei nem vi o mapa.
 

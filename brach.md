@@ -1,20 +1,21 @@
-# Tiro: mapa Favela Grande (para o Battle royale)
+# Editor de mapas do Tiro: terreno deformado com pincel
 
-Mapa novo do editor, feito juntando a **Favela** com dois bairros novos dos lados, com as peças do mesmo kit. O Aeroporto e a Maré Alta ficaram de fora, como pedido. Os mapas originais do jogo (Sable, Simoun etc.) não dá para emendar, porque cada um é montado por código, com céu, luz e caminhos dos robôs próprios. O Battle royale continua funcionando em todos eles.
+Pedido do Thiago: "seria legal eu conseguir criar um terreno meio deformado no editor de mapas".
 
-**O mapa** (180 x 88 m jogáveis, uns 3 vezes a Favela):
-- **no meio, a Favela de hoje inteira** (o que estiver no `favela.json`, inclusive o que foi mexido pelo editor), sem as paredes invisíveis dos lados;
-- **uma rua de divisa de cada lado**, que liga a Favela aos bairros em todo o comprimento;
-- **a oeste, o Campinho**: campo de futebol de terra no meio, arquibancadas, parquinho, uma rua com carro e moto, e duas fileiras de casas e prédios de favela de cada lado, com vielas entre elas e quintais nos fundos;
-- **a leste, o Comércio**: fonte, quiosque de açaí, churrasquinho, pipoca e mesa de dominó perto da divisa, a quadra de futsal no meio, fliperama e mototáxi no fim, uma rua com van e carros, lojas e prédios, e casas atrás;
-- casas fora do limite fechando a vista, como na Favela.
+**No editor** (botão **⛰ Terreno** na barra, que liga e desliga o modo terreno):
+- **Criar terreno**: uma grade com um ponto a cada 2 m, cobrindo as peças com 10 m de folga (até 320 x 320 m);
+- **botão esquerdo arrastado pinta**, o direito continua olhando e WASD andando; um círculo amarelo mostra o pincel deitado no chão;
+- pincéis **Subir**, **Descer**, **Aplanar** (até a altura de onde o arrasto começou, bom para assentar casas), **Suavizar** e **Zerar** (volta a y = 0);
+- **Raio** (1 a 25 m) e **Força** (0,5 a 12 m/s no meio do pincel, caindo até zero na borda); alturas de -20 a 40 m;
+- **Superfície** (as de chão, mais rocha e pedra) e **Cor**; **Zerar tudo** e **Apagar terreno**; Ctrl+Z desfaz cada pincelada;
+- as peças colocadas com o mouse se assentam em cima do terreno.
 
-Mais 129 pontos de passagem nos bairros (ruas, vielas, fundos, campo e quadra), que servem para os robôs andarem e para espalhar as armas e as caixas do Battle royale.
+**No jogo** o terreno vira o relevo de verdade, o mesmo das dunas do Simoun (`MAP_DEFS.relief`, 02-relief.js). Por isso pisar, balas, granadas, robôs e a sombra do chão já usam ele. A malha que se vê é a grade de 1 m do próprio jogo, a mesma em que se pisa, na superfície escolhida. Com terreno o mapa deixa de ser "sem chão": fora da grade o chão fica em y = 0. Com mar ainda não funciona, porque o mapa com mar é "sem chão" e o relevo não vale.
 
-**Como foi feito:** `ferramentas/tiro-mapas/favela-grande-gerar.js` lê o `favela.json` e grava o `favela-grande.json`, que entra no jogo como os outros mapas do editor. Conferi por script que nenhuma casa nova encosta em outra (pelo tamanho de cada prefab escrito no kit). Depois de mexer na Favela Grande pelo editor, não rode o gerador de novo, porque ele sobrescreve.
+**Arquivos:** `ferramentas/tiro-editor/editor.js` (o modo terreno), `mapa-json.js` (`edRelevoFn`, `edRelevoMalha`, limites e vazio), `texturas.js` (a foto do chão do terreno), e o guia em `docs/tiro-editor-de-mapas.md`. No `.json` fica em `relevo: { x0, z0, passo, nx, nz, m, cor, h }`.
 
-Montado de novo em cima da main depois do #1069 (robôs esperando no ar).
+**Atenção:** este PR e o #1072 (copiar e colar) mexem no `editor.js` e montam o mesmo `public/tiro/index.html`. O que entrar por último precisa ser juntado e montado de novo em cima da main.
 
-Conferido só com `node --check` (o gerador e o script do jogo montado); não joguei nem vi o mapa.
+Conferido só com `node --check` (os arquivos e o script do jogo montado); não abri o editor nem joguei um mapa com terreno.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -383,6 +383,23 @@ if (IATE_ATIVO) {
   h = troca(h, "HR.off=true;gpuLog(", "HR.off=true;try{localStorage.removeItem('tiro_hr_escala');}catch(e){}gpuLog(", { nome: "fps da tela rápida (esquecer ao desistir)" });
   h = troca(h, "if(++DYN.good>=DYN.need){const r=stepQuality(1);",
     "if(++DYN.good>=(hrAlvo()?Math.max(DYN.need,24):DYN.need)){const r=stepQuality(1);", { nome: "fps da tela rápida (subir a resolução com calma)" });
+  // (2026-11-27, Mi Pad no Chrome, "começa a 120 e depois fica em 60", mesmo na qualidade mínima) MODO TABLET. O relatório de
+  // desempenho dele mostrou o PROCESSADOR passando dos 8,3 ms que os 120 fps pedem: o "render" (o Chrome entregando 140 a 230
+  // desenhos por quadro) com 3,5 a 8 ms, os bots com 1 a 3 ms e o "prep" com até 2,7 ms. A resolução não ajuda nisso. Então, em
+  // aparelho de toque com tela de 90 Hz ou mais (e enquanto ele ainda mira a taxa da tela, tabLeve):
+  // - os bots pensam a cada dois quadros (HF.k = 2, o que o jogo já fazia acima de 175 fps): a 120 fps, 60 vezes por segundo;
+  //   volta ao normal se cair abaixo de 70 fps, para os bots não andarem aos trancos;
+  // - os detalhes do mapa somem mais perto (75% da distância; os espalhados, 70%) e a conta de quem aparece é a cada 4 quadros;
+  // - os soldados longe passam para o modelo simples mais cedo (lodPx 1,4 vez), o que também tira o pano (clothUpdate) deles
+  h = troca(h, "const HF={k:1};function hfUpdate(fps){HF.k=fps>(HF.k>=3?290:340)?3:fps>(HF.k>=2?150:175)?2:1;}",
+    "const HF={k:1};function tabLeve(){return typeof HR!=='undefined'&&COARSE&&!HR.off&&!Settings.eco&&HR.ms<12;}function hfUpdate(fps){HF.k=fps>(HF.k>=3?290:340)?3:fps>(HF.k>=2?150:175)?2:1;if(HF.k<2&&tabLeve()&&fps>70)HF.k=2;}",
+    { nome: "modo tablet (bots a cada dois quadros)" });
+  h = troca(h, "function updateMapDetail(){const p=camera.position;for(const[list,d]of[[WORLD.fine,RQ.q.detail||60],[WORLD.scatter,RQ.q.scatter||30]]){",
+    "function updateMapDetail(){const tl=tabLeve();if(tl&&frameN%4!==0)return;const p=camera.position;for(const[list,d]of[[WORLD.fine,(RQ.q.detail||60)*(tl?0.75:1)],[WORLD.scatter,(RQ.q.scatter||30)*(tl?0.7:1)]]){",
+    { nome: "modo tablet (detalhes do mapa)" });
+  h = troca(h, "function updateSoldierLods(){const k=1.8*VIEW.h/(2*Math.tan(camera.fov*Math.PI/360)),th=RQ.q.lodPx;",
+    "function updateSoldierLods(){const k=1.8*VIEW.h/(2*Math.tan(camera.fov*Math.PI/360)),th=RQ.q.lodPx*(tabLeve()?1.4:1);",
+    { nome: "modo tablet (soldados longe simples)" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

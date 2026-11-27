@@ -2467,3 +2467,429 @@ PF.kcVidroPainel = (w = 2, h = 2) => prefab('kcVidroPainel' + w + 'x' + h, (M) =
 });
 propType('kcVidro', (a) => { const w = a[0] || 2, h = a[1] || 2;
   return { pf: () => PF.kcVidroPainel(w, h), shapes: [BOX(0, h / 2, 0, w / 2, h / 2, 0.02)], mass: 14, mu: 0.5, e: 0.1, resp: 0.6, blast: 2, hp: 1, mat: 'glass', snd: 'plastic', brk: 'glass' }; });
+
+/* ---------- zona rural: coordenadas locais para futuros pontos do Battle royale ---------- */
+const KC_BR = {};
+const KC_RUR_MADEIRA = [0.48, 0.31, 0.18], KC_RUR_FENO = [0.72, 0.61, 0.30];
+kcTex(['kcRurCasaSede', 'kcRurPauAPique', 'kcRurGalinheiro', 'kcRurPoco'], ['plaster', 'plaster2', 'rooftiles']);
+kcTex(['kcRurCeleiro', 'kcRurCerca', 'kcRurPorteira', 'kcRurCurral', 'kcRurCarroca'], ['boards', 'corrugated']);
+kcTex(['kcRurEstrada', 'kcRurMilho'], ['dirt']);
+kcTex(['kcRurTrator'], ['rust', 'rubber']);
+// Parede de madeira de cerca: as tábuas e postes colidem separadamente, deixando frestas para tiros.
+function kcRurCerca(M, x0, x1, z) {
+  for (const x of [x0 + 0.06, x1 - 0.06]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.06, x + 0.06, 0, 1.5, z - 0.06, z + 0.06, 'wood');
+  for (const y of [0.35, 0.85, 1.3]) kcBloco(M, 'boards', KC_RUR_MADEIRA, x0, x1, y, y + 0.15, z - 0.04, z + 0.04, 'wood');
+}
+function kcRurFardo(M, x, y, z) { kcBloco(M, 'canvas', KC_RUR_FENO, x - 0.6, x + 0.6, y, y + 0.7, z - 0.45, z + 0.45, 'wood'); }
+function kcRurRoda(M, x, z, r, esp, mat, cor) {
+  M.save().move(x, r, z + esp / 2).rotX(Math.PI / 2).color(cor); M.cyl(mat, r, esp, 12); M.restore();
+  M.col(x - r, x + r, 0, 2 * r, z - esp / 2, z + esp / 2, mat === 'rubber' ? 'metal' : 'wood');
+}
+// Casa com três cômodos e varanda aberta; porta e passagens internas têm 1,6 m.
+function kcRurCasa(M, X, Z, mat, cor) {
+  M.color(cor);
+  kcParede(M, mat, 'x', Z - 0.15, Z, -X, X, 0, 2.8, [[-X + 0.3, -X + 0.9, 1, 2], [-0.8, 0.8, 0, 2.2], [X - 0.9, X - 0.3, 1, 2]]);
+  kcParede(M, mat, 'x', -Z, -Z + 0.15, -X, X, 0, 2.8);
+  for (const x of [-X, X - 0.15]) kcParede(M, mat, 'z', x, x + 0.15, -Z + 0.15, Z - 0.15, 0, 2.8);
+  kcBloco(M, 'rooftiles', [0.48, 0.25, 0.18], -X - 0.15, X + 0.15, 2.8, 3.0, -Z - 0.15, Z + 0.15, 'wood');
+}
+
+// casa sede do sítio, 9 x 3 x 7 m: três cômodos e varanda coberta na frente.
+PF.kcRurCasaSede = () => prefab('kcRurCasaSede', (M) => {
+  M.local(1); M.save().move(0, 0, -0.5); kcRurCasa(M, 4.35, 2.85, 'plaster', [0.85, 0.79, 0.63]);
+  M.color([0.85, 0.79, 0.63]);
+  kcParede(M, 'plaster', 'z', -1.5, -1.35, -2.7, 2.7, 0, 2.8, [[-0.8, 0.8, 0, 2.2]]);
+  kcParede(M, 'plaster', 'z', 1.35, 1.5, -2.7, 2.7, 0, 2.8, [[-0.8, 0.8, 0, 2.2]]);
+  for (const x of [-4.2, 4.2]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.1, x + 0.1, 0, 2.8, 3.85, 4, 'wood');
+  kcBloco(M, 'rooftiles', [0.48, 0.25, 0.18], -4.5, 4.5, 2.8, 3, 2.85, 4, 'wood'); M.restore();
+});
+KC_BR.kcRurCasaSede = { dentro: [[-3, 0.1, -1.7], [0, 0.1, -1.7], [3, 0.1, -1.7]], laje: [] };
+
+// celeiro, 12 x 6 x 12 m: frente aberta, fardos e mezanino com escada interna.
+PF.kcRurCeleiro = () => prefab('kcRurCeleiro', (M) => {
+  KC_ESCADAS.kcRurCeleiro = []; M.local(1);
+  for (const x of [-6, 5.85]) kcBloco(M, 'boards', KC_RUR_MADEIRA, x, x + 0.15, 0, 5.8, -6, 6, 'wood');
+  kcBloco(M, 'boards', KC_RUR_MADEIRA, -5.85, 5.85, 0, 5.8, -6, -5.85, 'wood');
+  kcBloco(M, 'boards', KC_RUR_MADEIRA, -6, 6, 4.8, 5.8, 5.85, 6, 'wood');
+  kcBloco(M, 'corrugated', [0.45, 0.42, 0.37], -6, 6, 5.8, 6, -6, 6, 'steel');
+  kcEscadaF(M, 'kcRurCeleiro', 3.4, 5.8, -1.3, 3.7, 'z', 2.95, 0, [[5.75, -1.3], [5.75, 3.7]]);
+  kcPatamar(M, 3.4, 5.8, -3.7, -1.3, 2.95);
+  kcBloco(M, 'boards', KC_RUR_MADEIRA, -5.8, 3.4, 2.8, 2.95, -5.85, -1.3, 'wood');
+  kcGuarda(M, -5.8, -1.3, 3.4, -1.3, 2.95);
+  kcRurFardo(M, -4, 0, 2); kcRurFardo(M, -2.6, 0, 2); kcRurFardo(M, -4, 0.7, 2);
+});
+KC_BR.kcRurCeleiro = { dentro: [[0, 0.1, 2], [-2, 0.1, 4]], laje: [[-2, 3.05, -3.5]] };
+
+// casa de pau a pique, 5,3 x 3 x 5,3 m: interior livre com porta na frente.
+PF.kcRurPauAPique = () => prefab('kcRurPauAPique', (M) => { M.local(1); kcRurCasa(M, 2.5, 2.5, 'plaster2', [0.67, 0.48, 0.33]); });
+KC_BR.kcRurPauAPique = { dentro: [[0, 0.1, -0.8]], laje: [] };
+
+// cerca de madeira, 3 x 1,5 x 0,12 m: tábuas com frestas.
+PF.kcRurCerca = () => prefab('kcRurCerca', (M) => { M.local(1); kcRurCerca(M, -1.5, 1.5, 0); });
+// porteira aberta, 3 x 1,5 x 1,3 m: vão livre de 2,7 m.
+PF.kcRurPorteira = () => prefab('kcRurPorteira', (M) => {
+  M.local(1); M.save().move(0, 0, -0.59); for (const x of [-1.44, 1.44]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.06, x + 0.06, 0, 1.5, -0.06, 0.06, 'wood');
+  for (const y of [0.35, 0.85, 1.3]) kcBloco(M, 'boards', KC_RUR_MADEIRA, -1.5, -1.42, y, y + 0.15, 0, 1.24, 'wood');
+  M.restore();
+});
+// curral, 9,12 x 1,5 x 9,12 m: cercado com vão de 3 m na frente.
+PF.kcRurCurral = () => prefab('kcRurCurral', (M) => {
+  M.local(1); for (const z of [-4.5, 4.5]) for (const x of [-3, 0, 3]) if (z < 0 || x !== 0) kcRurCerca(M, x - 1.5, x + 1.5, z);
+  for (const x of [-4.5, 4.5]) for (const z of [-3, 0, 3]) { M.save().move(x, 0, z).rotY(Math.PI / 2); kcRurCerca(M, -1.5, 1.5, 0); M.restore(); }
+});
+KC_BR.kcRurCurral = { dentro: [], laje: [] }; // curral descoberto: não há piso coberto nem laje.
+// fardo solto, 1,2 x 0,7 x 0,9 m: cobertura baixa.
+PF.kcRurFardo = () => prefab('kcRurFardo', (M) => { M.local(1); kcRurFardo(M, 0, 0, 0); });
+// pilha de fardos, 2,4 x 1,4 x 0,9 m: cobertura de pé.
+PF.kcRurFardos = () => prefab('kcRurFardos', (M) => { M.local(1); for (const x of [-0.6, 0.6]) for (const y of [0, 0.7]) kcRurFardo(M, x, y, 0); });
+
+// torre de água, aproximadamente 7,23 x 5,82 x 8,97 m: escada de acesso, escada de marinheiro e plataforma a 4,8 m.
+PF.kcRurTorreAgua = () => prefab('kcRurTorreAgua', (M) => {
+  KC_ESCADAS.kcRurTorreAgua = []; M.local(1); M.save().move(0, 0, -1.285);
+  kcEscadaF(M, 'kcRurTorreAgua', -3.6, -1.2, -0.8, 3.3, 'z', 2.4, 0, [[-3.55, -0.8], [-3.55, 3.3]]);
+  kcPatamar(M, -3.6, 1.2, -3.2, -0.8, 2.4);
+  kcEscadaF(M, 'kcRurTorreAgua', -1.2, 1.2, -0.8, 3.3, 'z', 2.4, 4.8, [[1.15, -0.8], [1.15, 3.3]]);
+  kcBloco(M, 'steel', KC_COR.ferro, -1.2, 3.6, 4.65, 4.8, 3.3, 5.7, 'metal');
+  kcGuarda(M, -1.2, 5.7, 3.6, 5.7, 4.8); kcGuarda(M, 3.6, 3.3, 3.6, 5.7, 4.8);
+  kcGuarda(M, -1.2, 3.3, -1.2, 5.7, 4.8); kcGuarda(M, 1.2, 3.3, 3.6, 3.3, 4.8);
+  for (const x of [1.4, 3.4]) for (const z of [3.5, 5.5]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.05, x + 0.05, 0, 4.8, z - 0.05, z + 0.05, 'metal');
+  M.cls = 1; M.color(KC_COR.ferro); for (const x of [2.1, 2.7]) M.boxB('steel', x - 0.025, x + 0.025, 0, 4.8, 5.72, 5.77);
+  for (let y = 0.3; y < 4.8; y += 0.3) M.boxB('steel', 2.1, 2.7, y, y + 0.04, 5.72, 5.77); M.cls = 0;
+  kcCaixaAgua(M, 2.4, 4.8, 4.5);
+  M.restore(); for (const e of KC_ESCADAS.kcRurTorreAgua) { e.z0 -= 1.285; e.z1 -= 1.285; }
+});
+KC_BR.kcRurTorreAgua = { dentro: [], laje: [[0, 4.9, 3.215]] };
+
+// galinheiro, 4,3 x 3 x 4,3 m: abrigo aberto para entrar.
+PF.kcRurGalinheiro = () => prefab('kcRurGalinheiro', (M) => { M.local(1); kcRurCasa(M, 2, 2, 'boards', KC_RUR_MADEIRA); });
+KC_BR.kcRurGalinheiro = { dentro: [[0, 0.1, -0.7]], laje: [] };
+// poço, 2 x 2,8 x 2 m: mureta e telhadinho em quatro postes.
+PF.kcRurPoco = () => prefab('kcRurPoco', (M) => {
+  M.local(1); kcMureta(M, -0.8, 0.8, 0, -0.8, 0.8, 0.8);
+  for (const x of [-0.9, 0.9]) for (const z of [-0.9, 0.9]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.05, x + 0.05, 0, 2.6, z - 0.05, z + 0.05, 'wood');
+  kcBloco(M, 'rooftiles', [0.48, 0.25, 0.18], -1, 1, 2.6, 2.8, -1, 1, 'wood');
+});
+// carroça, 3 x 1,1 x 1,6 m: carroceria e rodas sólidas.
+PF.kcRurCarroca = () => prefab('kcRurCarroca', (M) => {
+  M.local(1); kcBloco(M, 'boards', KC_RUR_MADEIRA, -1.5, 1.5, 0.45, 1.1, -0.6, 0.6, 'wood');
+  for (const x of [-0.9, 0.9]) for (const z of [-0.7, 0.7]) kcRurRoda(M, x, z, 0.4, 0.2, 'wood', [0.26, 0.2, 0.15]);
+});
+// trator velho, 4 x 2 x 2,4 m: carroceria e rodas com colisão.
+PF.kcRurTrator = () => prefab('kcRurTrator', (M) => {
+  M.local(1); kcBloco(M, 'rust', [0.48, 0.23, 0.13], -2, 2, 0.5, 1.25, -0.65, 0.65, 'metal');
+  kcBloco(M, 'rust', [0.48, 0.23, 0.13], -1.9, -0.4, 1.25, 1.8, -0.6, 0.6, 'metal');
+  for (const x of [-1.2, 1.3]) for (const z of [-0.9, 0.9]) kcRurRoda(M, x, z, 0.55, 0.6, 'rubber', [0.12, 0.12, 0.12]);
+  kcBloco(M, 'steel', KC_COR.ferro, 1.65, 1.75, 1.25, 2, -0.1, 0.1, 'metal');
+});
+// milho, 6 x 2,2 x 6 m: folhagem e pés sem colisão, para atravessar.
+PF.kcRurMilho = () => prefab('kcRurMilho', (M) => {
+  M.local(1); M.cls = 1; M.color([0.40, 0.31, 0.20]); M.boxB('dirt', -3, 3, 0, 0.02, -3, 3);
+  for (let x = -2.7; x <= 2.7; x += 0.6) for (let z = -2.7; z <= 2.7; z += 0.6) {
+    M.color([0.26, 0.43, 0.12]); M.boxB('wood', x - 0.025, x + 0.025, 0, 2.2, z - 0.025, z + 0.025);
+    M.color([0.31, 0.53, 0.16]); M.boxB('canvas', x - 0.23, x + 0.23, 0.6, 2, z - 0.015, z + 0.015);
+  } M.cls = 0;
+});
+// estrada de terra, 6 x 0,02 x 12 m: superfície visual sem colisão.
+PF.kcRurEstrada = () => prefab('kcRurEstrada', (M) => { M.local(1); M.cls = 1; M.color([0.57, 0.44, 0.32]); M.boxB('dirt', -3, 3, 0, 0.02, -6, 6); M.cls = 0; });
+// árvore baixa de pomar, 3 x 3,2 x 3 m: tronco sólido e copa sem colisão.
+PF.kcRurPomar = () => prefab('kcRurPomar', (M) => {
+  M.local(1); kcBloco(M, 'wood', KC_RUR_MADEIRA, -0.15, 0.15, 0, 2, -0.15, 0.15, 'wood');
+  M.cls = 1; M.color([0.24, 0.45, 0.16]); M.boxB('canvas', -1.5, 1.5, 1.5, 3.2, -1.5, 1.5); M.cls = 0;
+});
+
+/* ---------- centro comercial e bairros ----------
+   Os vidros e as escadas usam coordenadas da peça; construções com escada giram só de 90 em 90 graus. */
+const KC_CID_PAREDE = [0.81, 0.80, 0.75], KC_CID_CINZA = [0.58, 0.59, 0.58];
+kcTex(['kcComSupermercado', 'kcComBanco', 'kcComFarmacia', 'kcComLanchonete', 'kcComRoupas', 'kcComGaleria', 'kcComPredio4', 'kcComPosto', 'kcBaiEscola', 'kcBaiIgreja', 'kcBaiSaude', 'kcBaiEstacao', 'kcBaiCondominio'], ['plaster', 'plaster2', 'concrete', 'wood', 'corrugated']);
+kcTex(['kcComEstacionamento'], ['asphalt']);
+kcTex(['kcBaiLavaRapido'], ['corrugated', 'rubber']);
+const KC_CID_LETRAS = {
+  A:['010','101','111','101','101'], B:['110','101','110','101','110'], C:['011','100','100','100','011'],
+  D:['110','101','101','101','110'], E:['111','100','110','100','111'], F:['111','100','110','100','100'],
+  G:['011','100','101','101','011'], H:['101','101','111','101','101'],
+  I:['111','010','010','010','111'], J:['001','001','001','101','010'], L:['100','100','100','100','111'],
+  M:['101','111','111','101','101'], N:['101','111','111','111','101'], O:['010','101','101','101','010'],
+  P:['110','101','110','100','100'], R:['110','101','110','101','101'], S:['011','100','010','001','110'],
+  T:['111','010','010','010','010'], U:['101','101','101','101','111'], V:['101','101','101','101','010'],
+  Á:['010','101','111','101','101'], Ú:['101','101','101','101','111'], Ç:['011','100','100','100','011']
+};
+function kcCidTexto(M, txt, x, y, z, largura, altura) {
+  const cel = Math.min(altura / 5, largura / (txt.length * 4 - 1)), ini = x - (txt.length * 4 - 1) * cel / 2;
+  M.color([0.98, 0.98, 0.95]);
+  for (let k = 0; k < txt.length; k++) for (let r = 0; r < 5; r++) {
+    const linha = (KC_CID_LETRAS[txt[k]] || ['000','000','000','000','000'])[r];
+    for (let c = 0; c < 3;) { if (linha[c] !== '1') { c++; continue; } let fim = c + 1; while (fim < 3 && linha[fim] === '1') fim++;
+      M.boxB('paint', ini + (k * 4 + c) * cel, ini + (k * 4 + fim) * cel, y + (4 - r) * cel, y + (5 - r) * cel, z, z + 0.006); c = fim; }
+  }
+  for (let k = 0; k < txt.length; k++) if (txt[k] === 'Á' || txt[k] === 'Ú') M.boxB('paint', ini + (k * 4 + 1.5) * cel, ini + (k * 4 + 2.3) * cel, y + 5.15 * cel, y + 5.55 * cel, z, z + 0.006);
+  for (let k = 0; k < txt.length; k++) if (txt[k] === 'Ç') M.boxB('paint', ini + (k * 4 + 1) * cel, ini + (k * 4 + 2) * cel, y - 0.45 * cel, y, z, z + 0.006);
+}
+function kcCidB(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo = 'concrete') {
+  kcBloco(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo);
+}
+function kcCidVidro(nome, x0, x1, y, h, z) { KC_VIDROS[nome].push([(x0 + x1) / 2, y, z, x1 - x0, h, 0]); }
+// Fachada com duas vitrines destrutíveis e vão central, aberto para a circulação.
+function kcCidFrente(M, nome, x0, x1, z, y, cor, porta0, porta1) {
+  kcCidB(M, 'paint', cor, x0, x1, y + 2.55, y + 2.8, z - 0.15, z);
+  for (const [a, b] of [[x0, porta0], [porta1, x1]]) {
+    kcCidB(M, 'concrete', KC_CID_CINZA, a, b, y, y + 0.45, z - 0.15, z);
+    if (b - a > 0.15) kcCidVidro(nome, a + 0.03, b - 0.03, y + 0.45, 2.1, z - 0.075);
+  }
+}
+function kcCidCaixa(M, x0, x1, z0, z1, y = 0, h = 1.1, cor = [0.65, 0.62, 0.56]) {
+  kcCidB(M, 'wood', cor, x0, x1, y, y + h, z0, z1, 'wood');
+}
+// Sala térrea com telhado, duas vitrines e entrada de 2 m na frente.
+function kcCidLoja(M, nome, x0, x1, z0, z1, cor, texto = 'LOJA') {
+  kcCidB(M, 'plaster', KC_CID_PAREDE, x0, x1, 0, 2.8, z0, z0 + 0.15);
+  for (const x of [x0, x1 - 0.15]) kcCidB(M, 'plaster', KC_CID_PAREDE, x, x + 0.15, 0, 2.8, z0, z1);
+  const cx = (x0 + x1) / 2;
+  kcCidFrente(M, nome, x0 + 0.15, x1 - 0.15, z1, 0, cor, cx - 1, cx + 1);
+  kcCidB(M, 'concrete', KC_CID_CINZA, x0, x1, 2.8, 2.95, z0, z1);
+  M.cls = 1; M.color(cor); M.boxB('paint', x0 + 0.4, x1 - 0.4, 2.95, 3.4, z1 - 0.04, z1 + 0.02);
+  kcCidTexto(M, texto, (x0 + x1) / 2, 3.04, z1 + 0.021, x1 - x0 - 1, 0.28); M.cls = 0;
+}
+// Uma escada larga e patamar que liga o chão a um terraço sem cobrir o acesso.
+function kcCidEscada(M, nome, x0, x1, z0, z1, h) {
+  kcEscadaF(M, nome, x0, x1, z0, z1, 'z', h, 0, [[x1 - 0.05, z0], [x1 - 0.05, z1]]);
+  kcPatamar(M, x0, x1, z0 - 2.4, z0, h);
+  kcGuarda(M, x1 - 0.03, z0 - 2.4, x1 - 0.03, z0, h);
+}
+
+// supermercado, aproximadamente 20 x 3,4 x 16 m: salão, prateleiras, caixas e depósito no fundo.
+PF.kcComSupermercado = () => prefab('kcComSupermercado', (M) => {
+  KC_VIDROS.kcComSupermercado = []; M.local(1);
+  kcCidLoja(M, 'kcComSupermercado', -10, 10, -8, 8, [0.20, 0.48, 0.25], 'MERCADO');
+  kcCidVidro('kcComSupermercado', -1, 0, 0, 2.2, 7.925); kcCidVidro('kcComSupermercado', 0, 1, 0, 2.2, 7.925);
+  for (const x of [-6, -2, 2, 6]) kcCidCaixa(M, x - 0.45, x + 0.45, -4.5, 3.8, 0, 1.5);
+  for (const x of [-5, 3]) kcCidCaixa(M, x, x + 2, 5.4, 6.3, 0, 1);
+  M.color(KC_CID_PAREDE); kcParede(M, 'plaster', 'x', -5.8, -5.65, -9.85, 9.85, 0, 2.8, [[-1, 1, 0, 2.2]]);
+});
+KC_BR.kcComSupermercado = { dentro: [[-4, 0.1, -6.8], [0, 0.1, 0], [4, 0.1, 0]], laje: [] };
+
+// agência bancária, 10 x 3,4 x 8 m: balcão e caixas eletrônicos no salão.
+PF.kcComBanco = () => prefab('kcComBanco', (M) => {
+  KC_VIDROS.kcComBanco = []; M.local(1); kcCidLoja(M, 'kcComBanco', -5, 5, -4, 4, [0.18, 0.30, 0.48], 'BANCO');
+  kcCidVidro('kcComBanco', -1, 0, 0, 2.2, 3.925); kcCidVidro('kcComBanco', 0, 1, 0, 2.2, 3.925);
+  kcCidCaixa(M, -4, -0.5, -2.8, -1.8); for (const x of [1.8, 3.2]) kcCidB(M, 'steel', [0.4, 0.42, 0.43], x - 0.5, x + 0.5, 0, 1.6, -3.5, -2.9, 'metal');
+});
+KC_BR.kcComBanco = { dentro: [[0, 0.1, 0], [2, 0.1, 1.5]], laje: [] };
+// farmácia de rua, 8 x 3,4 x 8 m: prateleiras e balcão.
+PF.kcComFarmacia = () => prefab('kcComFarmacia', (M) => {
+  KC_VIDROS.kcComFarmacia = []; M.local(1); kcCidLoja(M, 'kcComFarmacia', -4, 4, -4, 4, [0.2, 0.55, 0.36], 'FARMÁCIA');
+  kcCidCaixa(M, -3, -2.4, -2.8, 1.5, 0, 1.5); kcCidCaixa(M, 2.3, 3.4, -2.8, -0.2);
+});
+KC_BR.kcComFarmacia = { dentro: [[0, 0.1, -1], [0, 0.1, 1.5]], laje: [] };
+// lanchonete de rua, 8 x 3,4 x 8 m: balcão e mesas como cobertura.
+PF.kcComLanchonete = () => prefab('kcComLanchonete', (M) => {
+  KC_VIDROS.kcComLanchonete = []; M.local(1); kcCidLoja(M, 'kcComLanchonete', -4, 4, -4, 4, [0.7, 0.22, 0.14], 'LANCHE');
+  kcCidCaixa(M, -3.4, 3.4, -3, -2.2); for (const x of [-2.5, 2.5]) kcCidCaixa(M, x - 0.5, x + 0.5, 0, 0.7, 0, 0.8);
+});
+KC_BR.kcComLanchonete = { dentro: [[0, 0.1, -1], [0, 0.1, 1.5]], laje: [] };
+// loja de roupas, 8 x 3,4 x 8 m: balcão e expositores.
+PF.kcComRoupas = () => prefab('kcComRoupas', (M) => {
+  KC_VIDROS.kcComRoupas = []; M.local(1); kcCidLoja(M, 'kcComRoupas', -4, 4, -4, 4, [0.48, 0.28, 0.48], 'ROUPAS');
+  kcCidCaixa(M, -3.4, -2.4, -2.8, 0.8, 0, 1.5); kcCidCaixa(M, 2.4, 3.4, -2.8, 0.8, 0, 1.5);
+});
+KC_BR.kcComRoupas = { dentro: [[0, 0.1, -1.5], [0, 0.1, 1.5]], laje: [] };
+
+// carro estacionado, 4,4 x 1,7 x 2 m: carroceria, cabine e rodas sólidas.
+PF.kcComCarro = () => prefab('kcComCarro', (M) => {
+  M.local(1); kcCidB(M, 'paint', [0.25, 0.38, 0.48], -2.2, 2.2, 0.35, 1.05, -0.85, 0.85, 'metal');
+  kcCidB(M, 'paint', [0.25, 0.38, 0.48], -1.15, 1.1, 1.05, 1.7, -0.75, 0.75, 'metal');
+  for (const x of [-1.4, 1.4]) for (const z of [-0.9, 0.9]) kcRurRoda(M, x, z, 0.36, 0.2, 'rubber', [0.12, 0.12, 0.12]);
+  M.cls = 1; M.color([0.35, 0.52, 0.58]); M.boxB('glass', -1.05, 1, 1.15, 1.6, 0.75, 0.76); M.cls = 0;
+});
+// estacionamento, 18 x 3 x 12 m: vagas, cancela aberta e cabine acessível.
+PF.kcComEstacionamento = () => prefab('kcComEstacionamento', (M) => {
+  KC_VIDROS.kcComEstacionamento = []; M.local(1);
+  M.cls = 1; M.color([0.29, 0.3, 0.3]); M.boxB('asphalt', -9, 9, 0, 0.02, -6, 6);
+  M.color([0.9, 0.9, 0.84]); for (const x of [-8, -5, -2, 1, 4, 7]) M.boxB('paint', x, x + 0.08, 0.02, 0.03, -5.5, 1.5); M.cls = 0;
+  kcCidB(M, 'concrete', KC_CID_PAREDE, 6, 8.8, 2.8, 2.95, 2.8, 5.8);
+  kcCidB(M, 'concrete', KC_CID_PAREDE, 6, 6.15, 0, 2.8, 2.8, 5.8); kcCidB(M, 'concrete', KC_CID_PAREDE, 8.65, 8.8, 0, 2.8, 2.8, 5.8);
+  kcCidB(M, 'concrete', KC_CID_PAREDE, 6, 8.8, 0, 2.8, 2.8, 2.95);
+  kcCidB(M, 'steel', [0.8, 0.2, 0.15], 3.6, 3.8, 0, 2.5, 4.7, 4.9, 'metal');
+  M.cls = 1; M.color([0.9, 0.9, 0.85]); M.boxB('paint', 3.6, 3.8, 2.5, 3, 4.7, 4.9); M.cls = 0;
+});
+KC_BR.kcComEstacionamento = { dentro: [[7.4, 0.1, 4]], laje: [] };
+
+// posto de gasolina, 20 x 4,5 x 16 m: ilhas, cobertura e loja de conveniência.
+PF.kcComPosto = () => prefab('kcComPosto', (M) => {
+  KC_VIDROS.kcComPosto = []; M.local(1);
+  M.cls = 1; M.color([0.45, 0.45, 0.42]); M.boxB('concrete', -10, 10, 0, 0.02, -8, 8); M.cls = 0;
+  kcCidLoja(M, 'kcComPosto', -9.5, -2.5, -7.5, -1.5, [0.22, 0.48, 0.62], 'LOJA');
+  for (const x of [1, 7]) for (const z of [-4, 5]) kcCidB(M, 'steel', KC_CID_CINZA, x - 0.15, x + 0.15, 0, 4.2, z - 0.15, z + 0.15, 'metal');
+  kcCidB(M, 'steel', [0.7, 0.72, 0.72], -1, 9, 4.2, 4.5, -6, 7, 'metal');
+  for (const x of [1, 7]) { kcCidB(M, 'concrete', KC_CID_CINZA, x - 0.7, x + 0.7, 0, 0.18, -0.8, 2.8); kcCidB(M, 'paint', [0.76, 0.76, 0.7], x - 0.45, x + 0.45, 0.18, 1.8, 0.3, 1.7, 'metal'); }
+});
+KC_BR.kcComPosto = { dentro: [[-6, 0.1, -4]], laje: [] };
+
+// placa comercial, 3 x 0,7 x 0,1 m: costas em z=0, letreiro genérico sem colisão.
+PF.kcComPlaca = () => prefab('kcComPlaca', (M) => {
+  M.local(1); M.cls = 1; M.color([0.18, 0.42, 0.32]); M.boxB('paint', -1.5, 1.5, 0, 0.7, 0, 0.1);
+  kcCidTexto(M, 'LOJA', 0, 0.13, 0.101, 2.6, 0.43); M.cls = 0;
+});
+// placa de serviços, 3 x 0,7 x 0,11 m: costas em z=0, sem colisão.
+PF.kcComPlacaServico = () => prefab('kcComPlacaServico', (M) => {
+  M.local(1); M.cls = 1; M.color([0.22, 0.32, 0.52]); M.boxB('paint', -1.5, 1.5, 0, 0.7, 0, 0.1);
+  kcCidTexto(M, 'SERVIÇO', 0, 0.13, 0.101, 2.6, 0.43); M.cls = 0;
+});
+
+// galeria, 26,4 x 6,8 x 14 m: quatro lojas por andar, escada interna e terraço com acesso lateral.
+PF.kcComGaleria = () => prefab('kcComGaleria', (M) => {
+  KC_VIDROS.kcComGaleria = []; KC_ESCADAS.kcComGaleria = []; M.local(1);
+  const n = 'kcComGaleria', x0 = -13.2, x1 = 10.8;
+  for (const y of [0, 2.95]) {
+    kcCidB(M, 'plaster', KC_CID_PAREDE, x0, x1, y, y + 2.8, -7, -6.85);
+    kcCidB(M, 'plaster', KC_CID_PAREDE, x0, x0 + 0.15, y, y + 2.8, -7, 7);
+    M.color(KC_CID_PAREDE); kcParede(M, 'plaster', 'z', x1 - 0.15, x1, -7, 7, y, y + 2.8, y ? [[3, 5.4, y, y + 2.2]] : []);
+    kcCidFrente(M, n, x0 + 0.15, x1 - 0.15, 7, y, [0.32, 0.42, 0.5], -2.2, 0.2);
+    for (let i = 0; i < 4; i++) {
+      const a = -12.9 + i * 4.7, b = a + 4.7, c = (a + b) / 2;
+      kcCidFrente(M, n, a, b, -2, y, [0.4 + 0.08 * i, 0.35, 0.3], c - 0.8, c + 0.8);
+      kcCidB(M, 'plaster', KC_CID_PAREDE, a, a + 0.15, y, y + 2.8, -6.85, -2);
+      kcCidCaixa(M, a + 0.5, a + 1.5, -5.8, -4.5, y, 1.1);
+    }
+  }
+  // Piso superior com abertura sobre a escada interna.
+  for (const [a, b, c, d] of [[x0, 7.2, -7, 7], [9.6, x1, -7, 7], [7.2, 9.6, -7, -4.4], [7.2, 9.6, 3, 7]])
+    kcCidB(M, 'concrete', KC_CID_CINZA, a, b, 2.8, 2.95, c, d);
+  kcCidEscada(M, n, 7.2, 9.6, -2, 3, 2.95);
+  kcCidB(M, 'concrete', KC_CID_CINZA, x0, x1, 5.75, 5.9, -7, 7);
+  kcMureta(M, x0, x1, 5.9, -7, 7, 0.9, 'nso');
+  kcMureta(M, x1 - 0.12, x1, 5.9, -7, -4.4, 0.9, 'l'); kcMureta(M, x1 - 0.12, x1, 5.9, -2, 7, 0.9, 'l');
+  kcPatamar(M, x1, 13.2, 3, 5.4, 2.95);
+  kcEscadaF(M, n, x1, 13.2, -2, 3, 'z', 5.9, 2.95, [[13.15, -2], [13.15, 3]]);
+  kcPatamar(M, x1, 13.2, -4.4, -2, 5.9); kcGuarda(M, 13.15, -4.4, 13.15, -2, 5.9);
+});
+KC_BR.kcComGaleria = { dentro: [[-10.5, 0.1, -4.5], [-1, 0.1, -4.5]], laje: [[-5, 3.05, -4.5], [0, 6, 0]] };
+
+// prédio comercial, 40 x 12,7 x 14,4 m: térreo acessível, andares superiores de cenário e escada externa até a laje.
+PF.kcComPredio4 = () => prefab('kcComPredio4', (M) => {
+  KC_VIDROS.kcComPredio4 = []; KC_ESCADAS.kcComPredio4 = []; M.local(1);
+  const n = 'kcComPredio4';
+  for (let i = 0; i < 4; i++) {
+    const y = i * 2.95;
+    kcCidB(M, 'plaster2', KC_CID_PAREDE, 0, 20, y, y + 2.8, -7.2, -7.05);
+    for (const x of [0, 19.85]) kcCidB(M, 'plaster2', KC_CID_PAREDE, x, x + 0.15, y, y + 2.8, -7.2, 4.8);
+    kcCidFrente(M, n, 0.15, 19.85, 4.8, y, [0.42, 0.48, 0.5], 9, 11);
+    kcCidB(M, 'concrete', KC_CID_CINZA, 0, 20, y + 2.8, y + 2.95, -7.2, 4.8);
+  }
+  kcMureta(M, 0, 20, 11.8, -7.2, 4.8, 0.9, 'nol'); kcMureta(M, 2.4, 20, 11.8, 4.68, 4.8, 0.9, 's');
+  kcEscadaF(M, n, -20, 0, 4.8, 7.2, 'x', 0, 11.8, [[-20, 7.15], [0, 7.15]]);
+  kcPatamar(M, 0, 2.4, 4.8, 7.2, 11.8); kcGuarda(M, 0, 7.15, 2.4, 7.15, 11.8);
+});
+KC_BR.kcComPredio4 = { dentro: [[10, 0.1, 0]], laje: [[9, 11.9, -1]] };
+
+// passarela de pedestres, 31,2 x 5,8 x 2,4 m: vão livre de 10 m e escada de cada lado.
+PF.kcComPassarela = () => prefab('kcComPassarela', (M) => {
+  KC_ESCADAS.kcComPassarela = []; M.local(1); const n = 'kcComPassarela';
+  kcEscadaF(M, n, -15.6, -7.4, -1.2, 1.2, 'x', 0, 4.8, [[-15.6, 1.15], [-7.4, 1.15]]);
+  kcEscadaF(M, n, 7.4, 15.6, -1.2, 1.2, 'x', 4.8, 0, [[7.4, 1.15], [15.6, 1.15]]);
+  kcPatamar(M, -7.4, -5, -1.2, 1.2, 4.8); kcPatamar(M, 5, 7.4, -1.2, 1.2, 4.8);
+  kcCidB(M, 'concrete', KC_CID_CINZA, -5, 5, 4.65, 4.8, -1.2, 1.2);
+  for (const z of [-1.17, 1.17]) kcGuarda(M, -7.4, z, 7.4, z, 4.8);
+});
+KC_BR.kcComPassarela = { dentro: [], laje: [[0, 4.9, 0]] };
+
+// escola com pátio e quadra coberta, aproximadamente 28 x 4,8 x 20 m: salas acessíveis e arquibancada pequena.
+PF.kcBaiEscola = () => prefab('kcBaiEscola', (M) => {
+  KC_VIDROS.kcBaiEscola = []; M.local(1);
+  kcCidLoja(M, 'kcBaiEscola', -13, -1, -9, -1, [0.28, 0.43, 0.63], 'ESCOLA');
+  M.color(KC_CID_PAREDE); kcParede(M, 'plaster', 'z', -7.1, -6.95, -8.85, -1.15, 0, 2.8, [[-5.8, -4.2, 0, 2.2]]);
+  for (const x of [-11, -4]) kcCidCaixa(M, x - 0.6, x + 0.6, -6.8, -6, 0, 0.8);
+  M.cls = 1; M.color([0.65, 0.64, 0.59]); M.boxB('concrete', -14, 14, 0, 0.02, -10, 10);
+  M.color([0.3, 0.52, 0.33]); M.boxB('paint', 1, 13, 0.02, 0.03, -9, 4); M.color([0.95, 0.95, 0.9]);
+  for (const x of [1.1, 12.8]) M.boxB('paint', x, x + 0.08, 0.03, 0.04, -8.9, 3.9);
+  for (const z of [-8.9, 3.8]) M.boxB('paint', 1.1, 12.9, 0.03, 0.04, z, z + 0.08); M.cls = 0;
+  for (const x of [1.1, 12.9]) for (const z of [-9, 4]) kcCidB(M, 'steel', KC_CID_CINZA, x - 0.08, x + 0.08, 0, 4.05, z - 0.08, z + 0.08, 'metal');
+  M.color([0.55, 0.55, 0.52]); for (const s of [-1, 1]) { M.save().move(7 + s * 3, 4.36, 0).rotZ(-s * 0.1); M.boxB('corrugated', -3.02, 3.02, 0, 0.12, -9.1, 4.1); M.restore(); }
+  M.col(1, 13, 4.05, 4.8, -9.1, 4.1, 'metal');
+  kcCidB(M, 'concrete', KC_CID_CINZA, 10.7, 12.7, 0, 0.35, -6.5, 1.5); kcCidB(M, 'concrete', KC_CID_CINZA, 11.7, 12.7, 0.35, 0.7, -6.5, 1.5);
+});
+KC_BR.kcBaiEscola = { dentro: [[-10, 0.1, -4], [-4, 0.1, -4]], laje: [] };
+
+// igreja de bairro, 14,4 x 5,8 x 16 m: nave acessível e torre com sino e escada até a plataforma.
+PF.kcBaiIgreja = () => prefab('kcBaiIgreja', (M) => {
+  KC_VIDROS.kcBaiIgreja = []; KC_ESCADAS.kcBaiIgreja = []; M.local(1);
+  kcCidLoja(M, 'kcBaiIgreja', -7.2, 0.8, -8, 8, [0.77, 0.7, 0.54], 'IGREJA');
+  for (const z of [-4, -1, 2]) for (const x of [-5.7, -1.1]) kcCidCaixa(M, x - 0.9, x + 0.9, z, z + 0.45, 0, 0.7);
+  kcPatamar(M, 0.8, 4.8, -4.4, -2, 2.95);
+  kcCidEscada(M, 'kcBaiIgreja', 4.8, 7.2, -2, 3, 2.95);
+  kcMureta(M, 0.8, 4.8, 2.95, -4.4, -2, 0.9, 'nso');
+  for (const x of [1.05, 4.55]) for (const z of [-4.15, -2.25]) kcCidB(M, 'concrete', KC_CID_PAREDE, x - 0.1, x + 0.1, 2.95, 5.6, z - 0.1, z + 0.1);
+  kcCidB(M, 'rooftiles', [0.55, 0.28, 0.19], 0.8, 4.8, 5.6, 5.8, -4.4, -2);
+  M.save().move(2.8, 4.2, -3.2).color([0.65, 0.52, 0.23]); M.cyl('steel', 0.35, 0.55, 12); M.restore(); M.col(2.45, 3.15, 4.2, 4.75, -3.55, -2.85, 'metal');
+});
+KC_BR.kcBaiIgreja = { dentro: [[-3.2, 0.1, 0], [-3.2, 0.1, -5.8]], laje: [[2.8, 3.05, -3.2]] };
+
+// posto de saúde, 14 x 3,4 x 8 m: recepção e dois consultórios acessíveis.
+PF.kcBaiSaude = () => prefab('kcBaiSaude', (M) => {
+  KC_VIDROS.kcBaiSaude = []; M.local(1); kcCidLoja(M, 'kcBaiSaude', -7, 7, -4, 4, [0.22, 0.55, 0.52], 'SAÚDE');
+  M.color(KC_CID_PAREDE); kcParede(M, 'plaster', 'x', -0.6, -0.45, -6.85, 6.85, 0, 2.8, [[-4.8, -3.2, 0, 2.2], [3.2, 4.8, 0, 2.2]]);
+  kcCidB(M, 'plaster', KC_CID_PAREDE, -0.075, 0.075, 0, 2.8, -3.85, -0.6);
+  kcCidCaixa(M, -1.1, 1.1, 1.6, 2.3, 0, 0.9);
+});
+KC_BR.kcBaiSaude = { dentro: [[-4, 0.1, -2], [4, 0.1, -2], [0, 0.1, 0.5]], laje: [] };
+
+// estação ferroviária, 24 x 5,5 x 29,4 m: plataforma coberta, bilheteria, trilhos e passarela.
+PF.kcBaiEstacao = () => prefab('kcBaiEstacao', (M) => {
+  KC_VIDROS.kcBaiEstacao = []; KC_ESCADAS.kcBaiEstacao = []; M.local(1); const n = 'kcBaiEstacao';
+  kcCidB(M, 'concrete', KC_CID_CINZA, -12, 12, 0, 0.15, -10, -5);
+  kcCidLoja(M, n, -11, -5, -10, -5, [0.28, 0.45, 0.55], 'TREM');
+  for (const x of [-11.8, -2.2]) for (const z of [-9.8, -5.2]) kcCidB(M, 'steel', KC_CID_CINZA, x - 0.08, x + 0.08, 0.15, 3.5, z - 0.08, z + 0.08, 'metal');
+  kcCidB(M, 'corrugated', [0.55, 0.56, 0.56], -12, -2, 3.5, 3.65, -10, -5, 'metal');
+  for (const z of [-0.75, 0.75]) kcCidB(M, 'steel', [0.3, 0.3, 0.3], -12, 12, 0, 0.12, z - 0.04, z + 0.04, 'metal');
+  kcEscadaF(M, n, -1.2, 1.2, -14.7, -7, 'z', 0, 4.5, [[1.15, -14.7], [1.15, -7]]);
+  kcEscadaF(M, n, -1.2, 1.2, 7, 14.7, 'z', 4.5, 0, [[1.15, 7], [1.15, 14.7]]);
+  kcPatamar(M, -1.2, 1.2, -7, -4.6, 4.5); kcPatamar(M, -1.2, 1.2, 4.6, 7, 4.5);
+  kcCidB(M, 'concrete', KC_CID_CINZA, -1.2, 1.2, 4.35, 4.5, -4.6, 4.6);
+  for (const x of [-1.17, 1.17]) kcGuarda(M, x, -7, x, 7, 4.5);
+});
+KC_BR.kcBaiEstacao = { dentro: [[-8, 0.25, -7.3]], laje: [[0, 4.6, 0]] };
+
+// viaduto, 12 x 7 x 8 m: tabuleiro a 6 m e pilares com espaço livre embaixo.
+PF.kcBaiViaduto = () => prefab('kcBaiViaduto', (M) => {
+  M.local(1); kcCidB(M, 'concrete', KC_CID_CINZA, -6, 6, 5.85, 6, -4, 4);
+  for (const x of [-5.2, 5.2]) for (const z of [-3.2, 3.2]) kcCidB(M, 'concrete', KC_CID_CINZA, x - 0.45, x + 0.45, 0, 5.85, z - 0.45, z + 0.45);
+  kcMureta(M, -6, 6, 6, -4, 4, 1, 'ns');
+});
+KC_BR.kcBaiViaduto = { dentro: [], laje: [[0, 6.1, 0]] }; // acesso pela rampa modular.
+// rampa do viaduto, 12,6 x 7 x 8 m: sobe de 0 a 6 m, com patamar na ponta +x.
+PF.kcBaiRampaViaduto = () => prefab('kcBaiRampaViaduto', (M) => {
+  KC_ESCADAS.kcBaiRampaViaduto = []; M.local(1);
+  kcEscadaF(M, 'kcBaiRampaViaduto', -6.3, 3.9, -4, 4, 'x', 0, 6, [[-6.3, 3.95], [3.9, 3.95]]);
+  kcPatamar(M, 3.9, 6.3, -4, 4, 6); for (const z of [-3.95, 3.95]) kcGuarda(M, 3.9, z, 6.3, z, 6);
+});
+KC_BR.kcBaiRampaViaduto = { dentro: [], laje: [[5.1, 6.1, 0]] };
+
+// condomínio, 24 x 5,9 x 16 m: muro, guarita, portão e casa com varanda superior acessível.
+PF.kcBaiCondominio = () => prefab('kcBaiCondominio', (M) => {
+  KC_VIDROS.kcBaiCondominio = []; KC_ESCADAS.kcBaiCondominio = []; M.local(1); const n = 'kcBaiCondominio';
+  M.color(KC_CID_PAREDE); kcParede(M, 'plaster', 'x', 7.85, 8, -12, 12, 0, 2.2, [[-0.5, 2.5, 0, 2.2]]);
+  kcCidB(M, 'plaster', KC_CID_PAREDE, -12, 12, 0, 2.2, -8, -7.85);
+  for (const x of [-12, 11.85]) kcCidB(M, 'plaster', KC_CID_PAREDE, x, x + 0.15, 0, 2.2, -8, 8);
+  kcCidLoja(M, n, -11, -7, 3, 7, [0.4, 0.48, 0.45], 'GUARITA');
+  kcCidB(M, 'plaster', KC_CID_PAREDE, -3, 5, 0, 2.8, -7, -6.85);
+  for (const x of [-3, 4.85]) kcCidB(M, 'plaster', KC_CID_PAREDE, x, x + 0.15, 0, 2.8, -7, 1);
+  kcCidFrente(M, n, -2.85, 4.85, 1, 0, [0.7, 0.64, 0.53], 0, 1.8);
+  kcCidB(M, 'concrete', KC_CID_CINZA, -3, 5, 2.8, 2.95, -7, 1);
+  kcCidB(M, 'plaster', KC_CID_PAREDE, -3, 2, 2.95, 5.75, -7, -6.85);
+  kcCidB(M, 'plaster', KC_CID_PAREDE, -3, -2.85, 2.95, 5.75, -7, -3);
+  M.color(KC_CID_PAREDE); kcParede(M, 'plaster', 'x', -3.15, -3, -3, 2, 2.95, 5.75, [[-1.3, 0.3, 2.95, 5.15]]);
+  kcCidB(M, 'concrete', KC_CID_CINZA, -3, 2, 5.75, 5.9, -7, -3);
+  kcMureta(M, -3, 5, 2.95, -3, 1, 0.9, 'so'); kcMureta(M, 4.88, 5, 2.95, -3, 1, 0.9, 'l');
+  kcMureta(M, 2, 5, 2.95, -7, -6.88, 0.9, 'n'); kcMureta(M, 4.88, 5, 2.95, -7, -5.4, 0.9, 'l');
+  kcCidEscada(M, n, 5, 7.4, -3, 2, 2.95);
+});
+KC_BR.kcBaiCondominio = { dentro: [[-9, 0.1, 5], [0, 0.1, -5]], laje: [[3.3, 3.05, -1]] };
+
+// lava-rápido, 12 x 3,8 x 10 m: galpão aberto, cobertura e pneus.
+PF.kcBaiLavaRapido = () => prefab('kcBaiLavaRapido', (M) => {
+  M.local(1); kcCidB(M, 'concrete', KC_CID_PAREDE, -6, 6, 0, 3.65, -5, -4.85);
+  for (const x of [-6, 5.85]) kcCidB(M, 'concrete', KC_CID_PAREDE, x, x + 0.15, 0, 3.65, -5, 5);
+  kcCidB(M, 'corrugated', [0.55, 0.56, 0.56], -6, 6, 3.65, 3.8, -5, 5, 'metal');
+  for (const x of [-4.7, 4.7]) for (const z of [-3.5, -2.5]) kcRurRoda(M, x, z, 0.55, 0.5, 'rubber', [0.12, 0.12, 0.12]);
+  kcCidCaixa(M, -2.5, -1.5, -4.5, -3.5, 0, 1.1);
+});
+KC_BR.kcBaiLavaRapido = { dentro: [[0, 0.1, 0], [2, 0.1, 2]], laje: [] };

@@ -8,6 +8,9 @@
 //   POST /tiro/perfil/entrar  { codigo }       → { token, nome, dados }
 //   POST /tiro/perfil/codigo                  → { codigo }   (o antigo deixa de valer)
 //   GET  /tiro/perfil/placar                  → { placar: [{ nome, xp }] }
+//   GET  /tiro/perfil/elo                     → { pontos, pico, partidas, vitorias, derrotas, ranque, historico }
+//   POST /tiro/perfil/elo/resultado { sala, modo, mapa, placar, humanos, eu } → { estado: contou | esperando | nao_conta }
+//   GET  /tiro/perfil/elo/placar              → { placar: [{ nome, pontos, ranque }] }
 const express = require("express");
 
 const CHAVES = /^(cod_arsenal|dc_settings|cod_nick|dc_grenade|dc_couteau)$/; // o que o perfil.js copia
@@ -85,6 +88,21 @@ module.exports = function ligarPerfilTiro(app) {
   });
   r.get("/placar", (req, res) => {
     try { res.json({ placar: bd().placarTiro() }); } catch { res.json({ placar: [] }); }
+  });
+  // o elo (servidor/jogos/tiro-elo.js): o meu, o relato do fim de partida e o ranking da galera
+  const ELO = require("./tiro-elo.js");
+  r.get("/elo", (req, res) => {
+    const p = dono(req); if (!p) return erro(res, 401, "Perfil não encontrado neste aparelho.");
+    try { const e = bd().eloTiro(p.id); res.json({ ...e, ranque: ELO.ranque(e.pontos), historico: bd().historicoEloTiro(p.id, 10), minHumanos: ELO.MIN_HUMANOS }); }
+    catch (e) { console.warn("tiro-elo:", e.message); erro(res, 500, "O elo não carregou."); }
+  });
+  r.post("/elo/resultado", (req, res) => {
+    const p = dono(req); if (!p) return erro(res, 401, "Perfil não encontrado neste aparelho.");
+    try { res.json(ELO.relatar(bd(), p, req.body)); }
+    catch (e) { console.warn("tiro-elo resultado:", e.message); erro(res, 500, "O resultado não foi guardado."); }
+  });
+  r.get("/elo/placar", (req, res) => {
+    try { res.json({ placar: bd().placarEloTiro(50).map((l) => ({ ...l, ranque: ELO.ranque(l.pontos).rotulo })) }); } catch { res.json({ placar: [] }); }
   });
   app.use("/tiro/perfil", r);
 };

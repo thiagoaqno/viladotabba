@@ -93,7 +93,7 @@
     + "#tgJan .er{color:#ff6b6b;min-height:1.2em;margin:0 0 8px}#tgJan hr{border:0;border-top:1px solid #2d323b;margin:14px 0}#tgJan ol{margin:6px 0 12px;padding-left:22px}#tgJan li{margin:2px 0}#tgJan li span{color:#99a0ab}";
   var bt, jan, volta;
   function montar() {
-    var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+    var st = document.createElement("style"); st.textContent = css + cssElo; document.head.appendChild(st);
     bt = document.createElement("button"); bt.id = "tgPerfil"; bt.type = "button"; bt.onclick = function () { abrir(); };
     jan = document.createElement("div"); jan.id = "tgJan"; jan.innerHTML = '<div class="c"></div>';
     jan.addEventListener("click", function (e) { if (e.target === jan) fechar(); });
@@ -106,6 +106,7 @@
       document.body.appendChild(volta);
     }
     setInterval(atualizarBotao, 700); atualizarBotao();
+    carregarElo();
     // primeira visita sem perfil: oferece criar (e não insiste por 3 dias se a pessoa disser "agora não")
     var depois = +(ls.getItem("tiro_perfil_depois") || 0);
     if (!P && Date.now() - depois > 3 * 864e5) var t = setInterval(function () { if (noMenu()) { clearInterval(t); abrir(); } }, 800);
@@ -114,7 +115,7 @@
   // o cartão "Perfil" do menu do jogo (acctChip) mostra o nosso perfil: ferramentas/tiro-frontline.js faz o jogo perguntar aqui
   var offline = function () { return P && ls.getItem(PEND) && !navigator.onLine; };
   function rotulo() {
-    return P ? { ok: true, nome: P.nome, sub: "Nível " + nivel() + (offline() ? " · sem internet, sobe depois ⏳" : " · ver meu perfil") }
+    return P ? { ok: true, nome: P.nome, sub: "Nível " + nivel() + (ELO && ELO.partidas ? " · " + ELO.ranque.rotulo : "") + (offline() ? " · sem internet, sobe depois ⏳" : " · ver meu perfil") }
       : { ok: false, nome: "Criar perfil", sub: "Guarde seu nível e suas classes na Vila" };
   }
   var ultimo = "";
@@ -149,7 +150,7 @@
       var nome = q("#tgNome").value.trim(); if (nome.length < 2) return erro("Escolha um nome com pelo menos 2 letras.");
       this.disabled = true;
       pedir("POST", "/criar", { nome: nome, dados: coletar() }).then(function (r) {
-        P = { token: r.token, nome: r.nome }; guardaP(); ls.setItem("cod_nick", r.nome);
+        P = { token: r.token, nome: r.nome }; guardaP(); ls.setItem("cod_nick", r.nome); carregarElo();
         telaCodigo(r.codigo, "Perfil criado! Seu progresso deste aparelho já está guardado.");
       }).catch(function (e) { erro(e.message); q("#tgCriar").disabled = false; });
     };
@@ -169,8 +170,24 @@
   }
   function telaPerfil() {
     tela("<h2>" + esc(P.nome) + "</h2><p>Nível " + nivel() + ". Seu progresso fica guardado no servidor da Vila.</p>"
+      + '<div id="tgElo"><b>Elo</b> <span style="color:#99a0ab">carregando...</span></div>'
       + '<div class="er"></div><button class="p" id="tgFechar">Fechar</button><button id="tgCodigo">Código para outro aparelho</button><button id="tgSair">Sair deste aparelho</button>'
+      + '<hr><b>Ranking do elo</b><ol id="tgRank"><li><span>carregando...</span></li></ol>'
       + '<hr><b>Placar da galera</b><ol id="tgPlacar"><li><span>carregando...</span></li></ol>');
+    carregarElo().then(function (e) {
+      var el = q("#tgElo"); if (!el) return;
+      if (!e) { el.innerHTML = '<b>Elo</b> <span style="color:#99a0ab">não carregou</span>'; return; }
+      var r = e.ranque, cor = CORES[r.nome] || "#ccc";
+      el.innerHTML = "<b>Elo</b> " + rqHtml(r) + ' <span style="color:#99a0ab">· ' + e.pontos + " pontos</span>"
+        + (r.proximo ? '<div class="tgBar" style="--c:' + cor + '"><b style="width:' + r.naDivisao + '%"></b></div><span style="color:#99a0ab;font-size:13px">' + r.naDivisao + "/100 para a próxima divisão</span>" : "")
+        + '<p style="margin:6px 0 0">' + e.vitorias + " vitórias, " + e.derrotas + " derrotas" + (e.pico > e.pontos ? " · melhor: " + e.pico + " pontos" : "") + "</p>"
+        + (e.partidas ? '<p style="margin:2px 0 0;font-size:13px">Últimas: ' + e.historico.map(function (h) { return '<span style="color:' + (h.delta > 0 ? "#5ee08f" : h.delta < 0 ? "#ff6b6b" : "#99a0ab") + '">' + (h.delta > 0 ? "+" : "") + h.delta + "</span>"; }).join(" ") + "</p>"
+          : '<p style="margin:6px 0 0;font-size:13px;color:#99a0ab">Vale elo: partida online de mata-mata em time ou dominação, com pelo menos ' + (e.minHumanos || 4) + " pessoas.</p>");
+    });
+    pedir("GET", "/elo/placar").then(function (r) {
+      var l = (r.placar || []).slice(0, 10), el = q("#tgRank"); if (!el) return;
+      el.innerHTML = l.length ? l.map(function (p) { return "<li>" + esc(p.nome) + ' <span>· <span class="tgRq" style="--c:' + (CORES[p.ranque.split(" ")[0]] || "#ccc") + '"><i></i>' + esc(p.ranque) + "</span> · " + p.pontos + " pontos</span></li>"; }).join("") : "<li><span>ninguém jogou valendo ainda</span></li>";
+    }).catch(function () { var el = q("#tgRank"); if (el) el.innerHTML = "<li><span>o ranking não carregou</span></li>"; });
     q("#tgFechar").onclick = fechar;
     q("#tgCodigo").onclick = function () {
       if (!confirm("Gerar um código novo? O código antigo deixa de valer (os aparelhos que já entraram continuam).")) return;
@@ -185,5 +202,49 @@
       q("#tgPlacar").innerHTML = l.length ? l.map(function (p) { return "<li>" + esc(p.nome) + " <span>· nível " + nivelDoXp(p.xp) + " · " + p.xp.toLocaleString("pt-BR") + " XP</span></li>"; }).join("") : "<li><span>ninguém ainda</span></li>";
     }).catch(function () { q("#tgPlacar").innerHTML = "<li><span>o placar não carregou</span></li>"; });
   }
+
+  // 4. o elo (servidor/jogos/tiro-elo.js). No fim de uma partida online, o jogo chama tiroElo.fim (ferramentas/tiro-frontline.js)
+  // com o placar e quem jogou; isto manda para o servidor e mostra na tela do fim quanto subiu ou desceu. A partida só conta
+  // quando outro jogador com perfil manda o mesmo placar: enquanto isso, a tela diz "esperando" e pergunta de novo.
+  var ELO = null, CORES = { Prata: "#c3cad4", Ouro: "#f2c14e", Diamante: "#8fd3ff", Ascendente: "#3ccf8e", Imortal: "#e2475d", Radiante: "#ffe58a" };
+  var cssElo = ".tgRq{display:inline-flex;align-items:center;gap:6px;font-weight:800}.tgRq i{display:inline-block;width:18px;height:18px;clip-path:polygon(50% 0,100% 28%,100% 72%,50% 100%,0 72%,0 28%);background:var(--c);box-shadow:0 0 8px var(--c)}"
+    + "#tgEloFim{margin:14px auto 0;max-width:520px;padding:12px 16px;border-radius:10px;background:#0f1114d9;border:1px solid #2d323b;font:600 15px/1.35 Figtree,system-ui,sans-serif;color:#f1f2f4;text-align:center}"
+    + "#tgEloFim .d{font-size:24px;font-weight:900;margin-left:8px}#tgEloFim .d.up{color:#5ee08f}#tgEloFim .d.dn{color:#ff6b6b}#tgEloFim small{display:block;color:#99a0ab;margin-top:4px;font-weight:500}"
+    + ".tgBar{height:8px;border-radius:4px;background:#2a2f37;overflow:hidden;margin:8px 0 2px}.tgBar b{display:block;height:100%;background:var(--c)}";
+  function rqHtml(r) { return '<span class="tgRq" style="--c:' + (CORES[r.nome] || "#ccc") + '"><i></i>' + esc(r.rotulo) + "</span>"; }
+  function carregarElo() {
+    if (!P) { ELO = null; return Promise.resolve(null); }
+    return pedir("GET", "/elo", null, 8000).then(function (r) { ELO = r; ultimo = ""; atualizarBotao(); return r; }).catch(function () { return null; });
+  }
+  function caixaFim() {
+    var c = document.getElementById("tgEloFim"); if (c) return c;
+    var st = document.getElementById("endStats"); if (!st || !st.parentNode) return null;
+    c = document.createElement("div"); c.id = "tgEloFim"; st.parentNode.insertBefore(c, st.nextSibling); return c;
+  }
+  var fimId = 0;
+  function fim(d) {
+    var id = ++fimId, c = caixaFim(); if (!c) return;
+    if (!P) { c.innerHTML = "Crie um perfil (botão Perfil no menu) para entrar no elo."; return; }
+    c.innerHTML = "Elo: mandando o resultado..."; var tentativas = 0;
+    (function vai() {
+      if (id !== fimId) return;
+      pedir("POST", "/elo/resultado", d, 10000).then(function (r) {
+        if (id !== fimId) return;
+        if (r.estado === "contou") {
+          var up = r.delta > 0, sobe = r.ranque.rotulo !== r.ranqueAntes.rotulo;
+          c.innerHTML = rqHtml(r.ranque) + '<span class="d ' + (up ? "up" : r.delta < 0 ? "dn" : "") + '">' + (up ? "+" : "") + r.delta + "</span>"
+            + "<small>" + (sobe ? (r.depois > r.antes ? "Subiu de " : "Caiu de ") + esc(r.ranqueAntes.rotulo) + " para " + esc(r.ranque.rotulo) + " · " : "")
+            + r.depois + " pontos" + (r.ranque.proximo ? " · " + r.ranque.naDivisao + "/100 na divisão" : "") + "</small>";
+          carregarElo();
+        } else if (r.estado === "esperando" && tentativas++ < 18) {
+          c.innerHTML = "Elo: esperando outro jogador com perfil confirmar o placar...<small>A partida conta quando dois perfis mandam o mesmo resultado.</small>";
+          setTimeout(vai, 5000);
+        } else if (r.estado === "esperando") {
+          c.innerHTML = "Elo: ninguém mais confirmou este placar, a partida não contou.<small>Precisa de pelo menos dois jogadores com perfil na partida.</small>";
+        } else c.innerHTML = "Esta partida não vale elo: " + esc(r.motivo || "") + ".";
+      }).catch(function (e) { if (id === fimId) c.innerHTML = "Elo: " + esc(e.message); });
+    })();
+  }
+  window.tiroElo = { fim: fim, carregar: carregarElo };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar); else montar();
 })();

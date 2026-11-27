@@ -654,3 +654,32 @@ function placarTiro() {
   });
 }
 Object.assign(module.exports, { criarPerfilTiro, perfilTiroPorToken: perfilTiroPorQualquerToken, recuperarPerfilTiro, salvarPerfilTiro, novoCodigoTiro, placarTiro });
+
+// ---------- elo do Tiro da Galera (migracoes/057-tiro-elo.sql; a regra fica em servidor/jogos/tiro-elo.js) ----------
+function eloTiro(perfil) {
+  const l = bd().prepare("SELECT pontos, pico, partidas, vitorias, derrotas FROM tiro_elo WHERE perfil = ?").get(perfil);
+  return l ? { pontos: Number(l.pontos), pico: Number(l.pico), partidas: Number(l.partidas), vitorias: Number(l.vitorias), derrotas: Number(l.derrotas) }
+    : { pontos: 0, pico: 0, partidas: 0, vitorias: 0, derrotas: 0 };
+}
+// uma partida que contou: guarda e soma os pontos (nunca abaixo de 0). A mesma partida não conta duas vezes: devolve null.
+function registrarEloTiro(perfil, { chave, modo, mapa, resultado, delta, agora = Date.now() }) {
+  const db = bd();
+  db.exec("BEGIN");
+  try {
+    const e = eloTiro(perfil), pontos = Math.max(0, e.pontos + delta);
+    const r = db.prepare("INSERT OR IGNORE INTO tiro_elo_partidas (perfil, chave, modo, mapa, resultado, delta, pontos, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(perfil, chave, modo, mapa, resultado, pontos - e.pontos, pontos, agora);
+    if (!r.changes) { db.exec("ROLLBACK"); return null; }
+    db.prepare(`INSERT INTO tiro_elo (perfil, pontos, pico, partidas, vitorias, derrotas, atualizado_em) VALUES (?, ?, ?, 1, ?, ?, ?)
+      ON CONFLICT(perfil) DO UPDATE SET pontos = excluded.pontos, pico = MAX(pico, excluded.pontos), partidas = partidas + 1,
+      vitorias = vitorias + excluded.vitorias, derrotas = derrotas + excluded.derrotas, atualizado_em = excluded.atualizado_em`)
+      .run(perfil, pontos, pontos, resultado === "vitoria" ? 1 : 0, resultado === "derrota" ? 1 : 0, agora);
+    db.exec("COMMIT");
+    return { pontos };
+  } catch (err) { try { db.exec("ROLLBACK"); } catch {} throw err; }
+}
+const historicoEloTiro = (perfil, limite = 10) => bd().prepare("SELECT modo, mapa, resultado, delta, pontos, criado_em FROM tiro_elo_partidas WHERE perfil = ? ORDER BY id DESC LIMIT ?")
+  .all(perfil, limite).map((l) => ({ modo: l.modo, mapa: l.mapa, resultado: l.resultado, delta: Number(l.delta), pontos: Number(l.pontos), em: Number(l.criado_em) }));
+const placarEloTiro = (limite = 50) => bd().prepare("SELECT p.nome, e.pontos, e.partidas, e.vitorias FROM tiro_elo e JOIN tiro_perfis p ON p.id = e.perfil WHERE e.partidas > 0 ORDER BY e.pontos DESC, e.partidas ASC LIMIT ?")
+  .all(limite).map((l) => ({ nome: l.nome, pontos: Number(l.pontos), partidas: Number(l.partidas), vitorias: Number(l.vitorias) }));
+Object.assign(module.exports, { eloTiro, registrarEloTiro, historicoEloTiro, placarEloTiro });

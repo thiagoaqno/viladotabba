@@ -1,16 +1,22 @@
-# Tiro: no Battle royale, as armas só aparecem dentro de construções e em lajes
+# Tiro: Favela Grande bem maior, com peças de outros mapas e parede alta na beira
 
-Pedido do Thiago: "faz as armas spawnarem só dentro de construções e lajes!"
+Pedido do Thiago: "cresce mais ainda o favela... usa assets de outros mapas e afins". E o cuidado: tirar as paredes invisíveis da Favela e pôr uma nova na beira do mapa, "absurdamente alta", bem na beira do abismo.
 
-**Como o lugar de cada arma é escolhido agora:**
-- só entram pontos onde dá para andar e chegar: os da malha de navegação dos robôs, na parte principal (nada atrás de parede invisível nem em telhado sem acesso);
-- desses, ficam os que têm **teto a até 8 m em cima** (dentro de casa, prédio, galpão, barraca) e os que estão **a mais de 1,5 m acima do chão sem teto** (laje, terraço, passarela);
-- as armas ficam espalhadas: cada uma a pelo menos 6 m das outras, ou em outro andar. Se não couberem todas, a distância vai diminuindo;
-- a quantidade é a mesma de antes (14 a 30, conforme o tamanho do mapa), com a mesma semente do salão, então todo mundo vê as armas nos mesmos lugares;
-- num mapa quase sem construção (menos de 6 lugares assim), o resto das armas vai para os pontos de passagem, como antes.
+**Tamanho:** de 196 x 116 m de chão para **272 x 212 m**, tudo jogável (uns 2,5 vezes a versão anterior e uns 11 vezes a Favela).
 
-As caixas de colete e de cura continuam como estavam (pontos de passagem). Os robôs com pistola continuam indo atrás da arma mais perto, agora dentro das casas e nas lajes.
+**O que entrou** (o sul é feito no gerador e espelhado no norte, como na Favela):
+- **Ferro-velho** (oeste, x -136 a -96): dois vagões e um ônibus queimado (peças dos mapas de neve e de deserto do jogo), contêineres, carcaças de carro, manilhas, pneus, vigas, caçamba, guarita e engradados;
+- **Rodoviária** (leste, x 96 a 136): **galpão coberto** de 28 x 22 m com bancos, guichê e painel de horários (peças do aeroporto). O teto, a 5 m, é laje, com **escada** pelo lado leste. Na frente, ônibus e van parados, pontos de ônibus, banca e orelhão;
+- **avenida** de ponta a ponta (z 44 a 56), com postes, carros e pontos de ônibus;
+- **Morro** (z 56 a 106, ao sul e ao norte): **três fileiras de prédios e casas de favela** com vielas entre elas e 6 vielas atravessando. Entre eles, prédios com escada até a laje (escada pelo lado, pelos fundos, até o telhado). No alto, uma **feira** de barracas, uma **praça** com fonte, quiosque de açaí, churrasquinho, dominó e parquinho;
+- o Campinho, o Comércio e a Favela continuam como estavam.
 
-Feito em `ferramentas/tiro-br.js` (`brLootPontos`, `brLoot`). Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
+**Paredes:**
+- saem **todas as paredes invisíveis de dentro**, inclusive as da Favela (as dos lados e as do fundo das bases) e as do Campinho e do Comércio, junto com as casas de cenário de fora do limite;
+- a única parede invisível agora é a da **beira do chão**, com **600 m de altura** (nem planando de paraquedas dá para passar), bem na beira do abismo (os 20 cm finais do chão).
+
+**Pontos de passagem:** uma grade de 8 m em todo o mapa fora da Favela, sem os pontos que caem dentro de um prédio: 603 novos (778 no total). Servem para os robôs andarem e para as caixas de colete e cura. As armas usam a malha dos robôs dentro das construções e nas lajes, e o galpão e os prédios com escada dão muitos lugares assim.
+
+**Conferido:** o gerador confere sozinho que nenhum prédio ou veículo novo encosta em outro (0) nem passa da beira (0), pelo tamanho de cada peça escrito no kit, e o script do jogo montado passa no `node --check`. Não joguei nem vi o mapa. São 553 prefabs (antes uns 250), então vale olhar o desempenho no tablet.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

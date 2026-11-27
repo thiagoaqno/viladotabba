@@ -5,7 +5,7 @@
  "tipo": "open",
  "ceu": "meltem",
  "mar": null,
- "desc": "A Favela com os dois bairros do lado: o Campinho, com o campo de terra, a oeste, e o Comércio, com a quadra e as lojas, a leste. Feito para o Battle royale.",
+ "desc": "A Favela no meio do morro inteiro: o Campinho e o Ferro-velho a oeste, o Comércio e a Rodoviária a leste, e o morro com vielas, lajes, feira e praça ao norte e ao sul. Feito para o Battle royale.",
  "pecas": [
   {
    "t": "prefab",
@@ -17,27 +17,6 @@
    ],
    "r": 0,
    "e": 1
-  },
-  {
-   "t": "caixa",
-   "p": [
-    0,
-    0,
-    44
-   ],
-   "s": [
-    60,
-    12,
-    0.2
-   ],
-   "r": 0,
-   "m": "glass",
-   "cor": [
-    0.6,
-    0.8,
-    1
-   ],
-   "inv": true
   },
   {
    "t": "prefab",
@@ -177,27 +156,6 @@
    "col": false
   },
   {
-   "t": "caixa",
-   "p": [
-    0,
-    0,
-    -44
-   ],
-   "s": [
-    60,
-    12,
-    0.2
-   ],
-   "r": 180,
-   "m": "glass",
-   "cor": [
-    0.6,
-    0.8,
-    1
-   ],
-   "inv": true
-  },
-  {
    "t": "prefab",
    "nome": "kcPortaoGaragem",
    "p": [
@@ -322,160 +280,6 @@
     0.75
    ],
    "col": false
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    -27,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTijolo",
-   "p": [
-    -18,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    -9,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaConcreto2",
-   "p": [
-    0,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaObra",
-   "p": [
-    9,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    18,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTelhado",
-   "p": [
-    27,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    -27,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTijolo",
-   "p": [
-    -18,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    -9,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaConcreto2",
-   "p": [
-    0,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaObra",
-   "p": [
-    9,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    18,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTelhado",
-   "p": [
-    27,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
   },
   {
    "t": "escada",
@@ -1047,46 +851,6 @@
     32.75
    ],
    "r": 90
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    13.25,
-    0,
-    55.25
-   ],
-   "r": 0
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    22.75,
-    0,
-    54.5
-   ],
-   "r": 0
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioFavela4",
-   "p": [
-    22.5,
-    0,
-    -53.75
-   ],
-   "r": 0
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioFavela3",
-   "p": [
-    13.75,
-    0,
-    -54.25
-   ],
-   "r": 0
   },
   {
    "t": "prefab",
@@ -2003,9 +1767,9 @@
     0
    ],
    "s": [
-    196,
+    272,
     0.3,
-    116
+    212
    ],
    "r": 0,
    "m": "cobble",
@@ -2018,14 +1782,14 @@
   {
    "t": "caixa",
    "p": [
-    -90,
-    0,
+    -135.9,
+    -0.3,
     0
    ],
    "s": [
     0.2,
-    6,
-    88
+    600.3,
+    212
    ],
    "r": 0,
    "m": "glass",
@@ -2039,14 +1803,56 @@
   {
    "t": "caixa",
    "p": [
-    90,
-    0,
+    135.9,
+    -0.3,
     0
    ],
    "s": [
     0.2,
-    6,
-    88
+    600.3,
+    212
+   ],
+   "r": 0,
+   "m": "glass",
+   "cor": [
+    0.6,
+    0.8,
+    1
+   ],
+   "inv": true
+  },
+  {
+   "t": "caixa",
+   "p": [
+    0,
+    -0.3,
+    -105.9
+   ],
+   "s": [
+    272,
+    600.3,
+    0.2
+   ],
+   "r": 0,
+   "m": "glass",
+   "cor": [
+    0.6,
+    0.8,
+    1
+   ],
+   "inv": true
+  },
+  {
+   "t": "caixa",
+   "p": [
+    0,
+    -0.3,
+    105.9
+   ],
+   "s": [
+    272,
+    600.3,
+    0.2
    ],
    "r": 0,
    "m": "glass",
@@ -2124,25 +1930,48 @@
    "e": 1
   },
   {
-   "t": "caixa",
+   "t": "prefab",
+   "nome": "stCrateStack",
    "p": [
-    -60,
+    -126,
     0,
-    44
+    0
    ],
-   "s": [
-    60,
-    6,
-    0.2
+   "r": 0.4,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcGabiao",
+   "p": [
+    -112,
+    0,
+    0
    ],
-   "r": 0,
-   "m": "glass",
-   "cor": [
-    0.6,
-    0.8,
-    1
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcJersey",
+   "p": [
+    104,
+    0,
+    0
    ],
-   "inv": true
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcJersey",
+   "p": [
+    120,
+    0,
+    0
+   ],
+   "r": 90,
+   "e": 1
   },
   {
    "t": "prefab",
@@ -2187,25 +2016,46 @@
    "r": 0.6
   },
   {
-   "t": "caixa",
+   "t": "prefab",
+   "nome": "kcPosteGato",
    "p": [
-    60,
+    -93,
     0,
-    44
+    10
    ],
-   "s": [
-    60,
-    6,
-    0.2
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -93,
+    0,
+    36
    ],
    "r": 0,
-   "m": "glass",
-   "cor": [
-    0.6,
-    0.8,
-    1
+   "e": 1
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    -94.5,
+    0,
+    27
    ],
-   "inv": true
+   "r": 0
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    -95,
+    0,
+    27.7
+   ],
+   "r": 0.6
   },
   {
    "t": "prefab",
@@ -2244,6 +2094,48 @@
    "nome": "barrel",
    "p": [
     35,
+    0,
+    27.7
+   ],
+   "r": 0.6
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPosteGato",
+   "p": [
+    93,
+    0,
+    10
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    93,
+    0,
+    36
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    94.5,
+    0,
+    27
+   ],
+   "r": 0
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    95,
     0,
     27.7
    ],
@@ -2888,25 +2780,1910 @@
    "e": 1
   },
   {
+   "t": "prefab",
+   "nome": "boxcar",
+   "p": [
+    -104,
+    0,
+    7.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "boxcar",
+   "p": [
+    -104,
+    0,
+    24
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "busWreck",
+   "p": [
+    -118,
+    0,
+    11
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcConteinerAberto",
+   "p": [
+    -124,
+    0,
+    30
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcConteinerAberto",
+   "p": [
+    -112,
+    0,
+    37
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroQueimado",
+   "p": [
+    -128,
+    0,
+    5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroQueimado",
+   "p": [
+    -111,
+    0,
+    30
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcManilhas",
+   "p": [
+    -126,
+    0,
+    19
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPneus",
+   "p": [
+    -112,
+    0,
+    19.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPaletes",
+   "p": [
+    -129,
+    0,
+    39
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVigas",
+   "p": [
+    -120,
+    0,
+    42
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    -98.5,
+    0,
+    15
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcEntulho",
+   "p": [
+    -130,
+    0,
+    13
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCacamba",
+   "p": [
+    -100,
+    0,
+    40
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcGuarita",
+   "p": [
+    -99,
+    0,
+    3
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
    "t": "caixa",
    "p": [
-    -60,
-    0,
-    -44
+    114,
+    5,
+    25
    ],
    "s": [
-    60,
-    6,
+    28,
+    0.3,
+    22
+   ],
+   "r": 0,
+   "m": "corrugated",
+   "cor": [
+    0.55,
+    0.57,
+    0.6
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    100.25,
+    0,
+    14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    100.25,
+    0,
+    35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    107.25,
+    0,
+    14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    107.25,
+    0,
+    35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114.25,
+    0,
+    14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114.25,
+    0,
+    35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    121.25,
+    0,
+    14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    121.25,
+    0,
+    35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    127.75,
+    0,
+    14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    127.75,
+    0,
+    35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 0,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114,
+    0,
+    36
+   ],
+   "s": [
+    28,
+    5,
+    0.4
+   ],
+   "r": 0,
+   "m": "brick",
+   "cor": [
+    0.86,
+    0.5,
+    0.36
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114,
+    5.3,
+    35.9
+   ],
+   "s": [
+    28,
+    0.9,
     0.2
    ],
-   "r": 180,
-   "m": "glass",
+   "r": 0,
+   "m": "brick",
    "cor": [
-    0.6,
-    0.8,
-    1
+    0.86,
+    0.5,
+    0.36
+   ]
+  },
+  {
+   "t": "escada",
+   "p": [
+    129.4,
+    0,
+    22.75
    ],
-   "inv": true
+   "s": [
+    2,
+    5.3,
+    9.5
+   ],
+   "r": 0,
+   "m": "concrete",
+   "cor": [
+    0.66,
+    0.65,
+    0.62
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    129.2,
+    5,
+    28.75
+   ],
+   "s": [
+    2.4,
+    0.3,
+    2.5
+   ],
+   "r": 0,
+   "m": "concrete",
+   "cor": [
+    0.66,
+    0.65,
+    0.62
+   ]
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    104,
+    0,
+    22
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    104,
+    0,
+    27
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    110,
+    0,
+    22
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    110,
+    0,
+    27
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    116,
+    0,
+    22
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    116,
+    0,
+    27
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcABalcao",
+   "p": [
+    122,
+    0,
+    32
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcAPainelVoos",
+   "p": [
+    114,
+    0,
+    35.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarrinhoPipoca",
+   "p": [
+    124,
+    0,
+    18
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcLixeiraRua",
+   "p": [
+    101.5,
+    0,
+    31
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBanca",
+   "p": [
+    132,
+    0,
+    40
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "busWreck",
+   "p": [
+    112,
+    0,
+    6
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVan",
+   "p": [
+    126,
+    0,
+    9
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPontoOnibus",
+   "p": [
+    101,
+    0,
+    10
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPontoOnibus",
+   "p": [
+    133.2,
+    0,
+    22
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcOrelhao",
+   "p": [
+    99,
+    0,
+    40
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    -129.6,
+    0,
+    59.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -120.9,
+    0,
+    59.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaLado",
+   "p": [
+    -110.3,
+    0,
+    60.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTijolo",
+   "p": [
+    -130.5,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaFundos",
+   "p": [
+    -122.05,
+    0,
+    74.8
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto",
+   "p": [
+    -112.35,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    -128.25,
+    0,
+    90.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    -118.2,
+    0,
+    88.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    -108.8,
+    0,
+    88.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -95.4,
+    0,
+    59.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaLado",
+   "p": [
+    -85.8,
+    0,
+    60.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -75.95,
+    0,
+    59.95
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaFundos",
+   "p": [
+    -94.75,
+    0,
+    74.8
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto",
+   "p": [
+    -86.05,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -77.75,
+    0,
+    73.95
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTelhado",
+   "p": [
+    -70.7,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    -95.4,
+    0,
+    88.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    -87,
+    0,
+    88.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -77.6,
+    0,
+    88.35
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -70.05,
+    0,
+    87.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaLado",
+   "p": [
+    -54.2,
+    0,
+    60.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -45.35,
+    0,
+    59.95
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    -36.7,
+    0,
+    59.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto",
+   "p": [
+    -55.75,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -48.45,
+    0,
+    73.95
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTelhado",
+   "p": [
+    -40.4,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -33.45,
+    0,
+    73.35
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    -55.4,
+    0,
+    88.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -47,
+    0,
+    88.35
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -38.45,
+    0,
+    87.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    -30,
+    0,
+    89
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -16.15,
+    0,
+    59.95
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    -8.5,
+    0,
+    59.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaComercio",
+   "p": [
+    2.4,
+    0,
+    59.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    12.3,
+    0,
+    60.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -16.15,
+    0,
+    73.95
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTelhado",
+   "p": [
+    -9.1,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -1.15,
+    0,
+    73.35
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    6.05,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    14.4,
+    0,
+    73.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -15.4,
+    0,
+    88.35
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -7.85,
+    0,
+    87.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    1.6,
+    0,
+    89
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    12.55,
+    0,
+    90.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    28.6,
+    0,
+    59.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaComercio",
+   "p": [
+    38.5,
+    0,
+    59.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    49.4,
+    0,
+    60.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTelhado",
+   "p": [
+    28,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    34.95,
+    0,
+    73.35
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    43.15,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    51.5,
+    0,
+    73.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    27.75,
+    0,
+    87.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    36.2,
+    0,
+    89
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    48.15,
+    0,
+    90.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaComercio",
+   "p": [
+    70.1,
+    0,
+    59.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    80,
+    0,
+    60.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSobrado",
+   "p": [
+    89.3,
+    0,
+    59.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    67.75,
+    0,
+    73.35
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    74.95,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    84.3,
+    0,
+    73.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTijolo",
+   "p": [
+    92.4,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    69.5,
+    0,
+    89
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    80.45,
+    0,
+    90.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    91.5,
+    0,
+    88.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    108.6,
+    0,
+    60.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSobrado",
+   "p": [
+    116.9,
+    0,
+    59.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    126.5,
+    0,
+    59.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    108.25,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    116.6,
+    0,
+    73.85
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTijolo",
+   "p": [
+    125.7,
+    0,
+    73.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    110.25,
+    0,
+    90.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    120.3,
+    0,
+    88.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    129.7,
+    0,
+    88.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -126,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -105,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -84,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -63,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -42,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -21,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    0,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    21,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    42,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    63,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    84,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    105,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    126,
+    0,
+    55.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroVelho",
+   "p": [
+    -84,
+    0,
+    50
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVan",
+   "p": [
+    -14,
+    0,
+    47.5
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroQueimado",
+   "p": [
+    40,
+    0,
+    49
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMoto",
+   "p": [
+    78,
+    0,
+    47.2
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroVelho",
+   "p": [
+    118,
+    0,
+    50
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPontoOnibus",
+   "p": [
+    -40,
+    0,
+    54.4
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPontoOnibus",
+   "p": [
+    10,
+    0,
+    54.4
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -58,
+    0,
+    100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -51.5,
+    0,
+    100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -45,
+    0,
+    100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -38.5,
+    0,
+    100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -32,
+    0,
+    100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaFonte",
+   "p": [
+    40,
+    0,
+    101
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaConvivio",
+   "p": [
+    30,
+    0,
+    99
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaConvivio",
+   "p": [
+    50,
+    0,
+    99
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    56,
+    0,
+    102
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcQuiosqueAcai",
+   "p": [
+    -12,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcChurrasquinho",
+   "p": [
+    -4,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMesaDomino",
+   "p": [
+    6,
+    0,
+    99.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBancoPraca",
+   "p": [
+    70,
+    0,
+    99
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBancoPraca",
+   "p": [
+    78,
+    0,
+    99
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaParquinho",
+   "p": [
+    90,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    -120,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcManilhas",
+   "p": [
+    -108,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCaixaDagua",
+   "p": [
+    -92,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcEntulho",
+   "p": [
+    -80,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    114,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    124,
+    0,
+    101
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVaral",
+   "p": [
+    104,
+    0,
+    100
+   ],
+   "r": 0,
+   "e": 1
   },
   {
    "t": "prefab",
@@ -2951,25 +4728,46 @@
    "r": 179.39999999999998
   },
   {
-   "t": "caixa",
+   "t": "prefab",
+   "nome": "kcPosteGato",
    "p": [
-    60,
+    -93,
     0,
-    -44
+    -10
    ],
-   "s": [
-    60,
-    6,
-    0.2
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -93,
+    0,
+    -36
    ],
    "r": 180,
-   "m": "glass",
-   "cor": [
-    0.6,
-    0.8,
-    1
+   "e": 1
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    -94.5,
+    0,
+    -27
    ],
-   "inv": true
+   "r": 180
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    -95,
+    0,
+    -27.7
+   ],
+   "r": 179.39999999999998
   },
   {
    "t": "prefab",
@@ -3008,6 +4806,48 @@
    "nome": "barrel",
    "p": [
     35,
+    0,
+    -27.7
+   ],
+   "r": 179.39999999999998
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPosteGato",
+   "p": [
+    93,
+    0,
+    -10
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    93,
+    0,
+    -36
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    94.5,
+    0,
+    -27
+   ],
+   "r": 180
+  },
+  {
+   "t": "prop",
+   "nome": "barrel",
+   "p": [
+    95,
     0,
     -27.7
    ],
@@ -3653,341 +5493,718 @@
   },
   {
    "t": "prefab",
-   "nome": "kcCasaTelhado",
+   "nome": "boxcar",
    "p": [
-    -95,
+    -104,
     0,
-    4
+    -7.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "boxcar",
+   "p": [
+    -104,
+    0,
+    -24
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "busWreck",
+   "p": [
+    -118,
+    0,
+    -11
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcConteinerAberto",
+   "p": [
+    -124,
+    0,
+    -30
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcConteinerAberto",
+   "p": [
+    -112,
+    0,
+    -37
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroQueimado",
+   "p": [
+    -128,
+    0,
+    -5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroQueimado",
+   "p": [
+    -111,
+    0,
+    -30
    ],
    "r": 90,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcSobrado",
+   "nome": "kcManilhas",
    "p": [
-    -95,
+    -126,
     0,
-    13
+    -19
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPneus",
+   "p": [
+    -112,
+    0,
+    -19.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPaletes",
+   "p": [
+    -129,
+    0,
+    -39
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVigas",
+   "p": [
+    -120,
+    0,
+    -42
    ],
    "r": 90,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaTijolo",
+   "nome": "kcTambores",
    "p": [
-    -95,
+    -98.5,
     0,
-    22
-   ],
-   "r": 90,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    -95,
-    0,
-    31
-   ],
-   "r": 90,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaConcreto2",
-   "p": [
-    -95,
-    0,
-    40
-   ],
-   "r": 90,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaObra",
-   "p": [
-    -95,
-    0,
-    49
-   ],
-   "r": 90,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioFavela4",
-   "p": [
-    -36,
-    0,
-    49
+    -15
    ],
    "r": 180,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaVerde",
+   "nome": "kcEntulho",
    "p": [
-    -45,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTelhado",
-   "p": [
-    -54,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    -63,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTijolo",
-   "p": [
-    -72,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    -81,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTijolo",
-   "p": [
-    95,
-    0,
-    4
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    95,
-    0,
-    13
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaConcreto2",
-   "p": [
-    95,
-    0,
-    22
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaObra",
-   "p": [
-    95,
-    0,
-    31
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioFavela4",
-   "p": [
-    95,
-    0,
-    40
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaVerde",
-   "p": [
-    95,
-    0,
-    49
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTelhado",
-   "p": [
-    36,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    45,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTijolo",
-   "p": [
-    54,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
-   "p": [
-    63,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaConcreto2",
-   "p": [
-    72,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaObra",
-   "p": [
-    81,
-    0,
-    49
-   ],
-   "r": 180,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTelhado",
-   "p": [
-    -95,
-    0,
-    -4
-   ],
-   "r": 90,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    -95,
+    -130,
     0,
     -13
    ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCacamba",
+   "p": [
+    -100,
+    0,
+    -40
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcGuarita",
+   "p": [
+    -99,
+    0,
+    -3
+   ],
    "r": 90,
+   "e": 1
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114,
+    5,
+    -25
+   ],
+   "s": [
+    28,
+    0.3,
+    22
+   ],
+   "r": 180,
+   "m": "corrugated",
+   "cor": [
+    0.55,
+    0.57,
+    0.6
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    100.25,
+    0,
+    -14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    100.25,
+    0,
+    -35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    107.25,
+    0,
+    -14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    107.25,
+    0,
+    -35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114.25,
+    0,
+    -14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114.25,
+    0,
+    -35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    121.25,
+    0,
+    -14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    121.25,
+    0,
+    -35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    127.75,
+    0,
+    -14.25
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    127.75,
+    0,
+    -35.75
+   ],
+   "s": [
+    0.5,
+    5,
+    0.5
+   ],
+   "r": 180,
+   "m": "steel",
+   "cor": [
+    0.4,
+    0.42,
+    0.45
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114,
+    0,
+    -36
+   ],
+   "s": [
+    28,
+    5,
+    0.4
+   ],
+   "r": 180,
+   "m": "brick",
+   "cor": [
+    0.86,
+    0.5,
+    0.36
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    114,
+    5.3,
+    -35.9
+   ],
+   "s": [
+    28,
+    0.9,
+    0.2
+   ],
+   "r": 180,
+   "m": "brick",
+   "cor": [
+    0.86,
+    0.5,
+    0.36
+   ]
+  },
+  {
+   "t": "escada",
+   "p": [
+    129.4,
+    0,
+    -22.75
+   ],
+   "s": [
+    2,
+    5.3,
+    9.5
+   ],
+   "r": 180,
+   "m": "concrete",
+   "cor": [
+    0.66,
+    0.65,
+    0.62
+   ]
+  },
+  {
+   "t": "caixa",
+   "p": [
+    129.2,
+    5,
+    -28.75
+   ],
+   "s": [
+    2.4,
+    0.3,
+    2.5
+   ],
+   "r": 180,
+   "m": "concrete",
+   "cor": [
+    0.66,
+    0.65,
+    0.62
+   ]
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    104,
+    0,
+    -22
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    104,
+    0,
+    -27
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    110,
+    0,
+    -22
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    110,
+    0,
+    -27
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    116,
+    0,
+    -22
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcACadeiras",
+   "p": [
+    116,
+    0,
+    -27
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcABalcao",
+   "p": [
+    122,
+    0,
+    -32
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcAPainelVoos",
+   "p": [
+    114,
+    0,
+    -35.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarrinhoPipoca",
+   "p": [
+    124,
+    0,
+    -18
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcLixeiraRua",
+   "p": [
+    101.5,
+    0,
+    -31
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBanca",
+   "p": [
+    132,
+    0,
+    -40
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "busWreck",
+   "p": [
+    112,
+    0,
+    -6
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVan",
+   "p": [
+    126,
+    0,
+    -9
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPontoOnibus",
+   "p": [
+    101,
+    0,
+    -10
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPontoOnibus",
+   "p": [
+    133.2,
+    0,
+    -22
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcOrelhao",
+   "p": [
+    99,
+    0,
+    -40
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    -129.6,
+    0,
+    -59.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -120.9,
+    0,
+    -59.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaLado",
+   "p": [
+    -110.3,
+    0,
+    -60.85
+   ],
+   "r": 0,
    "e": 1
   },
   {
    "t": "prefab",
    "nome": "kcCasaTijolo",
    "p": [
-    -95,
+    -130.5,
     0,
-    -22
+    -73.5
    ],
-   "r": 90,
+   "r": 0,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcPredioVelho",
+   "nome": "kcFavelaEscadaFundos",
    "p": [
-    -95,
+    -122.05,
     0,
-    -31
+    -74.8
    ],
-   "r": 90,
+   "r": 0,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaConcreto2",
+   "nome": "kcCasaConcreto",
    "p": [
-    -95,
+    -112.35,
     0,
-    -40
+    -73.5
    ],
-   "r": 90,
+   "r": 0,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaObra",
+   "nome": "kcFavelaEscadaTelhado",
    "p": [
-    -95,
+    -128.25,
     0,
-    -49
-   ],
-   "r": 90,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioFavela4",
-   "p": [
-    -36,
-    0,
-    -49
+    -90.5
    ],
    "r": 0,
    "e": 1
@@ -3996,9 +6213,86 @@
    "t": "prefab",
    "nome": "kcCasaVerde",
    "p": [
-    -45,
+    -118.2,
     0,
-    -49
+    -88.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    -108.8,
+    0,
+    -88.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -95.4,
+    0,
+    -59.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaLado",
+   "p": [
+    -85.8,
+    0,
+    -60.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -75.95,
+    0,
+    -59.95
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaFundos",
+   "p": [
+    -94.75,
+    0,
+    -74.8
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto",
+   "p": [
+    -86.05,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -77.75,
+    0,
+    -73.95
    ],
    "r": 0,
    "e": 1
@@ -4007,9 +6301,449 @@
    "t": "prefab",
    "nome": "kcCasaTelhado",
    "p": [
-    -54,
+    -70.7,
     0,
-    -49
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    -95.4,
+    0,
+    -88.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    -87,
+    0,
+    -88.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -77.6,
+    0,
+    -88.35
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -70.05,
+    0,
+    -87.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaLado",
+   "p": [
+    -54.2,
+    0,
+    -60.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -45.35,
+    0,
+    -59.95
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    -36.7,
+    0,
+    -59.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto",
+   "p": [
+    -55.75,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -48.45,
+    0,
+    -73.95
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTelhado",
+   "p": [
+    -40.4,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -33.45,
+    0,
+    -73.35
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    -55.4,
+    0,
+    -88.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -47,
+    0,
+    -88.35
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -38.45,
+    0,
+    -87.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    -30,
+    0,
+    -89
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -16.15,
+    0,
+    -59.95
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    -8.5,
+    0,
+    -59.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaComercio",
+   "p": [
+    2.4,
+    0,
+    -59.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    12.3,
+    0,
+    -60.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela4",
+   "p": [
+    -16.15,
+    0,
+    -73.95
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTelhado",
+   "p": [
+    -9.1,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -1.15,
+    0,
+    -73.35
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    6.05,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    14.4,
+    0,
+    -73.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaAmarela",
+   "p": [
+    -15.4,
+    0,
+    -88.35
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    -7.85,
+    0,
+    -87.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    1.6,
+    0,
+    -89
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    12.55,
+    0,
+    -90.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    28.6,
+    0,
+    -59.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaComercio",
+   "p": [
+    38.5,
+    0,
+    -59.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    49.4,
+    0,
+    -60.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTelhado",
+   "p": [
+    28,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    34.95,
+    0,
+    -73.35
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    43.15,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    51.5,
+    0,
+    -73.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    27.75,
+    0,
+    -87.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    36.2,
+    0,
+    -89
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    48.15,
+    0,
+    -90.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaComercio",
+   "p": [
+    70.1,
+    0,
+    -59.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    80,
+    0,
+    -60.1
    ],
    "r": 0,
    "e": 1
@@ -4017,166 +6751,650 @@
   {
    "t": "prefab",
    "nome": "kcSobrado",
+   "p": [
+    89.3,
+    0,
+    -59.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaTorre",
+   "p": [
+    67.75,
+    0,
+    -73.35
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    74.95,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    84.3,
+    0,
+    -73.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTijolo",
+   "p": [
+    92.4,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioVelho",
+   "p": [
+    69.5,
+    0,
+    -89
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    80.45,
+    0,
+    -90.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    91.5,
+    0,
+    -88.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    108.6,
+    0,
+    -60.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSobrado",
+   "p": [
+    116.9,
+    0,
+    -59.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    126.5,
+    0,
+    -59.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaConcreto2",
+   "p": [
+    108.25,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavela3",
+   "p": [
+    116.6,
+    0,
+    -73.85
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaTijolo",
+   "p": [
+    125.7,
+    0,
+    -73.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcFavelaEscadaTelhado",
+   "p": [
+    110.25,
+    0,
+    -90.5
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCasaVerde",
+   "p": [
+    120.3,
+    0,
+    -88.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPredioFavelaEsquina",
+   "p": [
+    129.7,
+    0,
+    -88.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -126,
+    0,
+    -55.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -105,
+    0,
+    -55.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    -84,
+    0,
+    -55.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
    "p": [
     -63,
     0,
-    -49
+    -55.2
    ],
-   "r": 0,
+   "r": 180,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaTijolo",
+   "nome": "kcPoste",
    "p": [
-    -72,
+    -42,
     0,
-    -49
+    -55.2
    ],
-   "r": 0,
+   "r": 180,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcPredioVelho",
+   "nome": "kcPoste",
    "p": [
-    -81,
+    -21,
     0,
-    -49
+    -55.2
    ],
-   "r": 0,
+   "r": 180,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaTijolo",
+   "nome": "kcPoste",
    "p": [
-    95,
     0,
-    -4
+    0,
+    -55.2
    ],
-   "r": 270,
+   "r": 180,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcPredioVelho",
+   "nome": "kcPoste",
    "p": [
-    95,
+    21,
     0,
-    -13
+    -55.2
    ],
-   "r": 270,
+   "r": 180,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaConcreto2",
+   "nome": "kcPoste",
    "p": [
-    95,
+    42,
     0,
-    -22
+    -55.2
    ],
-   "r": 270,
+   "r": 180,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaObra",
-   "p": [
-    95,
-    0,
-    -31
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioFavela4",
-   "p": [
-    95,
-    0,
-    -40
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaVerde",
-   "p": [
-    95,
-    0,
-    -49
-   ],
-   "r": 270,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTelhado",
-   "p": [
-    36,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcSobrado",
-   "p": [
-    45,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcCasaTijolo",
-   "p": [
-    54,
-    0,
-    -49
-   ],
-   "r": 0,
-   "e": 1
-  },
-  {
-   "t": "prefab",
-   "nome": "kcPredioVelho",
+   "nome": "kcPoste",
    "p": [
     63,
     0,
+    -55.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    84,
+    0,
+    -55.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    105,
+    0,
+    -55.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPoste",
+   "p": [
+    126,
+    0,
+    -55.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroVelho",
+   "p": [
+    -84,
+    0,
+    -50
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVan",
+   "p": [
+    -14,
+    0,
+    -47.5
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroQueimado",
+   "p": [
+    40,
+    0,
     -49
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMoto",
+   "p": [
+    78,
+    0,
+    -47.2
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCarroVelho",
+   "p": [
+    118,
+    0,
+    -50
+   ],
+   "r": 270,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPontoOnibus",
+   "p": [
+    -40,
+    0,
+    -54.4
    ],
    "r": 0,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaConcreto2",
+   "nome": "kcPontoOnibus",
    "p": [
-    72,
+    10,
     0,
-    -49
+    -54.4
    ],
    "r": 0,
    "e": 1
   },
   {
    "t": "prefab",
-   "nome": "kcCasaObra",
+   "nome": "kcBarraca",
    "p": [
-    81,
+    -58,
     0,
-    -49
+    -100
    ],
    "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -51.5,
+    0,
+    -100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -45,
+    0,
+    -100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -38.5,
+    0,
+    -100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarraca",
+   "p": [
+    -32,
+    0,
+    -100
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaFonte",
+   "p": [
+    40,
+    0,
+    -101
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaConvivio",
+   "p": [
+    30,
+    0,
+    -99
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaConvivio",
+   "p": [
+    50,
+    0,
+    -99
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    56,
+    0,
+    -102
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcQuiosqueAcai",
+   "p": [
+    -12,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcChurrasquinho",
+   "p": [
+    -4,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMesaDomino",
+   "p": [
+    6,
+    0,
+    -99.5
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBancoPraca",
+   "p": [
+    70,
+    0,
+    -99
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBancoPraca",
+   "p": [
+    78,
+    0,
+    -99
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaParquinho",
+   "p": [
+    90,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    -120,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcManilhas",
+   "p": [
+    -108,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcCaixaDagua",
+   "p": [
+    -92,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcEntulho",
+   "p": [
+    -80,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    114,
+    0,
+    -100
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    124,
+    0,
+    -101
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcVaral",
+   "p": [
+    104,
+    0,
+    -100
+   ],
+   "r": 180,
    "e": 1
   }
  ],
@@ -5304,726 +8522,3622 @@
    0
   ],
   [
-   -33,
+   -132,
    0,
+   -102,
+   1
+  ],
+  [
+   -132,
+   0,
+   -78,
    0
   ],
   [
-   33,
+   -132,
    0,
+   -70,
    0
   ],
   [
-   -63,
+   -132,
    0,
+   -54,
    0
   ],
   [
-   -87,
+   -132,
    0,
-   0
-  ],
-  [
-   42.5,
-   0,
-   4
-  ],
-  [
-   64,
-   0,
-   0
-  ],
-  [
-   85.5,
-   0,
-   0
-  ],
-  [
-   -33,
-   0,
-   4
-  ],
-  [
-   -33,
-   0,
-   13
-  ],
-  [
-   -33,
-   0,
-   22
-  ],
-  [
-   -33,
-   0,
-   31
-  ],
-  [
-   -33,
-   0,
-   40
-  ],
-  [
-   -40,
-   0,
-   18.5
-  ],
-  [
-   -40,
-   0,
-   29.5
-  ],
-  [
-   -40,
-   0,
-   41,
-   1
-  ],
-  [
-   -49,
-   0,
-   18.5
-  ],
-  [
-   -49,
-   0,
-   29.5
-  ],
-  [
-   -49,
-   0,
-   41,
-   1
-  ],
-  [
-   -58,
-   0,
-   18.5
-  ],
-  [
-   -58,
-   0,
-   29.5
-  ],
-  [
-   -58,
-   0,
-   41,
-   1
-  ],
-  [
-   -67,
-   0,
-   18.5
-  ],
-  [
-   -67,
-   0,
-   29.5
-  ],
-  [
-   -67,
-   0,
-   41,
-   1
-  ],
-  [
-   -76,
-   0,
-   18.5
-  ],
-  [
-   -76,
-   0,
-   29.5
-  ],
-  [
-   -76,
-   0,
-   41,
-   1
-  ],
-  [
-   -85,
-   0,
-   18.5
-  ],
-  [
-   -85,
-   0,
-   29.5
-  ],
-  [
-   -85,
-   0,
-   41,
-   1
-  ],
-  [
-   33,
-   0,
-   4
-  ],
-  [
-   33,
-   0,
-   13
-  ],
-  [
-   33,
-   0,
-   22
-  ],
-  [
-   33,
-   0,
-   31
-  ],
-  [
-   33,
-   0,
-   40
-  ],
-  [
-   40,
-   0,
-   14
-  ],
-  [
-   40,
-   0,
-   26.5
-  ],
-  [
-   40,
-   0,
-   41,
-   1
-  ],
-  [
-   49,
-   0,
-   14
-  ],
-  [
-   49,
-   0,
-   26.5
-  ],
-  [
-   49,
-   0,
-   41,
-   1
-  ],
-  [
-   58,
-   0,
-   14
-  ],
-  [
-   58,
-   0,
-   26.5
-  ],
-  [
-   58,
-   0,
-   41,
-   1
-  ],
-  [
-   67,
-   0,
-   14
-  ],
-  [
-   67,
-   0,
-   26.5
-  ],
-  [
-   67,
-   0,
-   41,
-   1
-  ],
-  [
-   76,
-   0,
-   14
-  ],
-  [
-   76,
-   0,
-   26.5
-  ],
-  [
-   76,
-   0,
-   41,
-   1
-  ],
-  [
-   85,
-   0,
-   14
-  ],
-  [
-   85,
-   0,
-   26.5
-  ],
-  [
-   85,
-   0,
-   41,
-   1
-  ],
-  [
-   -80,
-   0,
-   6
-  ],
-  [
-   -71.5,
-   0,
-   6
-  ],
-  [
-   -63,
-   0,
-   6
-  ],
-  [
-   -54.5,
-   0,
-   6
-  ],
-  [
    -46,
-   0,
-   6
-  ],
-  [
-   -72,
-   0,
-   13,
-   1
-  ],
-  [
-   -55,
-   0,
-   13,
-   1
-  ],
-  [
-   -87,
-   0,
-   6,
-   1
-  ],
-  [
-   52,
-   0,
-   5
-  ],
-  [
-   60,
-   0,
-   5
-  ],
-  [
-   68,
-   0,
-   5
-  ],
-  [
-   76,
-   0,
-   5
-  ],
-  [
-   40,
-   0,
-   6
-  ],
-  [
-   46,
-   0,
-   2
-  ],
-  [
-   85.5,
-   0,
-   8,
-   1
-  ],
-  [
-   -33,
-   0,
-   -4,
    0
   ],
   [
-   -33,
+   -132,
    0,
-   -13,
+   -38,
    0
   ],
   [
-   -33,
+   -132,
+   0,
+   -30,
+   0
+  ],
+  [
+   -132,
+   0,
+   -22,
+   1
+  ],
+  [
+   -132,
+   0,
+   -14,
+   0
+  ],
+  [
+   -132,
+   0,
+   -6,
+   0
+  ],
+  [
+   -132,
+   0,
+   2,
+   0
+  ],
+  [
+   -132,
+   0,
+   10,
+   0
+  ],
+  [
+   -132,
+   0,
+   18,
+   1
+  ],
+  [
+   -132,
+   0,
+   26,
+   0
+  ],
+  [
+   -132,
+   0,
+   34,
+   0
+  ],
+  [
+   -132,
+   0,
+   42,
+   0
+  ],
+  [
+   -132,
+   0,
+   50,
+   0
+  ],
+  [
+   -132,
+   0,
+   66,
+   0
+  ],
+  [
+   -132,
+   0,
+   82,
+   0
+  ],
+  [
+   -132,
+   0,
+   98,
+   1
+  ],
+  [
+   -124,
+   0,
+   -102,
+   0
+  ],
+  [
+   -124,
+   0,
+   -70,
+   0
+  ],
+  [
+   -124,
+   0,
+   -54,
+   1
+  ],
+  [
+   -124,
+   0,
+   -46,
+   0
+  ],
+  [
+   -124,
+   0,
+   -38,
+   0
+  ],
+  [
+   -124,
    0,
    -22,
    0
   ],
   [
-   -33,
+   -124,
    0,
-   -31,
-   0
-  ],
-  [
-   -33,
-   0,
-   -40,
-   0
-  ],
-  [
-   -40,
-   0,
-   -18.5,
-   0
-  ],
-  [
-   -40,
-   0,
-   -29.5,
-   0
-  ],
-  [
-   -40,
-   0,
-   -41,
+   -14,
    1
   ],
   [
-   -49,
+   -124,
    0,
-   -18.5,
+   -6,
    0
   ],
   [
-   -49,
+   -124,
    0,
-   -29.5,
+   2,
    0
   ],
   [
-   -49,
+   -124,
    0,
-   -41,
+   10,
+   0
+  ],
+  [
+   -124,
+   0,
+   18,
+   0
+  ],
+  [
+   -124,
+   0,
+   26,
    1
   ],
   [
-   -58,
+   -124,
    0,
-   -18.5,
+   34,
    0
   ],
   [
-   -58,
+   -124,
    0,
-   -29.5,
+   42,
    0
   ],
   [
-   -58,
+   -124,
    0,
-   -41,
+   50,
+   0
+  ],
+  [
+   -124,
+   0,
+   66,
    1
   ],
   [
-   -67,
+   -124,
    0,
-   -18.5,
+   82,
    0
   ],
   [
-   -67,
+   -124,
    0,
-   -29.5,
+   98,
    0
   ],
   [
-   -67,
+   -116,
    0,
-   -41,
+   -102,
+   0
+  ],
+  [
+   -116,
+   0,
+   -94,
+   0
+  ],
+  [
+   -116,
+   0,
+   -78,
+   0
+  ],
+  [
+   -116,
+   0,
+   -70,
+   0
+  ],
+  [
+   -116,
+   0,
+   -62,
+   0
+  ],
+  [
+   -116,
+   0,
+   -54,
+   0
+  ],
+  [
+   -116,
+   0,
+   -46,
    1
   ],
   [
-   -76,
+   -116,
    0,
-   -18.5,
+   -38,
    0
   ],
   [
-   -76,
+   -116,
    0,
-   -29.5,
+   -30,
    0
   ],
   [
-   -76,
-   0,
-   -41,
-   1
-  ],
-  [
-   -85,
-   0,
-   -18.5,
-   0
-  ],
-  [
-   -85,
-   0,
-   -29.5,
-   0
-  ],
-  [
-   -85,
-   0,
-   -41,
-   1
-  ],
-  [
-   33,
-   0,
-   -4,
-   0
-  ],
-  [
-   33,
-   0,
-   -13,
-   0
-  ],
-  [
-   33,
+   -116,
    0,
    -22,
    0
   ],
   [
-   33,
+   -116,
    0,
-   -31,
+   2,
    0
   ],
   [
-   33,
+   -116,
    0,
-   -40,
+   18,
    0
   ],
   [
-   40,
+   -116,
    0,
-   -14,
+   26,
    0
   ],
   [
-   40,
+   -116,
    0,
-   -26.5,
-   0
-  ],
-  [
-   40,
-   0,
-   -41,
+   34,
    1
   ],
   [
-   49,
+   -116,
    0,
-   -14,
+   42,
    0
   ],
   [
-   49,
+   -116,
    0,
-   -26.5,
+   50,
    0
   ],
   [
-   49,
+   -116,
    0,
-   -41,
-   1
-  ],
-  [
    58,
-   0,
-   -14,
    0
   ],
   [
-   58,
+   -116,
    0,
-   -26.5,
+   66,
    0
   ],
   [
-   58,
+   -116,
    0,
-   -41,
+   74,
    1
   ],
   [
-   67,
+   -116,
    0,
-   -14,
+   82,
    0
   ],
   [
-   67,
+   -116,
    0,
-   -26.5,
+   98,
    0
   ],
   [
-   67,
+   -108,
    0,
-   -41,
+   -102,
+   0
+  ],
+  [
+   -108,
+   0,
+   -94,
+   0
+  ],
+  [
+   -108,
+   0,
+   -78,
    1
   ],
   [
-   76,
+   -108,
    0,
-   -14,
+   -70,
    0
   ],
   [
-   76,
+   -108,
    0,
-   -26.5,
+   -54,
    0
   ],
   [
-   76,
+   -108,
    0,
-   -41,
-   1
-  ],
-  [
-   85,
-   0,
-   -14,
-   0
-  ],
-  [
-   85,
-   0,
-   -26.5,
-   0
-  ],
-  [
-   85,
-   0,
-   -41,
-   1
-  ],
-  [
-   -80,
-   0,
-   -6,
-   0
-  ],
-  [
-   -71.5,
-   0,
-   -6,
-   0
-  ],
-  [
-   -63,
-   0,
-   -6,
-   0
-  ],
-  [
-   -54.5,
-   0,
-   -6,
-   0
-  ],
-  [
    -46,
+   0
+  ],
+  [
+   -108,
+   0,
+   -38,
+   1
+  ],
+  [
+   -108,
+   0,
+   -30,
+   0
+  ],
+  [
+   -108,
+   0,
+   -22,
+   0
+  ],
+  [
+   -108,
+   0,
+   -14,
+   0
+  ],
+  [
+   -108,
    0,
    -6,
    0
   ],
   [
-   -72,
+   -108,
    0,
-   -13,
+   2,
    1
   ],
   [
-   -55,
+   -108,
    0,
-   -13,
+   10,
+   0
+  ],
+  [
+   -108,
+   0,
+   18,
+   0
+  ],
+  [
+   -108,
+   0,
+   26,
+   0
+  ],
+  [
+   -108,
+   0,
+   34,
+   0
+  ],
+  [
+   -108,
+   0,
+   42,
    1
   ],
   [
-   -87,
+   -108,
+   0,
+   50,
+   0
+  ],
+  [
+   -108,
+   0,
+   66,
+   0
+  ],
+  [
+   -108,
+   0,
+   74,
+   0
+  ],
+  [
+   -108,
+   0,
+   82,
+   1
+  ],
+  [
+   -108,
+   0,
+   98,
+   0
+  ],
+  [
+   -100,
+   0,
+   -102,
+   0
+  ],
+  [
+   -100,
+   0,
+   -94,
+   0
+  ],
+  [
+   -100,
+   0,
+   -86,
+   0
+  ],
+  [
+   -100,
+   0,
+   -78,
+   0
+  ],
+  [
+   -100,
+   0,
+   -70,
+   1
+  ],
+  [
+   -100,
+   0,
+   -62,
+   0
+  ],
+  [
+   -100,
+   0,
+   -54,
+   0
+  ],
+  [
+   -100,
+   0,
+   -46,
+   0
+  ],
+  [
+   -100,
+   0,
+   -38,
+   0
+  ],
+  [
+   -100,
+   0,
+   -30,
+   1
+  ],
+  [
+   -100,
+   0,
+   -22,
+   0
+  ],
+  [
+   -100,
+   0,
+   -14,
+   0
+  ],
+  [
+   -100,
    0,
    -6,
+   0
+  ],
+  [
+   -100,
+   0,
+   10,
+   1
+  ],
+  [
+   -100,
+   0,
+   18,
+   0
+  ],
+  [
+   -100,
+   0,
+   26,
+   0
+  ],
+  [
+   -100,
+   0,
+   34,
+   0
+  ],
+  [
+   -100,
+   0,
+   42,
+   0
+  ],
+  [
+   -100,
+   0,
+   50,
+   1
+  ],
+  [
+   -100,
+   0,
+   58,
+   0
+  ],
+  [
+   -100,
+   0,
+   66,
+   0
+  ],
+  [
+   -100,
+   0,
+   74,
+   0
+  ],
+  [
+   -100,
+   0,
+   82,
+   0
+  ],
+  [
+   -100,
+   0,
+   90,
+   1
+  ],
+  [
+   -100,
+   0,
+   98,
+   0
+  ],
+  [
+   -92,
+   0,
+   -102,
+   1
+  ],
+  [
+   -92,
+   0,
+   -94,
+   0
+  ],
+  [
+   -92,
+   0,
+   -70,
+   0
+  ],
+  [
+   -92,
+   0,
+   -54,
+   0
+  ],
+  [
+   -92,
+   0,
+   -46,
+   0
+  ],
+  [
+   -92,
+   0,
+   -38,
+   0
+  ],
+  [
+   -92,
+   0,
+   -30,
+   0
+  ],
+  [
+   -92,
+   0,
+   -22,
+   1
+  ],
+  [
+   -92,
+   0,
+   -14,
+   0
+  ],
+  [
+   -92,
+   0,
+   -6,
+   0
+  ],
+  [
+   -92,
+   0,
+   2,
+   0
+  ],
+  [
+   -92,
+   0,
+   10,
+   0
+  ],
+  [
+   -92,
+   0,
+   18,
+   1
+  ],
+  [
+   -92,
+   0,
+   26,
+   0
+  ],
+  [
+   -92,
+   0,
+   34,
+   0
+  ],
+  [
+   -92,
+   0,
+   42,
+   0
+  ],
+  [
+   -92,
+   0,
+   50,
+   0
+  ],
+  [
+   -92,
+   0,
+   66,
+   0
+  ],
+  [
+   -92,
+   0,
+   82,
+   0
+  ],
+  [
+   -92,
+   0,
+   98,
+   1
+  ],
+  [
+   -84,
+   0,
+   -102,
+   0
+  ],
+  [
+   -84,
+   0,
+   -94,
+   1
+  ],
+  [
+   -84,
+   0,
+   -78,
+   0
+  ],
+  [
+   -84,
+   0,
+   -70,
+   0
+  ],
+  [
+   -84,
+   0,
+   -54,
+   1
+  ],
+  [
+   -84,
+   0,
+   -46,
+   0
+  ],
+  [
+   -84,
+   0,
+   -38,
+   0
+  ],
+  [
+   -84,
+   0,
+   -30,
+   0
+  ],
+  [
+   -84,
+   0,
+   -14,
+   1
+  ],
+  [
+   -84,
+   0,
+   -6,
+   0
+  ],
+  [
+   -84,
+   0,
+   2,
+   0
+  ],
+  [
+   -84,
+   0,
+   10,
+   0
+  ],
+  [
+   -84,
+   0,
+   18,
+   0
+  ],
+  [
+   -84,
+   0,
+   42,
+   0
+  ],
+  [
+   -84,
+   0,
+   66,
+   1
+  ],
+  [
+   -84,
+   0,
+   82,
+   0
+  ],
+  [
+   -84,
+   0,
+   98,
+   0
+  ],
+  [
+   -76,
+   0,
+   -102,
+   0
+  ],
+  [
+   -76,
+   0,
+   -94,
+   0
+  ],
+  [
+   -76,
+   0,
+   -78,
+   0
+  ],
+  [
+   -76,
+   0,
+   -70,
+   0
+  ],
+  [
+   -76,
+   0,
+   -54,
+   0
+  ],
+  [
+   -76,
+   0,
+   -46,
+   1
+  ],
+  [
+   -76,
+   0,
+   -30,
+   0
+  ],
+  [
+   -76,
+   0,
+   -6,
+   1
+  ],
+  [
+   -76,
+   0,
+   2,
+   0
+  ],
+  [
+   -76,
+   0,
+   10,
+   0
+  ],
+  [
+   -76,
+   0,
+   42,
+   0
+  ],
+  [
+   -76,
+   0,
+   50,
+   0
+  ],
+  [
+   -76,
+   0,
+   66,
+   0
+  ],
+  [
+   -76,
+   0,
+   82,
+   0
+  ],
+  [
+   -76,
+   0,
+   98,
+   0
+  ],
+  [
+   -68,
+   0,
+   -102,
+   0
+  ],
+  [
+   -68,
+   0,
+   -94,
+   0
+  ],
+  [
+   -68,
+   0,
+   -78,
+   1
+  ],
+  [
+   -68,
+   0,
+   -70,
+   0
+  ],
+  [
+   -68,
+   0,
+   -62,
+   0
+  ],
+  [
+   -68,
+   0,
+   -54,
+   0
+  ],
+  [
+   -68,
+   0,
+   -46,
+   0
+  ],
+  [
+   -68,
+   0,
+   -38,
+   1
+  ],
+  [
+   -68,
+   0,
+   -30,
+   0
+  ],
+  [
+   -68,
+   0,
+   -6,
+   0
+  ],
+  [
+   -68,
+   0,
+   2,
+   1
+  ],
+  [
+   -68,
+   0,
+   10,
+   0
+  ],
+  [
+   -68,
+   0,
+   42,
+   1
+  ],
+  [
+   -68,
+   0,
+   50,
+   0
+  ],
+  [
+   -68,
+   0,
+   58,
+   0
+  ],
+  [
+   -68,
+   0,
+   66,
+   0
+  ],
+  [
+   -68,
+   0,
+   82,
+   1
+  ],
+  [
+   -68,
+   0,
+   98,
+   0
+  ],
+  [
+   -60,
+   0,
+   -102,
+   0
+  ],
+  [
+   -60,
+   0,
+   -94,
+   0
+  ],
+  [
+   -60,
+   0,
+   -86,
+   0
+  ],
+  [
+   -60,
+   0,
+   -78,
+   0
+  ],
+  [
+   -60,
+   0,
+   -70,
+   1
+  ],
+  [
+   -60,
+   0,
+   -62,
+   0
+  ],
+  [
+   -60,
+   0,
+   -54,
+   0
+  ],
+  [
+   -60,
+   0,
+   -46,
+   0
+  ],
+  [
+   -60,
+   0,
+   -38,
+   0
+  ],
+  [
+   -60,
+   0,
+   -30,
+   1
+  ],
+  [
+   -60,
+   0,
+   -6,
+   0
+  ],
+  [
+   -60,
+   0,
+   2,
+   0
+  ],
+  [
+   -60,
+   0,
+   10,
+   1
+  ],
+  [
+   -60,
+   0,
+   42,
+   0
+  ],
+  [
+   -60,
+   0,
+   50,
+   1
+  ],
+  [
+   -60,
+   0,
+   58,
+   0
+  ],
+  [
+   -60,
+   0,
+   66,
+   0
+  ],
+  [
+   -60,
+   0,
+   74,
+   0
+  ],
+  [
+   -60,
+   0,
+   82,
+   0
+  ],
+  [
+   -60,
+   0,
+   90,
+   1
+  ],
+  [
+   -60,
+   0,
+   98,
+   0
+  ],
+  [
+   -52,
+   0,
+   -102,
+   1
+  ],
+  [
+   -52,
+   0,
+   -94,
+   0
+  ],
+  [
+   -52,
+   0,
+   -78,
+   0
+  ],
+  [
+   -52,
+   0,
+   -70,
+   0
+  ],
+  [
+   -52,
+   0,
+   -54,
+   0
+  ],
+  [
+   -52,
+   0,
+   -46,
+   0
+  ],
+  [
+   -52,
+   0,
+   -38,
+   0
+  ],
+  [
+   -52,
+   0,
+   -30,
+   0
+  ],
+  [
+   -52,
+   0,
+   -6,
+   0
+  ],
+  [
+   -52,
+   0,
+   2,
+   0
+  ],
+  [
+   -52,
+   0,
+   10,
+   0
+  ],
+  [
+   -52,
+   0,
+   42,
+   0
+  ],
+  [
+   -52,
+   0,
+   50,
+   0
+  ],
+  [
+   -52,
+   0,
+   66,
+   0
+  ],
+  [
+   -52,
+   0,
+   74,
+   0
+  ],
+  [
+   -52,
+   0,
+   82,
+   0
+  ],
+  [
+   -52,
+   0,
+   98,
+   1
+  ],
+  [
+   -44,
+   0,
+   -102,
+   0
+  ],
+  [
+   -44,
+   0,
+   -94,
+   1
+  ],
+  [
+   -44,
+   0,
+   -78,
+   0
+  ],
+  [
+   -44,
+   0,
+   -70,
+   0
+  ],
+  [
+   -44,
+   0,
+   -54,
+   1
+  ],
+  [
+   -44,
+   0,
+   -46,
+   0
+  ],
+  [
+   -44,
+   0,
+   -30,
+   0
+  ],
+  [
+   -44,
+   0,
+   -14,
+   1
+  ],
+  [
+   -44,
+   0,
+   -6,
+   0
+  ],
+  [
+   -44,
+   0,
+   2,
+   0
+  ],
+  [
+   -44,
+   0,
+   10,
+   0
+  ],
+  [
+   -44,
+   0,
+   18,
+   0
+  ],
+  [
+   -44,
+   0,
+   42,
+   0
+  ],
+  [
+   -44,
+   0,
+   50,
+   0
+  ],
+  [
+   -44,
+   0,
+   66,
+   1
+  ],
+  [
+   -44,
+   0,
+   74,
+   0
+  ],
+  [
+   -44,
+   0,
+   82,
+   0
+  ],
+  [
+   -44,
+   0,
+   98,
+   0
+  ],
+  [
+   -36,
+   0,
+   -102,
+   0
+  ],
+  [
+   -36,
+   0,
+   -94,
+   0
+  ],
+  [
+   -36,
+   0,
+   -78,
+   0
+  ],
+  [
+   -36,
+   0,
+   -70,
+   0
+  ],
+  [
+   -36,
+   0,
+   -54,
+   0
+  ],
+  [
+   -36,
+   0,
+   -46,
+   1
+  ],
+  [
+   -36,
+   0,
+   -38,
+   0
+  ],
+  [
+   -36,
+   0,
+   -30,
+   0
+  ],
+  [
+   -36,
+   0,
+   -22,
+   0
+  ],
+  [
+   -36,
+   0,
+   -14,
+   0
+  ],
+  [
+   -36,
+   0,
+   -6,
+   1
+  ],
+  [
+   -36,
+   0,
+   2,
+   0
+  ],
+  [
+   -36,
+   0,
+   10,
+   0
+  ],
+  [
+   -36,
+   0,
+   18,
+   0
+  ],
+  [
+   -36,
+   0,
+   26,
+   0
+  ],
+  [
+   -36,
+   0,
+   34,
+   1
+  ],
+  [
+   -36,
+   0,
+   42,
+   0
+  ],
+  [
+   -36,
+   0,
+   50,
+   0
+  ],
+  [
+   -36,
+   0,
+   66,
+   0
+  ],
+  [
+   -36,
+   0,
+   82,
+   0
+  ],
+  [
+   -36,
+   0,
+   98,
+   0
+  ],
+  [
+   -28,
+   0,
+   -102,
+   0
+  ],
+  [
+   -28,
+   0,
+   -94,
+   0
+  ],
+  [
+   -28,
+   0,
+   -78,
+   1
+  ],
+  [
+   -28,
+   0,
+   -70,
+   0
+  ],
+  [
+   -28,
+   0,
+   -62,
+   0
+  ],
+  [
+   -28,
+   0,
+   -54,
+   0
+  ],
+  [
+   -28,
+   0,
+   -46,
+   0
+  ],
+  [
+   -28,
+   0,
+   50,
+   0
+  ],
+  [
+   -28,
+   0,
+   58,
+   0
+  ],
+  [
+   -28,
+   0,
+   66,
+   0
+  ],
+  [
+   -28,
+   0,
+   74,
+   0
+  ],
+  [
+   -28,
+   0,
+   82,
+   1
+  ],
+  [
+   -28,
+   0,
+   98,
+   0
+  ],
+  [
+   -20,
+   0,
+   -102,
+   0
+  ],
+  [
+   -20,
+   0,
+   -94,
+   0
+  ],
+  [
+   -20,
+   0,
+   -86,
+   0
+  ],
+  [
+   -20,
+   0,
+   -78,
+   0
+  ],
+  [
+   -20,
+   0,
+   -70,
+   1
+  ],
+  [
+   -20,
+   0,
+   -62,
+   0
+  ],
+  [
+   -20,
+   0,
+   -54,
+   0
+  ],
+  [
+   -20,
+   0,
+   -46,
+   0
+  ],
+  [
+   -20,
+   0,
+   50,
+   1
+  ],
+  [
+   -20,
+   0,
+   58,
+   0
+  ],
+  [
+   -20,
+   0,
+   66,
+   0
+  ],
+  [
+   -20,
+   0,
+   74,
+   0
+  ],
+  [
+   -20,
+   0,
+   82,
+   0
+  ],
+  [
+   -20,
+   0,
+   90,
+   1
+  ],
+  [
+   -20,
+   0,
+   98,
+   0
+  ],
+  [
+   -12,
+   0,
+   -102,
+   1
+  ],
+  [
+   -12,
+   0,
+   -94,
+   0
+  ],
+  [
+   -12,
+   0,
+   -78,
+   0
+  ],
+  [
+   -12,
+   0,
+   -70,
+   0
+  ],
+  [
+   -12,
+   0,
+   -54,
+   0
+  ],
+  [
+   -12,
+   0,
+   50,
+   0
+  ],
+  [
+   -12,
+   0,
+   66,
+   0
+  ],
+  [
+   -12,
+   0,
+   82,
+   0
+  ],
+  [
+   -12,
+   0,
+   98,
+   1
+  ],
+  [
+   -4,
+   0,
+   -102,
+   0
+  ],
+  [
+   -4,
+   0,
+   -94,
+   1
+  ],
+  [
+   -4,
+   0,
+   -86,
+   0
+  ],
+  [
+   -4,
+   0,
+   -78,
+   0
+  ],
+  [
+   -4,
+   0,
+   -70,
+   0
+  ],
+  [
+   -4,
+   0,
+   -62,
+   0
+  ],
+  [
+   -4,
+   0,
+   -54,
+   1
+  ],
+  [
+   -4,
+   0,
+   -46,
+   0
+  ],
+  [
+   -4,
+   0,
+   50,
+   0
+  ],
+  [
+   -4,
+   0,
+   58,
+   0
+  ],
+  [
+   -4,
+   0,
+   66,
+   1
+  ],
+  [
+   -4,
+   0,
+   82,
+   0
+  ],
+  [
+   -4,
+   0,
+   90,
+   0
+  ],
+  [
+   -4,
+   0,
+   98,
+   0
+  ],
+  [
+   4,
+   0,
+   -102,
+   0
+  ],
+  [
+   4,
+   0,
+   -94,
+   0
+  ],
+  [
+   4,
+   0,
+   -78,
+   0
+  ],
+  [
+   4,
+   0,
+   -70,
+   0
+  ],
+  [
+   4,
+   0,
+   -54,
+   0
+  ],
+  [
+   4,
+   0,
+   -46,
+   1
+  ],
+  [
+   4,
+   0,
+   50,
+   0
+  ],
+  [
+   4,
+   0,
+   66,
+   0
+  ],
+  [
+   4,
+   0,
+   82,
+   0
+  ],
+  [
+   4,
+   0,
+   98,
+   0
+  ],
+  [
+   12,
+   0,
+   -102,
+   0
+  ],
+  [
+   12,
+   0,
+   -78,
+   1
+  ],
+  [
+   12,
+   0,
+   -70,
+   0
+  ],
+  [
+   12,
+   0,
+   -54,
+   0
+  ],
+  [
+   12,
+   0,
+   -46,
+   0
+  ],
+  [
+   12,
+   0,
+   50,
+   0
+  ],
+  [
+   12,
+   0,
+   66,
+   0
+  ],
+  [
+   12,
+   0,
+   82,
+   1
+  ],
+  [
+   12,
+   0,
+   98,
+   0
+  ],
+  [
+   20,
+   0,
+   -102,
+   0
+  ],
+  [
+   20,
+   0,
+   -94,
+   0
+  ],
+  [
+   20,
+   0,
+   -86,
+   0
+  ],
+  [
+   20,
+   0,
+   -78,
+   0
+  ],
+  [
+   20,
+   0,
+   -70,
+   1
+  ],
+  [
+   20,
+   0,
+   -62,
+   0
+  ],
+  [
+   20,
+   0,
+   -54,
+   0
+  ],
+  [
+   20,
+   0,
+   -46,
+   0
+  ],
+  [
+   20,
+   0,
+   50,
+   1
+  ],
+  [
+   20,
+   0,
+   58,
+   0
+  ],
+  [
+   20,
+   0,
+   66,
+   0
+  ],
+  [
+   20,
+   0,
+   74,
+   0
+  ],
+  [
+   20,
+   0,
+   82,
+   0
+  ],
+  [
+   20,
+   0,
+   90,
+   1
+  ],
+  [
+   20,
+   0,
+   98,
+   0
+  ],
+  [
+   28,
+   0,
+   -102,
+   1
+  ],
+  [
+   28,
+   0,
+   -94,
+   0
+  ],
+  [
+   28,
+   0,
+   -78,
+   0
+  ],
+  [
+   28,
+   0,
+   -70,
+   0
+  ],
+  [
+   28,
+   0,
+   -54,
+   0
+  ],
+  [
+   28,
+   0,
+   -46,
+   0
+  ],
+  [
+   28,
+   0,
+   50,
+   0
+  ],
+  [
+   28,
+   0,
+   66,
+   0
+  ],
+  [
+   28,
+   0,
+   82,
+   0
+  ],
+  [
+   28,
+   0,
+   98,
+   1
+  ],
+  [
+   36,
+   0,
+   -102,
+   0
+  ],
+  [
+   36,
+   0,
+   -94,
+   1
+  ],
+  [
+   36,
+   0,
+   -78,
+   0
+  ],
+  [
+   36,
+   0,
+   -70,
+   0
+  ],
+  [
+   36,
+   0,
+   -54,
+   1
+  ],
+  [
+   36,
+   0,
+   -46,
+   0
+  ],
+  [
+   36,
+   0,
+   -38,
+   0
+  ],
+  [
+   36,
+   0,
+   -30,
+   0
+  ],
+  [
+   36,
+   0,
+   -22,
+   0
+  ],
+  [
+   36,
+   0,
+   -14,
+   1
+  ],
+  [
+   36,
+   0,
+   -6,
+   0
+  ],
+  [
+   36,
+   0,
+   2,
+   0
+  ],
+  [
+   36,
+   0,
+   10,
+   0
+  ],
+  [
+   36,
+   0,
+   18,
+   0
+  ],
+  [
+   36,
+   0,
+   26,
+   1
+  ],
+  [
+   36,
+   0,
+   34,
+   0
+  ],
+  [
+   36,
+   0,
+   42,
+   0
+  ],
+  [
+   36,
+   0,
+   50,
+   0
+  ],
+  [
+   36,
+   0,
+   66,
+   1
+  ],
+  [
+   36,
+   0,
+   82,
+   0
+  ],
+  [
+   36,
+   0,
+   98,
+   0
+  ],
+  [
+   44,
+   0,
+   -102,
+   0
+  ],
+  [
+   44,
+   0,
+   -78,
+   0
+  ],
+  [
+   44,
+   0,
+   -70,
+   0
+  ],
+  [
+   44,
+   0,
+   -62,
+   0
+  ],
+  [
+   44,
+   0,
+   -54,
+   0
+  ],
+  [
+   44,
+   0,
+   -46,
+   1
+  ],
+  [
+   44,
+   0,
+   -38,
+   0
+  ],
+  [
+   44,
+   0,
+   -14,
+   0
+  ],
+  [
+   44,
+   0,
+   -6,
+   1
+  ],
+  [
+   44,
+   0,
+   2,
+   0
+  ],
+  [
+   44,
+   0,
+   10,
+   0
+  ],
+  [
+   44,
+   0,
+   26,
+   0
+  ],
+  [
+   44,
+   0,
+   42,
+   0
+  ],
+  [
+   44,
+   0,
+   50,
+   0
+  ],
+  [
+   44,
+   0,
+   58,
+   0
+  ],
+  [
+   44,
+   0,
+   66,
+   0
+  ],
+  [
+   44,
+   0,
+   82,
+   0
+  ],
+  [
+   44,
+   0,
+   98,
+   0
+  ],
+  [
+   52,
+   0,
+   -102,
+   0
+  ],
+  [
+   52,
+   0,
+   -78,
    1
   ],
   [
    52,
    0,
-   -5,
+   -70,
    0
   ],
   [
-   60,
+   52,
    0,
-   -5,
+   -54,
    0
   ],
   [
-   68,
+   52,
    0,
-   -5,
+   -46,
    0
   ],
   [
-   76,
+   52,
    0,
-   -5,
-   0
+   -38,
+   1
   ],
   [
-   40,
+   52,
    0,
    -6,
    0
   ],
   [
-   46,
+   52,
    0,
-   -2,
+   2,
+   1
+  ],
+  [
+   52,
+   0,
+   10,
    0
   ],
   [
-   85.5,
+   52,
    0,
-   -8,
+   26,
+   0
+  ],
+  [
+   52,
+   0,
+   42,
    1
+  ],
+  [
+   52,
+   0,
+   50,
+   0
+  ],
+  [
+   52,
+   0,
+   66,
+   0
+  ],
+  [
+   52,
+   0,
+   82,
+   1
+  ],
+  [
+   52,
+   0,
+   98,
+   0
+  ],
+  [
+   60,
+   0,
+   -102,
+   0
+  ],
+  [
+   60,
+   0,
+   -94,
+   0
+  ],
+  [
+   60,
+   0,
+   -86,
+   0
+  ],
+  [
+   60,
+   0,
+   -78,
+   0
+  ],
+  [
+   60,
+   0,
+   -70,
+   1
+  ],
+  [
+   60,
+   0,
+   -62,
+   0
+  ],
+  [
+   60,
+   0,
+   -54,
+   0
+  ],
+  [
+   60,
+   0,
+   -46,
+   0
+  ],
+  [
+   60,
+   0,
+   -38,
+   0
+  ],
+  [
+   60,
+   0,
+   -14,
+   0
+  ],
+  [
+   60,
+   0,
+   -6,
+   0
+  ],
+  [
+   60,
+   0,
+   2,
+   0
+  ],
+  [
+   60,
+   0,
+   10,
+   1
+  ],
+  [
+   60,
+   0,
+   26,
+   0
+  ],
+  [
+   60,
+   0,
+   42,
+   0
+  ],
+  [
+   60,
+   0,
+   50,
+   1
+  ],
+  [
+   60,
+   0,
+   58,
+   0
+  ],
+  [
+   60,
+   0,
+   66,
+   0
+  ],
+  [
+   60,
+   0,
+   74,
+   0
+  ],
+  [
+   60,
+   0,
+   82,
+   0
+  ],
+  [
+   60,
+   0,
+   90,
+   1
+  ],
+  [
+   60,
+   0,
+   98,
+   0
+  ],
+  [
+   68,
+   0,
+   -102,
+   1
+  ],
+  [
+   68,
+   0,
+   -94,
+   0
+  ],
+  [
+   68,
+   0,
+   -78,
+   0
+  ],
+  [
+   68,
+   0,
+   -70,
+   0
+  ],
+  [
+   68,
+   0,
+   -54,
+   0
+  ],
+  [
+   68,
+   0,
+   -46,
+   0
+  ],
+  [
+   68,
+   0,
+   -38,
+   0
+  ],
+  [
+   68,
+   0,
+   -14,
+   0
+  ],
+  [
+   68,
+   0,
+   -6,
+   0
+  ],
+  [
+   68,
+   0,
+   2,
+   0
+  ],
+  [
+   68,
+   0,
+   10,
+   0
+  ],
+  [
+   68,
+   0,
+   26,
+   0
+  ],
+  [
+   68,
+   0,
+   42,
+   0
+  ],
+  [
+   68,
+   0,
+   50,
+   0
+  ],
+  [
+   68,
+   0,
+   66,
+   0
+  ],
+  [
+   68,
+   0,
+   82,
+   0
+  ],
+  [
+   68,
+   0,
+   98,
+   1
+  ],
+  [
+   76,
+   0,
+   -102,
+   0
+  ],
+  [
+   76,
+   0,
+   -78,
+   0
+  ],
+  [
+   76,
+   0,
+   -70,
+   0
+  ],
+  [
+   76,
+   0,
+   -62,
+   0
+  ],
+  [
+   76,
+   0,
+   -54,
+   1
+  ],
+  [
+   76,
+   0,
+   -46,
+   0
+  ],
+  [
+   76,
+   0,
+   -38,
+   0
+  ],
+  [
+   76,
+   0,
+   -6,
+   0
+  ],
+  [
+   76,
+   0,
+   2,
+   0
+  ],
+  [
+   76,
+   0,
+   10,
+   0
+  ],
+  [
+   76,
+   0,
+   26,
+   1
+  ],
+  [
+   76,
+   0,
+   42,
+   0
+  ],
+  [
+   76,
+   0,
+   50,
+   0
+  ],
+  [
+   76,
+   0,
+   58,
+   0
+  ],
+  [
+   76,
+   0,
+   66,
+   1
+  ],
+  [
+   76,
+   0,
+   82,
+   0
+  ],
+  [
+   76,
+   0,
+   98,
+   0
+  ],
+  [
+   84,
+   0,
+   -102,
+   0
+  ],
+  [
+   84,
+   0,
+   -78,
+   0
+  ],
+  [
+   84,
+   0,
+   -70,
+   0
+  ],
+  [
+   84,
+   0,
+   -62,
+   0
+  ],
+  [
+   84,
+   0,
+   -54,
+   0
+  ],
+  [
+   84,
+   0,
+   -46,
+   1
+  ],
+  [
+   84,
+   0,
+   -38,
+   0
+  ],
+  [
+   84,
+   0,
+   -14,
+   0
+  ],
+  [
+   84,
+   0,
+   -6,
+   1
+  ],
+  [
+   84,
+   0,
+   2,
+   0
+  ],
+  [
+   84,
+   0,
+   10,
+   0
+  ],
+  [
+   84,
+   0,
+   26,
+   0
+  ],
+  [
+   84,
+   0,
+   42,
+   0
+  ],
+  [
+   84,
+   0,
+   50,
+   0
+  ],
+  [
+   84,
+   0,
+   58,
+   0
+  ],
+  [
+   84,
+   0,
+   66,
+   0
+  ],
+  [
+   84,
+   0,
+   82,
+   0
+  ],
+  [
+   84,
+   0,
+   98,
+   0
+  ],
+  [
+   92,
+   0,
+   -102,
+   0
+  ],
+  [
+   92,
+   0,
+   -94,
+   0
+  ],
+  [
+   92,
+   0,
+   -78,
+   1
+  ],
+  [
+   92,
+   0,
+   -70,
+   0
+  ],
+  [
+   92,
+   0,
+   -54,
+   0
+  ],
+  [
+   92,
+   0,
+   -46,
+   0
+  ],
+  [
+   92,
+   0,
+   -38,
+   1
+  ],
+  [
+   92,
+   0,
+   -30,
+   0
+  ],
+  [
+   92,
+   0,
+   -22,
+   0
+  ],
+  [
+   92,
+   0,
+   -14,
+   0
+  ],
+  [
+   92,
+   0,
+   -6,
+   0
+  ],
+  [
+   92,
+   0,
+   2,
+   1
+  ],
+  [
+   92,
+   0,
+   10,
+   0
+  ],
+  [
+   92,
+   0,
+   18,
+   0
+  ],
+  [
+   92,
+   0,
+   26,
+   0
+  ],
+  [
+   92,
+   0,
+   34,
+   0
+  ],
+  [
+   92,
+   0,
+   42,
+   1
+  ],
+  [
+   92,
+   0,
+   50,
+   0
+  ],
+  [
+   92,
+   0,
+   66,
+   0
+  ],
+  [
+   92,
+   0,
+   82,
+   1
+  ],
+  [
+   92,
+   0,
+   98,
+   0
+  ],
+  [
+   100,
+   0,
+   -102,
+   0
+  ],
+  [
+   100,
+   0,
+   -94,
+   0
+  ],
+  [
+   100,
+   0,
+   -86,
+   0
+  ],
+  [
+   100,
+   0,
+   -78,
+   0
+  ],
+  [
+   100,
+   0,
+   -70,
+   1
+  ],
+  [
+   100,
+   0,
+   -62,
+   0
+  ],
+  [
+   100,
+   0,
+   -54,
+   0
+  ],
+  [
+   100,
+   0,
+   -46,
+   0
+  ],
+  [
+   100,
+   0,
+   -38,
+   0
+  ],
+  [
+   100,
+   0,
+   -30,
+   1
+  ],
+  [
+   100,
+   0,
+   -22,
+   0
+  ],
+  [
+   100,
+   0,
+   -6,
+   0
+  ],
+  [
+   100,
+   0,
+   2,
+   0
+  ],
+  [
+   100,
+   0,
+   10,
+   1
+  ],
+  [
+   100,
+   0,
+   18,
+   0
+  ],
+  [
+   100,
+   0,
+   26,
+   0
+  ],
+  [
+   100,
+   0,
+   34,
+   0
+  ],
+  [
+   100,
+   0,
+   42,
+   0
+  ],
+  [
+   100,
+   0,
+   50,
+   1
+  ],
+  [
+   100,
+   0,
+   58,
+   0
+  ],
+  [
+   100,
+   0,
+   66,
+   0
+  ],
+  [
+   100,
+   0,
+   74,
+   0
+  ],
+  [
+   100,
+   0,
+   82,
+   0
+  ],
+  [
+   100,
+   0,
+   90,
+   1
+  ],
+  [
+   100,
+   0,
+   98,
+   0
+  ],
+  [
+   108,
+   0,
+   -102,
+   1
+  ],
+  [
+   108,
+   0,
+   -78,
+   0
+  ],
+  [
+   108,
+   0,
+   -70,
+   0
+  ],
+  [
+   108,
+   0,
+   -54,
+   0
+  ],
+  [
+   108,
+   0,
+   -46,
+   0
+  ],
+  [
+   108,
+   0,
+   -38,
+   0
+  ],
+  [
+   108,
+   0,
+   -30,
+   0
+  ],
+  [
+   108,
+   0,
+   -22,
+   1
+  ],
+  [
+   108,
+   0,
+   2,
+   0
+  ],
+  [
+   108,
+   0,
+   10,
+   0
+  ],
+  [
+   108,
+   0,
+   18,
+   1
+  ],
+  [
+   108,
+   0,
+   26,
+   0
+  ],
+  [
+   108,
+   0,
+   34,
+   0
+  ],
+  [
+   108,
+   0,
+   42,
+   0
+  ],
+  [
+   108,
+   0,
+   50,
+   0
+  ],
+  [
+   108,
+   0,
+   66,
+   0
+  ],
+  [
+   108,
+   0,
+   82,
+   0
+  ],
+  [
+   108,
+   0,
+   98,
+   1
+  ],
+  [
+   116,
+   0,
+   -102,
+   0
+  ],
+  [
+   116,
+   0,
+   -94,
+   1
+  ],
+  [
+   116,
+   0,
+   -86,
+   0
+  ],
+  [
+   116,
+   0,
+   -78,
+   0
+  ],
+  [
+   116,
+   0,
+   -70,
+   0
+  ],
+  [
+   116,
+   0,
+   -54,
+   1
+  ],
+  [
+   116,
+   0,
+   -46,
+   0
+  ],
+  [
+   116,
+   0,
+   -38,
+   0
+  ],
+  [
+   116,
+   0,
+   -30,
+   0
+  ],
+  [
+   116,
+   0,
+   -22,
+   0
+  ],
+  [
+   116,
+   0,
+   -14,
+   1
+  ],
+  [
+   116,
+   0,
+   2,
+   0
+  ],
+  [
+   116,
+   0,
+   10,
+   0
+  ],
+  [
+   116,
+   0,
+   18,
+   0
+  ],
+  [
+   116,
+   0,
+   26,
+   1
+  ],
+  [
+   116,
+   0,
+   34,
+   0
+  ],
+  [
+   116,
+   0,
+   42,
+   0
+  ],
+  [
+   116,
+   0,
+   66,
+   1
+  ],
+  [
+   116,
+   0,
+   82,
+   0
+  ],
+  [
+   116,
+   0,
+   90,
+   0
+  ],
+  [
+   116,
+   0,
+   98,
+   0
+  ],
+  [
+   124,
+   0,
+   -102,
+   0
+  ],
+  [
+   124,
+   0,
+   -94,
+   0
+  ],
+  [
+   124,
+   0,
+   -78,
+   0
+  ],
+  [
+   124,
+   0,
+   -70,
+   0
+  ],
+  [
+   124,
+   0,
+   -54,
+   0
+  ],
+  [
+   124,
+   0,
+   -46,
+   1
+  ],
+  [
+   124,
+   0,
+   -38,
+   0
+  ],
+  [
+   124,
+   0,
+   -30,
+   0
+  ],
+  [
+   124,
+   0,
+   -22,
+   0
+  ],
+  [
+   124,
+   0,
+   -14,
+   0
+  ],
+  [
+   124,
+   0,
+   -6,
+   1
+  ],
+  [
+   124,
+   0,
+   2,
+   0
+  ],
+  [
+   124,
+   0,
+   18,
+   0
+  ],
+  [
+   124,
+   0,
+   26,
+   0
+  ],
+  [
+   124,
+   0,
+   34,
+   1
+  ],
+  [
+   124,
+   0,
+   42,
+   0
+  ],
+  [
+   124,
+   0,
+   50,
+   0
+  ],
+  [
+   124,
+   0,
+   66,
+   0
+  ],
+  [
+   124,
+   0,
+   82,
+   0
+  ],
+  [
+   124,
+   0,
+   98,
+   0
+  ],
+  [
+   132,
+   0,
+   -102,
+   0
+  ],
+  [
+   132,
+   0,
+   -94,
+   0
+  ],
+  [
+   132,
+   0,
+   -78,
+   1
+  ],
+  [
+   132,
+   0,
+   -70,
+   0
+  ],
+  [
+   132,
+   0,
+   -62,
+   0
+  ],
+  [
+   132,
+   0,
+   -54,
+   0
+  ],
+  [
+   132,
+   0,
+   -46,
+   0
+  ],
+  [
+   132,
+   0,
+   -30,
+   0
+  ],
+  [
+   132,
+   0,
+   -22,
+   0
+  ],
+  [
+   132,
+   0,
+   -14,
+   0
+  ],
+  [
+   132,
+   0,
+   -6,
+   0
+  ],
+  [
+   132,
+   0,
+   2,
+   1
+  ],
+  [
+   132,
+   0,
+   10,
+   0
+  ],
+  [
+   132,
+   0,
+   18,
+   0
+  ],
+  [
+   132,
+   0,
+   26,
+   0
+  ],
+  [
+   132,
+   0,
+   34,
+   0
+  ],
+  [
+   132,
+   0,
+   50,
+   0
+  ],
+  [
+   132,
+   0,
+   58,
+   0
+  ],
+  [
+   132,
+   0,
+   66,
+   0
+  ],
+  [
+   132,
+   0,
+   74,
+   0
+  ],
+  [
+   132,
+   0,
+   82,
+   1
+  ],
+  [
+   132,
+   0,
+   98,
+   0
   ]
  ],
  "sniper": [
@@ -6091,30 +12205,44 @@
    31
   ],
   [
-   "Divisa oeste",
-   -36,
-   -30,
-   -44,
-   44
+   "Morro sul",
+   -136,
+   136,
+   44,
+   106
   ],
   [
-   "Divisa leste",
-   30,
-   36,
+   "Morro norte",
+   -136,
+   136,
+   -106,
+   -44
+  ],
+  [
+   "Ferro-velho",
+   -136,
+   -90,
    -44,
    44
   ],
   [
    "Campinho",
    -90,
-   -36,
+   -30,
    -44,
    44
   ],
   [
    "Comércio",
-   36,
+   30,
    90,
+   -44,
+   44
+  ],
+  [
+   "Rodoviária",
+   90,
+   136,
    -44,
    44
   ]

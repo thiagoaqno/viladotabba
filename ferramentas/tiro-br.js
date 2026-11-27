@@ -29,13 +29,16 @@ function brRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) |
 // etapas: espera, fechamento (s) e o raio que sobra (fração do raio inicial); a vida que cai por segundo fora, em cada etapa
 const BR_ETAPAS = [[45, 40, 0.62], [35, 30, 0.36], [25, 25, 0.16], [20, 30, 0]];
 const BR_DANO = [1.5, 3, 5, 9, 15];
+// marcadores do Battle royale postos no editor (mapa do editor: MAP_DEFS[id].br): { armas, coletes, curas: [[x, y, z]], zonaFim: [x, z], largadas: [[x, z]] }
+function brMarcas() { return (CURMAP.def && CURMAP.def.br) || {}; }
 function brPlano(rnd) {
   let C0x = (MAP.x0 + MAP.x1) / 2, C0z = (MAP.z0 + MAP.z1) / 2, R0 = Math.hypot(MAP.x1 - MAP.x0, MAP.z1 - MAP.z0) / 2 * 1.02;
   if (RING.on && RING.r < R0) { C0x = RING.x; C0z = RING.z; R0 = RING.r; } // Simoun: o deserto já é um círculo
   // o centro final: um ponto de passagem no chão, no miolo do mapa (sem ele, o meio)
   const mx = (MAP.x1 - MAP.x0) * 0.25, mz = (MAP.z1 - MAP.z0) * 0.25;
   const miolo = spawnField().filter(([x, z]) => x > MAP.x0 + mx && x < MAP.x1 - mx && z > MAP.z0 + mz && z < MAP.z1 - mz && Math.hypot(x - C0x, z - C0z) < R0 * 0.6);
-  const F = miolo.length ? miolo[Math.floor(rnd() * miolo.length)] : [C0x, C0z];
+  const zf = brMarcas().zonaFim; // o centro final marcado no editor
+  const F = zf ? [zf[0], zf[1]] : miolo.length ? miolo[Math.floor(rnd() * miolo.length)] : [C0x, C0z];
   // mais tempo em mapa grande e em partida longa
   const k = clamp(R0 / 70, 1, 1.5) * clamp((BR.T0 || 600) / 600, 0.8, 1.3);
   const fases = []; let t = 0, f = 1;
@@ -82,6 +85,8 @@ function brLoot(rnd) {
   // (onde dá para andar e chegar), com teto em cima (dentro de casa, prédio, galpão) ou bem acima do chão sem teto (laje, terraço);
   // espalhados: cada um a pelo menos BR_LOOT_LONGE m dos outros (a distância cai se não couber). Mapa quase sem construção
   // (menos de 6 lugares assim): o resto vai para os pontos de passagem, como antes.
+  const marcadas = brMarcas().armas; // uma arma em cada marcador do editor, e só neles
+  if (marcadas && marcadas.length) { for (const [x, y, z] of marcadas) { const def = sorteia(); p.set(x, (y || 0) + 0.5, z); q.setFromAxisAngle(UP, rnd() * TAU); dropWeapon(def, def.mag, def.mag * 2, p, q, v); } return; }
   const dentro = brLootPontos();
   for (let i = dentro.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [dentro[i], dentro[j]] = [dentro[j], dentro[i]]; }
   const escolhidos = [];
@@ -122,6 +127,15 @@ function brCaixaMat(tipo) {
 }
 function brCaixasPoe(rnd) {
   BR.caixas = [];
+  const Mk = brMarcas();
+  if ((Mk.coletes && Mk.coletes.length) || (Mk.curas && Mk.curas.length)) { // caixas marcadas no editor: uma em cada marcador, e só neles
+    const geo = BR.geo || (BR.geo = new THREE.BoxGeometry(0.55, 0.32, 0.4));
+    for (const [tipo, L] of [['colete', Mk.coletes || []], ['cura', Mk.curas || []]]) for (const [x, py, z] of L) {
+      const y = groundHeight(x, z, (py || 0) + 1, 0.25), m = new THREE.Mesh(geo, brCaixaMat(tipo));
+      m.position.set(x, y + 0.16, z); m.rotation.y = rnd() * TAU; m.castShadow = true; scene.add(m); BR.caixas.push({ tipo, m, x, y, z });
+    }
+    return;
+  }
   const pts = POI.map((p) => [p[0], p[1], p[2]]);
   for (let i = pts.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
   const area = (MAP.x1 - MAP.x0) * (MAP.z1 - MAP.z0), n = Math.round(clamp(area / 350, 14, 30));
@@ -183,8 +197,10 @@ function brSlots(rnd) {
   let left = abertos(SPAWNS[0].concat(SPAWNS[1], spawnField()));
   if (left.length < 12) left = SPAWNS[0].concat(SPAWNS[1], spawnField());
   left = left.filter((c, i, a) => a.findIndex((d) => hyp(d[0] - c[0], d[1] - c[1]) < 1.5) === i); // pontos repetidos
-  const out = []; if (!left.length) return out;
-  out.push(left.splice(Math.floor(rnd() * left.length), 1)[0]);
+  // largadas marcadas no editor (até 12) entram primeiro; faltando, o resto é escolhido o mais longe delas
+  const out = (brMarcas().largadas || []).slice(0, 12).map(([x, z]) => [x, z]);
+  if (!out.length && !left.length) return out;
+  if (!out.length) out.push(left.splice(Math.floor(rnd() * left.length), 1)[0]);
   while (out.length < 12 && left.length) {
     let bi = 0, bd = -1;
     left.forEach((c, i) => { const d = Math.min(...out.map((o) => hyp(o[0] - c[0], o[1] - c[1]))); if (d > bd + 1e-6) { bd = d; bi = i; } });

@@ -43,6 +43,26 @@ No jogo, o terreno vira o relevo de verdade (o mesmo das dunas do Simoun): pisar
 
 No `.json` ele fica em `relevo: { x0, z0, passo, nx, nz, m, cor, h: [alturas linha a linha em z] }`.
 
+## Battle royale no editor
+
+No catálogo **Básico** há cinco marcadores do Battle royale:
+
+| Marcador | O que faz no jogo |
+|---|---|
+| ✦ BR: arma | uma arma sorteada (fuzil, submetralhadora, escopeta ou sniper) cai exatamente aqui; pode ser no chão, dentro de casa ou em cima de laje |
+| ⬢ BR: colete | uma caixa de colete aqui |
+| ✚ BR: cura | uma caixa de cura aqui |
+| ◎ BR: centro final da zona | a zona fecha até este ponto (só vale um) |
+| ▼ BR: largada | alguém começa caindo de paraquedas em cima deste ponto (até 12) |
+
+**O que não tiver marcador o jogo escolhe sozinho**, como antes: as armas dentro de construções e em lajes, as caixas nos pontos de passagem, o centro da zona num ponto do miolo do mapa e as largadas espalhadas. Se o mapa tiver pelo menos um marcador de arma, só os marcadores recebem arma; o mesmo vale para as caixas (colete e cura juntos). Com menos de 12 largadas, o jogo completa as que faltam, longe das marcadas.
+
+Sem nada selecionado, o painel da direita mostra o quadro **Battle royale**: quantos marcadores de cada tipo existem, o botão **Esconder/Mostrar a zona** e o **Espelhar marcadores BR (z → -z)**, que copia cada marcador para o outro lado do mapa (como o time Bravo). Com algum marcador BR no mapa, a cena mostra no chão os **círculos das quatro etapas da zona** (o azul é o começo), do jeito que o jogo calcula: o tamanho sai das peças e o centro final é o ◎ (ou o meio do mapa).
+
+O botão **▶ Testar no BR** da barra monta o mapa e começa um Battle royale solo com 11 robôs.
+
+No `.json` fica em `br: { armas: [[x, y, z]], coletes: [[x, y, z]], curas: [[x, y, z]], zonaFim: [x, z], largadas: [[x, z]] }`.
+
 ## Regras para o mapa funcionar
 
 Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo e que ninguém caia por engano.

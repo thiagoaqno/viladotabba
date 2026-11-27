@@ -365,7 +365,12 @@ if (IATE_ATIVO) {
   // (2026-11-26) elo: no fim de uma partida online de time, manda o placar e quem jogou para o perfil-galera.js (window.tiroElo),
   // que fala com o servidor (servidor/jogos/tiro-elo.js). f: o desempenho no próprio time (1 = melhor do placar, 0 = pior)
   h = troca(h, "if(MATCH.online)netMatchEnded();arsLocalXp(o.result);acctMatchEnd(o.result,true);}",
-    "if(MATCH.online)netMatchEnded();arsLocalXp(o.result);acctMatchEnd(o.result,true);if(MATCH.online&&MATCH.mode!=='ffa'&&window.tiroElo){try{const gente=[0,1].flatMap(boardList).filter((x)=>x.isPlayer||(x.isRemote&&!x.remoteBot)),nm=(x)=>netClean(x.isPlayer?NET.nick:x.name),meu=boardList(me.team),k=meu.indexOf(me);window.tiroElo.fim({sala:NET.code,modo:MATCH.mode,mapa:NET.cfg.map,placar:[MATCH.score[0],MATCH.score[1]],humanos:gente.map((x)=>({n:nm(x),t:x.team})),eu:{n:nm(me),t:me.team,f:meu.length>1?1-k/(meu.length-1):1}});}catch(e){console.warn('elo',e);}}}", { nome: "elo: resultado no fim da partida" });
+    "if(MATCH.online)netMatchEnded();arsLocalXp(o.result);acctMatchEnd(o.result,true);if(MATCH.online&&MATCH.mode!=='ffa'&&window.tiroElo){try{const gente=[0,1].flatMap(boardList).filter((x)=>x.isPlayer||(x.isRemote&&!x.remoteBot)),nm=(x)=>netClean(x.isPlayer?NET.nick:x.name),meu=boardList(me.team),k=meu.indexOf(me);window.tiroElo.fim({sala:NET.code,modo:MATCH.mode,mapa:NET.cfg.map,placar:[MATCH.score[0],MATCH.score[1]],humanos:gente.map((x)=>({n:nm(x),t:x.team})),eu:{n:nm(me),t:me.team,f:meu.length>1?1-k/(meu.length-1):1,b:[0,1].flatMap(boardList).sort(boardCmp)[0]===me?2:k===0?1:0}});}catch(e){console.warn('elo',e);}}}", { nome: "elo: resultado no fim da partida" });
+  // (2026-11-26) o selo do ranque do elo ao lado do nome, no placar da partida (Tab) e no do fim, só no online e só para gente
+  // (os bots não têm). window.tiroElo.selo (perfil-galera.js) devolve o selo guardado e pede ao servidor os que faltam
+  h = troca(h, "<td>${esc(boardName(x))}</td>", "<td>${esc(boardName(x))}${eloSelo(x)}</td>", { nome: "elo: selo no placar" });
+  h = troca(h, "<td><span>${esc(boardName(x))}</span>", "<td><span>${esc(boardName(x))}</span>${eloSelo(x)}", { nome: "elo: selo no placar do fim" });
+  h = troca(h, "const boardCmp=(a,b)=>", "const eloSelo=(x)=>{if(!MATCH.online||x.netBot||x.remoteBot||!window.tiroElo||!window.tiroElo.selo)return'';try{return window.tiroElo.selo(netClean(x.isPlayer?NET.nick:x.name),!!x.isPlayer);}catch(e){return'';}};const boardCmp=(a,b)=>", { nome: "elo: selo (função)" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

@@ -225,7 +225,10 @@
     + "@keyframes eaPop{0%{transform:scale(1)}35%{transform:scale(1.45);filter:brightness(1.9)}100%{transform:scale(1)}}"
     + "@keyframes eaTreme{0%,100%{transform:none}20%{transform:translateX(-6px) rotate(-3deg)}40%{transform:translateX(6px) rotate(3deg)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}"
     + "@keyframes eaBrilha{0%{box-shadow:0 0 0 #ffb02000}30%{box-shadow:0 0 34px #ffb020cc;border-color:#ffb020}100%{box-shadow:0 0 0 #ffb02000}}"
-    + "@keyframes eaAviso{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}";
+    + "@keyframes eaAviso{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}"
+    + ".tgSelo{display:inline-flex;align-items:center;gap:2px;margin-left:6px;vertical-align:middle;font:800 11px/1 Figtree,system-ui,sans-serif;color:var(--c)}"
+    + ".tgSelo i{display:inline-block;width:12px;height:12px;clip-path:polygon(50% 0,100% 28%,100% 72%,50% 100%,0 72%,0 28%);background:var(--c);box-shadow:0 0 6px var(--c)}"
+    + "#tgEloFim .ea-bonus{display:block;color:#ffd23f;font-weight:800;margin-top:2px}";
   function rqHtml(r) { return '<span class="tgRq" style="--c:' + (CORES[r.nome] || "#ccc") + '"><i></i>' + esc(r.rotulo) + "</span>"; }
   function carregarElo() {
     if (!P) { ELO = null; return Promise.resolve(null); }
@@ -252,7 +255,9 @@
     c.innerHTML = '<div class="ea-top"><span class="tgRq ea-rq" style="--c:' + cor(r0) + '"><i></i><b>' + esc(r0.rotulo) + '</b></span>'
       + '<span class="d ea-num ' + (up ? "up" : dn ? "dn" : "") + '">' + (up ? "+" : dn ? "-" : "") + "0</span></div>"
       + '<div class="tgBar ' + (up ? "up" : dn ? "dn" : "") + '" style="--c:' + cor(r0) + '"><b style="width:' + (r0.proximo ? r0.naDivisao : 100) + '%"></b></div>'
-      + '<small class="ea-txt">' + r.antes + " pontos</small><span class=\"ea-aviso\"></span>";
+      + '<small class="ea-txt">' + r.antes + " pontos</small>"
+      + (r.bonus ? '<small class="ea-bonus">' + (r.bonus === 2 ? "+2 de bônus: MVP da partida" : "+1 de bônus: melhor do time") + "</small>" : "")
+      + '<span class="ea-aviso"></span>';
     var rq = c.querySelector(".ea-rq"), nome = rq.querySelector("b"), num = c.querySelector(".ea-num"), bar = c.querySelector(".tgBar"), fill = bar.firstChild,
       txt = c.querySelector(".ea-txt"), aviso = c.querySelector(".ea-aviso"), atual = r0.rotulo, ultimoTic = 0;
     var DUR = Math.min(2600, 700 + Math.abs(r.delta) * 55), t0 = 0;
@@ -298,6 +303,25 @@
       }).catch(function (e) { if (id === fimId) c.innerHTML = "Elo: " + esc(e.message); });
     })();
   }
-  window.tiroElo = { fim: fim, carregar: carregarElo };
+  // o selo do ranque no placar da partida: os nomes que ainda não sabemos vão juntos numa pergunta só ao servidor
+  var SELOS = {}, pedirSelos = {}, seloT = 0;
+  function selo(nome, eu) {
+    var k = String(nome).toLowerCase().slice(0, 16), r = eu && ELO && ELO.partidas ? ELO.ranque : SELOS[k];
+    if (r === undefined && !eu) { if (!(k in pedirSelos)) { pedirSelos[k] = 1; if (!seloT) seloT = setTimeout(buscarSelos, 300); } return ""; }
+    if (!r) return "";
+    var d = r.nome === "Radiante" ? "" : String(r.rotulo).split(" ")[1] || "";
+    return ' <span class="tgSelo" title="' + esc(r.rotulo) + '" style="--c:' + (CORES[r.nome] || "#ccc") + '"><i></i>' + d + "</span>";
+  }
+  function buscarSelos() {
+    seloT = 0; var ns = Object.keys(pedirSelos).filter(function (k) { return SELOS[k] === undefined; }); pedirSelos = {};
+    if (!ns.length) return;
+    ns.forEach(function (k) { SELOS[k] = null; }); // sem ranque até a resposta (e não pergunta de novo)
+    pedir("GET", "/elo/nomes?n=" + encodeURIComponent(ns.join(",")), null, 8000).then(function (r) {
+      Object.keys(r.ranques || {}).forEach(function (k) { SELOS[k] = r.ranques[k]; });
+      try { if (typeof fillScoreboard === "function" && typeof HUD !== "undefined") fillScoreboard(); } catch (e) { /* placar fechado */ }
+      try { if (typeof MATCH !== "undefined" && MATCH.state === "ended" && typeof fillEnd === "function") fillEnd(); } catch (e) { /* ignorado */ }
+    }).catch(function () { /* fica sem selo */ });
+  }
+  window.tiroElo = { fim: fim, carregar: carregarElo, selo: selo };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", montar); else montar();
 })();

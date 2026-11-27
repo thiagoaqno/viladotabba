@@ -5,6 +5,8 @@
 //   Ascendente (900 a 1199):            vitória +19 a +22, derrota -19 a -20
 //   Imortal (1200 a 1499):              vitória +14 a +18, derrota -20 a -22
 //   Radiante (1500 ou mais):            vitória +13 a +16, derrota -22 a -24
+// Mais o bônus do desempenho individual (pedido de 26/nov): +2 para o melhor da partida (MVP) e +1 para o melhor do próprio
+// time; na derrota, o bônus tira da perda.
 // O que conta: partida online de mata-mata em time ou dominação, com pelo menos MIN_HUMANOS pessoas (os bots não contam).
 // A partida roda no navegador de quem cria a sala e o servidor só repassa as mensagens, então cada jogador manda o próprio
 // resultado no fim (POST /tiro/perfil/elo/resultado) e a partida só conta quando CONFIRMACOES perfis diferentes mandaram o
@@ -47,7 +49,7 @@ function lerRelato(c) {
   if (!/^[A-Z0-9]{5}$/.test(sala) || placar.length !== 2) return { erro: "partida sem sala" };
   if (!MODOS.has(modo)) return { erro: "só mata-mata em time e dominação contam" };
   if (humanos.length < MIN_HUMANOS) return { erro: `precisa de pelo menos ${MIN_HUMANOS} pessoas na partida` };
-  const meu = { n: limpa(eu.n, 24), t: eu.t === 1 ? 1 : 0, f: Math.min(1, Math.max(0, Number(eu.f) || 0)) };
+  const meu = { n: limpa(eu.n, 24), t: eu.t === 1 ? 1 : 0, f: Math.min(1, Math.max(0, Number(eu.f) || 0)), b: Math.min(2, Math.max(0, Math.floor(Number(eu.b) || 0))) };
   if (!humanos.some((h) => h.n === meu.n && h.t === meu.t)) return { erro: "você não está no placar" };
   const gente = humanos.map((h) => h.t + ":" + h.n).sort().join(",");
   return { chave: [sala, modo, mapa, placar.join("-"), gente].join("|"), sala, modo, mapa, placar, meu };
@@ -77,10 +79,10 @@ function relatar(bd, perfil, corpo, agora = Date.now()) {
   for (const [pid, r] of g.relatos) {
     if (g.feitos.has(pid)) continue;
     const res = resultadoDe(r.placar, r.meu.t);
-    const antes = bd.eloTiro(pid).pontos, d = delta(antes, res, r.meu.f);
+    const antes = bd.eloTiro(pid).pontos, d = delta(antes, res, r.meu.f) + (res === "empate" ? 0 : r.meu.b);
     const feito = bd.registrarEloTiro(pid, { chave, modo: r.modo, mapa: r.mapa, resultado: res, delta: d, agora });
     const depois = feito ? feito.pontos : antes;
-    g.feitos.set(pid, { estado: "contou", resultado: res, antes, depois, delta: depois - antes, ranque: ranque(depois), ranqueAntes: ranque(antes) });
+    g.feitos.set(pid, { estado: "contou", resultado: res, antes, depois, delta: depois - antes, bonus: res === "empate" ? 0 : r.meu.b, ranque: ranque(depois), ranqueAntes: ranque(antes) });
   }
   return g.feitos.get(perfil.id);
 }

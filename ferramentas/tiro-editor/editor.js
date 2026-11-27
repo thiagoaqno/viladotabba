@@ -31,7 +31,14 @@ const ED_BASICO = [
   { rot: '▲ Nascer (time Alpha)', P: { t: 'nascer' } },
   { rot: '◆ Ponto de dominação', P: { t: 'dom' } },
   { rot: '■ Queda do mecha', P: { t: 'mecha' } },
+  // Battle royale (2026-11-27): onde ficam as armas, os coletes e as curas, o centro final da zona e as largadas
+  { rot: '✦ BR: arma', P: { t: 'brArma' } },
+  { rot: '⬢ BR: colete', P: { t: 'brColete' } },
+  { rot: '✚ BR: cura', P: { t: 'brCura' } },
+  { rot: '◎ BR: centro final da zona', P: { t: 'brZona' } },
+  { rot: '▼ BR: largada (cai aqui)', P: { t: 'brLargada' } },
 ];
+const ED_MARC = new Set(['nascer', 'dom', 'mecha', 'brArma', 'brColete', 'brCura', 'brZona', 'brLargada']);
 const edEl = (tag, css, html) => { const e = document.createElement(tag); if (css) e.style.cssText = css; if (html != null) e.innerHTML = html; return e; };
 const edSnap = (v, s = ED.snap) => Math.round(v / s) * s;
 const edClone = (o) => JSON.parse(JSON.stringify(o));
@@ -43,18 +50,26 @@ function edDoJson(J) {
   for (const [x, z] of J.nascer || []) pecas.push({ t: 'nascer', p: [x, 0, z] });
   for (const [x, z, y] of J.dom || []) pecas.push({ t: 'dom', p: [x, y || 0, z] }); // 3º número: a altura do piso (morro, laje)
   for (const [x, z] of J.mecha || []) pecas.push({ t: 'mecha', p: [x, 0, z] });
+  const B = J.br || {}; // os marcadores do Battle royale: [x, y, z] (armas, coletes, curas) e [x, z] (zona, largadas)
+  for (const [k, t] of [['armas', 'brArma'], ['coletes', 'brColete'], ['curas', 'brCura']]) for (const [x, y, z] of B[k] || []) pecas.push({ t, p: [x, y || 0, z] });
+  if (B.zonaFim) pecas.push({ t: 'brZona', p: [B.zonaFim[0], 0, B.zonaFim[1]] });
+  for (const [x, z] of B.largadas || []) pecas.push({ t: 'brLargada', p: [x, 0, z] });
   // campos que o editor não mexe (pontos dos bots, zonas, sniper, som, tipo, capa) passam direto de volta para o .json
   const extra = {}; for (const k of ED_EXTRA) if (J[k] !== undefined) extra[k] = edClone(J[k]);
   return { meta: { id: J.id, nome: J.nome || J.id, ceu: J.ceu || 'meltem', mar: J.mar || null, tag: J.tag || '', desc: J.desc || '', extra }, pecas };
 }
 function edParaJson() {
-  const m = ED.J.meta, pecas = [], nascer = [], dom = [], mecha = [];
+  const m = ED.J.meta, pecas = [], nascer = [], dom = [], mecha = [], br = { armas: [], coletes: [], curas: [], largadas: [] };
   for (const P of ED.J.pecas) {
     const xz = [+P.p[0].toFixed(2), +P.p[2].toFixed(2)];
     if (P.t === 'nascer') nascer.push(xz); else if (P.t === 'dom') dom.push(P.p[1] > 0.05 ? [...xz, +P.p[1].toFixed(2)] : xz); else if (P.t === 'mecha') mecha.push(xz);
+    else if (P.t === 'brArma' || P.t === 'brColete' || P.t === 'brCura') br[{ brArma: 'armas', brColete: 'coletes', brCura: 'curas' }[P.t]].push([xz[0], +P.p[1].toFixed(2), xz[1]]);
+    else if (P.t === 'brZona') br.zonaFim = xz; else if (P.t === 'brLargada') br.largadas.push(xz);
     else { const Q = edClone(P); Q.p = Q.p.map((v) => +v.toFixed(3)); if (Q.s) Q.s = Q.s.map((v) => +v.toFixed(3)); pecas.push(Q); }
   }
-  return Object.assign({ id: m.id, nome: m.nome, tag: m.tag || undefined, desc: m.desc || undefined, ceu: m.ceu, mar: m.mar, pecas, nascer, dom: dom.slice(0, 3), mecha: mecha.slice(0, 3) }, edClone(m.extra || {}));
+  for (const k of ['armas', 'coletes', 'curas', 'largadas']) if (!br[k].length) delete br[k];
+  const comBr = Object.keys(br).length ? br : undefined;
+  return Object.assign({ id: m.id, nome: m.nome, tag: m.tag || undefined, desc: m.desc || undefined, ceu: m.ceu, mar: m.mar, pecas, nascer, dom: dom.slice(0, 3), mecha: mecha.slice(0, 3), br: comBr }, edClone(m.extra || {}));
 }
 function edNovo(nome = 'Mapa novo') {
   return { meta: { id: edIdDe(nome), nome, ceu: 'meltem', mar: null, tag: '', desc: '' },
@@ -155,6 +170,11 @@ function edMalha(P) {
   if (P.t === 'nascer') { o = marcador(0x3a8dde, 0.35, 1.8, 'cone'); const b = marcador(0xd84a3a, 0.35, 1.8, 'cone'); b.position.set(0, 0, -2 * P.p[2]); b.children[0].material.opacity = 0.35; o.add(b); }
   else if (P.t === 'dom') o = marcador(0x3ad86a, 2.0, 0.12);
   else if (P.t === 'mecha') o = marcador(0xf0a030, 1.4, 0.3);
+  else if (P.t === 'brArma') o = marcador(0xff8a1e, 0.25, 0.9);
+  else if (P.t === 'brColete') o = marcador(0x2f6fd6, 0.3, 0.45);
+  else if (P.t === 'brCura') o = marcador(0xf3f1ea, 0.3, 0.45);
+  else if (P.t === 'brZona') { o = marcador(0x9a5cff, 0.4, 6); o.add(marcador(0x9a5cff, 2.5, 0.08)); }
+  else if (P.t === 'brLargada') { o = marcador(0x3ad86a, 0.6, 3, 'cone'); o.children[0].rotation.x = Math.PI; o.children[0].position.y = 6; }
   else if (P.t === 'luz') { o = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffd880 })); o.add(new THREE.PointLight(0xffd8a0, 1.2, P.raio || 7)); }
   else if (P.t === 'prefab') o = edPrefabGrupo('pf:' + P.nome + JSON.stringify(P.a || []), () => PF[P.nome](...(P.a || [])));
   else if (P.t === 'prop') o = edPrefabGrupo('prop:' + P.nome + JSON.stringify(P.a || []), () => propDef(P.nome, P.a || []).pf());
@@ -164,7 +184,7 @@ function edMalha(P) {
     for (const [x, y, z, w, h, r] of KC_VIDROS[P.nome]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.03), mat); m.position.set(x, y + h / 2, z); m.rotation.y = r; o.add(m); }
   }
   if (!o) o = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xff00ff, wireframe: true }));
-  o.position.set(P.p[0], P.p[1], P.p[2]); if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') o.rotation.y = ((P.r || 0) * Math.PI) / 180;
+  o.position.set(P.p[0], P.p[1], P.p[2]); if (!ED_MARC.has(P.t)) o.rotation.y = ((P.r || 0) * Math.PI) / 180;
   if (P.e) o.scale.setScalar(P.e);
   return o;
 }
@@ -176,7 +196,7 @@ function edRedesenhar() {
   const L = edSelLista();
   for (const it of ED.items) if (L.includes(it.P)) { const b = new THREE.BoxHelper(it.o, it.P === ED.sel ? 0xffcc33 : 0x33ccff); ED.scene.add(b); ED.boxes.push(b); }
   if (ED.mar) ED.mar.visible = !!ED.J.meta.mar; if (ED.mar && ED.J.meta.mar) ED.mar.position.y = ED.J.meta.mar.y;
-  edTerrenoMalha();
+  edTerrenoMalha(); edBrPrevia();
 }
 
 /* ---------- interface ---------- */
@@ -227,7 +247,7 @@ function edBarra() {
   ED.btTerreno = bt('⛰ Terreno', () => { ED.modo = ED.modo === 'terreno' ? null : 'terreno'; ED.tpl = null; edFantasma(); edBarra(); edPainel(); }, 'Deformar o chão com um pincel (subir, descer, aplanar, suavizar)');
   if (ED.modo === 'terreno') ED.btTerreno.className = 'on';
   bt('Salvar', edSalvar, 'Grava no projeto (Editor de mapas do Tiro.bat)'); bt('Baixar .json', edBaixar); bt('Abrir .json', edAbrirArquivo);
-  bt('▶ Jogar', edJogar, 'Monta o mapa de verdade e começa uma partida solo com bots'); bt('Sair', () => { location.href = location.pathname; });
+  bt('▶ Jogar', () => edJogar(), 'Monta o mapa de verdade e começa uma partida solo com bots'); bt('▶ Testar no BR', () => edJogar('br'), 'Monta o mapa e começa um Battle royale solo com 11 robôs'); bt('Sair', () => { location.href = location.pathname; });
 }
 function edOpcoesMapas() {
   const s = ED.selMapa; s.innerHTML = ''; s.appendChild(new Option('Abrir mapa…', '')); s.appendChild(new Option('+ Mapa novo', 'novo'));
@@ -259,12 +279,12 @@ function edAbrirArquivo() {
   i.click();
 }
 // monta o mapa de verdade e começa uma partida solo
-function edJogar() {
+function edJogar(modo) {
   const J = edParaJson();
   if (!J.nascer.length) return edMsg('Coloque pelo menos um "Nascer" (o time Bravo nasce espelhado em -z).');
   edGuardar();
   try { if (MAPL.id === J.id) mapUnload(); tiroMapaRegistrar(J); } catch (e) { return edMsg('Erro no mapa: ' + e.message, 5000); }
-  Settings.map = J.id; saveSettings();
+  Settings.map = J.id; if (modo) Settings.mode = modo; saveSettings();
   ED.on = false; ED.root.remove(); ED.r.dispose();
   edMsgJogo();
   menuLaunch({ online: false, map: J.id, deploy: () => startMatch() });
@@ -387,12 +407,13 @@ function edPainel() {
     d.appendChild(bts); return;
   }
   if (!P && edCopia()) { const b = edEl('button', 'margin-top:10px', 'Colar ' + edCopia().pecas.length + ' peça(s) (Ctrl+V)'); b.onclick = () => edColar(); d.appendChild(b); }
+  if (!P) edPainelBr(d);
   if (!P) { d.appendChild(edEl('p', 'color:#888;margin-top:14px', 'Escolha uma peça no catálogo e clique na cena, ou clique numa peça para mexer nela.<br><br>O chão das aparições tem de estar em y = 0. O time Bravo nasce espelhado (z vira -z).')); return; }
-  d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', grafite: 'Grafite', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha' }[P.t]));
+  d.appendChild(edEl('h4', 'margin:14px 0 4px', P.t === 'prefab' || P.t === 'prop' ? P.nome : { caixa: 'Caixa', escada: 'Escada', luz: 'Luz', grafite: 'Grafite', nascer: 'Nascer (Alpha)', dom: 'Ponto de dominação', mecha: 'Queda do mecha', brArma: 'BR: arma (uma arma aqui)', brColete: 'BR: caixa de colete', brCura: 'BR: caixa de cura', brZona: 'BR: centro final da zona', brLargada: 'BR: largada (alguém cai aqui)' }[P.t]));
   const vec = (rot, arr, step, f) => { d.appendChild(edEl('label', '', rot)); const r = edEl('div'); r.className = 'row3'; arr.forEach((v, i) => { const x = edEl('input'); x.type = 'number'; x.step = step; x.value = +(+v).toFixed(3); x.onchange = () => { edAntes(); f(i, +x.value); edMudou(true); }; r.appendChild(x); }); d.appendChild(r); };
   vec('Posição x · y · z (m)', P.p, 0.25, (i, v) => { P.p[i] = v; });
   if (P.s) vec(P.t === 'grafite' ? 'Tamanho larg · alt (m)' : 'Tamanho larg · alt · prof (m)', P.s, 0.25, (i, v) => { P.s[i] = Math.max(0.05, v); });
-  if (!['nascer', 'dom', 'mecha'].includes(P.t)) vec('Giro (graus)' + (P.t === 'caixa' || P.t === 'escada' ? ' — de 90 em 90' : ''), [P.r || 0], P.t === 'caixa' || P.t === 'escada' ? 90 : 15, (i, v) => { P.r = v; });
+  if (!ED_MARC.has(P.t)) vec('Giro (graus)' + (P.t === 'caixa' || P.t === 'escada' ? ' — de 90 em 90' : ''), [P.r || 0], P.t === 'caixa' || P.t === 'escada' ? 90 : 15, (i, v) => { P.r = v; });
   if (P.t === 'prefab' || P.t === 'prop') vec('Escala', [P.e || 1], 0.1, (i, v) => { P.e = v === 1 ? undefined : Math.max(0.1, v); });
   if (P.t === 'caixa' || P.t === 'escada') {
     const atual = P.m || (P.t === 'escada' ? 'wood' : 'paint'), item = ED_SUPERF.find((x) => x[0] === atual);
@@ -470,7 +491,7 @@ function edGirarGrupo(g) {
   for (const P of L) {
     const dx = P.p[0] - c.x, dz = P.p[2] - c.z;
     P.p[0] = +(c.x + dx * co + dz * si).toFixed(3); P.p[2] = +(c.z - dx * si + dz * co).toFixed(3);
-    if (!['nascer', 'dom', 'mecha'].includes(P.t)) P.r = ((((P.r || 0) + g) % 360) + 360) % 360;
+    if (!ED_MARC.has(P.t)) P.r = ((((P.r || 0) + g) % 360) + 360) % 360;
   }
   edMudou(true);
 }
@@ -502,7 +523,7 @@ function edEventos() {
     if (ED.tpl) {
       const a = edAcerto(e); if (!a) return;
       edAntes(); const P = Object.assign(edClone(ED.tpl.P), { p: [edSnap(a.p.x), +(a.p.y + (ED.tpl.oy || 0)).toFixed(3), edSnap(a.p.z)] });
-      if (P.t !== 'nascer' && P.t !== 'dom' && P.t !== 'mecha') P.r = ED.ghostP ? ED.ghostP.r || 0 : 0;
+      if (!ED_MARC.has(P.t)) P.r = ED.ghostP ? ED.ghostP.r || 0 : 0;
       ED.J.pecas.push(P); edSelLimpa(); ED.sel = P; edMudou(true); return;
     }
     const a = edAcerto(e), soma = e.shiftKey || e.ctrlKey || e.metaKey;
@@ -568,7 +589,7 @@ function edEventos() {
       edMudou(true);
     }
     else if (k === 'KeyR') {
-      const alvo = P || ED.ghostP; if (!alvo || ['nascer', 'dom', 'mecha'].includes(alvo.t)) return;
+      const alvo = P || ED.ghostP; if (!alvo || ED_MARC.has(alvo.t)) return;
       const fino = e.shiftKey && (alvo.t === 'prefab' || alvo.t === 'prop'); if (P) edAntes(); alvo.r = (((alvo.r || 0) + (fino ? 15 : 90)) % 360);
       if (P) edMudou(true); else { ED.ghost.rotation.y = (alvo.r * Math.PI) / 180; if (alvo.t === 'caixa' || alvo.t === 'escada') edFantasma(); }
     }
@@ -587,6 +608,46 @@ function edEventos() {
   };
   addEventListener('keydown', tecla, true); addEventListener('keyup', tecla, true);
   addEventListener('blur', () => ED.keys.clear());
+}
+/* ---------- Battle royale no editor (2026-11-27) ----------
+   Marcadores (catálogo Básico): ✦ arma, ⬢ colete, ✚ cura (onde ficam: uma arma ou caixa em cada um), ◎ centro final da zona e
+   ▼ largada (onde alguém cai). Sem marcador de um tipo, o jogo escolhe sozinho como antes (tiro-br.js). A prévia desenha no chão os
+   círculos das quatro etapas da zona, do jeito que o jogo calcula (o tamanho do mapa sai das peças; o centro final é o ◎ ou o meio). */
+const ED_BR_ETAPAS = [1, 0.62, 0.36, 0.16];
+function edBrLimites() {
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  for (const P of ED.J.pecas) { if (ED_MARC.has(P.t) && P.t !== 'nascer') continue; const w = P.s ? Math.max(P.s[0], P.s[2] || 0) / 2 : 1; x0 = Math.min(x0, P.p[0] - w); x1 = Math.max(x1, P.p[0] + w); z0 = Math.min(z0, P.p[2] - w, P.t === 'nascer' ? -Math.abs(P.p[2]) : 1e9); z1 = Math.max(z1, P.p[2] + w, P.t === 'nascer' ? Math.abs(P.p[2]) : -1e9); }
+  const R = edRelevo && edRelevo(); if (R) { x0 = Math.min(x0, R.x0); z0 = Math.min(z0, R.z0); x1 = Math.max(x1, R.x0 + (R.nx - 1) * R.passo); z1 = Math.max(z1, R.z0 + (R.nz - 1) * R.passo); }
+  return x0 > x1 ? null : { x0, x1, z0, z1 };
+}
+function edBrPrevia() {
+  if (ED.brPrev) { ED.scene.remove(ED.brPrev); ED.brPrev.traverse((c) => c.geometry && c.geometry.dispose()); ED.brPrev = null; }
+  if (ED.brPreviaOff) return;
+  const L = edBrLimites(); if (!L) return;
+  const tem = ED.J.pecas.some((P) => P.t.startsWith('br')); if (!tem && !ED.brPreviaOn) return;
+  const C0x = (L.x0 + L.x1) / 2, C0z = (L.z0 + L.z1) / 2, R0 = Math.hypot(L.x1 - L.x0, L.z1 - L.z0) / 2 * 1.02;
+  const zf = ED.J.pecas.find((P) => P.t === 'brZona'), Fx = zf ? zf.p[0] : C0x, Fz = zf ? zf.p[2] : C0z;
+  const R = edRelevo && edRelevo(), fn = R ? edRelevoFn(R) : () => 0, g = new THREE.Group();
+  ED_BR_ETAPAS.forEach((f, i) => {
+    const r = R0 * f, cx = Fx + (C0x - Fx) * f, cz = Fz + (C0z - Fz) * f, N = 96, P = new Float32Array((N + 1) * 3);
+    for (let k = 0; k <= N; k++) { const a = (k / N) * Math.PI * 2, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r; P.set([x, fn(x, z) + 0.15, z], k * 3); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(P, 3));
+    g.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: i ? 0xffffff : 0x3d9bff, transparent: true, opacity: i ? 0.8 : 1 })));
+  });
+  ED.brPrev = g; ED.scene.add(g);
+}
+function edPainelBr(d) {
+  const c = (t) => ED.J.pecas.filter((P) => P.t === t).length;
+  const box = edEl('div', 'margin-top:12px;padding:8px;border:1px solid #3a3f46;border-radius:6px;font-size:12px;color:#bbb;line-height:1.5');
+  box.appendChild(edEl('div', 'color:#f5b82e;font-weight:600;margin-bottom:2px', 'Battle royale'));
+  const auto = (n, t) => (n ? n + ' ' + t : t + ': automático');
+  box.appendChild(edEl('div', '', [auto(c('brArma'), 'armas'), auto(c('brColete'), 'coletes'), auto(c('brCura'), 'curas'), c('brZona') ? 'centro da zona marcado' : 'centro da zona: automático', auto(c('brLargada'), 'largadas')].join(' · ')));
+  box.appendChild(edEl('div', 'color:#888;font-size:11px;margin-top:4px', 'Coloque os marcadores BR do catálogo Básico. O que não tiver marcador o jogo escolhe sozinho (armas dentro de construções e lajes). Até 12 largadas valem; faltando, o jogo completa.'));
+  const bts = edEl('div', 'display:flex;flex-wrap:wrap;gap:4px;margin-top:6px');
+  const pv = edEl('button', '', ED.brPreviaOff ? 'Mostrar a zona' : 'Esconder a zona'); pv.onclick = () => { ED.brPreviaOff = !ED.brPreviaOff; ED.brPreviaOn = !ED.brPreviaOff; edBrPrevia(); edPainel(); };
+  const es = edEl('button', '', 'Espelhar marcadores BR (z → -z)'); es.title = 'Copia cada marcador BR para o outro lado do mapa (como o time Bravo)';
+  es.onclick = () => { const L = ED.J.pecas.filter((P) => P.t.startsWith('br') && P.t !== 'brZona' && Math.abs(P.p[2]) > 0.5); if (!L.length) return edMsg('Nenhum marcador BR para espelhar.'); edAntes(); for (const P of L) ED.J.pecas.push({ t: P.t, p: [P.p[0], P.p[1], -P.p[2]] }); edMudou(true); edMsg(L.length + ' marcadores espelhados'); };
+  bts.append(pv, es); box.appendChild(bts); d.appendChild(box);
 }
 /* ---------- terreno deformado (2026-11-27) ----------
    O botão "⛰ Terreno" da barra liga o modo terreno: o painel da direita cria a grade (um ponto a cada 2 m, cobrindo as peças com

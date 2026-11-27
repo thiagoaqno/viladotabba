@@ -1,22 +1,27 @@
-# Tiro: Favela Grande bem maior, com peças de outros mapas e parede alta na beira
+# Editor de mapas do Tiro: focado no Battle royale
 
-Pedido do Thiago: "cresce mais ainda o favela... usa assets de outros mapas e afins". E o cuidado: tirar as paredes invisíveis da Favela e pôr uma nova na beira do mapa, "absurdamente alta", bem na beira do abismo.
+Pedido do Thiago: "editor de mapas focado no BR".
 
-**Tamanho:** de 196 x 116 m de chão para **272 x 212 m**, tudo jogável (uns 2,5 vezes a versão anterior e uns 11 vezes a Favela).
+**Marcadores novos** (catálogo Básico):
+- **✦ BR: arma**: uma arma sorteada cai exatamente ali (no chão, dentro de casa ou em cima de laje);
+- **⬢ BR: colete** e **✚ BR: cura**: uma caixa ali;
+- **◎ BR: centro final da zona**: a zona fecha até ali;
+- **▼ BR: largada**: alguém começa caindo de paraquedas em cima dali (até 12).
 
-**O que entrou** (o sul é feito no gerador e espelhado no norte, como na Favela):
-- **Ferro-velho** (oeste, x -136 a -96): dois vagões e um ônibus queimado (peças dos mapas de neve e de deserto do jogo), contêineres, carcaças de carro, manilhas, pneus, vigas, caçamba, guarita e engradados;
-- **Rodoviária** (leste, x 96 a 136): **galpão coberto** de 28 x 22 m com bancos, guichê e painel de horários (peças do aeroporto). O teto, a 5 m, é laje, com **escada** pelo lado leste. Na frente, ônibus e van parados, pontos de ônibus, banca e orelhão;
-- **avenida** de ponta a ponta (z 44 a 56), com postes, carros e pontos de ônibus;
-- **Morro** (z 56 a 106, ao sul e ao norte): **três fileiras de prédios e casas de favela** com vielas entre elas e 6 vielas atravessando. Entre eles, prédios com escada até a laje (escada pelo lado, pelos fundos, até o telhado). No alto, uma **feira** de barracas, uma **praça** com fonte, quiosque de açaí, churrasquinho, dominó e parquinho;
-- o Campinho, o Comércio e a Favela continuam como estavam.
+**No jogo** (`ferramentas/tiro-br.js`, que lê `MAP_DEFS[id].br`, passado pelo `mapa-json.js`):
+- com pelo menos um marcador de arma, **só os marcadores** recebem arma, uma em cada;
+- o mesmo vale para as caixas (colete e cura juntos);
+- o centro marcado vira o centro final da zona;
+- as largadas marcadas entram primeiro, e faltando, o jogo completa até 12, longe das marcadas;
+- **o que não tiver marcador continua automático**, como antes (armas dentro de construções e em lajes, caixas nos pontos de passagem, centro no miolo do mapa, largadas espalhadas). Os mapas que já existem não mudam.
 
-**Paredes:**
-- saem **todas as paredes invisíveis de dentro**, inclusive as da Favela (as dos lados e as do fundo das bases) e as do Campinho e do Comércio, junto com as casas de cenário de fora do limite;
-- a única parede invisível agora é a da **beira do chão**, com **600 m de altura** (nem planando de paraquedas dá para passar), bem na beira do abismo (os 20 cm finais do chão).
+**No editor:**
+- com algum marcador BR no mapa, a cena mostra no chão os **círculos das quatro etapas da zona** (azul: o começo; brancos: as etapas), do jeito que o jogo calcula: tamanho pelas peças (e pelo terreno) e centro final no ◎ ou no meio;
+- sem nada selecionado, o painel da direita mostra o quadro **Battle royale**: quantos marcadores de cada tipo existem ("automático" onde não há), **Esconder/Mostrar a zona** e **Espelhar marcadores BR (z → -z)**, que copia cada marcador para o outro lado, como o time Bravo;
+- botão **▶ Testar no BR** na barra: monta o mapa e começa um Battle royale solo com 11 robôs.
 
-**Pontos de passagem:** uma grade de 8 m em todo o mapa fora da Favela, sem os pontos que caem dentro de um prédio: 603 novos (778 no total). Servem para os robôs andarem e para as caixas de colete e cura. As armas usam a malha dos robôs dentro das construções e nas lajes, e o galpão e os prédios com escada dão muitos lugares assim.
+No `.json`: `br: { armas: [[x, y, z]], coletes, curas, zonaFim: [x, z], largadas: [[x, z]] }`. O guia (`docs/tiro-editor-de-mapas.md`) ganhou a seção "Battle royale no editor".
 
-**Conferido:** o gerador confere sozinho que nenhum prédio ou veículo novo encosta em outro (0) nem passa da beira (0), pelo tamanho de cada peça escrito no kit, e o script do jogo montado passa no `node --check`. Não joguei nem vi o mapa. São 553 prefabs (antes uns 250), então vale olhar o desempenho no tablet.
+Conferido só com `node --check` (os arquivos e o script do jogo montado); não abri o editor nem joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

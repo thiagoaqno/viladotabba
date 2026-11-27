@@ -1,20 +1,25 @@
-# Tiro: mapa Favela Grande (para o Battle royale)
+# Editor de mapas do Tiro: selecionar, copiar e colar várias peças
 
-Mapa novo do editor, feito juntando a **Favela** com dois bairros novos dos lados, com as peças do mesmo kit. O Aeroporto e a Maré Alta ficaram de fora, como pedido. Os mapas originais do jogo (Sable, Simoun etc.) não dá para emendar, porque cada um é montado por código, com céu, luz e caminhos dos robôs próprios. O Battle royale continua funcionando em todos eles.
+Pedido do Thiago: "uma função de copiar e colar vários elementos no editor de mapas".
 
-**O mapa** (180 x 88 m jogáveis, uns 3 vezes a Favela):
-- **no meio, a Favela de hoje inteira** (o que estiver no `favela.json`, inclusive o que foi mexido pelo editor), sem as paredes invisíveis dos lados;
-- **uma rua de divisa de cada lado**, que liga a Favela aos bairros em todo o comprimento;
-- **a oeste, o Campinho**: campo de futebol de terra no meio, arquibancadas, parquinho, uma rua com carro e moto, e duas fileiras de casas e prédios de favela de cada lado, com vielas entre elas e quintais nos fundos;
-- **a leste, o Comércio**: fonte, quiosque de açaí, churrasquinho, pipoca e mesa de dominó perto da divisa, a quadra de futsal no meio, fliperama e mototáxi no fim, uma rua com van e carros, lojas e prédios, e casas atrás;
-- casas fora do limite fechando a vista, como na Favela.
+**Selecionar várias:**
+- **Shift+clique** (ou Ctrl+clique) põe e tira uma peça da seleção;
+- **Shift+arrastar** num lugar vazio desenha um retângulo e seleciona tudo o que cai dentro dele (pelo ponto de apoio de cada peça, na tela);
+- **Esc** solta a seleção. A peça principal fica com a caixa amarela e as outras com a caixa azul.
 
-Mais 129 pontos de passagem nos bairros (ruas, vielas, fundos, campo e quadra), que servem para os robôs andarem e para espalhar as armas e as caixas do Battle royale.
+**Mexer em várias de uma vez:**
+- **arrastar** uma delas move todas juntas (a clicada encaixa na grade e as outras andam o mesmo tanto);
+- **setas** e **PgUp/PgDn** empurram todas;
+- **R** gira o grupo 90° em volta do meio, cada peça andando e girando junto;
+- **Delete** apaga todas e **Ctrl+D** duplica todas.
 
-**Como foi feito:** `ferramentas/tiro-mapas/favela-grande-gerar.js` lê o `favela.json` e grava o `favela-grande.json`, que entra no jogo como os outros mapas do editor. Conferi por script que nenhuma casa nova encosta em outra (pelo tamanho de cada prefab escrito no kit). Depois de mexer na Favela Grande pelo editor, não rode o gerador de novo, porque ele sobrescreve.
+**Copiar e colar:**
+- **Ctrl+C** copia a seleção;
+- **Ctrl+V** cola onde o mouse aponta: o meio do grupo vai para o ponto e o pé da peça mais baixa fica no chão que o mouse acerta. As coladas ficam selecionadas, prontas para arrastar;
+- a cópia fica guardada no navegador, então **dá para copiar de um mapa e colar em outro**.
 
-Montado de novo em cima da main depois do #1069 (robôs esperando no ar).
+O painel da direita mostra os botões do grupo quando há várias peças selecionadas (Copiar, Colar, Duplicar, Girar 90°, Soltar, Apagar todas) e o botão Colar quando nada está selecionado. A barra de ajuda e o guia (`docs/tiro-editor-de-mapas.md`) explicam os atalhos novos.
 
-Conferido só com `node --check` (o gerador e o script do jogo montado); não joguei nem vi o mapa.
+Conferido só com `node --check` (o editor e o script do jogo montado); não abri o editor.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

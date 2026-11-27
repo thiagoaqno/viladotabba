@@ -64,15 +64,22 @@ const brDentroZ = (z, x, zz, m = 1) => (x - z.x) ** 2 + (zz - z.z) ** 2 <= (z.r 
 
 /* ---------- armas no chão ---------- */
 const BR_ARMAS = [['m4', 4], ['ak47', 4], ['scarh', 3], ['famas', 3], ['mp5', 4], ['mp7', 3], ['ump45', 3], ['vector', 3], ['m1014', 2], ['rem870', 2], ['aa12', 1], ['l96', 1.5], ['svd', 1.5], ['m82', 1]];
-const BR_LOOT_LONGE = 6, BR_LOOT_TETO = 8, BR_LOOT_LAJE = 1.5;
+const BR_LOOT_LONGE = 6, BR_LOOT_TETO = 4.5, BR_LOOT_LAJE = 2.5, BR_LOOT_PAREDE = 7;
+const _brA = new V3(), _brB = new V3();
+// quantos dos 4 lados (x e z) têm parede a até BR_LOOT_PAREDE m, na altura do peito
+function brParedes(x, y, z) { let n = 0; for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { _brA.set(x, y + 1.2, z); _brB.set(x + dx * BR_LOOT_PAREDE, y + 1.2, z + dz * BR_LOOT_PAREDE); if (!lineClear(_brA, _brB)) n++; } return n; }
 // pontos de navegação (os que os robôs alcançam: a parte principal da malha) dentro de construção ou em cima de laje: [x, y, z]
 function brLootPontos() {
   const out = []; if (!NAV.count || !NAV.comp) return out;
   for (let id = 0; id < NAV.count; id++) {
     if (NAV.comp[id] !== NAV.mainComp) continue;
     const x = NAV.nx[id], y = NAV.ny[id], z = NAV.nz[id];
+    // (2026-11-27, o Thiago: "não vi nenhuma arma dentro das construções nem nas lajes") só teto em cima contava, e barraca,
+    // guarda-sol, sacada e copa de árvore viravam "construção": a arma caía na rua debaixo de uma lona. Agora, dentro de construção
+    // é teto a até BR_LOOT_TETO m E parede em pelo menos 3 dos 4 lados (até BR_LOOT_PAREDE m); laje é mais de BR_LOOT_LAJE m acima
+    // do chão, sem teto
     const teto = ceilingAbove(x, z, y + 0.3, 0.3) < y + BR_LOOT_TETO;
-    if (teto || y > gy0(x, z) + BR_LOOT_LAJE) out.push([x, y, z]);
+    if (teto ? brParedes(x, y, z) >= 3 : y > gy0(x, z) + BR_LOOT_LAJE) out.push([x, y, z]);
   }
   return out;
 }
@@ -268,7 +275,7 @@ function brLimpa() {
 function brInicio() {
   BR.ordem = 0; BR.armado = false; BR.avisouQueda = false; BR.T0 = MATCH.timeLeft; BR.estado = ''; BR.botT = 0; BR.ver = null; BR.cam = null; BR.lugar = 0;
   for (const e of entities) { e.brOut = 0; e.brT = 0; }
-  DROP.life = 1e9; DROP.max = 80;
+  DROP.life = 1e9; DROP.max = 160; // (160: mapa com muitos marcadores de arma, mais as que caem dos mortos)
   const seed = MATCH.online ? brHash(String(netCodeNow() || '') + '|' + CURMAP.id) : (Math.random() * 4294967296) >>> 0;
   BR.plano = brPlano(brRng(seed));
   brLoot(brRng(seed ^ 0x9e3779b9));

@@ -1,22 +1,20 @@
-# Tiro: marcadores do Battle royale na Favela Grande e armas de fato dentro das construções
+# Tiro: Battle royale em dupla (cair e levantar o parceiro)
 
-O Thiago jogou e não viu nenhuma arma dentro das construções nem nas lajes. Pediu também os marcadores do BR na Favela Grande.
+Pedido do Thiago: "cria um modo DUO para o BR. Caso um caia, o outro reanima e tal."
 
-**Por que não aparecia:** a escolha automática (#1074) contava como "dentro de construção" qualquer ponto com algo em cima. Barraca, guarda-sol, sacada e copa de árvore viravam construção, e a arma caía na rua debaixo de uma lona. "Laje" era qualquer ponto a 1,5 m do chão, o que inclui escadas e muretas.
+**Modo novo no menu: "BR em dupla"** (solo e salão, até 12, robôs completando):
+- **6 duplas.** As duplas saem da ordem de largada do jogo: no salão, as pessoas por ordem de identificador e depois os robôs do host (então duas pessoas num salão caem na mesma dupla); no solo, você e um robô. A conta é a mesma em todas as máquinas e fica fixa no "Vai!";
+- **o parceiro é aliado**: não leva tiro seu, aparece em claro e no minimapa. A dupla cai do céu junta, a 3 m uma da outra;
+- **cair em vez de morrer**: o tiro que mataria, com o parceiro de pé, derruba. Quem cai fica agachado, não atira e não mira, com **30 s** de vida que também caem com tiro. Um anel no chão marca quem está caído (azul o seu parceiro, vermelho os outros);
+- **levantar**: o parceiro chega perto (até 1,9 m) e fica **4 s sem atirar**, sem botão (funciona no PC, no controle e no tablet), e o caído volta com **30 de vida**. Um aviso na tela conta o tempo dos dois lados;
+- **morre de vez** quem sangra até o fim, leva o tiro final caído, cai do mapa ou fica caído sem parceiro de pé;
+- **robôs**: com o parceiro caído e sem inimigo à vista, vão até ele e levantam; robô caído fica parado agachado;
+- **a dupla sai quando os dois morrem**; a última dupla de pé vence e **os dois ganham**. O placar do fim é por dupla, o do jogo mostra "N duplas vivas" e, morto, a câmera segue o parceiro.
 
-**A regra automática agora** (vale para os mapas sem marcador):
-- dentro de construção: teto a até 4,5 m **e** parede em pelo menos 3 dos 4 lados (até 7 m, na altura do peito);
-- laje: mais de 2,5 m acima do chão, sem teto.
+**Rede:** cada máquina decide sobre os seus soldados, como nas mortes. "Caiu"/"levantou" vão como evento `brc` e "levantei o meu parceiro" como `brv`, e a máquina do caído levanta ele.
 
-**Marcadores na Favela Grande** (o gerador põe sozinho, em `br` do `.json`):
-- **70 armas**, a pelo menos 20 m umas das outras:
-  - **30 em lajes**: terraços dos prédios com escada (pelo lado, pelos fundos e até o telhado), lajes dos Telhados e do bloco leste da Favela, teto do galpão da Rodoviária;
-  - **40 dentro**: casas com porta, casa em obra, alpendre da casa azul, canto coberto do prédio de esquina, contêineres abertos do Ferro-velho e dentro do galpão;
-- **19 coletes e 36 curas** dentro das casas, a 16 m umas das outras;
-- o centro da zona e as largadas continuam automáticos.
+**Arquivos:** `ferramentas/tiro-br-dupla.js` (novo, entra logo depois do `tiro-br.js`); no `tiro-br.js`, `brModo()` para os dois battle royale; no `tiro-frontline.js`, a injeção do arquivo novo e os testes de modo do menu.
 
-As posições dentro de cada prédio saem dos blocos do kit (o térreo, a laje e o quarto de cima de cada um). Como o mapa tem muitas armas marcadas, o limite de armas no chão do Battle royale subiu de 80 para 160.
-
-Conferido só com `node --check` (o gerador, o `tiro-br.js` e o script do jogo montado); não joguei.
+Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei, nem sozinho nem em dupla no salão.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

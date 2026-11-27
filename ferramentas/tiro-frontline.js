@@ -362,6 +362,10 @@ if (IATE_ATIVO) {
   h = troca(h, "_gpick.set(r.x,b.pos.y,r.z)", "_gpick.set(r.x,r.y!==undefined?r.y:b.pos.y,r.z)", { nome: "bots: destino na altura do inimigo (vingança)" });
   h = troca(h, "_gpick.set(I.x,b.pos.y,I.z)", "_gpick.set(I.x,I.y!==undefined?I.y:b.pos.y,I.z)", { nome: "bots: destino na altura do inimigo (aviso)" });
   h = troca(h, "_gpick.set(q.x,b.pos.y,q.z)", "_gpick.set(q.x,q.y!==undefined?q.y:b.pos.y,q.z)", { nome: "bots: destino na altura do inimigo (radar)" });
+  // (2026-11-26) elo: no fim de uma partida online de time, manda o placar e quem jogou para o perfil-galera.js (window.tiroElo),
+  // que fala com o servidor (servidor/jogos/tiro-elo.js). f: o desempenho no próprio time (1 = melhor do placar, 0 = pior)
+  h = troca(h, "if(MATCH.online)netMatchEnded();arsLocalXp(o.result);acctMatchEnd(o.result,true);}",
+    "if(MATCH.online)netMatchEnded();arsLocalXp(o.result);acctMatchEnd(o.result,true);if(MATCH.online&&MATCH.mode!=='ffa'&&window.tiroElo){try{const gente=[0,1].flatMap(boardList).filter((x)=>x.isPlayer||(x.isRemote&&!x.remoteBot)),nm=(x)=>netClean(x.isPlayer?NET.nick:x.name),meu=boardList(me.team),k=meu.indexOf(me);window.tiroElo.fim({sala:NET.code,modo:MATCH.mode,mapa:NET.cfg.map,placar:[MATCH.score[0],MATCH.score[1]],humanos:gente.map((x)=>({n:nm(x),t:x.team})),eu:{n:nm(me),t:me.team,f:meu.length>1?1-k/(meu.length-1):1}});}catch(e){console.warn('elo',e);}}}", { nome: "elo: resultado no fim da partida" });
   h = troca(h, "DOM.pts=defs.map(([x,z],i)=>{const id=navNode(x,gy0(x,z),z)", "DOM.pts=defs.map(([x,z,yy],i)=>{const id=navNode(x,yy!==undefined?yy:gy0(x,z),z)", { nome: "altura dos pontos de dominação" });
 }
 

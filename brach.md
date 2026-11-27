@@ -1,17 +1,15 @@
-# Tiro: caixas de colete e de cura no Battle royale
+# Tiro: entrada caindo de cima no Battle royale
 
-No Battle royale, além das armas, o chão agora tem caixas (umas 35% de colete e 45% de cura em relação ao número de armas do mapa), nos pontos de passagem e com a mesma semente das armas.
+No começo do Battle royale, cada um nasce **60 m acima** do seu lugar de largada:
+- durante a **contagem** fica parado no ar, olhando o mapa de cima (dá pra ver onde estão as armas e as caixas);
+- no **"Vai!"** cai rápido (16 m/s) e, a **18 m do chão**, abre um **paraquedas** laranja e desce devagar (5,5 m/s), sem tranco no pouso;
+- no ar, as **teclas de andar fazem planar** (10 m/s na queda livre, 7 m/s de paraquedas) para escolher onde cair. Aparece o aviso "Ande para planar e escolher onde cair";
+- os **robôs** caem em linha reta no lugar deles;
+- só cai de cima quem tem **céu aberto** em cima do lugar. Quem nasce embaixo de um teto, sacada ou árvore nasce no chão, como antes, para ninguém ficar preso num telhado;
+- o paraquedas aparece em todo mundo que está descendo, inclusive os outros jogadores do salão (pela altura que chega pela rede).
 
-- **Colete** (caixa azul com um escudo): +50 de colete, até 100. O colete segura **60% de cada dano** de tiro, grenada ou faca até acabar. A zona passa direto por ele. Aparece como uma **barra azul** embaixo da barra de vida, que agora também aparece com a vida cheia quando você tem colete.
-- **Cura** (caixa branca com cruz vermelha): **+50 de vida**, até 100.
-- Pega-se **passando por cima**, só quando precisa: com a vida cheia a cura fica no chão; com 100 de colete, o colete também.
-- **Robôs** também pegam. Machucados (vida abaixo de 60), vão atrás de cura perto; sem colete, às vezes vão atrás de um.
-- Morreu, o colete some.
+Feito em `ferramentas/tiro-br.js`, no mesmo ponto em que a zona confere cada soldado depois do passo (`ringCheck`).
 
-**Em rede:** como as armas do chão, as caixas não vão pela rede. A caixa que outro jogador pisa some na sua tela também, mas o efeito é só na máquina dele. Como quem atira não sabe o colete do outro, no Battle royale a morte não é mais "prevista" na hora do tiro: ela aparece quando chega o aviso de quem morreu (uma fração de segundo depois, conforme o ping).
-
-Feito em `ferramentas/tiro-br.js`; em `ferramentas/tiro-frontline.js`, só a troca que deixa a barra de vida aparecer com colete.
-
-Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
+Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -1,11 +1,12 @@
-# Tiro: modo tablet liga mesmo com a resolução dinâmica desligada
+# Tiro: modo tablet fica ligado depois que a resolução desiste
 
-O relatório do Mi Pad mostrou `hf 1` na partida inteira: o modo tablet (#1060) não ligou. Ele dependia da taxa da tela (`HR.ms`), que só era medida no `hrAlvo`, e o `hrAlvo` só roda com a "Resolução dinâmica" ligada. O amigo jogava com ela desligada.
+Relatório novo do Mi Pad (resolução dinâmica ligada):
 
-Agora o `tabLeve` mede a taxa sozinho, então o modo tablet liga em qualquer configuração.
+- **Com o modo tablet (`hf` 2):** nos primeiros 11 s, os bots caíram para 0,4 ms e o jogo ficou entre 102 e 106 fps. Na partida toda, 72,6% dos quadros saíram a 120 (antes, 54%), e a média subiu de 79 para 92 fps.
+- **O que desligava o modo:** aos 12 s a resolução dinâmica já tinha descido a 70%. Isso não ajuda quando o gargalo é o processador. Ela desistiu dos 120 (`HR.off`), e o `tabLeve` desligava junto: o `hf` voltava a 1 e os bots, a 1,3 a 2,8 ms.
 
-O mesmo relatório confirma o diagnóstico: o processador gasta uns 7 ms por quadro (render 4,3 e bots 1,2), quase no limite de 8,3 ms dos 120 fps. Metade dos quadros sai a 120 e a outra metade a 60 (54% em 8,4 ms e 42% em 16,6 ms). Com o modo tablet ligado, os bots pensam a cada dois quadros e menos coisa é desenhada ao longe.
+Agora o modo tablet só depende de a tela ser rápida. A desistência da resolução não mexe mais nele.
 
-Conferido no navegador: a taxa da tela é medida com a resolução dinâmica desligada. Falta jogar no Mi Pad.
+Conferido com `node --check`; falta jogar no tablet.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

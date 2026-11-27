@@ -397,10 +397,12 @@ if (IATE_ATIVO) {
   // - os detalhes do mapa somem mais perto (75% da distância; os espalhados, 70%) e a conta de quem aparece é a cada 4 quadros;
   // - os soldados longe passam para o modelo simples mais cedo (lodPx 1,4 vez), o que também tira o pano (clothUpdate) deles
   h = troca(h, "const HF={k:1};function hfUpdate(fps){HF.k=fps>(HF.k>=3?290:340)?3:fps>(HF.k>=2?150:175)?2:1;}",
-    "const HF={k:1};function tabLeve(){if(VSYNC.ms>=6&&VSYNC.ms<HR.ms)HR.ms=VSYNC.ms;return COARSE&&!HR.off&&!Settings.eco&&HR.ms<12;}function hfUpdate(fps){HF.k=fps>(HF.k>=3?290:340)?3:fps>(HF.k>=2?150:175)?2:1;if(HF.k<2&&tabLeve()&&fps>70)HF.k=2;}",
+    "const HF={k:1};function tabLeve(){if(VSYNC.ms>=6&&VSYNC.ms<HR.ms)HR.ms=VSYNC.ms;return COARSE&&!Settings.eco&&HR.ms<12;}function hfUpdate(fps){HF.k=fps>(HF.k>=3?290:340)?3:fps>(HF.k>=2?150:175)?2:1;if(HF.k<2&&tabLeve()&&fps>70)HF.k=2;}",
     { nome: "modo tablet (bots a cada dois quadros)" });
   // (2026-11-27) o modo tablet não ligava com a "Resolução dinâmica" desligada: a taxa da tela (HR.ms) só era medida no
   // hrAlvo, que só roda com ela ligada. O relatório do Mi Pad mostrou hf 1 o partida inteira. Agora o tabLeve mede sozinho
+  // E não desliga mais quando a resolução dinâmica desiste dos 120 (HR.off): no Mi Pad ela baixou a resolução até 70%, o que
+  // não ajuda quando o gargalo é o processador, desistiu aos 12 s e levou o modo tablet junto (hf voltou a 1, bots de 0,4 para 1,3 a 2,8 ms)
   h = troca(h, "function updateMapDetail(){const p=camera.position;for(const[list,d]of[[WORLD.fine,RQ.q.detail||60],[WORLD.scatter,RQ.q.scatter||30]]){",
     "function updateMapDetail(){const tl=tabLeve();if(tl&&frameN%4!==0)return;const p=camera.position;for(const[list,d]of[[WORLD.fine,(RQ.q.detail||60)*(tl?0.75:1)],[WORLD.scatter,(RQ.q.scatter||30)*(tl?0.7:1)]]){",
     { nome: "modo tablet (detalhes do mapa)" });

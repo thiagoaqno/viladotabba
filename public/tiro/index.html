@@ -12917,8 +12917,33 @@ function brEspectar(dt) {
     if (weapon === NET_WSPECIAL.zone && (!a || a === PL.ent)) $('deathBy').innerHTML = '<b>Pego pela zona</b>';
     brDeathTxt();
   };
+  // minimapa (2026-11-27): domMinimap desenha nas coordenadas do mapa (já giradas e centradas no jogador), logo depois do plano
+  const domMinimap0 = domMinimap;
+  domMinimap = function (g, scale, yaw) { domMinimap0(g, scale, yaw); if (BR.on && BR.z && MATCH.state === 'playing') brMinimapa(g, scale); };
   const deathPrompt0 = deathPrompt;
   deathPrompt = function () { deathPrompt0(); brDeathTxt(); };
+}
+/* A zona no minimapa: fora dela escurece em azul, a borda atual é uma linha azul cheia e a próxima (para onde ela vai fechar) uma
+   linha branca tracejada. Fora da zona, um tracejado azul liga o jogador ao ponto mais perto da borda. */
+function brMinimapa(g, s) {
+  const z = BR.z, A = z.alvo, e = PL.ent;
+  g.save();
+  if (z.r > 0.5) {
+    g.fillStyle = 'rgba(30,90,200,0.28)';
+    g.beginPath(); g.arc(z.x * s, z.z * s, 4000, 0, TAU); g.arc(z.x * s, z.z * s, z.r * s, 0, TAU, true); g.fill();
+    g.strokeStyle = 'rgba(80,170,255,0.95)'; g.lineWidth = 2.2;
+    g.beginPath(); g.arc(z.x * s, z.z * s, z.r * s, 0, TAU); g.stroke();
+  } else { g.fillStyle = 'rgba(30,90,200,0.28)'; g.fillRect(-4000, -4000, 8000, 8000); }
+  if (A.r > 0.5 && A.r < z.r - 0.5) {
+    g.setLineDash([5, 4]); g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 1.6;
+    g.beginPath(); g.arc(A.x * s, A.z * s, A.r * s, 0, TAU); g.stroke();
+  }
+  if (e && e.alive && z.r > 0.5 && !brDentroZ(z, e.pos.x, e.pos.z)) {
+    const dx = z.x - e.pos.x, dz = z.z - e.pos.z, d = Math.hypot(dx, dz) || 1, k = (d - z.r) / d;
+    g.setLineDash([4, 3]); g.strokeStyle = 'rgba(80,170,255,0.95)'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(e.pos.x * s, e.pos.z * s); g.lineTo((e.pos.x + dx * k) * s, (e.pos.z + dz * k) * s); g.stroke();
+  }
+  g.restore();
 }
 function brDeathTxt() {
   if (!BR.on || !PL.ent.brOut) return;

@@ -7729,11 +7729,11 @@ row.setAttribute('aria-disabled',String(f!==null));};row.appendChild(box);O.sync
 body.appendChild(row);}};OPT_TABS.forEach(([name],i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.textContent=name;b.addEventListener('click',()=>{show(i);sfxUi('tab');});tabs.appendChild(b);});O.rebuild=()=>show(cur);show(0);OPTS.push(O);return O;}
 function syncOptions(){for(const O of OPTS)for(const f of O.syncs)f();}
 function syncSettings(){syncOptions();}
-function matchRows(o){const MD=MODES[o.mode]||MODES.tdm,ffa=brSolo(o.mode),diffs=DIFF.map((d,i)=>[i,d.name]),set=(k)=>(v)=>o.set(k,v),dis=!o.edit;const teams=o.mode==='br'||!o.online?MD.teams:ffa?(o.bots?_t('Jusqu\u0027à 8 joueurs, complétés par des bots'):_t('Chacun pour soi, joueurs humains seulement')):o.bots?_t('6 contre 6, complétés par des bots'):_t('Deux équipes, joueurs humains seulement');const rows=[];if(dis)rows.push({k:'note',text:o.note||_t('Réglés par l\u0027hôte')});rows.push({k:'seg',full:true,wide:true,key:'mode',label:_t('Mode'),items:MODE_IDS.filter((id)=>id!=='dom'||MAP_DEFS[o.map].dom).map((id)=>[id,MODES[id].btn]),get:()=>o.mode,set:set('mode'),disabled:dis},{k:'note',cls:'hint',text:MD.hint},{k:'info',label:_t('Joueurs'),value:teams},{k:'seg',full:true,wide:o.online,key:'bots',label:o.online?_t('Bots'):_t('Difficulté des bots'),items:o.online?[['off',_t('Aucun')],...diffs]:diffs,get:()=>(o.online&&!o.bots?'off':o.diff),set:set('bots'),disabled:dis});if(!o.online||o.bots)rows.push({k:'note',cls:'hint',text:DIFF_HINT[o.diff]});rows.push({k:'seg',full:true,key:'limit',label:MD.lim,items:MD.limits.map((v)=>[v,String(v)]),get:()=>o.limit,set:set('limit'),disabled:dis},{k:'seg',full:true,key:'time',label:_t('Durée maximale'),items:[5,10,15].map((v)=>[v,v+' min']),get:()=>o.time,set:set('time'),disabled:dis});if(o.pubOk)rows.push({k:'seg',full:true,key:'pub',label:_t('Salon'),items:[[0,_t('Privé')],[1,_t('Public')]],get:()=>(o.pub?1:0),set:set('pub'),disabled:dis});return rows;}
+function matchRows(o){const MD=MODES[o.mode]||MODES.tdm,ffa=brSolo(o.mode),diffs=DIFF.map((d,i)=>[i,d.name]),set=(k)=>(v)=>o.set(k,v),dis=!o.edit;const teams=brModo(o.mode)||!o.online?MD.teams:ffa?(o.bots?_t('Jusqu\u0027à 8 joueurs, complétés par des bots'):_t('Chacun pour soi, joueurs humains seulement')):o.bots?_t('6 contre 6, complétés par des bots'):_t('Deux équipes, joueurs humains seulement');const rows=[];if(dis)rows.push({k:'note',text:o.note||_t('Réglés par l\u0027hôte')});rows.push({k:'seg',full:true,wide:true,key:'mode',label:_t('Mode'),items:MODE_IDS.filter((id)=>id!=='dom'||MAP_DEFS[o.map].dom).map((id)=>[id,MODES[id].btn]),get:()=>o.mode,set:set('mode'),disabled:dis},{k:'note',cls:'hint',text:MD.hint},{k:'info',label:_t('Joueurs'),value:teams},{k:'seg',full:true,wide:o.online,key:'bots',label:o.online?_t('Bots'):_t('Difficulté des bots'),items:o.online?[['off',_t('Aucun')],...diffs]:diffs,get:()=>(o.online&&!o.bots?'off':o.diff),set:set('bots'),disabled:dis});if(!o.online||o.bots)rows.push({k:'note',cls:'hint',text:DIFF_HINT[o.diff]});rows.push({k:'seg',full:true,key:'limit',label:MD.lim,items:MD.limits.map((v)=>[v,String(v)]),get:()=>o.limit,set:set('limit'),disabled:dis},{k:'seg',full:true,key:'time',label:_t('Durée maximale'),items:[5,10,15].map((v)=>[v,v+' min']),get:()=>o.time,set:set('time'),disabled:dis});if(o.pubOk)rows.push({k:'seg',full:true,key:'pub',label:_t('Salon'),items:[[0,_t('Privé')],[1,_t('Public')]],get:()=>(o.pub?1:0),set:set('pub'),disabled:dis});return rows;}
 const mapSize=(m)=>(m.ok&&MAP_DEFS[m.id]?{close:_t('Petite'),mid:_t('Moyenne'),open:_t('Grande')}[MAP_DEFS[m.id].type]||'':'');function mapCards(selId,pick){return MAPS.map((m)=>({k:'card',key:m.id,label:m.name,tag:[m.tag,mapSize(m)].filter(Boolean).join(' · '),art:(m.ok&&MAP_ART[m.id])||'',on:m.id===selId,lock:!m.ok,badge:!m.ok?_t('Bientôt'):m.id===selId?_t('Sélectionnée'):'',disabled:!m.ok||!pick,pick:()=>pick(m.id),}));}
 function mapPreview(m,o){const MD=MODES[o.mode]||MODES.tdm,art=m.ok&&MAP_ART[m.id],mode=brSolo(o.mode)?MD.btn:MD.name;return(art?`<img class="mapart" alt="" decoding="async" src="${art}">`:'<span class="mapart none"></span>')+`<div class="pv-t"><b>${esc(m.name)}</b><span class="pv-m">${esc(mode)}</span><span class="pv-i">${esc(o.limit+' '+MD.unit+' · '+o.time+' min')}</span></div>`;}
 function lobbyMe(tags){const n=ACCT.user?ACCT.user.displayName:NET.nick;return{k:'player',key:'me',label:n||_t('Vous'),lv:playerLevel(),tags:n?[_t('vous'),...tags]:tags,me:true};}
-function soloStage(){const ffa=brSolo(Settings.mode),MD=MODES[Settings.mode]||MODES.tdm;const me=lobbyMe([]),bot=(n,i)=>({k:'player',key:'b'+i,label:n,bot:true});if(ffa){const all=[...BOT_NAMES[0],...BOT_NAMES[1]],idx=all.map((n,i)=>i),cut=all.length-(Settings.mode==='br'?11:FFA_BOTS);const off=new Set(idx.filter((i)=>i%3===1).concat(idx.slice().reverse()).filter((e,i,a)=>a.indexOf(e)===i).slice(0,cut));return{head:`<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`,cols:[{head:esc(_t('Chacun pour soi')),rows:[me,...all.filter((n,i)=>!off.has(i)).map(bot)]}]};}
+function soloStage(){const ffa=brSolo(Settings.mode),MD=MODES[Settings.mode]||MODES.tdm;const me=lobbyMe([]),bot=(n,i)=>({k:'player',key:'b'+i,label:n,bot:true});if(ffa){const all=[...BOT_NAMES[0],...BOT_NAMES[1]],idx=all.map((n,i)=>i),cut=all.length-(brModo(Settings.mode)?11:FFA_BOTS);const off=new Set(idx.filter((i)=>i%3===1).concat(idx.slice().reverse()).filter((e,i,a)=>a.indexOf(e)===i).slice(0,cut));return{head:`<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`,cols:[{head:esc(_t('Chacun pour soi')),rows:[me,...all.filter((n,i)=>!off.has(i)).map(bot)]}]};}
 return{head:`<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`,cols:[{cls:'ally',head:esc(TEAM_NAMES[0]),rows:[me,...BOT_NAMES[0].map(bot)]},{cls:'enemy',head:esc(TEAM_NAMES[1]),rows:BOT_NAMES[1].map((n,i)=>bot(n,10+i))},]};}
 function soloSet(k,v){if(k==='mode')Settings.mode=v;else if(k==='bots')Settings.difficulty=v;else if(k==='limit')Settings[MODES[Settings.mode].key]=v;else Settings.minutes=v;saveSettings();}
 function soloCfg(){const MD=MODES[Settings.mode]||MODES.tdm;return{map:Settings.map,mode:Settings.mode,diff:Settings.difficulty,limit:Settings[MD.key],time:Settings.minutes,online:false,edit:true,set:soloSet};}
@@ -13398,8 +13398,10 @@ if (/[?&]editor=1\b/.test(location.search)) { const go = () => setTimeout(() => 
    Por dentro a partida é um "cada um por si" (MATCH.mode = 'ffa'); BR.on diz que é battle royale. Em rede, a zona e as armas do
    chão saem da mesma semente em todo mundo (código do salão + mapa) e o relógio é o da partida (MATCH.timeLeft, que vem do host). */
 const BR = { on: false, ordem: 0, armado: false, T0: 0, z: null, plano: null, malha: null, estado: '', botT: 0, ver: null, cam: null, hudFora: null, roTxt: null, aviso: null, lugar: 0 };
-function brSolo(m) { return m === 'ffa' || m === 'br'; }
-function netMax() { return NET.cfg && NET.cfg.mode === 'br' ? 12 : NET_MAX; }
+// os dois battle royale: o de cada um por si ('br') e o em dupla ('brduo', ferramentas/tiro-br-dupla.js)
+function brModo(m) { return m === 'br' || m === 'brduo'; }
+function brSolo(m) { return m === 'ffa' || brModo(m); }
+function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? 12 : NET_MAX; }
 
 MODES.br = {
   name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 12 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
@@ -13762,7 +13764,7 @@ function brEspectar(dt) {
 /* ---------- as funções do jogo que mudam ---------- */
 {
   const modeStart0 = modeStart;
-  modeStart = function (mode) { brLimpa(); BR.on = mode === 'br'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? MODES.br : D; };
+  modeStart = function (mode) { brLimpa(); BR.on = brModo(mode); BR.duo = mode === 'brduo'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? modeDef() : D; };
   const openSlots0 = openSlots;
   openSlots = function (e) { return BR.on && BR.slots && BR.slots.length ? BR.slots : openSlots0(e); };
   const modeDef0 = modeDef;
@@ -13912,6 +13914,218 @@ function brMinimapa(g, s) {
 function brDeathTxt() {
   if (!BR.on || !PL.ent.brOut) return;
   const s = $('death').querySelector('.skip'); if (s) hudHtml(s, esc(`Você ficou em ${BR.lugar}º · a partida segue sem você`));
+}
+
+/* BATTLE ROYALE EM DUPLA do Tiro da Galera (2026-11-27, o Thiago: "cria um modo DUO para o BR. Caso um caia, o outro reanima").
+   Entra no jogo montado por ferramentas/tiro-frontline.js logo depois do ferramentas/tiro-br.js, no mesmo script, e troca
+   algumas funções de novo (chamando a anterior). Vale só com BR.duo (o modo 'brduo'); fora dele nada muda.
+   Regras:
+   - 6 duplas (12 no salão, robôs completando). As duplas saem da ordem de largada do jogo (openRank): no salão, as pessoas
+     por ordem de identificador e depois os robôs do host; no solo, você e o primeiro robô. A conta é a mesma em todas as máquinas
+     (netIdOf) e fica fixa no "Vai!";
+   - o parceiro é aliado: não leva tiro seu, aparece em claro e no minimapa; a dupla cai perto uma da outra (3 m);
+   - quem leva o tiro que mataria, com o parceiro de pé, CAI: fica agachado, sem atirar, com BR_CAIDO.tempo s de vida (que
+     também cai com tiro); o parceiro fica perto (até BR_CAIDO.raio m) por BR_CAIDO.levantar s sem atirar e ele levanta com
+     BR_CAIDO.volta de vida. Sangrou até o fim, levou o tiro final ou o parceiro morreu: morre de vez;
+   - a dupla sai quando os dois morrem; a última dupla de pé vence (os dois ganham). O placar do fim é por dupla.
+   Rede: cada máquina decide sobre os soldados dela (o jogador, e os robôs no host), como nas mortes. "Caiu"/"levantou" vão
+   como evento 'brc' (c: 1 ou 0) do soldado; "reanimei o meu parceiro" como 'brv' (to: id dele), e a máquina dele levanta. */
+const BR_CAIDO = { tempo: 30, raio: 1.9, levantar: 4, volta: 30 };
+
+MODES.brduo = Object.assign({}, MODES.br, {
+  name: 'Battle royale em dupla', btn: 'BR em dupla', sub: 'Battle royale em dupla, a última dupla vence', teams: 'Até 12 jogadores, 6 duplas',
+  hint: 'Duplas de dois. Quem cai fica 30 s no chão: o parceiro chega perto e fica 4 s sem atirar para levantar ele. A última dupla de pé vence.',
+});
+MODE_IDS.push('brduo');
+
+const brLocal = (e) => e.isPlayer || (!e.isRemote && (!MATCH.online || e.netBot));
+const brDupla = (e) => (e && e.brDuo != null ? e.brDuo : -1);
+function brParceiro(e) { const d = brDupla(e); if (d < 0) return null; for (const o of ffaList()) if (o !== e && o.brDuo === d) return o; return null; }
+const brDePe = (e) => !!e && e.alive && !e.brOut && !e.brCaido;
+
+/* ---------- as duplas ---------- */
+// a mesma ordem do openRank (09i-modes.js), mas para todos (inclusive os de outras máquinas): pessoas por identificador, depois robôs
+function brDuplasMontar() {
+  const L = ffaList(); let ord;
+  if (!MATCH.online) ord = L.slice().sort((a, b) => b.isPlayer - a.isPlayer || entities.indexOf(a) - entities.indexOf(b));
+  else {
+    const k = (e) => String(netIdOf(e) || ''), robo = (e) => k(e).includes('~b'), n = (e) => +k(e).split('~b')[1] || 0;
+    ord = L.slice().sort((a, b) => robo(a) - robo(b) || (robo(a) ? n(a) - n(b) : k(a) < k(b) ? -1 : k(a) > k(b) ? 1 : 0));
+  }
+  let mudou = false;
+  ord.forEach((e, i) => { const d = Math.floor(i / 2); if (e.brDuo !== d) { e.brDuo = d; mudou = true; } });
+  if (mudou) soldierLookAll(); // o parceiro em claro, os outros em escuro
+}
+
+/* ---------- cair, sangrar, levantar ---------- */
+function brCair(v, a, weapon) {
+  v.brCaido = true; v.brCaidoT = MATCH.time; v.health = 100; v.brCaidoPor = a && a !== v ? a : null; v.brCaidoArma = weapon; v.brRevT = 0;
+  v.protT = 0; v.target = null;
+  if (MATCH.online) netEvent({ k: 'brc', c: 1 }, v);
+  if (v.isPlayer) { hudMsg('Você caiu! Seu parceiro pode te levantar', 'enemy', 3); PL.reload = null; }
+  else if (a && a.isPlayer) hudMsg('Derrubado: ' + v.name, 'xp', 1.6);
+}
+function brLevantar(v) {
+  if (!v.brCaido || !v.alive) return;
+  v.brCaido = false; v.brRevT = 0; v.health = BR_CAIDO.volta;
+  if (MATCH.online && brLocal(v)) netEvent({ k: 'brc', c: 0 }, v);
+  if (v.isPlayer) { PL.crouchToggle = false; VM.lowerTarget = 0; hudMsg('Você foi levantado!', 'xp', 2); }
+}
+// morte de vez de quem estava caído (sangrou ou ficou sem parceiro): o abate é de quem derrubou
+function brMorrerCaido(v) {
+  v.health = 0; const a = v.brCaidoPor && entities.includes(v.brCaidoPor) ? v.brCaidoPor : v;
+  killEnt(v, a, v.brCaidoArma || NET_WSPECIAL.zone, false, new V3(0, 0, -1));
+}
+
+/* ---------- a cada quadro ---------- */
+function brDuplaUpdate(dt) {
+  if (OPEN.on || playHold()) brDuplasMontar(); // até o "Vai!"
+  const eu = PL.ent;
+  let txt = '';
+  for (const e of ffaList()) {
+    if (!e.alive || e.brOut) continue;
+    const p = brParceiro(e);
+    // caído desta máquina: sangra; sem parceiro de pé (morto ou caído também), morre
+    if (e.brCaido && brLocal(e)) {
+      e.health -= (100 / BR_CAIDO.tempo) * dt;
+      if (e.health <= 0 || !p || p.brOut || !p.alive) { brMorrerCaido(e); continue; }
+      if (e.isPlayer) txt = `Caído: ${Math.ceil(e.health * BR_CAIDO.tempo / 100)} s · fique perto do parceiro para ele te levantar`;
+    }
+    // reanimar: o parceiro de pé, desta máquina, perto do caído e sem atirar
+    if (!e.brCaido && brLocal(e) && p && p.brCaido && p.alive) {
+      const perto = hyp(p.pos.x - e.pos.x, p.pos.z - e.pos.z) < BR_CAIDO.raio && Math.abs(p.pos.y - e.pos.y) < 1.5, quieto = MATCH.time - (e.lastShotT || -9) > 0.6;
+      e.brRevT = perto && quieto ? (e.brRevT || 0) + dt : 0;
+      if (e.isPlayer) txt = perto ? (quieto ? `Levantando ${p.name}: ${Math.max(0, BR_CAIDO.levantar - e.brRevT).toFixed(1)} s` : 'Pare de atirar para levantar o parceiro') : `${p.name} caiu: chegue perto para levantar`;
+      if (e.brRevT >= BR_CAIDO.levantar) {
+        e.brRevT = 0;
+        if (brLocal(p)) brLevantar(p); else netEvent({ k: 'brv', to: netIdOf(p) }, e);
+      }
+    } else if (!e.brCaido) e.brRevT = 0;
+  }
+  // robôs desta máquina com o parceiro caído e sem inimigo à vista: vão até ele
+  for (const b of ffaList()) {
+    if (b.isPlayer || !brLocal(b) || !brDePe(b) || b.visible) continue;
+    const p = brParceiro(b); if (!p || !p.brCaido || !p.alive) continue;
+    if ((b.brIrT = (b.brIrT || 0) - dt) > 0) continue;
+    b.brIrT = 1;
+    if (hyp(p.pos.x - b.pos.x, p.pos.z - b.pos.z) > 1.2) { if (b.tactic !== 'roam') { releaseCover(b); b.tactic = 'roam'; } b.holdT = 0; setPath(b, new V3(p.pos.x, p.pos.y, p.pos.z)); }
+  }
+  if (eu.alive && !eu.brOut && txt) brAvisoDupla(txt); else if (!eu.brOut) brAvisoDupla('');
+  brMarcasCaidos();
+}
+function brAvisoDupla(t) {
+  if (!BR.avisoD) {
+    BR.avisoD = document.createElement('div');
+    BR.avisoD.style.cssText = 'position:fixed;left:50%;bottom:22%;transform:translateX(-50%);padding:.45em 1em;background:rgba(120,10,10,.72);color:#fff;font:600 16px/1.3 system-ui,sans-serif;border-radius:6px;z-index:60;pointer-events:none;text-align:center';
+    document.body.appendChild(BR.avisoD);
+  }
+  if (BR.avisoDT === t) return; BR.avisoDT = t;
+  BR.avisoD.style.display = t ? '' : 'none'; BR.avisoD.textContent = t;
+}
+// um anel vermelho no chão em volta de quem está caído (de todos), para achar e para saber que ele não atira
+function brMarcasCaidos() {
+  const P = BR.aneis || (BR.aneis = []); let n = 0;
+  for (const e of entities) {
+    if (!e.alive || e.off || !e.brCaido || e === PL.ent) continue;
+    let m = P[n];
+    if (!m) { m = P[n] = new THREE.Mesh(BR.anelGeo || (BR.anelGeo = new THREE.RingGeometry(0.7, 0.95, 32)), new THREE.MeshBasicMaterial({ color: 0xff3030, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; scene.add(m); }
+    m.visible = true; m.material.color.setHex(e.brDuo === PL.ent.brDuo ? 0x40e0ff : 0xff3030); m.position.set(e.pos.x, e.pos.y + 0.06, e.pos.z); n++;
+  }
+  for (let i = n; i < P.length; i++) P[i].visible = false;
+}
+
+/* ---------- as funções que mudam ---------- */
+{
+  const modeDef1 = modeDef;
+  modeDef = function () { return BR.on && BR.duo && MATCH.mode === 'ffa' ? MODES.brduo : modeDef1(); };
+  const allied1 = allied;
+  allied = function (a, b) { return BR.on && BR.duo ? a === b || (!!a && !!b && a.brDuo != null && a.brDuo === b.brDuo) : allied1(a, b); };
+  const soundFoe1 = soundFoe;
+  soundFoe = function (s, b) { return BR.on && BR.duo ? !allied(s.who, b) : soundFoe1(s, b); };
+  const brInicio1 = brInicio;
+  brInicio = function () { for (const e of entities) { e.brDuo = null; e.brCaido = false; e.brRevT = 0; } brInicio1(); if (BR.duo) brDuplasMontar(); };
+  const brLimpa1 = brLimpa;
+  brLimpa = function () { brLimpa1(); for (const m of BR.aneis || []) scene.remove(m); BR.aneis = []; brAvisoDupla(''); for (const e of entities) { e.brCaido = false; e.brDuo = null; } };
+  const brUpdate1 = brUpdate;
+  brUpdate = function (dt) { brUpdate1(dt); if (BR.on && BR.duo && MATCH.state === 'playing') brDuplaUpdate(dt); };
+  // largadas: 6 lugares espalhados, a dupla junta (o segundo 3 m ao lado do primeiro, onde tiver céu aberto)
+  const brSlots1 = brSlots;
+  brSlots = function (rnd) {
+    const S = brSlots1(rnd); if (!BR.duo || S.length < 2) return S;
+    const base = S.slice(0, 6), out = [];
+    const aberto = (x, z) => { const y = gy0(x, z); return Math.abs(groundHeight(x, z, y + BR_QUEDA.alto, 0.35) - y) < 0.6; };
+    for (const [x, z] of base) {
+      out.push([x, z]);
+      const lado = [[3, 0], [-3, 0], [0, 3], [0, -3]].find(([dx, dz]) => aberto(x + dx, z + dz)) || [1.5, 0];
+      out.push([x + lado[0], z + lado[1]]);
+    }
+    return out;
+  };
+  // tiro que mataria alguém desta máquina com o parceiro de pé: ele cai em vez de morrer
+  const killEnt1 = killEnt;
+  killEnt = function (v, a, weapon, head, dir, life) {
+    if (BR.on && BR.duo && v.alive && !v.brCaido && brLocal(v) && weapon !== NET_WSPECIAL.fall && (MATCH.state === 'playing' || MATCH.state === 'paused') && !MATCH.fin && brDePe(brParceiro(v))) { brCair(v, a, weapon); return; }
+    if (BR.on && BR.duo) { v.brCaido = false; v.brRevT = 0; }
+    return killEnt1(v, a, weapon, head, dir, life);
+  };
+  // caído: o jogador não atira, não mira e fica agachado; o robô fica parado, agachado, sem pensar
+  const updatePlayer1 = updatePlayer;
+  updatePlayer = function (dt, now) {
+    if (BR.on && BR.duo && PL.ent.alive && PL.ent.brCaido) { PL.held = false; PL.queued = false; PL.runShot = false; PL.adsWant = false; PL.crouchToggle = true; VM.lowerTarget = 1; }
+    return updatePlayer1(dt, now);
+  };
+  const updateBot1 = updateBot;
+  updateBot = function (b, dt, now) {
+    if (BR.on && BR.duo && b.alive && b.brCaido) {
+      const I = b.input; I.mx = 0; I.mz = 0; I.sprint = false; I.jump = false; I.fire = false; I.firePressed = false; I.ads = false; I.crouch = true; b.wantCrouch = true;
+      ctlMove(b, dt); animSoldier(b, dt); if (voidCheck(b) || ringCheck(b, dt)) return; return;
+    }
+    return updateBot1(b, dt, now);
+  };
+  // os eventos da dupla que chegam pela rede
+  const netEventIn1 = netEventIn;
+  netEventIn = function (e, ev) {
+    if (ev && ev.k === 'brc') { if (BR.on && BR.duo && e) { e.brCaido = !!ev.c; if (!ev.c) e.brRevT = 0; } return; }
+    if (ev && ev.k === 'brv') { if (BR.on && BR.duo) { const t = netLocal(ev.to); if (t && t.brCaido && brParceiro(t) === e) brLevantar(t); } return; }
+    return netEventIn1(e, ev);
+  };
+  // fim, placar e o que se lê no placar: por dupla
+  const ffaAcabou1 = ffaAcabou;
+  ffaAcabou = function () {
+    if (!(BR.on && BR.duo)) return ffaAcabou1();
+    const L = ffaList(), duplas = new Set(L.map(brDupla)), vivas = new Set(L.filter((e) => !e.brOut).map(brDupla));
+    return duplas.size >= 2 && vivas.size <= 1;
+  };
+  const brCmp1 = brCmp;
+  const saidaDupla = (e) => { const p = brParceiro(e); return !e.brOut || (p && !p.brOut) ? 1e9 : Math.max(e.brOut, p ? p.brOut : 0); };
+  brCmp = function (a, b) { return BR.on && BR.duo ? saidaDupla(b) - saidaDupla(a) || brCmp1(a, b) : brCmp1(a, b); };
+  const brLinha1 = brLinha;
+  brLinha = function () {
+    if (!(BR.on && BR.duo)) return brLinha1();
+    const n = new Set(brVivos().map(brDupla)).size, t = brLinha1().replace(/^\d+ vivos/, '');
+    return `${n} ${n === 1 ? 'dupla viva' : 'duplas vivas'}${t}`;
+  };
+  // morto: segue o parceiro primeiro; o lugar é o da dupla, e só conta quando os dois saem
+  const brEspectar1 = brEspectar;
+  brEspectar = function (dt) {
+    const p = BR.on && BR.duo ? brParceiro(PL.ent) : null, vivo = !!p && p.alive && !p.brOut;
+    if (BR.on && BR.duo) { if (vivo) BR.ver = p; else BR.lugar = new Set(brVivos().map(brDupla)).size + 1; }
+    brEspectar1(dt);
+    if (vivo && BR.aviso) BR.aviso.textContent = 'Seu parceiro continua · assistindo ' + p.name;
+  };
+  const brDeathTxt1 = brDeathTxt;
+  brDeathTxt = function () {
+    const p = BR.on && BR.duo ? brParceiro(PL.ent) : null;
+    if (p && p.alive && !p.brOut && PL.ent.brOut) { const s = $('death').querySelector('.skip'); if (s) hudHtml(s, esc('Seu parceiro continua: a câmera segue ele')); return; }
+    return brDeathTxt1();
+  };
+  const matchOutcome1 = matchOutcome;
+  matchOutcome = function () {
+    const o = matchOutcome1();
+    if (!(BR.on && BR.duo) || MATCH.mode !== 'ffa') return o;
+    const top = ffaList().sort(ffaCmp)[0], win = !!top && brDupla(top) === brDupla(PL.ent), p = brParceiro(PL.ent);
+    return Object.assign(o, { result: win ? 'win' : 'loss', sub: win ? 'Sua dupla venceu' + (p ? ' com ' + p.name : '') : `A dupla de ${top ? top.name : '?'} venceu` });
+  };
 }
 
 if(!window.WebGLRenderingContext)$('loadMsg').textContent=_t('WebGL est indisponible sur ce navigateur.');else if(!pwaGate(boot))boot();

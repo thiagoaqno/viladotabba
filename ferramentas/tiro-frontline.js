@@ -434,8 +434,8 @@ if (IATE_ATIVO) {
   h = troca(h, "st.o!=='ffa'", "!brSolo(st.o)", { min: 3, nome: "BR: lista de salões" });
   h = troca(h, /NET_MAX(?!=8)/g, "netMax()", { min: 6, nome: "BR: salão de 12" });
   h = troca(h, "bots.length-FFA_BOTS", "bots.length-(BR.on?11:FFA_BOTS)", { nome: "BR: 11 robôs no solo" });
-  h = troca(h, "all.length-FFA_BOTS", "all.length-(Settings.mode==='br'?11:FFA_BOTS)", { nome: "BR: 11 robôs na tela do solo" });
-  h = troca(h, "const teams=!o.online?MD.teams:", "const teams=o.mode==='br'||!o.online?MD.teams:", { nome: "BR: texto de jogadores" });
+  h = troca(h, "all.length-FFA_BOTS", "all.length-(brModo(Settings.mode)?11:FFA_BOTS)", { nome: "BR: 11 robôs na tela do solo" });
+  h = troca(h, "const teams=!o.online?MD.teams:", "const teams=brModo(o.mode)||!o.online?MD.teams:", { nome: "BR: texto de jogadores" });
   h = troca(h, "ffaList().some((e)=>e.kills>=MATCH.limit)", "ffaAcabou()", { min: 3, nome: "BR: último vivo vence" });
   h = troca(h, "const ffaCmp=(a,b)=>", "const ffaCmp=(a,b)=>(BR.on?brCmp(a,b):0)||", { nome: "BR: classificação" });
   h = troca(h, "if(MATCH.mode==='ffa'&&(HUD.rkT-=dt)<=0){HUD.rkT=0.25;hudText($('scLim'),", "if(MATCH.mode==='ffa'&&(HUD.rkT-=dt)<=0){HUD.rkT=0.25;hudText($('scLim'),BR.on?brLinha():", { nome: "BR: vivos e zona no placar" });
@@ -446,6 +446,9 @@ if (IATE_ATIVO) {
   h = troca(h, "I.firePressed=false;I.ads=false;ctlMove(b,dt);animSoldier(b,dt);return;}", "I.firePressed=false;I.ads=false;ctlMove(b,dt);if(BR.on)brQuedaPasso(b,dt);animSoldier(b,dt);return;}", { nome: "BR: robôs parados no ar na contagem" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
+  // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script
+  const dupla = fs.readFileSync(path.join(__dirname, "tiro-br-dupla.js"), "utf8");
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => dupla + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale em dupla" });
 }
 
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador

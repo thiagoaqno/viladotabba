@@ -1,25 +1,21 @@
-# Editor de mapas do Tiro: selecionar, copiar e colar várias peças
+# Editor de mapas do Tiro: terreno deformado com pincel
 
-Pedido do Thiago: "uma função de copiar e colar vários elementos no editor de mapas".
+Pedido do Thiago: "seria legal eu conseguir criar um terreno meio deformado no editor de mapas".
 
-**Selecionar várias:**
-- **Shift+clique** (ou Ctrl+clique) põe e tira uma peça da seleção;
-- **Shift+arrastar** num lugar vazio desenha um retângulo e seleciona tudo o que cai dentro dele (pelo ponto de apoio de cada peça, na tela);
-- **Esc** solta a seleção. A peça principal fica com a caixa amarela e as outras com a caixa azul.
+**No editor** (botão **⛰ Terreno** na barra, que liga e desliga o modo terreno):
+- **Criar terreno**: uma grade com um ponto a cada 2 m, cobrindo as peças com 10 m de folga (até 320 x 320 m);
+- **botão esquerdo arrastado pinta**, o direito continua olhando e WASD andando; um círculo amarelo mostra o pincel deitado no chão;
+- pincéis **Subir**, **Descer**, **Aplanar** (até a altura de onde o arrasto começou, bom para assentar casas), **Suavizar** e **Zerar** (volta a y = 0);
+- **Raio** (1 a 25 m) e **Força** (0,5 a 12 m/s no meio do pincel, caindo até zero na borda); alturas de -20 a 40 m;
+- **Superfície** (as de chão, mais rocha e pedra) e **Cor**; **Zerar tudo** e **Apagar terreno**; Ctrl+Z desfaz cada pincelada;
+- as peças colocadas com o mouse se assentam em cima do terreno.
 
-**Mexer em várias de uma vez:**
-- **arrastar** uma delas move todas juntas (a clicada encaixa na grade e as outras andam o mesmo tanto);
-- **setas** e **PgUp/PgDn** empurram todas;
-- **R** gira o grupo 90° em volta do meio, cada peça andando e girando junto;
-- **Delete** apaga todas e **Ctrl+D** duplica todas.
+**No jogo** o terreno vira o relevo de verdade, o mesmo das dunas do Simoun (`MAP_DEFS.relief`, 02-relief.js). Por isso pisar, balas, granadas, robôs e a sombra do chão já usam ele. A malha que se vê é a grade de 1 m do próprio jogo, a mesma em que se pisa, na superfície escolhida. Com terreno o mapa deixa de ser "sem chão": fora da grade o chão fica em y = 0. Com mar ainda não funciona, porque o mapa com mar é "sem chão" e o relevo não vale.
 
-**Copiar e colar:**
-- **Ctrl+C** copia a seleção;
-- **Ctrl+V** cola onde o mouse aponta: o meio do grupo vai para o ponto e o pé da peça mais baixa fica no chão que o mouse acerta. As coladas ficam selecionadas, prontas para arrastar;
-- a cópia fica guardada no navegador, então **dá para copiar de um mapa e colar em outro**.
+**Arquivos:** `ferramentas/tiro-editor/editor.js` (o modo terreno), `mapa-json.js` (`edRelevoFn`, `edRelevoMalha`, limites e vazio), `texturas.js` (a foto do chão do terreno), e o guia em `docs/tiro-editor-de-mapas.md`. No `.json` fica em `relevo: { x0, z0, passo, nx, nz, m, cor, h }`.
 
-O painel da direita mostra os botões do grupo quando há várias peças selecionadas (Copiar, Colar, Duplicar, Girar 90°, Soltar, Apagar todas) e o botão Colar quando nada está selecionado. A barra de ajuda e o guia (`docs/tiro-editor-de-mapas.md`) explicam os atalhos novos.
+Montado de novo em cima da main depois do #1071 e do #1072 (o conflito no `editor.js` foi resolvido juntando as duas partes).
 
-Conferido só com `node --check` (o editor e o script do jogo montado); não abri o editor.
+Conferido só com `node --check` (os arquivos e o script do jogo montado); não abri o editor nem joguei um mapa com terreno.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

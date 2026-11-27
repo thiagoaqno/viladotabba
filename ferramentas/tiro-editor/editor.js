@@ -37,7 +37,7 @@ const edSnap = (v, s = ED.snap) => Math.round(v / s) * s;
 const edClone = (o) => JSON.parse(JSON.stringify(o));
 
 /* ---------- modelo: o .json <-> as peças da cena ---------- */
-const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa', 'ativo', 'ambiente'];
+const ED_EXTRA = ['poi', 'zonas', 'sniper', 'som', 'tipo', 'capa', 'ativo', 'ambiente', 'relevo'];
 function edDoJson(J) {
   const pecas = (J.pecas || []).map(edClone);
   for (const [x, z] of J.nascer || []) pecas.push({ t: 'nascer', p: [x, 0, z] });
@@ -176,6 +176,7 @@ function edRedesenhar() {
   const L = edSelLista();
   for (const it of ED.items) if (L.includes(it.P)) { const b = new THREE.BoxHelper(it.o, it.P === ED.sel ? 0xffcc33 : 0x33ccff); ED.scene.add(b); ED.boxes.push(b); }
   if (ED.mar) ED.mar.visible = !!ED.J.meta.mar; if (ED.mar && ED.J.meta.mar) ED.mar.position.y = ED.J.meta.mar.y;
+  edTerrenoMalha();
 }
 
 /* ---------- interface ---------- */
@@ -223,6 +224,8 @@ function edBarra() {
   const mm = () => { ED.J.meta.mar = mk.checked ? { y: +my.value || 0 } : null; edMudou(); }; mk.onchange = mm; my.onchange = mm; b.appendChild(mar);
   const bt = (rot, f, tit) => { const x = edEl('button', '', rot); x.onclick = f; if (tit) x.title = tit; b.appendChild(x); return x; };
   b.appendChild(edEl('span', 'flex:1'));
+  ED.btTerreno = bt('⛰ Terreno', () => { ED.modo = ED.modo === 'terreno' ? null : 'terreno'; ED.tpl = null; edFantasma(); edBarra(); edPainel(); }, 'Deformar o chão com um pincel (subir, descer, aplanar, suavizar)');
+  if (ED.modo === 'terreno') ED.btTerreno.className = 'on';
   bt('Salvar', edSalvar, 'Grava no projeto (Editor de mapas do Tiro.bat)'); bt('Baixar .json', edBaixar); bt('Abrir .json', edAbrirArquivo);
   bt('▶ Jogar', edJogar, 'Monta o mapa de verdade e começa uma partida solo com bots'); bt('Sair', () => { location.href = location.pathname; });
 }
@@ -369,6 +372,7 @@ function edFantasma() {
 
 /* ---------- painel da peça ---------- */
 function edPainel() {
+  if (ED.modo === 'terreno') return edPainelTerreno();
   const d = ED.dir, P = ED.sel; d.innerHTML = '';
   const n = ED.J.pecas, cont = (t) => n.filter((p) => p.t === t).length;
   d.appendChild(edEl('div', 'color:#aaa;font-size:12px;line-height:1.5', `<b style="color:#eee">${ED.J.meta.nome}</b> · id ${ED.J.meta.id}<br>${n.length} peças · ${cont('nascer')} nascer (+${cont('nascer')} Bravo espelhado) · ${cont('dom')}/3 pontos · ${cont('mecha')}/3 mecha`));
@@ -481,6 +485,7 @@ function edRaio(ev) {
 }
 function edAcerto(ev, ignorar) {
   const rc = edRaio(ev), objs = ED.items.filter((i) => i.P !== ignorar).map((i) => i.o);
+  if (ED.terreno) objs.push(ED.terreno); // o terreno conta como chão: as peças se colocam em cima dele
   const h = rc.intersectObjects(objs, true)[0];
   const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pt = new THREE.Vector3();
   const hp = rc.ray.intersectPlane(plano, pt) ? pt : null;
@@ -493,6 +498,7 @@ function edEventos() {
   cv.addEventListener('mousedown', (e) => {
     if (e.button === 2) { ED.olhar = { x: e.clientX, y: e.clientY }; return; }
     if (e.button !== 0) return;
+    if (ED.modo === 'terreno') { edPincelIni(e); return; } // modo terreno: o botão esquerdo pinta
     if (ED.tpl) {
       const a = edAcerto(e); if (!a) return;
       edAntes(); const P = Object.assign(edClone(ED.tpl.P), { p: [edSnap(a.p.x), +(a.p.y + (ED.tpl.oy || 0)).toFixed(3), edSnap(a.p.z)] });
@@ -529,6 +535,8 @@ function edEventos() {
     }
     if (ED.ghost && e.target === cv) { const a = edAcerto(e); if (a) { ED.ghost.position.set(edSnap(a.p.x), a.p.y + (ED.tpl.oy || 0), edSnap(a.p.z)); ED.ghostP.p = [ED.ghost.position.x, ED.ghost.position.y, ED.ghost.position.z]; } }
   });
+  addEventListener('mousemove', (e) => { if (ED.on && e.target === cv) ED.mouseT = { clientX: e.clientX, clientY: e.clientY }; });
+  addEventListener('mouseup', (e) => { if (ED.on && e.button === 0 && ED.pincel) edPincelFim(); });
   addEventListener('mouseup', (e) => {
     if (!ED.on) return; if (e.button === 2) ED.olhar = null;
     if (e.button === 0 && ED.ret) { edRetFim(e); return; }
@@ -580,6 +588,120 @@ function edEventos() {
   addEventListener('keydown', tecla, true); addEventListener('keyup', tecla, true);
   addEventListener('blur', () => ED.keys.clear());
 }
+/* ---------- terreno deformado (2026-11-27) ----------
+   O botão "⛰ Terreno" da barra liga o modo terreno: o painel da direita cria a grade (um ponto a cada 2 m, cobrindo as peças com
+   10 m de folga) e escolhe o pincel; o botão esquerdo arrastado pinta (o direito continua olhando, WASD andando). Pincéis: Subir,
+   Descer, Aplanar (até a altura de onde o arrasto começou), Suavizar e Zerar (volta a y = 0). Raio em m, força em m por segundo
+   no meio do pincel (cai até zero na borda). A grade vai no .json como "relevo" (mapa-json.js: edRelevoFn, edRelevoMalha). */
+const ED_PINCEIS = [['subir', 'Subir'], ['descer', 'Descer'], ['aplanar', 'Aplanar'], ['suavizar', 'Suavizar'], ['zerar', 'Zerar (y = 0)']];
+const ED_TERR = { pincel: 'subir', raio: 6, forca: 3, passo: 2, maxPontos: 161, hMin: -20, hMax: 40 };
+function edRelevo() { return (ED.J.meta.extra && ED.J.meta.extra.relevo) || null; }
+function edCriarTerreno() {
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  for (const P of ED.J.pecas) { const w = P.s ? Math.max(P.s[0], P.s[2] || 0) / 2 : 1; x0 = Math.min(x0, P.p[0] - w); x1 = Math.max(x1, P.p[0] + w); z0 = Math.min(z0, P.p[2] - w); z1 = Math.max(z1, P.p[2] + w); }
+  if (x0 > x1) { x0 = -40; x1 = 40; z0 = -40; z1 = 40; }
+  const s = ED_TERR.passo, M = ED_TERR.maxPontos;
+  x0 = Math.floor((x0 - 10) / s) * s; z0 = Math.floor((z0 - 10) / s) * s;
+  const nx = Math.min(M, Math.ceil((x1 + 10 - x0) / s) + 1), nz = Math.min(M, Math.ceil((z1 + 10 - z0) / s) + 1);
+  if (!ED.J.meta.extra) ED.J.meta.extra = {};
+  edAntes(); ED.J.meta.extra.relevo = { x0, z0, passo: s, nx, nz, m: 'dirt', h: new Array(nx * nz).fill(0) }; edMudou(true);
+  edMsg(`Terreno de ${(nx - 1) * s} x ${(nz - 1) * s} m criado: arraste com o botão esquerdo para pintar`, 4000);
+}
+function edTerrenoMalha() {
+  const R = edRelevo();
+  if (!R) { if (ED.terreno) { ED.scene.remove(ED.terreno); ED.terreno.geometry.dispose(); ED.terreno = null; ED.terrenoK = null; } return; }
+  const k = [R.x0, R.z0, R.passo, R.nx, R.nz, R.m, JSON.stringify(R.cor || null), R.tx || 1].join('|');
+  if (!ED.terreno || ED.terrenoK !== k) {
+    if (ED.terreno) { ED.scene.remove(ED.terreno); ED.terreno.geometry.dispose(); }
+    const W = (R.nx - 1) * R.passo, D = (R.nz - 1) * R.passo, g = new THREE.PlaneGeometry(W, D, R.nx - 1, R.nz - 1); g.rotateX(-Math.PI / 2);
+    const S = (TEXSCALE[R.m || 'dirt'] || 2) * (R.tx || 1), pos = g.attributes.position, uv = g.attributes.uv; // uv em metros, como no jogo
+    for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + R.x0 + W / 2) / S, -(pos.getZ(i) + R.z0 + D / 2) / S);
+    const m = new THREE.MeshStandardMaterial({ color: edCorHex(R.cor || [1, 1, 1]), map: edTex3(R.m || 'dirt'), roughness: 0.9 });
+    ED.terreno = new THREE.Mesh(g, m); ED.terreno.position.set(R.x0 + W / 2, 0, R.z0 + D / 2); ED.terreno.userData.terreno = true;
+    ED.scene.add(ED.terreno); ED.terrenoK = k;
+  }
+  edTerrenoAltura();
+}
+function edTerrenoAltura() {
+  const R = edRelevo(), T = ED.terreno; if (!R || !T) return;
+  const pos = T.geometry.attributes.position; for (let i = 0; i < pos.count; i++) pos.setY(i, R.h[i] || 0);
+  pos.needsUpdate = true; T.geometry.computeVertexNormals(); T.geometry.computeBoundingBox(); T.geometry.computeBoundingSphere();
+}
+// onde o pincel está: no terreno, ou no chão y = 0 fora dele
+function edPincelPonto() {
+  const ev = ED.mouseT; if (!ev) return null;
+  const rc = edRaio(ev);
+  if (ED.terreno) { const h = rc.intersectObject(ED.terreno, false)[0]; if (h) return h.point; }
+  const pt = new THREE.Vector3(); return rc.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pt) ? pt : null;
+}
+function edPincelIni(e) {
+  if (!edRelevo()) return edMsg('Crie o terreno primeiro (botão no painel da direita).');
+  ED.mouseT = { clientX: e.clientX, clientY: e.clientY };
+  edAntes(); const p = edPincelPonto(); ED.pincel = { alvo: p ? p.y : 0 };
+}
+function edPincelFim() { ED.pincel = null; const R = edRelevo(); if (R) R.h = R.h.map((v) => Math.round(v * 100) / 100); edGuardar(); }
+function edPincelPasso(dt) {
+  const p = edPincelPonto(), R = edRelevo();
+  edPincelAnel(R ? p : null);
+  if (!ED.pincel || !p || !R) return;
+  const r = ED_TERR.raio, f = ED_TERR.forca * dt, s = R.passo, h = R.h, tipo = ED_TERR.pincel, velho = tipo === 'suavizar' ? h.slice() : null;
+  const i0 = Math.max(0, Math.floor((p.x - r - R.x0) / s)), i1 = Math.min(R.nx - 1, Math.ceil((p.x + r - R.x0) / s));
+  const j0 = Math.max(0, Math.floor((p.z - r - R.z0) / s)), j1 = Math.min(R.nz - 1, Math.ceil((p.z + r - R.z0) / s));
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const d = Math.hypot(R.x0 + i * s - p.x, R.z0 + j * s - p.z); if (d > r) continue;
+    const w = (1 - (d / r) ** 2) ** 2, k = j * R.nx + i, puxa = Math.min(1, f * w * 0.8);
+    if (tipo === 'subir') h[k] += f * w;
+    else if (tipo === 'descer') h[k] -= f * w;
+    else if (tipo === 'aplanar') h[k] += (ED.pincel.alvo - h[k]) * puxa;
+    else if (tipo === 'zerar') h[k] += (0 - h[k]) * puxa;
+    else { // suavizar: puxa para a média dos vizinhos
+      let soma = 0, n = 0;
+      for (const [a, b] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const ii = i + a, jj = j + b; if (ii < 0 || jj < 0 || ii >= R.nx || jj >= R.nz) continue; soma += velho[jj * R.nx + ii]; n++; }
+      h[k] += (soma / n - h[k]) * puxa;
+    }
+    h[k] = clamp(h[k], ED_TERR.hMin, ED_TERR.hMax);
+  }
+  edTerrenoAltura();
+}
+// o círculo do pincel, deitado no terreno
+function edPincelAnel(p) {
+  if (!p || ED.modo !== 'terreno') { if (ED.anel) ED.anel.visible = false; return; }
+  const N = 48, R = edRelevo(), fn = R ? edRelevoFn(R) : () => 0;
+  if (!ED.anel) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array((N + 1) * 3), 3)); ED.anel = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffcc33, depthTest: false })); ED.anel.renderOrder = 10; ED.scene.add(ED.anel); }
+  const pos = ED.anel.geometry.attributes.position, r = ED_TERR.raio;
+  for (let i = 0; i <= N; i++) { const a = (i / N) * Math.PI * 2, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r; pos.setXYZ(i, x, fn(x, z) + 0.08, z); }
+  pos.needsUpdate = true; ED.anel.geometry.computeBoundingSphere(); ED.anel.visible = true;
+}
+function edPainelTerreno() {
+  const d = ED.dir, R = edRelevo(); d.innerHTML = '';
+  d.appendChild(edEl('h4', 'margin:4px 0 6px', '⛰ Terreno'));
+  if (!R) {
+    d.appendChild(edEl('p', 'color:#aaa;font-size:12px', 'O mapa ainda não tem terreno. Ele cobre as peças com 10 m de folga, um ponto a cada 2 m (até 320 x 320 m).'));
+    const b = edEl('button', 'width:100%', 'Criar terreno'); b.onclick = edCriarTerreno; d.appendChild(b);
+  } else {
+    d.appendChild(edEl('div', 'color:#aaa;font-size:12px', `${(R.nx - 1) * R.passo} x ${(R.nz - 1) * R.passo} m · um ponto a cada ${R.passo} m · de x ${R.x0} e z ${R.z0}`));
+    d.appendChild(edEl('label', '', 'Pincel'));
+    const g = edEl('div', 'display:grid;grid-template-columns:1fr 1fr;gap:4px');
+    for (const [k, rot] of ED_PINCEIS) { const b = edEl('button', '', rot); if (ED_TERR.pincel === k) b.className = 'on'; b.onclick = () => { ED_TERR.pincel = k; edPainel(); }; g.appendChild(b); }
+    d.appendChild(g);
+    for (const [rot, campo, a, b, passo, un] of [['Raio', 'raio', 1, 25, 0.5, 'm'], ['Força', 'forca', 0.5, 12, 0.5, 'm/s']]) {
+      const l = edEl('label', '', `${rot}: <b style="color:#eee">${ED_TERR[campo]} ${un}</b>`); d.appendChild(l);
+      const i = edEl('input', 'width:100%'); i.type = 'range'; i.min = a; i.max = b; i.step = passo; i.value = ED_TERR[campo];
+      i.oninput = () => { ED_TERR[campo] = +i.value; l.innerHTML = `${rot}: <b style="color:#eee">${ED_TERR[campo]} ${un}</b>`; }; d.appendChild(i);
+    }
+    d.appendChild(edEl('label', '', 'Superfície'));
+    const sf = edEl('select', 'width:100%'); for (const [k, nome, gr] of ED_SUPERF) if (gr === 'Chão' || gr === 'Parede' && /rock|stone|strata/.test(k)) sf.appendChild(new Option(nome, k));
+    sf.value = R.m || 'dirt'; sf.onchange = () => { edAntes(); R.m = sf.value; edMudou(true); }; d.appendChild(sf);
+    d.appendChild(edEl('label', '', 'Cor'));
+    const c = edEl('input', 'width:100%;height:30px;padding:0'); c.type = 'color'; c.value = '#' + edCorHex(R.cor || [1, 1, 1]).getHexString();
+    c.onchange = () => { edAntes(); const k = new THREE.Color(c.value); R.cor = [+k.r.toFixed(3), +k.g.toFixed(3), +k.b.toFixed(3)]; edMudou(true); }; d.appendChild(c);
+    const bts = edEl('div', 'display:flex;gap:6px;margin-top:12px');
+    const z = edEl('button', '', 'Zerar tudo'); z.onclick = () => { edAntes(); R.h.fill(0); edMudou(true); };
+    const x = edEl('button', 'color:#f88', 'Apagar terreno'); x.onclick = () => { if (!confirm('Apagar o terreno deste mapa? (Ctrl+Z desfaz)')) return; edAntes(); delete ED.J.meta.extra.relevo; edMudou(true); };
+    bts.append(z, x); d.appendChild(bts);
+  }
+  d.appendChild(edEl('p', 'color:#888;font-size:11px;margin-top:12px;line-height:1.45', 'Arraste com o botão esquerdo para pintar; o direito continua olhando e WASD andando. "Aplanar" leva até a altura de onde o arrasto começou (bom para assentar casas). Com terreno o mapa ganha chão de verdade: fora dele o chão fica em y = 0. Onde o terreno descer abaixo de 0, apague ou suba o chão de caixa. Ainda não funciona em mapa com mar. Clique em "⛰ Terreno" de novo para voltar às peças.'));
+}
 // retângulo de seleção (Shift+arrastar no vazio): ao soltar, entra tudo cujo ponto de apoio cai dentro dele, na tela
 function edRet(e) {
   const R = ED.ret, b = ED.root.getBoundingClientRect();
@@ -613,5 +735,6 @@ function edTick(t) {
   for (const b of ED.boxes || []) b.update();
   ED.r.render(ED.scene, ED.camera);
   if (ED_MINI.fila.length) edMiniPasso();
+  if (ED.modo === 'terreno') edPincelPasso(dt);
 }
 if (/[?&]editor=1\b/.test(location.search)) { const go = () => setTimeout(() => { try { edAbrir(); } catch (e) { console.error('editor', e); } }, 300); if (document.readyState === 'complete') go(); else addEventListener('load', go); }

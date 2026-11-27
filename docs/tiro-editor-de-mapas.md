@@ -29,6 +29,20 @@ botão **Jogar** monta o mapa de verdade e começa uma partida solo com bots.
 
 O painel da direita mostra a posição, o tamanho, o giro, a matéria, a cor e a colisão da peça selecionada.
 
+## Terreno deformado
+
+O botão **⛰ Terreno** da barra liga o modo terreno (clique de novo para voltar às peças):
+
+- **Criar terreno** faz uma grade com um ponto a cada 2 m, cobrindo as peças com 10 m de folga (até 320 x 320 m);
+- arraste com o **botão esquerdo** para pintar; o direito continua olhando e WASD andando. O círculo amarelo é o pincel;
+- pincéis: **Subir**, **Descer**, **Aplanar** (até a altura de onde o arrasto começou, bom para assentar casas), **Suavizar** e **Zerar** (volta a y = 0);
+- **Raio** em metros e **Força** em metros por segundo no meio do pincel (cai até zero na borda); alturas de -20 a 40 m;
+- **Superfície** e **Cor** do chão do terreno; **Zerar tudo** e **Apagar terreno** (Ctrl+Z desfaz).
+
+No jogo, o terreno vira o relevo de verdade (o mesmo das dunas do Simoun): pisar, balas, granadas e robôs andam nele. Com terreno o mapa deixa de ser "sem chão": fora da grade o chão fica em y = 0. Onde o terreno descer abaixo de 0, apague ou suba o chão de caixa. As peças colocadas com o mouse se assentam em cima do terreno. **Ainda não funciona em mapa com mar.**
+
+No `.json` ele fica em `relevo: { x0, z0, passo, nx, nz, m, cor, h: [alturas linha a linha em z] }`.
+
 ## Regras para o mapa funcionar
 
 Estas regras garantem que os bots andem, que os jogadores nasçam no lugar certo e que ninguém caia por engano.

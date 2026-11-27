@@ -180,10 +180,42 @@ for (let i = 0; i < caixas.length; i++) for (let j = i + 1; j < caixas.length; j
 const fora = caixas.filter((c) => c.x0 < -BX + 0.3 || c.x1 > BX - 0.3 || c.z0 < -BZ + 0.3 || c.z1 > BZ - 0.3);
 for (const c of fora) console.log('passa da beira:', c.n, c.x0.toFixed(1), c.x1.toFixed(1), c.z0.toFixed(1), c.z1.toFixed(1));
 
+// ---------- marcadores do Battle royale (2026-11-27, o Thiago: "bota marcadores do BR na favela grande") ----------
+// Onde dá para entrar e ficar coberto, ou subir: dentro das casas com porta, no canto coberto do prédio de esquina, no alpendre,
+// na casa em obra, dentro dos contêineres abertos; nos terraços dos prédios com escada; nas lajes da Favela (Telhados e bloco
+// leste); dentro do galpão da Rodoviária e no teto dele. Posições na peça (com r = 0: frente em +z), lidas dos blocos do kit.
+const DENTRO = {
+  kcCasaTijolo: [[0, 0.1, -0.4]], kcCasaTelhado: [[0, 0.1, -0.4]], kcCasaConcreto: [[0, 0.1, -0.3]], kcCasaConcreto2: [[0, 0.1, -0.3]],
+  kcCasaObra: [[0, 0.1, 0]], kcCasaAzul: [[0, 0.1, 2.4]], kcPredioFavelaEsquina: [[1.7, 0.1, 1.5]], kcConteinerAberto: [[0, 0.3, 0]],
+};
+const LAJE = { kcFavelaEscadaLado: [[1, 3.3, 0.5]], kcFavelaEscadaFundos: [[0, 3.3, -1.2]], kcFavelaEscadaTelhado: [[-1, 6.2, -1.5]] };
+const naPeca = (P, [lx, ly, lz]) => { const a = ((P.r || 0) * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a); return [+(P.p[0] + lx * c + lz * s).toFixed(2), +(P.p[1] + ly).toFixed(2), +(P.p[2] - lx * s + lz * c).toFixed(2)]; };
+const lugarDentro = [], lugarLaje = [];
+for (const P of pecas) {
+  if (P.t !== 'prefab') continue;
+  for (const l of DENTRO[P.nome] || []) lugarDentro.push(naPeca(P, l));
+  for (const l of LAJE[P.nome] || []) lugarLaje.push(naPeca(P, l));
+}
+for (const sz of [1, -1]) {
+  lugarLaje.push([-6, 3.4, 24 * sz], [6, 3.4, 24 * sz], [16, 3.4, 22 * sz], [16, 3.4, 27 * sz]); // lajes da Favela (Telhados e bloco leste)
+  lugarDentro.push([106, 0.1, 30 * sz], [120, 0.1, 20 * sz], [112, 0.1, 25 * sz]);                // dentro do galpão
+  lugarLaje.push([108, 5.6, 22 * sz], [120, 5.6, 30 * sz]);                                      // teto do galpão
+}
+// espalha: cada um a pelo menos "longe" m dos já escolhidos (ou em outra altura), na ordem dada
+const espalha = (L, longe, usados = []) => { const out = []; for (const p of L) if (![...usados, ...out].some((o) => Math.hypot(o[0] - p[0], o[2] - p[2]) < longe && Math.abs(o[1] - p[1]) < 2)) out.push(p); return out; };
+const ordena = (L) => L.slice().sort((a, b) => a[0] - b[0] || a[2] - b[2]);
+// armas a 20 m umas das outras (as lajes primeiro); caixas a 16 m umas das outras, nas casas, meio metro ao lado de onde uma arma
+// pode estar (alternando: uma de colete para duas de cura)
+const armas = espalha([...ordena(lugarLaje), ...ordena(lugarDentro)], 20);
+const caixasBr = espalha(ordena(lugarDentro).reverse(), 16).map(([x, y, z]) => [+(x + 0.6).toFixed(2), y, +(z + 0.6).toFixed(2)]);
+const coletes = caixasBr.filter((p, i) => i % 3 === 0), curas = caixasBr.filter((p, i) => i % 3 !== 0);
+console.log('marcadores BR:', armas.length, 'armas (' + armas.filter((p) => p[1] > 2).length + ' em lajes),', coletes.length, 'coletes,', curas.length, 'curas');
+
 const J = {
   id: 'favela-grande', nome: 'Favela Grande', tag: 'Morro inteiro (Battle royale)', tipo: 'open', ceu: FAV.ceu || 'meltem', mar: null,
   desc: 'A Favela no meio do morro inteiro: o Campinho e o Ferro-velho a oeste, o Comércio e a Rodoviária a leste, e o morro com vielas, lajes, feira e praça ao norte e ao sul. Feito para o Battle royale.',
   pecas, nascer: FAV.nascer, dom: FAV.dom, mecha: FAV.mecha, poi,
+  br: { armas, coletes, curas }, // o centro da zona e as largadas continuam automáticos (tiro-br.js)
   sniper: FAV.sniper, som: FAV.som || 'concrete', ambiente: FAV.ambiente,
   zonas: [...(FAV.zonas || []), ['Morro sul', -BX, BX, 44, BZ], ['Morro norte', -BX, BX, -BZ, -44], ['Ferro-velho', -BX, -90, -44, 44], ['Campinho', -90, -30, -44, 44],
     ['Comércio', 30, 90, -44, 44], ['Rodoviária', 90, BX, -44, 44]],

@@ -1,0 +1,290 @@
+/* BATTLE ROYALE do Tiro da Galera (2026-11-27). Entra no jogo montado por ferramentas/tiro-frontline.js, logo antes do boot,
+   no mesmo script do jogo: troca algumas funções dele por versões que chamam a original e acrescentam o battle royale.
+   Regras (primeira versão):
+   - até 12 no salão (gente + robôs); ninguém renasce; o último vivo vence (o placar é a ordem de eliminação, depois os abates);
+   - todo mundo começa só com a pistola da classe (os robôs com uma M9); as outras armas estão espalhadas pelo chão do mapa;
+     com uma vaga livre, a arma do chão entra como segunda arma (E), sem largar a pistola;
+   - a zona (parede azul) fecha em quatro etapas até sumir; fora dela a vida cai, cada etapa mais rápido;
+   - sem séries de abates (helicóptero, mecha...);
+   - morto, a câmera passa a seguir quem ainda está vivo.
+   Por dentro a partida é um "cada um por si" (MATCH.mode = 'ffa'); BR.on diz que é battle royale. Em rede, a zona e as armas do
+   chão saem da mesma semente em todo mundo (código do salão + mapa) e o relógio é o da partida (MATCH.timeLeft, que vem do host). */
+const BR = { on: false, ordem: 0, armado: false, T0: 0, z: null, plano: null, malha: null, estado: '', botT: 0, ver: null, cam: null, hudFora: null, roTxt: null, aviso: null, lugar: 0 };
+function brSolo(m) { return m === 'ffa' || m === 'br'; }
+function netMax() { return NET.cfg && NET.cfg.mode === 'br' ? 12 : NET_MAX; }
+
+MODES.br = {
+  name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 12 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
+  limits: [12], key: 'limitBr', respawn: 1e9, botRespawn: 1e9, prot: 2,
+  hint: 'Ninguém renasce. Todo mundo começa com a pistola: as outras armas estão no chão. A zona fecha aos poucos e tira vida de quem fica fora. O último vivo vence.',
+};
+MODE_IDS.push('br');
+if (Settings.limitBr !== 12) Settings.limitBr = 12;
+
+/* ---------- sorteio com semente (igual em todo mundo do salão) ---------- */
+function brHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function brRng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+/* ---------- a zona ---------- */
+// etapas: espera, fechamento (s) e o raio que sobra (fração do raio inicial); a vida que cai por segundo fora, em cada etapa
+const BR_ETAPAS = [[45, 40, 0.62], [35, 30, 0.36], [25, 25, 0.16], [20, 30, 0]];
+const BR_DANO = [1.5, 3, 5, 9, 15];
+function brPlano(rnd) {
+  let C0x = (MAP.x0 + MAP.x1) / 2, C0z = (MAP.z0 + MAP.z1) / 2, R0 = Math.hypot(MAP.x1 - MAP.x0, MAP.z1 - MAP.z0) / 2 * 1.02;
+  if (RING.on && RING.r < R0) { C0x = RING.x; C0z = RING.z; R0 = RING.r; } // Simoun: o deserto já é um círculo
+  // o centro final: um ponto de passagem no chão, no miolo do mapa (sem ele, o meio)
+  const mx = (MAP.x1 - MAP.x0) * 0.25, mz = (MAP.z1 - MAP.z0) * 0.25;
+  const miolo = spawnField().filter(([x, z]) => x > MAP.x0 + mx && x < MAP.x1 - mx && z > MAP.z0 + mz && z < MAP.z1 - mz && Math.hypot(x - C0x, z - C0z) < R0 * 0.6);
+  const F = miolo.length ? miolo[Math.floor(rnd() * miolo.length)] : [C0x, C0z];
+  // mais tempo em mapa grande e em partida longa
+  const k = clamp(R0 / 70, 1, 1.5) * clamp((BR.T0 || 600) / 600, 0.8, 1.3);
+  const fases = []; let t = 0, f = 1;
+  for (const [esp, fec, f1] of BR_ETAPAS) { fases.push({ a: t + esp * k, b: t + (esp + fec) * k, f0: f, f1 }); t += (esp + fec) * k; f = f1; }
+  return { C0x, C0z, R0, Fx: F[0], Fz: F[1], fases };
+}
+// o centro anda em linha reta do meio do mapa até o centro final conforme o raio diminui: cada círculo fica dentro do anterior
+function brCirculo(P, f) { const r = P.R0 * f, k = f; return { x: P.Fx + (P.C0x - P.Fx) * k, z: P.Fz + (P.C0z - P.Fz) * k, r }; }
+function brZonaAgora() {
+  const P = BR.plano; if (!P) return null;
+  const t = Math.max(0, BR.T0 - MATCH.timeLeft);
+  let f = 1, alvo = 1, estado = 'espera', falta = 0, i = 0;
+  for (; i < P.fases.length; i++) {
+    const F = P.fases[i];
+    if (t < F.a) { f = F.f0; alvo = F.f1; estado = 'espera'; falta = F.a - t; break; }
+    if (t < F.b) { const u = (t - F.a) / (F.b - F.a); f = F.f0 + (F.f1 - F.f0) * u; alvo = F.f1; estado = 'fechando'; falta = F.b - t; break; }
+  }
+  if (i === P.fases.length) { f = 0; alvo = 0; estado = 'fim'; }
+  const c = brCirculo(P, f), A = brCirculo(P, alvo);
+  return { x: c.x, z: c.z, r: c.r, dps: BR_DANO[Math.min(i + (estado === 'fechando' ? 1 : 0), BR_DANO.length - 1)], estado, falta, fase: i, alvo: A };
+}
+const brDentroZ = (z, x, zz, m = 1) => (x - z.x) ** 2 + (zz - z.z) ** 2 <= (z.r * m) ** 2;
+
+/* ---------- armas no chão ---------- */
+const BR_ARMAS = [['m4', 4], ['ak47', 4], ['scarh', 3], ['famas', 3], ['mp5', 4], ['mp7', 3], ['ump45', 3], ['vector', 3], ['m1014', 2], ['rem870', 2], ['aa12', 1], ['l96', 1.5], ['svd', 1.5], ['m82', 1]];
+function brLoot(rnd) {
+  const lista = BR_ARMAS.filter(([id]) => WEAPONS[id]), soma = lista.reduce((s, [, p]) => s + p, 0);
+  const sorteia = () => { let x = rnd() * soma; for (const [id, p] of lista) { x -= p; if (x <= 0) return WEAPONS[id]; } return WEAPONS[lista[0][0]]; };
+  const pts = POI.map((p) => [p[0], p[1], p[2]]);
+  for (let i = pts.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
+  const area = (MAP.x1 - MAP.x0) * (MAP.z1 - MAP.z0), n = Math.round(clamp(area / 350, 14, 30));
+  const q = new THREE.Quaternion(), v = new V3(0, 0.2, 0), p = new V3();
+  for (let i = 0; i < n && pts.length; i++) {
+    const [x, y, z] = pts[i % pts.length], volta = i >= pts.length; // pontos de sobra: mais uma arma perto do mesmo ponto
+    const dx = volta ? (rnd() - 0.5) * 4 : (rnd() - 0.5) * 1.2, dz = volta ? (rnd() - 0.5) * 4 : (rnd() - 0.5) * 1.2;
+    const def = sorteia();
+    p.set(x + dx, y + 0.5, z + dz); q.setFromAxisAngle(UP, rnd() * TAU);
+    dropWeapon(def, def.mag, def.mag * 2, p, q, v);
+  }
+}
+
+/* ---------- começo e fim ---------- */
+function brLimpa() {
+  if (BR.malha) { scene.remove(BR.malha); BR.malha.geometry.dispose(); BR.malha.material.dispose(); BR.malha = null; }
+  const el = $('ringOut');
+  if (el && BR.roTxt) { el.querySelector('b').textContent = BR.roTxt[0]; el.querySelector('span').textContent = BR.roTxt[1]; el.classList.remove('show'); }
+  BR.roTxt = null; BR.hudFora = null;
+  if (BR.aviso) BR.aviso.style.display = 'none';
+  DROP.life = 90; DROP.max = 14;
+  for (const e of entities) if (e.brArma) { e.weapon = e.brArma; e.brArma = null; }
+}
+function brInicio() {
+  BR.ordem = 0; BR.armado = false; BR.T0 = MATCH.timeLeft; BR.estado = ''; BR.botT = 0; BR.ver = null; BR.cam = null; BR.lugar = 0;
+  for (const e of entities) { e.brOut = 0; e.brT = 0; }
+  DROP.life = 1e9; DROP.max = 80;
+  const seed = MATCH.online ? brHash(String(netCodeNow() || '') + '|' + CURMAP.id) : (Math.random() * 4294967296) >>> 0;
+  BR.plano = brPlano(brRng(seed));
+  brLoot(brRng(seed ^ 0x9e3779b9));
+  const g = new THREE.CylinderGeometry(1, 1, 1, 128, 1, true);
+  const m = new THREE.MeshBasicMaterial({ color: 0x3d9bff, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+  BR.malha = new THREE.Mesh(g, m); BR.malha.renderOrder = 5; BR.malha.frustumCulled = false; scene.add(BR.malha);
+  BR.z = brZonaAgora(); brMalha();
+}
+function brMalha() {
+  const M = BR.malha, z = BR.z; if (!M || !z) return;
+  M.visible = z.r > 0.5; M.position.set(z.x, 20, z.z); M.scale.set(Math.max(z.r, 0.5), 240, Math.max(z.r, 0.5));
+}
+function brVivos() { return ffaList().filter((e) => !e.brOut); }
+function ffaAcabou() {
+  if (!BR.on) return ffaList().some((e) => e.kills >= MATCH.limit);
+  const L = ffaList(); return L.length >= 2 && L.filter((e) => !e.brOut).length <= 1;
+}
+// classificação: quem está vivo, depois quem caiu por último; o resto (abates, mortes) segue a regra do cada um por si
+function brCmp(a, b) { return (b.brOut || 1e9) - (a.brOut || 1e9); }
+function brLinha() {
+  const z = BR.z, n = brVivos().length;
+  if (!z) return `${n} vivos`;
+  return `${n} vivos · ${z.estado === 'fechando' ? 'zona fechando' : z.estado === 'fim' ? 'zona fechada' : 'zona fecha em ' + fmtTime(z.falta)}`;
+}
+
+/* ---------- a cada quadro ---------- */
+function brUpdate(dt) {
+  if (!BR.on || MATCH.state !== 'playing') return;
+  const z = BR.z = brZonaAgora(); if (!z) return;
+  brMalha();
+  const est = z.estado + z.fase;
+  if (est !== BR.estado) { if (BR.estado && z.estado === 'fechando') hudMsg('A zona está fechando!', 'xp', 3); BR.estado = est; }
+  // robôs desta máquina (fora do jogo online, ou os do host): pegam arma do chão e fogem da zona
+  BR.botT -= dt; const pensa = BR.botT <= 0; if (pensa) BR.botT = 0.25;
+  for (const b of entities) {
+    if (b.isPlayer || b.isRemote || b.off || !b.alive) continue;
+    if (MATCH.online && !b.netBot) continue;
+    if (b.weapon && b.weapon.cat === 'pistol') {
+      for (const d of DROP.list) {
+        if (!d.landed || d.def.cat === 'pistol') continue;
+        const o = d.obj.position; if (Math.abs(o.y - b.pos.y) > 1.6 || hyp(o.x - b.pos.x, o.z - b.pos.z) > 2.2) continue;
+        brBotPega(b, d); break;
+      }
+    }
+    if (!pensa || (b.brT -= 0.25) > 0) continue;
+    const fora = !brDentroZ(z, b.pos.x, b.pos.z), A = z.alvo, longe = !brDentroZ(A, b.pos.x, b.pos.z, 0.92);
+    if (!fora && !longe) continue;
+    const g = b.goal, gFora = !g || !brDentroZ(A, g.x, g.z, 0.85);
+    if (!gFora) continue;
+    if (fora || b.tactic === 'roam') {
+      if (b.tactic !== 'roam') { releaseCover(b); b.tactic = 'roam'; }
+      b.holdT = 0; setPath(b, brDentro(b, A)); b.brT = 1;
+    }
+  }
+}
+function brDentro(b, A) {
+  const L = POI.filter((p) => brDentroZ(A, p[0], p[2], 0.75)).map((p) => [hyp(p[0] - b.pos.x, p[2] - b.pos.z), p]).sort((u, v) => u[0] - v[0]);
+  if (!L.length) return new V3(A.x, gy0(A.x, A.z), A.z);
+  const p = L[Math.floor(Math.random() * Math.min(3, L.length))][1];
+  return new V3(p[0], p[1], p[2]);
+}
+function brBotPega(b, d) {
+  removeDrop(d);
+  if (!b.brArma) b.brArma = b.weapon;
+  b.weapon = d.def; b.arms = makeArms([d.def.id], 60);
+  if (b.model && b.model.gunKey !== d.def.key) setSoldierGun(b.model, d.def.key);
+  sfxMech && b.pos.distanceTo(PL.ent.pos) < 6 && sfxMech('pickup');
+}
+// morto: depois da killcam, a câmera segue um vivo (o que matou, se ainda estiver de pé)
+function brEspectar(dt) {
+  let t = BR.ver;
+  if (!t || !t.alive || t.brOut || !entities.includes(t)) {
+    const V = brVivos().filter((e) => e !== PL.ent && e.alive);
+    t = BR.ver = PL.killer && V.includes(PL.killer) ? PL.killer : V[0] || null;
+    BR.cam = null;
+  }
+  const d = $('death'); if (d && d.classList.contains('show')) d.classList.remove('show');
+  if (!BR.aviso) {
+    BR.aviso = document.createElement('div');
+    BR.aviso.style.cssText = 'position:fixed;left:50%;bottom:14%;transform:translateX(-50%);padding:.5em 1.1em;background:rgba(0,0,0,.6);color:#fff;font:600 16px/1.3 system-ui,sans-serif;border-radius:6px;z-index:60;pointer-events:none;text-align:center';
+    document.body.appendChild(BR.aviso);
+  }
+  BR.aviso.style.display = '';
+  BR.aviso.textContent = `Você ficou em ${BR.lugar}º` + (t ? ` · assistindo ${t.name}` : '');
+  if (!t) return;
+  const y = t.yaw || 0, fx = -Math.sin(y), fz = -Math.cos(y);
+  const alvo = new V3(t.pos.x - fx * 4, t.pos.y + 2.4, t.pos.z - fz * 4);
+  if (!BR.cam) BR.cam = alvo.clone(); else BR.cam.lerp(alvo, 1 - Math.exp(-6 * dt));
+  camera.position.copy(BR.cam); camera.lookAt(t.pos.x, t.pos.y + 1.4, t.pos.z);
+}
+
+/* ---------- as funções do jogo que mudam ---------- */
+{
+  const modeStart0 = modeStart;
+  modeStart = function (mode) { brLimpa(); BR.on = mode === 'br'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? MODES.br : D; };
+  const modeDef0 = modeDef;
+  modeDef = function () { return BR.on && MATCH.mode === 'ffa' ? MODES.br : modeDef0(); };
+  const modeUpdate0 = modeUpdate;
+  modeUpdate = function (dt) { modeUpdate0(dt); brUpdate(dt); };
+  const modeEnd0 = modeEnd;
+  modeEnd = function () { modeEnd0(); if (BR.on) brLimpa(); }; // BR.on fica até a próxima partida: a tela do fim usa a classificação
+  const killEnt0 = killEnt;
+  killEnt = function (v, a, weapon, head, dir, life) {
+    if (BR.on && !v.brOut && (MATCH.state === 'playing' || MATCH.state === 'paused') && !MATCH.fin) { v.brOut = ++BR.ordem; if (v.isPlayer) BR.lugar = brVivos().length + 1; }
+    return killEnt0(v, a, weapon, head, dir, life);
+  };
+  const respawnPlayer0 = respawnPlayer;
+  respawnPlayer = function () { if (BR.on && PL.ent.brOut && (MATCH.state === 'playing' || MATCH.state === 'paused')) return; return respawnPlayer0(); };
+  const spawnEntity0 = spawnEntity;
+  spawnEntity = function (e) {
+    spawnEntity0(e);
+    if (!BR.on || e.isPlayer || e.isRemote || !WEAPONS.m9) return;
+    const p = WEAPONS.m9; if (!e.brArma) e.brArma = e.weapon;
+    e.weapon = p; e.arms = makeArms([p.id], 60);
+    if (e.model && e.model.gunKey !== p.key) setSoldierGun(e.model, p.key);
+  };
+  const giveLoadout0 = giveLoadout;
+  giveLoadout = function () {
+    if (BR.on && BR.armado) return; // trocar de classe no meio da partida não devolve as armas
+    giveLoadout0();
+    if (!BR.on) return;
+    BR.armado = true;
+    const A = PL.ent.arms; let s = A.slots.filter((x) => x.def.cat === 'pistol');
+    if (!s.length && WEAPONS.m9) s = [{ def: WEAPONS.m9, mag: WEAPONS.m9.mag, reserve: WEAPONS.m9.reserve }];
+    if (!s.length) return;
+    A.slots = s.slice(0, 1); A.cur = 0; vmEquip(A.slots[0].def);
+  };
+  const swapWithDrop0 = swapWithDrop;
+  swapWithDrop = function () {
+    const d = DROP.cur, P = PL.ent, A = P.arms;
+    if (BR.on && d && A.slots.length < 2 && dropSwapAllowed() && MATCH.state === 'playing' && !A.slots.some((s) => s.def.cat === d.def.cat)) {
+      PL.knifeOut = false; removeDrop(d);
+      A.slots.push({ def: d.def, mag: d.mag, reserve: d.reserve });
+      sfxMech('pickup'); P.busy = false; ctlSwitch(P, A.slots.length - 1);
+      return;
+    }
+    return swapWithDrop0();
+  };
+  const streakKill0 = streakKill;
+  streakKill = function (a, weapon, life) { return !BR.on && streakKill0(a, weapon, life); };
+  const pickGoal0 = pickGoal;
+  pickGoal = function (b, now) {
+    if (!BR.on || !BR.z) return pickGoal0(b, now);
+    const A = BR.z.alvo;
+    // com a pistola ainda, vai atrás de uma arma no chão perto (dentro da zona que vem)
+    if (b.weapon && b.weapon.cat === 'pistol' && Math.random() < 0.75) {
+      let best = null, bd = 45;
+      for (const d of DROP.list) {
+        if (!d.landed || d.def.cat === 'pistol') continue;
+        const o = d.obj.position, dd = hyp(o.x - b.pos.x, o.z - b.pos.z);
+        if (dd < bd && brDentroZ(A, o.x, o.z, 0.9)) { bd = dd; best = o; }
+      }
+      if (best) return new V3(best.x, best.y, best.z);
+    }
+    const g = pickGoal0(b, now);
+    return g && !brDentroZ(A, g.x, g.z, 0.85) ? brDentro(b, A) : g;
+  };
+  const ringCheck0 = ringCheck;
+  ringCheck = function (e, dt) {
+    if (BR.on && BR.z && e.alive && (MATCH.state === 'playing' || MATCH.state === 'paused') && !brDentroZ(BR.z, e.pos.x, e.pos.z)) {
+      e.health -= BR.z.dps * dt;
+      if (e.isPlayer) PL.lastDmgT = MATCH.time; else e.lastHitT = MATCH.time; // fora da zona a vida não volta
+      if (e.health <= 0) { e.health = 0; zoneDeath(e); if (!e.alive) return true; }
+    }
+    return ringCheck0(e, dt);
+  };
+  const ringHud0 = ringHud;
+  ringHud = function (e) {
+    if (!BR.on) return ringHud0(e);
+    const el = $('ringOut'), z = BR.z; if (!el) return;
+    const fora = !!(z && e && e.alive && MATCH.state === 'playing' && !brDentroZ(z, e.pos.x, e.pos.z));
+    if (fora !== BR.hudFora) {
+      BR.hudFora = fora; el.classList.toggle('show', fora);
+      if (!BR.roTxt) BR.roTxt = [el.querySelector('b').textContent, el.querySelector('span').textContent];
+      el.querySelector('b').textContent = 'Fora da zona'; el.querySelector('span').textContent = 'A zona tira vida: volte pra dentro da parede azul';
+    }
+    if (fora) { el.style.setProperty('--k', '0.55'); $('ringN').textContent = Math.ceil(Math.max(0, e.health) / z.dps); }
+  };
+  const updateDeadPlayer0 = updateDeadPlayer;
+  updateDeadPlayer = function (dt) {
+    updateDeadPlayer0(dt);
+    if (BR.on && PL.ent.brOut && !KC.active && !KC.pending && PL.deathT > 4 && MATCH.state === 'playing') brEspectar(dt);
+  };
+  const showDeathScreen0 = showDeathScreen;
+  showDeathScreen = function (a, weapon, head) {
+    showDeathScreen0(a, weapon, head);
+    if (!BR.on) return;
+    if (weapon === NET_WSPECIAL.zone && (!a || a === PL.ent)) $('deathBy').innerHTML = '<b>Pego pela zona</b>';
+    brDeathTxt();
+  };
+  const deathPrompt0 = deathPrompt;
+  deathPrompt = function () { deathPrompt0(); brDeathTxt(); };
+}
+function brDeathTxt() {
+  if (!BR.on || !PL.ent.brOut) return;
+  const s = $('death').querySelector('.skip'); if (s) hudHtml(s, esc(`Você ficou em ${BR.lugar}º · a partida segue sem você`));
+}

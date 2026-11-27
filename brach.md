@@ -1,21 +1,16 @@
-# Editor de mapas do Tiro: terreno deformado com pincel
+# Tiro: no Battle royale, as armas só aparecem dentro de construções e em lajes
 
-Pedido do Thiago: "seria legal eu conseguir criar um terreno meio deformado no editor de mapas".
+Pedido do Thiago: "faz as armas spawnarem só dentro de construções e lajes!"
 
-**No editor** (botão **⛰ Terreno** na barra, que liga e desliga o modo terreno):
-- **Criar terreno**: uma grade com um ponto a cada 2 m, cobrindo as peças com 10 m de folga (até 320 x 320 m);
-- **botão esquerdo arrastado pinta**, o direito continua olhando e WASD andando; um círculo amarelo mostra o pincel deitado no chão;
-- pincéis **Subir**, **Descer**, **Aplanar** (até a altura de onde o arrasto começou, bom para assentar casas), **Suavizar** e **Zerar** (volta a y = 0);
-- **Raio** (1 a 25 m) e **Força** (0,5 a 12 m/s no meio do pincel, caindo até zero na borda); alturas de -20 a 40 m;
-- **Superfície** (as de chão, mais rocha e pedra) e **Cor**; **Zerar tudo** e **Apagar terreno**; Ctrl+Z desfaz cada pincelada;
-- as peças colocadas com o mouse se assentam em cima do terreno.
+**Como o lugar de cada arma é escolhido agora:**
+- só entram pontos onde dá para andar e chegar: os da malha de navegação dos robôs, na parte principal (nada atrás de parede invisível nem em telhado sem acesso);
+- desses, ficam os que têm **teto a até 8 m em cima** (dentro de casa, prédio, galpão, barraca) e os que estão **a mais de 1,5 m acima do chão sem teto** (laje, terraço, passarela);
+- as armas ficam espalhadas: cada uma a pelo menos 6 m das outras, ou em outro andar. Se não couberem todas, a distância vai diminuindo;
+- a quantidade é a mesma de antes (14 a 30, conforme o tamanho do mapa), com a mesma semente do salão, então todo mundo vê as armas nos mesmos lugares;
+- num mapa quase sem construção (menos de 6 lugares assim), o resto das armas vai para os pontos de passagem, como antes.
 
-**No jogo** o terreno vira o relevo de verdade, o mesmo das dunas do Simoun (`MAP_DEFS.relief`, 02-relief.js). Por isso pisar, balas, granadas, robôs e a sombra do chão já usam ele. A malha que se vê é a grade de 1 m do próprio jogo, a mesma em que se pisa, na superfície escolhida. Com terreno o mapa deixa de ser "sem chão": fora da grade o chão fica em y = 0. Com mar ainda não funciona, porque o mapa com mar é "sem chão" e o relevo não vale.
+As caixas de colete e de cura continuam como estavam (pontos de passagem). Os robôs com pistola continuam indo atrás da arma mais perto, agora dentro das casas e nas lajes.
 
-**Arquivos:** `ferramentas/tiro-editor/editor.js` (o modo terreno), `mapa-json.js` (`edRelevoFn`, `edRelevoMalha`, limites e vazio), `texturas.js` (a foto do chão do terreno), e o guia em `docs/tiro-editor-de-mapas.md`. No `.json` fica em `relevo: { x0, z0, passo, nx, nz, m, cor, h }`.
-
-Montado de novo em cima da main depois do #1071 e do #1072 (o conflito no `editor.js` foi resolvido juntando as duas partes).
-
-Conferido só com `node --check` (os arquivos e o script do jogo montado); não abri o editor nem joguei um mapa com terreno.
+Feito em `ferramentas/tiro-br.js` (`brLootPontos`, `brLoot`). Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

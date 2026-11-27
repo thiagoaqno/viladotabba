@@ -12957,13 +12957,38 @@ const brDentroZ = (z, x, zz, m = 1) => (x - z.x) ** 2 + (zz - z.z) ** 2 <= (z.r 
 
 /* ---------- armas no chão ---------- */
 const BR_ARMAS = [['m4', 4], ['ak47', 4], ['scarh', 3], ['famas', 3], ['mp5', 4], ['mp7', 3], ['ump45', 3], ['vector', 3], ['m1014', 2], ['rem870', 2], ['aa12', 1], ['l96', 1.5], ['svd', 1.5], ['m82', 1]];
+const BR_LOOT_LONGE = 6, BR_LOOT_TETO = 8, BR_LOOT_LAJE = 1.5;
+// pontos de navegação (os que os robôs alcançam: a parte principal da malha) dentro de construção ou em cima de laje: [x, y, z]
+function brLootPontos() {
+  const out = []; if (!NAV.count || !NAV.comp) return out;
+  for (let id = 0; id < NAV.count; id++) {
+    if (NAV.comp[id] !== NAV.mainComp) continue;
+    const x = NAV.nx[id], y = NAV.ny[id], z = NAV.nz[id];
+    const teto = ceilingAbove(x, z, y + 0.3, 0.3) < y + BR_LOOT_TETO;
+    if (teto || y > gy0(x, z) + BR_LOOT_LAJE) out.push([x, y, z]);
+  }
+  return out;
+}
 function brLoot(rnd) {
   const lista = BR_ARMAS.filter(([id]) => WEAPONS[id]), soma = lista.reduce((s, [, p]) => s + p, 0);
   const sorteia = () => { let x = rnd() * soma; for (const [id, p] of lista) { x -= p; if (x <= 0) return WEAPONS[id]; } return WEAPONS[lista[0][0]]; };
-  const pts = POI.map((p) => [p[0], p[1], p[2]]);
-  for (let i = pts.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
   const area = (MAP.x1 - MAP.x0) * (MAP.z1 - MAP.z0), n = Math.round(clamp(area / 350, 14, 30));
   const q = new THREE.Quaternion(), v = new V3(0, 0.2, 0), p = new V3();
+  // (2026-11-27, o Thiago: "faz as armas spawnarem só dentro de construções e lajes") os lugares são pontos de navegação dos robôs
+  // (onde dá para andar e chegar), com teto em cima (dentro de casa, prédio, galpão) ou bem acima do chão sem teto (laje, terraço);
+  // espalhados: cada um a pelo menos BR_LOOT_LONGE m dos outros (a distância cai se não couber). Mapa quase sem construção
+  // (menos de 6 lugares assim): o resto vai para os pontos de passagem, como antes.
+  const dentro = brLootPontos();
+  for (let i = dentro.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [dentro[i], dentro[j]] = [dentro[j], dentro[i]]; }
+  const escolhidos = [];
+  for (let longe = BR_LOOT_LONGE; longe >= 1.5 && escolhidos.length < n; longe *= 0.6)
+    for (const c of dentro) { if (escolhidos.length >= n) break; if (!escolhidos.includes(c) && escolhidos.every((o) => hyp(o[0] - c[0], o[2] - c[2]) >= longe || Math.abs(o[1] - c[1]) > 2.5)) escolhidos.push(c); }
+  if (escolhidos.length >= 6) {
+    for (const [x, y, z] of escolhidos) { const def = sorteia(); p.set(x, y + 0.5, z); q.setFromAxisAngle(UP, rnd() * TAU); dropWeapon(def, def.mag, def.mag * 2, p, q, v); }
+    return;
+  }
+  const pts = [...escolhidos, ...POI.map((p) => [p[0], p[1], p[2]])];
+  for (let i = pts.length - 1; i > escolhidos.length; i--) { const j = escolhidos.length + Math.floor(rnd() * (i - escolhidos.length + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
   for (let i = 0; i < n && pts.length; i++) {
     const [x, y, z] = pts[i % pts.length], volta = i >= pts.length; // pontos de sobra: mais uma arma perto do mesmo ponto
     const dx = volta ? (rnd() - 0.5) * 4 : (rnd() - 0.5) * 1.2, dz = volta ? (rnd() - 0.5) * 4 : (rnd() - 0.5) * 1.2;

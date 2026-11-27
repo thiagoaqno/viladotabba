@@ -351,7 +351,12 @@ if (IATE_ATIVO) {
   h = troca(h, "function stepQuality(dir,step=0.05){",
     "function stepQuality(dir,step=0.05){if(dir<0&&hrAlvo()&&!capMs()){const fix=!!QUALITY[gfxSet('quality')],lo=Math.max(0.7,fix?RQ.q.scaleMin:GFX_SAFE?1:AUTO_LADDER[RQ.rung][1]);if(RQ.scale<=lo+1e-6){HR.off=true;gpuLog(`tela de ${Math.round(1000/HR.ms)} Hz: nem com a resolução em ${Math.round(RQ.scale*100)}% chegou, volta a mirar 60 fps`);return'wait';}}", { nome: "fps da tela rápida (desistir)" });
   h = troca(h, "const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||moved;",
-    "const k=HF.k,due=(i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||(moved&&(i===0||!(VSYNC.ms>0&&VSYNC.ms<12)||(S.frame+i)%2===0));", { nome: "sombras se revezam em tela rápida" });
+    "const k=HF.k,far=i>0&&COARSE,due=far?((S.frame+i*3)%6===0||S.p[i].distanceToSquared(camera.position)>64):((i===0?S.frame%k===0:(S.frame+i*k)%(4*k)===0)||(moved&&(i===0||!(VSYNC.ms>0&&VSYNC.ms<12)||(S.frame+i)%2===0)));", { nome: "sombras se revezam em tela rápida" });
+  // (2026-11-27, iPad e Mi Pad) nos aparelhos de toque, as duas camadas de sombra de longe não se redesenham mais a cada passo:
+  // cada uma a cada 6 quadros, revezando (e na hora, se a câmera pular mais de 8 m, ao renascer). O relatório do iPad mostrou a
+  // placa de vídeo presa (20 ms por quadro com o processador em 5 ms, igual na qualidade mínima e com a resolução baixa) e
+  // 1,3 milhão de triângulos por quadro, boa parte das 3 camadas de sombra se redesenhando enquanto anda. Andando, eram até 3
+  // sombras por quadro; agora é a de perto e, em média, um terço de uma de longe
   // (2026-11-26) "os bots não sobem muito as escadas": ao ir atrás de um inimigo (vingança de quem o matou, aviso de um colega,
   // radar), o bot mirava o x/z do inimigo mas na altura DELE mesmo. Quem estava no chão e caçava alguém numa laje ganhava um
   // destino no chão, embaixo da laje, e nunca pegava a escada (e quem estava no alto nunca descia). Agora guarda e usa a altura

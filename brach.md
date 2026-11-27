@@ -1,21 +1,14 @@
-# Tiro: modo tablet (menos trabalho para o processador a 120 fps)
+# Tiro: sombras de longe mais leves no tablet
 
-No Mi Pad, pelo Chrome: "começa a 120 e depois fica em 60", mesmo com a qualidade no mínimo.
+No iPad, o relatório de desempenho mostrou a placa de vídeo presa. Cada quadro levava 20 ms com o processador em 5 ms, igual na qualidade mínima e com a resolução baixa. Eram 1,3 milhão de triângulos por quadro, e boa parte vinha das 3 camadas de sombra se redesenhando enquanto o jogador anda.
 
-**Por quê:** pelo relatório de desempenho dele, o gargalo é o processador, não a placa de vídeo. Nos quadros que travaram, o jogo gastou de 6 a 16 ms, e os 120 fps pedem no máximo 8,3 ms:
-- o "render" (o Chrome entregando 140 a 230 desenhos por quadro) levou de 3,5 a 8 ms;
-- os bots, de 1 a 3 ms;
-- o "prep", até 2,7 ms.
+**O que mudou** (em `ferramentas/tiro-frontline.js`, só em aparelho de toque):
+- As duas camadas de sombra de longe se redesenham cada uma a cada 6 quadros, revezando. Antes era a cada passo do jogador.
+- Se a câmera pular mais de 8 m (ao renascer), elas se redesenham na hora.
+- A camada de perto continua igual.
 
-Baixar a resolução não ajuda nisso.
+Andando, eram até 3 sombras por quadro; agora é a de perto e, em média, um terço de uma de longe.
 
-**O que mudou** (em `ferramentas/tiro-frontline.js`). Só vale em aparelho de toque com tela de 90 Hz ou mais, enquanto o jogo ainda mira a taxa da tela:
-- **Bots:** pensam a cada dois quadros, o que o jogo já fazia acima de 175 fps. A 120 fps, isso dá 60 vezes por segundo. Se cair abaixo de 70 fps, volta ao normal, para os bots não andarem aos trancos.
-- **Detalhes do mapa:** somem mais perto (75% da distância; os espalhados, 70%). A conta de quem aparece passa a ser a cada 4 quadros.
-- **Soldados longe:** passam para o modelo simples mais cedo (1,4 vez antes), o que também tira a simulação do pano deles.
-
-PC e telas de 60 Hz ficam iguais.
-
-**Conferido no navegador**, forçando o modo tablet: a 115 fps os bots passam a pensar a cada dois quadros e a 60 voltam ao normal, e a partida segue rodando. Falta o amigo jogar no tablet.
+PC fica igual. Conferido só com `node --check`; falta jogar no iPad.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -294,8 +294,9 @@ function edMsgJogo() { const b = edEl('button', 'position:fixed;right:12px;top:1
 /* ---------- grupos dos prefabs no catálogo ----------
    Os prefabs se dividem em grupos (Favela, Navio, Cobertura...). Peça nova entra no grupo pelo nome: kcN... vai para o Navio,
    o resto das kc para a Favela, a não ser que esteja numa das listas abaixo; as do jogo original ficam em "Jogo original". */
-const ED_GRUPOS = ['Favela', 'Aeroporto', 'Navio', 'Praça e esporte', 'Veículos', 'Cobertura', 'Jogo original'];
+const ED_GRUPOS = ['Favela', 'Rural', 'Aeroporto', 'Navio', 'Praça e esporte', 'Veículos', 'Cobertura', 'Jogo original'];
 const ED_GRUPO_LISTA = {
+  'Rural': /^kcRur/,
   'Aeroporto': /^kcA[A-Z]/,
   'Praça e esporte': /^kc(Praca|Quadra|CampoFutebol|Arquibancada|BancoPraca|ArvoreCanteiro|GuardaSol|VasoPlanta|Arbusto|Bananeira)/,
   'Veículos': /^(kc(CarroVelho|Van|Moto$|CarroQueimado)|car$|truck$|busWreck$|boxcar$|snowplow$)/,
@@ -345,7 +346,8 @@ function edCatalogo(aba) {
    Cada peça do catálogo ganha uma miniatura 3D, desenhada por um renderizador pequeno só delas (vista de 3/4 pela frente, +z),
    aos poucos (algumas por quadro) e guardada enquanto o editor estiver aberto. */
 const ED_MINI = { cache: new Map(), fila: [], r: null, cena: null, cam: null, W: 160, H: 120 };
-const edNomeBonito = (n) => n.replace(/^kc/, '').replace(/([a-z])([A-Z0-9])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+const ED_NOMES_RURAIS = { kcRurCarroca: 'Carroça', kcRurCasaSede: 'Casa sede', kcRurCeleiro: 'Celeiro', kcRurCerca: 'Cerca', kcRurCurral: 'Curral', kcRurEstrada: 'Estrada de terra', kcRurFardo: 'Fardo', kcRurFardos: 'Fardos empilhados', kcRurGalinheiro: 'Galinheiro', kcRurMilho: 'Plantação de milho', kcRurPauAPique: 'Casa de pau a pique', kcRurPoco: 'Poço', kcRurPomar: 'Árvore de pomar', kcRurPorteira: 'Porteira', kcRurTorreAgua: 'Torre de água', kcRurTrator: 'Trator velho' };
+const edNomeBonito = (n) => ED_NOMES_RURAIS[n] || n.replace(/^kc/, '').replace(/([a-z])([A-Z0-9])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
 function edMiniPedir(tpl, img) {
   const k = JSON.stringify(tpl.P), u = ED_MINI.cache.get(k);
   if (u) { img.src = u; return; }

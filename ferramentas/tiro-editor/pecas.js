@@ -2467,3 +2467,132 @@ PF.kcVidroPainel = (w = 2, h = 2) => prefab('kcVidroPainel' + w + 'x' + h, (M) =
 });
 propType('kcVidro', (a) => { const w = a[0] || 2, h = a[1] || 2;
   return { pf: () => PF.kcVidroPainel(w, h), shapes: [BOX(0, h / 2, 0, w / 2, h / 2, 0.02)], mass: 14, mu: 0.5, e: 0.1, resp: 0.6, blast: 2, hp: 1, mat: 'glass', snd: 'plastic', brk: 'glass' }; });
+
+/* ---------- zona rural: coordenadas locais para futuros pontos do Battle royale ---------- */
+const KC_BR = {};
+const KC_RUR_MADEIRA = [0.48, 0.31, 0.18], KC_RUR_FENO = [0.72, 0.61, 0.30];
+kcTex(['kcRurCasaSede', 'kcRurPauAPique', 'kcRurGalinheiro', 'kcRurPoco'], ['plaster', 'plaster2', 'rooftiles']);
+kcTex(['kcRurCeleiro', 'kcRurCerca', 'kcRurPorteira', 'kcRurCurral', 'kcRurCarroca'], ['boards', 'corrugated']);
+kcTex(['kcRurEstrada', 'kcRurMilho'], ['dirt']);
+kcTex(['kcRurTrator'], ['rust', 'rubber']);
+// Parede de madeira de cerca: as tábuas e postes colidem separadamente, deixando frestas para tiros.
+function kcRurCerca(M, x0, x1, z) {
+  for (const x of [x0 + 0.06, x1 - 0.06]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.06, x + 0.06, 0, 1.5, z - 0.06, z + 0.06, 'wood');
+  for (const y of [0.35, 0.85, 1.3]) kcBloco(M, 'boards', KC_RUR_MADEIRA, x0, x1, y, y + 0.15, z - 0.04, z + 0.04, 'wood');
+}
+function kcRurFardo(M, x, y, z) { kcBloco(M, 'canvas', KC_RUR_FENO, x - 0.6, x + 0.6, y, y + 0.7, z - 0.45, z + 0.45, 'wood'); }
+function kcRurRoda(M, x, z, r, esp, mat, cor) {
+  M.save().move(x, r, z + esp / 2).rotX(Math.PI / 2).color(cor); M.cyl(mat, r, esp, 12); M.restore();
+  M.col(x - r, x + r, 0, 2 * r, z - esp / 2, z + esp / 2, mat === 'rubber' ? 'metal' : 'wood');
+}
+// Casa com três cômodos e varanda aberta; porta e passagens internas têm 1,6 m.
+function kcRurCasa(M, X, Z, mat, cor) {
+  M.color(cor);
+  kcParede(M, mat, 'x', Z - 0.15, Z, -X, X, 0, 2.8, [[-X + 0.3, -X + 0.9, 1, 2], [-0.8, 0.8, 0, 2.2], [X - 0.9, X - 0.3, 1, 2]]);
+  kcParede(M, mat, 'x', -Z, -Z + 0.15, -X, X, 0, 2.8);
+  for (const x of [-X, X - 0.15]) kcParede(M, mat, 'z', x, x + 0.15, -Z + 0.15, Z - 0.15, 0, 2.8);
+  kcBloco(M, 'rooftiles', [0.48, 0.25, 0.18], -X - 0.15, X + 0.15, 2.8, 3.0, -Z - 0.15, Z + 0.15, 'wood');
+}
+
+// casa sede do sítio, 9 x 3 x 7 m: três cômodos e varanda coberta na frente.
+PF.kcRurCasaSede = () => prefab('kcRurCasaSede', (M) => {
+  M.local(1); M.save().move(0, 0, -0.5); kcRurCasa(M, 4.35, 2.85, 'plaster', [0.85, 0.79, 0.63]);
+  M.color([0.85, 0.79, 0.63]);
+  kcParede(M, 'plaster', 'z', -1.5, -1.35, -2.7, 2.7, 0, 2.8, [[-0.8, 0.8, 0, 2.2]]);
+  kcParede(M, 'plaster', 'z', 1.35, 1.5, -2.7, 2.7, 0, 2.8, [[-0.8, 0.8, 0, 2.2]]);
+  for (const x of [-4.2, 4.2]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.1, x + 0.1, 0, 2.8, 3.85, 4, 'wood');
+  kcBloco(M, 'rooftiles', [0.48, 0.25, 0.18], -4.5, 4.5, 2.8, 3, 2.85, 4, 'wood'); M.restore();
+});
+KC_BR.kcRurCasaSede = { dentro: [[-3, 0.1, -1.7], [0, 0.1, -1.7], [3, 0.1, -1.7]], laje: [] };
+
+// celeiro, 12 x 6 x 12 m: frente aberta, fardos e mezanino com escada interna.
+PF.kcRurCeleiro = () => prefab('kcRurCeleiro', (M) => {
+  KC_ESCADAS.kcRurCeleiro = []; M.local(1);
+  for (const x of [-6, 5.85]) kcBloco(M, 'boards', KC_RUR_MADEIRA, x, x + 0.15, 0, 5.8, -6, 6, 'wood');
+  kcBloco(M, 'boards', KC_RUR_MADEIRA, -5.85, 5.85, 0, 5.8, -6, -5.85, 'wood');
+  kcBloco(M, 'boards', KC_RUR_MADEIRA, -6, 6, 4.8, 5.8, 5.85, 6, 'wood');
+  kcBloco(M, 'corrugated', [0.45, 0.42, 0.37], -6, 6, 5.8, 6, -6, 6, 'steel');
+  kcEscadaF(M, 'kcRurCeleiro', 3.4, 5.8, -1.3, 3.7, 'z', 2.95, 0, [[5.75, -1.3], [5.75, 3.7]]);
+  kcPatamar(M, 3.4, 5.8, -3.7, -1.3, 2.95);
+  kcBloco(M, 'boards', KC_RUR_MADEIRA, -5.8, 3.4, 2.8, 2.95, -5.85, -1.3, 'wood');
+  kcGuarda(M, -5.8, -1.3, 3.4, -1.3, 2.95);
+  kcRurFardo(M, -4, 0, 2); kcRurFardo(M, -2.6, 0, 2); kcRurFardo(M, -4, 0.7, 2);
+});
+KC_BR.kcRurCeleiro = { dentro: [[0, 0.1, 2], [-2, 0.1, 4]], laje: [[-2, 3.05, -3.5]] };
+
+// casa de pau a pique, 5,3 x 3 x 5,3 m: interior livre com porta na frente.
+PF.kcRurPauAPique = () => prefab('kcRurPauAPique', (M) => { M.local(1); kcRurCasa(M, 2.5, 2.5, 'plaster2', [0.67, 0.48, 0.33]); });
+KC_BR.kcRurPauAPique = { dentro: [[0, 0.1, -0.8]], laje: [] };
+
+// cerca de madeira, 3 x 1,5 x 0,12 m: tábuas com frestas.
+PF.kcRurCerca = () => prefab('kcRurCerca', (M) => { M.local(1); kcRurCerca(M, -1.5, 1.5, 0); });
+// porteira aberta, 3 x 1,5 x 1,3 m: vão livre de 2,7 m.
+PF.kcRurPorteira = () => prefab('kcRurPorteira', (M) => {
+  M.local(1); M.save().move(0, 0, -0.59); for (const x of [-1.44, 1.44]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.06, x + 0.06, 0, 1.5, -0.06, 0.06, 'wood');
+  for (const y of [0.35, 0.85, 1.3]) kcBloco(M, 'boards', KC_RUR_MADEIRA, -1.5, -1.42, y, y + 0.15, 0, 1.24, 'wood');
+  M.restore();
+});
+// curral, 9,12 x 1,5 x 9,12 m: cercado com vão de 3 m na frente.
+PF.kcRurCurral = () => prefab('kcRurCurral', (M) => {
+  M.local(1); for (const z of [-4.5, 4.5]) for (const x of [-3, 0, 3]) if (z < 0 || x !== 0) kcRurCerca(M, x - 1.5, x + 1.5, z);
+  for (const x of [-4.5, 4.5]) for (const z of [-3, 0, 3]) { M.save().move(x, 0, z).rotY(Math.PI / 2); kcRurCerca(M, -1.5, 1.5, 0); M.restore(); }
+});
+KC_BR.kcRurCurral = { dentro: [], laje: [] }; // curral descoberto: não há piso coberto nem laje.
+// fardo solto, 1,2 x 0,7 x 0,9 m: cobertura baixa.
+PF.kcRurFardo = () => prefab('kcRurFardo', (M) => { M.local(1); kcRurFardo(M, 0, 0, 0); });
+// pilha de fardos, 2,4 x 1,4 x 0,9 m: cobertura de pé.
+PF.kcRurFardos = () => prefab('kcRurFardos', (M) => { M.local(1); for (const x of [-0.6, 0.6]) for (const y of [0, 0.7]) kcRurFardo(M, x, y, 0); });
+
+// torre de água, aproximadamente 7,23 x 5,82 x 8,97 m: escada de acesso, escada de marinheiro e plataforma a 4,8 m.
+PF.kcRurTorreAgua = () => prefab('kcRurTorreAgua', (M) => {
+  KC_ESCADAS.kcRurTorreAgua = []; M.local(1); M.save().move(0, 0, -1.285);
+  kcEscadaF(M, 'kcRurTorreAgua', -3.6, -1.2, -0.8, 3.3, 'z', 2.4, 0, [[-3.55, -0.8], [-3.55, 3.3]]);
+  kcPatamar(M, -3.6, 1.2, -3.2, -0.8, 2.4);
+  kcEscadaF(M, 'kcRurTorreAgua', -1.2, 1.2, -0.8, 3.3, 'z', 2.4, 4.8, [[1.15, -0.8], [1.15, 3.3]]);
+  kcBloco(M, 'steel', KC_COR.ferro, -1.2, 3.6, 4.65, 4.8, 3.3, 5.7, 'metal');
+  kcGuarda(M, -1.2, 5.7, 3.6, 5.7, 4.8); kcGuarda(M, 3.6, 3.3, 3.6, 5.7, 4.8);
+  kcGuarda(M, -1.2, 3.3, -1.2, 5.7, 4.8); kcGuarda(M, 1.2, 3.3, 3.6, 3.3, 4.8);
+  for (const x of [1.4, 3.4]) for (const z of [3.5, 5.5]) kcBloco(M, 'steel', KC_COR.ferro, x - 0.05, x + 0.05, 0, 4.8, z - 0.05, z + 0.05, 'metal');
+  M.cls = 1; M.color(KC_COR.ferro); for (const x of [2.1, 2.7]) M.boxB('steel', x - 0.025, x + 0.025, 0, 4.8, 5.72, 5.77);
+  for (let y = 0.3; y < 4.8; y += 0.3) M.boxB('steel', 2.1, 2.7, y, y + 0.04, 5.72, 5.77); M.cls = 0;
+  kcCaixaAgua(M, 2.4, 4.8, 4.5);
+  M.restore(); for (const e of KC_ESCADAS.kcRurTorreAgua) { e.z0 -= 1.285; e.z1 -= 1.285; }
+});
+KC_BR.kcRurTorreAgua = { dentro: [], laje: [[0, 4.9, 3.215]] };
+
+// galinheiro, 4,3 x 3 x 4,3 m: abrigo aberto para entrar.
+PF.kcRurGalinheiro = () => prefab('kcRurGalinheiro', (M) => { M.local(1); kcRurCasa(M, 2, 2, 'boards', KC_RUR_MADEIRA); });
+KC_BR.kcRurGalinheiro = { dentro: [[0, 0.1, -0.7]], laje: [] };
+// poço, 2 x 2,8 x 2 m: mureta e telhadinho em quatro postes.
+PF.kcRurPoco = () => prefab('kcRurPoco', (M) => {
+  M.local(1); kcMureta(M, -0.8, 0.8, 0, -0.8, 0.8, 0.8);
+  for (const x of [-0.9, 0.9]) for (const z of [-0.9, 0.9]) kcBloco(M, 'wood', KC_RUR_MADEIRA, x - 0.05, x + 0.05, 0, 2.6, z - 0.05, z + 0.05, 'wood');
+  kcBloco(M, 'rooftiles', [0.48, 0.25, 0.18], -1, 1, 2.6, 2.8, -1, 1, 'wood');
+});
+// carroça, 3 x 1,1 x 1,6 m: carroceria e rodas sólidas.
+PF.kcRurCarroca = () => prefab('kcRurCarroca', (M) => {
+  M.local(1); kcBloco(M, 'boards', KC_RUR_MADEIRA, -1.5, 1.5, 0.45, 1.1, -0.6, 0.6, 'wood');
+  for (const x of [-0.9, 0.9]) for (const z of [-0.7, 0.7]) kcRurRoda(M, x, z, 0.4, 0.2, 'wood', [0.26, 0.2, 0.15]);
+});
+// trator velho, 4 x 2 x 2,4 m: carroceria e rodas com colisão.
+PF.kcRurTrator = () => prefab('kcRurTrator', (M) => {
+  M.local(1); kcBloco(M, 'rust', [0.48, 0.23, 0.13], -2, 2, 0.5, 1.25, -0.65, 0.65, 'metal');
+  kcBloco(M, 'rust', [0.48, 0.23, 0.13], -1.9, -0.4, 1.25, 1.8, -0.6, 0.6, 'metal');
+  for (const x of [-1.2, 1.3]) for (const z of [-0.9, 0.9]) kcRurRoda(M, x, z, 0.55, 0.6, 'rubber', [0.12, 0.12, 0.12]);
+  kcBloco(M, 'steel', KC_COR.ferro, 1.65, 1.75, 1.25, 2, -0.1, 0.1, 'metal');
+});
+// milho, 6 x 2,2 x 6 m: folhagem e pés sem colisão, para atravessar.
+PF.kcRurMilho = () => prefab('kcRurMilho', (M) => {
+  M.local(1); M.cls = 1; M.color([0.40, 0.31, 0.20]); M.boxB('dirt', -3, 3, 0, 0.02, -3, 3);
+  for (let x = -2.7; x <= 2.7; x += 0.6) for (let z = -2.7; z <= 2.7; z += 0.6) {
+    M.color([0.26, 0.43, 0.12]); M.boxB('wood', x - 0.025, x + 0.025, 0, 2.2, z - 0.025, z + 0.025);
+    M.color([0.31, 0.53, 0.16]); M.boxB('canvas', x - 0.23, x + 0.23, 0.6, 2, z - 0.015, z + 0.015);
+  } M.cls = 0;
+});
+// estrada de terra, 6 x 0,02 x 12 m: superfície visual sem colisão.
+PF.kcRurEstrada = () => prefab('kcRurEstrada', (M) => { M.local(1); M.cls = 1; M.color([0.57, 0.44, 0.32]); M.boxB('dirt', -3, 3, 0, 0.02, -6, 6); M.cls = 0; });
+// árvore baixa de pomar, 3 x 3,2 x 3 m: tronco sólido e copa sem colisão.
+PF.kcRurPomar = () => prefab('kcRurPomar', (M) => {
+  M.local(1); kcBloco(M, 'wood', KC_RUR_MADEIRA, -0.15, 0.15, 0, 2, -0.15, 0.15, 'wood');
+  M.cls = 1; M.color([0.24, 0.45, 0.16]); M.boxB('canvas', -1.5, 1.5, 1.5, 3.2, -1.5, 1.5); M.cls = 0;
+});

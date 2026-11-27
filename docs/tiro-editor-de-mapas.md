@@ -448,6 +448,29 @@ Cada praça é um prefab completo, com piso de 10 x 8 m e frente para +z. Posici
 | `kcPracaConvivio` | 10,4 x 4,2 x 8 | Praça com mesa de dominó, bancos, árvores e luminárias |
 | `kcPracaParquinho` | 10,4 x 4,2 x 8 | Praça com balanço, bancos, árvores e luminárias |
 
+## Zona rural
+
+As peças têm a frente para +z. Gire celeiro e torre apenas de 90 em 90 graus, para as escadas funcionarem. `KC_BR` em `pecas.js` registra pontos locais para o futuro gerador do Battle royale; não adiciona armas automaticamente ao mapa. O curral é descoberto e não tem pontos cobertos ou elevados.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcRurCasaSede` | 9 x 3 x 7 | Casa de três cômodos e varanda coberta |
+| `kcRurCeleiro` | 12 x 6 x 12 | Celeiro aberto com fardos, escada e mezanino |
+| `kcRurPauAPique` | 5,3 x 3 x 5,3 | Casa pequena com interior acessível |
+| `kcRurCerca` | 3 x 1,5 x 0,12 | Cerca com frestas entre as tábuas |
+| `kcRurPorteira` | 3 x 1,5 x 1,3 | Porteira aberta com vão livre |
+| `kcRurCurral` | 9,12 x 1,5 x 9,12 | Curral com entrada aberta |
+| `kcRurFardo` | 1,2 x 0,7 x 0,9 | Fardo baixo |
+| `kcRurFardos` | 2,4 x 1,4 x 0,9 | Pilha de fardos |
+| `kcRurTorreAgua` | aprox. 7,23 x 5,82 x 8,97 | Torre com caixa, escada e plataforma elevada |
+| `kcRurGalinheiro` | 4,3 x 3 x 4,3 | Abrigo aberto |
+| `kcRurPoco` | 2 x 2,8 x 2 | Poço com cobertura |
+| `kcRurCarroca` | 3 x 1,1 x 1,6 | Carroça de madeira |
+| `kcRurTrator` | 4 x 2 x 2,4 | Trator velho com rodas sólidas |
+| `kcRurMilho` | 6 x 2,2 x 6 | Plantação atravessável, sem colisão |
+| `kcRurEstrada` | 6 x 0,02 x 12 | Chão de terra sem colisão |
+| `kcRurPomar` | 3 x 3,2 x 3 | Árvore baixa, com tronco sólido |
+
 ## Campo de várzea e peças de rua
 
 As medidas incluem os elementos que avançam para fora do corpo principal. A arquibancada tem escada: gire essa peça somente de 90 em 90 graus.

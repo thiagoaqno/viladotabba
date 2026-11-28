@@ -38,7 +38,11 @@ const daFavela = FAV.pecas.filter((P) => {
 });
 
 // ---------- chão e a parede da beira ----------
-caixa(meio, -BX, BX, -0.3, 0, -BZ, BZ, 'cobble', C.rua);
+// (2026-11-28, o Thiago: "troca todo o chão da favela do BR por terreno, assim eu posso mexer na topografia") o chão é o terreno
+// do editor (relevo: uma grade de 2 em 2 m, plana em y = 0, cobrindo o mapa inteiro, com a mesma superfície e cor do chão de antes).
+// Mexa nele pelo editor (⛰ Terreno). Depois disso, NÃO rode este gerador de novo: ele zera a grade.
+const RELEVO = { x0: -BX, z0: -BZ, passo: 2, nx: BX + 1, nz: BZ + 1, m: 'cobble', cor: C.rua };
+RELEVO.h = new Array(RELEVO.nx * RELEVO.nz).fill(0);
 const beira = (x0, x1, z0, z1) => caixa(meio, x0, x1, -0.3, 600, z0, z1, 'glass', [0.6, 0.8, 1], { inv: true });
 beira(-BX, -BX + 0.2, -BZ, BZ); beira(BX - 0.2, BX, -BZ, BZ); beira(-BX, BX, -BZ, -BZ + 0.2); beira(-BX, BX, BZ - 0.2, BZ);
 
@@ -262,7 +266,8 @@ const J = {
   id: 'favela-grande', nome: 'Favela Grande', tag: 'Morro inteiro (Battle royale)', tipo: 'open', ceu: FAV.ceu || 'meltem', mar: null,
   desc: 'A Favela no meio do morro inteiro: o Campinho e o Ferro-velho a oeste, o Comércio e a Rodoviária a leste, e o morro com vielas, lajes, feira e praça ao norte e ao sul. Feito para o Battle royale.',
   pecas, nascer: FAV.nascer, dom: FAV.dom, mecha: FAV.mecha, poi,
-  br: { armas, coletes, curas }, // o centro da zona e as largadas continuam automáticos (tiro-br.js)
+  br: { armas, coletes, curas },
+  relevo: RELEVO, // o chão (ver o começo do arquivo) // o centro da zona e as largadas continuam automáticos (tiro-br.js)
   sniper: FAV.sniper, som: FAV.som || 'concrete', ambiente: FAV.ambiente,
   zonas: [...(FAV.zonas || []), ['Morro sul', -BX, BX, 44, BZ], ['Morro norte', -BX, BX, -BZ, -44], ['Estação e Sítio', -BX, -90, -44, 44], ['Campinho', -90, -30, -44, 44],
     ['Comércio', 30, 90, -44, 44], ['Rodoviária', 90, BX, -44, 44]],

@@ -453,6 +453,8 @@ if (IATE_ATIVO) {
   // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script
   const dupla = fs.readFileSync(path.join(__dirname, "tiro-br-dupla.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => dupla + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale em dupla" });
+  const carros = fs.readFileSync(path.join(__dirname, "tiro-br-carros.js"), "utf8");
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => carros + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "carros do battle royale" });
 }
 
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador

@@ -1,26 +1,11 @@
-# Tiro: Favela Grande com zona rural, centro comercial e bairro novo (peças do Codex)
+# Tiro: carros de F1 no Battle royale
 
-Com as 37 peças novas do Codex (#1079), a Favela Grande cresce de 272 x 212 m para **480 x 212 m** de chão. A parede de 600 m vai para a nova beira, bem na beira do abismo. O sul é feito no gerador e espelhado no norte, como o resto.
+O Battle royale passa a montar carros dirigíveis com quatro pinturas genéricas. Na Favela Grande são sorteados pontos candidatos na avenida, na estrada rural e no centro comercial; os demais mapas usam pontos de navegação livres. Os carros são removidos ao encerrar a partida e não alteram o JSON nem o gerador do mapa.
 
-**Zona rural** (oeste, x -232 a -136, depois do Ferro-velho):
-- estrada de terra N-S colada ao Ferro-velho e uma E-W cortando a zona;
-- **estação de trem** no meio (plataforma coberta, bilheteria, trilhos e passarela);
-- sítio com **casa sede** e **cerca com porteira**, poço, carroça, **celeiro com mezanino**, **torre d'água** (ponto alto), galinheiro, duas **casas de pau a pique**, **curral**, trator, fardos;
-- **milharal** de 24 x 24 m e **pomar** com 18 árvores.
+E ou o botão de usar entra e sai, com um ocupante. A direção usa W/S e A/D ou o joystick, a câmera acompanha por trás e o motorista não atira. A carroceria tem 300 de vida, explode ao ser destruída e mata o ocupante; uma parte da cabine fica aberta a tiros. Atropelamentos acima de 8 m/s causam dano, e a zona continua afetando o motorista. Os robôs não dirigem e tentam contornar carros parados.
 
-**Centro comercial** (leste, x 136 a 248, perto da avenida):
-- **passarela** sobre a avenida;
-- **galeria** de 2 andares, **supermercado** e **posto de gasolina** na frente;
-- banco, farmácia, lanchonete, loja de roupas e **estacionamento** atrás;
-- carros e postes na avenida, ponto de ônibus.
+Em salas, o anfitrião arbitra ocupação e vida; o motorista publica pose e velocidade, e os demais suavizam a movimentação. O anfitrião também envia periodicamente um resumo para recuperação após entrada tardia ou reconexão.
 
-**Bairro novo** (mais para o alto, a leste):
-- **prédio comercial de 4 andares** com escada até a laje;
-- **escola** com quadra coberta, **igreja** com torre, **posto de saúde**, **condomínio** com guarita e **lava-rápido**;
-- praça com banco, lixeira e árvore.
+O modelo é uma malha simplificada montada para o Tiro, inspirada nas proporções do carro da Corrida; não copia o GLB nem as pinturas de equipe. Não há física da Corrida, piloto robô, passageiros ou novos marcadores no mapa. A negociação de compatibilidade para jogadores que tenham uma versão antiga do jogo aberta ainda não foi acrescentada.
 
-**Battle royale:** os pontos `KC_BR` de cada peça do Codex são lidos direto do `pecas.js` e viram marcadores. Agora são **119 armas** (46 em lajes e mezaninos), **30 coletes** e **59 curas**, para até 20 jogadores. A grade de pontos de passagem cobre o mapa inteiro (1.115 pontos novos).
-
-**Conferido:** o gerador confere sozinho que nenhuma peça encosta em outra (0) nem passa da beira (0), pelos tamanhos do guia, e o script do jogo montado passa no `node --check`. Não joguei nem vi o mapa. São uns 760 prefabs; vale ver o desempenho.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Conferido com `node --check` em `tiro-br-carros.js`, `tiro-frontline.js` e no script extraído do jogo remontado. Não rodei a suíte nem criei testes. **Rascunho:** ainda é necessário conferir jogando a quantidade e as posições reais de carros, a dirigibilidade e as colisões, danos, controle no tablet e sincronização em um salão com mais de um jogador.

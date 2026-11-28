@@ -11,6 +11,20 @@
    chão saem da mesma semente em todo mundo (código do salão + mapa) e o relógio é o da partida (MATCH.timeLeft, que vem do host). */
 const BR = { on: false, ordem: 0, armado: false, T0: 0, z: null, plano: null, malha: null, estado: '', botT: 0, ver: null, cam: null, hudFora: null, roTxt: null, aviso: null, lugar: 0 };
 // os dois battle royale: o de cada um por si ('br') e o em dupla ('brduo', ferramentas/tiro-br-dupla.js)
+// a faca na hora do golpe (troca no tiro-frontline.js): o alvo do aperto, se ainda estiver a até 2,5 m; senão, o inimigo mais perto
+// na frente (cone de uns 60°, a até 2,5 m, sem parede no meio). Vale em todos os modos.
+function facaAlvo(T, e) {
+  if (T && T.alive && T.pos.distanceTo(e.pos) < 2.5) return T;
+  const f = camFwd(new V3()); f.y = 0; f.normalize(); let best = null, bd = 2.5;
+  for (const o of entities) {
+    if (o === e || !o.alive || o.off || allied(o, e)) continue;
+    const d = o.pos.distanceTo(e.pos); if (d > bd) continue;
+    const to = new V3(o.pos.x - e.pos.x, 0, o.pos.z - e.pos.z); if (to.lengthSq() > 1e-4 && to.normalize().dot(f) < 0.5) continue;
+    if (!lineClear(camera.position, entChest(o, new V3()))) continue;
+    best = o; bd = d;
+  }
+  return best;
+}
 function brModo(m) { return m === 'br' || m === 'brduo'; }
 function brSolo(m) { return m === 'ffa' || brModo(m); }
 function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? BR_MAX : NET_MAX; }

@@ -1,17 +1,17 @@
-# Tiro: Battle royale com 150 de vida e colete em placas (300 no total, como no Warzone)
+# Tiro: a faca acerta de verdade, e o 3 saca a faca sem atacar
 
-Pedido do Thiago: no BR, mais vida e escudo que no multijogador, para não morrer na hora depois de passar um tempão juntando coisas no mapa (mais tempo para matar).
+Os amigos do Thiago: "a faca funcionava só quando queria". E: "apertando 3, deve ser possível segurar a faca na mão sem dar facada, andando um pouco mais rápido".
 
-**Vida de 150:** a vida do jogo continua de 0 a 100 por dentro (regeneração, cura, HUD), e o dano de tiro, granada, faca e zona que chega nela é multiplicado por 2/3. O número da vida no HUD mostra de 0 a 150. Só no battle royale; nos outros modos nada muda.
+**Por que falhava:**
+- **F segurado mais de 0,3 s sacava a faca em vez de dar a facada.** Quem segurava o F um pouquinho mais não dava golpe nenhum;
+- o alvo era escolhido **no aperto**, num cone estreito e até 4,2 m, e só levava o golpe se ainda estivesse **a menos de 2,2 m** quando a lâmina chegava. Se ele se mexia, a facada errava; e quem entrasse na frente depois do aperto não contava.
 
-**Colete em placas:** cada caixa azul é **uma placa de 50**, até **3 placas (150)**. O colete agora segura **o dano inteiro** até acabar (antes segurava 60%, até 100), e só depois a vida começa a cair. A zona passa direto por ele. A barra azul vai de 0 a 150, e ao pegar uma caixa aparece "Colete: N de 3 placas".
-
-**No total: 150 de vida + 150 de placas = 300**, em dano das armas (as mesmas de sempre). A cura continua dando +50 por dentro, o que aparece como "+75 de vida".
-
-Arquivos: `ferramentas/tiro-br.js` (`BR_VIDA_K`, placas, dano e zona) e `ferramentas/tiro-frontline.js` (o número da vida no HUD).
+**Agora:**
+- **F é sempre facada**, na hora;
+- **3 saca a faca e guarda de novo** (com a faca na mão o clique dá a facada, como antes). A tecla aparece na lista de teclas como "Faca na mão (sem atacar)";
+- **na hora do golpe**, se o alvo do aperto já saiu, vale o inimigo mais perto **na frente** (cone de uns 60°), a **até 2,5 m**, sem parede no meio (`facaAlvo`, em `ferramentas/tiro-br.js`). Vale em todos os modos;
+- com a faca na mão a pessoa já anda 1,15 vez a velocidade normal, um pouco mais rápido que com as pistolas (1,04 a 1,09). Ficou como estava.
 
 Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-**Faca:** a facada passa pelas placas e pela vida de 150, e mata direto como nos outros modos.

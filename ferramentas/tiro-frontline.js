@@ -454,6 +454,8 @@ if (IATE_ATIVO) {
   h = troca(h, "if(!Settings.allyMarks||MATCH.mode==='ffa'||", "if((!Settings.allyMarks||MATCH.mode==='ffa')&&!(BR.on&&BR.duo)||", { nome: "BR: marcador do parceiro" });
   h = troca(h, "a=(o.markVis?0.9:0.42)", "a=(o.markVis?0.9:BR.on&&BR.duo?0.75:0.42)", { nome: "BR: parceiro atrás de parede" });
   h = troca(h, "d<AM.range&&", "d<(BR.on&&BR.duo?600:AM.range)&&", { nome: "BR: parceiro longe" });
+  // vida de 150 no battle royale: o número do HUD (BR_VIDA_MOSTRA, tiro-br.js)
+  h = troca(h, "hudText($('hpN'),hpv)", "hudText($('hpN'),BR.on?Math.ceil(Math.max(0,e.health)*BR_VIDA_MOSTRA):hpv)", { nome: "BR: vida de 150 no HUD" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
   // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script

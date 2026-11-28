@@ -1,16 +1,23 @@
-# Tiro: peças de arma pelo mapa do Battle royale, com equipar automático
+# Tiro: avião na largada do Battle royale e levantar o parceiro segurando E
 
-Pedido do Thiago: encontrar peças de armas andando pelo mapa e poder ajustar no meio da partida. Escolhemos o equipar automático, em vez de um inventário.
+Pedido do Thiago: "para reanimar, precisa ter um botão que você aperta... não só chegar perto e reanima sozinho. Além disso, para nascer, deve passar um avião lento por cima do mapa... aí as pessoas vão dropando do avião quando quiserem... o avião passa em sentidos aleatórios, mas sempre cruzando o meio do mapa."
 
-**Como funciona** (`ferramentas/tiro-br.js`: `brPecasPoe`, `brPecaArma`, `brPecaPor`):
-- no Battle royale, as **peças** (os 19 acessórios do jogo: miras, silenciador, compensador, freio de boca, choke, canos, empunhaduras, laser, carregadores, coronhas, munições) ficam no chão **ao lado da outra metade dos lugares das armas** (a primeira metade tem as granadas): dentro das construções, nas lajes ou nos marcadores do editor, com a semente do salão. É uma caixinha pequena com a cor do encaixe (azul: mira; cinza: cano; marrom: sob o cano; vermelha: lateral; verde: carregador e munição; preta: coronha);
-- **passando por cima**, a peça **entra sozinha na arma da mão**, se servir nela (as mesmas regras do menu de classes: a família da arma, um acessório por encaixe e no máximo 4 por arma). Se não couber na da mão, tenta a outra arma. Aparece "Silenciador na M4A1", e a arma na mão já mostra a peça;
-- se o encaixe já estiver ocupado, a peça **fica no chão**, para ninguém trocar de peça sem querer só de andar;
-- quando você pega outra arma no chão, ela vem com as peças dela (as da arma antiga ficam na arma antiga);
-- os robôs não pegam peças. Como as caixas e as granadas, as peças não vão pela rede: a que outro jogador pisou some na sua tela também.
+**Levantar o parceiro** (`ferramentas/tiro-br-dupla.js`):
+- no BR em dupla, o jogador só levanta o parceiro caído **segurando E** perto dele, por 4 s e sem atirar. Soltou o E, o tempo volta a zero;
+- perto dele, o E levanta o parceiro em vez de pegar a arma do chão;
+- no tablet e no controle, um toque no botão de pegar (ou de usar) começa a levantar, e segue enquanto você fica perto;
+- os robôs continuam levantando o parceiro sozinhos.
 
-**Ainda não tem:** tirar ou trocar uma peça que já está na arma (seria o inventário), e os robôs usando peças.
+**Avião da largada** (arquivo novo `ferramentas/tiro-br-aviao.js`, montado depois do airdrop):
+- no começo, todo mundo entra num avião que cruza o mapa em linha reta, **sempre passando pelo meio**, de uma borda à outra, num ângulo sorteado a cada partida. A semente é a do salão, então todos veem o mesmo avião;
+- o avião voa 65 m acima do ponto mais alto embaixo da rota, a 12 m/s (devagar). Na contagem ele espera na borda; no "Vai!" começa a andar;
+- **Espaço ou E salta** quando você quiser (no tablet, pular ou pegar). Aparece um aviso com o tempo que falta; no fim da rota, quem ainda está dentro salta sozinho. Dali segue a queda de antes: queda livre planando e paraquedas a 35 m do chão;
+- cada robô salta quando o avião passa mais perto do lugar de largada dele (os lugares espalhados de antes) e plana até lá, então eles continuam espalhados pelo mapa;
+- no minimapa aparecem a rota tracejada e um triângulo branco no avião;
+- dentro do avião ninguém aparece, não se atira e a zona não tira vida.
 
-Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
+A volta do parceiro no BR em dupla continua caindo de paraquedas em cima dele, sem avião.
+
+Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

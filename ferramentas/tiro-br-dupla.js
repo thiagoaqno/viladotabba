@@ -7,7 +7,7 @@
      (netIdOf) e fica fixa no "Vai!";
    - o parceiro é aliado: não leva tiro seu, aparece em claro e no minimapa; a dupla cai perto uma da outra (3 m);
    - quem leva o tiro que mataria, com o parceiro de pé, CAI: fica agachado, sem atirar, com BR_CAIDO.tempo s de vida (que
-     também cai com tiro); o parceiro fica perto (até BR_CAIDO.raio m) por BR_CAIDO.levantar s sem atirar e ele levanta com
+     também cai com tiro); o parceiro fica perto (até BR_CAIDO.raio m) por BR_CAIDO.levantar s segurando E, sem atirar, e ele levanta com
      BR_CAIDO.volta de vida. Sangrou até o fim, levou o tiro final ou o parceiro morreu: morre de vez;
    - a dupla sai quando os dois morrem; a última dupla de pé vence (os dois ganham). O placar do fim é por dupla.
    Rede: cada máquina decide sobre os soldados dela (o jogador, e os robôs no host), como nas mortes. "Caiu"/"levantou" vão
@@ -37,7 +37,7 @@ function brVoltar(e) {
 
 MODES.brduo = Object.assign({}, MODES.br, {
   name: 'Battle royale em dupla', btn: 'BR em dupla', sub: 'Battle royale em dupla, a última dupla vence', teams: 'Até 20 jogadores, 10 duplas',
-  hint: 'Duplas de dois. Quem cai fica 30 s no chão: o parceiro chega perto e fica 4 s sem atirar para levantar ele. A última dupla de pé vence.',
+  hint: 'Duplas de dois. Quem cai fica 30 s no chão: o parceiro chega perto e segura E por 4 s, sem atirar, para levantar ele. A última dupla de pé vence.',
 });
 MODE_IDS.push('brduo');
 
@@ -113,7 +113,7 @@ function brCair(v, a, weapon) {
 }
 function brLevantar(v) {
   if (!v.brCaido || !v.alive) return;
-  v.brCaido = false; v.brRevT = 0; v.health = BR_CAIDO.volta;
+  v.brCaido = false; v.brRevT = 0; v.health = BR_CAIDO.volta; BR.revLig = false;
   if (MATCH.online && brLocal(v)) netEvent({ k: 'brc', c: 0 }, v);
   if (v.isPlayer) { PL.crouchToggle = false; VM.lowerTarget = 0; hudMsg('Você foi levantado!', 'xp', 2); }
 }
@@ -121,6 +121,23 @@ function brLevantar(v) {
 function brMorrerCaido(v) {
   v.health = 0; const a = v.brCaidoPor && entities.includes(v.brCaidoPor) ? v.brCaidoPor : v;
   killEnt(v, a, v.brCaidoArma || NET_WSPECIAL.zone, false, new V3(0, 0, -1));
+}
+
+/* (2026-11-28, o Thiago: "para reanimar, precisa ter um botão que você aperta... não só chegar perto e reanima sozinho")
+   O jogador levanta o parceiro SEGURANDO a tecla de usar (E) perto dele: soltou, o tempo volta a zero. No tablet e no controle,
+   onde o botão de pegar é de toque, um toque começa e o levantar segue enquanto ele fica perto (afastou, para). Os robôs seguem
+   levantando sozinhos. */
+function brPertoCaido(e, p) { return hyp(p.pos.x - e.pos.x, p.pos.z - e.pos.z) < BR_CAIDO.raio && Math.abs(p.pos.y - e.pos.y) < 1.5; }
+function brSegurandoUso() { return inputMode() === 'kb' ? !!KEYS.KeyE : !!BR.revLig; }
+function brTeclaLevantar(p) {
+  const m = inputMode();
+  if (m === 'touch') return `Toque no botão de pegar para levantar ${p.name}`;
+  return m === 'pad' ? `Aperte o botão de usar para levantar ${p.name}` : `Segure E para levantar ${p.name}`;
+}
+// o parceiro caído ao alcance do jogador (para a tecla de usar levantar ele, em vez de pegar arma)
+function brCaidoPerto() {
+  const e = PL.ent; if (!BR.on || !BR.duo || !e || !e.alive || e.brCaido || e.brQueda || MATCH.state !== 'playing') return null;
+  const p = brParceiro(e); return p && p.alive && p.brCaido && brPertoCaido(e, p) ? p : null;
 }
 
 /* ---------- a cada quadro ---------- */
@@ -137,11 +154,14 @@ function brDuplaUpdate(dt) {
       if (e.health <= 0 || !p || p.brOut || !p.alive) { brMorrerCaido(e); continue; }
       if (e.isPlayer) txt = `Caído: ${Math.ceil(e.health * BR_CAIDO.tempo / 100)} s · fique perto do parceiro para ele te levantar`;
     }
-    // reanimar: o parceiro de pé, desta máquina, perto do caído e sem atirar
+    // reanimar: o parceiro de pé, desta máquina, perto do caído, sem atirar e (o jogador) segurando a tecla de usar
     if (!e.brCaido && brLocal(e) && p && p.brCaido && p.alive) {
-      const perto = hyp(p.pos.x - e.pos.x, p.pos.z - e.pos.z) < BR_CAIDO.raio && Math.abs(p.pos.y - e.pos.y) < 1.5, quieto = MATCH.time - (e.lastShotT || -9) > 0.6;
-      e.brRevT = perto && quieto ? (e.brRevT || 0) + dt : 0;
-      if (e.isPlayer) txt = perto ? (quieto ? `Levantando ${p.name}: ${Math.max(0, BR_CAIDO.levantar - e.brRevT).toFixed(1)} s` : 'Pare de atirar para levantar o parceiro') : `${p.name} caiu: chegue perto para levantar`;
+      const perto = brPertoCaido(e, p), quieto = MATCH.time - (e.lastShotT || -9) > 0.6;
+      if (e.isPlayer && !perto) BR.revLig = false;
+      const quer = !e.isPlayer || brSegurandoUso();
+      e.brRevT = perto && quieto && quer ? (e.brRevT || 0) + dt : 0;
+      if (e.isPlayer) txt = !perto ? `${p.name} caiu: chegue perto para levantar` : !quieto ? 'Pare de atirar para levantar o parceiro'
+        : quer ? `Levantando ${p.name}: ${Math.max(0, BR_CAIDO.levantar - e.brRevT).toFixed(1)} s` : brTeclaLevantar(p);
       if (e.brRevT >= BR_CAIDO.levantar) {
         e.brRevT = 0;
         if (brLocal(p)) brLevantar(p); else netEvent({ k: 'brv', to: netIdOf(p) }, e);
@@ -246,6 +266,9 @@ function brMarcasCaidos() {
     return r;
   };
   // caído não pega arma (troca nem munição no chão): o updateDrops só deixa pegar quem está vivo, e o caído passa por morto ali
+  // a tecla de usar perto do parceiro caído: levanta ele (não pega a arma do chão nem sobe na moto)
+  const mechaUse1 = mechaUse;
+  mechaUse = function () { if (brCaidoPerto()) { BR.revLig = true; return true; } return mechaUse1(); };
   const swapWithDrop1 = swapWithDrop;
   swapWithDrop = function () { if (BR.on && PL.ent.brCaido) return; return swapWithDrop1(); };
   const updateDrops1 = updateDrops;

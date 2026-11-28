@@ -3285,6 +3285,1256 @@
     46.5
    ],
    "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -36.5,
+    3.105,
+    -50.75
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -36,
+    3.24,
+    6.75
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    -61.25,
+    4.592,
+    82.25
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -47.25,
+    3.382,
+    -45
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    -22,
+    2.85,
+    20.5
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    44,
+    2.537,
+    67.25
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -0.75,
+    3.135,
+    33
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -69.5,
+    3.846,
+    56.75
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -25.25,
+    2.85,
+    5.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -20.5,
+    5.503,
+    37.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    -30.5,
+    2.838,
+    -67.75
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    -26.75,
+    2.91,
+    26.5
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    55.75,
+    3.316,
+    -42.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -26.75,
+    2.85,
+    12.75
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    81,
+    15.09,
+    -69.25
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    -58.25,
+    2.017,
+    -46.5
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -7.75,
+    2.887,
+    -24
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    40,
+    3.85,
+    36.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    -5.5,
+    6.99,
+    44.25
+   ],
+   "r": 135
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    23.75,
+    2.908,
+    -43.75
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -35.75,
+    8.111,
+    -37.25
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -35.75,
+    2.655,
+    16.75
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    -61.25,
+    3.312,
+    -6.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    15.5,
+    3.17,
+    82.5
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    63.5,
+    2.85,
+    -13.5
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -59.25,
+    8.305,
+    -28.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    45,
+    3.971,
+    25.25
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -45,
+    9.098,
+    -26.5
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    7.5,
+    13.514,
+    -68.5
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -15.5,
+    2.946,
+    -20.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -81.5,
+    10.721,
+    -57.5
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    39,
+    3.532,
+    29
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -34.5,
+    4.478,
+    -5.25
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    -28.5,
+    3.694,
+    79
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -43.5,
+    4.335,
+    -5.75
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    -30.75,
+    8.622,
+    -20.5
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    8.75,
+    4.245,
+    82
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    -46.25,
+    3.809,
+    76.25
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    12.5,
+    2.877,
+    29.75
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    40.25,
+    3.011,
+    46
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    -50.25,
+    3.901,
+    82.75
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -43.75,
+    2.938,
+    -50.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    12,
+    13.888,
+    -60
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -51,
+    2.83,
+    -81.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -13,
+    5.904,
+    39.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    48.75,
+    3.414,
+    15
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    45.5,
+    3.575,
+    39
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -75.5,
+    3.812,
+    6.25
+   ],
+   "r": 135
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    -50.5,
+    2.864,
+    -50.25
+   ],
+   "r": 135
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    86.5,
+    14.953,
+    -81.75
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -63.5,
+    3.902,
+    -14.25
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -9.75,
+    4.78,
+    -73.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArvoreCanteiro",
+   "p": [
+    13.25,
+    2.85,
+    -4.25
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -74.5,
+    3.981,
+    35.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    62,
+    3.299,
+    -32.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    82.5,
+    15.088,
+    -61.5
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -33.25,
+    6.511,
+    -12.5
+   ],
+   "r": 135
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -54.75,
+    2.83,
+    -56.25
+   ],
+   "r": 45
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    42.75,
+    13.728,
+    -59
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -73.25,
+    3.93,
+    43
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBananeira",
+   "p": [
+    49.5,
+    4.555,
+    30.5
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    -63.5,
+    3.029,
+    -87.75
+   ],
+   "r": 225
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    49,
+    2.299,
+    58
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -16,
+    2.886,
+    28.75
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -22,
+    2.85,
+    -1.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    28,
+    4.056,
+    47.25
+   ],
+   "r": 135
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRurPomar",
+   "p": [
+    57.75,
+    3.734,
+    -48.75
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -21.25,
+    1.214,
+    82
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcArbusto",
+   "p": [
+    -22.75,
+    4.695,
+    -82.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPracaArvore",
+   "p": [
+    -80,
+    4.78,
+    1.25
+   ],
+   "r": 315
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    -78,
+    11.272,
+    69.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPneus",
+   "p": [
+    -30.5,
+    9.197,
+    -33.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacosBaixo",
+   "p": [
+    20.75,
+    7.081,
+    42.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    -20.5,
+    2.973,
+    -14.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    48,
+    3.404,
+    -48.25
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    87.25,
+    23.138,
+    15
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacos",
+   "p": [
+    4.25,
+    6.662,
+    47.25
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    43.5,
+    3.418,
+    18
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    -41,
+    3.777,
+    80.75
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacos",
+   "p": [
+    -41,
+    2.83,
+    -66
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcJersey",
+   "p": [
+    -55,
+    2.884,
+    -87.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    -81.75,
+    7.821,
+    -72.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarreiraAgua",
+   "p": [
+    -55,
+    3.286,
+    -7
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    -39,
+    9.363,
+    -22.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPneus",
+   "p": [
+    -81.25,
+    6.113,
+    12.25
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    10.5,
+    13.803,
+    -73.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcManilhas",
+   "p": [
+    62,
+    3.322,
+    -39.75
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    -8.5,
+    2.854,
+    28
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacosBaixo",
+   "p": [
+    -8,
+    5.29,
+    -82.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacos",
+   "p": [
+    77.5,
+    11.92,
+    28.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPneus",
+   "p": [
+    -19.25,
+    11.517,
+    -39.75
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    -24,
+    2.763,
+    -65.75
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    -67.75,
+    0.795,
+    -48.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcManilhas",
+   "p": [
+    -64,
+    3.803,
+    60.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcJersey",
+   "p": [
+    -69.5,
+    3.458,
+    5.75
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarreiraAgua",
+   "p": [
+    -52,
+    7.495,
+    -25.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    87,
+    14.85,
+    -8.5
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    3.5,
+    2.869,
+    28.75
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacos",
+   "p": [
+    -47.5,
+    3.92,
+    -0.5
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacos",
+   "p": [
+    86.5,
+    14.458,
+    -72.25
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    -19.25,
+    4.022,
+    -74.75
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacosBaixo",
+   "p": [
+    -5.5,
+    12.989,
+    -47.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcJersey",
+   "p": [
+    56.75,
+    4.377,
+    40
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacos",
+   "p": [
+    -74.25,
+    3.944,
+    24.75
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacosBaixo",
+   "p": [
+    33,
+    14.837,
+    -87
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcJersey",
+   "p": [
+    36.25,
+    14.952,
+    -60.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    21.25,
+    11.153,
+    -93.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    -78.5,
+    11.984,
+    -94.5
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    18,
+    14.072,
+    -60.25
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    44.5,
+    2.486,
+    53.75
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPaletes",
+   "p": [
+    -65.75,
+    8.882,
+    -29.75
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    -0.5,
+    15.678,
+    -94.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcManilhas",
+   "p": [
+    67,
+    12.55,
+    29
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcBarreiraAgua",
+   "p": [
+    39.5,
+    2.85,
+    -14.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    8.75,
+    11.257,
+    -87.75
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    -74,
+    4.093,
+    49.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPneus",
+   "p": [
+    85,
+    13.355,
+    29.5
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcPaletes",
+   "p": [
+    11.25,
+    2.937,
+    -43
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    -23.5,
+    2.877,
+    -7.75
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacosBaixo",
+   "p": [
+    -28,
+    3.176,
+    -73.25
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTambores",
+   "p": [
+    36,
+    2.931,
+    51.5
+   ],
+   "r": 180
+  },
+  {
+   "t": "prefab",
+   "nome": "kcSacos",
+   "p": [
+    -81.75,
+    6.889,
+    28.75
+   ],
+   "r": 90
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    -48.5,
+    2.83,
+    -56.75
+   ],
+   "r": 0
+  },
+  {
+   "t": "prefab",
+   "nome": "kcMuroQuebrado",
+   "p": [
+    37.5,
+    13.863,
+    -94.5
+   ],
+   "r": 270
+  },
+  {
+   "t": "prefab",
+   "nome": "kcTamboresAzuis",
+   "p": [
+    28,
+    3.404,
+    58.25
+   ],
+   "r": 270
   }
  ],
  "nascer": [

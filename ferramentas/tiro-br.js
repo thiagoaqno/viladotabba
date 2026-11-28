@@ -90,6 +90,21 @@ const brDentroZ = (z, x, zz, m = 1) => (x - z.x) ** 2 + (zz - z.z) ** 2 <= (z.r 
 /* ---------- armas no chão ---------- */
 const BR_ARMAS = [['m4', 4], ['ak47', 4], ['scarh', 3], ['famas', 3], ['mp5', 4], ['mp7', 3], ['ump45', 3], ['vector', 3], ['m1014', 2], ['rem870', 2], ['aa12', 1], ['l96', 1.5], ['svd', 1.5], ['m82', 1]];
 const BR_LOOT_LONGE = 6, BR_LOOT_TETO = 4.5, BR_LOOT_LAJE = 2.5, BR_LOOT_PAREDE = 7;
+// por construção: uma arma a cada BR_LOOT_M2 m² de piso, até BR_LOOT_MAX nela, e até BR_LOOT_TETO_N no mapa (fora as dos módulos)
+const BR_LOOT_M2 = 35, BR_LOOT_MAX = 6, BR_LOOT_TETO_N = 110;
+// os pontos de dentro juntados por vizinhança (até 1,5 m, no mesmo piso): cada grupo é um cômodo, galpão ou laje
+function brLootGrupos(P) {
+  const pai = P.map((_, i) => i), raiz = (i) => { while (pai[i] !== i) i = pai[i] = pai[pai[i]]; return i; };
+  const cel = new Map(), chave = (x, z) => Math.floor(x / 1.5) + ',' + Math.floor(z / 1.5);
+  P.forEach((c, i) => { const k = chave(c[0], c[2]); if (!cel.has(k)) cel.set(k, []); cel.get(k).push(i); });
+  P.forEach((c, i) => { const cx = Math.floor(c[0] / 1.5), cz = Math.floor(c[2] / 1.5);
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) for (const j of cel.get((cx + dx) + ',' + (cz + dz)) || []) {
+      if (j <= i) continue; const o = P[j];
+      if (Math.abs(o[1] - c[1]) < 0.7 && hyp(o[0] - c[0], o[2] - c[2]) <= 1.5) pai[raiz(j)] = raiz(i);
+    } });
+  const G = new Map(); P.forEach((c, i) => { const r = raiz(i); if (!G.has(r)) G.set(r, []); G.get(r).push(c); });
+  return [...G.values()];
+}
 const _brA = new V3(), _brB = new V3();
 // quantos dos 4 lados (x e z) têm parede a até BR_LOOT_PAREDE m, na altura do peito
 function brParedes(x, y, z) { let n = 0; for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { _brA.set(x, y + 1.2, z); _brB.set(x + dx * BR_LOOT_PAREDE, y + 1.2, z + dz * BR_LOOT_PAREDE); if (!lineClear(_brA, _brB)) n++; } return n; }
@@ -122,11 +137,23 @@ function brLoot(rnd) {
   // (2026-11-28, o Thiago: "coloque para nascer armas também dentro dos módulos") uma arma no meio de cada módulo do mapa do
   // editor (as salas de 3 x 3 m em que se entra), além das outras
   for (const [x, y, z] of (CURMAP.def && CURMAP.def.modulos) || []) { const def = sorteia(); p.set(x + (rnd() - 0.5) * 0.8, y + 0.5, z + (rnd() - 0.5) * 0.8); q.setFromAxisAngle(UP, rnd() * TAU); dropWeapon(def, def.mag, def.mag * 2, p, q, v); }
-  const dentro = brLootPontos();
-  for (let i = dentro.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [dentro[i], dentro[j]] = [dentro[j], dentro[i]]; }
-  const escolhidos = [];
-  for (let longe = BR_LOOT_LONGE; longe >= 1.5 && escolhidos.length < n; longe *= 0.6)
-    for (const c of dentro) { if (escolhidos.length >= n) break; if (!escolhidos.includes(c) && escolhidos.every((o) => hyp(o[0] - c[0], o[2] - c[2]) >= longe || Math.abs(o[1] - c[1]) > 2.5)) escolhidos.push(c); }
+  // (2026-11-28, o Thiago: "construções grandes devem ter mais de uma arma dentro") os pontos de dentro (a grade de 1 m dos
+  // robôs) se juntam por construção: pontos vizinhos, no mesmo piso, são o mesmo cômodo, galpão ou laje. Cada um ganha uma arma a cada
+  // BR_LOOT_M2 m² de piso (de 1 a BR_LOOT_MAX), nos pontos mais afastados entre si; pedaço com menos de 4 m² (um vão de porta) fica sem
+  const ja = DROP.list.map((d) => d.obj.position), escolhidos = [];
+  for (const g of brLootGrupos(brLootPontos())) {
+    if (g.length < 4) continue;
+    const k = Math.min(BR_LOOT_MAX, Math.max(1, Math.round(g.length / BR_LOOT_M2))), sel = [g[Math.floor(rnd() * g.length)]];
+    while (sel.length < k) {
+      let bi = -1, bd = 2.5; // nada a menos de 2,5 m de outra arma do mesmo grupo
+      for (let i = 0; i < g.length; i++) { const c = g[i], d = Math.min(...sel.map((o) => hyp(o[0] - c[0], o[2] - c[2]))); if (d > bd) { bd = d; bi = i; } }
+      if (bi < 0) break; sel.push(g[bi]);
+    }
+    for (const c of sel) if (!ja.some((o) => Math.abs(o.y - 0.5 - c[1]) < 1.5 && hyp(o.x - c[0], o.z - c[2]) < 2.5)) escolhidos.push(c); // o módulo já tem a dele
+  }
+  // muitas: as que sobram saem ao acaso (mapa enorme); poucas: completa com os pontos de passagem
+  for (let i = escolhidos.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [escolhidos[i], escolhidos[j]] = [escolhidos[j], escolhidos[i]]; }
+  escolhidos.length = Math.min(escolhidos.length, BR_LOOT_TETO_N);
   if (escolhidos.length >= 6) {
     for (const [x, y, z] of escolhidos) { const def = sorteia(); p.set(x, y + 0.5, z); q.setFromAxisAngle(UP, rnd() * TAU); dropWeapon(def, def.mag, def.mag * 2, p, q, v); }
     return;
@@ -369,7 +396,7 @@ function brLimpa() {
 function brInicio() {
   BR.ordem = 0; BR.armado = false; BR.avisouQueda = false; BR.T0 = MATCH.timeLeft; BR.estado = ''; BR.botT = 0; BR.ver = null; BR.cam = null; BR.lugar = 0;
   for (const e of entities) { e.brOut = 0; e.brT = 0; }
-  DROP.life = 1e9; DROP.max = 160; // (160: mapa com muitos marcadores de arma, mais as que caem dos mortos)
+  DROP.life = 1e9; DROP.max = 260; // (260: até 110 armas por construção, as dos módulos e dos marcadores, mais as que caem dos mortos)
   const seed = MATCH.online ? brHash(String(netCodeNow() || '') + '|' + CURMAP.id) : (Math.random() * 4294967296) >>> 0;
   BR.plano = brPlano(brRng(seed));
   brLoot(brRng(seed ^ 0x9e3779b9));

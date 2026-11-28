@@ -263,6 +263,33 @@ cima vai em y = 2,95. A cor de cada parede vem pronta; para outra cor, use uma c
 | `kcPlacaBar` | 0,15 x 1,75 x 1,35 | placa vertical "BAR" num braço (de parede) |
 | `kcCobogo` | 2 x 2 x 0,15 | parede de cobogó: vê através, segura gente e bala |
 
+### Coberturas de rua brasileira
+
+As 20 peças `kcRua...` aparecem em **Prefabs → Cobertura**, com a origem no centro inferior e a frente em +z. As medidas abaixo são aproximadas e incluem rodas, alças e detalhes. Os volumes principais seguram gente e tiros; frutas, folhas, inscrições e fios finos são apenas visuais. Gire de 90 em 90 graus para manter as colisões alinhadas à malha.
+
+| Nome | Tamanho (larg x alt x prof, m) | O que é |
+|---|---|---|
+| `kcRuaTotem` | 1,8 x 2,2 x 0,6 | Totem de anúncios genéricos com base de concreto |
+| `kcRuaCarrinhoFeira` | 2,68 x 1,5 x 1,5 | Carrinho de feira com caixas de frutas |
+| `kcRuaHortifruti` | 2,4 x 1,3 x 1,1 | Pilha de caixas de hortifruti |
+| `kcRuaSofa` | 2,3 x 1,15 x 0,96 | Sofá descartado, com assento e encosto |
+| `kcRuaGeladeira` | 0,9 x 1,85 x 0,82 | Geladeira velha fechada |
+| `kcRuaLavadora` | 0,9 x 1 x 0,78 | Máquina de lavar descartada |
+| `kcRuaArmario` | 1,5 x 1,9 x 0,82 | Armário de madeira descartado |
+| `kcRuaMesaVirada` | 1,8 x 1,2 x 0,9 | Mesa virada com tampo vertical |
+| `kcRuaCarrinhoMercado` | 1,8 x 1,25 x 1,12 | Carrinho de mercado com carga |
+| `kcRuaLixeiraColetiva` | 2,1 x 1,42 x 1,2 | Lixeira coletiva de rodas |
+| `kcRuaCanteiro` | 3 x 1,55 x 1,2 | Canteiro com base sólida de 0,78 m e folhagem visual |
+| `kcRuaPilhaTelhas` | 2 x 0,9 x 1 | Pilha de telhas de obra |
+| `kcRuaCarrinhoMao` | 2,27 x 1 x 0,86 | Carrinho de mão com carga |
+| `kcRuaSacosCimento` | 2 x 1,4 x 1 | Pilha de sacos de cimento sem marca |
+| `kcRuaBetoneira` | 1,6 x 1,55 x 1,2 | Betoneira com tambor e pés sólidos |
+| `kcRuaTapumeMadeira` | 3 x 2,1 x 0,2 | Tapume de tábuas e postes |
+| `kcRuaChurrasqueira` | 1,8 x 1,35 x 0,8 | Churrasqueira com base de tijolo e grelha |
+| `kcRuaBancadaOficina` | 2,4 x 1,4 x 0,9 | Bancada de oficina com armários e painel |
+| `kcRuaTransformador` | 2 x 1,9 x 1,1 | Gabinete elétrico em base de concreto |
+| `kcRuaCarrinhoReciclagem` | 2,4 x 1,6 x 1,5 | Carrinho de reciclagem com caixas |
+
 ### Prédios de favela com escada
 
 Três destes prédios trazem escada de verdade: o jogo transforma a escada da peça em rampa, e o jogador e os bots sobem. As

@@ -1,17 +1,7 @@
-# Tiro: a faca acerta de verdade, e o 3 saca a faca sem atacar
+# Tiro: 20 coberturas de rua brasileira para o editor
 
-Os amigos do Thiago: "a faca funcionava só quando queria". E: "apertando 3, deve ser possível segurar a faca na mão sem dar facada, andando um pouco mais rápido".
+O catálogo de prefabs ganha 20 peças `kcRua...` no grupo Cobertura: totem, carrinhos de feira, mercado, mão e reciclagem, caixas de hortifruti, sofá, geladeira, lavadora, armário, mesa virada, lixeira coletiva, canteiro, pilha de telhas, sacos de cimento, betoneira, tapume de madeira, churrasqueira, bancada de oficina e gabinete elétrico.
 
-**Por que falhava:**
-- **F segurado mais de 0,3 s sacava a faca em vez de dar a facada.** Quem segurava o F um pouquinho mais não dava golpe nenhum;
-- o alvo era escolhido **no aperto**, num cone estreito e até 4,2 m, e só levava o golpe se ainda estivesse **a menos de 2,2 m** quando a lâmina chegava. Se ele se mexia, a facada errava; e quem entrasse na frente depois do aperto não contava.
+Os volumes principais têm colisão; frutas, folhagem e detalhes finos são visuais. O guia informa as dimensões aproximadas e a orientação das peças. Não há marcas reais e nenhum mapa foi alterado. O jogo foi remontado a partir das fontes do editor.
 
-**Agora:**
-- **F é sempre facada**, na hora;
-- **3 saca a faca e guarda de novo** (com a faca na mão o clique dá a facada, como antes). A tecla aparece na lista de teclas como "Faca na mão (sem atacar)";
-- **na hora do golpe**, se o alvo do aperto já saiu, vale o inimigo mais perto **na frente** (cone de uns 60°), a **até 2,5 m**, sem parede no meio (`facaAlvo`, em `ferramentas/tiro-br.js`). Vale em todos os modos;
-- com a faca na mão a pessoa já anda 1,15 vez a velocidade normal, um pouco mais rápido que com as pistolas (1,04 a 1,09). Ficou como estava.
-
-Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Conferido com `node --check` em `pecas.js`, `editor.js` e no script do jogo remontado. Não criei testes nem rodei a suíte. Não joguei: ainda falta conferir as miniaturas, a escala e a cobertura no editor e em partida.

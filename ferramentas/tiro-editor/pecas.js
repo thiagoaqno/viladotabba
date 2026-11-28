@@ -2893,3 +2893,199 @@ PF.kcBaiLavaRapido = () => prefab('kcBaiLavaRapido', (M) => {
   kcCidCaixa(M, -2.5, -1.5, -4.5, -3.5, 0, 1.1);
 });
 KC_BR.kcBaiLavaRapido = { dentro: [[0, 0.1, 0], [2, 0.1, 2]], laje: [] };
+
+/* ---------- coberturas de rua: volumes sólidos com detalhes leves ---------- */
+const KC_RUA = { metal: [0.43, 0.45, 0.45], escuro: [0.16, 0.17, 0.18], madeira: [0.53, 0.36, 0.22], concreto: [0.65, 0.64, 0.61] };
+function kcRuaB(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo = 'concrete') {
+  kcBloco(M, mat, cor, x0, x1, y0, y1, z0, z1, tipo);
+}
+// Roda em eixo z: colisão do tamanho da roda, sem preencher o espaço entre rodas.
+function kcRuaRoda(M, x, z, r, esp) {
+  M.save().move(x, r, z + esp / 2).rotX(Math.PI / 2).color(KC_RUA.escuro); M.cyl('rubber', r, esp, 12); M.restore();
+  M.col(x - r, x + r, 0, 2 * r, z - esp / 2, z + esp / 2, 'rubber');
+}
+// Enfeites de fruta não colidem; a caixa que as sustenta é uma cobertura sólida.
+function kcRuaFrutas(M, x0, x1, y, z, cor) {
+  M.cls = 1; M.color(cor);
+  for (let x = x0 + 0.15; x < x1 - 0.08; x += 0.25) for (const dz of [-0.18, 0.18]) {
+    M.save().move(x, y, z + dz); M.lathe('plastic', [[0, 0], [0.1, 0.02], [0.12, 0.1], [0.08, 0.18], [0, 0.2]], 8); M.restore();
+  } M.cls = 0;
+}
+kcTex(['kcRuaGeladeira', 'kcRuaLavadora', 'kcRuaLixeiraColetiva', 'kcRuaBetoneira', 'kcRuaTransformador'], ['rust', 'steel']);
+kcTex(['kcRuaHortifruti', 'kcRuaArmario', 'kcRuaMesaVirada', 'kcRuaTapumeMadeira'], ['boards', 'wood']);
+kcTex(['kcRuaCarrinhoReciclagem'], ['wood', 'cardboard']);
+kcTex(['kcRuaCanteiro', 'kcRuaCarrinhoMao'], ['dirt']);
+kcTex(['kcRuaChurrasqueira'], ['brick']);
+kcTex(['kcRuaPilhaTelhas'], ['rooftiles']);
+
+// totem de anúncios, 1,8 x 2,2 x 0,6 m: base e painel sólidos, sem propaganda real.
+PF.kcRuaTotem = () => prefab('kcRuaTotem', (M) => {
+  M.local(1); kcRuaB(M, 'concrete', KC_RUA.concreto, -0.9, 0.9, 0, 0.2, -0.3, 0.3);
+  kcRuaB(M, 'steel', KC_RUA.metal, -0.8, 0.8, 0.2, 2.2, -0.08, 0.08, 'metal');
+  M.cls = 1; M.color([0.72, 0.67, 0.46]); M.boxB('paint', -0.7, 0.7, 0.35, 2.05, 0.08, 0.085);
+  M.color([0.3, 0.43, 0.31]); M.boxB('paint', -0.57, 0.57, 1.35, 1.8, 0.085, 0.09);
+  M.color([0.92, 0.9, 0.82]); for (const y of [0.65, 0.86, 1.07]) M.boxB('paint', -0.52, 0.52, y, y + 0.04, 0.085, 0.09); M.cls = 0;
+});
+
+// carrinho de feira com frutas, aproximadamente 2,68 x 1,5 x 1,5 m: corpo e rodas colidem.
+PF.kcRuaCarrinhoFeira = () => prefab('kcRuaCarrinhoFeira', (M) => {
+  M.local(1); M.save().move(-0.1375, 0, 0); kcRuaB(M, 'wood', KC_RUA.madeira, -1.2, 1.2, 0.35, 1.05, -0.55, 0.55, 'wood');
+  for (const x of [-0.8, 0.8]) for (const z of [-0.66, 0.66]) kcRuaRoda(M, x, z, 0.25, 0.18);
+  for (const [x0, x1, cor] of [[-1.05, -0.4, [0.67, 0.18, 0.12]], [-0.3, 0.3, [0.75, 0.62, 0.16]], [0.4, 1.05, [0.25, 0.54, 0.2]]]) {
+    kcRuaB(M, 'wood', KC_RUA.madeira, x0, x1, 1.05, 1.3, -0.44, 0.44, 'wood'); kcRuaFrutas(M, x0, x1, 1.3, 0, cor);
+  }
+  M.cls = 1; M.color(KC_RUA.metal); for (const z of [-0.4, 0.4]) M.tube('steel', 0.025, [[1.1, 0.65, z], [1.45, 0.9, z]], 6); M.cls = 0; M.restore();
+});
+
+// pilha de caixas de hortifruti, 2,4 x 1,3 x 1,1 m: caixas sólidas, frutas decorativas.
+PF.kcRuaHortifruti = () => prefab('kcRuaHortifruti', (M) => {
+  M.local(1);
+  for (const [y, xs] of [[0, [-0.8, 0, 0.8]], [0.55, [-0.4, 0.4]]]) for (const x of xs) {
+    kcRuaB(M, 'wood', KC_RUA.madeira, x - 0.4, x + 0.4, y, y + 0.55, -0.55, 0.55, 'wood');
+    M.cls = 1; M.color([0.34, 0.23, 0.15]); for (const z of [-0.551, 0.551]) for (const yy of [y + 0.16, y + 0.34]) M.boxB('dark', x - 0.35, x + 0.35, yy, yy + 0.018, z - 0.002, z + 0.002); M.cls = 0;
+    if (y > 0) kcRuaFrutas(M, x - 0.35, x + 0.35, y + 0.55, 0, x < 0 ? [0.72, 0.2, 0.12] : [0.28, 0.52, 0.18]);
+  }
+});
+
+// sofá descartado, 2,3 x 1,15 x 0,96 m: assento, braços e encosto colidem separadamente.
+PF.kcRuaSofa = () => prefab('kcRuaSofa', (M) => {
+  M.local(1); const c = [0.43, 0.34, 0.28];
+  for (const x of [-0.92, 0.92]) for (const z of [-0.34, 0.34]) kcRuaB(M, 'wood', KC_RUA.madeira, x - 0.08, x + 0.08, 0, 0.16, z - 0.08, z + 0.08, 'wood');
+  kcRuaB(M, 'canvas', c, -1.15, 1.15, 0.16, 0.62, -0.48, 0.48, 'wood');
+  kcRuaB(M, 'canvas', c, -1.15, 1.15, 0.62, 1.15, -0.48, -0.26, 'wood');
+  for (const x of [-1.15, 0.92]) kcRuaB(M, 'canvas', c, x, x + 0.23, 0.62, 0.9, -0.26, 0.48, 'wood');
+  M.cls = 1; M.color([0.53, 0.43, 0.35]); for (const x of [-0.59, 0.01, 0.61]) M.boxB('canvas', x - 0.28, x + 0.28, 0.62, 0.68, -0.22, 0.38); M.cls = 0;
+});
+
+// geladeira velha, aproximadamente 0,9 x 1,85 x 0,82 m: porta fechada e laterais sólidas.
+PF.kcRuaGeladeira = () => prefab('kcRuaGeladeira', (M) => {
+  M.local(1); kcRuaB(M, 'paint', [0.76, 0.76, 0.7], -0.45, 0.45, 0, 1.85, -0.4, 0.4, 'metal');
+  M.cls = 1; M.color([0.58, 0.42, 0.3]); M.boxB('rust', -0.43, 0.42, 0.15, 0.22, 0.4, 0.405);
+  M.color(KC_RUA.escuro); M.boxB('dark', -0.43, 0.43, 1.25, 1.27, 0.405, 0.41); M.boxB('steel', 0.27, 0.31, 0.85, 1.15, 0.41, 0.42); M.boxB('steel', 0.27, 0.31, 1.43, 1.68, 0.41, 0.42); M.cls = 0;
+});
+
+// máquina de lavar descartada, aproximadamente 0,9 x 1 x 0,78 m: corpo sólido e vigia frontal.
+PF.kcRuaLavadora = () => prefab('kcRuaLavadora', (M) => {
+  M.local(1); kcRuaB(M, 'paint', [0.75, 0.77, 0.74], -0.45, 0.45, 0, 1, -0.38, 0.38, 'metal');
+  M.cls = 1; M.color(KC_RUA.metal); M.save().move(0, 0.5, 0.381).rotX(-Math.PI / 2); M.cyl('steel', 0.29, 0.012, 16); M.restore();
+  M.color([0.12, 0.16, 0.17]); M.save().move(0, 0.5, 0.394).rotX(-Math.PI / 2); M.cyl('dark', 0.21, 0.008, 16); M.restore();
+  M.color(KC_RUA.escuro); for (const x of [-0.28, 0, 0.28]) M.boxB('plastic', x - 0.04, x + 0.04, 0.85, 0.9, 0.38, 0.39); M.cls = 0;
+});
+
+// armário de madeira descartado, aproximadamente 1,5 x 1,9 x 0,82 m: corpo sólido e portas.
+PF.kcRuaArmario = () => prefab('kcRuaArmario', (M) => {
+  M.local(1); kcRuaB(M, 'wood', [0.47, 0.31, 0.2], -0.75, 0.75, 0, 1.9, -0.4, 0.4, 'wood');
+  M.cls = 1; M.color([0.63, 0.44, 0.28]); for (const x of [-0.37, 0.37]) M.boxB('boards', x - 0.34, x + 0.34, 0.12, 1.78, 0.4, 0.405);
+  M.color(KC_RUA.metal); for (const x of [-0.1, 0.1]) M.boxB('steel', x - 0.015, x + 0.015, 0.85, 1.05, 0.405, 0.42); M.cls = 0;
+});
+
+// mesa virada, 1,8 x 1,2 x 0,9 m: tampo na vertical e pés em direção ao fundo.
+PF.kcRuaMesaVirada = () => prefab('kcRuaMesaVirada', (M) => {
+  M.local(1); kcRuaB(M, 'wood', [0.56, 0.39, 0.25], -0.9, 0.9, 0, 1.2, -0.45, -0.37, 'wood');
+  for (const x of [-0.75, 0.65]) for (const y of [0.12, 0.92]) kcRuaB(M, 'wood', KC_RUA.madeira, x, x + 0.1, y, y + 0.1, -0.37, 0.45, 'wood');
+  M.cls = 1; M.color([0.3, 0.22, 0.16]); for (const y of [0.4, 0.8]) M.boxB('boards', -0.8, 0.8, y, y + 0.025, -0.455, -0.45); M.cls = 0;
+});
+
+// carrinho de mercado com caixas, aproximadamente 1,8 x 1,25 x 1,12 m: carga sólida e grade visual.
+PF.kcRuaCarrinhoMercado = () => prefab('kcRuaCarrinhoMercado', (M) => {
+  M.local(1); kcRuaB(M, 'wood', [0.63, 0.48, 0.32], -0.75, 0.75, 0.4, 1.02, -0.4, 0.4, 'wood');
+  for (const x of [-0.7, 0.7]) for (const z of [-0.5, 0.5]) kcRuaRoda(M, x, z, 0.14, 0.12);
+  for (const x of [-0.88, 0.78]) kcRuaB(M, 'steel', KC_RUA.metal, x, x + 0.1, 0.25, 1.2, -0.45, 0.45, 'metal');
+  M.cls = 1; M.color(KC_RUA.metal); M.boxB('steel', 0.78, 0.9, 1.2, 1.25, -0.5, 0.5); M.boxB('steel', -0.88, 0.88, 0.38, 0.42, -0.5, 0.5);
+  for (const x of [-0.55, -0.2, 0.15, 0.5]) for (const z of [-0.45, 0.45]) M.boxB('steel', x - 0.015, x + 0.015, 0.42, 1.15, z - 0.015, z + 0.015); M.cls = 0;
+});
+
+// lixeira coletiva com rodas, 2,1 x 1,42 x 1,2 m: corpo e tampa fechada colidem.
+PF.kcRuaLixeiraColetiva = () => prefab('kcRuaLixeiraColetiva', (M) => {
+  M.local(1); kcRuaB(M, 'steel', [0.25, 0.38, 0.3], -1.05, 1.05, 0.15, 1.3, -0.55, 0.55, 'metal');
+  kcRuaB(M, 'steel', [0.2, 0.3, 0.24], -1.05, 1.05, 1.3, 1.42, -0.55, 0.55, 'metal');
+  for (const x of [-0.85, 0.85]) for (const z of [-0.55, 0.55]) kcRuaRoda(M, x, z, 0.15, 0.1);
+  M.cls = 1; M.color([0.7, 0.7, 0.64]); M.boxB('paint', -0.5, 0.5, 0.66, 0.9, 0.55, 0.56);
+  M.color([0.3, 0.22, 0.16]); for (const x of [-0.7, 0.4]) M.boxB('rust', x, x + 0.23, 0.2, 0.38, 0.55, 0.556); M.cls = 0;
+});
+
+// canteiro de calçada, 3 x 1,55 x 1,2 m: base de concreto colide; arbustos são visuais.
+PF.kcRuaCanteiro = () => prefab('kcRuaCanteiro', (M) => {
+  M.local(1); kcRuaB(M, 'concrete', KC_RUA.concreto, -1.5, 1.5, 0, 0.78, -0.6, 0.6);
+  M.cls = 1; M.color([0.3, 0.23, 0.16]); M.boxB('dirt', -1.35, 1.35, 0.78, 0.8, -0.46, 0.46);
+  for (const x of [-0.95, -0.3, 0.35, 1]) { M.save().move(x, 0.78, 0); M.color([0.26, 0.46, 0.2]); M.lathe('canvas', [[0, 0], [0.32, 0.15], [0.31, 0.45], [0.14, 0.7], [0, 0.77]], 10); M.restore(); } M.cls = 0;
+});
+
+// pilha de telhas de obra, 2 x 0,9 x 1 m: cinco camadas sólidas, cobertura baixa.
+PF.kcRuaPilhaTelhas = () => prefab('kcRuaPilhaTelhas', (M) => {
+  M.local(1); for (let i = 0; i < 5; i++) {
+    const y = i * 0.18; kcRuaB(M, 'rooftiles', i % 2 ? [0.55, 0.29, 0.18] : [0.62, 0.34, 0.22], -1, 1, y, y + 0.18, -0.5, 0.5, 'wood');
+    M.cls = 1; M.color([0.36, 0.2, 0.14]); for (let x = -0.8; x <= 0.8; x += 0.4) M.boxB('paint', x - 0.012, x + 0.012, y + 0.03, y + 0.15, 0.5, 0.502); M.cls = 0;
+  }
+});
+
+// carrinho de mão carregado, aproximadamente 2,27 x 1 x 0,86 m: caçamba e roda colidem.
+PF.kcRuaCarrinhoMao = () => prefab('kcRuaCarrinhoMao', (M) => {
+  M.local(1); M.save().move(-0.025, 0, 0);
+  kcRuaB(M, 'steel', [0.45, 0.36, 0.25], -0.72, 0.7, 0.3, 0.82, -0.43, 0.43, 'metal');
+  kcRuaB(M, 'dirt', [0.47, 0.37, 0.25], -0.65, 0.64, 0.82, 1, -0.38, 0.38);
+  kcRuaRoda(M, -0.86, 0, 0.25, 0.18);
+  for (const z of [-0.35, 0.35]) kcRuaB(M, 'steel', KC_RUA.metal, 0.5, 0.58, 0, 0.35, z - 0.04, z + 0.04, 'metal');
+  M.cls = 1; M.color(KC_RUA.madeira); for (const z of [-0.34, 0.34]) M.tube('wood', 0.035, [[0.55, 0.52, z], [1.12, 0.62, z]], 6); M.cls = 0; M.restore();
+});
+
+// pilha de sacos de cimento, 2 x 1,4 x 1 m: sacos fechados sem marca, cada um sólido.
+PF.kcRuaSacosCimento = () => prefab('kcRuaSacosCimento', (M) => {
+  M.local(1); for (let j = 0; j < 4; j++) for (const x of [-0.5, 0.5]) {
+    const y = j * 0.35; kcRuaB(M, 'canvas', j % 2 ? [0.71, 0.66, 0.55] : [0.78, 0.72, 0.6], x - 0.5, x + 0.5, y, y + 0.35, -0.5, 0.5, 'wood');
+    M.cls = 1; M.color([0.52, 0.47, 0.38]); M.boxB('paint', x - 0.28, x + 0.28, y + 0.14, y + 0.18, 0.5, 0.502); M.cls = 0;
+  }
+});
+
+// betoneira de obra, aproximadamente 1,6 x 1,55 x 1,2 m: tambor e pés sólidos.
+PF.kcRuaBetoneira = () => prefab('kcRuaBetoneira', (M) => {
+  M.local(1); M.save().move(-0.05, 0, 0);
+  for (const x of [-0.7, 0.7]) kcRuaB(M, 'steel', KC_RUA.metal, x - 0.05, x + 0.05, 0, 0.65, -0.6, 0.6, 'metal');
+  kcRuaB(M, 'steel', KC_RUA.metal, -0.75, 0.75, 0.5, 0.6, -0.1, 0.1, 'metal');
+  M.save().move(0, 0.6, 0).color([0.64, 0.39, 0.17]); M.lathe('rust', [[0, 0], [0.42, 0], [0.55, 0.18], [0.55, 0.55], [0.32, 0.95], [0, 0.95]], 16); M.restore();
+  M.col(-0.55, 0.55, 0.6, 1.55, -0.55, 0.55, 'metal');
+  M.save().move(0.85, 0.85, 0).rotZ(Math.PI / 2).color(KC_RUA.escuro); M.cyl('steel', 0.32, 0.1, 12); M.restore(); M.col(0.75, 0.85, 0.53, 1.17, -0.32, 0.32, 'metal');
+  M.cls = 1; M.color([0.33, 0.28, 0.22]); M.boxB('dark', -0.3, 0.3, 1.53, 1.55, -0.3, 0.3); M.cls = 0; M.restore();
+});
+
+// tapume de madeira, 3 x 2,1 x 0,2 m: tábuas e postes colidem; frestas continuam visíveis.
+PF.kcRuaTapumeMadeira = () => prefab('kcRuaTapumeMadeira', (M) => {
+  M.local(1); for (let i = 0; i < 10; i++) {
+    const x = -1.5 + i * 0.3; kcRuaB(M, 'boards', i % 2 ? [0.54, 0.38, 0.25] : [0.61, 0.44, 0.28], x, x + 0.29, 0, 2, -0.06, 0.06, 'wood');
+  }
+  for (const x of [-1.45, 0, 1.45]) kcRuaB(M, 'wood', [0.37, 0.25, 0.17], x - 0.05, x + 0.05, 0, 2.1, -0.1, 0.1, 'wood');
+});
+
+// churrasqueira de rua, 1,8 x 1,35 x 0,8 m: base de tijolo, grelha e anteparo.
+PF.kcRuaChurrasqueira = () => prefab('kcRuaChurrasqueira', (M) => {
+  M.local(1); kcRuaB(M, 'brick', [0.65, 0.36, 0.25], -0.9, 0.9, 0, 0.85, -0.4, 0.4);
+  kcRuaB(M, 'steel', KC_RUA.escuro, -0.9, 0.9, 0.85, 0.92, -0.4, 0.4, 'metal');
+  kcRuaB(M, 'steel', KC_RUA.metal, -0.9, 0.9, 0.92, 1.35, -0.4, -0.3, 'metal');
+  M.cls = 1; M.color([0.7, 0.7, 0.68]); for (let x = -0.75; x <= 0.75; x += 0.15) M.boxB('steel', x - 0.01, x + 0.01, 0.92, 0.94, -0.28, 0.3); M.cls = 0;
+});
+
+// bancada de oficina na calçada, 2,4 x 1,4 x 0,9 m: armários, tampo e painel traseiro sólidos.
+PF.kcRuaBancadaOficina = () => prefab('kcRuaBancadaOficina', (M) => {
+  M.local(1); for (const x of [-1.2, 0.55]) kcRuaB(M, 'steel', [0.35, 0.39, 0.4], x, x + 0.65, 0, 0.8, -0.45, 0.45, 'metal');
+  kcRuaB(M, 'wood', KC_RUA.madeira, -1.2, 1.2, 0.8, 0.92, -0.45, 0.45, 'wood');
+  kcRuaB(M, 'steel', KC_RUA.metal, -1.2, 1.2, 0.92, 1.4, -0.45, -0.35, 'metal');
+  M.cls = 1; M.color([0.7, 0.69, 0.65]); for (const x of [-0.95, 0.8]) for (const y of [0.25, 0.52]) M.boxB('steel', x - 0.12, x + 0.12, y, y + 0.035, 0.45, 0.46);
+  M.color([0.18, 0.18, 0.19]); M.boxB('steel', -0.3, 0.25, 0.92, 1.02, -0.05, 0.2); M.cls = 0;
+});
+
+// caixa de transformador de rua, 2 x 1,9 x 1,1 m: gabinete sólido com aletas visuais.
+PF.kcRuaTransformador = () => prefab('kcRuaTransformador', (M) => {
+  M.local(1); kcRuaB(M, 'concrete', KC_RUA.concreto, -1, 1, 0, 0.15, -0.55, 0.55);
+  kcRuaB(M, 'steel', [0.49, 0.53, 0.48], -0.95, 0.95, 0.15, 1.9, -0.5, 0.5, 'metal');
+  M.cls = 1; M.color([0.28, 0.3, 0.28]); for (let y = 0.45; y <= 1.35; y += 0.15) M.boxB('dark', -0.65, 0.65, y, y + 0.035, 0.5, 0.505);
+  M.color([0.88, 0.69, 0.14]); M.boxB('paint', 0.5, 0.8, 1.5, 1.75, 0.5, 0.51); M.cls = 0;
+});
+
+// carrinho de reciclagem com carga, 2,4 x 1,6 x 1,5 m: carroceria, caixas e rodas sólidas.
+PF.kcRuaCarrinhoReciclagem = () => prefab('kcRuaCarrinhoReciclagem', (M) => {
+  M.local(1); kcRuaB(M, 'wood', [0.45, 0.31, 0.21], -1.2, 1.2, 0.3, 0.85, -0.6, 0.6, 'wood');
+  for (const x of [-0.8, 0.8]) for (const z of [-0.65, 0.65]) kcRuaRoda(M, x, z, 0.3, 0.2);
+  kcRuaB(M, 'cardboard', [0.62, 0.48, 0.33], -1.05, -0.1, 0.85, 1.55, -0.48, 0.48, 'wood');
+  kcRuaB(M, 'cardboard', [0.69, 0.55, 0.38], 0.05, 1.05, 0.85, 1.4, -0.48, 0.48, 'wood');
+  M.cls = 1; M.color([0.22, 0.24, 0.23]); for (const [x, y] of [[-0.6, 1.55], [0.6, 1.4]]) M.boxB('rubber', x - 0.025, x + 0.025, y, y + 0.03, -0.48, 0.48); M.cls = 0;
+});

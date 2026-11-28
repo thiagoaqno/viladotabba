@@ -7253,6 +7253,2250 @@
    ],
    "r": 180,
    "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    -116.5,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    -105,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    -98,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    -86.5,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    -75,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMercado",
+   "p": [
+    -68,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaHortifruti",
+   "p": [
+    -56.5,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoReciclagem",
+   "p": [
+    -45,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    -26.5,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    -15,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    -8,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    3.5,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    15,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMercado",
+   "p": [
+    33.5,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaHortifruti",
+   "p": [
+    45,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoReciclagem",
+   "p": [
+    52,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    75,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    82,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    93.5,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    112,
+    0,
+    45.7
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    123.5,
+    0,
+    54.3
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    -31.4,
+    0,
+    5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaHortifruti",
+   "p": [
+    -34.6,
+    0,
+    14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    -31.4,
+    0,
+    23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    -34.6,
+    0,
+    32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -31.4,
+    0,
+    41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    -91.4,
+    0,
+    5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -94.6,
+    0,
+    14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMercado",
+   "p": [
+    -91.4,
+    0,
+    23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    -94.6,
+    0,
+    32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    -91.4,
+    0,
+    41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaPilhaTelhas",
+   "p": [
+    31.4,
+    0,
+    5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    34.6,
+    0,
+    14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    31.4,
+    0,
+    23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    34.6,
+    0,
+    32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    31.4,
+    0,
+    41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    91.4,
+    0,
+    5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    94.6,
+    0,
+    14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    91.4,
+    0,
+    23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoReciclagem",
+   "p": [
+    94.6,
+    0,
+    32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    91.4,
+    0,
+    41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -130,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -108,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -86,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    -64,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -42,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -20,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    2,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    24,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    46,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    57,
+    0,
+    69.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    68,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    90,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    101,
+    0,
+    69.6
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaPilhaTelhas",
+   "p": [
+    112,
+    0,
+    66.2
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    -130,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -119,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -108,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -97,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    -86,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -75,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    -64,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -53,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    -42,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -31,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -20,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -9,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    2,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    13,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    24,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    35,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    46,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    57,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    68,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    79,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    90,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    101,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    112,
+    0,
+    80.1
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    123,
+    0,
+    84
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    -103.3,
+    0,
+    60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    -100.7,
+    0,
+    72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -103.3,
+    0,
+    84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -100.7,
+    0,
+    96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    -63.3,
+    0,
+    60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    -60.7,
+    0,
+    72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    -63.3,
+    0,
+    84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    -60.7,
+    0,
+    96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    -23.3,
+    0,
+    60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    -20.7,
+    0,
+    72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -23.3,
+    0,
+    84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaPilhaTelhas",
+   "p": [
+    -20.7,
+    0,
+    96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    20.7,
+    0,
+    60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    23.3,
+    0,
+    72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    20.7,
+    0,
+    84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    23.3,
+    0,
+    96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    60.7,
+    0,
+    60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    63.3,
+    0,
+    72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    60.7,
+    0,
+    84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    63.3,
+    0,
+    96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    100.7,
+    0,
+    60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    103.3,
+    0,
+    72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    103.3,
+    0,
+    96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    -116.5,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    -105,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    -98,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    -86.5,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    -75,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMercado",
+   "p": [
+    -68,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaHortifruti",
+   "p": [
+    -56.5,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoReciclagem",
+   "p": [
+    -45,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    -26.5,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    -15,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    -8,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    3.5,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    15,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMercado",
+   "p": [
+    33.5,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaHortifruti",
+   "p": [
+    45,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoReciclagem",
+   "p": [
+    52,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    75,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    82,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    93.5,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    112,
+    0,
+    -45.7
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    123.5,
+    0,
+    -54.3
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoFeira",
+   "p": [
+    -31.4,
+    0,
+    -5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaHortifruti",
+   "p": [
+    -34.6,
+    0,
+    -14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    -31.4,
+    0,
+    -23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    -34.6,
+    0,
+    -32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -31.4,
+    0,
+    -41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    -91.4,
+    0,
+    -5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -94.6,
+    0,
+    -14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMercado",
+   "p": [
+    -91.4,
+    0,
+    -23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLixeiraColetiva",
+   "p": [
+    -94.6,
+    0,
+    -32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCanteiro",
+   "p": [
+    -91.4,
+    0,
+    -41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaPilhaTelhas",
+   "p": [
+    31.4,
+    0,
+    -5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    34.6,
+    0,
+    -14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    31.4,
+    0,
+    -23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    34.6,
+    0,
+    -32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    31.4,
+    0,
+    -41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    91.4,
+    0,
+    -5
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    94.6,
+    0,
+    -14
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTransformador",
+   "p": [
+    91.4,
+    0,
+    -23
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoReciclagem",
+   "p": [
+    94.6,
+    0,
+    -32
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTotem",
+   "p": [
+    91.4,
+    0,
+    -41
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -130,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -108,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -86,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    -64,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -42,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -20,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    2,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    24,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    46,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    57,
+    0,
+    -69.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    68,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    90,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    101,
+    0,
+    -69.6
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaPilhaTelhas",
+   "p": [
+    112,
+    0,
+    -66.2
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    -130,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -119,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -108,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -97,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    -86,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -75,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    -64,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -53,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    -42,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -31,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -20,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -9,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    2,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    13,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    24,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    35,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    46,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    57,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    68,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    79,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    90,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    101,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    112,
+    0,
+    -80.1
+   ],
+   "r": 180,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    123,
+    0,
+    -84
+   ],
+   "r": 0,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    -103.3,
+    0,
+    -60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    -100.7,
+    0,
+    -72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    -103.3,
+    0,
+    -84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    -100.7,
+    0,
+    -96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    -63.3,
+    0,
+    -60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    -60.7,
+    0,
+    -72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    -63.3,
+    0,
+    -84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    -60.7,
+    0,
+    -96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    -23.3,
+    0,
+    -60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    -20.7,
+    0,
+    -72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    -23.3,
+    0,
+    -84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaPilhaTelhas",
+   "p": [
+    -20.7,
+    0,
+    -96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaCarrinhoMao",
+   "p": [
+    20.7,
+    0,
+    -60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaArmario",
+   "p": [
+    23.3,
+    0,
+    -72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaMesaVirada",
+   "p": [
+    20.7,
+    0,
+    -84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaTapumeMadeira",
+   "p": [
+    23.3,
+    0,
+    -96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBancadaOficina",
+   "p": [
+    60.7,
+    0,
+    -60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSofa",
+   "p": [
+    63.3,
+    0,
+    -72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaGeladeira",
+   "p": [
+    60.7,
+    0,
+    -84
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaSacosCimento",
+   "p": [
+    63.3,
+    0,
+    -96
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaBetoneira",
+   "p": [
+    100.7,
+    0,
+    -60
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaChurrasqueira",
+   "p": [
+    103.3,
+    0,
+    -72
+   ],
+   "r": 90,
+   "e": 1
+  },
+  {
+   "t": "prefab",
+   "nome": "kcRuaLavadora",
+   "p": [
+    103.3,
+    0,
+    -96
+   ],
+   "r": 90,
+   "e": 1
   }
  ],
  "nascer": [
@@ -8753,12 +10997,6 @@
   [
    -108,
    0,
-   66,
-   0
-  ],
-  [
-   -108,
-   0,
    74,
    0
   ],
@@ -9011,12 +11249,6 @@
   [
    -92,
    0,
-   42,
-   0
-  ],
-  [
-   -92,
-   0,
    50,
    0
   ],
@@ -9121,12 +11353,6 @@
    0,
    42,
    0
-  ],
-  [
-   -84,
-   0,
-   66,
-   1
   ],
   [
    -84,
@@ -9936,12 +12162,6 @@
    -20,
    0,
    58,
-   0
-  ],
-  [
-   -20,
-   0,
-   66,
    0
   ],
   [
@@ -10913,12 +13133,6 @@
   [
    68,
    0,
-   66,
-   0
-  ],
-  [
-   68,
-   0,
    82,
    0
   ],
@@ -11233,12 +13447,6 @@
    0,
    34,
    0
-  ],
-  [
-   92,
-   0,
-   42,
-   1
   ],
   [
    92,

@@ -1,20 +1,16 @@
-# Tiro: marcador do parceiro através das paredes e granadas pelo mapa no Battle royale
+# Tiro: a faca acerta de verdade, e o 3 saca a faca sem atacar
 
-Dois pedidos do Thiago.
+Os amigos do Thiago: "a faca funcionava só quando queria". E: "apertando 3, deve ser possível segurar a faca na mão sem dar facada, andando um pouco mais rápido".
 
-**Marcador do parceiro** ("deve ficar um marcador sobre o jogador da minha equipe, mesmo quando ele está atrás das paredes"):
-- os marcadores de aliado do jogo (o triângulo verde em cima da cabeça, com o nome de perto) ficavam desligados no cada um por si, e o BR é um cada um por si por dentro. No **BR em dupla** eles ligam, mesmo com o ajuste "Marcadores de aliados" desligado;
-- vão até **600 m** (eram 120), então dá para achar o parceiro em qualquer canto do mapa;
-- **atrás de parede** ficam quase tão fortes quanto à vista (0,75 em vez de 0,42).
+**Por que falhava:**
+- **F segurado mais de 0,3 s sacava a faca em vez de dar a facada.** Quem segurava o F um pouquinho mais não dava golpe nenhum;
+- o alvo era escolhido **no aperto**, num cone estreito e até 4,2 m, e só levava o golpe se ainda estivesse **a menos de 2,2 m** quando a lâmina chegava. Se ele se mexia, a facada errava; e quem entrasse na frente depois do aperto não contava.
 
-**Granadas pelo mapa** ("deve ser possível encontrar granadas"):
-- no Battle royale (solo e dupla) todo mundo começa **sem granada**;
-- elas ficam no chão ao lado de **metade dos lugares das armas** (dentro das construções e nas lajes, ou nos marcadores do editor), com a mesma semente do salão: 60% de fragmentação, 25% de fumaça e 15% de atordoante;
-- pega-se passando por cima, até 3, do mesmo tipo (sem nenhuma, qualquer tipo). O HUD mostra a quantidade;
-- os robôs também pegam (até 2) e jogam;
-- como as caixas, não vão pela rede: a granada que outro jogador pegou some aqui também.
-
-Arquivos: `ferramentas/tiro-br.js` (`brGranadasPoe`, granada nas caixas, começar sem granada) e `ferramentas/tiro-frontline.js` (três trocas nos marcadores de aliado).
+**Agora:**
+- **F é sempre facada**, na hora;
+- **3 saca a faca e guarda de novo** (com a faca na mão o clique dá a facada, como antes). A tecla aparece na lista de teclas como "Faca na mão (sem atacar)";
+- **na hora do golpe**, se o alvo do aperto já saiu, vale o inimigo mais perto **na frente** (cone de uns 60°), a **até 2,5 m**, sem parede no meio (`facaAlvo`, em `ferramentas/tiro-br.js`). Vale em todos os modos;
+- com a faca na mão a pessoa já anda 1,15 vez a velocidade normal, um pouco mais rápido que com as pistolas (1,04 a 1,09). Ficou como estava.
 
 Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
 

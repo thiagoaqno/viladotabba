@@ -302,7 +302,7 @@ const ED_GRUPO_LISTA = {
   'Aeroporto': /^kcA[A-Z]/,
   'Praça e esporte': /^kc(Praca|Quadra|CampoFutebol|Arquibancada|BancoPraca|ArvoreCanteiro|GuardaSol|VasoPlanta|Arbusto|Bananeira)/,
   'Veículos': /^(kc(CarroVelho|Van|Moto$|CarroQueimado)|car$|truck$|busWreck$|boxcar$|snowplow$)/,
-  'Cobertura': /^kc(Jersey|Sacos|Gabiao|MuroQuebrado|Pilar$|Carretel|Guarita|Tanque|Tapume|Paletes|BarreiraAgua|ConteinerAberto|Cavalete|Entulho|Manilhas|Prateleira|Tambores|Vigas|Alambrado|ArmarioEletrico|Blocos|PaleteEmPe|IBC|Pneus|Cone)/,
+  'Cobertura': /^kc(Rua|Jersey|Sacos|Gabiao|MuroQuebrado|Pilar$|Carretel|Guarita|Tanque|Tapume|Paletes|BarreiraAgua|ConteinerAberto|Cavalete|Entulho|Manilhas|Prateleira|Tambores|Vigas|Alambrado|ArmarioEletrico|Blocos|PaleteEmPe|IBC|Pneus|Cone)/,
 };
 function edGrupoDe(n) {
   for (const [g, re] of Object.entries(ED_GRUPO_LISTA)) if (re.test(n)) return g;
@@ -350,7 +350,8 @@ function edCatalogo(aba) {
 const ED_MINI = { cache: new Map(), fila: [], r: null, cena: null, cam: null, W: 160, H: 120 };
 const ED_NOMES_RURAIS = { kcRurCarroca: 'Carroça', kcRurCasaSede: 'Casa sede', kcRurCeleiro: 'Celeiro', kcRurCerca: 'Cerca', kcRurCurral: 'Curral', kcRurEstrada: 'Estrada de terra', kcRurFardo: 'Fardo', kcRurFardos: 'Fardos empilhados', kcRurGalinheiro: 'Galinheiro', kcRurMilho: 'Plantação de milho', kcRurPauAPique: 'Casa de pau a pique', kcRurPoco: 'Poço', kcRurPomar: 'Árvore de pomar', kcRurPorteira: 'Porteira', kcRurTorreAgua: 'Torre de água', kcRurTrator: 'Trator velho' };
 const ED_NOMES_CIDADE = { kcComGaleria: 'Galeria de lojas', kcComSupermercado: 'Supermercado', kcComPosto: 'Posto de gasolina', kcComEstacionamento: 'Estacionamento', kcComCarro: 'Carro estacionado', kcComBanco: 'Agência bancária', kcComFarmacia: 'Farmácia', kcComLanchonete: 'Lanchonete', kcComRoupas: 'Loja de roupas', kcComPredio4: 'Prédio comercial de quatro andares', kcComPassarela: 'Passarela de pedestres', kcComPlaca: 'Placa de loja', kcComPlacaServico: 'Placa de serviço', kcBaiEscola: 'Escola e quadra', kcBaiIgreja: 'Igreja', kcBaiSaude: 'Posto de saúde', kcBaiEstacao: 'Estação de trem', kcBaiViaduto: 'Viaduto', kcBaiRampaViaduto: 'Rampa do viaduto', kcBaiCondominio: 'Condomínio', kcBaiLavaRapido: 'Lava-rápido' };
-const edNomeBonito = (n) => ED_NOMES_RURAIS[n] || ED_NOMES_CIDADE[n] || n.replace(/^kc/, '').replace(/([a-z])([A-Z0-9])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
+const ED_NOMES_RUA = { kcRuaTotem: 'Totem de anúncios', kcRuaCarrinhoFeira: 'Carrinho de feira', kcRuaHortifruti: 'Caixas de hortifruti', kcRuaSofa: 'Sofá descartado', kcRuaGeladeira: 'Geladeira velha', kcRuaLavadora: 'Máquina de lavar', kcRuaArmario: 'Armário descartado', kcRuaMesaVirada: 'Mesa virada', kcRuaCarrinhoMercado: 'Carrinho de mercado', kcRuaLixeiraColetiva: 'Lixeira coletiva', kcRuaCanteiro: 'Canteiro de calçada', kcRuaPilhaTelhas: 'Pilha de telhas', kcRuaCarrinhoMao: 'Carrinho de mão', kcRuaSacosCimento: 'Sacos de cimento', kcRuaBetoneira: 'Betoneira', kcRuaTapumeMadeira: 'Tapume de madeira', kcRuaChurrasqueira: 'Churrasqueira de rua', kcRuaBancadaOficina: 'Bancada de oficina', kcRuaTransformador: 'Transformador de rua', kcRuaCarrinhoReciclagem: 'Carrinho de reciclagem' };
+const edNomeBonito = (n) => ED_NOMES_RURAIS[n] || ED_NOMES_CIDADE[n] || ED_NOMES_RUA[n] || n.replace(/^kc/, '').replace(/([a-z])([A-Z0-9])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
 function edMiniPedir(tpl, img) {
   const k = JSON.stringify(tpl.P), u = ED_MINI.cache.get(k);
   if (u) { img.src = u; return; }

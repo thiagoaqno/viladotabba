@@ -55,9 +55,52 @@ function brDuplasMontar() {
     const k = (e) => String(netIdOf(e) || ''), robo = (e) => k(e).includes('~b'), n = (e) => +k(e).split('~b')[1] || 0;
     ord = L.slice().sort((a, b) => robo(a) - robo(b) || (robo(a) ? n(a) - n(b) : k(a) < k(b) ? -1 : k(a) > k(b) ? 1 : 0));
   }
+  // (2026-11-28) no salão, cada pessoa escolhe a dupla (campo d do jogador, de 0 a 9, ou -1: automática). Primeiro entram as
+  // escolhas (até 2 por dupla), depois quem deixou automático (de dois em dois, em duplas vazias), e os robôs completam: primeiro
+  // quem ficou sozinho numa dupla, depois duplas só de robôs. Sem robôs no salão, quem escolheu uma dupla sozinho joga sozinho.
+  const lugar = new Map(), cheia = new Map(), conta = (d) => cheia.get(d) || 0, por = (e, d) => { lugar.set(e, d); cheia.set(d, conta(d) + 1); };
+  if (MATCH.online) {
+    const k = (e) => String(netIdOf(e) || ''), robo = (e) => k(e).includes('~b');
+    const pessoas = ord.filter((e) => !robo(e)), robos = ord.filter(robo), esc = (e) => { const p = NET.players.get(k(e)); return p && typeof p.d === 'number' && p.d >= 0 ? p.d : -1; };
+    for (const e of pessoas) { const d = esc(e); if (d >= 0 && conta(d) < 2) por(e, d); }
+    const livre = () => { for (let d = 0; d < 64; d++) if (!conta(d)) return d; return 63; };
+    const auto = pessoas.filter((e) => !lugar.has(e));
+    for (let i = 0; i < auto.length; i += 2) { const d = livre(); por(auto[i], d); if (auto[i + 1]) por(auto[i + 1], d); }
+    for (const b of robos) { let d = -1; for (const [dd, n] of cheia) if (n === 1) { d = dd; break; } por(b, d >= 0 ? d : livre()); }
+  } else ord.forEach((e, i) => por(e, Math.floor(i / 2)));
   let mudou = false;
-  ord.forEach((e, i) => { const d = Math.floor(i / 2); if (e.brDuo !== d) { e.brDuo = d; mudou = true; } });
+  for (const e of ord) { const d = lugar.get(e); if (e.brDuo !== d) { e.brDuo = d; mudou = true; } }
   if (mudou) soldierLookAll(); // o parceiro em claro, os outros em escuro
+}
+/* ---------- o salão do BR em dupla: cada um escolhe a dupla ---------- */
+const BR_DUPLAS = 10;
+// no host: põe o jogador na dupla d (0 a 9; -1 automática), se ela tiver lugar
+function brDuplaEscolher(pl, d) {
+  if (!pl || pl.ig || NET.cfg.mode !== 'brduo') return;
+  d = clamp(d | 0, -1, BR_DUPLAS - 1);
+  if (d >= 0) { let n = 0; for (const p of NET.players.values()) if (p !== pl && p.d === d) n++; if (n >= 2) return; }
+  pl.d = d; netLobbyChanged();
+}
+function brDuplaPedir(d) {
+  if (NET.role === 'host') brDuplaEscolher(NET.players.get(NET.me), d);
+  else if (NET.role === 'client') netSend({ t: 'dupla', d });
+  sfxUi('click');
+}
+// a linha do menu do salão: Automática ou de 1 a 10 (as cheias aparecem com "cheia")
+function brDuplaLinha() {
+  const me = NET.players.get(NET.me) || {}, n = (d) => { let c = 0; for (const p of NET.players.values()) if (p.d === d) c++; return c; };
+  const items = [[-1, 'Automática']]; for (let d = 0; d < BR_DUPLAS; d++) items.push([d, String(d + 1) + (n(d) >= 2 && me.d !== d ? ' (cheia)' : '')]);
+  return { k: 'seg', full: true, key: 'dupla', label: 'Sua dupla', items, get: () => (typeof me.d === 'number' ? me.d : -1), set: (v) => brDuplaPedir(+v), disabled: !NET.joined || !!me.ig };
+}
+// a lista do salão: as pessoas por dupla, com os lugares livres que os robôs vão ocupar
+function brDuplaPalco() {
+  const host = NET.role === 'host', rows = [], por = new Map(), auto = [];
+  for (const p of NET.players.values()) { if (typeof p.d === 'number' && p.d >= 0) { if (!por.has(p.d)) por.set(p.d, []); por.get(p.d).push(p); } else auto.push(p); }
+  const linha = (p) => { const other = p.id !== NET.me, tags = []; if (p.h || (host && !other)) tags.push(_t('hôte')); return { k: 'player', key: p.id, label: p.n, lv: p.lv | 0, tags, me: !other, page: other ? 'player' : null, params: p.id }; };
+  for (const d of [...por.keys()].sort((a, b) => a - b)) { rows.push({ k: 'note', text: 'Dupla ' + (d + 1) }); for (const p of por.get(d)) rows.push(linha(p)); if (por.get(d).length < 2) rows.push({ k: 'note', text: NET.cfg.bots ? '+ robô' : '(sozinho, sem robôs)' }); }
+  if (auto.length) { rows.push({ k: 'note', text: 'Dupla automática' }); for (const p of auto) rows.push(linha(p)); }
+  if (NET.cfg.bots) rows.push({ k: 'note', text: 'Robôs completam até ' + netMax() + ' jogadores' }); else rows.push({ k: 'note', text: 'Sem robôs: só gente' });
+  return rows;
 }
 
 /* ---------- cair, sangrar, levantar ---------- */
@@ -146,6 +189,11 @@ function brMarcasCaidos() {
 
 /* ---------- as funções que mudam ---------- */
 {
+  const netStage1 = netStage;
+  netStage = function () {
+    const S = netStage1(); if (!NET.cfg || NET.cfg.mode !== 'brduo') return S;
+    return Object.assign({}, S, { cols: [{ head: esc('Duplas'), rows: brDuplaPalco() }] });
+  };
   const modeDef1 = modeDef;
   modeDef = function () { return BR.on && BR.duo && MATCH.mode === 'ffa' ? MODES.brduo : modeDef1(); };
   const allied1 = allied;

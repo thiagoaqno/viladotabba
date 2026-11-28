@@ -14330,7 +14330,7 @@ function brF1Dirigir(dt) {
 function brF1Explodir(c, atacante) {
   if (c.morto) return;
   c.morto = true; c.hp = 0; c.mesh.visible = false;
-  const ocupante = brF1Pessoa(c.dono), local = ocupante === PL.ent;
+  const ocupante = c === BR_F1.meu ? PL.ent : brF1Pessoa(c.dono), local = ocupante === PL.ent;
   if (local) { brF1SairLocal(false, true); if (ocupante.alive) { ocupante.protT = 0; killEnt(ocupante, atacante || ocupante, NET_WSPECIAL.brCarro, false, new V3(0, 1, 0)); } }
   c.dono = '';
   const quem = atacante || PL.ent, p = new V3(c.p.x, c.p.y + 0.5, c.p.z);

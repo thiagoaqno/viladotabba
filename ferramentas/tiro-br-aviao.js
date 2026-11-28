@@ -9,7 +9,7 @@
      paraquedas a BR_QUEDA.abre m do chão;
    - cada robô salta quando o avião passa mais perto do lugar de largada dele (os lugares espalhados de brSlots) e plana até lá;
    - quem está no avião não aparece (nem os de fora da máquina perto do avião) e a zona não tira vida dele. */
-const BR_AV = { vel: 12, alto: 65, margem: 4 };
+const BR_AV = { vel: 12, alto: 65, margem: 4, robLivre: 20, robPara: 9 };
 
 function brAvRota() {
   if (BR.av) return BR.av;
@@ -48,7 +48,12 @@ function brAvLimpa() { if (BR.av && BR.av.malha) scene.remove(BR.av.malha); BR.a
 function brPoeNoAviao(e) {
   const A = brAvRota();
   e.brAvAlvo = [e.pos.x, e.pos.z];
-  const s = Math.max(0, Math.min(2 * A.L, (e.pos.x - A.ax) * A.dx + (e.pos.z - A.az) * A.dz));
+  // (2026-11-28, o Thiago: "faça os bots caírem mais espalhados") cada robô mira um lugar de largada diferente (os de brSlots, cada
+  // um o mais longe possível dos outros), na ordem, e plana mais rápido para chegar até os cantos do mapa
+  const S = BR.slots || [];
+  if (!e.isPlayer && S.length) { const k = BR.avK = (BR.avK || 0) + 1, [sx, sz] = S[k % S.length], j = k >= S.length ? 6 : 1.5; e.brAvAlvo = [sx + (Math.random() - 0.5) * j, sz + (Math.random() - 0.5) * j]; }
+  const [ox, oz] = e.brAvAlvo;
+  const s = Math.max(0, Math.min(2 * A.L, (ox - A.ax) * A.dx + (oz - A.az) * A.dz));
   e.brAvSalta = e.isPlayer ? A.T : Math.max(1, Math.min(A.T, s / BR_AV.vel + (Math.random() - 0.5) * 2.5));
   e.brAviao = true; e.brQueda = true; e.vel.set(0, 0, 0); e.vy = 0; e.onGround = false; e.airVy = 0;
   const [x, y, z] = brAvPos(0); e.pos.set(x, y, z); e.brAlto = y;
@@ -71,7 +76,7 @@ function brAvAviso(t) {
 
 {
   const limpa0 = brLimpa;
-  brLimpa = function () { brAvLimpa(); BR.avSalta = false; for (const e of entities) { e.brAviao = false; e.brAvAlvo = null; } limpa0(); };
+  brLimpa = function () { brAvLimpa(); BR.avSalta = false; BR.avK = 0; for (const e of entities) { e.brAviao = false; e.brAvAlvo = null; } limpa0(); };
   const spawn0 = spawnEntity;
   spawnEntity = function (e) {
     const r = spawn0(e);
@@ -93,7 +98,7 @@ function brAvAviso(t) {
     if (!e.isPlayer && e.brQueda && e.brAvAlvo && !playHold()) {
       const alt = e.pos.y - brChao(e), [tx, tz] = e.brAvAlvo, wx = tx - e.pos.x, wz = tz - e.pos.z, d = hyp(wx, wz);
       if (alt < 4 || d < 0.8) { e.vel.x = damp(e.vel.x, 0, 3, dt); e.vel.z = damp(e.vel.z, 0, 3, dt); return; }
-      const v = Math.min(alt < BR_QUEDA.abre ? BR_QUEDA.planaPara : BR_QUEDA.planaLivre, d * 0.8);
+      const v = Math.min(alt < BR_QUEDA.abre ? BR_AV.robPara : BR_AV.robLivre, d * 0.8);
       e.vel.x = damp(e.vel.x, wx / d * v, 3, dt); e.vel.z = damp(e.vel.z, wz / d * v, 3, dt);
     }
     if (!e.brQueda) e.brAvAlvo = null;

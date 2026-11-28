@@ -40,6 +40,10 @@ MODES.br = {
   hint: 'Ninguém renasce. Todo mundo salta do avião quando quiser (Espaço ou E) e começa com a pistola: as outras armas estão no chão. A zona fecha aos poucos e tira vida de quem fica fora. O último vivo vence.',
 };
 MODE_IDS.push('br');
+/* (2026-11-28, o Thiago: "esse deve ser o único mapa de BR por enquanto, junto com o favela que fizemos") no battle royale só
+   aparecem estes mapas na escolha (solo e salão); escolhido o modo com outro mapa, ele passa para o primeiro desta lista. */
+const BR_MAPAS = ['danger-zone', 'favela-grande'];
+function brMapaDe(mode, map) { return brModo(mode) && !BR_MAPAS.includes(map) ? (BR_MAPAS.find((id) => MAP_DEFS[id] && MAPS.some((m) => m.id === id && m.ok)) || map) : map; }
 if (Settings.limitBr !== 20) Settings.limitBr = 20;
 
 /* ---------- sorteio com semente (igual em todo mundo do salão) ---------- */
@@ -115,6 +119,9 @@ function brLoot(rnd) {
   // (menos de 6 lugares assim): o resto vai para os pontos de passagem, como antes.
   const marcadas = brMarcas().armas; // uma arma em cada marcador do editor, e só neles
   if (marcadas && marcadas.length) { for (const [x, y, z] of marcadas) { const def = sorteia(); p.set(x, (y || 0) + 0.5, z); q.setFromAxisAngle(UP, rnd() * TAU); dropWeapon(def, def.mag, def.mag * 2, p, q, v); } return; }
+  // (2026-11-28, o Thiago: "coloque para nascer armas também dentro dos módulos") uma arma no meio de cada módulo do mapa do
+  // editor (as salas de 3 x 3 m em que se entra), além das outras
+  for (const [x, y, z] of (CURMAP.def && CURMAP.def.modulos) || []) { const def = sorteia(); p.set(x + (rnd() - 0.5) * 0.8, y + 0.5, z + (rnd() - 0.5) * 0.8); q.setFromAxisAngle(UP, rnd() * TAU); dropWeapon(def, def.mag, def.mag * 2, p, q, v); }
   const dentro = brLootPontos();
   for (let i = dentro.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [dentro[i], dentro[j]] = [dentro[j], dentro[i]]; }
   const escolhidos = [];
@@ -463,6 +470,9 @@ function brEspectar(dt) {
 
 /* ---------- as funções do jogo que mudam ---------- */
 {
+  // a escolha de mapa do battle royale: só os de BR_MAPAS (BR.menuModo vem da página que chama, troca no tiro-frontline.js)
+  const mapCards0 = mapCards;
+  mapCards = function (selId, pick) { const r = mapCards0(selId, pick), mo = BR.menuModo; BR.menuModo = ''; return brModo(mo) ? r.filter((c) => BR_MAPAS.includes(c.key)) : r; };
   const modeStart0 = modeStart;
   modeStart = function (mode) { brLimpa(); BR.on = brModo(mode); BR.duo = mode === 'brduo'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? modeDef() : D; };
   const openSlots0 = openSlots;

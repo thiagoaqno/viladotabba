@@ -242,6 +242,8 @@ function tiroMapaRegistrar(J) {
   const dom = J.dom && J.dom.length === 3 ? J.dom : null;
   MAP_DEFS[J.id] = {
     type: J.tipo || 'mid', mar: !!mar, editor: true, br: J.br || null, // marcadores do Battle royale (tiro-br.js: brMarcas)
+    // (2026-11-28) o centro e o piso de cada módulo de 3 x 3 m em que se entra: o Battle royale põe uma arma dentro (tiro-br.js: brLoot)
+    modulos: (J.pecas || []).filter((p) => p.t === 'prefab' && /^kcN?Modulo/.test(p.nome) && !/Garagem|Janela/.test(p.nome)).map((p) => [p.p[0], p.p[1], p.p[2]]),
     void: J.relevo && !mar ? undefined : { kill: Math.min(L.y0, mar ? mar.y : L.y0) - 1.5 },
     relief: J.relevo && !mar ? { fn: edRelevoFn(J.relevo), pad: 2 } : undefined, // terreno do editor (o relevo do jogo, 02-relief.js)
     // limites com o tamanho de verdade de cada prefab, medidos só quando o mapa começa (para não montar prefab ao abrir a página)

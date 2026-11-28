@@ -474,6 +474,11 @@ if (IATE_ATIVO) {
   h = troca(h, "case'team':if(!pl.ig){pl.t=1-pl.t;netLobbyChanged();}break;", "case'dupla':brDuplaEscolher(pl,m.d);break;case'team':if(!pl.ig){pl.t=1-pl.t;netLobbyChanged();}break;", { nome: "BR dupla: pedido de dupla" });
   h = troca(h, "m.t==='team'||m.t==='lv'", "m.t==='team'||m.t==='dupla'||m.t==='lv'", { min: 0, nome: "BR dupla: limite de pedidos" });
   h = troca(h, "...(!brSolo(NET.cfg.mode)&&NET.phase==='lobby'?[{k:'btn',key:'team'", "...(NET.cfg.mode==='brduo'&&NET.phase==='lobby'?[brDuplaLinha()]:[]),...(!brSolo(NET.cfg.mode)&&NET.phase==='lobby'?[{k:'btn',key:'team'", { nome: "BR dupla: escolher a dupla no salão" });
+  // (2026-11-28) a escolha de mapa no battle royale: só os de BR_MAPAS (tiro-br.js); a página diz o modo antes de montar os cartões
+  h = troca(h, "rows:mapCards(NET.cfg.map,", "rows:(BR.menuModo=NET.cfg.mode,mapCards)(NET.cfg.map,", { nome: "BR: mapas no salão" });
+  h = troca(h, "rows:mapCards(Settings.map,", "rows:(BR.menuModo=Settings.mode,mapCards)(Settings.map,", { nome: "BR: mapas no solo" });
+  h = troca(h, "time,map,mode,pub:+c.pub?1:0};}", "time,map:brMapaDe(mode,map),mode,pub:+c.pub?1:0};}", { nome: "BR: mapa do salão" });
+  h = troca(h, "solo:()=>{const m=mapById(Settings.map);", "solo:()=>{Settings.map=brMapaDe(Settings.mode,Settings.map);const m=mapById(Settings.map);", { nome: "BR: mapa do solo" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
   // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script

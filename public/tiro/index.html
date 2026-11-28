@@ -9546,7 +9546,7 @@ PF.kcVigas = () => prefab('kcVigas', (M) => {
   M.col(-2, 2, 0, 0.9, -0.6, 0.6, 'steel');
 });
 
-// cerca de tela de arame (alambrado), 3 x 2,2 m: segura gente e bala, mas dá para ver através
+// cerca de tela de arame (alambrado), 3 x 2,2 m: só visual (sem colisão desde 2026-11-28), dá para ver e passar através
 PF.kcAlambrado = () => prefab('kcAlambrado', (M) => {
   M.local(1); M.color(KC_COR.ferro);
   for (const x of [-1.5, 1.5]) { M.save().move(x, 0, 0); M.cyl('steel', 0.035, 2.25, 8); M.restore(); }
@@ -9558,7 +9558,7 @@ PF.kcAlambrado = () => prefab('kcAlambrado', (M) => {
     M.save().move(x, 0.05, 0.006).rotZ(-0.045); M.boxB('steel', -0.004, 0.004, 0, 2.15, -0.004, 0.004); M.restore();
   }
   M.cls = 0;
-  M.col(-1.5, 1.5, 0, 2.2, -0.04, 0.04, 'steel');
+  // (2026-11-28, o Thiago: "todas as grades (de quadra, campo, janelas) sem física") sem colisão: gente e bala passam (os postes também)
 });
 
 // armário elétrico de rua, 1,6 x 1,6 x 0,8 m
@@ -9604,14 +9604,14 @@ function kcParede(M, mat, eixo, d0, d1, a0, a1, y0, y1, buracos = [], kind = 'co
   for (const [h0, h1, b0, b1] of buracos.slice().sort((p, q) => p[0] - q[0])) { put(a, h0, y0, y1); put(h0, h1, y0, b0); put(h0, h1, b1, y1); a = h1; }
   put(a, a1, y0, y1);
 }
-// grade de ferro numa janela aberta (a bala passa, a gente não)
+// grade de ferro numa janela aberta: só visual (sem colisão desde 2026-11-28: a bala e a gente passam)
 function kcGrade(M, eixo, d, a0, a1, b0, b1) {
   M.save().color(KC_COR.ferro); const c = M.cls; M.cls = 1;
   const n = Math.max(2, Math.round((a1 - a0) / 0.13));
   for (let i = 1; i < n; i++) { const a = a0 + (i / n) * (a1 - a0); kcB(M, 'steel', eixo, a - 0.012, a + 0.012, b0, b1, d - 0.012, d + 0.012); }
   kcB(M, 'steel', eixo, a0, a1, (b0 + b1) / 2 - 0.012, (b0 + b1) / 2 + 0.012, d - 0.015, d + 0.015);
   M.cls = c; M.restore();
-  if (eixo === 'x') M.col(a0, a1, b0, b1, d - 0.03, d + 0.03, 'steel'); else M.col(d - 0.03, d + 0.03, b0, b1, a0, a1, 'steel');
+  // (2026-11-28, o Thiago: "todas as grades (de quadra, campo, janelas) sem física") sem colisão: gente e bala passam
 }
 // janela de fachada fechada (prédio sem miolo): peitoril, moldura, vidro escuro, cruzeta e venezianas abertas. s: para onde a fachada olha
 function kcJanela(M, eixo, d, s, a0, a1, b0, b1, cor = [0.32, 0.42, 0.3]) {
@@ -9896,7 +9896,7 @@ PF.kcMuroPortao = () => prefab('kcMuroPortao', (M) => {
   for (let i = 0; i <= 10; i++) M.boxB('steel', -0.01, 0.01, 0.1, 1.95, -0.05 - i * 0.145, -0.03 - i * 0.145);
   M.restore();
   M.cls = 0;
-  M.col(1.98, 2.12, 0, 2.0, -1.72, -0.15, 'steel');
+  // (2026-11-28, o Thiago: "todas as grades (de quadra, campo, janelas) sem física") sem colisão: gente e bala passam (o portão de grade)
 });
 
 // puxadinho: telhado de zinco enferrujado em quatro esteios, 3,4 x 2,6 m
@@ -10231,7 +10231,7 @@ PF.kcCasaAzul = () => prefab('kcCasaAzul', (M) => {
   // alpendre: piso de cimento, grade baixa com entrada de 1,6 m no meio, esteios
   M.color(KC_COR.laje); M.boxB('concrete', -X, X, 0, 0.05, z1, z1 + 2.2);
   M.color([0.85, 0.85, 0.83]); M.cls = 1;
-  for (const [a, b] of [[-X, -0.85], [0.85, X]]) { M.boxB('steel', a, b, 0.9, 0.95, z1 + 2.1, z1 + 2.15); for (let x = a; x <= b + 0.01; x += 0.15) M.boxB('steel', x - 0.01, x + 0.01, 0.05, 0.9, z1 + 2.11, z1 + 2.14); M.col(a, b, 0, 0.95, z1 + 2.08, z1 + 2.17, 'steel'); }
+  for (const [a, b] of [[-X, -0.85], [0.85, X]]) { M.boxB('steel', a, b, 0.9, 0.95, z1 + 2.1, z1 + 2.15); for (let x = a; x <= b + 0.01; x += 0.15) M.boxB('steel', x - 0.01, x + 0.01, 0.05, 0.9, z1 + 2.11, z1 + 2.14); } // grade baixa do alpendre: sem colisão (2026-11-28)
   M.cls = 0;
   M.color([0.82, 0.82, 0.8]); for (const x of [-X + 0.08, -0.85, 0.85, X - 0.08]) { M.boxB('paint', x - 0.06, x + 0.06, 0, 2.55, z1 + 2.05, z1 + 2.17); M.col(x - 0.06, x + 0.06, 0, 2.55, z1 + 2.05, z1 + 2.17, 'concrete'); }
   kcTelhado(M, -X, X, z0, z1 + 2.2, 3.3, 2.95, KC_COR.ferrugem, 0.25);
@@ -10801,7 +10801,7 @@ PF.kcCampoFutebol = () => prefab('kcCampoFutebol', (M) => {
   // Alambrado com duas aberturas de 2,4 m, uma em cada lateral longa.
   const cerca = (x0, x1, z0, z1) => {
     M.color(KC_COR.ferro); M.boxB('steel', x0, x1, 2.44, 2.5, z0, z1);
-    M.col(x0, x1, 0, 2.5, z0, z1, 'steel');
+    // (2026-11-28, o Thiago: "todas as grades (de quadra, campo, janelas) sem física") sem colisão: gente e bala passam
     M.cls = 1; M.color([0.58, 0.6, 0.59]);
     const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 0.3);
     for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; M.tube('steel', 0.008, [[x, 0.05, z], [x, 2.45, z]], 4); }

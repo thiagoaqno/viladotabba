@@ -21,9 +21,7 @@ const path = require('path');
 
 const FAV = JSON.parse(fs.readFileSync(path.join(__dirname, 'editor', 'favela.json'), 'utf8'));
 const C = { rua: [0.74, 0.7, 0.63], praca: [0.8, 0.78, 0.74], terra: [0.62, 0.5, 0.38], tijolo: [0.86, 0.5, 0.36], laje: [0.66, 0.65, 0.62], telha: [0.55, 0.57, 0.6] };
-const BX = 136, BZ = 106; // a beira da versão 2 (os bairros do meio vão até aqui)
-// versão 3 (2026-11-27, com as peças do Codex): a zona rural a oeste e o centro comercial e o bairro novo a leste; a beira agora é esta
-const BXW = -232, BXE = 248;
+const BX = 136, BZ = 106; // beira do chão (o abismo começa aqui)
 const sul = [], meio = [];
 const caixa = (L, x0, x1, y0, y1, z0, z1, m, cor, o = {}) => L.push(Object.assign({ t: 'caixa', p: [(x0 + x1) / 2, y0, (z0 + z1) / 2], s: [x1 - x0, y1 - y0, z1 - z0], r: 0, m, cor }, o));
 const pf = (L, nome, x, z, r = 0, y = 0) => L.push({ t: 'prefab', nome, p: [x, y, z], r, e: 1 });
@@ -40,9 +38,9 @@ const daFavela = FAV.pecas.filter((P) => {
 });
 
 // ---------- chão e a parede da beira ----------
-caixa(meio, BXW, BXE, -0.3, 0, -BZ, BZ, 'cobble', C.rua);
+caixa(meio, -BX, BX, -0.3, 0, -BZ, BZ, 'cobble', C.rua);
 const beira = (x0, x1, z0, z1) => caixa(meio, x0, x1, -0.3, 600, z0, z1, 'glass', [0.6, 0.8, 1], { inv: true });
-beira(BXW, BXW + 0.2, -BZ, BZ); beira(BXE - 0.2, BXE, -BZ, BZ); beira(BXW, BXE, -BZ, -BZ + 0.2); beira(BXW, BXE, BZ - 0.2, BZ);
+beira(-BX, -BX + 0.2, -BZ, BZ); beira(BX - 0.2, BX, -BZ, BZ); beira(-BX, BX, -BZ, -BZ + 0.2); beira(-BX, BX, BZ - 0.2, BZ);
 
 // ---------- tamanhos [largura x, profundidade z] com r = 0 (a frente olha +z), escritos no kit ----------
 const TAM = {
@@ -143,31 +141,6 @@ pf(sul, 'kcBancoPraca', 70, 99); pf(sul, 'kcBancoPraca', 78, 99); pf(sul, 'kcPra
 pf(sul, 'kcTambores', -120, 100); pf(sul, 'kcManilhas', -108, 100); pf(sul, 'kcCaixaDagua', -92, 100); pf(sul, 'kcEntulho', -80, 100);
 pf(sul, 'kcBananeira', 114, 100); pf(sul, 'kcBananeira', 124, 101); pf(sul, 'kcVaral', 104, 100);
 
-// ---------- Zona rural (x -232 a -136, versão 3): estrada de terra, sítio, celeiro, curral, torre d'água, milharal, pomar, estação ----------
-for (let z = 6; z <= 102; z += 12) pf(sul, 'kcRurEstrada', -139, z, 0);                       // estrada de terra N-S, colada ao Ferro-velho
-for (const x of [-220, -208, -164, -152]) pf(meio, 'kcRurEstrada', x, 0, 90);                 // estrada E-W (a estação fica no meio dela)
-pf(meio, 'kcBaiEstacao', -185, 0, 90);                                                         // estação de trem (29,4 x 24 girada)
-pf(sul, 'kcRurCasaSede', -158, 22, 90); pf(sul, 'kcRurPoco', -152, 12); pf(sul, 'kcRurCarroca', -170, 20, 90);
-pf(sul, 'kcRurCeleiro', -182, 32, 90); pf(sul, 'kcRurTorreAgua', -162, 50, 0); pf(sul, 'kcRurGalinheiro', -150, 46);
-pf(sul, 'kcRurPauAPique', -210, 24, 90); pf(sul, 'kcRurPauAPique', -200, 52, 0); pf(sul, 'kcRurCurral', -215, 36);
-pf(sul, 'kcRurTrator', -195, 24, 0); pf(sul, 'kcRurFardos', -176, 44, 30); pf(sul, 'kcRurFardos', -190, 46, 90); pf(sul, 'kcRurFardos', -150, 30);
-pf(sul, 'kcRurFardo', -186, 22); pf(sul, 'kcRurFardo', -205, 40, 60);
-for (const x of [-219, -213, -207, -201]) for (const z of [69, 75, 81, 87]) pf(sul, 'kcRurMilho', x, z);   // milharal de 24 x 24 m
-for (const x of [-185, -178, -171, -164, -157, -150]) for (const z of [80, 88, 96]) pf(sul, 'kcRurPomar', x + (z === 88 ? 3 : 0), z);
-for (let z = 5.5; z <= 62; z += 3) { if (z > 27 && z < 35) continue; pf(sul, 'kcRurCerca', -146, z, 90); } // cerca do sítio, com porteira
-pf(sul, 'kcRurPorteira', -146, 31, 90);
-
-// ---------- Centro comercial (x 136 a 248, perto da avenida) e bairro novo (mais para o alto), versão 3 ----------
-pf(meio, 'kcComPassarela', 190, 0, 90);                                                         // passarela sobre a avenida
-pf(sul, 'kcComGaleria', 165, 17, 180); pf(sul, 'kcComSupermercado', 205, 18, 180); pf(sul, 'kcComPosto', 232, 18, 180);
-pf(sul, 'kcComBanco', 150, 36, 180); pf(sul, 'kcComFarmacia', 163, 36, 180); pf(sul, 'kcComLanchonete', 174, 36, 180); pf(sul, 'kcComRoupas', 185, 36, 180);
-pf(sul, 'kcComEstacionamento', 205, 38, 180);
-pf(sul, 'kcComCarro', 160, 4, 0); pf(sul, 'kcComCarro', 214, 4.2, 0); pf(sul, 'kcComCarro', 236, 4, 0);
-pf(sul, 'kcComPredio4', 175, 56, 180); pf(sul, 'kcBaiEscola', 225, 62, 180);
-pf(sul, 'kcBaiIgreja', 155, 82, 180); pf(sul, 'kcBaiSaude', 178, 76, 180); pf(sul, 'kcBaiCondominio', 200, 90, 180); pf(sul, 'kcBaiLavaRapido', 228, 90, 180);
-for (const x of [146, 170, 198, 224]) pf(sul, 'kcPoste', x, 8); for (const x of [158, 212, 240]) pf(sul, 'kcPoste', x, 68);
-pf(sul, 'kcBancoPraca', 188, 66); pf(sul, 'kcLixeiraRua', 196, 66); pf(sul, 'kcArvoreCanteiro', 242, 44); pf(sul, 'kcPontoOnibus', 145, 6.5, 180);
-
 // ---------- espelho: o norte é o sul com z trocado (o prefab gira 180 - r) ----------
 const espelha = (P) => { const Q = JSON.parse(JSON.stringify(P)); Q.p[2] = -Q.p[2]; Q.r = (((180 - (Q.r || 0)) % 360) + 360) % 360; return Q; };
 const pecas = [...daFavela, ...meio, ...sul, ...sul.map(espelha)];
@@ -175,11 +148,7 @@ for (const P of pecas) { P.p = P.p.map((v) => Math.round(v * 1000) / 1000); if (
 
 // ---------- pontos de passagem: uma grade de 8 m fora da Favela, sem os que caem dentro de um prédio ----------
 const ocupa = []; // [x0, x1, z0, z1] dos prédios e veículos novos (com folga de 0,8 m)
-const DIM_V3 = { kcRurCasaSede: [9, 7], kcRurCeleiro: [12, 12], kcRurPauAPique: [5.3, 5.3], kcRurCurral: [9.12, 9.12], kcRurTorreAgua: [7.23, 8.97], kcRurGalinheiro: [4.3, 4.3],
-  kcRurPoco: [2, 2], kcRurCarroca: [3, 1.6], kcRurTrator: [4, 2.4], kcRurFardos: [2.4, 0.9], kcRurPomar: [1, 1], kcComGaleria: [26.4, 14], kcComSupermercado: [20, 16], kcComPosto: [20, 16],
-  kcComEstacionamento: [18, 12], kcComCarro: [4.4, 2], kcComBanco: [10, 8], kcComFarmacia: [8, 8], kcComLanchonete: [8, 8], kcComRoupas: [8, 8], kcComPredio4: [40, 14.4], kcComPassarela: [31.2, 2.4],
-  kcBaiEscola: [28, 20], kcBaiIgreja: [14.4, 16], kcBaiSaude: [14, 8], kcBaiEstacao: [24, 29.4], kcBaiCondominio: [24, 16], kcBaiLavaRapido: [12, 10] };
-const DIM = Object.assign({}, TAM, DIM_V3, { boxcar: [2.85, 12.2], busWreck: [2.5, 11], kcConteinerAberto: [6.1, 2.5], kcCarroQueimado: [1.9, 4.4], kcCarroVelho: [1.7, 3.9], kcVan: [1.9, 4.5],
+const DIM = Object.assign({}, TAM, { boxcar: [2.85, 12.2], busWreck: [2.5, 11], kcConteinerAberto: [6.1, 2.5], kcCarroQueimado: [1.9, 4.4], kcCarroVelho: [1.7, 3.9], kcVan: [1.9, 4.5],
   kcCampoFutebol: [0, 0], kcQuadra: [0, 0], kcArquibancadaConcreto: [10, 6], kcGuarita: [2.4, 2.4], kcManilhas: [2.4, 2.2], kcBanca: [2.9, 2.1], kcABalcao: [2.6, 1.5], kcAPainelVoos: [3, 0.5] });
 for (const P of pecas) {
   if (Math.abs(P.p[0]) < 30.5 && Math.abs(P.p[2]) < 44.5) continue;
@@ -190,7 +159,7 @@ for (const P of pecas) {
 }
 const livre = (x, z) => !ocupa.some(([a, b, c, d]) => x > a && x < b && z > c && z < d);
 const poiNovos = [];
-for (let x = BXW + 4; x <= BXE - 4; x += 8) for (let z = -102; z <= 102; z += 8) {
+for (let x = -132; x <= 132; x += 8) for (let z = -102; z <= 102; z += 8) {
   if (Math.abs(x) < 30.5 && Math.abs(z) < 44.5) continue; // a Favela tem os dela
   if (livre(x, z)) poiNovos.push([x, 0, z, (x * 7 + z * 3) % 5 === 0 ? 1 : 0]);
 }
@@ -208,7 +177,7 @@ for (let i = 0; i < caixas.length; i++) for (let j = i + 1; j < caixas.length; j
   const a = caixas[i], b = caixas[j];
   if (a.x0 < b.x1 - 0.05 && b.x0 < a.x1 - 0.05 && a.z0 < b.z1 - 0.05 && b.z0 < a.z1 - 0.05) { sobre++; console.log('encosta:', a.n, a.x0.toFixed(1), a.z0.toFixed(1), '|', b.n, b.x0.toFixed(1), b.z0.toFixed(1)); }
 }
-const fora = caixas.filter((c) => c.x0 < BXW + 0.3 || c.x1 > BXE - 0.3 || c.z0 < -BZ + 0.3 || c.z1 > BZ - 0.3);
+const fora = caixas.filter((c) => c.x0 < -BX + 0.3 || c.x1 > BX - 0.3 || c.z0 < -BZ + 0.3 || c.z1 > BZ - 0.3);
 for (const c of fora) console.log('passa da beira:', c.n, c.x0.toFixed(1), c.x1.toFixed(1), c.z0.toFixed(1), c.z1.toFixed(1));
 
 // ---------- marcadores do Battle royale (2026-11-27, o Thiago: "bota marcadores do BR na favela grande") ----------
@@ -220,15 +189,6 @@ const DENTRO = {
   kcCasaObra: [[0, 0.1, 0]], kcCasaAzul: [[0, 0.1, 2.4]], kcPredioFavelaEsquina: [[1.7, 0.1, 1.5]], kcConteinerAberto: [[0, 0.3, 0]],
 };
 const LAJE = { kcFavelaEscadaLado: [[1, 3.3, 0.5]], kcFavelaEscadaFundos: [[0, 3.3, -1.2]], kcFavelaEscadaTelhado: [[-1, 6.2, -1.5]] };
-// as peças do Codex trazem os pontos delas em KC_BR (ferramentas/tiro-editor/pecas.js): lidos do arquivo, como estão lá
-{
-  const kit = fs.readFileSync(path.join(__dirname, '..', 'tiro-editor', 'pecas.js'), 'utf8');
-  for (const m of kit.matchAll(/^KC_BR\.(\w+) = (\{.*?\});/gm)) {
-    let o; try { o = Function('return ' + m[2])(); } catch (e) { continue; }
-    if (o.dentro && o.dentro.length) DENTRO[m[1]] = o.dentro;
-    if (o.laje && o.laje.length) LAJE[m[1]] = o.laje;
-  }
-}
 const naPeca = (P, [lx, ly, lz]) => { const a = ((P.r || 0) * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a); return [+(P.p[0] + lx * c + lz * s).toFixed(2), +(P.p[1] + ly).toFixed(2), +(P.p[2] - lx * s + lz * c).toFixed(2)]; };
 const lugarDentro = [], lugarLaje = [];
 for (const P of pecas) {
@@ -258,7 +218,7 @@ const J = {
   br: { armas, coletes, curas }, // o centro da zona e as largadas continuam automáticos (tiro-br.js)
   sniper: FAV.sniper, som: FAV.som || 'concrete', ambiente: FAV.ambiente,
   zonas: [...(FAV.zonas || []), ['Morro sul', -BX, BX, 44, BZ], ['Morro norte', -BX, BX, -BZ, -44], ['Ferro-velho', -BX, -90, -44, 44], ['Campinho', -90, -30, -44, 44],
-    ['Comércio', 30, 90, -44, 44], ['Rodoviária', 90, BX, -44, 44], ['Zona rural', BXW, -BX, -BZ, BZ], ['Centro comercial', BX, BXE, -50, 50], ['Bairro novo', BX, BXE, 50, BZ], ['Bairro novo', BX, BXE, -BZ, -50]],
+    ['Comércio', 30, 90, -44, 44], ['Rodoviária', 90, BX, -44, 44]],
 };
 const out = path.join(__dirname, 'editor', 'favela-grande.json');
 fs.writeFileSync(out, JSON.stringify(J, null, 1) + '\n');

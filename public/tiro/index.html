@@ -13973,6 +13973,27 @@ function brDeathTxt() {
    Rede: cada máquina decide sobre os soldados dela (o jogador, e os robôs no host), como nas mortes. "Caiu"/"levantou" vão
    como evento 'brc' (c: 1 ou 0) do soldado; "reanimei o meu parceiro" como 'brv' (to: id dele), e a máquina dele levanta. */
 const BR_CAIDO = { tempo: 30, raio: 1.9, levantar: 4, volta: 30 };
+/* VOLTA DO PARCEIRO (2026-11-28, o Thiago: "quando um jogador morre (e é finalizado) se a dupla dele ainda estiver viva, deve ser
+   possível chamar ele de volta"; corrigido: por quintos). Quem morre de vez com o parceiro vivo volta sozinho depois de um tempo que
+   cresce com a partida: 10 s no primeiro quinto, 30 s no segundo, 1 min no terceiro, 1 min 30 s no quarto; no último quinto não volta
+   mais. A partida é medida pela
+   zona (do começo até ela sumir). Volta caindo de paraquedas em cima do parceiro, sem armas (a pistola vazia: munição e armas se
+   acham no chão) e sem granada. Se o parceiro morrer antes, não volta. A máquina dono do soldado decide e avisa ('brvolta'). */
+function brVoltaEspera() {
+  const P = BR.plano, total = P && P.fases.length ? P.fases[P.fases.length - 1].b : 300, t = Math.max(0, BR.T0 - MATCH.timeLeft), q = t / total;
+  return q < 0.2 ? 10 : q < 0.4 ? 30 : q < 0.6 ? 60 : q < 0.8 ? 90 : 0; // 0: último quinto, não volta
+}
+function brVoltar(e) {
+  const p = brParceiro(e); if (!p || !p.alive || p.brOut) { e.brVolta = 0; return; }
+  e.brOut = 0; e.brVolta = 0; e.brCaido = false; e.brRevT = 0;
+  if (e.isPlayer) respawnPlayer(); else { spawnEntity(e); initTactics(e); }
+  const A = e.arms; if (A && A.slots.length) { A.slots = [A.slots[0]]; A.cur = 0; A.slots[0].mag = 0; A.slots[0].reserve = 0; }
+  if (e.isPlayer) { if (A && A.slots[0]) vmEquip(A.slots[0].def); PL.nades = 0; } else e.nades = 0;
+  const a = Math.random() * TAU; e.pos.set(p.pos.x + Math.cos(a) * 3, p.pos.y, p.pos.z + Math.sin(a) * 3); e.vel.set(0, 0, 0); e.vy = 0;
+  brPoeNoAlto(e); // céu aberto em cima: cai de 75 m de paraquedas; com teto, aparece no chão ao lado dele
+  if (MATCH.online) netEvent({ k: 'brvolta' }, e);
+  if (e.isPlayer) { hudMsg('Você voltou! Cai sem armas: ache uma no chão', 'xp', 3.5); BR.ver = null; BR.cam = null; if (BR.aviso) BR.aviso.style.display = 'none'; }
+}
 
 MODES.brduo = Object.assign({}, MODES.br, {
   name: 'Battle royale em dupla', btn: 'BR em dupla', sub: 'Battle royale em dupla, a última dupla vence', teams: 'Até 20 jogadores, 10 duplas',
@@ -14054,6 +14075,13 @@ function brDuplaUpdate(dt) {
   }
   if (eu.alive && !eu.brOut && txt) brAvisoDupla(txt); else if (!eu.brOut) brAvisoDupla('');
   brMarcasCaidos();
+  // quem está esperando para voltar (desta máquina): o parceiro morreu, não volta; o tempo acabou, volta
+  for (const e of entities) {
+    if (!e.brVolta || e.alive) continue;
+    const p = brParceiro(e);
+    if (!p || !p.alive || p.brOut) { e.brVolta = 0; continue; }
+    if (MATCH.time >= e.brVolta && !(e.isPlayer && (KC.active || KC.pending))) brVoltar(e);
+  }
 }
 function brAvisoDupla(t) {
   if (!BR.avisoD) {
@@ -14107,8 +14135,12 @@ function brMarcasCaidos() {
   const killEnt1 = killEnt;
   killEnt = function (v, a, weapon, head, dir, life) {
     if (BR.on && BR.duo && v.alive && !v.brCaido && brLocal(v) && weapon !== NET_WSPECIAL.fall && (MATCH.state === 'playing' || MATCH.state === 'paused') && !MATCH.fin && brDePe(brParceiro(v))) { brCair(v, a, weapon); return; }
-    if (BR.on && BR.duo) { v.brCaido = false; v.brRevT = 0; }
-    return killEnt1(v, a, weapon, head, dir, life);
+    if (!(BR.on && BR.duo)) return killEnt1(v, a, weapon, head, dir, life);
+    v.brCaido = false; v.brRevT = 0;
+    const p = brParceiro(v), r = killEnt1(v, a, weapon, head, dir, life);
+    const espera = brVoltaEspera();
+    if (brLocal(v) && !v.alive && p && p.alive && !p.brOut && !MATCH.fin && espera > 0) v.brVolta = MATCH.time + espera; // morto de vez, parceiro vivo: volta
+    return r;
   };
   // caído: o jogador não atira, não mira e fica agachado; o robô fica parado, agachado, sem pensar
   // (2026-11-27, o Thiago: "faz não ser possível atirar enquanto você cai de paraquedas") na queda também: sem tiro, mira nem grenada
@@ -14137,6 +14169,7 @@ function brMarcasCaidos() {
   // os eventos da dupla que chegam pela rede
   const netEventIn1 = netEventIn;
   netEventIn = function (e, ev) {
+    if (ev && ev.k === 'brvolta') { if (BR.on && BR.duo && e) { e.brOut = 0; e.brCaido = false; } return; }
     if (ev && ev.k === 'brc') { if (BR.on && BR.duo && e) { e.brCaido = !!ev.c; if (!ev.c) e.brRevT = 0; } return; }
     if (ev && ev.k === 'brv') { if (BR.on && BR.duo) { const t = netLocal(ev.to); if (t && t.brCaido && brParceiro(t) === e) brLevantar(t); } return; }
     return netEventIn1(e, ev);
@@ -14163,12 +14196,12 @@ function brMarcasCaidos() {
     const p = BR.on && BR.duo ? brParceiro(PL.ent) : null, vivo = !!p && p.alive && !p.brOut;
     if (BR.on && BR.duo) { if (vivo) BR.ver = p; else BR.lugar = new Set(brVivos().map(brDupla)).size + 1; }
     brEspectar1(dt);
-    if (vivo && BR.aviso) BR.aviso.textContent = 'Seu parceiro continua · assistindo ' + p.name;
+    if (vivo && BR.aviso) BR.aviso.textContent = (PL.ent.brVolta ? `Você volta em ${Math.max(0, Math.ceil(PL.ent.brVolta - MATCH.time))} s se ${p.name} sobreviver` : 'Seu parceiro continua') + ' · assistindo ' + p.name;
   };
   const brDeathTxt1 = brDeathTxt;
   brDeathTxt = function () {
     const p = BR.on && BR.duo ? brParceiro(PL.ent) : null;
-    if (p && p.alive && !p.brOut && PL.ent.brOut) { const s = $('death').querySelector('.skip'); if (s) hudHtml(s, esc('Seu parceiro continua: a câmera segue ele')); return; }
+    if (p && p.alive && !p.brOut && PL.ent.brOut) { const s = $('death').querySelector('.skip'); if (s) hudHtml(s, esc(PL.ent.brVolta ? 'Seu parceiro continua: se ele sobreviver, você volta caindo do céu' : 'Seu parceiro continua: a câmera segue ele')); return; }
     return brDeathTxt1();
   };
   const matchOutcome1 = matchOutcome;

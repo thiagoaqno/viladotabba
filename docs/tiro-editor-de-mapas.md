@@ -186,7 +186,7 @@ e a origem é o centro de baixo.
 | `kcPrateleira` | 3 x 3 x 1,2 | prateleira de galpão com caixas |
 | `kcTambores` | 1,2 x 1,05 x 1,2 | quatro tambores num palete |
 | `kcVigas` | 4 x 0,9 x 1,2 | pilha de vigas de aço |
-| `kcAlambrado` | 3 x 2,2 x 0,1 | cerca de tela de arame (vê através, mas segura bala) |
+| `kcAlambrado` | 3 x 2,2 x 0,1 | cerca de tela de arame, só visual: gente e bala passam (desde 2026-11-28) |
 | `kcArmarioEletrico` | 1,6 x 1,6 x 0,8 | armário elétrico de rua |
 
 ### Favela e casas

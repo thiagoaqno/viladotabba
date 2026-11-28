@@ -433,8 +433,12 @@ if (IATE_ATIVO) {
   h = troca(h, "o.mode==='ffa'", "brSolo(o.mode)", { min: 2, nome: "BR: menu como cada um por si" });
   h = troca(h, "st.o!=='ffa'", "!brSolo(st.o)", { min: 3, nome: "BR: lista de salões" });
   h = troca(h, /NET_MAX(?!=8)/g, "netMax()", { min: 6, nome: "BR: salão de 12" });
-  h = troca(h, "bots.length-FFA_BOTS", "bots.length-(BR.on?11:FFA_BOTS)", { nome: "BR: 11 robôs no solo" });
-  h = troca(h, "all.length-FFA_BOTS", "all.length-(brModo(Settings.mode)?11:FFA_BOTS)", { nome: "BR: 11 robôs na tela do solo" });
+  h = troca(h, "bots.length-FFA_BOTS", "bots.length-(BR.on?BR_MAX-1:FFA_BOTS)", { nome: "BR: 11 robôs no solo" });
+  // a tela do solo mostra também os robôs a mais quando o modo é battle royale (BR_NOMES)
+  h = troca(h, "const all=[...BOT_NAMES[0],...BOT_NAMES[1]]", "const all=[...BOT_NAMES[0],...BOT_NAMES[1],...(brModo(Settings.mode)?BR_NOMES:[])]", { nome: "BR: nomes dos robôs a mais no solo" });
+  // os robôs a mais do battle royale (até 20), criados no boot logo depois dos 11 do jogo
+  h = troca(h, "for(let i=0;i<6;i++)makeBot(1,i);", "for(let i=0;i<6;i++)makeBot(1,i);if(window.brCriarExtras)window.brCriarExtras();", { nome: "BR: robôs a mais" });
+  h = troca(h, "all.length-FFA_BOTS", "all.length-(brModo(Settings.mode)?BR_MAX-1:FFA_BOTS)", { nome: "BR: 11 robôs na tela do solo" });
   h = troca(h, "const teams=!o.online?MD.teams:", "const teams=brModo(o.mode)||!o.online?MD.teams:", { nome: "BR: texto de jogadores" });
   h = troca(h, "ffaList().some((e)=>e.kills>=MATCH.limit)", "ffaAcabou()", { min: 3, nome: "BR: último vivo vence" });
   h = troca(h, "const ffaCmp=(a,b)=>", "const ffaCmp=(a,b)=>(BR.on?brCmp(a,b):0)||", { nome: "BR: classificação" });

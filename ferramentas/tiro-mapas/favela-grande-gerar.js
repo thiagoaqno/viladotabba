@@ -4,7 +4,7 @@
 //
 // Versão 2 (2026-11-27, o Thiago: "cresce mais ainda o favela... usa assets de outros mapas"): 272 x 212 m de chão, tudo jogável.
 //   Faixa do meio (z de -44 a 44), de oeste para leste:
-//     Ferro-velho (x -136 a -96): vagões, ônibus queimado, contêineres, manilhas, carcaças, guarita;
+//     Estação e Sítio (x -136 a -96): estação de trem, celeiro com mezanino, torre d'água, pau a pique, trator (era o Ferro-velho);
 //     Campinho (x -90 a -36): campo de terra, arquibancadas, duas fileiras de casas de cada lado;
 //     a Favela de hoje inteira (x -30 a 30);
 //     Comércio (x 36 a 90): fonte, quiosques, quadra, lojas e prédios;
@@ -92,14 +92,13 @@ quintal(sul, 41, 87, 39.5, 3);
 pf(sul, 'kcVan', 55, 14, 90); pf(sul, 'kcCarroVelho', 76, 14, 270); pf(sul, 'kcMoto', 44, 14.2, 90);
 pf(sul, 'kcPoste', 66, 15.5); pf(sul, 'kcLixeiraRua', 38.5, 15.5); pf(sul, 'kcPosteGato', 86, 26, 270);
 
-// ---------- Ferro-velho (x -136 a -96): peças dos mapas de neve e de deserto do jogo (vagão, ônibus) e do kit ----------
-pf(sul, 'boxcar', -104, 7.5, 0); pf(sul, 'boxcar', -104, 24, 0);            // vagões, compridos em z (12,2 m)
-pf(sul, 'busWreck', -118, 11, 0);                                            // ônibus queimado, comprido em z (11 m)
-pf(sul, 'kcConteinerAberto', -124, 30, 0); pf(sul, 'kcConteinerAberto', -112, 37, 0);
-pf(sul, 'kcCarroQueimado', -128, 5, 0); pf(sul, 'kcCarroQueimado', -111, 30, 90);
-pf(sul, 'kcManilhas', -126, 19); pf(sul, 'kcPneus', -112, 19.5); pf(sul, 'kcPaletes', -129, 39); pf(sul, 'kcVigas', -120, 42, 90);
-pf(sul, 'kcTambores', -98.5, 15); pf(sul, 'kcEntulho', -130, 13); pf(sul, 'kcCacamba', -100, 40);
-pf(sul, 'kcGuarita', -99, 3, 90); pf(meio, 'stCrateStack', -126, 0, 0.4); pf(meio, 'kcGabiao', -112, 0, 90);
+// ---------- Estação e Sítio (x -136 a -96; 2026-11-28, no lugar do Ferro-velho, com as peças do Codex) ----------
+pf(meio, 'kcBaiEstacao', -116, 0, 0);                                        // estação de trem: x -128 a -104, z -14,7 a 14,7
+pf(sul, 'kcRurCeleiro', -109, 32, 90);                                       // celeiro com mezanino: x -115 a -103, z 26 a 38
+pf(sul, 'kcRurTorreAgua', -127, 31, 0);                                      // torre d'água (ponto alto): x -130,6 a -123,4, z 26,5 a 35,5
+pf(sul, 'kcRurPauAPique', -127.5, 41.5, 0);                                  // casa de pau a pique: z 38,9 a 44,2
+pf(sul, 'kcRurFardos', -99, 30, 90); pf(sul, 'kcRurFardo', -100, 20); pf(sul, 'kcRurTrator', -118, 21, 90); pf(sul, 'kcRurPoco', -100, 42);
+for (const z of [24, 36]) pf(sul, 'kcRurCerca', -97, z, 90);                  // cerca do sítio, olhando a rua de divisa
 
 // ---------- Rodoviária (x 96 a 136): galpão coberto (x 100 a 128, z 14 a 36), teto a 5 m com escada ----------
 caixa(sul, 100, 128, 5, 5.3, 14, 36, 'corrugated', C.telha);                // o teto (uma laje: dá para andar)
@@ -148,7 +147,7 @@ for (const P of pecas) { P.p = P.p.map((v) => Math.round(v * 1000) / 1000); if (
 
 // ---------- pontos de passagem: uma grade de 8 m fora da Favela, sem os que caem dentro de um prédio ----------
 const ocupa = []; // [x0, x1, z0, z1] dos prédios e veículos novos (com folga de 0,8 m)
-const DIM = Object.assign({}, TAM, { boxcar: [2.85, 12.2], busWreck: [2.5, 11], kcConteinerAberto: [6.1, 2.5], kcCarroQueimado: [1.9, 4.4], kcCarroVelho: [1.7, 3.9], kcVan: [1.9, 4.5],
+const DIM = Object.assign({}, TAM, { kcBaiEstacao: [24, 29.4], kcRurCeleiro: [12, 12], kcRurTorreAgua: [7.23, 8.97], kcRurPauAPique: [5.3, 5.3], kcRurFardos: [2.4, 0.9], kcRurTrator: [4, 2.4], kcRurPoco: [2, 2], boxcar: [2.85, 12.2], busWreck: [2.5, 11], kcConteinerAberto: [6.1, 2.5], kcCarroQueimado: [1.9, 4.4], kcCarroVelho: [1.7, 3.9], kcVan: [1.9, 4.5],
   kcCampoFutebol: [0, 0], kcQuadra: [0, 0], kcArquibancadaConcreto: [10, 6], kcGuarita: [2.4, 2.4], kcManilhas: [2.4, 2.2], kcBanca: [2.9, 2.1], kcABalcao: [2.6, 1.5], kcAPainelVoos: [3, 0.5] });
 for (const P of pecas) {
   if (Math.abs(P.p[0]) < 30.5 && Math.abs(P.p[2]) < 44.5) continue;
@@ -189,6 +188,15 @@ const DENTRO = {
   kcCasaObra: [[0, 0.1, 0]], kcCasaAzul: [[0, 0.1, 2.4]], kcPredioFavelaEsquina: [[1.7, 0.1, 1.5]], kcConteinerAberto: [[0, 0.3, 0]],
 };
 const LAJE = { kcFavelaEscadaLado: [[1, 3.3, 0.5]], kcFavelaEscadaFundos: [[0, 3.3, -1.2]], kcFavelaEscadaTelhado: [[-1, 6.2, -1.5]] };
+// as peças do Codex trazem os pontos do BR delas em KC_BR (ferramentas/tiro-editor/pecas.js): lidos do arquivo
+{
+  const kit = fs.readFileSync(path.join(__dirname, '..', 'tiro-editor', 'pecas.js'), 'utf8');
+  for (const m of kit.matchAll(/^KC_BR\.(\w+) = (\{.*?\});/gm)) {
+    let o; try { o = Function('return ' + m[2])(); } catch (e) { continue; }
+    if (o.dentro && o.dentro.length) DENTRO[m[1]] = o.dentro;
+    if (o.laje && o.laje.length) LAJE[m[1]] = o.laje;
+  }
+}
 const naPeca = (P, [lx, ly, lz]) => { const a = ((P.r || 0) * Math.PI) / 180, c = Math.cos(a), s = Math.sin(a); return [+(P.p[0] + lx * c + lz * s).toFixed(2), +(P.p[1] + ly).toFixed(2), +(P.p[2] - lx * s + lz * c).toFixed(2)]; };
 const lugarDentro = [], lugarLaje = [];
 for (const P of pecas) {
@@ -217,7 +225,7 @@ const J = {
   pecas, nascer: FAV.nascer, dom: FAV.dom, mecha: FAV.mecha, poi,
   br: { armas, coletes, curas }, // o centro da zona e as largadas continuam automáticos (tiro-br.js)
   sniper: FAV.sniper, som: FAV.som || 'concrete', ambiente: FAV.ambiente,
-  zonas: [...(FAV.zonas || []), ['Morro sul', -BX, BX, 44, BZ], ['Morro norte', -BX, BX, -BZ, -44], ['Ferro-velho', -BX, -90, -44, 44], ['Campinho', -90, -30, -44, 44],
+  zonas: [...(FAV.zonas || []), ['Morro sul', -BX, BX, 44, BZ], ['Morro norte', -BX, BX, -BZ, -44], ['Estação e Sítio', -BX, -90, -44, 44], ['Campinho', -90, -30, -44, 44],
     ['Comércio', 30, 90, -44, 44], ['Rodoviária', 90, BX, -44, 44]],
 };
 const out = path.join(__dirname, 'editor', 'favela-grande.json');

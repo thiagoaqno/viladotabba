@@ -1,15 +1,20 @@
-# Tiro: na Favela Grande, o Ferro-velho vira Estação e Sítio (peças do Codex)
+# Tiro: no BR em dupla, quem morre volta se o parceiro sobreviver
 
-Segunda parte da opção 1: o mapa fica no tamanho anterior (272 x 212 m), e algumas peças novas do Codex entram no lugar do Ferro-velho (x -136 a -96).
+Pedido do Thiago: quando um jogador morre de vez com a dupla dele ainda viva, ele volta depois de um tempo, que cresce com a partida, e cai do céu sem armas.
 
-**Estação e Sítio:**
-- **estação de trem** no meio (plataforma coberta, bilheteria, trilhos e passarela por cima);
-- ao sul e ao norte, **celeiro com mezanino** (ponto alto, por escada), **torre d'água** (ponto alto de sniper), **casa de pau a pique**, trator, fardos, poço e cerca olhando a rua de divisa.
+**Como funciona** (`ferramentas/tiro-br-dupla.js`):
+- só vale para quem **morre de vez** (sangrou, levou o tiro final caído ou caiu do mapa) com o **parceiro vivo**;
+- o tempo de espera depende de quanto da partida já passou (a partida é medida pela zona, do começo até ela sumir), em quintos:
+  - primeiro quinto: **10 s**;
+  - segundo quinto: **30 s**;
+  - terceiro quinto: **1 min**;
+  - quarto quinto: **1 min 30 s**;
+  - último quinto: **não volta mais**;
+- se o parceiro morrer antes do tempo acabar, não volta (a dupla sai);
+- volta **caindo de paraquedas em cima do parceiro** (de 75 m, a uns 3 m dele; com teto em cima, aparece no chão ao lado), **sem armas**: só a pistola, vazia, e nenhuma granada. Armas, munição e granadas se acham no chão;
+- enquanto espera, a tela diz "Você volta em N s se fulano sobreviver" e a câmera segue o parceiro;
+- vale para pessoas e robôs. No salão, a máquina dona do soldado decide e avisa os outros (evento `brvolta`).
 
-Os vagões, os contêineres e o ônibus do Ferro-velho saem. A Rodoviária, o Campinho, o Comércio, a Favela e o Morro ficam como estavam.
-
-**Battle royale:** o gerador agora lê os pontos `KC_BR` das peças do Codex direto do `pecas.js`. São 76 armas no mapa (33 em lajes), 17 delas na Estação e Sítio (mezanino do celeiro, plataforma da torre, passarela da estação, dentro da casa e da bilheteria), mais 20 coletes e 38 curas.
-
-**Conferido:** o gerador diz 0 sobreposições e 0 peças passando da beira, e o script do jogo montado passa no `node --check`. Não joguei.
+Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

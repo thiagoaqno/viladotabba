@@ -212,7 +212,7 @@ function brCaixasUpdate() {
   for (let i = L.length - 1; i >= 0; i--) {
     const c = L[i];
     for (const e of entities) {
-      if (!e.alive || e.off || Math.abs(e.pos.y - c.y) > 1.3 || hyp(e.pos.x - c.x, e.pos.z - c.z) > (e.isPlayer ? 1.1 : 1.3)) continue;
+      if (!e.alive || e.off || e.brCaido || Math.abs(e.pos.y - c.y) > 1.3 || hyp(e.pos.x - c.x, e.pos.z - c.z) > (e.isPlayer ? 1.1 : 1.3)) continue;
       const local = e.isPlayer || (!e.isRemote && (!MATCH.online || e.netBot));
       if (local && !brPrecisa(e, c.tipo, c)) continue;
       if (local) {
@@ -366,7 +366,7 @@ function brUpdate(dt) {
   // robôs desta máquina (fora do jogo online, ou os do host): pegam arma do chão e fogem da zona
   BR.botT -= dt; const pensa = BR.botT <= 0; if (pensa) BR.botT = 0.25;
   for (const b of entities) {
-    if (b.isPlayer || b.isRemote || b.off || !b.alive) continue;
+    if (b.isPlayer || b.isRemote || b.off || !b.alive || b.brCaido) continue; // robô caído não pega arma nem foge da zona
     if (MATCH.online && !b.netBot) continue;
     if (b.weapon && b.weapon.cat === 'pistol') {
       for (const d of DROP.list) {

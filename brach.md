@@ -1,20 +1,21 @@
-# Tiro: no BR em dupla, quem morre volta se o parceiro sobreviver
+# Tiro: marcador do parceiro através das paredes e granadas pelo mapa no Battle royale
 
-Pedido do Thiago: quando um jogador morre de vez com a dupla dele ainda viva, ele volta depois de um tempo, que cresce com a partida, e cai do céu sem armas.
+Dois pedidos do Thiago.
 
-**Como funciona** (`ferramentas/tiro-br-dupla.js`):
-- só vale para quem **morre de vez** (sangrou, levou o tiro final caído ou caiu do mapa) com o **parceiro vivo**;
-- o tempo de espera depende de quanto da partida já passou (a partida é medida pela zona, do começo até ela sumir), em quintos:
-  - primeiro quinto: **10 s**;
-  - segundo quinto: **30 s**;
-  - terceiro quinto: **1 min**;
-  - quarto quinto: **1 min 30 s**;
-  - último quinto: **não volta mais**;
-- se o parceiro morrer antes do tempo acabar, não volta (a dupla sai);
-- volta **caindo de paraquedas em cima do parceiro** (de 75 m, a uns 3 m dele; com teto em cima, aparece no chão ao lado), **sem armas**: só a pistola, vazia, e nenhuma granada. Armas, munição e granadas se acham no chão;
-- enquanto espera, a tela diz "Você volta em N s se fulano sobreviver" e a câmera segue o parceiro;
-- vale para pessoas e robôs. No salão, a máquina dona do soldado decide e avisa os outros (evento `brvolta`).
+**Marcador do parceiro** ("deve ficar um marcador sobre o jogador da minha equipe, mesmo quando ele está atrás das paredes"):
+- os marcadores de aliado do jogo (o triângulo verde em cima da cabeça, com o nome de perto) ficavam desligados no cada um por si, e o BR é um cada um por si por dentro. No **BR em dupla** eles ligam, mesmo com o ajuste "Marcadores de aliados" desligado;
+- vão até **600 m** (eram 120), então dá para achar o parceiro em qualquer canto do mapa;
+- **atrás de parede** ficam quase tão fortes quanto à vista (0,75 em vez de 0,42).
 
-Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
+**Granadas pelo mapa** ("deve ser possível encontrar granadas"):
+- no Battle royale (solo e dupla) todo mundo começa **sem granada**;
+- elas ficam no chão ao lado de **metade dos lugares das armas** (dentro das construções e nas lajes, ou nos marcadores do editor), com a mesma semente do salão: 60% de fragmentação, 25% de fumaça e 15% de atordoante;
+- pega-se passando por cima, até 3, do mesmo tipo (sem nenhuma, qualquer tipo). O HUD mostra a quantidade;
+- os robôs também pegam (até 2) e jogam;
+- como as caixas, não vão pela rede: a granada que outro jogador pegou some aqui também.
+
+Arquivos: `ferramentas/tiro-br.js` (`brGranadasPoe`, granada nas caixas, começar sem granada) e `ferramentas/tiro-frontline.js` (três trocas nos marcadores de aliado).
+
+Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

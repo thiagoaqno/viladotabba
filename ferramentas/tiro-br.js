@@ -165,7 +165,28 @@ function brCaixasPoe(rnd) {
   }
 }
 function brCaixasTira() { for (const c of BR.caixas || []) scene.remove(c.m); BR.caixas = []; }
-function brPrecisa(e, tipo) { return tipo === 'cura' ? e.health < BR_CAIXAS.cura.max : (e.brColete || 0) < BR_CAIXAS.colete.max; }
+function brPrecisa(e, tipo, c) {
+  if (tipo === 'granada') return e.isPlayer ? PL.nades < BR_GRANADA.max && (PL.nades <= 0 || PL.nadeType === c.ntipo) : (e.nades || 0) < 2;
+  return tipo === 'cura' ? e.health < BR_CAIXAS.cura.max : (e.brColete || 0) < BR_CAIXAS.colete.max;
+}
+/* granadas no chão (2026-11-28, o Thiago: "deve ser possível encontrar granadas pelo mapa"). No battle royale todo mundo começa sem
+   granada; elas ficam ao lado de metade dos lugares das armas (dentro de casa e nas lajes, ou nos marcadores do editor), com a mesma
+   semente. Pega-se passando por cima: até BR_GRANADA.max, do mesmo tipo (sem nenhuma, qualquer tipo). Sorteio: 60% de fragmentação,
+   25% de fumaça e 15% de atordoante. Os robôs também pegam (até 2) e jogam. */
+const BR_GRANADA = { max: 3, tipos: [['frag', 0.6], ['smoke', 0.25], ['flash', 0.15]], cor: { frag: 0x4b5a2a, smoke: 0x8a8f96, flash: 0xd9d6c8 } };
+function brGranadasPoe(rnd, pts) {
+  const tipos = BR_GRANADA.tipos.filter(([t]) => NADE_TYPES[t]); if (!tipos.length) return;
+  const geo = BR.granGeo || (BR.granGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.13, 10));
+  pts.forEach(([px, py, pz], i) => {
+    if (i % 2) return;
+    let x = rnd(); let ntipo = tipos[0][0]; for (const [t, p] of tipos) { x -= p; if (x <= 0) { ntipo = t; break; } }
+    const gx = px + 0.7, gz = pz - 0.5, y = groundHeight(gx, gz, py + 1, 0.2);
+    if (!(y > py - 3)) return;
+    const m = new THREE.Mesh(geo, BR['granMat' + ntipo] || (BR['granMat' + ntipo] = new THREE.MeshStandardMaterial({ color: BR_GRANADA.cor[ntipo] || 0x4b5a2a, roughness: 0.6, metalness: 0.3 })));
+    m.position.set(gx, y + 0.065, gz); m.castShadow = true; scene.add(m);
+    BR.caixas.push({ tipo: 'granada', ntipo, m, x: gx, y, z: gz });
+  });
+}
 function brCaixasUpdate() {
   const L = BR.caixas; if (!L || !L.length) return;
   for (let i = L.length - 1; i >= 0; i--) {
@@ -173,11 +194,12 @@ function brCaixasUpdate() {
     for (const e of entities) {
       if (!e.alive || e.off || Math.abs(e.pos.y - c.y) > 1.3 || hyp(e.pos.x - c.x, e.pos.z - c.z) > (e.isPlayer ? 1.1 : 1.3)) continue;
       const local = e.isPlayer || (!e.isRemote && (!MATCH.online || e.netBot));
-      if (local && !brPrecisa(e, c.tipo)) continue;
+      if (local && !brPrecisa(e, c.tipo, c)) continue;
       if (local) {
         const B = BR_CAIXAS[c.tipo];
-        if (c.tipo === 'cura') e.health = Math.min(B.max, e.health + B.ganho); else e.brColete = Math.min(B.max, (e.brColete || 0) + B.ganho);
-        if (e.isPlayer) { hudMsg(c.tipo === 'cura' ? '+50 de vida' : `Colete ${Math.round(e.brColete)}`, 'xp', 1.6); sfxMech('pickup'); }
+        if (c.tipo === 'granada') { if (e.isPlayer) { if (PL.nades <= 0) PL.nadeType = c.ntipo; PL.nades++; } else { e.nades = (e.nades || 0) + 1; e.nadeType = c.ntipo; e.nadeOn = true; } }
+        else if (c.tipo === 'cura') e.health = Math.min(B.max, e.health + B.ganho); else e.brColete = Math.min(B.max, (e.brColete || 0) + B.ganho);
+        if (e.isPlayer) { hudMsg(c.tipo === 'granada' ? `Granada (${PL.nades})` : c.tipo === 'cura' ? '+50 de vida' : `Colete ${Math.round(e.brColete)}`, 'xp', 1.6); sfxMech('pickup'); }
       }
       scene.remove(c.m); L.splice(i, 1); break;
     }
@@ -286,7 +308,9 @@ function brInicio() {
   const seed = MATCH.online ? brHash(String(netCodeNow() || '') + '|' + CURMAP.id) : (Math.random() * 4294967296) >>> 0;
   BR.plano = brPlano(brRng(seed));
   brLoot(brRng(seed ^ 0x9e3779b9));
+  const lootPts = DROP.list.map((d) => [d.obj.position.x, d.obj.position.y - 0.5, d.obj.position.z]); // onde as armas do chão começaram
   brCaixasPoe(brRng(seed ^ 0x51ed270b));
+  brGranadasPoe(brRng(seed ^ 0x6c8e9cf5), lootPts);
   BR.slots = brSlots(brRng(seed ^ 0x2545f491));
   const g = new THREE.CylinderGeometry(1, 1, 1, 128, 1, true);
   const m = new THREE.MeshBasicMaterial({ color: 0x3d9bff, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
@@ -427,7 +451,7 @@ function brEspectar(dt) {
     if (BR.on && OPEN.on && !e.isRemote) brPoeNoAlto(e);
     if (!BR.on || e.isPlayer || e.isRemote || !WEAPONS.m9) return;
     const p = WEAPONS.m9; if (!e.brArma) e.brArma = e.weapon;
-    e.weapon = p; e.arms = makeArms([p.id], 60);
+    e.weapon = p; e.arms = makeArms([p.id], 60); e.nades = 0; // as granadas se acham no chão
     if (e.model && e.model.gunKey !== p.key) setSoldierGun(e.model, p.key);
   };
   const giveLoadout0 = giveLoadout;
@@ -440,6 +464,7 @@ function brEspectar(dt) {
     if (!s.length && WEAPONS.m9) s = [{ def: WEAPONS.m9, mag: WEAPONS.m9.mag, reserve: WEAPONS.m9.reserve }];
     if (!s.length) return;
     A.slots = s.slice(0, 1); A.cur = 0; vmEquip(A.slots[0].def);
+    PL.nades = 0; // as granadas se acham no chão (brGranadasPoe)
   };
   const swapWithDrop0 = swapWithDrop;
   swapWithDrop = function () {

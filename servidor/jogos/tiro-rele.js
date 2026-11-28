@@ -12,7 +12,7 @@ const { WebSocketServer } = require("ws"); // vem com o socket.io (engine.io dep
 
 const CTL = "\x02", SEP = "\x01";
 const BASE = "/tiro/rele";
-const MAX_CONVIDADOS = 17; // o jogo deles vai até 18 jogadores por salão (NET_MAX)
+const MAX_CONVIDADOS = 19; // até 20 por salão: o battle royale (BR_MAX em ferramentas/tiro-br.js); os outros modos param antes, no próprio jogo
 const ESPERA_HOST_MS = 20000; // o jogo espera o host voltar 15 s (NETR.hostGrace); depois o salão some
 const MAX_SALOES = 300;
 

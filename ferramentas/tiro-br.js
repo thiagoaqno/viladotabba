@@ -13,15 +13,20 @@ const BR = { on: false, ordem: 0, armado: false, T0: 0, z: null, plano: null, ma
 // os dois battle royale: o de cada um por si ('br') e o em dupla ('brduo', ferramentas/tiro-br-dupla.js)
 function brModo(m) { return m === 'br' || m === 'brduo'; }
 function brSolo(m) { return m === 'ffa' || brModo(m); }
-function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? 12 : NET_MAX; }
+function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? BR_MAX : NET_MAX; }
+// (2026-11-27, o Thiago: "aumenta a quantidade de players por partida") o battle royale vai a BR_MAX (era 12). O jogo cria 11 robôs
+// no começo; os BR_NOMES.length a mais (criados no boot, troca no tiro-frontline.js) só entram no battle royale: nos outros modos
+// ficam de fora (modeRoster, abaixo) e o menu deles não muda.
+const BR_MAX = 20;
+const BR_NOMES = ['Tavares', 'Ribeiro', 'Nogueira', 'Barbosa', 'Moreira', 'Cardoso', 'Pacheco', 'Siqueira'];
 
 MODES.br = {
-  name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 12 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
-  limits: [12], key: 'limitBr', respawn: 1e9, botRespawn: 1e9, prot: 2,
+  name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 20 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
+  limits: [20], key: 'limitBr', respawn: 1e9, botRespawn: 1e9, prot: 2,
   hint: 'Ninguém renasce. Todo mundo começa com a pistola: as outras armas estão no chão. A zona fecha aos poucos e tira vida de quem fica fora. O último vivo vence.',
 };
 MODE_IDS.push('br');
-if (Settings.limitBr !== 12) Settings.limitBr = 12;
+if (Settings.limitBr !== 20) Settings.limitBr = 20;
 
 /* ---------- sorteio com semente (igual em todo mundo do salão) ---------- */
 function brHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -204,13 +209,13 @@ const BR_QUEDA = { alto: 75, abre: 35, livre: -16, para: -5.5, planaLivre: 10, p
 function brSlots(rnd) {
   const abertos = (L) => L.filter(([x, z]) => { const y = gy0(x, z); return Math.abs(groundHeight(x, z, y + BR_QUEDA.alto, 0.35) - y) < 0.6; });
   let left = abertos(SPAWNS[0].concat(SPAWNS[1], spawnField()));
-  if (left.length < 12) left = SPAWNS[0].concat(SPAWNS[1], spawnField());
+  if (left.length < BR_MAX) left = SPAWNS[0].concat(SPAWNS[1], spawnField());
   left = left.filter((c, i, a) => a.findIndex((d) => hyp(d[0] - c[0], d[1] - c[1]) < 1.5) === i); // pontos repetidos
   // largadas marcadas no editor (até 12) entram primeiro; faltando, o resto é escolhido o mais longe delas
-  const out = (brMarcas().largadas || []).slice(0, 12).map(([x, z]) => [x, z]);
+  const out = (brMarcas().largadas || []).slice(0, BR_MAX).map(([x, z]) => [x, z]);
   if (!out.length && !left.length) return out;
   if (!out.length) out.push(left.splice(Math.floor(rnd() * left.length), 1)[0]);
-  while (out.length < 12 && left.length) {
+  while (out.length < BR_MAX && left.length) {
     let bi = 0, bd = -1;
     left.forEach((c, i) => { const d = Math.min(...out.map((o) => hyp(o[0] - c[0], o[1] - c[1]))); if (d > bd + 1e-6) { bd = d; bi = i; } });
     out.push(left.splice(bi, 1)[0]);
@@ -379,6 +384,18 @@ function brEspectar(dt) {
   modeStart = function (mode) { brLimpa(); BR.on = brModo(mode); BR.duo = mode === 'brduo'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? modeDef() : D; };
   const openSlots0 = openSlots;
   openSlots = function (e) { return BR.on && BR.slots && BR.slots.length ? BR.slots : openSlots0(e); };
+  // os robôs a mais (BR_NOMES) só jogam o battle royale: nos outros modos, o roster é montado como se eles não existissem
+  const modeRoster0 = modeRoster;
+  modeRoster = function () {
+    if (BR.on) return modeRoster0();
+    const extra = entities.filter((e) => e.brExtra);
+    for (const e of extra) entities.splice(entities.indexOf(e), 1);
+    try { modeRoster0(); } finally { entities.push(...extra); }
+    for (const e of extra) { e.off = true; e.alive = false; e.respawnT = Infinity; e.target = null; if (e.model) { e.model.rag = null; e.model.root.visible = false; } }
+  };
+  // no boot (troca no tiro-frontline.js): mais BR_NOMES.length robôs, no fim da lista
+  function brCriarExtras() { for (let i = 0; i < BR_NOMES.length; i++) { const b = makeBot(1, 6 + i); b.name = BR_NOMES[i]; b.brExtra = true; b.off = true; } }
+  window.brCriarExtras = brCriarExtras;
   const modeDef0 = modeDef;
   modeDef = function () { return BR.on && MATCH.mode === 'ffa' ? MODES.br : modeDef0(); };
   const modeUpdate0 = modeUpdate;

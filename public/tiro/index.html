@@ -7239,7 +7239,7 @@ function shadowWarm(){if(!csm||!renderer.shadowMap.enabled)return;const seen=new
 const vis=scene.children.map((c)=>c.visible),sm=renderer.shadowMap;scene.children.forEach((c)=>{if(!c.isLight)c.visible=false;});scene.add(tmp);scene.updateMatrixWorld(true);try{for(const lit of RQ.q.lights>0?[true,false]:[false]){setFlashLightsVisible(lit);updateShadows();for(const l of csm.lights)l.shadow.needsUpdate=true;sm.needsUpdate=true;composer.render(0);}}finally{scene.remove(tmp);setFlashLightsVisible(false);scene.children.forEach((c,i)=>{c.visible=vis[i];});for(const l of csm.lights)l.shadow.needsUpdate=true;sm.needsUpdate=true;for(const d of tmp.children)if(d.isInstancedMesh)d.dispose();geo.dispose();}}
 const BOOT_T=[];async function boot(){let tStep=performance.now(),lastMsg='début';PRE.booted=true;if(gpuLostNow()){gpuLog('boot waits for the context');await gpuRestored(10000);}
 GPUX.booting=true;gpuLog('boot');const step=(msg,p)=>new Promise((r)=>{const t=performance.now();BOOT_T.push([lastMsg,Math.round(t-tStep)]);tStep=t;lastMsg=msg;gpuLog('boot: '+msg);$('loadMsg').textContent=msg;$('loadBar').style.transform=`scaleX(${p/100})`;setTimeout(r,20);});try{await step(_t('Préparation des effets'),5);const scan=gearScanLoad();FXT=buildFxTextures();await step(_t('Éclairage de la scène'),20);setupComposer();buildEnvironment();initFx();{const h=MAP_DEFS[mapById(Settings.map).id].atmo.hdri;if(h)hdriFetch(h);}
-await step(_t('Préparation des soldats'),45);await scan;buildGunTextures();initViewmodel();classFix();arsenalPrebuild();setTimeout(thumbsStart,1500);soldierPrebuild();for(let i=0;i<5;i++)makeBot(0,i);for(let i=0;i<6;i++)makeBot(1,i);vmEquip(WEAPONS.m4);VM.root.visible=false;PL.ent.model=makeSoldier(skinOf(PL.ent),0,'m4',{shadowOnly:true});PL.ent.model.root.visible=false;KC.body=makeSoldier(skinOf(PL.ent),0,'m4');KC.body.root.visible=false;KC.bodyEnt={model:KC.body,pos:new V3(),yaw:0,alive:false,lastForce:null};kcInit();setupShadows();soldierMatsCsm();nadeWarm();ksWarm();await step(_t('Préparation des menus'),85);buildTabletRig();buildPhoneRig();buildMenu();await step(_t('Prêt'),100);GPUX.booted=true;GPUX.booting=false;MATCH.state='menu';$('loading').classList.add('hidden');uiOpen('main');newsPopup();acctArrive();ecoAsk();if(/[?&]diag\b/.test(location.search))gpuReport();setTimeout(gpuResume,400);requestAnimationFrame(frame);netAutoJoin();}catch(err){console.error(err);$('loadMsg').textContent=_t('Le chargement a échoué : {0}. Rechargez la page ou passez la qualité en Basse.',err.message);$('loadFail').classList.remove('hidden');$('loadSafe').classList.toggle('hidden',GFX_SAFE);$('loadSafe').onclick=()=>{Settings.gfxSafe=true;Settings.gfxSafeAuto=BUILD;saveSettings();location.reload();};$('loadRep').onclick=()=>gpuReport();}}
+await step(_t('Préparation des soldats'),45);await scan;buildGunTextures();initViewmodel();classFix();arsenalPrebuild();setTimeout(thumbsStart,1500);soldierPrebuild();for(let i=0;i<5;i++)makeBot(0,i);for(let i=0;i<6;i++)makeBot(1,i);if(window.brCriarExtras)window.brCriarExtras();vmEquip(WEAPONS.m4);VM.root.visible=false;PL.ent.model=makeSoldier(skinOf(PL.ent),0,'m4',{shadowOnly:true});PL.ent.model.root.visible=false;KC.body=makeSoldier(skinOf(PL.ent),0,'m4');KC.body.root.visible=false;KC.bodyEnt={model:KC.body,pos:new V3(),yaw:0,alive:false,lastForce:null};kcInit();setupShadows();soldierMatsCsm();nadeWarm();ksWarm();await step(_t('Préparation des menus'),85);buildTabletRig();buildPhoneRig();buildMenu();await step(_t('Prêt'),100);GPUX.booted=true;GPUX.booting=false;MATCH.state='menu';$('loading').classList.add('hidden');uiOpen('main');newsPopup();acctArrive();ecoAsk();if(/[?&]diag\b/.test(location.search))gpuReport();setTimeout(gpuResume,400);requestAnimationFrame(frame);netAutoJoin();}catch(err){console.error(err);$('loadMsg').textContent=_t('Le chargement a échoué : {0}. Rechargez la page ou passez la qualité en Basse.',err.message);$('loadFail').classList.remove('hidden');$('loadSafe').classList.toggle('hidden',GFX_SAFE);$('loadSafe').onclick=()=>{Settings.gfxSafe=true;Settings.gfxSafeAuto=BUILD;saveSettings();location.reload();};$('loadRep').onclick=()=>gpuReport();}}
 const MAPL={id:null,state:'none',root:null,job:null,jobId:null,p:0,msg:'',subs:new Set(),idle:0,fail:null,T:[],ms:0};const MAPL_KEEP=60;function mapProg(msg,p){MAPL.msg=msg;MAPL.p=p;for(const f of MAPL.subs){try{f(p,msg,MAPL.id);}catch(e){console.error(e);}}}
 function mapReady(id){return MAPL.state==='ready'&&MAPL.id===mapById(id).id;}
 function mapEnsure(id){id=mapById(id).id;MAPL.idle=0;if(MAPL.job&&MAPL.jobId===id)return MAPL.job;const prev=MAPL.job;const job=(async()=>{if(prev){try{await prev;}catch(e){}}
@@ -7733,7 +7733,7 @@ function matchRows(o){const MD=MODES[o.mode]||MODES.tdm,ffa=brSolo(o.mode),diffs
 const mapSize=(m)=>(m.ok&&MAP_DEFS[m.id]?{close:_t('Petite'),mid:_t('Moyenne'),open:_t('Grande')}[MAP_DEFS[m.id].type]||'':'');function mapCards(selId,pick){return MAPS.map((m)=>({k:'card',key:m.id,label:m.name,tag:[m.tag,mapSize(m)].filter(Boolean).join(' · '),art:(m.ok&&MAP_ART[m.id])||'',on:m.id===selId,lock:!m.ok,badge:!m.ok?_t('Bientôt'):m.id===selId?_t('Sélectionnée'):'',disabled:!m.ok||!pick,pick:()=>pick(m.id),}));}
 function mapPreview(m,o){const MD=MODES[o.mode]||MODES.tdm,art=m.ok&&MAP_ART[m.id],mode=brSolo(o.mode)?MD.btn:MD.name;return(art?`<img class="mapart" alt="" decoding="async" src="${art}">`:'<span class="mapart none"></span>')+`<div class="pv-t"><b>${esc(m.name)}</b><span class="pv-m">${esc(mode)}</span><span class="pv-i">${esc(o.limit+' '+MD.unit+' · '+o.time+' min')}</span></div>`;}
 function lobbyMe(tags){const n=ACCT.user?ACCT.user.displayName:NET.nick;return{k:'player',key:'me',label:n||_t('Vous'),lv:playerLevel(),tags:n?[_t('vous'),...tags]:tags,me:true};}
-function soloStage(){const ffa=brSolo(Settings.mode),MD=MODES[Settings.mode]||MODES.tdm;const me=lobbyMe([]),bot=(n,i)=>({k:'player',key:'b'+i,label:n,bot:true});if(ffa){const all=[...BOT_NAMES[0],...BOT_NAMES[1]],idx=all.map((n,i)=>i),cut=all.length-(brModo(Settings.mode)?11:FFA_BOTS);const off=new Set(idx.filter((i)=>i%3===1).concat(idx.slice().reverse()).filter((e,i,a)=>a.indexOf(e)===i).slice(0,cut));return{head:`<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`,cols:[{head:esc(_t('Chacun pour soi')),rows:[me,...all.filter((n,i)=>!off.has(i)).map(bot)]}]};}
+function soloStage(){const ffa=brSolo(Settings.mode),MD=MODES[Settings.mode]||MODES.tdm;const me=lobbyMe([]),bot=(n,i)=>({k:'player',key:'b'+i,label:n,bot:true});if(ffa){const all=[...BOT_NAMES[0],...BOT_NAMES[1],...(brModo(Settings.mode)?BR_NOMES:[])],idx=all.map((n,i)=>i),cut=all.length-(brModo(Settings.mode)?BR_MAX-1:FFA_BOTS);const off=new Set(idx.filter((i)=>i%3===1).concat(idx.slice().reverse()).filter((e,i,a)=>a.indexOf(e)===i).slice(0,cut));return{head:`<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`,cols:[{head:esc(_t('Chacun pour soi')),rows:[me,...all.filter((n,i)=>!off.has(i)).map(bot)]}]};}
 return{head:`<b>${esc(_t('Joueurs'))}</b><span>${esc(MD.teams)}</span>`,cols:[{cls:'ally',head:esc(TEAM_NAMES[0]),rows:[me,...BOT_NAMES[0].map(bot)]},{cls:'enemy',head:esc(TEAM_NAMES[1]),rows:BOT_NAMES[1].map((n,i)=>bot(n,10+i))},]};}
 function soloSet(k,v){if(k==='mode')Settings.mode=v;else if(k==='bots')Settings.difficulty=v;else if(k==='limit')Settings[MODES[Settings.mode].key]=v;else Settings.minutes=v;saveSettings();}
 function soloCfg(){const MD=MODES[Settings.mode]||MODES.tdm;return{map:Settings.map,mode:Settings.mode,diff:Settings.difficulty,limit:Settings[MD.key],time:Settings.minutes,online:false,edit:true,set:soloSet};}
@@ -7888,7 +7888,7 @@ function allied(a,b){return a===b||(MATCH.mode!=='ffa'&&a.team===b.team);}
 function soundFoe(s,b){return MATCH.mode==='ffa'?s.who!==b:s.team!==b.team;}
 const ffaCmp=(a,b)=>(BR.on?brCmp(a,b):0)||b.kills-a.kills||a.deaths-b.deaths||b.score-a.score;function modeStart(mode){MATCH.mode=MODES[mode]?mode:'tdm';SPAWN_LOG.length=0;DEATH_LOG.length=0;SPAWN_TRAP.length=0;OPEN.on=true;for(const e of entities){e.protT=0;e.lastDeath=null;e.caps=0;}
 squadReset();modeRoster();domClear();if(MATCH.mode==='dom')domInit();MATCH.over=false;const D=modeDef();document.querySelectorAll('.score .row span').forEach((s,i)=>{s.textContent=MATCH.mode==='ffa'?[_t('Vous'),_t('Rival')][i]:TEAM_NAMES[i];});$('domRow').classList.toggle('hidden',MATCH.mode!=='dom');document.querySelector('.score').classList.toggle('dom',MATCH.mode==='dom');$('domCap').className='';return D;}
-function modeRoster(){const ffa=MATCH.mode==='ffa',bots=entities.filter((e)=>!e.isPlayer),cut=MATCH.online?0:bots.length-(BR.on?11:FFA_BOTS);const off=new Set(ffa&&cut>0?bots.filter((e,i)=>i%3===1).concat(bots.slice().reverse()).filter((e,i,a)=>a.indexOf(e)===i).slice(0,cut):[]);for(const e of bots){e.off=off.has(e);if(e.off){e.alive=false;e.respawnT=Infinity;e.target=null;e.model.rag=null;e.model.root.visible=false;}
+function modeRoster(){const ffa=MATCH.mode==='ffa',bots=entities.filter((e)=>!e.isPlayer),cut=MATCH.online?0:bots.length-(BR.on?BR_MAX-1:FFA_BOTS);const off=new Set(ffa&&cut>0?bots.filter((e,i)=>i%3===1).concat(bots.slice().reverse()).filter((e,i,a)=>a.indexOf(e)===i).slice(0,cut):[]);for(const e of bots){e.off=off.has(e);if(e.off){e.alive=false;e.respawnT=Infinity;e.target=null;e.model.rag=null;e.model.root.visible=false;}
 soldierLook(e.model,skinOf(e),skinRel(e));}}
 function modeEnd(){domClear();}
 function modeUpdate(dt){for(const e of entities){if(e.protT>0){e.protT-=dt;if(e.lastShotT>e.spawnAt)e.protT=0;}}
@@ -13401,15 +13401,20 @@ const BR = { on: false, ordem: 0, armado: false, T0: 0, z: null, plano: null, ma
 // os dois battle royale: o de cada um por si ('br') e o em dupla ('brduo', ferramentas/tiro-br-dupla.js)
 function brModo(m) { return m === 'br' || m === 'brduo'; }
 function brSolo(m) { return m === 'ffa' || brModo(m); }
-function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? 12 : NET_MAX; }
+function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? BR_MAX : NET_MAX; }
+// (2026-11-27, o Thiago: "aumenta a quantidade de players por partida") o battle royale vai a BR_MAX (era 12). O jogo cria 11 robôs
+// no começo; os BR_NOMES.length a mais (criados no boot, troca no tiro-frontline.js) só entram no battle royale: nos outros modos
+// ficam de fora (modeRoster, abaixo) e o menu deles não muda.
+const BR_MAX = 20;
+const BR_NOMES = ['Tavares', 'Ribeiro', 'Nogueira', 'Barbosa', 'Moreira', 'Cardoso', 'Pacheco', 'Siqueira'];
 
 MODES.br = {
-  name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 12 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
-  limits: [12], key: 'limitBr', respawn: 1e9, botRespawn: 1e9, prot: 2,
+  name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 20 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
+  limits: [20], key: 'limitBr', respawn: 1e9, botRespawn: 1e9, prot: 2,
   hint: 'Ninguém renasce. Todo mundo começa com a pistola: as outras armas estão no chão. A zona fecha aos poucos e tira vida de quem fica fora. O último vivo vence.',
 };
 MODE_IDS.push('br');
-if (Settings.limitBr !== 12) Settings.limitBr = 12;
+if (Settings.limitBr !== 20) Settings.limitBr = 20;
 
 /* ---------- sorteio com semente (igual em todo mundo do salão) ---------- */
 function brHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -13592,13 +13597,13 @@ const BR_QUEDA = { alto: 75, abre: 35, livre: -16, para: -5.5, planaLivre: 10, p
 function brSlots(rnd) {
   const abertos = (L) => L.filter(([x, z]) => { const y = gy0(x, z); return Math.abs(groundHeight(x, z, y + BR_QUEDA.alto, 0.35) - y) < 0.6; });
   let left = abertos(SPAWNS[0].concat(SPAWNS[1], spawnField()));
-  if (left.length < 12) left = SPAWNS[0].concat(SPAWNS[1], spawnField());
+  if (left.length < BR_MAX) left = SPAWNS[0].concat(SPAWNS[1], spawnField());
   left = left.filter((c, i, a) => a.findIndex((d) => hyp(d[0] - c[0], d[1] - c[1]) < 1.5) === i); // pontos repetidos
   // largadas marcadas no editor (até 12) entram primeiro; faltando, o resto é escolhido o mais longe delas
-  const out = (brMarcas().largadas || []).slice(0, 12).map(([x, z]) => [x, z]);
+  const out = (brMarcas().largadas || []).slice(0, BR_MAX).map(([x, z]) => [x, z]);
   if (!out.length && !left.length) return out;
   if (!out.length) out.push(left.splice(Math.floor(rnd() * left.length), 1)[0]);
-  while (out.length < 12 && left.length) {
+  while (out.length < BR_MAX && left.length) {
     let bi = 0, bd = -1;
     left.forEach((c, i) => { const d = Math.min(...out.map((o) => hyp(o[0] - c[0], o[1] - c[1]))); if (d > bd + 1e-6) { bd = d; bi = i; } });
     out.push(left.splice(bi, 1)[0]);
@@ -13767,6 +13772,18 @@ function brEspectar(dt) {
   modeStart = function (mode) { brLimpa(); BR.on = brModo(mode); BR.duo = mode === 'brduo'; const D = modeStart0(BR.on ? 'ffa' : mode); if (BR.on) brInicio(); return BR.on ? modeDef() : D; };
   const openSlots0 = openSlots;
   openSlots = function (e) { return BR.on && BR.slots && BR.slots.length ? BR.slots : openSlots0(e); };
+  // os robôs a mais (BR_NOMES) só jogam o battle royale: nos outros modos, o roster é montado como se eles não existissem
+  const modeRoster0 = modeRoster;
+  modeRoster = function () {
+    if (BR.on) return modeRoster0();
+    const extra = entities.filter((e) => e.brExtra);
+    for (const e of extra) entities.splice(entities.indexOf(e), 1);
+    try { modeRoster0(); } finally { entities.push(...extra); }
+    for (const e of extra) { e.off = true; e.alive = false; e.respawnT = Infinity; e.target = null; if (e.model) { e.model.rag = null; e.model.root.visible = false; } }
+  };
+  // no boot (troca no tiro-frontline.js): mais BR_NOMES.length robôs, no fim da lista
+  function brCriarExtras() { for (let i = 0; i < BR_NOMES.length; i++) { const b = makeBot(1, 6 + i); b.name = BR_NOMES[i]; b.brExtra = true; b.off = true; } }
+  window.brCriarExtras = brCriarExtras;
   const modeDef0 = modeDef;
   modeDef = function () { return BR.on && MATCH.mode === 'ffa' ? MODES.br : modeDef0(); };
   const modeUpdate0 = modeUpdate;
@@ -13933,7 +13950,7 @@ function brDeathTxt() {
 const BR_CAIDO = { tempo: 30, raio: 1.9, levantar: 4, volta: 30 };
 
 MODES.brduo = Object.assign({}, MODES.br, {
-  name: 'Battle royale em dupla', btn: 'BR em dupla', sub: 'Battle royale em dupla, a última dupla vence', teams: 'Até 12 jogadores, 6 duplas',
+  name: 'Battle royale em dupla', btn: 'BR em dupla', sub: 'Battle royale em dupla, a última dupla vence', teams: 'Até 20 jogadores, 10 duplas',
   hint: 'Duplas de dois. Quem cai fica 30 s no chão: o parceiro chega perto e fica 4 s sem atirar para levantar ele. A última dupla de pé vence.',
 });
 MODE_IDS.push('brduo');
@@ -14052,7 +14069,7 @@ function brMarcasCaidos() {
   const brSlots1 = brSlots;
   brSlots = function (rnd) {
     const S = brSlots1(rnd); if (!BR.duo || S.length < 2) return S;
-    const base = S.slice(0, 6), out = [];
+    const base = S.slice(0, Math.ceil(BR_MAX / 2)), out = [];
     const aberto = (x, z) => { const y = gy0(x, z); return Math.abs(groundHeight(x, z, y + BR_QUEDA.alto, 0.35) - y) < 0.6; };
     for (const [x, z] of base) {
       out.push([x, z]);
@@ -14069,13 +14086,23 @@ function brMarcasCaidos() {
     return killEnt1(v, a, weapon, head, dir, life);
   };
   // caído: o jogador não atira, não mira e fica agachado; o robô fica parado, agachado, sem pensar
+  // (2026-11-27, o Thiago: "faz não ser possível atirar enquanto você cai de paraquedas") na queda também: sem tiro, mira nem grenada
   const updatePlayer1 = updatePlayer;
   updatePlayer = function (dt, now) {
-    if (BR.on && BR.duo && PL.ent.alive && PL.ent.brCaido) { PL.held = false; PL.queued = false; PL.runShot = false; PL.adsWant = false; PL.crouchToggle = true; VM.lowerTarget = 1; }
-    return updatePlayer1(dt, now);
+    const e = PL.ent, caido = BR.on && BR.duo && e.alive && e.brCaido, queda = BR.on && e.alive && e.brQueda;
+    if (caido || queda) { PL.held = false; PL.queued = false; PL.runShot = false; PL.adsWant = false; VM.lowerTarget = 1; if (caido) PL.crouchToggle = true; }
+    const r = updatePlayer1(dt, now);
+    if (queda && !e.brQueda) VM.lowerTarget = 0; // pousou: a arma sobe
+    return r;
   };
+  const cookNade1 = cookNade;
+  cookNade = function () { if (BR.on && PL.ent.alive && (PL.ent.brQueda || PL.ent.brCaido)) return; return cookNade1.apply(this, arguments); };
   const updateBot1 = updateBot;
   updateBot = function (b, dt, now) {
+    if (BR.on && b.alive && b.brQueda && !playHold()) { // caindo de paraquedas: sem pensar nem atirar, só cai (a queda está no ringCheck)
+      const I = b.input; I.mx = 0; I.mz = 0; I.sprint = false; I.jump = false; I.fire = false; I.firePressed = false; I.ads = false;
+      ctlMove(b, dt); animSoldier(b, dt); if (voidCheck(b) || ringCheck(b, dt)) return; return;
+    }
     if (BR.on && BR.duo && b.alive && b.brCaido) {
       const I = b.input; I.mx = 0; I.mz = 0; I.sprint = false; I.jump = false; I.fire = false; I.firePressed = false; I.ads = false; I.crouch = true; b.wantCrouch = true;
       ctlMove(b, dt); animSoldier(b, dt); if (voidCheck(b) || ringCheck(b, dt)) return; return;

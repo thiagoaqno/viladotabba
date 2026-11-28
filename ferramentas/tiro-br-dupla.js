@@ -15,7 +15,7 @@
 const BR_CAIDO = { tempo: 30, raio: 1.9, levantar: 4, volta: 30 };
 
 MODES.brduo = Object.assign({}, MODES.br, {
-  name: 'Battle royale em dupla', btn: 'BR em dupla', sub: 'Battle royale em dupla, a última dupla vence', teams: 'Até 12 jogadores, 6 duplas',
+  name: 'Battle royale em dupla', btn: 'BR em dupla', sub: 'Battle royale em dupla, a última dupla vence', teams: 'Até 20 jogadores, 10 duplas',
   hint: 'Duplas de dois. Quem cai fica 30 s no chão: o parceiro chega perto e fica 4 s sem atirar para levantar ele. A última dupla de pé vence.',
 });
 MODE_IDS.push('brduo');
@@ -134,7 +134,7 @@ function brMarcasCaidos() {
   const brSlots1 = brSlots;
   brSlots = function (rnd) {
     const S = brSlots1(rnd); if (!BR.duo || S.length < 2) return S;
-    const base = S.slice(0, 6), out = [];
+    const base = S.slice(0, Math.ceil(BR_MAX / 2)), out = [];
     const aberto = (x, z) => { const y = gy0(x, z); return Math.abs(groundHeight(x, z, y + BR_QUEDA.alto, 0.35) - y) < 0.6; };
     for (const [x, z] of base) {
       out.push([x, z]);
@@ -151,13 +151,23 @@ function brMarcasCaidos() {
     return killEnt1(v, a, weapon, head, dir, life);
   };
   // caído: o jogador não atira, não mira e fica agachado; o robô fica parado, agachado, sem pensar
+  // (2026-11-27, o Thiago: "faz não ser possível atirar enquanto você cai de paraquedas") na queda também: sem tiro, mira nem grenada
   const updatePlayer1 = updatePlayer;
   updatePlayer = function (dt, now) {
-    if (BR.on && BR.duo && PL.ent.alive && PL.ent.brCaido) { PL.held = false; PL.queued = false; PL.runShot = false; PL.adsWant = false; PL.crouchToggle = true; VM.lowerTarget = 1; }
-    return updatePlayer1(dt, now);
+    const e = PL.ent, caido = BR.on && BR.duo && e.alive && e.brCaido, queda = BR.on && e.alive && e.brQueda;
+    if (caido || queda) { PL.held = false; PL.queued = false; PL.runShot = false; PL.adsWant = false; VM.lowerTarget = 1; if (caido) PL.crouchToggle = true; }
+    const r = updatePlayer1(dt, now);
+    if (queda && !e.brQueda) VM.lowerTarget = 0; // pousou: a arma sobe
+    return r;
   };
+  const cookNade1 = cookNade;
+  cookNade = function () { if (BR.on && PL.ent.alive && (PL.ent.brQueda || PL.ent.brCaido)) return; return cookNade1.apply(this, arguments); };
   const updateBot1 = updateBot;
   updateBot = function (b, dt, now) {
+    if (BR.on && b.alive && b.brQueda && !playHold()) { // caindo de paraquedas: sem pensar nem atirar, só cai (a queda está no ringCheck)
+      const I = b.input; I.mx = 0; I.mz = 0; I.sprint = false; I.jump = false; I.fire = false; I.firePressed = false; I.ads = false;
+      ctlMove(b, dt); animSoldier(b, dt); if (voidCheck(b) || ringCheck(b, dt)) return; return;
+    }
     if (BR.on && BR.duo && b.alive && b.brCaido) {
       const I = b.input; I.mx = 0; I.mz = 0; I.sprint = false; I.jump = false; I.fire = false; I.firePressed = false; I.ads = false; I.crouch = true; b.wantCrouch = true;
       ctlMove(b, dt); animSoldier(b, dt); if (voidCheck(b) || ringCheck(b, dt)) return; return;

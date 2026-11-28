@@ -12,7 +12,7 @@
    - a dupla sai quando os dois morrem; a última dupla de pé vence (os dois ganham). O placar do fim é por dupla.
    Rede: cada máquina decide sobre os soldados dela (o jogador, e os robôs no host), como nas mortes. "Caiu"/"levantou" vão
    como evento 'brc' (c: 1 ou 0) do soldado; "reanimei o meu parceiro" como 'brv' (to: id dele), e a máquina dele levanta. */
-const BR_CAIDO = { tempo: 30, raio: 1.9, levantar: 4, volta: 30 };
+const BR_CAIDO = { tempo: 30, raio: 1.9, levantar: 4, volta: 30, rasteja: 0.3 };
 /* VOLTA DO PARCEIRO (2026-11-28, o Thiago: "quando um jogador morre (e é finalizado) se a dupla dele ainda estiver viva, deve ser
    possível chamar ele de volta"; corrigido: por quintos). Quem morre de vez com o parceiro vivo volta sozinho depois de um tempo que
    cresce com a partida: 10 s no primeiro quinto, 30 s no segundo, 1 min no terceiro, 1 min 30 s no quarto; no último quinto não volta
@@ -188,10 +188,20 @@ function brMarcasCaidos() {
   updatePlayer = function (dt, now) {
     const e = PL.ent, caido = BR.on && BR.duo && e.alive && e.brCaido, queda = BR.on && e.alive && e.brQueda;
     if (caido || queda) { PL.held = false; PL.queued = false; PL.runShot = false; PL.adsWant = false; VM.lowerTarget = 1; if (caido) PL.crouchToggle = true; }
+    // (2026-11-28, o Thiago: "quando você cai, dá para sair correndo e pegar armas como se estivesse vivo") caído rasteja: sem pular
+    // nem correr, e só BR_CAIDO.rasteja do passo agachado
+    if (caido) { KEYS.Space = false; KEYS.ShiftLeft = false; KEYS.ShiftRight = false; PAD.sprint = false; if (typeof TOUCH !== 'undefined') TOUCH.sprint = false; }
+    const x0 = e.pos.x, z0 = e.pos.z, y0 = e.pos.y;
     const r = updatePlayer1(dt, now);
+    if (caido && e.alive && e.brCaido) { e.pos.x = x0 + (e.pos.x - x0) * BR_CAIDO.rasteja; e.pos.z = z0 + (e.pos.z - z0) * BR_CAIDO.rasteja; if (e.pos.y > y0) e.pos.y = y0; if (e.vy > 0) e.vy = 0; }
     if (queda && !e.brQueda) VM.lowerTarget = 0; // pousou: a arma sobe
     return r;
   };
+  // caído não pega arma (troca nem munição no chão): o updateDrops só deixa pegar quem está vivo, e o caído passa por morto ali
+  const swapWithDrop1 = swapWithDrop;
+  swapWithDrop = function () { if (BR.on && PL.ent.brCaido) return; return swapWithDrop1(); };
+  const updateDrops1 = updateDrops;
+  updateDrops = function (dt) { const e = PL.ent, caido = BR.on && e && e.alive && e.brCaido; if (caido) e.alive = false; try { return updateDrops1(dt); } finally { if (caido) e.alive = true; } };
   const cookNade1 = cookNade;
   cookNade = function () { if (BR.on && PL.ent.alive && (PL.ent.brQueda || PL.ent.brCaido)) return; return cookNade1.apply(this, arguments); };
   const updateBot1 = updateBot;

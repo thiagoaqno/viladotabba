@@ -185,7 +185,44 @@ function brCaixasPoe(rnd) {
   }
 }
 function brCaixasTira() { for (const c of BR.caixas || []) scene.remove(c.m); BR.caixas = []; }
+/* PEÇAS DE ARMA no chão (2026-11-28, o Thiago: "encontrar peças de armas andando pelo mapa", com equipar automático). No battle
+   royale ficam peças (os acessórios do jogo: ATT, 06p-accessoires.js) ao lado da outra metade dos lugares das armas. Passando por cima,
+   a peça entra sozinha na arma da mão, se servir nela e o encaixe dela (o ponto de accroche: mira, cano, sob o cano, lateral,
+   carregador, coronha) estiver livre e a arma tiver menos de 4 peças; senão, tenta a outra arma. Encaixe ocupado: a peça fica no chão
+   (ninguém troca de peça sem querer, andando). Robôs não pegam; como as caixas, não vão pela rede. */
+const BR_PECA_COR = { optic: 0x3a6fd8, canon: 0x55585e, under: 0x6b4a2c, side: 0xc23a2a, mun: 0x3d6b35, stock: 0x26282c };
+function brPecaArma(e, a) { // em qual arma do jogador a peça a entra (a da mão primeiro): índice do slot, ou -1
+  const A = e.arms; if (!A || !ATT[a]) return -1;
+  for (const i of [A.cur, ...A.slots.map((_, k) => k).filter((k) => k !== A.cur)]) {
+    const w = A.slots[i]; if (!w) continue; const base = w.def.base || w.def, att = w.def.att || [];
+    if (!attFits(base, a) || att.length >= attMax(base) || att.some((x) => attGroup(x) === attGroup(a))) continue;
+    return i;
+  }
+  return -1;
+}
+function brPecaPor(e, a) {
+  const i = brPecaArma(e, a); if (i < 0) return false;
+  const A = e.arms, w = A.slots[i], base = w.def.base || w.def, def = weaponDef(base.id, [...(w.def.att || []), a], w.def.camo);
+  if (!def || def === w.def) return false;
+  A.slots[i] = { def, mag: Math.min(w.mag, def.mag), reserve: w.reserve };
+  if (i === A.cur) { vmEquip(def); VM.lowerTarget = 0; }
+  hudMsg(ATT[a].name + ' na ' + base.name, 'xp', 1.8);
+  return true;
+}
+function brPecasPoe(rnd, pts) {
+  const lista = Object.keys(ATT); if (!lista.length) return;
+  const geo = BR.pecaGeo || (BR.pecaGeo = new THREE.BoxGeometry(0.3, 0.1, 0.2));
+  pts.forEach(([px, py, pz], i) => {
+    if (!(i % 2)) return; // a outra metade dos lugares (a primeira é das granadas)
+    const a = lista[Math.floor(rnd() * lista.length)], gx = px - 0.6, gz = pz + 0.6, y = groundHeight(gx, gz, py + 1, 0.2);
+    if (!(y > py - 3)) return;
+    const g = attGroup(a), m = new THREE.Mesh(geo, BR['pecaMat' + g] || (BR['pecaMat' + g] = new THREE.MeshStandardMaterial({ color: BR_PECA_COR[g] || 0x55585e, roughness: 0.5, metalness: 0.5, emissive: BR_PECA_COR[g] || 0x55585e, emissiveIntensity: 0.15 })));
+    m.position.set(gx, y + 0.05, gz); m.rotation.y = rnd() * TAU; m.castShadow = true; scene.add(m);
+    BR.caixas.push({ tipo: 'peca', att: a, m, x: gx, y, z: gz });
+  });
+}
 function brPrecisa(e, tipo, c) {
+  if (tipo === 'peca') return e.isPlayer && brPecaArma(e, c.att) >= 0;
   if (tipo === 'granada') return e.isPlayer ? PL.nades < BR_GRANADA.max && (PL.nades <= 0 || PL.nadeType === c.ntipo) : (e.nades || 0) < 2;
   return tipo === 'cura' ? e.health < BR_CAIXAS.cura.max : (e.brColete || 0) < BR_CAIXAS.colete.max;
 }
@@ -217,6 +254,7 @@ function brCaixasUpdate() {
       if (local && !brPrecisa(e, c.tipo, c)) continue;
       if (local) {
         const B = BR_CAIXAS[c.tipo];
+        if (c.tipo === 'peca') { if (!brPecaPor(e, c.att)) continue; sfxMech('pickup'); scene.remove(c.m); L.splice(i, 1); break; }
         if (c.tipo === 'granada') { if (e.isPlayer) { if (PL.nades <= 0) PL.nadeType = c.ntipo; PL.nades++; } else { e.nades = (e.nades || 0) + 1; e.nadeType = c.ntipo; e.nadeOn = true; } }
         else if (c.tipo === 'cura') e.health = Math.min(B.max, e.health + B.ganho); else e.brColete = Math.min(B.max, (e.brColete || 0) + B.ganho);
         if (e.isPlayer) { hudMsg(c.tipo === 'granada' ? `Granada (${PL.nades})` : c.tipo === 'cura' ? `+${Math.round(BR_CAIXAS.cura.ganho * BR_VIDA_MOSTRA)} de vida` : `Colete: ${Math.round(e.brColete / 50)} de 3 placas`, 'xp', 1.6); sfxMech('pickup'); }
@@ -331,6 +369,7 @@ function brInicio() {
   const lootPts = DROP.list.map((d) => [d.obj.position.x, d.obj.position.y - 0.5, d.obj.position.z]); // onde as armas do chão começaram
   brCaixasPoe(brRng(seed ^ 0x51ed270b));
   brGranadasPoe(brRng(seed ^ 0x6c8e9cf5), lootPts);
+  brPecasPoe(brRng(seed ^ 0x3b1d7e55), lootPts);
   BR.slots = brSlots(brRng(seed ^ 0x2545f491));
   const g = new THREE.CylinderGeometry(1, 1, 1, 128, 1, true);
   const m = new THREE.MeshBasicMaterial({ color: 0x3d9bff, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });

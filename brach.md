@@ -1,21 +1,16 @@
-# Tiro: no salão do BR em dupla, cada um escolhe a dupla
+# Tiro: peças de arma pelo mapa do Battle royale, com equipar automático
 
-Pedido do Thiago: "deve ser possível escolher qual dupla você quer jogar... o lobby do BR duplas tem que ser separado em duplas, com opção de jogar sem bots".
+Pedido do Thiago: encontrar peças de armas andando pelo mapa e poder ajustar no meio da partida. Escolhemos o equipar automático, em vez de um inventário.
 
-**No salão** (modo "BR em dupla"):
-- no menu do salão, logo abaixo de "Modificar a classe", aparece **"Sua dupla"**: **Automática** ou de **1 a 10**. As duplas que já têm 2 pessoas aparecem como "(cheia)", e o host não deixa entrar uma terceira;
-- a lista de jogadores do salão fica **separada por dupla**: "Dupla 3: Fulano, Ciclano", "Dupla 5: Beltrano, + robô"; quem deixou automático aparece em "Dupla automática". Embaixo diz se os robôs completam até 20 ou se é só gente;
-- **sem robôs**: já dava, e continua igual. Em "Bots", escolha **Nenhum**. Aí quem está sozinho numa dupla joga sozinho, e só gente entra na partida.
+**Como funciona** (`ferramentas/tiro-br.js`: `brPecasPoe`, `brPecaArma`, `brPecaPor`):
+- no Battle royale, as **peças** (os 19 acessórios do jogo: miras, silenciador, compensador, freio de boca, choke, canos, empunhaduras, laser, carregadores, coronhas, munições) ficam no chão **ao lado da outra metade dos lugares das armas** (a primeira metade tem as granadas): dentro das construções, nas lajes ou nos marcadores do editor, com a semente do salão. É uma caixinha pequena com a cor do encaixe (azul: mira; cinza: cano; marrom: sob o cano; vermelha: lateral; verde: carregador e munição; preta: coronha);
+- **passando por cima**, a peça **entra sozinha na arma da mão**, se servir nela (as mesmas regras do menu de classes: a família da arma, um acessório por encaixe e no máximo 4 por arma). Se não couber na da mão, tenta a outra arma. Aparece "Silenciador na M4A1", e a arma na mão já mostra a peça;
+- se o encaixe já estiver ocupado, a peça **fica no chão**, para ninguém trocar de peça sem querer só de andar;
+- quando você pega outra arma no chão, ela vem com as peças dela (as da arma antiga ficam na arma antiga);
+- os robôs não pegam peças. Como as caixas e as granadas, as peças não vão pela rede: a que outro jogador pisou some na sua tela também.
 
-**Na partida** (`brDuplasMontar`, em `ferramentas/tiro-br-dupla.js`), as duplas seguem o salão:
-1. primeiro quem escolheu uma dupla (até 2 por dupla);
-2. depois quem deixou automático, de dois em dois, em duplas vazias;
-3. por último os robôs: primeiro completam quem ficou sozinho numa dupla, e depois formam duplas só de robôs.
+**Ainda não tem:** tirar ou trocar uma peça que já está na arma (seria o inventário), e os robôs usando peças.
 
-A conta é a mesma em todas as máquinas, porque a escolha de cada um vai no estado do salão. No solo continua: você e um robô.
-
-**Rede:** o jogador ganha o campo `d` (a dupla, de 0 a 9, ou -1), que vai no estado do salão; o convidado pede a dupla ao host com a mensagem `dupla`, que entra no mesmo limite de pedidos da troca de equipe.
-
-Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei nem abri um salão.
+Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

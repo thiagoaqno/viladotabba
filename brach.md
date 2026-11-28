@@ -1,7 +1,15 @@
-# Tiro: Favela Grande volta ao tamanho anterior (272 x 212 m)
+# Tiro: na Favela Grande, o Ferro-velho vira Estação e Sítio (peças do Codex)
 
-O Thiago achou o mapa de 480 x 212 m grande demais. O `favela-grande.json` e o gerador voltam ao estado de antes do #1081 (o do #1077): 272 x 212 m, com Ferro-velho, Rodoviária, Morro, os marcadores do BR e a parede de 600 m na beira. As peças do Codex continuam no editor (#1079), só não estão mais no mapa.
+Segunda parte da opção 1: o mapa fica no tamanho anterior (272 x 212 m), e algumas peças novas do Codex entram no lugar do Ferro-velho (x -136 a -96).
 
-Conferido com `node --check` no script do jogo montado; não joguei.
+**Estação e Sítio:**
+- **estação de trem** no meio (plataforma coberta, bilheteria, trilhos e passarela por cima);
+- ao sul e ao norte, **celeiro com mezanino** (ponto alto, por escada), **torre d'água** (ponto alto de sniper), **casa de pau a pique**, trator, fardos, poço e cerca olhando a rua de divisa.
+
+Os vagões, os contêineres e o ônibus do Ferro-velho saem. A Rodoviária, o Campinho, o Comércio, a Favela e o Morro ficam como estavam.
+
+**Battle royale:** o gerador agora lê os pontos `KC_BR` das peças do Codex direto do `pecas.js`. São 76 armas no mapa (33 em lajes), 17 delas na Estação e Sítio (mezanino do celeiro, plataforma da torre, passarela da estação, dentro da casa e da bilheteria), mais 20 coletes e 38 curas.
+
+**Conferido:** o gerador diz 0 sobreposições e 0 peças passando da beira, e o script do jogo montado passa no `node --check`. Não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

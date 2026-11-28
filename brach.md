@@ -1,12 +1,21 @@
-# Tiro: mapa Danger Zone, BR só com ele e a Favela Grande, robôs mais espalhados e armas nos módulos
+# Tiro: mais armas no BR (várias por construção grande) e vegetação e covers no Danger Zone
 
-Pedido do Thiago: "esse deve ser o único mapa de BR por enquanto, junto com o favela que fizemos lá... faça os bots caírem mais espalhados. Coloque para nascer armas também dentro dos módulos."
+Pedido do Thiago: "no Danger Zone construções grandes devem ter mais de uma arma dentro. Inclusive eu coloquei algumas construções do aeroporto... é um mapa bem completo. Espalhe mais armas nele e alguns elementos... como vegetação, covers etc."
 
-- **Mapa Danger Zone** (`ferramentas/tiro-mapas/editor/danger-zone.json`, o arquivo do editor que ele mandou, sem mudança): entra no jogo como os outros mapas do editor (continua disponível nos outros modos).
-- **Mapas do Battle royale** (`BR_MAPAS` e `brMapaDe` em `ferramentas/tiro-br.js`, trocas no `tiro-frontline.js`): no BR e no BR em dupla, a escolha de mapa (solo e salão) mostra **só o Danger Zone e a Favela Grande**. Se o modo for trocado para BR com outro mapa escolhido, o mapa passa para o Danger Zone.
-- **Robôs mais espalhados** (`ferramentas/tiro-br-aviao.js`): cada robô agora mira um lugar de largada diferente (os lugares espalhados, cada um o mais longe dos outros), salta do avião quando passa mais perto dele e plana mais rápido (20 m/s em queda livre e 9 m/s de paraquedas; o jogador segue com 10 e 7), para chegar até os cantos do mapa.
-- **Armas dentro dos módulos** (`ferramentas/tiro-editor/mapa-json.js` guarda o centro de cada módulo; `brLoot`): uma arma no meio de cada módulo em que se entra (`kcModuloAberto`, `kcModuloPorta`, `kcModuloPortaMadeira` e os `kcNModulo*`; garagem e janela, que são fechados, ficam de fora), além das outras. No Danger Zone são 17. As granadas e peças de arma também usam esses lugares.
+**Armas por construção** (`ferramentas/tiro-br.js`: `brLootGrupos`, `brLoot`; vale para os dois mapas do BR):
+- antes eram até 30 armas no mapa, cada uma a 6 m das outras, então um galpão grande ficava com uma só;
+- agora os pontos de dentro (com teto e paredes, ou em laje) se juntam por construção: os vizinhos no mesmo piso são o mesmo cômodo, galpão ou laje;
+- cada construção ganha **uma arma a cada 35 m² de piso**, de 1 a 6, nos pontos mais afastados entre si, com o máximo de 110 no mapa. Por exemplo, uma casa pequena fica com 1 e um mercado ou terminal com várias;
+- as dos módulos continuam (uma no meio de cada um) e não se repetem no mesmo módulo;
+- as granadas e peças de arma, que ficam ao lado da metade dos lugares das armas, também aumentam;
+- o limite de armas no chão subiu para 260.
 
-Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
+**Danger Zone** (`ferramentas/tiro-mapas/editor/danger-zone.json`): 125 peças novas, em lugares livres, longe das construções e dos nascimentos, e em chão plano, no piso do relevo:
+- **70 de vegetação:** arbustos, bananeiras, árvores de canteiro e de praça, árvores de pomar;
+- **55 covers:** sacos de areia (altos e baixos), sacos de cimento, barreiras jersey e de água, tambores, muros quebrados, paletes, pneus e manilhas.
+
+As peças novas aparecem no editor como as outras e dá para mover ou apagar qualquer uma.
+
+Conferido só com `node --check` (o arquivo e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

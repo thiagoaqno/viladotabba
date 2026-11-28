@@ -448,6 +448,12 @@ if (IATE_ATIVO) {
   // (2026-11-27, o Thiago: "os bots caem primeiro que os players") na contagem o robô dá o passo (ctlMove, com gravidade) e sai
   // antes do ringCheck, onde a queda do Battle royale segura todo mundo no ar: ele já descia enquanto o jogador esperava lá em cima
   h = troca(h, "I.firePressed=false;I.ads=false;ctlMove(b,dt);animSoldier(b,dt);return;}", "I.firePressed=false;I.ads=false;ctlMove(b,dt);if(BR.on)brQuedaPasso(b,dt);animSoldier(b,dt);return;}", { nome: "BR: robôs parados no ar na contagem" });
+  // (2026-11-28, o Thiago: "deve ficar um marcador sobre o jogador da minha equipe, mesmo quando ele está atrás das paredes")
+  // os marcadores de aliado (09m-marqueurs.js) ficam desligados no cada um por si; no BR em dupla eles ligam (mesmo com o ajuste
+  // desligado), vão até 600 m e, atrás de parede, ficam quase tão fortes quanto à vista (0,75 em vez de 0,42)
+  h = troca(h, "if(!Settings.allyMarks||MATCH.mode==='ffa'||", "if((!Settings.allyMarks||MATCH.mode==='ffa')&&!(BR.on&&BR.duo)||", { nome: "BR: marcador do parceiro" });
+  h = troca(h, "a=(o.markVis?0.9:0.42)", "a=(o.markVis?0.9:BR.on&&BR.duo?0.75:0.42)", { nome: "BR: parceiro atrás de parede" });
+  h = troca(h, "d<AM.range&&", "d<(BR.on&&BR.duo?600:AM.range)&&", { nome: "BR: parceiro longe" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
   // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script

@@ -4,11 +4,12 @@ Pedido do Thiago: quando um jogador morre de vez com a dupla dele ainda viva, el
 
 **Como funciona** (`ferramentas/tiro-br-dupla.js`):
 - só vale para quem **morre de vez** (sangrou, levou o tiro final caído ou caiu do mapa) com o **parceiro vivo**;
-- o tempo de espera depende de quanto da partida já passou (a partida é medida pela zona, do começo até ela sumir):
-  - primeiro minuto e primeiro quarto: **10 s**;
-  - segundo quarto: **30 s**;
-  - terceiro quarto: **1 min**;
-  - último quarto: **1 min 30 s**;
+- o tempo de espera depende de quanto da partida já passou (a partida é medida pela zona, do começo até ela sumir), em quintos:
+  - primeiro quinto: **10 s**;
+  - segundo quinto: **30 s**;
+  - terceiro quinto: **1 min**;
+  - quarto quinto: **1 min 30 s**;
+  - último quinto: **não volta mais**;
 - se o parceiro morrer antes do tempo acabar, não volta (a dupla sai);
 - volta **caindo de paraquedas em cima do parceiro** (de 75 m, a uns 3 m dele; com teto em cima, aparece no chão ao lado), **sem armas**: só a pistola, vazia, e nenhuma granada. Armas, munição e granadas se acham no chão;
 - enquanto espera, a tela diz "Você volta em N s se fulano sobreviver" e a câmera segue o parceiro;

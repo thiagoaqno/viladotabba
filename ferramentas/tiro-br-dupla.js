@@ -14,13 +14,14 @@
    como evento 'brc' (c: 1 ou 0) do soldado; "reanimei o meu parceiro" como 'brv' (to: id dele), e a máquina dele levanta. */
 const BR_CAIDO = { tempo: 30, raio: 1.9, levantar: 4, volta: 30 };
 /* VOLTA DO PARCEIRO (2026-11-28, o Thiago: "quando um jogador morre (e é finalizado) se a dupla dele ainda estiver viva, deve ser
-   possível chamar ele de volta"). Quem morre de vez com o parceiro vivo volta sozinho depois de um tempo que cresce com a partida:
-   10 s no primeiro quarto (e no primeiro minuto), 30 s no segundo, 1 min no terceiro e 1 min 30 s no último. A partida é medida pela
+   possível chamar ele de volta"; corrigido: por quintos). Quem morre de vez com o parceiro vivo volta sozinho depois de um tempo que
+   cresce com a partida: 10 s no primeiro quinto, 30 s no segundo, 1 min no terceiro, 1 min 30 s no quarto; no último quinto não volta
+   mais. A partida é medida pela
    zona (do começo até ela sumir). Volta caindo de paraquedas em cima do parceiro, sem armas (a pistola vazia: munição e armas se
    acham no chão) e sem granada. Se o parceiro morrer antes, não volta. A máquina dono do soldado decide e avisa ('brvolta'). */
 function brVoltaEspera() {
   const P = BR.plano, total = P && P.fases.length ? P.fases[P.fases.length - 1].b : 300, t = Math.max(0, BR.T0 - MATCH.timeLeft), q = t / total;
-  return t < 60 || q < 0.25 ? 10 : q < 0.5 ? 30 : q < 0.75 ? 60 : 90;
+  return q < 0.2 ? 10 : q < 0.4 ? 30 : q < 0.6 ? 60 : q < 0.8 ? 90 : 0; // 0: último quinto, não volta
 }
 function brVoltar(e) {
   const p = brParceiro(e); if (!p || !p.alive || p.brOut) { e.brVolta = 0; return; }
@@ -177,7 +178,8 @@ function brMarcasCaidos() {
     if (!(BR.on && BR.duo)) return killEnt1(v, a, weapon, head, dir, life);
     v.brCaido = false; v.brRevT = 0;
     const p = brParceiro(v), r = killEnt1(v, a, weapon, head, dir, life);
-    if (brLocal(v) && !v.alive && p && p.alive && !p.brOut && !MATCH.fin) v.brVolta = MATCH.time + brVoltaEspera(); // morto de vez, parceiro vivo: volta
+    const espera = brVoltaEspera();
+    if (brLocal(v) && !v.alive && p && p.alive && !p.brOut && !MATCH.fin && espera > 0) v.brVolta = MATCH.time + espera; // morto de vez, parceiro vivo: volta
     return r;
   };
   // caído: o jogador não atira, não mira e fica agachado; o robô fica parado, agachado, sem pensar

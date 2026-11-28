@@ -1,19 +1,26 @@
-# Tiro: Battle royale com até 20 jogadores e sem tiro na queda
+# Tiro: Favela Grande com zona rural, centro comercial e bairro novo (peças do Codex)
 
-Dois pedidos do Thiago: "aumenta a quantidade de players por partida" e "faz não ser possível atirar enquanto você cai de paraquedas".
+Com as 37 peças novas do Codex (#1079), a Favela Grande cresce de 272 x 212 m para **480 x 212 m** de chão. A parede de 600 m vai para a nova beira, bem na beira do abismo. O sul é feito no gerador e espelhado no norte, como o resto.
 
-**Até 20 jogadores** (era 12) no Battle royale e no BR em dupla (10 duplas):
-- o jogo cria 11 robôs no começo; agora cria mais 8 no boot (Tavares, Ribeiro, Nogueira, Barbosa, Moreira, Cardoso, Pacheco, Siqueira), que **só jogam o battle royale**. Nos outros modos o roster é montado como se eles não existissem e o menu não muda;
-- no solo, 19 robôs com você; no salão, gente até 20 e robôs completando;
-- o relé do servidor (`servidor/jogos/tiro-rele.js`) passa a aceitar 20 por salão (19 convidados mais o host). Os outros modos continuam parando em 8 no próprio jogo;
-- as largadas espalham 20 lugares (10 pares na dupla).
+**Zona rural** (oeste, x -232 a -136, depois do Ferro-velho):
+- estrada de terra N-S colada ao Ferro-velho e uma E-W cortando a zona;
+- **estação de trem** no meio (plataforma coberta, bilheteria, trilhos e passarela);
+- sítio com **casa sede** e **cerca com porteira**, poço, carroça, **celeiro com mezanino**, **torre d'água** (ponto alto), galinheiro, duas **casas de pau a pique**, **curral**, trator, fardos;
+- **milharal** de 24 x 24 m e **pomar** com 18 árvores.
 
-**Sem tiro na queda:** enquanto está caindo (do começo até pousar), o jogador não atira, não mira, não joga granada e fica com a arma baixa, que sobe ao pousar. Os robôs só caem, sem pensar nem atirar.
+**Centro comercial** (leste, x 136 a 248, perto da avenida):
+- **passarela** sobre a avenida;
+- **galeria** de 2 andares, **supermercado** e **posto de gasolina** na frente;
+- banco, farmácia, lanchonete, loja de roupas e **estacionamento** atrás;
+- carros e postes na avenida, ponto de ônibus.
 
-**Atenção:** quem é o host simula os 19 robôs. Num tablet fraco isso pesa; vale ver o desempenho.
+**Bairro novo** (mais para o alto, a leste):
+- **prédio comercial de 4 andares** com escada até a laje;
+- **escola** com quadra coberta, **igreja** com torre, **posto de saúde**, **condomínio** com guarita e **lava-rápido**;
+- praça com banco, lixeira e árvore.
 
-Arquivos: `ferramentas/tiro-br.js` (`BR_MAX`, `BR_NOMES`, os robôs a mais, `modeRoster`), `ferramentas/tiro-br-dupla.js` (sem tiro na queda, 10 duplas), `ferramentas/tiro-frontline.js` (cria os robôs no boot, os nomes na tela do solo) e o relé.
+**Battle royale:** os pontos `KC_BR` de cada peça do Codex são lidos direto do `pecas.js` e viram marcadores. Agora são **119 armas** (46 em lajes e mezaninos), **30 coletes** e **59 curas**, para até 20 jogadores. A grade de pontos de passagem cobre o mapa inteiro (1.115 pontos novos).
 
-Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
+**Conferido:** o gerador confere sozinho que nenhuma peça encosta em outra (0) nem passa da beira (0), pelos tamanhos do guia, e o script do jogo montado passa no `node --check`. Não joguei nem vi o mapa. São uns 760 prefabs; vale ver o desempenho.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

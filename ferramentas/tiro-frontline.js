@@ -466,6 +466,14 @@ if (IATE_ATIVO) {
   h = troca(h, "['w2','Digit2',", "['faca3','Digit3',_t('Faca na mão (sem atacar)')],['w2','Digit2',", { min: 0, nome: "faca: 3 na lista de teclas" });
   // vida de 150 no battle royale: o número do HUD (BR_VIDA_MOSTRA, tiro-br.js)
   h = troca(h, "hudText($('hpN'),hpv)", "hudText($('hpN'),BR.on?Math.ceil(Math.max(0,e.health)*BR_VIDA_MOSTRA):hpv)", { nome: "BR: vida de 150 no HUD" });
+  // salão do BR em dupla (2026-11-28, o Thiago: "deve ser possível escolher qual dupla você quer jogar"): o jogador ganha o campo d
+  // (a dupla, de 0 a 9; -1 automática), que vai no estado do salão para todos, um pedido 'dupla' do convidado ao host, e a linha
+  // "Sua dupla" no menu do salão (brDuplaLinha, brDuplaPalco e a montagem das duplas em ferramentas/tiro-br-dupla.js)
+  h = troca(h, "t:p.t,h:p.id===NET.me?1:0", "t:p.t,d:typeof p.d==='number'?p.d:-1,h:p.id===NET.me?1:0", { nome: "BR dupla: a dupla no estado do salão" });
+  h = troca(h, "t:p.t===1?1:0,", "t:p.t===1?1:0,d:typeof p.d==='number'?clamp(p.d|0,-1,9):-1,", { nome: "BR dupla: a dupla lida do salão" });
+  h = troca(h, "case'team':if(!pl.ig){pl.t=1-pl.t;netLobbyChanged();}break;", "case'dupla':brDuplaEscolher(pl,m.d);break;case'team':if(!pl.ig){pl.t=1-pl.t;netLobbyChanged();}break;", { nome: "BR dupla: pedido de dupla" });
+  h = troca(h, "m.t==='team'||m.t==='lv'", "m.t==='team'||m.t==='dupla'||m.t==='lv'", { min: 0, nome: "BR dupla: limite de pedidos" });
+  h = troca(h, "...(!brSolo(NET.cfg.mode)&&NET.phase==='lobby'?[{k:'btn',key:'team'", "...(NET.cfg.mode==='brduo'&&NET.phase==='lobby'?[brDuplaLinha()]:[]),...(!brSolo(NET.cfg.mode)&&NET.phase==='lobby'?[{k:'btn',key:'team'", { nome: "BR dupla: escolher a dupla no salão" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
   // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script

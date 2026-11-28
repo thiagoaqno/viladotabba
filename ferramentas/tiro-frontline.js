@@ -464,6 +464,8 @@ if (IATE_ATIVO) {
   h = troca(h, "const T=PL.knifeTarget;", "let T=PL.knifeTarget;", { nome: "faca: alvo de novo no golpe (1)" });
   h = troca(h, "if(!PL.knifeHit&&PL.knifeT<KNIFE_DUR*(1-KNIFE_HIT)){PL.knifeHit=true;if(T&&T.alive&&T.pos.distanceTo(e.pos)<2.2)", "if(!PL.knifeHit&&PL.knifeT<KNIFE_DUR*(1-KNIFE_HIT)){PL.knifeHit=true;T=facaAlvo(T,e);if(T&&T.alive&&T.pos.distanceTo(e.pos)<2.5)", { nome: "faca: alvo de novo no golpe (2)" });
   h = troca(h, "['w2','Digit2',", "['faca3','Digit3',_t('Faca na mão (sem atacar)')],['w2','Digit2',", { min: 0, nome: "faca: 3 na lista de teclas" });
+  // vida de 150 no battle royale: o número do HUD (BR_VIDA_MOSTRA, tiro-br.js)
+  h = troca(h, "hudText($('hpN'),hpv)", "hudText($('hpN'),BR.on?Math.ceil(Math.max(0,e.health)*BR_VIDA_MOSTRA):hpv)", { nome: "BR: vida de 150 no HUD" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
   // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script

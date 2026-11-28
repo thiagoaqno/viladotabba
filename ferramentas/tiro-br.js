@@ -140,8 +140,14 @@ function brLoot(rnd) {
    colete (azul): +50 de colete, até 100; o colete segura 60% de cada dano de tiro, grenada ou faca até acabar (a zona passa por ele);
    cura (branca, cruz vermelha): +50 de vida, até 100. Os robôs também pegam, e vão atrás de cura quando estão machucados.
    Como as armas do chão, nada disso vai pela rede: a caixa que outro jogador pisou some aqui também, mas o efeito é só na máquina dele. */
-const BR_CAIXAS = { colete: { cor: '#2f6fd6', ganho: 50, max: 100 }, cura: { cor: '#f3f1ea', ganho: 50, max: 100 } };
-const BR_COLETE_SEGURA = 0.6;
+/* VIDA E PLACAS (2026-11-28, o Thiago, pelo Warzone: 150 de vida e até 3 placas de 50, 300 no total). No battle royale:
+   - vida de 150: a vida do jogo continua de 0 a 100 por dentro (regeneração, HUD, cura), e o dano de tiro, grenada, faca e zona que
+     chega nela é multiplicado por BR_VIDA_K (2/3); o HUD mostra de 0 a 150;
+   - colete em placas: cada caixa azul é uma placa de 50, até 3 (150), e o colete segura o dano inteiro até acabar (antes: 60%,
+     até 100); a zona passa direto por ele. Os números de colete e de dano são os da arma (como numa vida de 100). */
+const BR_VIDA_K = 2 / 3, BR_VIDA_MOSTRA = 1.5;
+const BR_CAIXAS = { colete: { cor: '#2f6fd6', ganho: 50, max: 150 }, cura: { cor: '#f3f1ea', ganho: 50, max: 100 } };
+const BR_COLETE_SEGURA = 1;
 function brCaixaMat(tipo) {
   BR.mats = BR.mats || {};
   if (BR.mats[tipo]) return BR.mats[tipo];
@@ -213,7 +219,7 @@ function brCaixasUpdate() {
         const B = BR_CAIXAS[c.tipo];
         if (c.tipo === 'granada') { if (e.isPlayer) { if (PL.nades <= 0) PL.nadeType = c.ntipo; PL.nades++; } else { e.nades = (e.nades || 0) + 1; e.nadeType = c.ntipo; e.nadeOn = true; } }
         else if (c.tipo === 'cura') e.health = Math.min(B.max, e.health + B.ganho); else e.brColete = Math.min(B.max, (e.brColete || 0) + B.ganho);
-        if (e.isPlayer) { hudMsg(c.tipo === 'granada' ? `Granada (${PL.nades})` : c.tipo === 'cura' ? '+50 de vida' : `Colete ${Math.round(e.brColete)}`, 'xp', 1.6); sfxMech('pickup'); }
+        if (e.isPlayer) { hudMsg(c.tipo === 'granada' ? `Granada (${PL.nades})` : c.tipo === 'cura' ? `+${Math.round(BR_CAIXAS.cura.ganho * BR_VIDA_MOSTRA)} de vida` : `Colete: ${Math.round(e.brColete / 50)} de 3 placas`, 'xp', 1.6); sfxMech('pickup'); }
       }
       scene.remove(c.m); L.splice(i, 1); break;
     }
@@ -227,7 +233,7 @@ function brColeteHud() {
     b.appendChild(f); hp.appendChild(b); BR.cvBar = b; BR.cvFill = f; BR.cvV = -1;
   }
   const v = BR.on && PL.ent.alive ? Math.round(PL.ent.brColete || 0) : 0;
-  if (v !== BR.cvV) { BR.cvV = v; BR.cvBar.style.display = v > 0 ? '' : 'none'; BR.cvFill.style.transform = `scaleX(${v / 100})`; }
+  if (v !== BR.cvV) { BR.cvV = v; BR.cvBar.style.display = v > 0 ? '' : 'none'; BR.cvFill.style.transform = `scaleX(${v / BR_CAIXAS.colete.max})`; }
 }
 
 /* ---------- entrada caindo de cima (2026-11-27) ----------
@@ -443,9 +449,11 @@ function brEspectar(dt) {
   // o colete segura parte do dano de quem é desta máquina (em rede, cada um aplica o dano que leva: netApply 'hit')
   const applyDamage0 = applyDamage;
   applyDamage = function (victim, dmg, attacker, weapon, head, dir, srcPos, life) {
-    if (BR.on && victim && victim.alive && !victim.isRemote && victim.brColete > 0 && dmg > 0 && !(victim.protT > 0) && (MATCH.state === 'playing' || MATCH.state === 'paused')) {
+    const faca = weapon === _t('Couteau'); // a facada mata direto, como antes: passa pelas placas e pela vida de 150
+    if (BR.on && !faca && victim && victim.alive && !victim.isRemote && victim.brColete > 0 && dmg > 0 && !(victim.protT > 0) && (MATCH.state === 'playing' || MATCH.state === 'paused')) {
       const s = Math.min(victim.brColete, dmg * BR_COLETE_SEGURA); victim.brColete -= s; dmg -= s;
     }
+    if (BR.on && !faca && victim && victim.alive && !victim.isRemote && dmg > 0) dmg *= BR_VIDA_K; // vida de 150 (o resto, depois das placas)
     return applyDamage0(victim, dmg, attacker, weapon, head, dir, srcPos, life);
   };
   // quem atira não sabe o colete do outro: no battle royale a morte não é prevista, vem do aviso de quem morreu
@@ -521,7 +529,7 @@ function brEspectar(dt) {
   ringCheck = function (e, dt) {
     if (BR.on) brQuedaPasso(e, dt);
     if (BR.on && BR.z && e.alive && (MATCH.state === 'playing' || MATCH.state === 'paused') && !brDentroZ(BR.z, e.pos.x, e.pos.z)) {
-      e.health -= BR.z.dps * dt;
+      e.health -= BR.z.dps * BR_VIDA_K * dt;
       if (e.isPlayer) PL.lastDmgT = MATCH.time; else e.lastHitT = MATCH.time; // fora da zona a vida não volta
       if (e.health <= 0) { e.health = 0; zoneDeath(e); if (!e.alive) return true; }
     }

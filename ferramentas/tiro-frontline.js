@@ -485,6 +485,9 @@ if (IATE_ATIVO) {
   // o airdrop do battle royale (2026-11-28): por cima das motos, no mesmo script
   const airdrop = fs.readFileSync(path.join(__dirname, "tiro-br-airdrop.js"), "utf8");
   h = troca(h, "if(!window.WebGLRenderingContext)", () => airdrop + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale: airdrop" });
+  // o avião da largada do battle royale (2026-11-28): por cima do airdrop, no mesmo script
+  const aviao = fs.readFileSync(path.join(__dirname, "tiro-br-aviao.js"), "utf8");
+  h = troca(h, "if(!window.WebGLRenderingContext)", () => aviao + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale: avião" });
 }
 
 // o perfil da Vila (servidor/jogos/tiro-perfil.js): roda antes do jogo, para o progresso do servidor já estar no navegador

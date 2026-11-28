@@ -37,7 +37,7 @@ const BR_NOMES = ['Tavares', 'Ribeiro', 'Nogueira', 'Barbosa', 'Moreira', 'Cardo
 MODES.br = {
   name: 'Battle royale', btn: 'Battle royale', sub: 'Battle royale, o último vivo vence', teams: 'Até 20 jogadores, sem renascer', lim: 'Jogadores', unit: 'jogadores',
   limits: [20], key: 'limitBr', respawn: 1e9, botRespawn: 1e9, prot: 2,
-  hint: 'Ninguém renasce. Todo mundo começa com a pistola: as outras armas estão no chão. A zona fecha aos poucos e tira vida de quem fica fora. O último vivo vence.',
+  hint: 'Ninguém renasce. Todo mundo salta do avião quando quiser (Espaço ou E) e começa com a pistola: as outras armas estão no chão. A zona fecha aos poucos e tira vida de quem fica fora. O último vivo vence.',
 };
 MODE_IDS.push('br');
 if (Settings.limitBr !== 20) Settings.limitBr = 20;

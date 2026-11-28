@@ -157,6 +157,45 @@ for (const P of pecas) {
   ocupa.push([P.p[0] - wd[0] / 2 - 0.8, P.p[0] + wd[0] / 2 + 0.8, P.p[2] - wd[1] / 2 - 0.8, P.p[2] + wd[1] / 2 + 0.8]);
 }
 const livre = (x, z) => !ocupa.some(([a, b, c, d]) => x > a && x < b && z > c && z < d);
+// ---------- coberturas de rua (2026-11-28, o Thiago: "as ruas novas estão muito vazias"; peças kcRua do #1090) ----------
+// Na avenida, nas ruas de divisa, nos corredores entre as fileiras do morro e nas vielas: uma a cada 9 a 12 m, sempre de um lado
+// (alternando), para dar onde se esconder sem fechar a passagem. Cada uma só entra se não encostar em prédio, veículo, poste ou
+// outra cobertura (folga de 0,6 m). Feitas no sul e espelhadas no norte, como o resto.
+const RUA = { kcRuaTotem: [1.8, 0.6], kcRuaCarrinhoFeira: [2.68, 1.5], kcRuaHortifruti: [2.4, 1.1], kcRuaSofa: [2.3, 0.96], kcRuaGeladeira: [0.9, 0.82],
+  kcRuaLavadora: [0.9, 0.78], kcRuaArmario: [1.5, 0.82], kcRuaMesaVirada: [1.8, 0.9], kcRuaCarrinhoMercado: [1.8, 1.12], kcRuaLixeiraColetiva: [2.1, 1.2],
+  kcRuaCanteiro: [3, 1.2], kcRuaPilhaTelhas: [2, 1], kcRuaCarrinhoMao: [2.27, 0.86], kcRuaSacosCimento: [2, 1], kcRuaBetoneira: [1.6, 1.2],
+  kcRuaTapumeMadeira: [3, 0.2], kcRuaChurrasqueira: [1.8, 0.8], kcRuaBancadaOficina: [2.4, 0.9], kcRuaTransformador: [2, 1.1], kcRuaCarrinhoReciclagem: [2.4, 1.5] };
+Object.assign(DIM, RUA);
+// o que cada tipo de rua tem mais: avenida (comércio e lixo), morro (casa e obra), divisa (de tudo)
+const RUA_AV = ['kcRuaLixeiraColetiva', 'kcRuaTotem', 'kcRuaCarrinhoFeira', 'kcRuaCanteiro', 'kcRuaTransformador', 'kcRuaCarrinhoMercado', 'kcRuaHortifruti', 'kcRuaCarrinhoReciclagem'];
+const RUA_MORRO = ['kcRuaSofa', 'kcRuaGeladeira', 'kcRuaSacosCimento', 'kcRuaBetoneira', 'kcRuaChurrasqueira', 'kcRuaLavadora', 'kcRuaPilhaTelhas', 'kcRuaCarrinhoMao', 'kcRuaArmario', 'kcRuaMesaVirada', 'kcRuaTapumeMadeira', 'kcRuaBancadaOficina'];
+const RUA_TUDO = Object.keys(RUA);
+const cobSul = [], cobCaixas = [];
+function cobertura(nome, x, z, r) {
+  let [w, d] = RUA[nome]; if (Math.round(r / 90) % 2) [w, d] = [d, w];
+  const c = [x - w / 2 - 0.6, x + w / 2 + 0.6, z - d / 2 - 0.6, z + d / 2 + 0.6];
+  if (c[2] < 0.5 || c[3] > BZ - 1 || c[0] < -BX + 1 || c[1] > BX - 1) return false;
+  const bate = (o) => c[0] < o[1] && o[0] < c[1] && c[2] < o[3] && o[2] < c[3];
+  if (ocupa.some(bate) || cobCaixas.some(bate)) return false;
+  for (const P of [...meio, ...sul]) { // postes, bancos, pontos e o resto que não está no "ocupa": 1,2 m de folga do centro
+    if (P.t !== 'prefab' && P.t !== 'prop') continue;
+    if (Math.hypot(P.p[0] - x, P.p[2] - z) < Math.max(w, d) / 2 + 1.2) return false;
+  }
+  cobSul.push({ t: 'prefab', nome, p: [+x.toFixed(2), 0, +z.toFixed(2)], r, e: 1 }); cobCaixas.push(c); return true;
+}
+let kRua = 0;
+const poeLinha = (lista, pontos) => { for (const [x, z, r] of pontos) { for (let t = 0; t < lista.length; t++) { if (cobertura(lista[(kRua + t) % lista.length], x, z, r)) { kRua++; break; } } } };
+// avenida (z 44 a 56): uma a cada 10 m, alternando os dois lados
+{ const P = []; for (let x = -128, i = 0; x <= 128; x += 10, i++) P.push([x + (i % 3) * 1.5, i % 2 ? 54.3 : 45.7, i % 2 ? 180 : 0]); poeLinha(RUA_AV, P); }
+// ruas de divisa (x 30 a 36 e 90 a 96, z 0 a 44): uma a cada 9 m, encostadas num lado
+for (const sd of [-1, 1]) for (const xs of [33, 93]) { const P = []; for (let z = 5, i = 0; z <= 41; z += 9, i++) P.push([sd * (xs + (i % 2 ? 1.6 : -1.6)), z, 90]); poeLinha(RUA_TUDO, P); }
+// corredores entre as fileiras do morro (z 64,7 a 71 e 78,6 a 85,5): uma a cada 11 m, alternando os lados
+for (const [za, zb] of [[66.2, 69.6], [80.1, 84]]) { const P = []; for (let x = -130, i = 0; x <= 130; x += 11, i++) P.push([x, i % 2 ? zb : za, i % 2 ? 180 : 0]); poeLinha(RUA_MORRO, P); }
+// vielas N-S do morro (5 m): uma a cada 12 m, encostada num lado
+for (const v of [-102, -62, -22, 22, 62, 102]) { const P = []; for (let z = 60, i = 0; z <= 96; z += 12, i++) P.push([v + (i % 2 ? 1.3 : -1.3), z, 90]); poeLinha(RUA_MORRO, P); }
+for (const c of cobCaixas) ocupa.push(c);
+pecas.push(...cobSul, ...cobSul.map(espelha));
+console.log('coberturas de rua:', cobSul.length * 2, '(' + cobSul.length + ' no sul e o espelho no norte)');
 const poiNovos = [];
 for (let x = -132; x <= 132; x += 8) for (let z = -102; z <= 102; z += 8) {
   if (Math.abs(x) < 30.5 && Math.abs(z) < 44.5) continue; // a Favela tem os dela

@@ -1,7 +1,14 @@
-# Tiro: 20 coberturas de rua brasileira para o editor
+# Tiro: coberturas de rua espalhadas pela Favela Grande
 
-O catálogo de prefabs ganha 20 peças `kcRua...` no grupo Cobertura: totem, carrinhos de feira, mercado, mão e reciclagem, caixas de hortifruti, sofá, geladeira, lavadora, armário, mesa virada, lixeira coletiva, canteiro, pilha de telhas, sacos de cimento, betoneira, tapume de madeira, churrasqueira, bancada de oficina e gabinete elétrico.
+O Thiago achou as ruas novas da Favela Grande muito vazias. As 20 coberturas de rua do ChatGPT (#1090: lixeira coletiva, totem, carrinhos de feira, de mercado, de mão e de reciclagem, hortifruti, canteiro, transformador, sofá, geladeira, lavadora, armário, mesa virada, sacos de cimento, betoneira, telhas, tapume, churrasqueira, bancada de oficina) agora estão nas ruas, **204 no total** (102 no sul e o espelho no norte).
 
-Os volumes principais têm colisão; frutas, folhagem e detalhes finos são visuais. O guia informa as dimensões aproximadas e a orientação das peças. Não há marcas reais e nenhum mapa foi alterado. O jogo foi remontado a partir das fontes do editor.
+**Onde:**
+- **avenida** (de ponta a ponta): uma a cada 10 m, alternando os dois lados. Mais coisa de comércio e de lixo: lixeira, totem, carrinhos, canteiro, transformador;
+- **ruas de divisa** (entre a Favela, o Campinho, o Comércio, a Estação e a Rodoviária): uma a cada 9 m, encostada num lado, de todo tipo;
+- **corredores entre as fileiras do morro** e **vielas**: uma a cada 11 a 12 m, alternando os lados. Mais coisa de casa e de obra: sofá, geladeira, sacos de cimento, betoneira, churrasqueira, telhas, tapume.
 
-Conferido com `node --check` em `pecas.js`, `editor.js` e no script do jogo remontado. Não criei testes nem rodei a suíte. Não joguei: ainda falta conferir as miniaturas, a escala e a cobertura no editor e em partida.
+Sempre de um lado, para dar onde se esconder sem fechar a passagem. O gerador só põe uma cobertura onde ela não encosta em prédio, veículo, poste, banco ou outra cobertura (folga de 0,6 m), e os pontos de passagem dos robôs desviam delas.
+
+**Conferido:** 0 sobreposições e 0 peças passando da beira (o gerador confere), e o script do jogo montado passa no `node --check`. Não joguei.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

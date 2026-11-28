@@ -3,7 +3,7 @@
    o piloto simula a moto na máquina dele e publica a pose. Uma pessoa por moto, sentada e exposta (tiro acerta o piloto normalmente);
    o piloto não atira. Hitbox: a moto é uma cápsula fina (BR_MOTO_FORMA) no comprimento dela, para quem anda e para a física dela,
    e uma caixa baixa (só a moto, sem o piloto) para os tiros que acertam a moto. */
-const BR_MOTO_FORMA = { meio: 0.62, raio: 0.42, caixa: [0.38, 0.12, 0.98, 1.0], vida: 150, vmax: 24, re: 4, acel: 9, freio: 14, curva: 1.9, inclina: 0.45 };
+const BR_MOTO_FORMA = { meio: 0.62, raio: 0.42, caixa: [0.38, 0.12, 0.98, 1.0], vida: 600, vmax: 24, re: 4, acel: 9, freio: 14, curva: 1.9, inclina: 0.45 };
 const BR_MOTO = { motos: [], meu: null, pedido: null, tempo: 0, sync: 0, resolvendo: false, geos: [], mat: null };
 NET_WSPECIAL.brMoto = 'Moto';
 const BR_MOTO_CORES = [[0.78, 0.12, 0.1], [0.12, 0.3, 0.72], [0.1, 0.1, 0.11], [0.88, 0.7, 0.12]];

@@ -454,6 +454,18 @@ if (IATE_ATIVO) {
   h = troca(h, "if(!Settings.allyMarks||MATCH.mode==='ffa'||", "if((!Settings.allyMarks||MATCH.mode==='ffa')&&!(BR.on&&BR.duo)||", { nome: "BR: marcador do parceiro" });
   h = troca(h, "a=(o.markVis?0.9:0.42)", "a=(o.markVis?0.9:BR.on&&BR.duo?0.75:0.42)", { nome: "BR: parceiro atrás de parede" });
   h = troca(h, "d<AM.range&&", "d<(BR.on&&BR.duo?600:AM.range)&&", { nome: "BR: parceiro longe" });
+  // ---------- faca (2026-11-28, os amigos do Thiago: "a faca funcionava só quando queria"; e "apertando 3, segurar a faca na mão") ----------
+  // - F segurado mais de 0,3 s sacava a faca em vez de dar a facada: agora F é sempre facada, na hora; quem saca e guarda é o 3;
+  // - o alvo era escolhido no aperto (cone estreito, até 4,2 m) e só levava o golpe se ainda estivesse a menos de 2,2 m: agora, na
+  //   hora do golpe, vale também quem estiver na frente a até 2,5 m (facaAlvo, tiro-br.js)
+  h = troca(h, "const hit=PL.knifeOut||!!knifePick();if(hit)knife();", "const hit=true;knife();", { nome: "faca: F é sempre facada" });
+  h = troca(h, "const KNIFE_HOLD=0.3;", "const KNIFE_HOLD=1e9;", { nome: "faca: F não saca mais" });
+  h = troca(h, "else if(c==='Digit2')switchWeapon(1);", "else if(c==='Digit2')switchWeapon(1);else if(c==='Digit3'){if(PL.knifeOut)switchWeapon(PL.cur);else knifeDraw();}", { nome: "faca: 3 saca e guarda" });
+  h = troca(h, "const T=PL.knifeTarget;", "let T=PL.knifeTarget;", { nome: "faca: alvo de novo no golpe (1)" });
+  h = troca(h, "if(!PL.knifeHit&&PL.knifeT<KNIFE_DUR*(1-KNIFE_HIT)){PL.knifeHit=true;if(T&&T.alive&&T.pos.distanceTo(e.pos)<2.2)", "if(!PL.knifeHit&&PL.knifeT<KNIFE_DUR*(1-KNIFE_HIT)){PL.knifeHit=true;T=facaAlvo(T,e);if(T&&T.alive&&T.pos.distanceTo(e.pos)<2.5)", { nome: "faca: alvo de novo no golpe (2)" });
+  h = troca(h, "['w2','Digit2',", "['faca3','Digit3',_t('Faca na mão (sem atacar)')],['w2','Digit2',", { min: 0, nome: "faca: 3 na lista de teclas" });
+  // vida de 150 no battle royale: o número do HUD (BR_VIDA_MOSTRA, tiro-br.js)
+  h = troca(h, "hudText($('hpN'),hpv)", "hudText($('hpN'),BR.on?Math.ceil(Math.max(0,e.health)*BR_VIDA_MOSTRA):hpv)", { nome: "BR: vida de 150 no HUD" });
   // por último: o tiro-br.js usa NET_MAX e 'ffa' de propósito, e não pode passar pelas trocas acima
   h = troca(h, "if(!window.WebGLRenderingContext)", () => br + "\nif(!window.WebGLRenderingContext)", { todas: false, nome: "battle royale" });
   // o modo em dupla (2026-11-27): por cima do battle royale, no mesmo script

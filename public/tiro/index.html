@@ -6596,7 +6596,7 @@ if(MATCH.state!=='playing'&&MATCH.state!=='paused')return;const c=keyCanon(e.cod
 if(MATCH.state!=='playing'||!pointerActive())return;if(['Space','ArrowUp','ArrowDown'].includes(c))e.preventDefault();if(KS.map.open&&down){ksMapKey(c);if(c!=='Escape'){e.preventDefault();return;}}
 const was=KEYS[c];KEYS[c]=down;if(!down||was){if(!down&&c==='KeyG')releaseNade();if(!down&&c==='KeyF')knifeButton(false);return;}
 if(PILOT.d)return;if(MECHA_P.me){if(c==='KeyE')mechaUse();return;}
-if(adsToggleMode()&&ADS_UNAIM.has(c))PL.adsWant=false;if(c==='KeyR')startReload();else if(c==='Digit1')switchWeapon(0);else if(c==='Digit2')switchWeapon(1);else if(c==='KeyQ'&&e.getModifierState&&!e.getModifierState('Control'))quickSwap();else if(c==='KeyF')knifeButton(true,true);else if(c==='KeyG')cookNade();else if(c==='KeyE'){if(!mechaUse())swapWithDrop();}
+if(adsToggleMode()&&ADS_UNAIM.has(c))PL.adsWant=false;if(c==='KeyR')startReload();else if(c==='Digit1')switchWeapon(0);else if(c==='Digit2')switchWeapon(1);else if(c==='Digit3'){if(PL.knifeOut)switchWeapon(PL.cur);else knifeDraw();}else if(c==='KeyQ'&&e.getModifierState&&!e.getModifierState('Control'))quickSwap();else if(c==='KeyF')knifeButton(true,true);else if(c==='KeyG')cookNade();else if(c==='KeyE'){if(!mechaUse())swapWithDrop();}
 else if(c==='KeyC'){if(!trySlide())PL.crouchToggle=!PL.crouchToggle;}
 else if(c==='ControlLeft')trySlide();else if(c==='Digit4')useKs(0);else if(c==='Digit5')useKs(1);else if(c==='Digit6')useKs(2);else if(c==='KeyI')inspectWeapon();}
 function adsLookMul(mul){return lerp(1,clamp(+mul||1,0.1,2),smoothstep(0,1,VM.ads));}
@@ -6612,7 +6612,7 @@ function quickSwap(){switchWeapon(PL.knifeOut?PL.cur:1-PL.cur);}
 function knife(){if(PL.knifeT>0||MATCH.time<(PL.knifeFim||-99)+KNIFE_CD||PL.nadeState||!PL.ent.alive||KS.mode||playHold())return;kcEvent('knife',{sid:PL.ent.kcI,neu:PL.knifeOut});PL.actT=MATCH.time;PL.knifeT=KNIFE_DUR;PL.knifeFim=MATCH.time+KNIFE_DUR;PL.knifeNew=PL.knifeOut;PL.knifeHit=false;PL.knifePull=0;PL.knifeKick=false;VM.lowerTarget=1;PL.reload=null;VM.action=null;setTimeout(()=>{if(PL.knifeT>0)sfxMech('knife');},KNIFE_DUR*200);PL.knifeTarget=knifePick();}
 function knifePick(){const f=camFwd(new V3());let best=null,bd=4.2;for(const e of entities){if(!e.alive||allied(e,PL.ent))continue;const d=e.pos.distanceTo(PL.ent.pos);if(d>bd)continue;const to=entChest(e,new V3()).sub(camera.position).normalize();if(to.dot(f)<(d<KNIFE_MAG.near?KNIFE_MAG.cone:0.82))continue;if(!lineClear(camera.position,entChest(e,new V3())))continue;best=e;bd=d;}
 return best;}
-const KNIFE_HOLD=0.3;function knifeButton(down,key){if(down){if(PL.knifeBtn)return;const hit=PL.knifeOut||!!knifePick();if(hit)knife();PL.knifeBtn={t:0,hit,eq:false,key:!!key};}else{const b=PL.knifeBtn;PL.knifeBtn=null;if(b&&!b.hit&&!b.eq)knife();}}
+const KNIFE_HOLD=1e9;function knifeButton(down,key){if(down){if(PL.knifeBtn)return;const hit=true;knife();PL.knifeBtn={t:0,hit,eq:false,key:!!key};}else{const b=PL.knifeBtn;PL.knifeBtn=null;if(b&&!b.hit&&!b.eq)knife();}}
 function knifeButtonTick(dt){const b=PL.knifeBtn;if(!b)return;if(MATCH.state!=='playing'||(b.key&&!KEYS.KeyF)){PL.knifeBtn=null;return;}
 if(PL.knifeOut||b.eq)return;if((b.t+=dt)>=KNIFE_HOLD&&knifeDraw())b.eq=true;}
 function knifeDraw(){const A=PL.ent.arms;if(PL.knifeOut||PL.nadeState||!PL.ent.alive||KS.mode||playHold()||A.switching>0)return false;PL.knifeOut=true;PL.knifeHold=PL.knifeT>0&&PL.knifeNew?1:0;A.reload=null;A.boltT=0;VM.action=null;VM.lowerTarget=1;sfxMech('draw');return true;}
@@ -6645,11 +6645,11 @@ if(mv.jumped){VM.vland-=0.75;sfxJump(surfaceAt(e.pos));}
 if(e.slideT>0)slideDust(e,dt);if(mv.landed){const lk=clamp(-mv.landed*0.08,0.3,1.3);VM.vland+=lk*1.5;sfxLand(surfaceAt(e.pos),lk);PL.punchP-=0.016+0.026*lk;PL.vrollP+=(Math.random()<0.5?-1:1)*0.32*lk;}
 const ads=!!e.adsActive;if(ads!==!!PL.ads&&e.alive)sfxMech('ads');PL.ads=ads;if(VM.action==='inspect'&&(PL.held||PL.adsWant||PL.sprinting||PL.reload||!PL.onGround))VM.actFade=true;const hs=hyp(e.vel.x,e.vel.z);PL.bobA=damp(PL.bobA,PL.onGround&&!e.slideT?clamp(hs/5,0,1.5):0,8,dt);PL.bobT+=dt*Math.PI*hs/(PL.sprinting?2.7:2.1);const stepPh=Math.floor((PL.bobT*2+Math.PI/2)/TAU);if(stepPh!==PL.stepPh){PL.stepPh=stepPh;if(PL.onGround&&hs>0.8&&!e.slideT&&!(e.crouch&&!PL.sprinting)){const sf=surfaceAt(e.pos);sfxStep(null,PL.sprinting?0.3:0.18,sf);if(sf==='water')stepSplashFx(e.pos,hs,e.vel);const sk=(1-VM.ads)*clamp(hs/6.5,0,1);VM.vland+=(PL.sprinting?0.16:0.06)*sk;if(PL.sprinting){PL.vpP-=0.16*sk;PL.vrollP+=(stepPh&1?0.1:-0.1)*sk;}}}
 if(PL.sprinting&&!PL.wasSprint&&PL.onGround){PL.fovK=(PL.fovK||0)+3;PL.vpP-=0.45;}
-PL.wasSprint=PL.sprinting;if(PL.knifeT>0){PL.knifeT-=dt;const T=PL.knifeTarget;if(T&&T.alive&&PL.knifeT>KNIFE_DUR*(1-KNIFE_HIT)-0.01){const to=new V3().subVectors(T.pos,e.pos);to.y=0;const dd=to.length();if(dd>1.1){to.normalize();if(!VOID.on||groundHeight(e.pos.x+to.x*0.8,e.pos.z+to.z*0.8,e.pos.y,0.3)>e.pos.y-0.6){e.vel.x=to.x*14;e.vel.z=to.z*14;}}}
+PL.wasSprint=PL.sprinting;if(PL.knifeT>0){PL.knifeT-=dt;let T=PL.knifeTarget;if(T&&T.alive&&PL.knifeT>KNIFE_DUR*(1-KNIFE_HIT)-0.01){const to=new V3().subVectors(T.pos,e.pos);to.y=0;const dd=to.length();if(dd>1.1){to.normalize();if(!VOID.on||groundHeight(e.pos.x+to.x*0.8,e.pos.z+to.z*0.8,e.pos.y,0.3)>e.pos.y-0.6){e.vel.x=to.x*14;e.vel.z=to.z*14;}}}
 if(!PL.knifeKick&&PL.knifeT<KNIFE_DUR*0.8){PL.knifeKick=true;PL.fovK=(PL.fovK||0)+4;PL.vpP-=0.7;}
 if(T&&T.alive&&!PL.knifeHit&&PL.knifePull<KNIFE_MAG.max){const c=entChest(T,new V3()),dx=c.x-camera.position.x,dz=c.z-camera.position.z,dy=c.y-camera.position.y,hd=hyp(dx,dz);const w=1-smoothstep(KNIFE_MAG.near,KNIFE_MAG.range,hd);if(w>0){const ay=angDiff(e.yaw,Math.atan2(-dx,-dz)),ap=Math.atan2(dy,hd)-e.pitch,k=1-Math.exp(-KNIFE_MAG.rate*w*dt);let sy=ay*k,sp=ap*k;const m=hyp(sy,sp),room=KNIFE_MAG.max-PL.knifePull;if(m>room){sy*=room/m;sp*=room/m;}
 e.yaw+=sy;e.pitch=clamp(e.pitch+sp,-1.5,1.5);PL.knifePull+=hyp(sy,sp);}}
-if(!PL.knifeHit&&PL.knifeT<KNIFE_DUR*(1-KNIFE_HIT)){PL.knifeHit=true;if(T&&T.alive&&T.pos.distanceTo(e.pos)<2.2){sfxMelee();bloodFx(entChest(T,new V3()),camFwd(new V3()),false);kcEvent('melee',{sid:e.kcI,p:entChest(T,new V3()),dir:camFwd(new V3())});T.lastForce={dir:camFwd(new V3()),mag:6,lift:1.4,part:'body'};applyDamage(T,knifeDano(e,T),e,_t('Couteau'),false,camFwd(new V3()));PL.vpY+=1.5;}}
+if(!PL.knifeHit&&PL.knifeT<KNIFE_DUR*(1-KNIFE_HIT)){PL.knifeHit=true;T=facaAlvo(T,e);if(T&&T.alive&&T.pos.distanceTo(e.pos)<2.5){sfxMelee();bloodFx(entChest(T,new V3()),camFwd(new V3()),false);kcEvent('melee',{sid:e.kcI,p:entChest(T,new V3()),dir:camFwd(new V3())});T.lastForce={dir:camFwd(new V3()),mag:6,lift:1.4,part:'body'};applyDamage(T,knifeDano(e,T),e,_t('Couteau'),false,camFwd(new V3()));PL.vpY+=1.5;}}
 if(PL.knifeT<=0){VM.lowerTarget=PL.knifeOut?1:0;PL.knifeTarget=null;}}
 nadeArcUpdate();if(PL.nadeState){PL.nadeT+=dt;if(PL.nadeFuse&&!PL.nadeThrown){PL.cookT+=dt;if(Math.floor(PL.cookT)!==Math.floor(PL.cookT-dt))sfxClick(null,2600,0.15);if(PL.cookT>=nadeFuse(PL.nadeType)){if(PL.nadeState!=='throw')PL.nades--;PL.nadeState=null;VM.lowerTarget=PL.knifeOut?1:0;VM.lowerRate=16;nadeBurst(PL.nadeType,e.pos.clone().add(new V3(0,1,0)),e);}}
 if(PL.nadeState==='pull'){if(!PL.nadePin&&PL.nadeT>=NADE_ANIM.pin){PL.nadePin=true;sfxMech('pin');PL.vpY+=0.25;}
@@ -6677,7 +6677,7 @@ camera.rotation.set(lerp(PL.pitch,-0.1,k),yaw,lerp(0,0.5,k));}
 VM.holder.visible=false;vmClearHeld();if(e.model)e.model.root.visible=false;if(KC.pending&&PL.deathT>1.2&&MATCH.state==='playing'&&!MATCH.finalPending){if(startKillcam({killer:KC.pending,victim:PL.ent,tEnd:KC.deathT,info:KC.info}))return;KC.pending=null;$('death').classList.remove('kcnext');}
 if(PL.deathT>modeDef().respawn&&MATCH.state==='playing'&&!KC.pending&&!MATCH.finalPending)respawnPlayer();}
 function respawnPlayer(){spawnEntity(PL.ent);PL.yaw=PL.ent.yaw;PL.pitch=0;PL.eyeH=1.62;PL.onGround=true;PL.crouchToggle=false;giveLoadout();PL.ent.arms.recPend=0;VM.root.visible=true;VM.holder.visible=true;hideDeathScreen();}
-const BIND_DEFS=[['fwd','KeyW',_t('Avancer')],['back','KeyS',_t('Reculer')],['left','KeyA',_t('Aller à gauche')],['right','KeyD',_t('Aller à droite')],['jump','Space',_t('Sauter')],['sprint','ShiftLeft',_t('Sprinter, retenir son souffle en lunette')],['crouch','ControlLeft',_t('S\u0027accroupir (maintenu), glisser en sprintant')],['crouchT','KeyC',_t('S\u0027accroupir (bascule), glisser en sprintant')],['reload','KeyR',_t('Recharger')],['w1','Digit1',_t('Arme principale')],['w2','Digit2',_t('Arme secondaire')],['swap','KeyQ',_t('Changer d\u0027arme')],['knife','KeyF',_t('Couteau (maintenir pour le garder en main)')],['nade','KeyG',_t('Grenade (maintenir pour la garder en main)')],['use','KeyE',_t('Ramasser l\u0027arme au sol')],['inspect','KeyI',_t('Inspecter l\u0027arme')],['ks1','Digit4',_t('Première série')],['ks2','Digit5',_t('Deuxième série')],['ks3','Digit6',_t('Troisième série')],['board','Tab',_t('Tableau des scores')],];const BIND_RESERVED=new Set(['Escape','KeyP','KeyT','Enter','NumpadEnter','MetaLeft','MetaRight','ContextMenu','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);const BIND={rev:new Map(),dead:new Set(),layout:null,capture:null};const bindDefault=(a)=>BIND_DEFS.find((d)=>d[0]===a)[1];const bindValid=(c)=>typeof c==='string'&&/^[A-Za-z0-9]{1,20}$/.test(c)&&!BIND_RESERVED.has(c)&&!/^F\d{1,2}$/.test(c);function bindOf(a){const o=Settings.binds&&Settings.binds[a];return bindValid(o)?o:bindDefault(a);}
+const BIND_DEFS=[['fwd','KeyW',_t('Avancer')],['back','KeyS',_t('Reculer')],['left','KeyA',_t('Aller à gauche')],['right','KeyD',_t('Aller à droite')],['jump','Space',_t('Sauter')],['sprint','ShiftLeft',_t('Sprinter, retenir son souffle en lunette')],['crouch','ControlLeft',_t('S\u0027accroupir (maintenu), glisser en sprintant')],['crouchT','KeyC',_t('S\u0027accroupir (bascule), glisser en sprintant')],['reload','KeyR',_t('Recharger')],['w1','Digit1',_t('Arme principale')],['faca3','Digit3',_t('Faca na mão (sem atacar)')],['w2','Digit2',_t('Arme secondaire')],['swap','KeyQ',_t('Changer d\u0027arme')],['knife','KeyF',_t('Couteau (maintenir pour le garder en main)')],['nade','KeyG',_t('Grenade (maintenir pour la garder en main)')],['use','KeyE',_t('Ramasser l\u0027arme au sol')],['inspect','KeyI',_t('Inspecter l\u0027arme')],['ks1','Digit4',_t('Première série')],['ks2','Digit5',_t('Deuxième série')],['ks3','Digit6',_t('Troisième série')],['board','Tab',_t('Tableau des scores')],];const BIND_RESERVED=new Set(['Escape','KeyP','KeyT','Enter','NumpadEnter','MetaLeft','MetaRight','ContextMenu','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);const BIND={rev:new Map(),dead:new Set(),layout:null,capture:null};const bindDefault=(a)=>BIND_DEFS.find((d)=>d[0]===a)[1];const bindValid=(c)=>typeof c==='string'&&/^[A-Za-z0-9]{1,20}$/.test(c)&&!BIND_RESERVED.has(c)&&!/^F\d{1,2}$/.test(c);function bindOf(a){const o=Settings.binds&&Settings.binds[a];return bindValid(o)?o:bindDefault(a);}
 function bindRebuild(){BIND.rev=new Map();BIND.dead=new Set();for(const[a,def]of BIND_DEFS){const c=bindOf(a);if(!BIND.rev.has(c))BIND.rev.set(c,def);}
 for(const[a,def]of BIND_DEFS)if(!BIND.rev.has(def))BIND.dead.add(def);}
 function keyCanon(code){if(BIND.rev.has(code))return BIND.rev.get(code);return BIND.dead.has(code)?'':code;}
@@ -7172,7 +7172,7 @@ if((HUD.tagT-=dt)<=0){HUD.tagT=0.1;let tag=null;if(!Settings.allyMarks&&e.alive&
 const nt=$('nameTag');if(tag){hudText(nt,tag.name);nt.className='nametag show ally';}
 else if(nt.className!=='nametag')nt.className='nametag';}
 if(HUD.msgT>0){HUD.msgT-=dt;if(HUD.msgT<=0)$('msg').classList.remove('show');}
-if(HUD.board&&(HUD.boardT-=dt)<=0)fillScoreboard();const hp=$('hp');const hpv=Math.max(0,Math.ceil(e.health));hudStyle(hp,'opacity',e.alive&&(hpv<100||(BR.on&&e.brColete>0))?'1':'0');hudStyle($('hpFill'),'transform',`scaleX(${clamp(e.health/100,0,1)})`);hudText($('hpN'),hpv);hudCls(hp,'crit',hpv<=35);}
+if(HUD.board&&(HUD.boardT-=dt)<=0)fillScoreboard();const hp=$('hp');const hpv=Math.max(0,Math.ceil(e.health));hudStyle(hp,'opacity',e.alive&&(hpv<100||(BR.on&&e.brColete>0))?'1':'0');hudStyle($('hpFill'),'transform',`scaleX(${clamp(e.health/100,0,1)})`);hudText($('hpN'),BR.on?Math.ceil(Math.max(0,e.health)*BR_VIDA_MOSTRA):hpv);hudCls(hp,'crit',hpv<=35);}
 function showScoreboard(on){HUD.board=on&&MATCH.state!=='ended';$('board').classList.toggle('show',!!HUD.board);if(on)fillScoreboard();}
 const boardName=(x)=>(x.isPlayer&&MATCH.online?NET.nick:x.name)+(MATCH.online&&(x.netBot||x.remoteBot)?' '+_t('(bot)'):'');const eloSelo=(x)=>{if(!MATCH.online||x.netBot||x.remoteBot||!window.tiroElo||!window.tiroElo.selo)return'';try{return window.tiroElo.selo(netClean(x.isPlayer?NET.nick:x.name),!!x.isPlayer);}catch(e){return'';}};const boardCmp=(a,b)=>b.score-a.score||b.kills-a.kills||a.deaths-b.deaths;function boardList(t){return entities.filter((x)=>x.team===t&&(!MATCH.online||x.isPlayer||x.isRemote||x.netBot)).sort(boardCmp);}
 function fillScoreboard(){HUD.boardT=0.25;const ffa=MATCH.mode==='ffa';hudCls($('board'),'one',ffa);const head=`<thead><tr><th>${_t('Nom')}</th><th>${_t('Score')}</th><th>${_t('Élim.')}</th><th>${_t('Morts')}</th><th>${_t('Aides')}</th></tr></thead>`;const row=(x)=>`<tr class="${x.isPlayer?'me':''}${x.alive?'':' dead'}"><td>${esc(boardName(x))}${eloSelo(x)}</td><td>${x.score}</td><td>${x.kills}</td><td>${x.deaths}</td><td>${x.assists}</td></tr>`;if(ffa){hudHtml($('board0'),`<caption class="ally"><span>${_t('Classement, premier à {0}',MATCH.limit)}</span></caption>${head}<tbody>${ffaList().sort(ffaCmp).map(row).join('')}</tbody>`);return;}
@@ -13596,6 +13596,20 @@ if (/[?&]editor=1\b/.test(location.search)) { const go = () => setTimeout(() => 
    chão saem da mesma semente em todo mundo (código do salão + mapa) e o relógio é o da partida (MATCH.timeLeft, que vem do host). */
 const BR = { on: false, ordem: 0, armado: false, T0: 0, z: null, plano: null, malha: null, estado: '', botT: 0, ver: null, cam: null, hudFora: null, roTxt: null, aviso: null, lugar: 0 };
 // os dois battle royale: o de cada um por si ('br') e o em dupla ('brduo', ferramentas/tiro-br-dupla.js)
+// a faca na hora do golpe (troca no tiro-frontline.js): o alvo do aperto, se ainda estiver a até 2,5 m; senão, o inimigo mais perto
+// na frente (cone de uns 60°, a até 2,5 m, sem parede no meio). Vale em todos os modos.
+function facaAlvo(T, e) {
+  if (T && T.alive && T.pos.distanceTo(e.pos) < 2.5) return T;
+  const f = camFwd(new V3()); f.y = 0; f.normalize(); let best = null, bd = 2.5;
+  for (const o of entities) {
+    if (o === e || !o.alive || o.off || allied(o, e)) continue;
+    const d = o.pos.distanceTo(e.pos); if (d > bd) continue;
+    const to = new V3(o.pos.x - e.pos.x, 0, o.pos.z - e.pos.z); if (to.lengthSq() > 1e-4 && to.normalize().dot(f) < 0.5) continue;
+    if (!lineClear(camera.position, entChest(o, new V3()))) continue;
+    best = o; bd = d;
+  }
+  return best;
+}
 function brModo(m) { return m === 'br' || m === 'brduo'; }
 function brSolo(m) { return m === 'ffa' || brModo(m); }
 function netMax() { return NET.cfg && brModo(NET.cfg.mode) ? BR_MAX : NET_MAX; }
@@ -13711,8 +13725,14 @@ function brLoot(rnd) {
    colete (azul): +50 de colete, até 100; o colete segura 60% de cada dano de tiro, grenada ou faca até acabar (a zona passa por ele);
    cura (branca, cruz vermelha): +50 de vida, até 100. Os robôs também pegam, e vão atrás de cura quando estão machucados.
    Como as armas do chão, nada disso vai pela rede: a caixa que outro jogador pisou some aqui também, mas o efeito é só na máquina dele. */
-const BR_CAIXAS = { colete: { cor: '#2f6fd6', ganho: 50, max: 100 }, cura: { cor: '#f3f1ea', ganho: 50, max: 100 } };
-const BR_COLETE_SEGURA = 0.6;
+/* VIDA E PLACAS (2026-11-28, o Thiago, pelo Warzone: 150 de vida e até 3 placas de 50, 300 no total). No battle royale:
+   - vida de 150: a vida do jogo continua de 0 a 100 por dentro (regeneração, HUD, cura), e o dano de tiro, grenada, faca e zona que
+     chega nela é multiplicado por BR_VIDA_K (2/3); o HUD mostra de 0 a 150;
+   - colete em placas: cada caixa azul é uma placa de 50, até 3 (150), e o colete segura o dano inteiro até acabar (antes: 60%,
+     até 100); a zona passa direto por ele. Os números de colete e de dano são os da arma (como numa vida de 100). */
+const BR_VIDA_K = 2 / 3, BR_VIDA_MOSTRA = 1.5;
+const BR_CAIXAS = { colete: { cor: '#2f6fd6', ganho: 50, max: 150 }, cura: { cor: '#f3f1ea', ganho: 50, max: 100 } };
+const BR_COLETE_SEGURA = 1;
 function brCaixaMat(tipo) {
   BR.mats = BR.mats || {};
   if (BR.mats[tipo]) return BR.mats[tipo];
@@ -13784,7 +13804,7 @@ function brCaixasUpdate() {
         const B = BR_CAIXAS[c.tipo];
         if (c.tipo === 'granada') { if (e.isPlayer) { if (PL.nades <= 0) PL.nadeType = c.ntipo; PL.nades++; } else { e.nades = (e.nades || 0) + 1; e.nadeType = c.ntipo; e.nadeOn = true; } }
         else if (c.tipo === 'cura') e.health = Math.min(B.max, e.health + B.ganho); else e.brColete = Math.min(B.max, (e.brColete || 0) + B.ganho);
-        if (e.isPlayer) { hudMsg(c.tipo === 'granada' ? `Granada (${PL.nades})` : c.tipo === 'cura' ? '+50 de vida' : `Colete ${Math.round(e.brColete)}`, 'xp', 1.6); sfxMech('pickup'); }
+        if (e.isPlayer) { hudMsg(c.tipo === 'granada' ? `Granada (${PL.nades})` : c.tipo === 'cura' ? `+${Math.round(BR_CAIXAS.cura.ganho * BR_VIDA_MOSTRA)} de vida` : `Colete: ${Math.round(e.brColete / 50)} de 3 placas`, 'xp', 1.6); sfxMech('pickup'); }
       }
       scene.remove(c.m); L.splice(i, 1); break;
     }
@@ -13798,7 +13818,7 @@ function brColeteHud() {
     b.appendChild(f); hp.appendChild(b); BR.cvBar = b; BR.cvFill = f; BR.cvV = -1;
   }
   const v = BR.on && PL.ent.alive ? Math.round(PL.ent.brColete || 0) : 0;
-  if (v !== BR.cvV) { BR.cvV = v; BR.cvBar.style.display = v > 0 ? '' : 'none'; BR.cvFill.style.transform = `scaleX(${v / 100})`; }
+  if (v !== BR.cvV) { BR.cvV = v; BR.cvBar.style.display = v > 0 ? '' : 'none'; BR.cvFill.style.transform = `scaleX(${v / BR_CAIXAS.colete.max})`; }
 }
 
 /* ---------- entrada caindo de cima (2026-11-27) ----------
@@ -14014,9 +14034,11 @@ function brEspectar(dt) {
   // o colete segura parte do dano de quem é desta máquina (em rede, cada um aplica o dano que leva: netApply 'hit')
   const applyDamage0 = applyDamage;
   applyDamage = function (victim, dmg, attacker, weapon, head, dir, srcPos, life) {
-    if (BR.on && victim && victim.alive && !victim.isRemote && victim.brColete > 0 && dmg > 0 && !(victim.protT > 0) && (MATCH.state === 'playing' || MATCH.state === 'paused')) {
+    const faca = weapon === _t('Couteau'); // a facada mata direto, como antes: passa pelas placas e pela vida de 150
+    if (BR.on && !faca && victim && victim.alive && !victim.isRemote && victim.brColete > 0 && dmg > 0 && !(victim.protT > 0) && (MATCH.state === 'playing' || MATCH.state === 'paused')) {
       const s = Math.min(victim.brColete, dmg * BR_COLETE_SEGURA); victim.brColete -= s; dmg -= s;
     }
+    if (BR.on && !faca && victim && victim.alive && !victim.isRemote && dmg > 0) dmg *= BR_VIDA_K; // vida de 150 (o resto, depois das placas)
     return applyDamage0(victim, dmg, attacker, weapon, head, dir, srcPos, life);
   };
   // quem atira não sabe o colete do outro: no battle royale a morte não é prevista, vem do aviso de quem morreu
@@ -14092,7 +14114,7 @@ function brEspectar(dt) {
   ringCheck = function (e, dt) {
     if (BR.on) brQuedaPasso(e, dt);
     if (BR.on && BR.z && e.alive && (MATCH.state === 'playing' || MATCH.state === 'paused') && !brDentroZ(BR.z, e.pos.x, e.pos.z)) {
-      e.health -= BR.z.dps * dt;
+      e.health -= BR.z.dps * BR_VIDA_K * dt;
       if (e.isPlayer) PL.lastDmgT = MATCH.time; else e.lastHitT = MATCH.time; // fora da zona a vida não volta
       if (e.health <= 0) { e.health = 0; zoneDeath(e); if (!e.alive) return true; }
     }

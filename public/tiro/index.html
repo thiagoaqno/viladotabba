@@ -13823,10 +13823,11 @@ function brEspectar(dt) {
   // o colete segura parte do dano de quem é desta máquina (em rede, cada um aplica o dano que leva: netApply 'hit')
   const applyDamage0 = applyDamage;
   applyDamage = function (victim, dmg, attacker, weapon, head, dir, srcPos, life) {
-    if (BR.on && victim && victim.alive && !victim.isRemote && victim.brColete > 0 && dmg > 0 && !(victim.protT > 0) && (MATCH.state === 'playing' || MATCH.state === 'paused')) {
+    const faca = weapon === _t('Couteau'); // a facada mata direto, como antes: passa pelas placas e pela vida de 150
+    if (BR.on && !faca && victim && victim.alive && !victim.isRemote && victim.brColete > 0 && dmg > 0 && !(victim.protT > 0) && (MATCH.state === 'playing' || MATCH.state === 'paused')) {
       const s = Math.min(victim.brColete, dmg * BR_COLETE_SEGURA); victim.brColete -= s; dmg -= s;
     }
-    if (BR.on && victim && victim.alive && !victim.isRemote && dmg > 0) dmg *= BR_VIDA_K; // vida de 150 (o resto, depois das placas)
+    if (BR.on && !faca && victim && victim.alive && !victim.isRemote && dmg > 0) dmg *= BR_VIDA_K; // vida de 150 (o resto, depois das placas)
     return applyDamage0(victim, dmg, attacker, weapon, head, dir, srcPos, life);
   };
   // quem atira não sabe o colete do outro: no battle royale a morte não é prevista, vem do aviso de quem morreu

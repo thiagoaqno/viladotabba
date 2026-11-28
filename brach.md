@@ -13,3 +13,5 @@ Arquivos: `ferramentas/tiro-br.js` (`BR_VIDA_K`, placas, dano e zona) e `ferrame
 Conferido só com `node --check` (os arquivos e o script do jogo montado); não joguei.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+**Faca:** a facada passa pelas placas e pela vida de 150, e mata direto como nos outros modos.
